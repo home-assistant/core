@@ -1,23 +1,44 @@
 """Switch for Shelly."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
-from .entity import ShellyBlockEntity, ShellyRpcEntity
+from .entity import (
+    BlockEntityDescription,
+    ShellyBlockAttributeEntity,
+    ShellyBlockEntity,
+    ShellyRpcEntity,
+    async_setup_block_attribute_entities,
+)
 from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+)
+
+
+@dataclass
+class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
+    """Class to describe a BLOCK switch."""
+
+
+GAS_VALVE_SWITCH = BlockSwitchDescription(
+    key="valve|valve",
+    name="Valve opened",
+    icon="mdi:valve",
+    available=lambda block: block.valve not in ("failure", "checking"),
+    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
 )
 
 
@@ -42,6 +63,16 @@ def async_setup_block_entry(
     """Set up entities for block device."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert coordinator
+
+    # Add Shelly Gas Valve as a switch
+    if coordinator.model == "SHGS-1":
+        async_setup_block_attribute_entities(
+            hass,
+            async_add_entities,
+            coordinator,
+            {("valve", "valve"): GAS_VALVE_SWITCH},
+            BlockValveSwitch,
+        )
 
     # In roller mode the relay blocks exist but do not contain required info
     if (
@@ -92,6 +123,40 @@ def async_setup_rpc_entry(
         return
 
     async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
+
+
+class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
+    """Entity that controls a Gas Valve on Block based Shelly devices."""
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockSwitchDescription,
+    ) -> None:
+        """Initialize relay switch."""
+        super().__init__(coordinator, block, attribute, description)
+
+    @property
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return self.attribute_value == "opened"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        await self.async_set_valve("open")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        await self.async_set_valve("close")
+
+    async def async_set_valve(self, new_state: str) -> None:
+        """Set the valve state."""
+        await self.coordinator.device.http_request(
+            "get", f"settings/{self.block.type}/{self.block.channel}", {"go": new_state}
+        )
+        self.async_write_ha_state()
 
 
 class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
