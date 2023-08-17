@@ -1,35 +1,30 @@
 """Test the Hong Kong Observatory config flow."""
-from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.hko.const import DOMAIN
+from homeassistant.components.hko.const import DEFAULT_LOCATION, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_user_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test user config flow with minimum fields."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["step_id"] == SOURCE_USER
+    assert "flow_id" in result
 
-    with patch(
-        "homeassistant.components.hko.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": "Hong Kong Observatory",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: DEFAULT_LOCATION},
+    )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Hong Kong Observatory"
-    assert result2["data"] == {
-        "location": "Hong Kong Observatory",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_LOCATION
+    assert result["result"].unique_id == DEFAULT_LOCATION
+    assert result["data"][CONF_LOCATION] == DEFAULT_LOCATION
