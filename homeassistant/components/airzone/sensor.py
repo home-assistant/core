@@ -145,6 +145,8 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
 class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
     """Define an Airzone Hot Water sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -154,7 +156,6 @@ class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, entry)
 
-        self._attr_name = f"{self.get_airzone_value(AZD_NAME)} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_dhw_{description.key}"
         self.entity_description = description
 
