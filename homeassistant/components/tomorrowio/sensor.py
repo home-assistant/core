@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -295,7 +296,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_UV_INDEX,
         name="UV Index",
-        state_class="measurement",
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:sun-wireless",
     ),
     TomorrowioSensorEntityDescription(
