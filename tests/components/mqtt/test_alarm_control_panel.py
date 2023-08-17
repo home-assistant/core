@@ -285,8 +285,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
                 DEFAULT_CONFIG,
                 ({"supported_features": ["invalid"]},),
             ),
-            AlarmControlPanelEntityFeature.ARM_HOME
-            | AlarmControlPanelEntityFeature.ARM_AWAY,
+            None,
             False,
         ),
         (
@@ -295,8 +294,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
                 DEFAULT_CONFIG,
                 ({"supported_features": ["arm_home", "invalid"]},),
             ),
-            AlarmControlPanelEntityFeature.ARM_HOME
-            | AlarmControlPanelEntityFeature.ARM_AWAY,
+            None,
             False,
         ),
     ],
@@ -304,7 +302,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
 async def test_supported_features(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    expected_features: AlarmControlPanelEntityFeature,
+    expected_features: AlarmControlPanelEntityFeature | None,
     valid: bool,
 ) -> None:
     """Test conditional enablement of supported features."""
