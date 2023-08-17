@@ -1,8 +1,8 @@
 """The ATAG Integration."""
+from asyncio import timeout
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyatag import AtagException, AtagOne
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data():
         """Update data via library."""
-        async with async_timeout.timeout(20):
+        async with timeout(20):
             try:
                 await atag.update()
             except AtagException as err:

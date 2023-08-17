@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools~=68.0", "wheel~=0.40.0"]
+requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,7 +25,7 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.2",
+    "async-timeout==4.0.3",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",

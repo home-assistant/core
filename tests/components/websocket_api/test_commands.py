@@ -1,9 +1,9 @@
 """Tests for WebSocket API commands."""
+import asyncio
 from copy import deepcopy
 import datetime
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -497,7 +497,7 @@ async def test_subscribe_unsubscribe_events(
     hass.bus.async_fire("test_event", {"hello": "world"})
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -712,7 +712,7 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
     hass.bus.async_fire("themes_updated")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 6
@@ -1611,7 +1611,7 @@ async def test_subscribe_trigger(hass: HomeAssistant, websocket_client) -> None:
     hass.bus.async_fire("test_event", {"hello": "world"}, context=context)
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -1810,7 +1810,7 @@ async def test_execute_script_with_dynamically_validated_action(
 
     ws_client = await hass_ws_client(hass)
 
-    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module_cache = hass.data[loader.DATA_COMPONENTS]
     module = module_cache["fake_integration.device_action"]
     module.async_call_action_from_config = AsyncMock()
     module.async_validate_action_config = AsyncMock(
