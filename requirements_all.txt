@@ -73,7 +73,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.10.0
+PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.9
