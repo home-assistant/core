@@ -50,6 +50,22 @@ from .const import (
     DOMAIN,
     KEY_DISTRICT,
     KEY_LOCATION,
+    WEATHER_INFO_AT_TIMES_AT_FIRST,
+    WEATHER_INFO_CLOUD,
+    WEATHER_INFO_FINE,
+    WEATHER_INFO_FOG,
+    WEATHER_INFO_HEAVY,
+    WEATHER_INFO_INTERVAL,
+    WEATHER_INFO_ISOLATED,
+    WEATHER_INFO_MIST,
+    WEATHER_INFO_OVERCAST,
+    WEATHER_INFO_PERIOD,
+    WEATHER_INFO_RAIN,
+    WEATHER_INFO_SHOWER,
+    WEATHER_INFO_SNOW,
+    WEATHER_INFO_SUNNY,
+    WEATHER_INFO_THUNDERSTORM,
+    WEATHER_INFO_WIND,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class HKOUpdateCoordinator(DataUpdateCoordinator):
     """HKO Update Coordinator."""
 
-    def __init__(self, hass, session, district, location):
+    def __init__(self, hass: HomeAssistant, session, district, location) -> None:
         """Update data via library."""
         self.location = location
         self.district = district
@@ -193,40 +209,52 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_info_condition(self, info):
         info = info.lower()
-        if "rain" in info:
+        if WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_HAIL
-        if "snow" in info and "rain" in info:
+        if WEATHER_INFO_SNOW in info and WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_SNOWY_RAINY
-        if "snow" in info:
+        if WEATHER_INFO_SNOW in info:
             return ATTR_CONDITION_SNOWY
-        if "fog" in info or "mist" in info:
+        if WEATHER_INFO_FOG in info or WEATHER_INFO_MIST in info:
             return ATTR_CONDITION_FOG
-        if "wind" in info and "cloud" in info:
+        if WEATHER_INFO_WIND in info and WEATHER_INFO_CLOUD in info:
             return ATTR_CONDITION_WINDY_VARIANT
-        if "wind" in info:
+        if WEATHER_INFO_WIND in info:
             return ATTR_CONDITION_WINDY
-        if "thunderstorm" in info and "isolated" not in info:
+        if WEATHER_INFO_THUNDERSTORM in info and WEATHER_INFO_ISOLATED not in info:
             return ATTR_CONDITION_LIGHTNING_RAINY
         if (
-            ("rain" in info or "shower" in info or "thunderstorm" in info)
-            and "heavy" in info
-            and "sunny" not in info
-            and "fine" not in info
-            and "at times at first" not in info
+            (
+                WEATHER_INFO_RAIN in info
+                or WEATHER_INFO_SHOWER in info
+                or WEATHER_INFO_THUNDERSTORM in info
+            )
+            and WEATHER_INFO_HEAVY in info
+            and WEATHER_INFO_SUNNY not in info
+            and WEATHER_INFO_FINE not in info
+            and WEATHER_INFO_AT_TIMES_AT_FIRST not in info
         ):
             return ATTR_CONDITION_POURING
         if (
-            ("rain" in info or "shower" in info or "thunderstorm" in info)
-            and "sunny" not in info
-            and "fine" not in info
+            (
+                WEATHER_INFO_RAIN in info
+                or WEATHER_INFO_SHOWER in info
+                or WEATHER_INFO_THUNDERSTORM in info
+            )
+            and WEATHER_INFO_SUNNY not in info
+            and WEATHER_INFO_FINE not in info
         ):
             return ATTR_CONDITION_RAINY
-        if ("cloud" in info or "overcast" in info) and not (
-            "interval" in info or "period" in info
+        if (WEATHER_INFO_CLOUD in info or WEATHER_INFO_OVERCAST in info) and not (
+            WEATHER_INFO_INTERVAL in info or WEATHER_INFO_PERIOD in info
         ):
             return ATTR_CONDITION_CLOUDY
-        if ("sunny" in info) and ("interval" in info or "period" in info):
+        if (WEATHER_INFO_SUNNY in info) and (
+            WEATHER_INFO_INTERVAL in info or WEATHER_INFO_PERIOD in info
+        ):
             return ATTR_CONDITION_PARTLYCLOUDY
-        if ("sunny" in info or "fine" in info) and "shower" not in info:
+        if (
+            WEATHER_INFO_SUNNY in info or WEATHER_INFO_FINE in info
+        ) and WEATHER_INFO_SHOWER not in info:
             return ATTR_CONDITION_SUNNY
         return ATTR_CONDITION_PARTLYCLOUDY
