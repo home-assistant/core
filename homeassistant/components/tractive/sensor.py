@@ -65,16 +65,18 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         description: TractiveSensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
-        super().__init__(client, item.trackable, item.tracker_details)
+        if description.hardware_sensor:
+            dispatcher_signal = (
+                f"{description.signal_prefix}-{item.tracker_details['_id']}"
+            )
+        else:
+            dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
+        super().__init__(
+            client, item.trackable, item.tracker_details, dispatcher_signal
+        )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
-        if description.hardware_sensor:
-            self._dispatcher_signal = f"{description.signal_prefix}-{self._tracker_id}"
-        else:
-            self._dispatcher_signal = (
-                f"{description.signal_prefix}-{self._trackable['_id']}"
-            )
         self.entity_description = description
 
     @callback

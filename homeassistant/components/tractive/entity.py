@@ -1,7 +1,7 @@
 """A entity class for Tractive integration."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,6 +22,7 @@ class TractiveEntity(Entity):
         client: TractiveClient,
         trackable: dict[str, Any],
         tracker_details: dict[str, Any],
+        dispatcher_signal: str,
     ) -> None:
         """Initialize tracker entity."""
         self._attr_device_info = DeviceInfo(
@@ -34,17 +35,13 @@ class TractiveEntity(Entity):
         )
         self._user_id = client.user_id
         self._tracker_id = tracker_details["_id"]
-        self._trackable = trackable
         self._client = client
-        self._dispatcher_signal: str | None = None
+        self._dispatcher_signal = dispatcher_signal
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:
             self._client.subscribe()
-
-        if TYPE_CHECKING:
-            assert self._dispatcher_signal is not None
 
         self.async_on_remove(
             async_dispatcher_connect(

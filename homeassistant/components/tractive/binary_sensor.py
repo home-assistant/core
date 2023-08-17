@@ -28,14 +28,16 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
-        super().__init__(client, item.trackable, item.tracker_details)
+        super().__init__(
+            client,
+            item.trackable,
+            item.tracker_details,
+            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
+        )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self._attr_available = False
         self.entity_description = description
-        self._dispatcher_signal = (
-            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}"
-        )
 
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:

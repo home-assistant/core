@@ -41,7 +41,12 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     def __init__(self, client: TractiveClient, item: Trackables) -> None:
         """Initialize tracker entity."""
-        super().__init__(client, item.trackable, item.tracker_details)
+        super().__init__(
+            client,
+            item.trackable,
+            item.tracker_details,
+            f"{TRACKER_HARDWARE_STATUS_UPDATED}-{item.tracker_details['_id']}",
+        )
 
         self._battery_level: int | None = item.hw_info.get("battery_level")
         self._latitude: float = item.pos_report["latlong"][0]
@@ -102,7 +107,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
+                self._dispatcher_signal,
                 self._handle_hardware_status_update,
             )
         )
