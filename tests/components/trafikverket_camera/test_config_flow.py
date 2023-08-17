@@ -55,28 +55,32 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "base_error"),
+    ("side_effect", "error_key", "base_error"),
     [
         (
             InvalidAuthentication,
+            "base",
             "invalid_auth",
         ),
         (
             NoCameraFound,
+            "location",
             "invalid_location",
         ),
         (
             MultipleCamerasFound,
+            "location",
             "more_locations",
         ),
         (
             UnknownError,
+            "base",
             "cannot_connect",
         ),
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, side_effect: Exception, base_error: str
+    hass: HomeAssistant, side_effect: Exception, error_key: str, base_error: str
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
@@ -98,7 +102,7 @@ async def test_flow_fails(
             },
         )
 
-    assert result4["errors"] == {"base": base_error}
+    assert result4["errors"] == {error_key: base_error}
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
@@ -147,28 +151,32 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "p_error"),
+    ("side_effect", "error_key", "p_error"),
     [
         (
             InvalidAuthentication,
+            "base",
             "invalid_auth",
         ),
         (
             NoCameraFound,
+            "location",
             "invalid_location",
         ),
         (
             MultipleCamerasFound,
+            "location",
             "more_locations",
         ),
         (
             UnknownError,
+            "base",
             "cannot_connect",
         ),
     ],
 )
 async def test_reauth_flow_error(
-    hass: HomeAssistant, side_effect: Exception, p_error: str
+    hass: HomeAssistant, side_effect: Exception, error_key: str, p_error: str
 ) -> None:
     """Test a reauthentication flow with error."""
     entry = MockConfigEntry(
@@ -204,7 +212,7 @@ async def test_reauth_flow_error(
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": p_error}
+    assert result2["errors"] == {error_key: p_error}
 
     with patch(
         "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_camera",
