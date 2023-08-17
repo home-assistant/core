@@ -48,15 +48,11 @@ class BlinkCamera(CoordinatorEntity, Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
     def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
         """Initialize a camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
         self._coordinator = coordinator
-        self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         self._attr_device_info = DeviceInfo(
@@ -73,7 +69,6 @@ class BlinkCamera(CoordinatorEntity, Camera):
         return self._camera.attributes
 
     async def async_enable_motion_detection(self) -> None:
-    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
         try:
             await self._camera.async_arm(True)
@@ -83,7 +78,6 @@ class BlinkCamera(CoordinatorEntity, Camera):
         except asyncio.TimeoutError:
             self._attr_available = False
 
-    async def async_disable_motion_detection(self) -> None:
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
         try:

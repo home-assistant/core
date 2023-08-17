@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import logging
 
 from blinkpy.blinkpy import Blink, BlinkSyncModule
@@ -87,7 +86,6 @@ class BlinkSyncModuleHA(CoordinatorEntity, AlarmControlPanelEntity):
         except asyncio.TimeoutError:
             self._attr_available = False
 
-    async def async_alarm_arm_away(self, code: str | None = None) -> None:
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         try:
