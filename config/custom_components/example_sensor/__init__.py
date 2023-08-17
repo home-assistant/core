@@ -1,0 +1,1 @@
+"""The example sensor integration."""
