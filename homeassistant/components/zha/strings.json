@@ -506,7 +506,7 @@
   "issues": {
     "wrong_silabs_firmware_installed": {
       "title": "Zigbee radio has the wrong firmware installed",
-      "description": "Your Zigbee radio was previously used with multi-PAN and has has non-Zigbee firmware installed ({firmware_type}). It cannot be used with ZHA directly until Zigbee firmware is installed again. Click the \"Learn More\" link below and follow the instructions to re-install Zigbee firmware and reload the integration to try again."
+      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install the EmberZNet Zigbee firmware:\n\n1. Open the documentation by selecting the link under \"Learn More\".\n2. Follow the instructions described in the step to flash the EmberZNet Zigbee radio firmware."
     }
   }
 }
