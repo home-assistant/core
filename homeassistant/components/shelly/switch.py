@@ -141,7 +141,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return self.attribute_value == "opened"
+        return self.attribute_value in ("closing", "opening", "opened")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
