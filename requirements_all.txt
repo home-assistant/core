@@ -2159,7 +2159,7 @@ python-smarttub==0.0.33
 python-songpal==0.15.2
 
 # homeassistant.components.tado
-python-tado==0.16.0
+python-tado==0.15.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
