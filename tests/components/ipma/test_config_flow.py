@@ -8,6 +8,8 @@ from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
+from tests.components.ipma import MockLocation
+
 
 @pytest.fixture(name="ipma_setup", autouse=True)
 def ipma_setup_fixture(request):
@@ -29,14 +31,17 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
     }
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        test_data,
-    )
+    with patch(
+        "pyipma.location.Location.get",
+        return_value=MockLocation(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            test_data,
+        )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == ""
+    assert result["title"] == "HomeTown"
     assert result["data"] == {
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
