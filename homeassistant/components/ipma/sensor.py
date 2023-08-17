@@ -57,7 +57,9 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][entry.entry_id][DATA_API]
     location = hass.data[DOMAIN][entry.entry_id][DATA_LOCATION]
 
-    entities = [IPMASensor(api, location, description) for description in SENSOR_TYPES]
+    entities = [
+        IPMASensor(api, location, entry, description) for description in SENSOR_TYPES
+    ]
 
     async_add_entities(entities, True)
 
@@ -72,12 +74,12 @@ class IPMASensor(SensorEntity, IPMADevice):
         self,
         api: IPMA_API,
         location: Location,
+        config_entry: ConfigEntry,
         description: IPMASensorEntityDescription,
     ) -> None:
         """Initialize the IPMA Sensor."""
-        IPMADevice.__init__(self, location)
+        IPMADevice.__init__(self, api, location, config_entry)
         self.entity_description = description
-        self._api = api
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

@@ -19,6 +19,6 @@ async def test_ipma_fire_risk_create_sensors(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.hometown_fire_risk")
+    state = hass.states.get("sensor.home_town_fire_risk")
 
     assert state.state == "3"
