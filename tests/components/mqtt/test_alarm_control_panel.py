@@ -275,8 +275,7 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
                 DEFAULT_CONFIG,
                 ({"supported_features": "invalid"},),
             ),
-            AlarmControlPanelEntityFeature.ARM_HOME
-            | AlarmControlPanelEntityFeature.ARM_AWAY,
+            None,
             False,
         ),
         (
