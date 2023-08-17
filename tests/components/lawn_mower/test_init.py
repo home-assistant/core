@@ -116,7 +116,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_get_entry(entity1.entity_id) is None
+    assert hass.config_entries.async_get_entry(config_entry.entry_id) is None
 
 
 async def test_sync_start_mowing(hass: HomeAssistant) -> None:
