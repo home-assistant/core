@@ -62,8 +62,113 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion"
+      },
+      "face": {
+        "name": "Face"
+      },
+      "person": {
+        "name": "Person"
+      },
+      "vehicle": {
+        "name": "Vehicle"
+      },
+      "pet": {
+        "name": "Pet"
+      },
+      "visitor": {
+        "name": "Visitor"
+      }
+    },
+    "button": {
+      "ptz_stop": {
+        "name": "PTZ stop"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      },
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_calibrate": {
+        "name": "PTZ calibrate"
+      },
+      "guard_go_to": {
+        "name": "Guard go to"
+      },
+      "guard_set": {
+        "name": "Guard set current position"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Floodlight"
+      },
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
+      "status_led": {
+        "name": "Status LED"
+      }
+    },
+    "number": {
+      "zoom": {
+        "name": "Zoom"
+      },
+      "focus": {
+        "name": "Focus"
+      },
+      "floodlight_brightness": {
+        "name": "Floodlight turn on brightness"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "guard_return_time": {
+        "name": "Guard return time"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "ai_face_sensititvity": {
+        "name": "AI face sensitivity"
+      },
+      "ai_person_sensititvity": {
+        "name": "AI person sensitivity"
+      },
+      "ai_vehicle_sensititvity": {
+        "name": "AI vehicle sensitivity"
+      },
+      "ai_pet_sensititvity": {
+        "name": "AI pet sensitivity"
+      },
+      "auto_quick_reply_time": {
+        "name": "Auto quick reply time"
+      },
+      "auto_track_limit_left": {
+        "name": "Auto track limit left"
+      },
+      "auto_track_limit_right": {
+        "name": "Auto track limit right"
+      },
+      "auto_track_disappear_time": {
+        "name": "Auto track disappear time"
+      },
+      "auto_track_stop_time": {
+        "name": "Auto track stop time"
+      }
+    },
     "select": {
       "floodlight_mode": {
+        "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
           "auto": "Auto",
@@ -73,18 +178,24 @@
         }
       },
       "day_night_mode": {
+        "name": "Day night mode",
         "state": {
           "auto": "Auto",
           "color": "Color",
           "blackwhite": "Black&White"
         }
       },
+      "ptz_preset": {
+        "name": "PTZ preset"
+      },
       "auto_quick_reply_message": {
+        "name": "Auto quick reply message",
         "state": {
           "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {
+        "name": "Auto track method",
         "state": {
           "digital": "Digital",
           "digitalfirst": "Digital first",
@@ -92,6 +203,7 @@
         }
       },
       "status_led": {
+        "name": "Status LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
@@ -103,6 +215,51 @@
       "wifi_signal": {
         "name": "Wi-Fi signal"
       }
-    }
+    },
+    "siren": {
+      "siren": {
+        "name": "Siren"
+      }
+    },
+    "switch": {
+      "record_audio": {
+        "name": "Record audio"
+      },
+      "siren_on_event": {
+        "name": "Siren on event"
+      },
+      "auto_tracking": {
+        "name": "Auto tracking"
+      },
+      "auto_focus": {
+        "name": "Auto focus"
+      },
+      "gaurd_return": {
+        "name": "Guard return"
+      },
+      "email": {
+        "name": "Email on event"
+      },
+      "ftp_upload": {
+        "name": "FTP upload"
+      },
+      "push_notifications": {
+        "name": "Push notifications"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "buzzer": {
+        "name": "Buzzer on event"
+      },
+      "doorbell_button_sound": {
+        "name": "Doorbell button sound"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      }
+    },
   }
 }
