@@ -10,7 +10,6 @@ import os
 from socket import gaierror
 from typing import Any
 
-import async_timeout
 import mpd
 from mpd.asyncio import MPDClient
 import voluptuous as vol
@@ -128,7 +127,7 @@ class MpdDevice(MediaPlayerEntity):
                 # prevent a deadlock, enforce an additional (slightly longer)
                 # timeout on the coroutine itself.
                 try:
-                    async with async_timeout.timeout(self._client.timeout + 5):
+                    async with asyncio.timeout(self._client.timeout + 5):
                         await self._client.connect(self.server, self.port)
                 except asyncio.TimeoutError as error:
                     # TimeoutError has no message (which hinders logging further
