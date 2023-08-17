@@ -63,9 +63,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "motion": {
-        "name": "Motion"
-      },
       "face": {
         "name": "Face"
       },
@@ -254,11 +251,6 @@
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
-      }
-    },
-    "update": {
-      "update": {
-        "name": "Update"
       }
     }
   }

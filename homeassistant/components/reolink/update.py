@@ -41,7 +41,6 @@ class ReolinkUpdateEntity(
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_release_url = "https://reolink.com/download-center/"
-    _attr_translation_key = "update"
 
     def __init__(
         self,
