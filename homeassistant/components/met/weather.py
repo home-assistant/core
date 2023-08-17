@@ -8,6 +8,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -200,6 +201,13 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         """Return the cloud coverage."""
         return self.coordinator.data.current_weather_data.get(
             ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
+        )
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_DEW_POINT]
         )
 
     def _forecast(self, hourly: bool) -> list[Forecast] | None:
