@@ -17,20 +17,12 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_UPDATED, DOMAIN, PLATFORMS
+from .const import CONF_MANUAL, DATA_UPDATED, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import FastdotcomDataUpdateCoordindator
-
-# DOMAIN = "fastdotcom"
-# DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MANUAL = "manual"
-
-
-# DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_INTERVAL = 0
-
+# Questin: should this remain for legacy support?
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(

@@ -606,6 +606,9 @@ eufylife-ble-client==0.1.7
 # homeassistant.components.faa_delays
 faadelays==0.0.7
 
+# homeassistant.components.fastdotcom
+fastdotcom==0.0.3
+
 # homeassistant.components.feedreader
 feedparser==6.0.10
 

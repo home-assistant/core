@@ -371,7 +371,8 @@ build.json @home-assistant/supervisor
 /tests/components/faa_delays/ @ntilley905
 /homeassistant/components/fan/ @home-assistant/core
 /tests/components/fan/ @home-assistant/core
-/homeassistant/components/fastdotcom/ @rohankapoorcom
+/homeassistant/components/fastdotcom/ @rohankapoorcom @erwindouna
+/tests/components/fastdotcom/ @rohankapoorcom @erwindouna
 /homeassistant/components/fibaro/ @rappenze
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff

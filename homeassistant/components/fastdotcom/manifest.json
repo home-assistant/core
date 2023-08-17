@@ -1,7 +1,7 @@
 {
   "domain": "fastdotcom",
   "name": "Fast.com",
-  "codeowners": ["@rohankapoorcom"],
+  "codeowners": ["@rohankapoorcom", "@erwindouna"],
   "documentation": "https://www.home-assistant.io/integrations/fastdotcom",
   "iot_class": "cloud_polling",
   "loggers": ["fastdotcom"],
