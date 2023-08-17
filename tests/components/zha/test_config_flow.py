@@ -956,22 +956,10 @@ async def test_user_port_config(probe_mock, hass: HomeAssistant) -> None:
     ],
 )
 async def test_migration_ti_cc_to_znp(
-    old_type, new_type, hass: HomeAssistant, config_entry
+    old_type, new_type, hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test zigpy-cc to zigpy-znp config migration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=old_type + new_type,
-        data={
-            CONF_RADIO_TYPE: old_type,
-            CONF_DEVICE: {
-                CONF_DEVICE_PATH: "/dev/ttyUSB1",
-                CONF_BAUDRATE: 115200,
-                CONF_FLOWCONTROL: None,
-            },
-        },
-    )
-
+    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
     config_entry.version = 2
     config_entry.add_to_hass(hass)
 
