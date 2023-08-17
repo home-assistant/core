@@ -1671,7 +1671,7 @@ rapt-ble==0.1.2
 regenmaschine==2023.06.0
 
 # homeassistant.components.renault
-renault-api==0.1.13
+renault-api==0.2.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.5.0
