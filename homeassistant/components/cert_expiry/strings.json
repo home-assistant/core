@@ -23,8 +23,8 @@
   },
   "entity": {
     "sensor": {
-      "certificate_expiry_timestamp": {
-        "name": "Certificate expiry timestamp"
+      "certificate_expiry": {
+        "name": "Cert expiry"
       }
     }
   }

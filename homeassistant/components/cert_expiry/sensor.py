@@ -92,7 +92,7 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_translation_key = "certificate_expiry_timestamp"
+    _attr_translation_key = "certificate_expiry"
 
     def __init__(
         self,
