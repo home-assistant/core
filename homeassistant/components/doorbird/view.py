@@ -46,5 +46,14 @@ class DoorBirdRequestView(HomeAssistantView):
             message = f"HTTP Favorites cleared for {door_station.slug}"
             return web.Response(text=message)
 
+        #
+        # This integration uses a different event for
+        # each entity id. It would be a major breaking
+        # change to change this to a single event at this
+        # point.
+        #
+        # Do not copy this pattern in the future
+        # for any new integrations.
+        #
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
         return web.Response(text="OK")
