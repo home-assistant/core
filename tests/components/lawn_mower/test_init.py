@@ -5,11 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,7 +36,7 @@ class MockLawnMowerEntity(LawnMowerEntity):
 
     def __init__(
         self,
-        unique_id: str = "lawn_mower",
+        unique_id: str = "mock_lawn_mower",
         name: str = "Lawn Mower",
         features: LawnMowerEntityFeature = LawnMowerEntityFeature(0),
     ) -> None:
@@ -90,7 +91,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     )
 
     entity1 = LawnMowerEntity()
-    entity1.entity_id = "lawn_mower.test1"
+    entity1.entity_id = "lawn_mower.mock_lawn_mower"
 
     async def async_setup_entry_platform(
         hass: HomeAssistant,
@@ -102,15 +103,17 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{Platform.LAWN_MOWER}",
+        f"{TEST_DOMAIN}.{LAWN_MOWER_DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
     config_entry = MockConfigEntry(domain=TEST_DOMAIN)
     config_entry.add_to_hass(hass)
+
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert config_entry.state == ConfigEntryState.LOADED
     assert hass.states.get(entity1.entity_id)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
