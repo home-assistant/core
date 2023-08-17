@@ -45,7 +45,7 @@ async def get_coordinator(
                 garage.garage_name: garage
                 for garage in await ODPAmsterdam(
                     session=aiohttp_client.async_get_clientsession(hass)
-                ).all_garages()
+                ).all_garages(vehicle="car")
             }
 
     coordinator = DataUpdateCoordinator(

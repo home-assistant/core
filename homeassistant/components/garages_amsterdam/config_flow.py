@@ -32,7 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 api_data = await ODPAmsterdam(
                     session=aiohttp_client.async_get_clientsession(self.hass)
-                ).all_garages()
+                ).all_garages(vehicle="car")
             except ClientResponseError:
                 _LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")
