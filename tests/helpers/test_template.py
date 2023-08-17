@@ -2709,6 +2709,7 @@ async def test_device_entities(
 ) -> None:
     """Test device_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids
     info = render_to_info(hass, "{{ device_entities('abc123') }}")
@@ -2858,6 +2859,7 @@ async def test_device_id(
 ) -> None:
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2903,6 +2905,7 @@ async def test_device_attr(
 ) -> None:
     """Test device_attr and is_device_attr functions."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device ids (device_attr)
     info = render_to_info(hass, "{{ device_attr('abc123', 'id') }}")
@@ -3049,6 +3052,7 @@ async def test_area_id(
 ) -> None:
     """Test area_id function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_id('sensor.fake') }}")
@@ -3155,6 +3159,7 @@ async def test_area_name(
 ) -> None:
     """Test area_name function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing entity id
     info = render_to_info(hass, "{{ area_name('sensor.fake') }}")
@@ -3236,6 +3241,7 @@ async def test_area_entities(
 ) -> None:
     """Test area_entities function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
@@ -3290,6 +3296,7 @@ async def test_area_devices(
 ) -> None:
     """Test area_devices function."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Test non existing device id
     info = render_to_info(hass, "{{ area_devices('deadbeef') }}")

@@ -16,9 +16,9 @@ from homeassistant.components.mqtt import (
     is_connected as mqtt_connected,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .discovery import (
     TASMOTA_DISCOVERY_ENTITY_UPDATED,

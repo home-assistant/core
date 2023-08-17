@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 import threading
+from time import monotonic
 import traceback
 from typing import Any
 
@@ -114,6 +115,10 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
+        # bind the built-in time.monotonic directly as loop.time to avoid the
+        # overhead of the additional method call since its the most called loop
+        # method and its roughly 10%+ of all the call time in base_events.py
+        loop.time = monotonic  # type: ignore[method-assign]
         return loop
 
 

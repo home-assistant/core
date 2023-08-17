@@ -1,9 +1,9 @@
 """Provides the coordinator for a LOQED lock."""
+import asyncio
 import logging
 from typing import TypedDict
 
 from aiohttp.web import Request
-import async_timeout
 from loqedAPI import loqed
 
 from homeassistant.components import cloud, webhook
@@ -86,7 +86,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
 
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             return await self._api.async_get_lock_details()
 
     async def _handle_webhook(
