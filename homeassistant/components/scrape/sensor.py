@@ -24,8 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
@@ -179,6 +178,7 @@ class ScrapeSensor(
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
+        value: str | list[str] | None
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]

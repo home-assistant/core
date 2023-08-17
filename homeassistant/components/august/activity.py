@@ -4,10 +4,7 @@ from datetime import datetime
 import logging
 
 from aiohttp import ClientError
-from yalexs.activity import (
-    Activity,
-    ActivityType,
-)
+from yalexs.activity import Activity, ActivityType
 from yalexs.api_async import ApiAsync
 from yalexs.pubnub_async import AugustPubNub
 from yalexs.util import get_latest_activity

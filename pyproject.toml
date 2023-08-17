@@ -25,8 +25,8 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.2",
-    "attrs==22.2.0",
+    "async-timeout==4.0.3",
+    "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==4.0.1",
@@ -537,6 +537,7 @@ known-first-party = [
     "homeassistant",
 ]
 combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 

@@ -12,10 +12,9 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, final
 
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
@@ -41,7 +40,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType, EventDeviceRegistryUpdatedData
+from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -173,25 +172,6 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.unit_of_measurement
-
-
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    configuration_url: str | URL | None
-    connections: set[tuple[str, str]]
-    default_manufacturer: str
-    default_model: str
-    default_name: str
-    entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    name: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    hw_version: str | None
-    via_device: tuple[str, str]
 
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)

@@ -6,7 +6,6 @@ import datetime
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +48,7 @@ async def async_setup_entry(
                 doorstation_info,
                 device.live_image_url,
                 "live",
-                f"{doorstation.name} Live",
+                "live",
                 doorstation.doorstation_events,
                 _LIVE_INTERVAL,
                 device.rtsp_live_video_url,
@@ -59,7 +58,7 @@ async def async_setup_entry(
                 doorstation_info,
                 device.history_image_url(1, "doorbell"),
                 "last_ring",
-                f"{doorstation.name} Last Ring",
+                "last_ring",
                 [],
                 _LAST_VISITOR_INTERVAL,
             ),
@@ -68,7 +67,7 @@ async def async_setup_entry(
                 doorstation_info,
                 device.history_image_url(1, "motionsensor"),
                 "last_motion",
-                f"{doorstation.name} Last Motion",
+                "last_motion",
                 [],
                 _LAST_MOTION_INTERVAL,
             ),
@@ -85,7 +84,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         doorstation_info,
         url,
         camera_id,
-        name,
+        translation_key,
         doorstation_events,
         interval,
         stream_url=None,
@@ -94,7 +93,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         super().__init__(doorstation, doorstation_info)
         self._url = url
         self._stream_url = stream_url
-        self._attr_name = name
+        self._attr_translation_key = translation_key
         self._last_image: bytes | None = None
         if self._stream_url:
             self._attr_supported_features = CameraEntityFeature.STREAM
@@ -118,7 +117,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
 
         try:
             websession = async_get_clientsession(self.hass)
-            async with async_timeout.timeout(_TIMEOUT):
+            async with asyncio.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()
