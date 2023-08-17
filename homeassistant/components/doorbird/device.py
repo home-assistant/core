@@ -157,7 +157,8 @@ async def async_reset_device_favorites(
 def _reset_device_favorites(door_station: ConfiguredDoorBird) -> None:
     """Handle clearing favorites on device."""
     # Clear webhooks
-    favorites: dict[str, list[str]] = door_station.device.favorites()
+    door_bird = door_station.device
+    favorites: dict[str, list[str]] = door_bird.favorites()
     for favorite_type, favorite_ids in favorites.items():
         for favorite_id in favorite_ids:
-            door_station.device.delete_favorite(favorite_type, favorite_id)
+            door_bird.delete_favorite(favorite_type, favorite_id)
