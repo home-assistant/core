@@ -1,0 +1,1 @@
+DOMAIN="kindhome_solarbeaker"

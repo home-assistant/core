@@ -1,0 +1,1 @@
+"""The kindhome solarbeaker integration.""".
