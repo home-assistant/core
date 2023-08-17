@@ -87,6 +87,7 @@ def setup_platform(
     calendars = client.principal().calendars()
 
     calendar_devices = []
+    device_id: str | None
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others

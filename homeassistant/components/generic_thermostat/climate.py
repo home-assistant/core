@@ -442,7 +442,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Update thermostat with latest state from sensor."""
         try:
             cur_temp = float(state.state)
-            if math.isnan(cur_temp) or math.isinf(cur_temp):
+            if not math.isfinite(cur_temp):
                 raise ValueError(f"Sensor has illegal state {state.state}")
             self._cur_temp = cur_temp
         except ValueError as ex:

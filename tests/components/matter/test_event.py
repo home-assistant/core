@@ -5,16 +5,10 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
 
-from homeassistant.components.event import (
-    ATTR_EVENT_TYPE,
-    ATTR_EVENT_TYPES,
-)
+from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    setup_integration_with_node_fixture,
-    trigger_subscription_callback,
-)
+from .common import setup_integration_with_node_fixture, trigger_subscription_callback
 
 
 @pytest.fixture(name="generic_switch_node")

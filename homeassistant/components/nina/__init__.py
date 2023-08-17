@@ -1,11 +1,11 @@
 """The Nina integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import re
 from typing import Any
 
-from async_timeout import timeout
 from pynina import ApiError, Nina
 
 from homeassistant.config_entries import ConfigEntry
@@ -103,7 +103,7 @@ class NINADataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
-        async with timeout(10):
+        async with asyncio.timeout(10):
             try:
                 await self._nina.update()
             except ApiError as err:

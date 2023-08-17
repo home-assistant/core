@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 from http import HTTPStatus
 import json
 import logging
@@ -10,7 +11,6 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components import event
 from homeassistant.const import MATCH_ALL, STATE_ON
@@ -364,7 +364,7 @@ async def async_send_changereport_message(
 
     assert config.endpoint is not None
     try:
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -517,7 +517,7 @@ async def async_send_doorbell_event_message(
 
     assert config.endpoint is not None
     try:
-        async with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
