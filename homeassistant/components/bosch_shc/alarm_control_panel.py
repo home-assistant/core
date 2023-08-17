@@ -45,7 +45,7 @@ class IntrusionSystemAlarmControlPanel(SHCDomainEntity, AlarmControlPanelEntity)
 
     _attr_code_arm_required: bool = False
     _attr_should_poll: bool = False
-    _attr_supported_features: int = (
+    _attr_supported_features: AlarmControlPanelEntityFeature = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
