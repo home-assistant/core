@@ -1,7 +1,7 @@
 {
   "domain": "myq",
   "name": "MyQ",
-  "codeowners": ["@bdraco", "@ehendrix23"],
+  "codeowners": ["@ehendrix23"],
   "config_flow": true,
   "dhcp": [
     {

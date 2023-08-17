@@ -17,5 +17,30 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "heat_index": {
+        "name": "Heat index"
+      },
+      "wind_heading": {
+        "name": "Wind heading"
+      },
+      "wet_dry": {
+        "name": "Wet/Dry"
+      },
+      "flex": {
+        "name": "Flex"
+      },
+      "barometric_pressure": {
+        "name": "Barometric pressure"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "wind_chill": {
+        "name": "Wind chill"
+      }
+    }
   }
 }

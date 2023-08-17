@@ -1,6 +1,7 @@
 """The Airly integration."""
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from math import ceil
@@ -9,7 +10,6 @@ from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
-import async_timeout
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             str(longitude),
         ),
     ):
-        device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
+        device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
         if device_entry and entry.entry_id in device_entry.config_entries:
             new_ids = (DOMAIN, f"{latitude}-{longitude}")
             device_registry.async_update_device(
@@ -167,7 +167,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
-        async with async_timeout.timeout(20):
+        async with timeout(20):
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:

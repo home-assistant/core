@@ -302,7 +302,7 @@ async def async_get_translations(
         components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category in ("state", "entity_component"):
+    elif category in ("state", "entity_component", "services"):
         components = set(hass.config.components)
     else:
         # Only 'state' supports merging, so remove platforms from selection

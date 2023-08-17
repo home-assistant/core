@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -68,6 +68,8 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     """Shark IQ vacuum entity."""
 
     _attr_fan_speed_list = list(FAN_SPEEDS_MAP)
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.FAN_SPEED
@@ -75,7 +77,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
         | VacuumEntityFeature.STATE
-        | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
     )
@@ -86,7 +87,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
         self.sharkiq = sharkiq
-        self._attr_name = sharkiq.name
         self._attr_unique_id = sharkiq.serial_number
         self._serial_number = sharkiq.serial_number
 
@@ -122,7 +122,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             identifiers={(DOMAIN, self._serial_number)},
             manufacturer=SHARK,
             model=self.model,
-            name=self.name,
+            name=self.sharkiq.name,
             sw_version=self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),

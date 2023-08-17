@@ -46,9 +46,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RensonCoordinator
+from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
+
+OPTIONS_MAPPING = {
+    "Off": "off",
+    "Level1": "level1",
+    "Level2": "level2",
+    "Level3": "level3",
+    "Level4": "level4",
+    "Breeze": "breeze",
+    "Holiday": "holiday",
+}
 
 
 @dataclass
@@ -63,13 +73,13 @@ class RensonSensorEntityDescriptionMixin:
 class RensonSensorEntityDescription(
     SensorEntityDescription, RensonSensorEntityDescriptionMixin
 ):
-    """Description of sensor."""
+    """Description of a Renson sensor."""
 
 
 SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     RensonSensorEntityDescription(
         key="CO2_QUALITY_FIELD",
-        name="CO2 quality category",
+        translation_key="co2_quality_category",
         field=CO2_QUALITY_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
@@ -77,7 +87,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
-        name="Air quality category",
+        translation_key="air_quality_category",
         field=AIR_QUALITY_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
@@ -85,7 +95,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",
-        name="CO2 quality",
         field=CO2_FIELD,
         raw_format=True,
         state_class=SensorStateClass.MEASUREMENT,
@@ -94,7 +103,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
-        name="Air quality",
+        translation_key="air_quality",
         field=AIR_QUALITY_FIELD,
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
@@ -102,15 +111,15 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
-        name="Ventilation level",
+        translation_key="ventilation_level",
         field=CURRENT_LEVEL_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_EXTRACT_FIELD",
-        name="Total airflow out",
+        translation_key="total_airflow_out",
         field=CURRENT_AIRFLOW_EXTRACT_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -118,7 +127,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_INGOING_FIELD",
-        name="Total airflow in",
+        translation_key="total_airflow_in",
         field=CURRENT_AIRFLOW_INGOING_FIELD,
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
@@ -126,7 +135,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="OUTDOOR_TEMP_FIELD",
-        name="Outdoor air temperature",
+        translation_key="outdoor_air_temperature",
         field=OUTDOOR_TEMP_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -135,7 +144,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="INDOOR_TEMP_FIELD",
-        name="Extract air temperature",
+        translation_key="extract_air_temperature",
         field=INDOOR_TEMP_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -144,7 +153,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="FILTER_REMAIN_FIELD",
-        name="Filter change",
+        translation_key="filter_change",
         field=FILTER_REMAIN_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.DURATION,
@@ -153,7 +162,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="HUMIDITY_FIELD",
-        name="Relative humidity",
         field=HUMIDITY_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -162,15 +170,15 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="MANUAL_LEVEL_FIELD",
-        name="Manual level",
+        translation_key="manual_level",
         field=MANUAL_LEVEL_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze", "Holiday"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
     ),
     RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
-        name="Breeze temperature",
+        translation_key="breeze_temperature",
         field=BREEZE_TEMPERATURE_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -179,58 +187,48 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="BREEZE_LEVEL_FIELD",
-        name="Breeze level",
+        translation_key="breeze_level",
         field=BREEZE_LEVEL_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["Off", "Level1", "Level2", "Level3", "Level4", "Breeze"],
+        options=["off", "level1", "level2", "level3", "level4", "breeze"],
     ),
     RensonSensorEntityDescription(
         key="DAYTIME_FIELD",
-        name="Start day time",
+        translation_key="start_day_time",
         field=DAYTIME_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="NIGHTTIME_FIELD",
-        name="Start night time",
+        translation_key="start_night_time",
         field=NIGHTTIME_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
         key="DAY_POLLUTION_FIELD",
-        name="Day pollution level",
+        translation_key="day_pollution_level",
         field=DAY_POLLUTION_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Level1",
-            "Level2",
-            "Level3",
-            "Level4",
-        ],
+        options=["level1", "level2", "level3", "level4"],
     ),
     RensonSensorEntityDescription(
         key="NIGHT_POLLUTION_FIELD",
-        name="Night pollution level",
+        translation_key="co2_quality_category",
         field=NIGHT_POLLUTION_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "Level1",
-            "Level2",
-            "Level3",
-            "Level4",
-        ],
+        options=["level1", "level2", "level3", "level4"],
     ),
     RensonSensorEntityDescription(
         key="CO2_THRESHOLD_FIELD",
-        name="CO2 threshold",
+        translation_key="co2_threshold",
         field=CO2_THRESHOLD_FIELD,
         raw_format=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
@@ -238,7 +236,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="CO2_HYSTERESIS_FIELD",
-        name="CO2 hysteresis",
+        translation_key="co2_hysteresis",
         field=CO2_HYSTERESIS_FIELD,
         raw_format=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
@@ -246,7 +244,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="BYPASS_TEMPERATURE_FIELD",
-        name="Bypass activation temperature",
+        translation_key="bypass_activation_temperature",
         field=BYPASS_TEMPERATURE_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -255,7 +253,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
     ),
     RensonSensorEntityDescription(
         key="BYPASS_LEVEL_FIELD",
-        name="Bypass level",
+        translation_key="bypass_level",
         field=BYPASS_LEVEL_FIELD,
         raw_format=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -292,6 +290,10 @@ class RensonSensor(RensonEntity, SensorEntity):
 
         if self.raw_format:
             self._attr_native_value = value
+        elif self.entity_description.device_class == SensorDeviceClass.ENUM:
+            self._attr_native_value = OPTIONS_MAPPING.get(
+                self.api.parse_value(value, self.data_type), None
+            )
         else:
             self._attr_native_value = self.api.parse_value(value, self.data_type)
 
@@ -305,13 +307,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renson sensor platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list = []
-    for description in SENSORS:
-        entities.append(RensonSensor(description, api, coordinator))
+    entities = [
+        RensonSensor(description, data.api, data.coordinator) for description in SENSORS
+    ]
 
     async_add_entities(entities)

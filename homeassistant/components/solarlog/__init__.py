@@ -56,7 +56,7 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         try:
             data = await self.hass.async_add_executor_job(SolarLog, self.host)
         except (OSError, Timeout, HTTPError) as err:
-            raise update_coordinator.UpdateFailed(err)
+            raise update_coordinator.UpdateFailed(err) from err
 
         if data.time.year == 1999:
             raise update_coordinator.UpdateFailed(

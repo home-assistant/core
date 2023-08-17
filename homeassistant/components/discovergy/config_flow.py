@@ -13,16 +13,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import (
-    APP_NAME,
-    CONF_TIME_BETWEEN_UPDATE,
-    DEFAULT_TIME_BETWEEN_UPDATE,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,10 +69,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        return await self._validate_and_save(dict(entry_data), step_id="reauth")
+        return await self._validate_and_save(entry_data, step_id="reauth")
 
     async def _validate_and_save(
-        self, user_input: dict[str, Any] | None = None, step_id: str = "user"
+        self, user_input: Mapping[str, Any] | None = None, step_id: str = "user"
     ) -> FlowResult:
         """Validate user input and create config entry."""
         errors = {}
@@ -88,18 +82,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await pydiscovergy.Discovergy(
                     email=user_input[CONF_EMAIL],
                     password=user_input[CONF_PASSWORD],
-                    app_name=APP_NAME,
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
-                ).get_meters()
-
-                result = {"title": user_input[CONF_EMAIL], "data": user_input}
+                ).meters()
             except discovergyError.HTTPError:
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected error occurred while getting meters")
                 errors["base"] = "unknown"
             else:
                 if self.existing_entry:
@@ -116,52 +107,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
 
                 # set unique id to title which is the account email
-                await self.async_set_unique_id(result["title"].lower())
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=result["title"], data=result["data"]
+                    title=user_input[CONF_EMAIL], data=user_input
                 )
 
         return self.async_show_form(
             step_id=step_id,
             data_schema=make_schema(),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
-        """Create the options flow."""
-        return DiscovergyOptionsFlowHandler(config_entry)
-
-
-class DiscovergyOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Discovergy options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_TIME_BETWEEN_UPDATE,
-                        default=self.config_entry.options.get(
-                            CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-                }
-            ),
         )

@@ -108,6 +108,7 @@ async def async_setup_entry(
 class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     """Representation of a Roku media player on the network."""
 
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK

@@ -11,7 +11,7 @@
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
           "slots": "Maximum warnings per city/county",
-          "corona_filter": "Remove Corona Warnings"
+          "headline_filter": "Blacklist regex to filter warning headlines"
         }
       }
     },
@@ -29,19 +29,19 @@
       "init": {
         "title": "Options",
         "data": {
-          "_a_to_d": "City/county (A-D)",
-          "_e_to_h": "City/county (E-H)",
-          "_i_to_l": "City/county (I-L)",
-          "_m_to_q": "City/county (M-Q)",
-          "_r_to_u": "City/county (R-U)",
-          "_v_to_z": "City/county (V-Z)",
-          "slots": "Maximum warnings per city/county",
-          "corona_filter": "Remove Corona Warnings"
+          "_a_to_d": "[%key:component::nina::config::step::user::data::_a_to_d%]",
+          "_e_to_h": "[%key:component::nina::config::step::user::data::_e_to_h%]",
+          "_i_to_l": "[%key:component::nina::config::step::user::data::_i_to_l%]",
+          "_m_to_q": "[%key:component::nina::config::step::user::data::_m_to_q%]",
+          "_r_to_u": "[%key:component::nina::config::step::user::data::_r_to_u%]",
+          "_v_to_z": "[%key:component::nina::config::step::user::data::_v_to_z%]",
+          "slots": "[%key:component::nina::config::step::user::data::slots%]",
+          "headline_filter": "[%key:component::nina::config::step::user::data::headline_filter%]"
         }
       }
     },
     "error": {
-      "no_selection": "Please select at least one city/county",
+      "no_selection": "[%key:component::nina::config::error::no_selection%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }

@@ -45,5 +45,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
+    }
   }
 }

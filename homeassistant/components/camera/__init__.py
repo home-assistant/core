@@ -15,7 +15,6 @@ from random import SystemRandom
 from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
-import async_timeout
 import attr
 import voluptuous as vol
 
@@ -168,7 +167,7 @@ async def _async_get_image(
     are handled.
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             if image_bytes := await camera.async_camera_image(
                 width=width, height=height
             ):
@@ -514,8 +513,8 @@ class Camera(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.stream and not self.stream.available:
-            return self.stream.available
+        if (stream := self.stream) and not stream.available:
+            return False
         return super().available
 
     async def async_create_stream(self) -> Stream | None:
@@ -525,7 +524,7 @@ class Camera(Entity):
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
             if not self.stream:
-                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self.stream_source()
                 if not source:
                     return None

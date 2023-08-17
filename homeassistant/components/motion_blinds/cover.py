@@ -15,13 +15,13 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,7 +36,9 @@ from .const import (
     KEY_VERSION,
     MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
+    UPDATE_DELAY_STOP,
     UPDATE_INTERVAL_MOVING,
+    UPDATE_INTERVAL_MOVING_WIFI,
 )
 from .gateway import device_name
 
@@ -191,13 +193,15 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
 
         self._blind = blind
         self._api_lock = coordinator.api_lock
-        self._requesting_position = False
+        self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions = []
 
         if blind.device_type in DEVICE_TYPES_WIFI:
+            self._update_interval_moving = UPDATE_INTERVAL_MOVING_WIFI
             via_device = ()
             connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
         else:
+            self._update_interval_moving = UPDATE_INTERVAL_MOVING
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
             sw_version = None
@@ -271,23 +275,29 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
             self.current_cover_position == prev_position
             for prev_position in self._previous_positions
         ):
-            # keep updating the position @UPDATE_INTERVAL_MOVING until the position does not change.
-            async_call_later(
-                self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request
+            # keep updating the position @self._update_interval_moving until the position does not change.
+            self._requesting_position = async_call_later(
+                self.hass,
+                self._update_interval_moving,
+                self.async_scheduled_update_request,
             )
         else:
             self._previous_positions = []
-            self._requesting_position = False
+            self._requesting_position = None
 
-    async def async_request_position_till_stop(self):
-        """Request the position of the blind every UPDATE_INTERVAL_MOVING seconds until it stops moving."""
+    async def async_request_position_till_stop(self, delay=None):
+        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
+        if delay is None:
+            delay = self._update_interval_moving
+
         self._previous_positions = []
-        if self._requesting_position or self.current_cover_position is None:
+        if self.current_cover_position is None:
             return
+        if self._requesting_position is not None:
+            self._requesting_position()
 
-        self._requesting_position = True
-        async_call_later(
-            self.hass, UPDATE_INTERVAL_MOVING, self.async_scheduled_update_request
+        self._requesting_position = async_call_later(
+            self.hass, delay, self.async_scheduled_update_request
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -334,6 +344,8 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
 
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
+
 
 class MotionTiltDevice(MotionPositionDevice):
     """Representation of a Motion Blind Device."""
@@ -377,6 +389,8 @@ class MotionTiltDevice(MotionPositionDevice):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop)
+
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
@@ -507,3 +521,5 @@ class MotionTDBUDevice(MotionPositionDevice):
         """Stop the cover."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Stop, self._motor_key)
+
+        await self.async_request_position_till_stop(delay=UPDATE_DELAY_STOP)

@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
@@ -15,6 +14,7 @@ from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemp
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
 from .core import discovery
 from .core.const import (
@@ -334,7 +334,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().native_step
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str | UndefinedType | None:
         """Return the name of the number entity."""
         description = self._analog_output_cluster_handler.description
         if description is not None and len(description) > 0:
@@ -401,6 +401,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
+            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._zcl_attribute) is None
         ):
             _LOGGER.debug(
