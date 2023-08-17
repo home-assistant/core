@@ -11,7 +11,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -90,7 +90,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
         ),
     )
 
-    entity1 = LawnMowerEntity()
+    entity1 = MockLawnMowerEntity()
     entity1.entity_id = "lawn_mower.mock_lawn_mower"
 
     async def async_setup_entry_platform(
@@ -120,6 +120,10 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    entity_state = hass.states.get(entity1.entity_id)
+
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
 
 
 async def test_sync_start_mowing(hass: HomeAssistant) -> None:
