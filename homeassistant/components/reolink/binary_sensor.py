@@ -129,7 +129,10 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
 
-        if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
+        if (
+            self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS
+            and self._name_translation_key is not None
+        ):
             name = self.platform.platform_translations.get(self._name_translation_key)
             self._attr_name = f"{name} lens {self._channel}"
 
