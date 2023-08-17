@@ -192,7 +192,7 @@ class RepetierJobStartSensor(RepetierSensor):
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = dt_util.utc_from_timestamp(start).replace(tzinfo=None)
+        self._state = dt_util.utc_from_timestamp(start)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",
