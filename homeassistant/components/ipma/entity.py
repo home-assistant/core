@@ -4,8 +4,6 @@ from __future__ import annotations
 from pyipma.api import IPMA_API
 from pyipma.location import Location
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -17,9 +15,7 @@ class IPMADevice(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, api: IPMA_API, location: Location, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, api: IPMA_API, location: Location) -> None:
         """Initialize device information."""
         self._api = api
         self._location = location
@@ -32,5 +28,5 @@ class IPMADevice(Entity):
                 )
             },
             manufacturer=DOMAIN,
-            name=config_entry.data.get(CONF_NAME, location.name),
+            name=location.name,
         )
