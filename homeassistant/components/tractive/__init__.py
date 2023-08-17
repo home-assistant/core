@@ -207,6 +207,7 @@ class TractiveClient:
         while True:
             try:
                 async for event in self._client.events():
+                    _LOGGER.debug("Received event: %s", event)
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
