@@ -10,6 +10,7 @@ from homeassistant.components.recorder.auto_repairs.schema import (
     correct_db_schema_precision,
     correct_db_schema_utf8,
     validate_db_schema_precision,
+    validate_table_schema_has_correct_collation,
     validate_table_schema_supports_utf8,
 )
 from homeassistant.components.recorder.db_schema import States
@@ -102,6 +103,69 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     # Now validate the schema again
     schema_errors = await instance.async_add_executor_job(
         validate_table_schema_supports_utf8, instance, States, ("state",)
+    )
+    assert schema_errors == set()
+
+
+async def test_validate_db_schema_fix_incorrect_collation(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating DB schema with MySQL when the collation is incorrect."""
+    if not recorder_db_url.startswith("mysql://"):
+        # This problem only happens on MySQL
+        return
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    session_maker = instance.get_session
+
+    def _break_states_schema():
+        with session_scope(session=session_maker()) as session:
+            session.execute(
+                text(
+                    "ALTER TABLE states CHARACTER SET utf8mb3 COLLATE utf8_general_ci, "
+                    "LOCK=EXCLUSIVE;"
+                )
+            )
+
+    await instance.async_add_executor_job(_break_states_schema)
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_has_correct_collation, instance, States
+    )
+    assert schema_errors == {"states.utf8mb4_unicode_ci"}
+
+    # Now repair the schema
+    await instance.async_add_executor_job(
+        correct_db_schema_utf8, instance, States, schema_errors
+    )
+
+    # Now validate the schema again
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_has_correct_collation, instance, States
+    )
+    assert schema_errors == set()
+
+
+async def test_validate_db_schema_precision_correct_collation(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating DB schema when the schema is correct with the correct collation."""
+    if not recorder_db_url.startswith("mysql://"):
+        # This problem only happens on MySQL
+        return
+    await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+    instance = get_instance(hass)
+    schema_errors = await instance.async_add_executor_job(
+        validate_table_schema_has_correct_collation,
+        instance,
+        States,
     )
     assert schema_errors == set()
 

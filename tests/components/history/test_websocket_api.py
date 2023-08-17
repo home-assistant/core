@@ -1,9 +1,9 @@
 """The tests the History component websocket_api."""
 # pylint: disable=protected-access,invalid-name
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-import async_timeout
 from freezegun import freeze_time
 import pytest
 
@@ -97,7 +97,7 @@ async def test_history_during_period(
     assert len(sensor_test_history) == 3
 
     assert sensor_test_history[0]["s"] == "on"
-    assert sensor_test_history[0]["a"] == {}
+    assert "a" not in sensor_test_history[0]  # no_attributes = True
     assert isinstance(sensor_test_history[0]["lu"], float)
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
@@ -510,17 +510,13 @@ async def test_history_stream_historical_only(
             "start_time": now.timestamp(),
             "states": {
                 "sensor.four": [
-                    {"a": {}, "lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
                 "sensor.three": [
-                    {"a": {}, "lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
                 ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -563,12 +559,12 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": True,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 1
     assert response["type"] == "result"
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response == {
         "event": {
@@ -594,13 +590,13 @@ async def test_history_stream_significant_domain_historical_only(
             "minimal_response": True,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 2
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
     assert len(sensor_test_history) == 5
@@ -629,13 +625,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 3
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 
@@ -666,13 +662,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 4
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 
@@ -711,13 +707,13 @@ async def test_history_stream_significant_domain_historical_only(
             "no_attributes": False,
         }
     )
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     assert response["success"]
     assert response["id"] == 5
     assert response["type"] == "result"
 
-    async with async_timeout.timeout(3):
+    async with asyncio.timeout(3):
         response = await client.receive_json()
     sensor_test_history = response["event"]["states"]["climate.test"]
 
@@ -857,12 +853,8 @@ async def test_history_stream_live_no_attributes_minimal_response(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1220,12 +1212,8 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1306,12 +1294,8 @@ async def test_history_stream_live_with_future_end_time(
             "end_time": first_end_time,
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 1,
@@ -1505,10 +1489,10 @@ async def test_overflow_queue(
                 "start_time": now.timestamp(),
                 "states": {
                     "sensor.one": [
-                        {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
+                        {"lu": sensor_one_last_updated.timestamp(), "s": "on"}
                     ],
                     "sensor.two": [
-                        {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
+                        {"lu": sensor_two_last_updated.timestamp(), "s": "off"}
                     ],
                 },
             },
@@ -1722,9 +1706,7 @@ async def test_history_stream_for_invalid_entity_ids(
             "end_time": sensor_one_last_updated.timestamp(),
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
             },
         },
         "id": 1,
@@ -1754,12 +1736,8 @@ async def test_history_stream_for_invalid_entity_ids(
             "end_time": sensor_two_last_updated.timestamp(),
             "start_time": now.timestamp(),
             "states": {
-                "sensor.one": [
-                    {"a": {}, "lu": sensor_one_last_updated.timestamp(), "s": "on"}
-                ],
-                "sensor.two": [
-                    {"a": {}, "lu": sensor_two_last_updated.timestamp(), "s": "off"}
-                ],
+                "sensor.one": [{"lu": sensor_one_last_updated.timestamp(), "s": "on"}],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
             },
         },
         "id": 2,
@@ -1842,4 +1820,92 @@ async def test_history_stream_for_invalid_entity_ids(
         "id": 5,
         "type": "result",
         "success": False,
+    }
+
+
+async def test_history_stream_historical_only_with_start_time_state_past(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream."""
+    await async_setup_component(
+        hass,
+        "history",
+        {},
+    )
+    await async_setup_component(hass, "sensor", {})
+
+    hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
+    hass.states.get("sensor.one").last_updated
+    await async_recorder_block_till_done(hass)
+
+    await asyncio.sleep(0.00002)
+    now = dt_util.utcnow()
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.one", "second", attributes={"any": "attr"})
+    sensor_one_last_updated_second = hass.states.get("sensor.one").last_updated
+
+    await asyncio.sleep(0.00001)
+    hass.states.async_set("sensor.one", "third", attributes={"any": "attr"})
+    sensor_one_last_updated_third = hass.states.get("sensor.one").last_updated
+
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.two", "off", attributes={"any": "attr"})
+    sensor_two_last_updated = hass.states.get("sensor.two").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.three", "off", attributes={"any": "changed"})
+    sensor_three_last_updated = hass.states.get("sensor.three").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.four", "off", attributes={"any": "again"})
+    sensor_four_last_updated = hass.states.get("sensor.four").last_updated
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
+    await async_wait_recording_done(hass)
+
+    end_time = dt_util.utcnow()
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["sensor.one", "sensor.two", "sensor.three", "sensor.four"],
+            "start_time": now.isoformat(),
+            "end_time": end_time.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": True,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": sensor_four_last_updated.timestamp(),
+            "start_time": now.timestamp(),
+            "states": {
+                "sensor.four": [
+                    {"lu": sensor_four_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.one": [
+                    {
+                        "lu": now.timestamp(),
+                        "s": "first",
+                    },  # should use start time state
+                    {"lu": sensor_one_last_updated_second.timestamp(), "s": "second"},
+                    {"lu": sensor_one_last_updated_third.timestamp(), "s": "third"},
+                ],
+                "sensor.three": [
+                    {"lu": sensor_three_last_updated.timestamp(), "s": "off"}
+                ],
+                "sensor.two": [{"lu": sensor_two_last_updated.timestamp(), "s": "off"}],
+            },
+        },
+        "id": 1,
+        "type": "event",
     }

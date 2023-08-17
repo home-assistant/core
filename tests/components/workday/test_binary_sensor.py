@@ -79,6 +79,34 @@ async def test_setup(
     }
 
 
+async def test_setup_from_import(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup from various configs."""
+    freezer.move_to(datetime(2022, 4, 15, 12, tzinfo=UTC))  # Monday
+    await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "DE",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state.state == "off"
+    assert state.attributes == {
+        "friendly_name": "Workday Sensor",
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+    }
+
+
 async def test_setup_with_invalid_province_from_yaml(hass: HomeAssistant) -> None:
     """Test setup invalid province with import."""
 

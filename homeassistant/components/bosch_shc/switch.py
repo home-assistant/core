@@ -111,7 +111,7 @@ async def async_setup_entry(
             )
         )
 
-    for switch in session.device_helper.light_switches:
+    for switch in session.device_helper.light_switches_bsm:
         entities.append(
             SHCSwitch(
                 device=switch,

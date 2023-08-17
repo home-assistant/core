@@ -8,11 +8,9 @@ from typing import Any, cast
 import attr
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
-from .frame import report
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
 
@@ -280,19 +278,6 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = AreaRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
-
-
-@bind_hass
-async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
-    """Get area registry.
-
-    This is deprecated and will be removed in the future. Use async_get instead.
-    """
-    report(
-        "uses deprecated `async_get_registry` to access area registry, use async_get"
-        " instead"
-    )
-    return async_get(hass)
 
 
 def normalize_area_name(area_name: str) -> str:

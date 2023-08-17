@@ -8,6 +8,11 @@
           "country": "Country"
         }
       },
+      "choose_contract": {
+        "data": {
+          "contract": "Contract"
+        }
+      },
       "reauth_confirm": {
         "data": {
           "description": "Re-authenticate with Prosegur account.",
@@ -24,6 +29,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "services": {
+    "request_image": {
+      "name": "Request camera image",
+      "description": "Requests a new image from a Prosegur camera."
     }
   }
 }

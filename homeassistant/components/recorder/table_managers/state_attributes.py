@@ -11,11 +11,11 @@ from homeassistant.core import Event
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder
@@ -114,7 +114,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         with session.no_autoflush:
             for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
                 for attributes_id, shared_attrs in execute_stmt_lambda_element(
-                    session, get_shared_attributes(hashs_chunk)
+                    session, get_shared_attributes(hashs_chunk), orm_rows=False
                 ):
                     results[shared_attrs] = self._id_map[shared_attrs] = cast(
                         int, attributes_id

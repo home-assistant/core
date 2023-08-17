@@ -161,9 +161,9 @@ async def test_setup_fails(
                     "command_topic": "test_light_rgb/set",
                     "command_on_template": "on",
                     "command_off_template": "off",
-                    "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[4].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[4].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[4].split("-")[2] }}',
                 }
             }
         }
@@ -181,6 +181,45 @@ async def test_rgb_light(
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_light/set",
+                    "command_on_template": "on,{{ brightness|d }},{{ color_temp|d }}",
+                    "command_off_template": "off",
+                    "brightness_template": "{{ value.split(',')[1] }}",
+                    "color_temp_template": "{{ value.split(',')[2] }}",
+                }
+            }
+        }
+    ],
+)
+async def test_single_color_mode(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the color mode when we only have one supported color_mode."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    await common.async_turn_on(hass, "light.test", brightness=50, color_temp=192)
+    async_fire_mqtt_message(hass, "test_light", "on,50,192")
+    color_modes = [light.ColorMode.COLOR_TEMP]
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
+    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
+    assert state.attributes.get(light.ATTR_COLOR_MODE) == color_modes[0]
 
 
 @pytest.mark.parametrize(
@@ -377,9 +416,9 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
                     "optimistic": True,
                     "state_template": '{{ value.split(",")[0] }}',
                     "color_temp_template": '{{ value.split(",")[2] }}',
-                    "red_template": '{{ value.split(",")[3].' 'split("-")[0] }}',
-                    "green_template": '{{ value.split(",")[3].' 'split("-")[1] }}',
-                    "blue_template": '{{ value.split(",")[3].' 'split("-")[2] }}',
+                    "red_template": '{{ value.split(",")[3].split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[3].split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[3].split("-")[2] }}',
                     "effect_template": '{{ value.split(",")[4] }}',
                     "qos": 2,
                 }
@@ -1315,7 +1354,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

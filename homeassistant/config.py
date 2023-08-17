@@ -96,10 +96,6 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
 
-# Text to speech
-tts:
-  - platform: google_translate
-
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
 scene: !include {SCENE_CONFIG_PATH}
@@ -341,7 +337,6 @@ async def async_create_default_config(hass: HomeAssistant) -> bool:
 
     Return if creation was successful.
     """
-    assert hass.config.config_dir
     return await hass.async_add_executor_job(
         _write_default_config, hass.config.config_dir
     )
@@ -394,10 +389,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> dict:
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
-    if hass.config.config_dir is None:
-        secrets = None
-    else:
-        secrets = Secrets(Path(hass.config.config_dir))
+    secrets = Secrets(Path(hass.config.config_dir))
 
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(

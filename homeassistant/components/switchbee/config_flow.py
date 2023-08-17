@@ -46,6 +46,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
         raise CannotConnect from exp
 
+    if api.unique_id:
+        return api.unique_id
+
     assert api.mac is not None
     return format_mac(api.mac)
 
@@ -53,7 +56,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SwitchBee Smart Home."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            mac_formatted = await validate_input(self.hass, user_input)
+            unique_id = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -77,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         else:
-            await self.async_set_unique_id(mac_formatted)
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 

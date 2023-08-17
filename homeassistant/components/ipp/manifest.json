@@ -8,6 +8,6 @@
   "iot_class": "local_polling",
   "loggers": ["deepmerge", "pyipp"],
   "quality_scale": "platinum",
-  "requirements": ["pyipp==0.12.1"],
+  "requirements": ["pyipp==0.14.3"],
   "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
 }

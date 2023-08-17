@@ -4,7 +4,10 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.components.weather import (
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -24,14 +27,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_DEW_POINT,
+    ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CLOUDS,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -44,6 +52,7 @@ from .const import (
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DEFAULT_NAME,
@@ -64,6 +73,9 @@ FORECAST_MAP = {
     ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
     ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_API_FORECAST_CLOUDS: ATTR_FORECAST_CLOUD_COVERAGE,
+    ATTR_API_FORECAST_HUMIDITY: ATTR_FORECAST_HUMIDITY,
+    ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE: ATTR_FORECAST_NATIVE_APPARENT_TEMP,
 }
 
 
@@ -117,6 +129,16 @@ class OpenWeatherMapWeather(WeatherEntity):
         return self._weather_coordinator.data[ATTR_API_CONDITION]
 
     @property
+    def cloud_coverage(self) -> float | None:
+        """Return the Cloud coverage in %."""
+        return self._weather_coordinator.data[ATTR_API_CLOUDS]
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return self._weather_coordinator.data[ATTR_API_FEELS_LIKE_TEMPERATURE]
+
+    @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self._weather_coordinator.data[ATTR_API_TEMPERATURE]
@@ -130,6 +152,16 @@ class OpenWeatherMapWeather(WeatherEntity):
     def humidity(self) -> float | None:
         """Return the humidity."""
         return self._weather_coordinator.data[ATTR_API_HUMIDITY]
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self._weather_coordinator.data[ATTR_API_DEW_POINT]
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        return self._weather_coordinator.data[ATTR_API_WIND_GUST]
 
     @property
     def native_wind_speed(self) -> float | None:

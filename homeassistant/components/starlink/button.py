@@ -58,7 +58,6 @@ class StarlinkButtonEntity(StarlinkEntity, ButtonEntity):
 BUTTONS = [
     StarlinkButtonEntityDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_fn=lambda coordinator: coordinator.async_reboot_starlink(),

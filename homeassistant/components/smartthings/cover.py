@@ -62,7 +62,11 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Must have one of the min_required
     if any(capability in capabilities for capability in min_required):
         # Return all capabilities supported/consumed
-        return min_required + [Capability.battery, Capability.switch_level]
+        return min_required + [
+            Capability.battery,
+            Capability.switch_level,
+            Capability.window_shade_level,
+        ]
 
     return None
 
@@ -74,12 +78,16 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         """Initialize the cover class."""
         super().__init__(device)
         self._device_class = None
+        self._current_cover_position = None
         self._state = None
         self._state_attrs = None
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        if Capability.switch_level in device.capabilities:
+        if (
+            Capability.switch_level in device.capabilities
+            or Capability.window_shade_level in device.capabilities
+        ):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -103,7 +111,12 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         if not self.supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
-        await self._device.set_level(kwargs[ATTR_POSITION], 0)
+        if Capability.window_shade_level in self._device.capabilities:
+            await self._device.set_window_shade_level(
+                kwargs[ATTR_POSITION], set_status=False
+            )
+        else:
+            await self._device.set_level(kwargs[ATTR_POSITION], set_status=False)
 
     async def async_update(self) -> None:
         """Update the attrs of the cover."""
@@ -116,6 +129,11 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         elif Capability.garage_door_control in self._device.capabilities:
             self._device_class = CoverDeviceClass.GARAGE
             self._state = VALUE_TO_STATE.get(self._device.status.door)
+
+        if Capability.window_shade_level in self._device.capabilities:
+            self._current_cover_position = self._device.status.shade_level
+        elif Capability.switch_level in self._device.capabilities:
+            self._current_cover_position = self._device.status.level
 
         self._state_attrs = {}
         battery = self._device.status.attributes[Attribute.battery].value
@@ -142,9 +160,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if not self.supported_features & CoverEntityFeature.SET_POSITION:
-            return None
-        return self._device.status.level
+        return self._current_cover_position
 
     @property
     def device_class(self) -> CoverDeviceClass | None:

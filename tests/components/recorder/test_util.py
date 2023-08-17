@@ -893,15 +893,16 @@ def test_execute_stmt_lambda_element(
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
+    all_calls = 0
 
     class MockExecutor:
         def __init__(self, stmt):
             assert isinstance(stmt, StatementLambdaElement)
-            self.calls = 0
 
         def all(self):
-            self.calls += 1
-            if self.calls == 2:
+            nonlocal all_calls
+            all_calls += 1
+            if all_calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
@@ -922,6 +923,16 @@ def test_execute_stmt_lambda_element(
         # Time window >= 2 days, we get a ChunkedIteratorResult
         rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.metadata_id == metadata_id
+
+        # Time window >= 2 days, we should not get a ChunkedIteratorResult
+        # because orm_rows=False
+        rows = util.execute_stmt_lambda_element(
+            session, stmt, now, one_week_from_now, orm_rows=False
+        )
+        assert not isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
         assert row.metadata_id == metadata_id

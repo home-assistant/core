@@ -89,7 +89,7 @@ class ZHAGroupMember(LogMixin):
                 entity_ref.reference_id,
             )._asdict()
             for entity_ref in zha_device_registry.get(self.device.ieee)
-            if list(entity_ref.cluster_channels.values())[
+            if list(entity_ref.cluster_handlers.values())[
                 0
             ].cluster.endpoint.endpoint_id
             == self.endpoint_id

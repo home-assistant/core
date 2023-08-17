@@ -28,8 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -136,6 +135,14 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Daily original condition",
         entity_registry_enabled_default=False,
         data_path="today_forecast:weather12H:desc",
+    ),
+    MeteoFranceSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_path="current_forecast:humidity",
     ),
 )
 
@@ -247,11 +254,7 @@ class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], Sensor
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert (
-            self.platform
-            and self.platform.config_entry
-            and self.platform.config_entry.unique_id
-        )
+        assert self.platform.config_entry and self.platform.config_entry.unique_id
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
@@ -275,11 +278,10 @@ class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], Sensor
                 value = data[0][path[1]]
 
         # General case
+        elif len(path) == 3:
+            value = data[path[1]][path[2]]
         else:
-            if len(path) == 3:
-                value = data[path[1]][path[2]]
-            else:
-                value = data[path[1]]
+            value = data[path[1]]
 
         if self.entity_description.key in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h

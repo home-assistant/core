@@ -34,6 +34,7 @@ async def test_diagnostics(
         },
         "data": {
             "energy_production_today": 100000,
+            "energy_production_today_remaining": 50000,
             "energy_production_tomorrow": 200000,
             "energy_current_hour": 800000,
             "power_production_now": 300000,
@@ -45,7 +46,7 @@ async def test_diagnostics(
                 "2021-06-27T13:00:00-07:00": 20,
                 "2022-06-27T13:00:00-07:00": 200,
             },
-            "wh_hours": {
+            "wh_period": {
                 "2021-06-27T13:00:00-07:00": 30,
                 "2022-06-27T13:00:00-07:00": 300,
             },

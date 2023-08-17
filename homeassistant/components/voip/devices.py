@@ -139,6 +139,7 @@ class VoIPDevices:
             manufacturer=manuf,
             model=model,
             sw_version=fw_version,
+            configuration_url=f"http://{call_info.caller_ip}",
         )
         voip_device = self.devices[voip_id] = VoIPDevice(
             voip_id=voip_id,

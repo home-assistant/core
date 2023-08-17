@@ -165,7 +165,11 @@ async def test_set_config_unique_id(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"token": {"userid": "my_user_id"}, "profile": person0.profile},
+        data={
+            "token": {"userid": "my_user_id"},
+            "auth_implementation": "withings",
+            "profile": person0.profile,
+        },
     )
 
     with patch("homeassistant.components.withings.async_get_data_manager") as mock:

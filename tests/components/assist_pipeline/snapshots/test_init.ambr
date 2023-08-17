@@ -1,10 +1,10 @@
 # serializer version: 1
-# name: test_pipeline_from_audio_stream
+# name: test_pipeline_from_audio_stream_auto
   list([
     dict({
       'data': dict({
-        'language': 'en-US',
-        'pipeline': 'en-US',
+        'language': 'en',
+        'pipeline': <ANY>,
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -32,8 +32,100 @@
     }),
     dict({
       'data': dict({
+        'conversation_id': None,
+        'device_id': None,
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
+        'language': 'en',
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'conversation_id': None,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'code': 'no_intent_match',
+            }),
+            'language': 'en',
+            'response_type': 'error',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': "Sorry, I couldn't understand that",
+              }),
+            }),
+          }),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'test',
+        'language': 'en-US',
+        'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'james_earl_jones',
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_from_audio_stream_entity
+  list([
+    dict({
+      'data': dict({
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'stt.mock_stt',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': 'en-US',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'test transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': None,
+        'device_id': None,
+        'engine': 'homeassistant',
+        'intent_input': 'test transcript',
+        'language': 'en-US',
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -63,16 +155,218 @@
     dict({
       'data': dict({
         'engine': 'test',
+        'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'Arnold Schwarzenegger',
       }),
       'type': <PipelineEventType.TTS_START: 'tts-start'>,
     }),
     dict({
       'data': dict({
         'tts_output': dict({
-          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US",
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
           'mime_type': 'audio/mpeg',
-          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_-_test.mp3',
+          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_from_audio_stream_legacy
+  list([
+    dict({
+      'data': dict({
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'test',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': 'en-US',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'test transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': None,
+        'device_id': None,
+        'engine': 'homeassistant',
+        'intent_input': 'test transcript',
+        'language': 'en-US',
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'conversation_id': None,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'code': 'no_intent_match',
+            }),
+            'language': 'en-US',
+            'response_type': 'error',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': "Sorry, I couldn't understand that",
+              }),
+            }),
+          }),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'test',
+        'language': 'en-US',
+        'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'Arnold Schwarzenegger',
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=Arnold+Schwarzenegger",
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_2657c1a8ee_test.mp3',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_pipeline_from_audio_stream_wake_word
+  list([
+    dict({
+      'data': dict({
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'wake_word.test',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.WAKE_WORD_START: 'wake_word-start'>,
+    }),
+    dict({
+      'data': dict({
+        'wake_word_output': dict({
+          'timestamp': 2000,
+          'ww_id': 'test_ww',
+        }),
+      }),
+      'type': <PipelineEventType.WAKE_WORD_END: 'wake_word-end'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'test',
+        'metadata': dict({
+          'bit_rate': <AudioBitRates.BITRATE_16: 16>,
+          'channel': <AudioChannels.CHANNEL_MONO: 1>,
+          'codec': <AudioCodecs.PCM: 'pcm'>,
+          'format': <AudioFormats.WAV: 'wav'>,
+          'language': 'en-US',
+          'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+        }),
+      }),
+      'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'stt_output': dict({
+          'text': 'test transcript',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': None,
+        'device_id': None,
+        'engine': 'homeassistant',
+        'intent_input': 'test transcript',
+        'language': 'en',
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'conversation_id': None,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'code': 'no_intent_match',
+            }),
+            'language': 'en',
+            'response_type': 'error',
+            'speech': dict({
+              'plain': dict({
+                'extra_data': None,
+                'speech': "Sorry, I couldn't understand that",
+              }),
+            }),
+          }),
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'engine': 'test',
+        'language': 'en-US',
+        'tts_input': "Sorry, I couldn't understand that",
+        'voice': 'james_earl_jones',
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
         }),
       }),
       'type': <PipelineEventType.TTS_END: 'tts-end'>,

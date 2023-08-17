@@ -13,7 +13,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .helpers import trigger_plex_update, wait_for_debouncer
 
@@ -125,7 +125,7 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexTVEpisode()]
@@ -196,7 +196,7 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexMovie()]
@@ -214,7 +214,7 @@ async def test_library_sensor_values(
         async_dispatcher_send(
             hass, PLEX_UPDATE_LIBRARY_SIGNAL.format(mock_plex_server.machine_identifier)
         )
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
@@ -232,7 +232,7 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexMusic()]

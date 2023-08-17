@@ -14,6 +14,12 @@ from tests.components.image_processing import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 async def setup_openalpr_cloud(hass):
     """Set up openalpr cloud."""

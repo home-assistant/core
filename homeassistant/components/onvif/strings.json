@@ -4,11 +4,14 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "onvif_error": "Error setting up ONVIF device.  Check logs for more information.",
       "no_h264": "There were no H264 streams available.  Check the profile configuration on your device.",
-      "no_mac": "Could not configure unique ID for ONVIF device."
+      "no_mac": "Could not configure unique ID for ONVIF device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "onvif_error": "Error setting up ONVIF device: {error}. Check logs for more information.",
+      "auth_failed": "Could not authenticate: {error}",
+      "no_onvif_service": "No ONVIF service found. Check that the port number is correct.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
@@ -41,6 +44,14 @@
         "data": {
           "include": "Create camera entity"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate the ONVIF device",
+        "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     }
   },
@@ -50,9 +61,50 @@
         "data": {
           "extra_arguments": "Extra FFMPEG arguments",
           "rtsp_transport": "RTSP transport mechanism",
-          "use_wallclock_as_timestamps": "Use wall clock as timestamps"
+          "use_wallclock_as_timestamps": "Use wall clock as timestamps",
+          "enable_webhooks": "Enable Webhooks"
         },
         "title": "ONVIF Device Options"
+      }
+    }
+  },
+  "services": {
+    "ptz": {
+      "name": "PTZ",
+      "description": "If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.",
+      "fields": {
+        "tilt": {
+          "name": "Tilt",
+          "description": "Tilt direction."
+        },
+        "pan": {
+          "name": "Pan",
+          "description": "Pan direction."
+        },
+        "zoom": {
+          "name": "Zoom",
+          "description": "Zoom."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "Distance coefficient. Sets how much PTZ should be executed in one request."
+        },
+        "speed": {
+          "name": "Speed",
+          "description": "Speed coefficient. Sets how fast PTZ will be executed."
+        },
+        "continuous_duration": {
+          "name": "Continuous duration",
+          "description": "Set ContinuousMove delay in seconds before stopping the move."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "PTZ preset profile token. Sets the preset profile token which is executed with GotoPreset."
+        },
+        "move_mode": {
+          "name": "Move Mode",
+          "description": "PTZ moving mode."
+        }
       }
     }
   }

@@ -1,5 +1,4 @@
 """Test VoIP devices."""
-
 from __future__ import annotations
 
 from voip_utils import CallInfo
@@ -7,20 +6,22 @@ from voip_utils import CallInfo
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_device_registry_info(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     call_info: CallInfo,
-    device_registry: DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test info in device registry."""
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device is not None
     assert device.name == call_info.caller_ip
     assert device.manufacturer == "Grandstream"
@@ -33,7 +34,9 @@ async def test_device_registry_info(
 
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device.sw_version == "2.0.0.0"
 
 
@@ -41,14 +44,16 @@ async def test_device_registry_info_from_unknown_phone(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     call_info: CallInfo,
-    device_registry: DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test info in device registry from unknown phone."""
     call_info.headers["user-agent"] = "Unknown"
     voip_device = voip_devices.async_get_or_create(call_info)
     assert not voip_device.async_allow_call(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, call_info.caller_ip)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, call_info.caller_ip)}
+    )
     assert device.manufacturer is None
     assert device.model == "Unknown"
     assert device.sw_version is None
@@ -58,7 +63,7 @@ async def test_remove_device_registry_entry(
     hass: HomeAssistant,
     voip_device: VoIPDevice,
     voip_devices: VoIPDevices,
-    device_registry: DeviceRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device registry entry."""
     assert voip_device.voip_id in voip_devices.devices

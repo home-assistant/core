@@ -8,7 +8,6 @@ from typing import Any
 
 from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
-from pyfibaro.fibaro_scene import SceneModel
 from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +26,8 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
@@ -278,24 +278,18 @@ class FibaroController:
             return self._device_infos[device.parent_fibaro_id]
         return DeviceInfo(identifiers={(DOMAIN, self.hub_serial)})
 
+    def get_room_name(self, room_id: int) -> str | None:
+        """Get the room name by room id."""
+        assert self._room_map
+        room = self._room_map.get(room_id)
+        return room.name if room else None
+
     def _read_scenes(self):
         scenes = self._client.read_scenes()
         for device in scenes:
             device.fibaro_controller = self
-            if device.room_id == 0:
-                room_name = "Unknown"
-            else:
-                room_name = self._room_map[device.room_id].name
-            device.room_name = room_name
-            device.friendly_name = f"{room_name} {device.name}"
-            device.ha_id = (
-                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
-            )
-            device.unique_id_str = (
-                f"{slugify(self.hub_serial)}.scene.{device.fibaro_id}"
-            )
             self.fibaro_devices[Platform.SCENE].append(device)
-            _LOGGER.debug("%s scene -> %s", device.ha_id, device)
+            _LOGGER.debug("Scene -> %s", device)
 
     def _read_devices(self):
         """Read and process the device list."""
@@ -425,7 +419,7 @@ class FibaroDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, fibaro_device: DeviceModel | SceneModel) -> None:
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the device."""
         self.fibaro_device = fibaro_device
         self.controller = fibaro_device.fibaro_controller
@@ -433,8 +427,7 @@ class FibaroDevice(Entity):
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
 
-        if isinstance(fibaro_device, DeviceModel):
-            self._attr_device_info = self.controller.get_device_info(fibaro_device)
+        self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
         if not fibaro_device.visible:
             self._attr_entity_registry_visible_default = False
@@ -519,13 +512,17 @@ class FibaroDevice(Entity):
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}
 
-        if isinstance(self.fibaro_device, DeviceModel):
-            if self.fibaro_device.has_battery_level:
-                attr[ATTR_BATTERY_LEVEL] = self.fibaro_device.battery_level
-            if self.fibaro_device.has_armed:
-                attr[ATTR_ARMED] = self.fibaro_device.armed
+        if self.fibaro_device.has_battery_level:
+            attr[ATTR_BATTERY_LEVEL] = self.fibaro_device.battery_level
+        if self.fibaro_device.has_armed:
+            attr[ATTR_ARMED] = self.fibaro_device.armed
 
         return attr
+
+    def update(self) -> None:
+        """Update the available state of the entity."""
+        if isinstance(self.fibaro_device, DeviceModel) and self.fibaro_device.has_dead:
+            self._attr_available = not self.fibaro_device.dead
 
 
 class FibaroConnectFailed(HomeAssistantError):
