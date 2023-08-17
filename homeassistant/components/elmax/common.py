@@ -1,11 +1,11 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from logging import Logger
 
-import async_timeout
 from elmax_api.exceptions import (
     ElmaxApiError,
     ElmaxBadLoginError,
@@ -94,7 +94,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
                 # Retrieve the panel online status first
                 panels = await self._client.list_control_panels()
                 panel = next(

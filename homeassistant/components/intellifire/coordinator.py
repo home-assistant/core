@@ -1,10 +1,10 @@
 """The IntelliFire integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
 from intellifire4py import IntellifirePollData
 from intellifire4py.intellifire import IntellifireAPILocal
 
@@ -38,7 +38,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             await self._api.start_background_polling()
 
             # Don't return uninitialized poll data
-            async with timeout(15):
+            async with asyncio.timeout(15):
                 try:
                     await self._api.poll()
                 except (ConnectionError, ClientConnectionError) as exception:

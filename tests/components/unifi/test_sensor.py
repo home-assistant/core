@@ -278,6 +278,27 @@ PDU_DEVICE_1 = {
     "x_has_ssh_hostkey": True,
 }
 
+PDU_OUTLETS_UPDATE_DATA = [
+    {
+        "index": 1,
+        "relay_state": True,
+        "cycle_enabled": False,
+        "name": "USB Outlet 1",
+        "outlet_caps": 1,
+    },
+    {
+        "index": 2,
+        "relay_state": True,
+        "cycle_enabled": False,
+        "name": "Outlet 2",
+        "outlet_caps": 3,
+        "outlet_voltage": "119.644",
+        "outlet_current": "0.935",
+        "outlet_power": "123.45",
+        "outlet_power_factor": "0.659",
+    },
+]
+
 
 async def test_no_clients(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -719,31 +740,69 @@ async def test_wlan_client_sensors(
     assert hass.states.get("sensor.ssid_1").state == "0"
 
 
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "expected_unique_id",
+        "expected_value",
+        "changed_data",
+        "expected_update_value",
+    ),
+    [
+        (
+            "dummy_usp_pdu_pro_outlet_2_outlet_power",
+            "outlet_power-01:02:03:04:05:ff_2",
+            "73.827",
+            {"outlet_table": PDU_OUTLETS_UPDATE_DATA},
+            "123.45",
+        ),
+        (
+            "dummy_usp_pdu_pro_ac_power_budget",
+            "ac_power_budget-01:02:03:04:05:ff",
+            "1875.000",
+            None,
+            None,
+        ),
+        (
+            "dummy_usp_pdu_pro_ac_power_consumption",
+            "ac_power_conumption-01:02:03:04:05:ff",
+            "201.683",
+            {"outlet_ac_power_consumption": "456.78"},
+            "456.78",
+        ),
+    ],
+)
 async def test_outlet_power_readings(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_unifi_websocket,
+    entity_id: str,
+    expected_unique_id: str,
+    expected_value: any,
+    changed_data: dict | None,
+    expected_update_value: any,
 ) -> None:
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
     ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
-    assert ent_reg_entry.unique_id == "outlet_power-01:02:03:04:05:ff_2"
+    ent_reg_entry = ent_reg.async_get(f"sensor.{entity_id}")
+    assert ent_reg_entry.unique_id == expected_unique_id
     assert ent_reg_entry.entity_category is EntityCategory.DIAGNOSTIC
 
-    outlet_2 = hass.states.get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
-    assert outlet_2.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert outlet_2.state == "73.827"
+    sensor_data = hass.states.get(f"sensor.{entity_id}")
+    assert sensor_data.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
+    assert sensor_data.state == expected_value
 
-    # Verify state update
-    pdu_device_state_update = deepcopy(PDU_DEVICE_1)
+    if changed_data is not None:
+        updated_device_data = deepcopy(PDU_DEVICE_1)
+        updated_device_data.update(changed_data)
 
-    pdu_device_state_update["outlet_table"][1]["outlet_power"] = "123.45"
+        mock_unifi_websocket(message=MessageKey.DEVICE, data=updated_device_data)
+        await hass.async_block_till_done()
 
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=pdu_device_state_update)
-    await hass.async_block_till_done()
-
-    outlet_2 = hass.states.get("sensor.dummy_usp_pdu_pro_outlet_2_outlet_power")
-    assert outlet_2.state == "123.45"
+        sensor_data = hass.states.get(f"sensor.{entity_id}")
+        assert sensor_data.state == expected_update_value
