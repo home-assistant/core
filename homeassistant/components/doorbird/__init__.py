@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token: str = door_station_config.get(CONF_TOKEN, config_entry_id)
     custom_url: str | None = door_station_config.get(CONF_CUSTOM_URL)
     name: str | None = door_station_config.get(CONF_NAME)
-    events = door_station_config.get(CONF_EVENTS, [])
+    events = entry.options.get(CONF_EVENTS, [])
     event_entity_ids: dict[str, str] = {}
     door_station = ConfiguredDoorBird(device, name, custom_url, token, event_entity_ids)
     door_bird_data = DoorBirdData(door_station, info, event_entity_ids)
