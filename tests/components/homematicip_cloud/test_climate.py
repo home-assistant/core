@@ -224,6 +224,19 @@ async def test_hmip_heating_group_heat(
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
 
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": entity_id, "preset_mode": PRESET_ECO},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 25
+    assert hmip_device.mock_calls[-1][0] == "set_control_mode"
+    assert hmip_device.mock_calls[-1][1] == ("ECO",)
+    await async_manipulate_test_data(hass, hmip_device, "controlMode", "ECO")
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+
     await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.1)
     ha_state = hass.states.get(entity_id)
