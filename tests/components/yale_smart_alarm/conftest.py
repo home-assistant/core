@@ -23,15 +23,6 @@ ENTRY_CONFIG = {
 OPTIONS_CONFIG = {"lock_code_digits": 6}
 
 
-class MockYaleSmartAlarmClient:
-    """Mocked YaleSmartAlarmClient."""
-
-    def __init__(self, username: str, password: str, area_id: int = 1) -> None:
-        """Initialize module."""
-        self.auth = None
-        self.area_id = area_id
-
-
 @pytest.fixture
 async def load_int(hass: HomeAssistant, load_json: dict[str, Any]) -> MockConfigEntry:
     """Set up the Sensibo integration in Home Assistant."""
