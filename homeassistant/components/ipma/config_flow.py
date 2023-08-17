@@ -1,53 +1,43 @@
 """Config flow to configure IPMA component."""
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME
+from .const import DOMAIN
 
 
-class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class IpmaFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for IPMA component."""
 
     VERSION = 1
 
-    def __init__(self):
-        """Init IpmaFlowHandler."""
-        self._errors = {}
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        self._errors = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                }
-            )
+            self._async_abort_entries_match(user_input)
 
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
-        # default location is set hass configuration
-        return await self._show_config_form(
-            name=HOME_LOCATION_NAME,
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-        )
-
-    async def _show_config_form(self, name=None, latitude=None, longitude=None):
-        """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                    }
+                ),
                 {
-                    vol.Required(CONF_NAME, default=name): str,
-                    vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-                    vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-                }
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                },
             ),
-            errors=self._errors,
         )

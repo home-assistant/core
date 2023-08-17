@@ -36,9 +36,8 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home"
+    assert result["title"] == ""
     assert result["data"] == {
-        CONF_NAME: "Home",
         CONF_LONGITUDE: 0,
         CONF_LATITUDE: 0,
     }
