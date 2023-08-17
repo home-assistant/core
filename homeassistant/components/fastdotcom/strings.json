@@ -1,8 +1,12 @@
 {
-  "services": {
-    "speedtest": {
-      "name": "Speed test",
-      "description": "Immediately executs a speed test with Fast.com."
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

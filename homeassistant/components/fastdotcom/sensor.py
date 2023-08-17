@@ -71,7 +71,7 @@ class SpeedtestSensor(
     def __init__(self, coordinator: FastdotcomDataUpdateCoordindator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{DOMAIN}+str(random.getrandbits(32))"
+        self._attr_unique_id = f"{DOMAIN}"
 
     @property
     # Disabling the pylint, since it's an old function of fastdotcom that's being used
