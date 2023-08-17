@@ -199,7 +199,6 @@ class Remote:
 
     async def async_turn_on(self):
         """Turn on the TV."""
-        _LOGGER.info("Turning on the tv via telnet")
         if self.state != STATE_ON:
             await self.async_send_key(Keys.power)
             await self.async_update()
