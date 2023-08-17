@@ -51,8 +51,9 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
         ]
     ),
     "disable_error_code": ", ".join(["annotation-unchecked"]),
-    # Strict_concatenate breaks passthrough ParamSpec typing
-    "strict_concatenate": "false",
+    # Impractical in real code
+    # E.g. this breaks passthrough ParamSpec typing with Concatenate
+    "extra_checks": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
