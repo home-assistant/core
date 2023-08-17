@@ -87,6 +87,7 @@ def setup_platform(
     calendars = client.principal().calendars()
 
     calendar_devices = []
+    device_id: str | None
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others
@@ -105,7 +106,12 @@ def setup_platform(
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEntity(
-                    name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
+                    name=name,
+                    calendar=calendar,
+                    entity_id=entity_id,
+                    days=days,
+                    all_day=True,
+                    search=cust_calendar[CONF_SEARCH],
                 )
             )
 
@@ -126,7 +132,12 @@ class WebDavCalendarEntity(CalendarEntity):
 
     def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, days, all_day, search)
+        self.data = WebDavCalendarData(
+            calendar=calendar,
+            days=days,
+            include_all_day=all_day,
+            search=search,
+        )
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
@@ -347,10 +358,8 @@ class WebDavCalendarData:
         """Return the end datetime as determined by dtend or duration."""
         if hasattr(obj, "dtend"):
             enddate = obj.dtend.value
-
         elif hasattr(obj, "duration"):
             enddate = obj.dtstart.value + obj.duration.value
-
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
 

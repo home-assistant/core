@@ -84,6 +84,25 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
     ),
+    RoborockSwitchDescription(
+        cache_key=CacheableAttribute.valley_electricity_timer,
+        update_value=lambda cache, value: cache.update_value(
+            [
+                cache.value.get("start_hour"),
+                cache.value.get("start_minute"),
+                cache.value.get("end_hour"),
+                cache.value.get("end_minute"),
+            ]
+        )
+        if value
+        else cache.close_value(),
+        attribute="enabled",
+        key="off_peak_switch",
+        translation_key="off_peak_switch",
+        icon="mdi:power-plug",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 

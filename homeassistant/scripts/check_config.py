@@ -11,7 +11,7 @@ import os
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant import core
+from homeassistant import core, loader
 from homeassistant.config import get_default_config_dir
 from homeassistant.config_entries import ConfigEntries
 from homeassistant.exceptions import HomeAssistantError
@@ -231,8 +231,8 @@ def check(config_dir, secrets=False):
 
 async def async_check_config(config_dir):
     """Check the HA config."""
-    hass = core.HomeAssistant()
-    hass.config.config_dir = config_dir
+    hass = core.HomeAssistant(config_dir)
+    loader.async_setup(hass)
     hass.config_entries = ConfigEntries(hass, {})
     await ar.async_load(hass)
     await dr.async_load(hass)

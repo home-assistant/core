@@ -4,7 +4,6 @@ import io
 import logging
 
 import aiohttp
-import async_timeout
 from colorthief import ColorThief
 from PIL import UnidentifiedImageError
 import voluptuous as vol
@@ -120,7 +119,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await session.get(url)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:

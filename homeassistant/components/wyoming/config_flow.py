@@ -50,14 +50,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
-        # ASR = automated speech recognition (STT)
+        # ASR = automated speech recognition (speech-to-text)
         asr_installed = [asr for asr in service.info.asr if asr.installed]
+
+        # TTS = text-to-speech
         tts_installed = [tts for tts in service.info.tts if tts.installed]
+
+        # wake-word-detection
+        wake_installed = [wake for wake in service.info.wake if wake.installed]
 
         if asr_installed:
             name = asr_installed[0].name
         elif tts_installed:
             name = tts_installed[0].name
+        elif wake_installed:
+            name = wake_installed[0].name
         else:
             return self.async_abort(reason="no_services")
 

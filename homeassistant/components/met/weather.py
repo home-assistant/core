@@ -16,6 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -27,9 +28,8 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -82,6 +82,9 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
     def __init__(
         self,
@@ -132,6 +135,15 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._hourly
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        assert self.platform.config_entry
+        self.platform.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily", "hourly"))
+        )
 
     @property
     def condition(self) -> str | None:
@@ -190,10 +202,9 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
             ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
         )
 
-    @property
-    def forecast(self) -> list[Forecast] | None:
+    def _forecast(self, hourly: bool) -> list[Forecast] | None:
         """Return the forecast array."""
-        if self._hourly:
+        if hourly:
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
@@ -213,6 +224,19 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
                 )
             ha_forecast.append(ha_item)  # type: ignore[arg-type]
         return ha_forecast
+
+    @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast array."""
+        return self._forecast(self._hourly)
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast(False)
+
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self._forecast(True)
 
     @property
     def device_info(self) -> DeviceInfo:

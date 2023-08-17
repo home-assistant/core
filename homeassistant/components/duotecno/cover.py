@@ -5,10 +5,7 @@ from typing import Any
 
 from duotecno.unit import DuoswitchUnit
 
-from homeassistant.components.cover import (
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
