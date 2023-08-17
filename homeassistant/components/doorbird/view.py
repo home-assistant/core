@@ -47,10 +47,9 @@ class DoorBirdRequestView(HomeAssistantView):
             return web.Response(text=message)
 
         #
-        # This integration uses a different event for
-        # each entity id. It would be a major breaking
-        # change to change this to a single event at this
-        # point.
+        # This integration uses a multiple different events.
+        # It would be a major breaking change to change this to
+        # a single event at this point.
         #
         # Do not copy this pattern in the future
         # for any new integrations.
