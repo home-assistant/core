@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Provide an endpoint for the door_stations to call to trigger events
+    # Provide an endpoint for the door stations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
 
     def _reset_device_favorites_handler(event: Event) -> None:
