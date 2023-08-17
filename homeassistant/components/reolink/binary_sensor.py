@@ -49,7 +49,6 @@ class ReolinkBinarySensorEntityDescription(
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="motion",
-        translation_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
     ),
