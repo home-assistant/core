@@ -504,9 +504,13 @@
     }
   },
   "issues": {
-    "wrong_silabs_firmware_installed": {
+    "wrong_silabs_firmware_installed_nabucasa": {
       "title": "Zigbee radio has the wrong firmware installed",
       "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install the EmberZNet Zigbee firmware:\n\n1. Open the documentation by selecting the link under \"Learn More\".\n2. Follow the instructions described in the step to flash the EmberZNet Zigbee radio firmware."
+    },
+    "wrong_silabs_firmware_installed_other": {
+      "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]",
+      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install the EmberZNet Zigbee firmware. Follow your Zigbee radio manufacturer's instructions for how to do this."
     }
   }
 }
