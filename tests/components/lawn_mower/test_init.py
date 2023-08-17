@@ -5,12 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.lawn_mower import (
-    DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,14 +37,16 @@ class MockLawnMowerEntity(LawnMowerEntity):
         self,
         unique_id: str = "lawn_mower",
         name: str = "Lawn Mower",
-        activity: LawnMowerActivity = LawnMowerActivity.DOCKED,
         features: LawnMowerEntityFeature = LawnMowerEntityFeature(0),
     ) -> None:
         """Initialize the lawn mower."""
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
-        self._attr_activity = activity
+
+    def start_mowing(self) -> None:
+        """Start mowing."""
+        self._attr_activity = LawnMowerActivity.MOWING
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +66,16 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setup(
-            config_entry, LAWN_MOWER_DOMAIN
+            config_entry, Platform.LAWN_MOWER
+        )
+        return True
+
+    async def async_unload_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Unload up test config entry."""
+        await hass.config_entries.async_unload_platforms(
+            config_entry, [Platform.LAWN_MOWER]
         )
         return True
 
@@ -74,6 +85,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
         MockModule(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
+            async_unload_entry=async_unload_entry_init,
         ),
     )
 
@@ -90,7 +102,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{LAWN_MOWER_DOMAIN}",
+        f"{TEST_DOMAIN}.{Platform.LAWN_MOWER}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 
@@ -101,9 +113,7 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
 
     assert hass.states.get(entity1.entity_id)
 
-    assert await hass.config_entries.async_forward_entry_unload(
-        config_entry, LAWN_MOWER_DOMAIN
-    )
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_get_entry(entity1.entity_id) is None
@@ -145,7 +155,7 @@ async def test_lawn_mower_default(hass: HomeAssistant) -> None:
     lawn_mower = MockLawnMowerEntity()
     lawn_mower.hass = hass
 
-    assert lawn_mower.state == str(LawnMowerActivity.DOCKED)
+    assert lawn_mower.state is None
 
 
 async def test_lawn_mower_state(hass: HomeAssistant) -> None:
@@ -154,5 +164,6 @@ async def test_lawn_mower_state(hass: HomeAssistant) -> None:
         "lawn_mower_1", "Test lawn mower", LawnMowerActivity.MOWING
     )
     lawn_mower.hass = hass
+    lawn_mower.start_mowing()
 
     assert lawn_mower.state == str(LawnMowerActivity.MOWING)
