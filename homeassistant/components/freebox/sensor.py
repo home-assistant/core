@@ -120,8 +120,7 @@ async def async_setup_entry(
 
         tracked.add(nodeid)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(entities, True)
 
 
 class FreeboxSensor(SensorEntity):
