@@ -249,7 +249,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.15
+aiohomekit==2.6.16
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -800,7 +800,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==1.0.1
+flux-led==1.0.2
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -988,7 +988,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230802.0
+home-assistant-frontend==20230802.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1243,7 +1243,7 @@ nad-receiver==0.3.0
 ndms2-client==0.1.2
 
 # homeassistant.components.ness_alarm
-nessclient==0.10.0
+nessclient==1.0.0
 
 # homeassistant.components.netdata
 netdata==1.1.0
@@ -1368,7 +1368,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.26
+opower==0.0.29
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1746,7 +1746,7 @@ pyintesishome==1.8.0
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.14.2
+pyipp==0.14.3
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1952,7 +1952,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==3.0.0
+pyrainbird==4.0.0
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2150,7 +2150,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.32.2
+python-roborock==0.32.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2159,7 +2159,7 @@ python-smarttub==0.0.33
 python-songpal==0.15.2
 
 # homeassistant.components.tado
-python-tado==0.16.0
+python-tado==0.15.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2278,7 +2278,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.6
+reolink-aio==0.7.7
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2299,7 +2299,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.18.0
+rokuecp==0.18.1
 
 # homeassistant.components.roomba
 roombapy==1.6.8
