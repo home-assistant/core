@@ -63,8 +63,6 @@ async def test_diagnostics_for_config_entry(
     zigpy_device,
 ) -> None:
     """Test diagnostics for config entry."""
-    config_entry.add_to_hass(hass)
-
     await zha_device_joined(zigpy_device)
 
     gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
