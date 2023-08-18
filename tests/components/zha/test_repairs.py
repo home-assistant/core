@@ -18,6 +18,7 @@ from homeassistant.components.zha.repairs import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
@@ -64,6 +65,19 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
         assert detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
 
 
+def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
+    """Test radio hardware detection failure."""
+
+    with patch(
+        "homeassistant.components.homeassistant_yellow.hardware.async_info",
+        side_effect=HomeAssistantError(),
+    ), patch(
+        "homeassistant.components.homeassistant_sky_connect.hardware.async_info",
+        side_effect=HomeAssistantError(),
+    ):
+        assert detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
+
+
 @pytest.mark.parametrize(
     ("detected_hardware", "expected_learn_more_url"),
     [
@@ -83,6 +97,7 @@ async def test_multipan_firmware_repair(
 
     config_entry.add_to_hass(hass)
 
+    # ZHA fails to set up
     with patch(
         "homeassistant.components.zha.repairs.Flasher.probe_app_type",
         side_effect=set_flasher_app_type(ApplicationType.CPC),
@@ -118,6 +133,73 @@ async def test_multipan_firmware_repair(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+    )
+    assert issue is None
+
+
+async def test_multipan_firmware_no_repair_on_probe_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that a repair is not created when multi-PAN firmware cannot be probed."""
+
+    config_entry.add_to_hass(hass)
+
+    # ZHA fails to set up
+    with patch(
+        "homeassistant.components.zha.repairs.Flasher.probe_app_type",
+        side_effect=set_flasher_app_type(None),
+        autospec=True,
+    ), patch(
+        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        side_effect=RuntimeError(),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # No repair is created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+    )
+    assert issue is None
+
+
+async def test_multipan_firmware_retry_on_probe_ezsp(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect,
+) -> None:
+    """Test that ZHA is reloaded when EZSP firmware is probed."""
+
+    config_entry.add_to_hass(hass)
+
+    # ZHA fails to set up
+    with patch(
+        "homeassistant.components.zha.repairs.Flasher.probe_app_type",
+        side_effect=set_flasher_app_type(ApplicationType.EZSP),
+        autospec=True,
+    ), patch(
+        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        side_effect=RuntimeError(),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # The config entry state is `SETUP_RETRY`, not `SETUP_ERROR`!
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # No repair is created
+    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
