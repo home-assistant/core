@@ -24,8 +24,10 @@ OPTIONS_CONFIG = {"lock_code_digits": 6}
 
 
 @pytest.fixture
-async def load_int(hass: HomeAssistant, load_json: dict[str, Any]) -> MockConfigEntry:
-    """Set up the Sensibo integration in Home Assistant."""
+async def load_config_entry(
+    hass: HomeAssistant, load_json: dict[str, Any]
+) -> MockConfigEntry:
+    """Set up the Yale Smart Living integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
