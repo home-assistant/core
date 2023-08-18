@@ -77,7 +77,7 @@ async def async_setup_entry(
         async_add_entities(binary_entities, True)
 
 
-class FreeboxPir(FreeboxHomeEntity, BinarySensorEntity):
+class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox motion binary sensor."""
 
     def __init__(
