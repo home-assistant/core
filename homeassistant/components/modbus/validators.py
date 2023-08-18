@@ -65,7 +65,6 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     slave_count = config.get(CONF_SLAVE_COUNT, 0) + 1
-    slave = config.get(CONF_SLAVE, 0)
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     if (
         slave_count > 1
@@ -79,7 +78,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             error = f"{name}  structure: cannot be mixed with {data_type}"
 
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
-        if slave or slave_count > 1:
+        if slave_count > 1:
             error = f"{name}: `{CONF_STRUCTURE}` illegal with `{CONF_SLAVE_COUNT}` / `{CONF_SLAVE}`"
             raise vol.Invalid(error)
         if swap_type != CONF_SWAP_NONE:
