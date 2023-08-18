@@ -1123,9 +1123,7 @@ def _no_yaml_config_schema(
         from .issue_registry import IssueSeverity, async_create_issue
 
         # HomeAssistantError is raised if called from the wrong thread
-        # KeyError is raised if the issue registry is not set up, e.g.
-        # if validation happens from check_config
-        with contextlib.suppress(HomeAssistantError, KeyError):
+        with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(
                 hass,
