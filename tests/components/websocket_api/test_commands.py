@@ -177,9 +177,11 @@ async def test_call_service_blocking(
     hass: HomeAssistant, websocket_client, command
 ) -> None:
     """Test call service commands block, except for homeassistant restart / stop."""
+    async_mock_service(hass, "domain_test", "test_service")
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 5,
@@ -202,11 +204,14 @@ async def test_call_service_blocking(
         blocking=True,
         context=ANY,
         target=ANY,
+        return_response=False,
     )
 
+    async_mock_service(hass, "homeassistant", "test_service")
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 6,
@@ -228,11 +233,14 @@ async def test_call_service_blocking(
         blocking=True,
         context=ANY,
         target=ANY,
+        return_response=False,
     )
 
+    async_mock_service(hass, "homeassistant", "restart")
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 7,
@@ -247,7 +255,14 @@ async def test_call_service_blocking(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     mock_call.assert_called_once_with(
-        ANY, "homeassistant", "restart", ANY, blocking=True, context=ANY, target=ANY
+        ANY,
+        "homeassistant",
+        "restart",
+        ANY,
+        blocking=True,
+        context=ANY,
+        target=ANY,
+        return_response=False,
     )
 
 
