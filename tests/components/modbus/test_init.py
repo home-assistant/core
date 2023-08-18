@@ -181,7 +181,6 @@ async def test_nan_validator() -> None:
             CONF_COUNT: 2,
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">i",
-            CONF_SWAP: CONF_SWAP_BYTE,
         },
     ],
 )
@@ -238,6 +237,16 @@ async def test_ok_struct_validator(do_config) -> None:
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">f",
             CONF_SLAVE_COUNT: 5,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.STRING,
+            CONF_SLAVE_COUNT: 2,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD,
         },
     ],
 )
