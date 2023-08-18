@@ -28,11 +28,7 @@ async def test_camera(
     state1 = hass.states.get("camera.test_location")
     assert state1.state == "idle"
     assert state1.attributes["description"] == "Test Camera for testing"
-    assert state1.attributes["direction"] == "180"
-    assert state1.attributes["full_size_photo"] is True
     assert state1.attributes["location"] == "Test location"
-    assert state1.attributes["photo_url"] == "https://www.testurl.com/test_photo.jpg"
-    assert state1.attributes["status"] == "Running"
     assert state1.attributes["type"] == "Road"
 
     with patch(

@@ -81,10 +81,6 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
         """Return additional attributes."""
         return {
             "description": self.coordinator.data.data.description,
-            "direction": self.coordinator.data.data.direction,
-            "full_size_photo": self.coordinator.data.data.fullsizephoto,
             "location": self.coordinator.data.data.location,
-            "photo_url": self.coordinator.data.data.photourl,
-            "status": self.coordinator.data.data.status,
             "type": self.coordinator.data.data.camera_type,
         }
