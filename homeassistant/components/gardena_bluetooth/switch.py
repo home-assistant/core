@@ -35,7 +35,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
     characteristics = {
         Valve.state.uuid,
         Valve.manual_watering_time.uuid,
-        Valve.manual_watering_time.uuid,
+        Valve.remaining_open_time.uuid,
     }
 
     def __init__(

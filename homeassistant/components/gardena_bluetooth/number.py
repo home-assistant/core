@@ -62,11 +62,11 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.uuid,
         translation_key="rain_pause",
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         mode=NumberMode.BOX,
         native_min_value=0.0,
-        native_max_value=127.0,
-        native_step=1.0,
+        native_max_value=7 * 24 * 60,
+        native_step=6 * 60.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.rain_pause,
     ),
@@ -105,10 +105,11 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
     entity_description: GardenaBluetoothNumberEntityDescription
 
     def _handle_coordinator_update(self) -> None:
-        if data := self.coordinator.get_cached(self.entity_description.char):
-            self._attr_native_value = float(data)
-        else:
+        data = self.coordinator.get_cached(self.entity_description.char)
+        if data is None:
             self._attr_native_value = None
+        else:
+            self._attr_native_value = float(data)
         super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:

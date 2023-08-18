@@ -5,7 +5,6 @@ import socket
 from unittest.mock import Mock, patch
 
 from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
 import pytest
 
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
@@ -148,7 +147,7 @@ async def test_udp_server(
         sock.sendto(b"test", ("127.0.0.1", port))
 
         # Give the socket some time to send/receive the data
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             while voice_assistant_udp_server_v1.queue.qsize() == 0:
                 await asyncio.sleep(0.1)
 
@@ -273,7 +272,7 @@ async def test_error_event_type(
         )
     )
 
-    assert voice_assistant_udp_server_v1.handle_event.called_with(
+    voice_assistant_udp_server_v1.handle_event.assert_called_with(
         VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
         {"code": "code", "message": "message"},
     )

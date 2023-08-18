@@ -25,6 +25,24 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "current_consumption": {
+        "name": "Current consumption"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "today_consumption": {
+        "name": "Today's consumption"
+      }
+    },
+    "switch": {
+      "led": {
+        "name": "LED"
+      }
+    }
+  },
   "services": {
     "sequence_effect": {
       "name": "Sequence effect",

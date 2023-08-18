@@ -1,6 +1,6 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
-black==23.3.0
+black==23.7.0
 codespell==2.2.2
-ruff==0.0.277
+ruff==0.0.280
 yamllint==1.32.0

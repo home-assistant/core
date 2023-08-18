@@ -24,12 +24,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SOLAR_NET_DISCOVERY_NEW
 
 if TYPE_CHECKING:
     from . import FroniusSolarNet
@@ -53,7 +54,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Fronius sensor entities based on a config entry."""
     solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
-    solar_net.sensor_async_add_entities = async_add_entities
 
     for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
@@ -79,6 +79,19 @@ async def async_setup_entry(
         solar_net.storage_coordinator.add_entities_for_seen_keys(
             async_add_entities, StorageSensor
         )
+
+    @callback
+    def async_add_new_entities(coordinator: FroniusInverterUpdateCoordinator) -> None:
+        """Add newly found inverter entities."""
+        coordinator.add_entities_for_seen_keys(async_add_entities, InverterSensor)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            SOLAR_NET_DISCOVERY_NEW,
+            async_add_new_entities,
+        )
+    )
 
 
 @dataclass

@@ -8,9 +8,10 @@ import voluptuous as vol
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.helpers.typing import EventType
 
 from .const import CONF_TARGET_DOMAIN
 from .light import LightSwitch
@@ -55,7 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    async def async_registry_updated(event: Event) -> None:
+    async def async_registry_updated(
+        event: EventType[er.EventEntityRegistryUpdatedData],
+    ) -> None:
         """Handle entity registry update."""
         data = event.data
         if data["action"] == "remove":

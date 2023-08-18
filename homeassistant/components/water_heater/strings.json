@@ -53,6 +53,14 @@
           "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]"
         }
       }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns water heater on."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns water heater off."
     }
   }
 }

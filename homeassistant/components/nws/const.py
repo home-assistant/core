@@ -26,7 +26,6 @@ CONF_STATION = "station"
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
 ATTR_FORECAST_DETAILED_DESCRIPTION = "detailed_description"
-ATTR_FORECAST_DAYTIME = "daytime"
 
 CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_EXCEPTIONAL: [
@@ -74,11 +73,6 @@ CONDITION_CLASSES: dict[str, list[str]] = {
 
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
-
-NWS_DATA = "nws data"
-COORDINATOR_OBSERVATION = "coordinator_observation"
-COORDINATOR_FORECAST = "coordinator_forecast"
-COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
 
 OBSERVATION_VALID_TIME = timedelta(minutes=20)
 FORECAST_VALID_TIME = timedelta(minutes=45)

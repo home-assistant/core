@@ -15,10 +15,21 @@
       "cannot_connect": "Failed to connect: {error}"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "valve_connected_state": {
+        "name": "Valve connection"
+      }
+    },
+    "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      }
+    },
     "number": {
       "remaining_open_time": {
         "name": "Remaining open time"

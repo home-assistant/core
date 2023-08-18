@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -18,23 +18,23 @@ from aioesphomeapi import (
     UserServiceArgType,
     VoiceAssistantEventType,
 )
+from aioesphomeapi.model import VoiceAssistantCommandFlag
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -42,6 +42,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import EventType
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -270,11 +271,13 @@ class ESPHomeManager:
         """Subscribe and forward states for requested entities."""
         hass = self.hass
 
-        async def send_home_assistant_state_event(event: Event) -> None:
+        async def send_home_assistant_state_event(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Forward Home Assistant states updates to ESPHome."""
             event_data = event.data
-            new_state: State | None = event_data.get("new_state")
-            old_state: State | None = event_data.get("old_state")
+            new_state = event_data["new_state"]
+            old_state = event_data["old_state"]
 
             if new_state is None or old_state is None:
                 return
@@ -317,7 +320,7 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, use_vad: bool
+        self, conversation_id: str, use_vad: int
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -337,7 +340,8 @@ class ESPHomeManager:
             voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
-                use_vad=use_vad,
+                use_vad=VoiceAssistantCommandFlag(use_vad)
+                == VoiceAssistantCommandFlag.USE_VAD,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
@@ -390,12 +394,12 @@ class ESPHomeManager:
 
             if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
                 entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(hass, entry, cli, entry_data)
+                    await async_connect_scanner(
+                        hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
+                    )
                 )
 
-            self.device_id = _async_setup_device_registry(
-                hass, entry, entry_data.device_info
-            )
+            self.device_id = _async_setup_device_registry(hass, entry, entry_data)
             entry_data.async_update_device_state(hass)
 
             entity_infos, services = await cli.list_entities_services()
@@ -513,9 +517,12 @@ class ESPHomeManager:
 
 @callback
 def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
     """Set up device registry feature for a particular config entry."""
+    device_info = entry_data.device_info
+    if TYPE_CHECKING:
+        assert device_info is not None
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
@@ -542,7 +549,7 @@ def _async_setup_device_registry(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=device_info.friendly_name or device_info.name,
+        name=entry_data.friendly_name,
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,

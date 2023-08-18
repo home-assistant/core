@@ -15,12 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     DOMAIN,
+    SOLAR_NET_DISCOVERY_NEW,
     SOLAR_NET_ID_SYSTEM,
     SOLAR_NET_RESCAN_TIMER,
     FroniusDeviceInfo,
@@ -34,7 +35,6 @@ from .coordinator import (
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
-from .sensor import InverterSensor
 
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
@@ -76,7 +76,6 @@ class FroniusSolarNet:
         self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry = entry
         self.coordinator_lock = asyncio.Lock()
-        self.sensor_async_add_entities: AddEntitiesCallback | None = None
         self.fronius = fronius
         self.host: str = entry.data[CONF_HOST]
         # entry.unique_id is either logger uid or first inverter uid if no logger available
@@ -204,10 +203,8 @@ class FroniusSolarNet:
             self.inverter_coordinators.append(_coordinator)
 
             # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
-            if self.sensor_async_add_entities is not None:
-                _coordinator.add_entities_for_seen_keys(
-                    self.sensor_async_add_entities, InverterSensor
-                )
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
 
             _LOGGER.debug(
                 "New inverter added (UID: %s)",
