@@ -56,7 +56,7 @@ async def async_setup_entry(
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
-        if node["category"] == "pir":
+        if node["category"] == FreeboxHomeCategory.PIR:
             binary_entities.append(FreeboxPir(hass, router, node))
         elif node["category"] == "dws":
             binary_entities.append(FreeboxDws(hass, router, node))
