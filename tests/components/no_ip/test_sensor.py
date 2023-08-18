@@ -1,6 +1,7 @@
 """Test the No-IP.com Sensor."""
 from __future__ import annotations
 
+import os
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.no_ip import sensor
@@ -12,6 +13,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
 
+def get_test_config_dir(*add_path):
+    """Return a path to a test config dir."""
+    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
+
+
 async def test_async_added_to_hass() -> None:
     """Test async_added_to_hass method of NoIPSensor."""
     coordinator = MagicMock()
@@ -19,7 +25,7 @@ async def test_async_added_to_hass() -> None:
         CONF_DOMAIN: "example.com",
         CONF_IP_ADDRESS: "1.2.3.4",
     }
-    hass = HomeAssistant()
+    hass = HomeAssistant(get_test_config_dir())
     entity = sensor.NoIPSensor(coordinator)
     entity.hass = hass
 
