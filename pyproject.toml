@@ -266,6 +266,7 @@ disable = [
     "missing-module-docstring", # D100
     "multiple-imports", #E401
     "singleton-comparison", # E711, E712
+    "subprocess-run-check", # PLW1510
     "superfluous-parens", # UP034
     "ungrouped-imports", # I001
     "unidiomatic-typecheck", # E721
