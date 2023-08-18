@@ -596,41 +596,12 @@ class PipelineRun:
         )
 
         try:
-            segmenter = VoiceCommandSegmenter()
-
-            async def segment_stream(
-                stream: AsyncIterable[bytes],
-            ) -> AsyncGenerator[bytes, None]:
-                """Stop stream when voice command is finished."""
-                sent_vad_start = False
-                timestamp_ms = 0
-                async for chunk in stream:
-                    if not segmenter.process(chunk):
-                        # Silence detected at the end of voice command
-                        self.process_event(
-                            PipelineEvent(
-                                PipelineEventType.STT_VAD_END,
-                                {"timestamp": timestamp_ms},
-                            )
-                        )
-                        break
-
-                    if segmenter.in_command and (not sent_vad_start):
-                        # Speech detected at start of voice command
-                        self.process_event(
-                            PipelineEvent(
-                                PipelineEventType.STT_VAD_START,
-                                {"timestamp": timestamp_ms},
-                            )
-                        )
-                        sent_vad_start = True
-
-                    yield chunk
-                    timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
-
             # Transcribe audio stream
             result = await self.stt_provider.async_process_audio_stream(
-                metadata, segment_stream(stream)
+                metadata,
+                self._speech_to_text_stream(
+                    audio_stream=stream, stt_vad=VoiceCommandSegmenter()
+                ),
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during speech-to-text")
@@ -664,6 +635,42 @@ class PipelineRun:
         )
 
         return result.text
+
+    async def _speech_to_text_stream(
+        self,
+        audio_stream: AsyncIterable[bytes],
+        stt_vad: VoiceCommandSegmenter | None,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+    ) -> AsyncGenerator[bytes, None]:
+        """Yield audio chunks until VAD detects silence or speech-to-text completes."""
+        ms_per_sample = sample_rate // 1000
+        sent_vad_start = False
+        timestamp_ms = 0
+        async for chunk in audio_stream:
+            if stt_vad is not None:
+                if not stt_vad.process(chunk):
+                    # Silence detected at the end of voice command
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_END,
+                            {"timestamp": timestamp_ms},
+                        )
+                    )
+                    break
+
+                if stt_vad.in_command and (not sent_vad_start):
+                    # Speech detected at start of voice command
+                    self.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_START,
+                            {"timestamp": timestamp_ms},
+                        )
+                    )
+                    sent_vad_start = True
+
+            yield chunk
+            timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
 
     async def prepare_recognize_intent(self) -> None:
         """Prepare recognizing an intent."""
