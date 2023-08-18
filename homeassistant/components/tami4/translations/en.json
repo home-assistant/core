@@ -6,8 +6,8 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "invalid_phone": "Invalid phone number",
-            "unknown": "Unexpected error, please try again later"
+            "invalid_phone": "Invalid phone number, please use the following format: +972xxxxxxxx",
+            "unknown": "Unexpected error"
         },
         "step": {
             "otp": {
