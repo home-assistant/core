@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HoneywellData
@@ -101,6 +101,7 @@ class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -145,13 +146,13 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:
+        if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
+        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
-        if not device._data["hasFan"]:
+        if not device._data.get("hasFan"):
             return
 
         # not all honeywell fans support all modes
@@ -214,9 +215,9 @@ class HoneywellUSThermostat(ClimateEntity):
         return self._device.current_humidity
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
+        return HW_MODE_TO_HVAC_MODE.get(self._device.system_mode)
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -343,12 +344,8 @@ class HoneywellUSThermostat(ClimateEntity):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         try:
             # Set permanent hold
             # and Set temperature
@@ -367,12 +364,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def _turn_hold_mode_on(self) -> None:
         """Turn permanent hold on."""
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         # Check that we got a valid mode back
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
@@ -427,11 +420,6 @@ class HoneywellUSThermostat(ClimateEntity):
             try:
                 await self._data.client.login()
 
-            except aiosomecomfort.AuthError:
-                self._attr_available = False
-                await self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._data.entry_id)
-                )
             except (
                 aiosomecomfort.SomeComfortError,
                 ClientConnectionError,

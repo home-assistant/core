@@ -3,6 +3,8 @@ import datetime
 import json
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
@@ -15,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
@@ -56,6 +58,28 @@ async def assert_distance(hass, distance):
     assert state.attributes.get("distance") == distance
 
 
+async def test_no_mqtt(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test no mqtt available."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                CONF_PLATFORM: "mqtt_room",
+                CONF_NAME: NAME,
+                CONF_DEVICE_ID: DEVICE_ID,
+                CONF_STATE_TOPIC: "room_presence",
+                CONF_QOS: DEFAULT_QOS,
+                CONF_TIMEOUT: 5,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(SENSOR_STATE)
+    assert state is None
+    assert "MQTT integration is not available" in caplog.text
+
+
 async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the updating between rooms."""
     assert await async_setup_component(
@@ -86,7 +110,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     await assert_state(hass, LIVING_ROOM)
     await assert_distance(hass, 1)
 
-    time = dt.utcnow() + datetime.timedelta(seconds=7)
+    time = dt_util.utcnow() + datetime.timedelta(seconds=7)
     with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=time):
         await send_message(hass, BEDROOM_TOPIC, FAR_MESSAGE)
         await assert_state(hass, BEDROOM)

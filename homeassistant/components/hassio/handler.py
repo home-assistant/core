@@ -5,6 +5,7 @@ import asyncio
 from http import HTTPStatus
 import logging
 import os
+from typing import Any
 
 import aiohttp
 
@@ -249,6 +250,49 @@ async def async_update_core(
     )
 
 
+@bind_hass
+@_api_bool
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
+    """Apply a suggestion from supervisor's resolution center.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/resolution/suggestion/{suggestion_uuid}"
+    return await hassio.send_command(command, timeout=None)
+
+
+@api_data
+async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
+    """Return settings specific to Home Assistant Yellow."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/os/boards/yellow", method="get")
+
+
+@api_data
+async def async_set_yellow_settings(
+    hass: HomeAssistant, settings: dict[str, bool]
+) -> dict:
+    """Set settings specific to Home Assistant Yellow.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command(
+        "/os/boards/yellow", method="post", payload=settings
+    )
+
+
+@api_data
+async def async_reboot_host(hass: HomeAssistant) -> dict:
+    """Reboot the host.
+
+    Returns an empty dict.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    return await hassio.send_command("/host/reboot", method="post", timeout=60)
+
+
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -416,6 +460,16 @@ class HassIO:
         """
         return self.send_command("/resolution/info", method="get")
 
+    @api_data
+    def get_suggestions_for_issue(self, issue_id: str) -> dict[str, Any]:
+        """Return suggestions for issue from Supervisor resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(
+            f"/resolution/issue/{issue_id}/suggestions", method="get"
+        )
+
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
@@ -453,6 +507,14 @@ class HassIO:
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
+
+    @_api_bool
+    def apply_suggestion(self, suggestion_uuid: str):
+        """Apply a suggestion from supervisor's resolution center.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
 
     async def send_command(
         self,

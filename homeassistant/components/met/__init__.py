@@ -6,10 +6,9 @@ from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Self
 
 import metno
-from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -179,6 +178,6 @@ class MetWeatherData:
             raise CannotConnect()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
-        self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
+        self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self

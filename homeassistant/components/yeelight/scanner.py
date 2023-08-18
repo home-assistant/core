@@ -7,16 +7,15 @@ import contextlib
 from datetime import datetime
 from ipaddress import IPv4Address
 import logging
+from typing import Self
 from urllib.parse import urlparse
 
-import async_timeout
 from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
-from typing_extensions import Self
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -106,7 +105,7 @@ class YeelightScanner:
 
         await self._async_wait_connected()
         self._track_interval = async_track_time_interval(
-            self._hass, self.async_scan, DISCOVERY_INTERVAL
+            self._hass, self.async_scan, DISCOVERY_INTERVAL, cancel_on_shutdown=True
         )
         self.async_scan()
 
@@ -157,7 +156,7 @@ class YeelightScanner:
             listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
                 await host_event.wait()
 
         self._host_discovered_events[host].remove(host_event)
@@ -180,7 +179,9 @@ class YeelightScanner:
 
         # Delay starting the flow in case the discovery is the result
         # of another discovery
-        async_call_later(self._hass, 1, _async_start_flow)
+        async_call_later(
+            self._hass, 1, HassJob(_async_start_flow, cancel_on_shutdown=True)
+        )
 
     @callback
     def _async_process_entry(self, headers: CaseInsensitiveDict) -> None:

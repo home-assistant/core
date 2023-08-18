@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
@@ -22,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
@@ -77,6 +78,8 @@ SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
 SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -351,9 +354,13 @@ class XiaomiDevice(Entity):
             return True
         return False
 
+    def push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub running in another thread."""
+        self.hass.loop.call_soon_threadsafe(self.async_push_data, data, raw_data)
+
     @callback
-    def push_data(self, data, raw_data):
-        """Push from Hub."""
+    def async_push_data(self, data: dict[str, Any], raw_data: dict[Any, Any]) -> None:
+        """Push from Hub handled in the event loop."""
         _LOGGER.debug("PUSH >> %s: %s", self, data)
         was_unavailable = self._async_track_unavailable()
         is_data = self.parse_data(data, raw_data)

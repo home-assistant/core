@@ -101,8 +101,6 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
-CONF_WHITE_VALUE = "white_value"
-
 
 def valid_color_configuration(config: ConfigType) -> ConfigType:
     """Test color_mode is not combined with deprecated config."""
@@ -134,7 +132,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
@@ -158,15 +156,11 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
@@ -186,6 +180,7 @@ async def async_setup_entity_json(
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -378,11 +373,18 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if brightness_supported(self.supported_color_modes):
                 try:
-                    self._attr_brightness = int(
-                        values["brightness"]  # type: ignore[operator]
-                        / float(self._config[CONF_BRIGHTNESS_SCALE])
-                        * 255
-                    )
+                    if brightness := values["brightness"]:
+                        self._attr_brightness = int(
+                            brightness  # type: ignore[operator]
+                            / float(self._config[CONF_BRIGHTNESS_SCALE])
+                            * 255
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
+
                 except KeyError:
                     pass
                 except (TypeError, ValueError):

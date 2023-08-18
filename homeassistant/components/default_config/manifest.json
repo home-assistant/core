@@ -4,6 +4,7 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": [
     "application_credentials",
+    "assist_pipeline",
     "automation",
     "bluetooth",
     "cloud",

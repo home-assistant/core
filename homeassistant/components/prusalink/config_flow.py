@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-import async_timeout
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 from pyprusalink import InvalidAuth, PrusaLink
 import voluptuous as vol
@@ -39,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     api = PrusaLink(async_get_clientsession(hass), data[CONF_HOST], data[CONF_API_KEY])
 
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             version = await api.get_version()
 
     except (asyncio.TimeoutError, ClientError) as err:

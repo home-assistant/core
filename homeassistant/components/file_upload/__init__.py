@@ -17,6 +17,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename
 from homeassistant.util.ulid import ulid_hex
@@ -26,6 +27,8 @@ DOMAIN = "file_upload"
 ONE_MEGABYTE = 1024 * 1024
 MAX_SIZE = 100 * ONE_MEGABYTE
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @contextmanager

@@ -2,11 +2,10 @@
 from datetime import timedelta
 from functools import lru_cache
 import os
-import sys
+from pathlib import Path
 from unittest.mock import patch
 
 from lru import LRU  # pylint: disable=no-name-in-module
-import py
 import pytest
 
 from homeassistant.components.profiler import (
@@ -33,9 +32,10 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_basic_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path / "profiles"
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -47,9 +47,9 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("cProfile.Profile"), patch.object(hass.config, "path", _mock_path):
@@ -63,12 +63,10 @@ async def test_basic_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 11), reason="not yet available on python 3.11"
-)
-async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+async def test_memory_usage(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test we can setup and the service is registered."""
-    test_dir = tmpdir.mkdir("profiles")
+    test_dir = tmp_path / "profiles"
+    test_dir.mkdir()
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -80,9 +78,9 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
     last_filename = None
 
-    def _mock_path(filename):
+    def _mock_path(filename: str) -> str:
         nonlocal last_filename
-        last_filename = f"{test_dir}/{filename}"
+        last_filename = str(test_dir / filename)
         return last_filename
 
     with patch("guppy.hpy") as mock_hpy, patch.object(hass.config, "path", _mock_path):
@@ -94,24 +92,6 @@ async def test_memory_usage(hass: HomeAssistant, tmpdir: py.path.local) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-
-
-@pytest.mark.skipif(sys.version_info < (3, 11), reason="still works on python 3.10")
-async def test_memory_usage_py311(hass: HomeAssistant, tmpdir: py.path.local) -> None:
-    """Test raise an error on python3.11."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.services.has_service(DOMAIN, SERVICE_MEMORY)
-    with pytest.raises(
-        HomeAssistantError,
-        match="Memory profiling is not supported on Python 3.11. Please use Python 3.10.",
-    ):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_MEMORY, {CONF_SECONDS: 0.000001}, blocking=True
-        )
 
 
 async def test_object_growth_logging(
@@ -243,6 +223,8 @@ async def test_log_scheduled(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED)
+
+    hass.loop.call_later(0.1, lambda: None)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED, {}, blocking=True

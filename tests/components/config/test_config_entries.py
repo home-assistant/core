@@ -216,7 +216,9 @@ async def test_get_entries(hass: HomeAssistant, client, clear_handlers) -> None:
 
 async def test_remove_entry(hass: HomeAssistant, client) -> None:
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == HTTPStatus.OK
@@ -227,7 +229,9 @@ async def test_remove_entry(hass: HomeAssistant, client) -> None:
 
 async def test_reload_entry(hass: HomeAssistant, client) -> None:
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -821,6 +825,52 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/options/flow", "post"),
+        ("/api/config/config_entries/options/flow/1", "get"),
+        ("/api/config/config_entries/options/flow/1", "post"),
+    ],
+)
+async def test_options_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on options flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+            return OptionsFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(
@@ -965,6 +1015,57 @@ async def test_options_flow_with_invalid_data(hass: HomeAssistant, client) -> No
         }
 
 
+async def test_get_single(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can get a config entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/get_single",
+            "entry_id": entry.entry_id,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["config_entry"] == {
+        "disabled_by": None,
+        "domain": "test",
+        "entry_id": entry.entry_id,
+        "pref_disable_new_entities": False,
+        "pref_disable_polling": False,
+        "reason": None,
+        "source": "user",
+        "state": "loaded",
+        "supports_options": False,
+        "supports_remove_device": False,
+        "supports_unload": False,
+        "title": "Mock Title",
+    }
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/get_single",
+            "entry_id": "blah",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+
 async def test_update_prefrences(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -972,7 +1073,9 @@ async def test_update_prefrences(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
 
     assert entry.pref_disable_new_entities is False
@@ -1069,7 +1172,9 @@ async def test_disable_entry(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
+    entry = MockConfigEntry(
+        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
+    )
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
 
@@ -1209,7 +1314,7 @@ async def test_ignore_flow_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
-async def test_get_entries_ws(
+async def test_get_matching_entries_ws(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, clear_handlers
 ) -> None:
     """Test get entries with the websocket api."""
@@ -1260,14 +1365,8 @@ async def test_get_entries_ws(
 
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config_entries/get",
-        }
-    )
+    await ws_client.send_json_auto_id({"type": "config_entries/get"})
     response = await ws_client.receive_json()
-    assert response["id"] == 5
     assert response["result"] == [
         {
             "disabled_by": None,
@@ -1341,16 +1440,14 @@ async def test_get_entries_ws(
         },
     ]
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config_entries/get",
             "domain": "comp1",
             "type_filter": "hub",
         }
     )
     response = await ws_client.receive_json()
-    assert response["id"] == 6
     assert response["result"] == [
         {
             "disabled_by": None,
@@ -1368,15 +1465,13 @@ async def test_get_entries_ws(
         }
     ]
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            "id": 7,
             "type": "config_entries/get",
             "type_filter": ["service", "device"],
         }
     )
     response = await ws_client.receive_json()
-    assert response["id"] == 7
     assert response["result"] == [
         {
             "disabled_by": None,
@@ -1408,15 +1503,13 @@ async def test_get_entries_ws(
         },
     ]
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config_entries/get",
             "type_filter": "hub",
         }
     )
     response = await ws_client.receive_json()
-    assert response["id"] == 8
     assert response["result"] == [
         {
             "disabled_by": None,
@@ -1453,16 +1546,14 @@ async def test_get_entries_ws(
         "homeassistant.components.config.config_entries.async_get_integrations",
         return_value={"any": IntegrationNotFound("any")},
     ):
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 9,
                 "type": "config_entries/get",
                 "type_filter": "hub",
             }
         )
         response = await ws_client.receive_json()
 
-    assert response["id"] == 9
     assert response["result"] == [
         {
             "disabled_by": None,
@@ -1541,16 +1632,14 @@ async def test_get_entries_ws(
         "homeassistant.components.config.config_entries.async_get_integrations",
         return_value={"any": IntegrationNotFound("any")},
     ):
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 10,
                 "type": "config_entries/get",
                 "type_filter": ["helper"],
             }
         )
         response = await ws_client.receive_json()
 
-    assert response["id"] == 10
     assert response["result"] == []
 
     # Verify we raise if something really goes wrong
@@ -1559,16 +1648,14 @@ async def test_get_entries_ws(
         "homeassistant.components.config.config_entries.async_get_integrations",
         return_value={"any": Exception()},
     ):
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 11,
                 "type": "config_entries/get",
                 "type_filter": ["device", "hub", "service"],
             }
         )
         response = await ws_client.receive_json()
 
-    assert response["id"] == 11
     assert response["success"] is False
 
 

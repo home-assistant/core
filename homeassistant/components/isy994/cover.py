@@ -13,10 +13,10 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN, UOM_8_BIT_RANGE, UOM_BARRIER
+from .const import _LOGGER, DOMAIN, UOM_8_BIT_RANGE
 from .entity import ISYNodeEntity, ISYProgramEntity
 
 
@@ -63,8 +63,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover device."""
-        val = 100 if self._node.uom == UOM_BARRIER else None
-        if not await self._node.turn_on(val=val):
+        if not await self._node.turn_on():
             _LOGGER.error("Unable to open the cover")
 
     async def async_close_cover(self, **kwargs: Any) -> None:

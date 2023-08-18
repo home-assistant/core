@@ -338,7 +338,6 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     ),
     NAMSensorEntityDescription(
         key=ATTR_SIGNAL_STRENGTH,
-        translation_key="signal_strength",
         suggested_display_precision=0,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,

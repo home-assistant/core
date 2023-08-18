@@ -730,6 +730,52 @@ async def test_zeroconf_ip_change_via_secondary_identifier(
     assert len(mock_async_setup.mock_calls) == 2
     assert entry.data[CONF_ADDRESS] == "127.0.0.1"
     assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+    assert set(entry.data[CONF_IDENTIFIERS]) == {"airplayid", "mrpid"}
+
+
+async def test_zeroconf_updates_identifiers_for_ignored_entries(
+    hass: HomeAssistant, mock_scan
+) -> None:
+    """Test that an ignored config entry gets updated when the ip changes.
+
+    Instead of checking only the unique id, all the identifiers
+    in the config entry are checked
+    """
+    entry = MockConfigEntry(
+        domain="apple_tv",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        source=config_entries.SOURCE_IGNORE,
+        data={CONF_IDENTIFIERS: ["mrpid"], CONF_ADDRESS: "127.0.0.2"},
+    )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert (
+        len(mock_async_setup.mock_calls) == 0
+    )  # Should not be called because entry is ignored
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+    assert set(entry.data[CONF_IDENTIFIERS]) == {"airplayid", "mrpid"}
 
 
 async def test_zeroconf_add_existing_aborts(hass: HomeAssistant, dmap_device) -> None:

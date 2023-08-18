@@ -21,9 +21,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
+    DictStorageCollectionWebsocket,
     IDManager,
     SerializedStorageCollection,
-    StorageCollectionWebsocket,
     YamlCollection,
     sync_entity_lifecycle,
 )
@@ -182,7 +182,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    StorageCollectionWebsocket(
+    DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
         DOMAIN,

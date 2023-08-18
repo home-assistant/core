@@ -15,7 +15,6 @@ from random import SystemRandom
 from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
-import async_timeout
 import attr
 import voluptuous as vol
 
@@ -56,6 +55,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -167,7 +167,7 @@ async def _async_get_image(
     are handled.
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             if image_bytes := await camera.async_camera_image(
                 width=width, height=height
             ):
@@ -513,8 +513,8 @@ class Camera(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.stream and not self.stream.available:
-            return self.stream.available
+        if (stream := self.stream) and not stream.available:
+            return False
         return super().available
 
     async def async_create_stream(self) -> Stream | None:
@@ -524,7 +524,7 @@ class Camera(Entity):
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
             if not self.stream:
-                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self.stream_source()
                 if not source:
                     return None
@@ -672,7 +672,10 @@ class Camera(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        await self.async_refresh_providers()
+        # Avoid calling async_refresh_providers() in here because it
+        # it will write state a second time since state is always
+        # written when an entity is added to hass.
+        self._rtsp_to_webrtc = await self._async_use_rtsp_to_webrtc()
 
     async def async_refresh_providers(self) -> None:
         """Determine if any of the registered providers are suitable for this entity.
@@ -912,15 +915,16 @@ async def async_handle_snapshot_service(
 ) -> None:
     """Handle snapshot services calls."""
     hass = camera.hass
-    filename = service_call.data[ATTR_FILENAME]
+    filename: Template = service_call.data[ATTR_FILENAME]
     filename.hass = hass
 
     snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
-        _LOGGER.error("Can't write %s, no access to path!", snapshot_file)
-        return
+        raise HomeAssistantError(
+            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+        )
 
     image = await camera.async_camera_image()
 

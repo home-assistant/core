@@ -47,6 +47,7 @@ async def async_setup_entry(
 class ElgatoLight(ElgatoEntity, LightEntity):
     """Defines an Elgato Light."""
 
+    _attr_name = None
     _attr_min_mireds = 143
     _attr_max_mireds = 344
 

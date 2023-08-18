@@ -3,7 +3,7 @@
   "name": "Jandy iAqualink",
   "codeowners": ["@flz"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
+  "documentation": "https://www.home-assistant.io/integrations/iaqualink",
   "iot_class": "cloud_polling",
   "loggers": ["iaqualink"],
   "requirements": ["iaqualink==0.5.0", "h2==4.1.0"]

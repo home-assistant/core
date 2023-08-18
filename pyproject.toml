@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools~=62.3", "wheel~=0.37.1"]
+requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2023.5.0.dev0"
+version     = "2023.9.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -18,15 +18,15 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 dependencies    = [
-    "aiohttp==3.8.4",
+    "aiohttp==3.8.5",
     "astral==2.2",
-    "async_timeout==4.0.2",
-    "attrs==22.2.0",
+    "async-timeout==4.0.3",
+    "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==4.0.1",
@@ -34,29 +34,31 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.23.3",
-    "home-assistant-bluetooth==1.9.3",
-    "ifaddr==0.1.7",
-    "jinja2==3.1.2",
-    "lru-dict==1.1.8",
-    "PyJWT==2.6.0",
+    "httpx==0.24.1",
+    "home-assistant-bluetooth==1.10.2",
+    "ifaddr==0.2.0",
+    "Jinja2==3.1.2",
+    "lru-dict==1.2.0",
+    "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==40.0.1",
-    # pyOpenSSL 23.1.0 is required to work with cryptography 39+
-    "pyOpenSSL==23.1.0",
-    "orjson==3.8.9",
-    "pip>=21.0,<23.1",
+    "cryptography==41.0.3",
+    # pyOpenSSL 23.2.0 is required to work with cryptography 41+
+    "pyOpenSSL==23.2.0",
+    "orjson==3.9.4",
+    "packaging>=23.1",
+    "pip>=21.3.1",
     "python-slugify==4.0.1",
-    "pyyaml==6.0",
-    "requests==2.28.2",
-    "typing-extensions>=4.5.0,<5.0",
-    "ulid-transform==0.6.0",
+    "PyYAML==6.0.1",
+    "requests==2.31.0",
+    "typing-extensions>=4.7.0,<5.0",
+    "ulid-transform==0.8.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
-    "yarl==1.8.1",
+    "yarl==1.9.2",
 ]
 
 [project.urls]
+"Homepage"    = "https://www.home-assistant.io/"
 "Source Code" = "https://github.com/home-assistant/core"
 "Bug Reports" = "https://github.com/home-assistant/core/issues"
 "Docs: Dev"   = "https://developers.home-assistant.io/"
@@ -77,22 +79,8 @@ include = ["homeassistant*"]
 [tool.black]
 extend-exclude = "/generated/"
 
-[tool.isort]
-# https://github.com/PyCQA/isort/wiki/isort-Settings
-profile = "black"
-# will group `import x` and `from x import` of the same module.
-force_sort_within_sections = true
-known_first_party = [
-    "homeassistant",
-    "tests",
-]
-forced_separate = [
-    "tests",
-]
-combine_as_imports = true
-
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
@@ -113,6 +101,7 @@ load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "hass_enforce_type_hints",
+    "hass_inheritance",
     "hass_imports",
     "hass_logger",
     "pylint_per_file_ignores",
@@ -174,19 +163,223 @@ disable = [
     "too-few-public-methods",
     "too-many-ancestors",
     "too-many-arguments",
-    "too-many-branches",
     "too-many-instance-attributes",
     "too-many-lines",
     "too-many-locals",
     "too-many-public-methods",
-    "too-many-return-statements",
-    "too-many-statements",
     "too-many-boolean-expressions",
-    "unused-argument",
     "wrong-import-order",
     "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
+
+    # Handled by ruff
+    # Ref: <https://github.com/astral-sh/ruff/issues/970>
+    "await-outside-async", # PLE1142
+    "bad-str-strip-call", # PLE1310
+    "bad-string-format-type", # PLE1307
+    "bidirectional-unicode", # PLE2502
+    "continue-in-finally", # PLE0116
+    "duplicate-bases", # PLE0241
+    "format-needs-mapping", # F502
+    "function-redefined", # F811
+    "invalid-all-format", # PLE0605
+    "invalid-all-object", # PLE0604
+    "invalid-character-backspace", # PLE2510
+    "invalid-character-esc", # PLE2513
+    "invalid-character-nul", # PLE2514
+    "invalid-character-sub", # PLE2512
+    "invalid-character-zero-width-space", # PLE2515
+    "logging-too-few-args", # PLE1206
+    "logging-too-many-args", # PLE1205
+    "missing-format-string-key", # F524
+    "mixed-format-string", # F506
+    "no-method-argument", # N805
+    "no-self-argument", # N805
+    "nonexistent-operator", # B002
+    "nonlocal-without-binding", # PLE0117
+    "not-in-loop", # F701, F702
+    "notimplemented-raised", # F901
+    "return-in-init", # PLE0101
+    "return-outside-function", # F706
+    "syntax-error", # E999
+    "too-few-format-args", # F524
+    "too-many-format-args", # F522
+    "too-many-star-expressions", # F622
+    "truncated-format-string", # F501
+    "undefined-all-variable", # F822
+    "undefined-variable", # F821
+    "used-prior-global-declaration", # PLE0118
+    "yield-inside-async-function", # PLE1700
+    "yield-outside-function", # F704
+    "anomalous-backslash-in-string", # W605
+    "assert-on-string-literal", # PLW0129
+    "assert-on-tuple", # F631
+    "bad-format-string", # W1302, F
+    "bad-format-string-key", # W1300, F
+    "bare-except", # E722
+    "binary-op-exception", # PLW0711
+    "cell-var-from-loop", # B023
+    # "dangerous-default-value", # B006, ruff catches new occurrences, needs more work
+    "duplicate-except", # B014
+    "duplicate-key", # F601
+    "duplicate-string-formatting-argument", # F
+    "duplicate-value", # F
+    "eval-used", # PGH001
+    "exec-used", # S102
+    # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
+    "f-string-without-interpolation", # F541
+    "forgotten-debug-statement", # T100
+    "format-string-without-interpolation", # F
+    # "global-statement", # PLW0603, ruff catches new occurrences, needs more work
+    "global-variable-not-assigned", # PLW0602
+    "implicit-str-concat", # ISC001
+    "import-self", # PLW0406
+    "inconsistent-quotes", # Q000
+    "invalid-envvar-default", # PLW1508
+    "keyword-arg-before-vararg", # B026
+    "logging-format-interpolation", # G
+    "logging-fstring-interpolation", # G
+    "logging-not-lazy", # G
+    "misplaced-future", # F404
+    "named-expr-without-context", # PLW0131
+    "nested-min-max", # PLW3301
+    # "pointless-statement", # B018, ruff catches new occurrences, needs more work
+    "raise-missing-from", # TRY200
+    # "redefined-builtin", # A001, ruff is way more stricter, needs work
+    "try-except-raise", # TRY302
+    "unused-argument", # ARG001, we don't use it
+    "unused-format-string-argument", #F507
+    "unused-format-string-key", # F504
+    "unused-import", # F401
+    "unused-variable", # F841
+    "useless-else-on-loop", # PLW0120
+    "wildcard-import", # F403
+    "bad-classmethod-argument", # N804
+    "consider-iterating-dictionary", # SIM118
+    "empty-docstring", # D419
+    "invalid-name", # N815
+    "line-too-long", # E501, disabled globally
+    "missing-class-docstring", # D101
+    "missing-final-newline", # W292
+    "missing-function-docstring", # D103
+    "missing-module-docstring", # D100
+    "multiple-imports", #E401
+    "singleton-comparison", # E711, E712
+    "superfluous-parens", # UP034
+    "ungrouped-imports", # I001
+    "unidiomatic-typecheck", # E721
+    "unnecessary-direct-lambda-call", # PLC3002
+    "unnecessary-lambda-assignment", # PLC3001
+    "unneeded-not", # SIM208
+    "useless-import-alias", # PLC0414
+    "wrong-import-order", # I001
+    "wrong-import-position", # E402
+    "comparison-of-constants", # PLR0133
+    "comparison-with-itself", # PLR0124
+    "consider-alternative-union-syntax", # UP007
+    "consider-merging-isinstance", # PLR1701
+    "consider-using-alias", # UP006
+    "consider-using-dict-comprehension", # C402
+    "consider-using-generator", # C417
+    "consider-using-get", # SIM401
+    "consider-using-set-comprehension", # C401
+    "consider-using-sys-exit", # PLR1722
+    "consider-using-ternary", # SIM108
+    "literal-comparison", # F632
+    "property-with-parameters", # PLR0206
+    "super-with-arguments", # UP008
+    "too-many-branches", # PLR0912
+    "too-many-return-statements", # PLR0911
+    "too-many-statements", # PLR0915
+    "trailing-comma-tuple", # COM818
+    "unnecessary-comprehension", # C416
+    "use-a-generator", # C417
+    "use-dict-literal", # C406
+    "use-list-literal", # C405
+    "useless-object-inheritance", # UP004
+    "useless-return", # PLR1711
+
+    # Handled by mypy
+    # Ref: <https://github.com/antonagestam/pylint-mypy-overlap>
+    "abstract-class-instantiated",
+    "arguments-differ",
+    "assigning-non-slot",
+    "assignment-from-no-return",
+    "assignment-from-none",
+    "bad-exception-cause",
+    "bad-format-character",
+    "bad-reversed-sequence",
+    "bad-super-call",
+    "bad-thread-instantiation",
+    "catching-non-exception",
+    "comparison-with-callable",
+    "deprecated-class",
+    "dict-iter-missing-items",
+    "format-combined-specification",
+    "global-variable-undefined",
+    "import-error",
+    "inconsistent-mro",
+    "inherit-non-class",
+    "init-is-generator",
+    "invalid-class-object",
+    "invalid-enum-extension",
+    "invalid-envvar-value",
+    "invalid-format-returned",
+    "invalid-hash-returned",
+    "invalid-metaclass",
+    "invalid-overridden-method",
+    "invalid-repr-returned",
+    "invalid-sequence-index",
+    "invalid-slice-index",
+    "invalid-slots-object",
+    "invalid-slots",
+    "invalid-star-assignment-target",
+    "invalid-str-returned",
+    "invalid-unary-operand-type",
+    "invalid-unicode-codec",
+    "isinstance-second-argument-not-valid-type",
+    "method-hidden",
+    "misplaced-format-function",
+    "missing-format-argument-key",
+    "missing-format-attribute",
+    "missing-kwoa",
+    "no-member",
+    "no-value-for-parameter",
+    "non-iterator-returned",
+    "non-str-assignment-to-dunder-name",
+    "nonlocal-and-global",
+    "not-a-mapping",
+    "not-an-iterable",
+    "not-async-context-manager",
+    "not-callable",
+    "not-context-manager",
+    "overridden-final-method",
+    "raising-bad-type",
+    "raising-non-exception",
+    "redundant-keyword-arg",
+    "relative-beyond-top-level",
+    "self-cls-assignment",
+    "signature-differs",
+    "star-needs-assignment-target",
+    "subclassed-final-class",
+    "super-without-brackets",
+    "too-many-function-args",
+    "typevar-double-variance",
+    "typevar-name-mismatch",
+    "unbalanced-dict-unpacking",
+    "unbalanced-tuple-unpacking",
+    "unexpected-keyword-arg",
+    "unhashable-member",
+    "unpacking-non-sequence",
+    "unsubscriptable-object",
+    "unsupported-assignment-operation",
+    "unsupported-binary-operation",
+    "unsupported-delete-operation",
+    "unsupported-membership-test",
+    "used-before-assignment",
+    "using-final-decorator-in-unsupported-version",
+    "wrong-exception-operation",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -241,25 +434,64 @@ filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 target-version = "py310"
 
 select = [
+    "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
+    "B023", # Function definition does not bind loop variable {name}
+    "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "C",  # complexity
+    "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
+    "G", # flake8-logging-format
+    "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
+    "ISC001", # Implicitly concatenated string literals on one line
+    "N804", # First argument of a class method should be named cls
+    "N805", # First argument of a method should be named self
+    "N815", # Variable {name} in class scope should not be mixedCase
+    "PGH001", # No builtin eval() allowed
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "PLC", # pylint
+    "PLE", # pylint
+    "PLR", # pylint
+    "PLW", # pylint
+    "Q000", # Double quotes found but single quotes preferred
+    "RUF006", # Store a reference to the return value of asyncio.create_task
+    "S102", # Use of exec detected
+    "S103",  # bad-file-permissions
+    "S108",  # hardcoded-temp-file
+    "S306",  # suspicious-mktemp-usage
+    "S307",  # suspicious-eval-usage
+    "S313",  # suspicious-xmlc-element-tree-usage
+    "S314",  # suspicious-xml-element-tree-usage
+    "S315",  # suspicious-xml-expat-reader-usage
+    "S316",  # suspicious-xml-expat-builder-usage
+    "S317",  # suspicious-xml-sax-usage
+    "S318",  # suspicious-xml-mini-dom-usage
+    "S319",  # suspicious-xml-pull-dom-usage
+    "S320",  # suspicious-xmle-tree-usage
+    "S601",  # paramiko-call
+    "S602",  # subprocess-popen-with-shell-equals-true
+    "S604",  # call-with-shell-equals-true
+    "S608",  # hardcoded-sql-expression
+    "S609",  # unix-command-wildcard-injection
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
     "SIM201", # Use {left} != {right} instead of not {left} == {right}
+    "SIM208", # Use {expr} instead of not (not {expr})
     "SIM212", # Use {a} if {a} else {b} instead of {b} if not {a} else {a}
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
+    "T100", # Trace found: {name} used
     "T20",  # flake8-print
+    "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
-    "RUF006", # Store a reference to the return value of asyncio.create_task
+    "TRY200", # Use raise from to specify exception cause
+    "TRY302", # Remove exception handler; error is immediately re-raised
     "UP",  # pyupgrade
     "W",  # pycodestyle
 ]
@@ -272,8 +504,20 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
+    "PLC1901", # Lots of false positives
+    # False positives https://github.com/astral-sh/ruff/issues/5386
+    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
+    "PLR0911", # Too many return statements ({returns} > {max_returns})
+    "PLR0912", # Too many branches ({branches} > {max_branches})
+    "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
+    "PLR0915", # Too many statements ({statements} > {max_statements})
+    "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
+    "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
+    "UP006", # keep type annotation style as is
+    "UP007", # keep type annotation style as is
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+
 ]
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
@@ -283,12 +527,21 @@ voluptuous = "vol"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
 
-[tool.ruff.pyupgrade]
-keep-runtime-typing = true
+[tool.ruff.flake8-tidy-imports.banned-api]
+"pytz".msg = "use zoneinfo instead"
+
+[tool.ruff.isort]
+force-sort-within-sections = true
+known-first-party = [
+    "homeassistant",
+]
+combine-as-imports = true
+split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 

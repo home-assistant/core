@@ -1,5 +1,6 @@
 """Test config flow."""
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
 from ssl import SSLError
@@ -136,19 +137,22 @@ def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, Non
     file_id_cert = str(uuid4())
     file_id_key = str(uuid4())
 
-    def _mock_process_uploaded_file(hass: HomeAssistant, file_id) -> None:
+    @contextmanager
+    def _mock_process_uploaded_file(
+        hass: HomeAssistant, file_id: str
+    ) -> Iterator[Path | None]:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
                 cafile.write(b"## mock CA certificate file ##")
-            return tmp_path / "ca.crt"
+            yield tmp_path / "ca.crt"
         elif file_id == file_id_cert:
             with open(tmp_path / "client.crt", "wb") as certfile:
                 certfile.write(b"## mock client certificate file ##")
-            return tmp_path / "client.crt"
+            yield tmp_path / "client.crt"
         elif file_id == file_id_key:
             with open(tmp_path / "client.key", "wb") as keyfile:
                 keyfile.write(b"## mock key file ##")
-            return tmp_path / "client.key"
+            yield tmp_path / "client.key"
         else:
             pytest.fail(f"Unexpected file_id: {file_id}")
 
@@ -208,7 +212,8 @@ async def test_user_v5_connection_works(
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt", context={"source": config_entries.SOURCE_USER}
+        "mqtt",
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
     assert result["type"] == "form"
 
@@ -343,6 +348,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             },
             name="Mosquitto",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -373,6 +379,7 @@ async def test_hassio_confirm(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -421,6 +428,7 @@ async def test_hassio_cannot_connect(
             },
             name="Mock Addon",
             slug="mosquitto",
+            uuid="1234",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -443,14 +451,14 @@ async def test_hassio_cannot_connect(
 
 async def test_option_flow(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
 ) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
     ) as yaml_mock:
-        mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+        mqtt_mock = await mqtt_mock_entry()
         mock_try_connection.return_value = True
         config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
         config_entry.data = {
@@ -540,7 +548,7 @@ async def test_option_flow(
 )
 async def test_bad_certificate(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection_success: MqttMockPahoClient,
     mock_ssl_context: dict[str, MagicMock],
     mock_process_uploaded_file: MagicMock,
@@ -577,7 +585,7 @@ async def test_bad_certificate(
         # Client key file without client cert, client cert without key file
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
@@ -636,7 +644,7 @@ async def test_bad_certificate(
 )
 async def test_keepalive_validation(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
     input_value: str,
@@ -650,7 +658,7 @@ async def test_keepalive_validation(
         mqtt.CONF_KEEPALIVE: input_value,
     }
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
@@ -682,12 +690,12 @@ async def test_keepalive_validation(
 
 async def test_disable_birth_will(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -753,12 +761,12 @@ async def test_disable_birth_will(
 
 async def test_invalid_discovery_prefix(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test setting an invalid discovery prefix."""
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
@@ -832,12 +840,12 @@ def get_suggested(schema: vol.Schema, key: str) -> Any:
 
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection_success: MqttMockPahoClient,
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test config flow options has default/suggested values."""
-    await mqtt_mock_entry_no_yaml_config()
+    await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
@@ -987,7 +995,7 @@ async def test_option_flow_default_suggested_values(
 )
 async def test_skipping_advanced_options(
     hass: HomeAssistant,
-    mqtt_mock_entry_no_yaml_config: MqttMockHAClientGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     mock_reload_after_entry_update: MagicMock,
     advanced_options: bool,
@@ -1001,7 +1009,7 @@ async def test_skipping_advanced_options(
         "advanced_options": advanced_options,
     }
 
-    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Initiate with a basic setup
@@ -1012,7 +1020,9 @@ async def test_skipping_advanced_options(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1265,7 +1275,9 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]

@@ -7,12 +7,12 @@ from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import datetime as dt
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 import attr
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -231,11 +231,21 @@ class MqttValueTemplate:
                 values,
                 self._value_template,
             )
-            rendered_payload = (
-                self._value_template.async_render_with_possible_json_value(
-                    payload, variables=values
+            try:
+                rendered_payload = (
+                    self._value_template.async_render_with_possible_json_value(
+                        payload, variables=values
+                    )
                 )
-            )
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    "%s: %s rendering template for entity '%s', template: '%s'",
+                    type(ex).__name__,
+                    ex,
+                    self._entity.entity_id if self._entity else "n/a",
+                    self._value_template.template,
+                )
+                raise ex
             return rendered_payload
 
         _LOGGER.debug(
@@ -248,9 +258,24 @@ class MqttValueTemplate:
             default,
             self._value_template,
         )
-        rendered_payload = self._value_template.async_render_with_possible_json_value(
-            payload, default, variables=values
-        )
+        try:
+            rendered_payload = (
+                self._value_template.async_render_with_possible_json_value(
+                    payload, default, variables=values
+                )
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "%s: %s rendering template for entity '%s', template: "
+                "'%s', default value: %s and payload: %s",
+                type(ex).__name__,
+                ex,
+                self._entity.entity_id if self._entity else "n/a",
+                self._value_template.template,
+                default,
+                payload,
+            )
+            raise ex
         return rendered_payload
 
 
@@ -289,7 +314,7 @@ class MqttData:
     """Keep the MQTT entry data."""
 
     client: MQTT
-    config: ConfigType
+    config: list[ConfigType]
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -305,14 +330,12 @@ class MqttData:
     )
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
+    issues: dict[str, set[str]] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
     reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
         default_factory=dict
     )
-    reload_needed: bool = False
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
-    updated_config: ConfigType = field(default_factory=dict)

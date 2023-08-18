@@ -8,7 +8,6 @@ import re
 from types import MappingProxyType
 from typing import Any, cast
 
-import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
@@ -31,8 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -188,7 +187,9 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         )
 
     hass.async_create_background_task(_async_discovery(), "elkm1 setup discovery")
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     if DOMAIN not in hass_config:
         return True
@@ -380,7 +381,7 @@ async def async_wait_for_elk_to_sync(
     ):
         _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)

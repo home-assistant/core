@@ -67,18 +67,6 @@ POLL_REQUIRED = (
     ATTR_STATUS_LIGHT,
 )
 
-FRIENDLY_NAMES = {
-    ATTR_CROSSFADE: "Crossfade",
-    ATTR_LOUDNESS: "Loudness",
-    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "Surround music full volume",
-    ATTR_NIGHT_SOUND: "Night sound",
-    ATTR_SPEECH_ENHANCEMENT: "Speech enhancement",
-    ATTR_STATUS_LIGHT: "Status light",
-    ATTR_SUB_ENABLED: "Subwoofer enabled",
-    ATTR_SURROUND_ENABLED: "Surround enabled",
-    ATTR_TOUCH_CONTROLS: "Touch controls",
-}
-
 FEATURE_ICONS = {
     ATTR_LOUDNESS: "mdi:bullhorn-variant",
     ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
@@ -140,7 +128,7 @@ async def async_setup_entry(
                 )
             _LOGGER.debug(
                 "Creating %s switch on %s",
-                FRIENDLY_NAMES[feature_type],
+                feature_type,
                 speaker.zone_name,
             )
             entities.append(SonosSwitchEntity(feature_type, speaker))
@@ -163,7 +151,7 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         self.feature_type = feature_type
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_name = FRIENDLY_NAMES[feature_type]
+        self._attr_translation_key = feature_type
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 

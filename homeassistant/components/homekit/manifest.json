@@ -1,6 +1,6 @@
 {
   "domain": "homekit",
-  "name": "HomeKit",
+  "name": "HomeKit Bridge",
   "after_dependencies": ["camera", "zeroconf"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
@@ -9,8 +9,8 @@
   "iot_class": "local_push",
   "loggers": ["pyhap"],
   "requirements": [
-    "HAP-python==4.6.0",
-    "fnv-hash-fast==0.3.1",
+    "HAP-python==4.7.1",
+    "fnv-hash-fast==0.4.0",
     "PyQRCode==1.2.1",
     "base36==0.1.1"
   ],

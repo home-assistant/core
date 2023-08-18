@@ -38,6 +38,8 @@ UPDATE_FIELDS = {
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""
@@ -98,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         id_manager,
     )
     await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 

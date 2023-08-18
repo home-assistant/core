@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,6 +17,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -50,6 +51,7 @@ STATUS_PAUSED = "paused"
 
 EVENT_TIMER_FINISHED = "timer.finished"
 EVENT_TIMER_CANCELLED = "timer.cancelled"
+EVENT_TIMER_CHANGED = "timer.changed"
 EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
@@ -57,6 +59,7 @@ EVENT_TIMER_PAUSED = "timer.paused"
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
+SERVICE_CHANGE = "change"
 SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
@@ -130,7 +133,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -158,6 +161,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(
+        SERVICE_CHANGE,
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        "async_change",
+    )
 
     return True
 
@@ -316,6 +324,31 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
 
+        self._listener = async_track_point_in_utc_time(
+            self.hass, self._async_finished, self._end
+        )
+        self.async_write_ha_state()
+
+    @callback
+    def async_change(self, duration: timedelta) -> None:
+        """Change duration of a running timer."""
+        if self._listener is None or self._end is None:
+            raise HomeAssistantError(
+                f"Timer {self.entity_id} is not running, only active timers can be changed"
+            )
+        if self._remaining and (self._remaining + duration) > self._duration:
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} beyond configured duration"
+            )
+        if self._remaining and (self._remaining + duration) < timedelta():
+            raise HomeAssistantError(
+                f"Not possible to change timer {self.entity_id} to negative time remaining"
+            )
+
+        self._listener()
+        self._end += duration
+        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+        self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )

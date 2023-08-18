@@ -127,7 +127,7 @@ async def test_update_entity_states(
         },
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert "There is no value to refresh for this entity" in caplog.text
 
     client.async_send_command.return_value = {"updates": []}
@@ -264,6 +264,8 @@ async def test_update_entity_ha_not_running(
     """Test update occurs only after HA is running."""
     await hass.async_stop()
 
+    client.async_send_command.return_value = {"updates": []}
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -341,7 +343,9 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -437,7 +441,9 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": False}
+    client.async_send_command.return_value = {
+        "result": {"status": 2, "success": False, "reInterview": False}
+    }
 
     # Test install call - we expect it to finish fail
     install_task = hass.async_create_task(
@@ -577,6 +583,7 @@ async def test_update_entity_delay(
 ) -> None:
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"updates": []}
     await hass.async_stop()
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
@@ -710,7 +717,9 @@ async def test_update_entity_full_restore_data_update_available(
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "11.2.4"
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command.return_value = {
+        "result": {"status": 255, "success": True, "reInterview": False}
+    }
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -776,3 +785,55 @@ async def test_update_entity_full_restore_data_no_update_available(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+
+
+async def test_update_entity_no_latest_version(
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus_different_endpoints,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test entity with no `latest_version` attr restores state."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    UPDATE_ENTITY,
+                    STATE_OFF,
+                    {
+                        ATTR_INSTALLED_VERSION: "10.7",
+                        ATTR_LATEST_VERSION: None,
+                        ATTR_SKIPPED_VERSION: None,
+                    },
+                ),
+                {"latest_version_firmware": None},
+            )
+        ],
+    )
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] == "10.7"
+
+
+async def test_update_entity_unload_asleep_node(
+    hass: HomeAssistant, client, wallmote_central_scene, integration
+) -> None:
+    """Test unloading config entry after attempting an update for an asleep node."""
+    assert len(client.async_send_command.call_args_list) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(wallmote_central_scene._listeners["wake up"]) == 2
+
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert len(wallmote_central_scene._listeners["wake up"]) == 0

@@ -9,7 +9,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypedDict, cast, overload
+from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -34,7 +34,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
-from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
@@ -59,7 +58,7 @@ ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEAT
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 30
+SCHEMA_VERSION = 32
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -253,7 +252,8 @@ class Events(Base):  # type: ignore[misc,valid-type]
             event_type=event.event_type,
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
-            time_fired=event.time_fired,
+            time_fired=None,
+            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
             context_id=event.context.id,
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
@@ -268,12 +268,12 @@ class Events(Base):  # type: ignore[misc,valid-type]
         )
         try:
             return Event(
-                self.event_type,
+                self.event_type or "",
                 json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
-                else EVENT_ORIGIN_ORDER[self.origin_idx],
-                process_timestamp(self.time_fired),
+                else EVENT_ORIGIN_ORDER[self.origin_idx or 0],
+                dt_util.utc_from_timestamp(self.time_fired_ts or 0),
                 context=context,
             )
         except JSON_DECODE_EXCEPTIONS:
@@ -419,21 +419,22 @@ class States(Base):  # type: ignore[misc,valid-type]
             context_user_id=event.context.user_id,
             context_parent_id=event.context.parent_id,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
+            last_updated=None,
+            last_changed=None,
         )
-
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated = event.time_fired
-            dbstate.last_changed = None
+            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated = state.last_updated
+        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
         if state.last_updated == state.last_changed:
-            dbstate.last_changed = None
+            dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed = state.last_changed
+            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
 
         return dbstate
 
@@ -450,14 +451,16 @@ class States(Base):  # type: ignore[misc,valid-type]
             # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
-        if self.last_changed is None or self.last_changed == self.last_updated:
-            last_changed = last_updated = process_timestamp(self.last_updated)
+        if self.last_changed_ts is None or self.last_changed_ts == self.last_updated_ts:
+            last_changed = last_updated = dt_util.utc_from_timestamp(
+                self.last_updated_ts or 0
+            )
         else:
-            last_updated = process_timestamp(self.last_updated)
-            last_changed = process_timestamp(self.last_changed)
+            last_updated = dt_util.utc_from_timestamp(self.last_updated_ts or 0)
+            last_changed = dt_util.utc_from_timestamp(self.last_changed_ts or 0)
         return State(
-            self.entity_id,
-            self.state,
+            self.entity_id or "",
+            self.state,  # type: ignore[arg-type]
             # Join the state_attributes table on attributes_id to get the attributes
             # for newer states
             attrs,
@@ -558,16 +561,19 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    created_ts = Column(TIMESTAMP_TYPE, default=time.time)
     metadata_id = Column(
         Integer,
         ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
+    start_ts = Column(TIMESTAMP_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
     max = Column(DOUBLE_TYPE)
     last_reset = Column(DATETIME_TYPE)
+    last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
 

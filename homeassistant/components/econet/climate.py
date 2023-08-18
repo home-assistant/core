@@ -152,7 +152,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         return self.op_list
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 
         Needs to be one of HVAC_MODE_*.

@@ -52,7 +52,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
             thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
         )
 
-    def _do_return_conn(self, record: ConnectionPoolEntry) -> Any:
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if self.recorder_or_dbworker:
             return super()._do_return_conn(record)
         record.close()
@@ -72,8 +72,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         if self.recorder_or_dbworker:
             super().dispose()
 
-    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
-    def _do_get(self) -> Any:
+    def _do_get(self) -> ConnectionPoolEntry:
         if self.recorder_or_dbworker:
             return super()._do_get()
         check_loop(
@@ -83,7 +82,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
         )
         return self._do_get_db_connection_protected()
 
-    def _do_get_db_connection_protected(self) -> Any:
+    def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
         report(
             (
                 "accesses the database without the database executor; "
@@ -93,7 +92,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
             exclude_integrations={"recorder"},
             error_if_core=False,
         )
-        return super(NullPool, self)._create_connection()
+        return NullPool._create_connection(self)
 
 
 class MutexPool(StaticPool):
@@ -106,7 +105,7 @@ class MutexPool(StaticPool):
     _reference_counter = 0
     pool_lock: threading.RLock
 
-    def _do_return_conn(self, record: ConnectionPoolEntry) -> Any:
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "\n" + "".join(traceback.format_list(trace[:-1]))
@@ -124,7 +123,7 @@ class MutexPool(StaticPool):
             )
         MutexPool.pool_lock.release()
 
-    def _do_get(self) -> Any:
+    def _do_get(self) -> ConnectionPoolEntry:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "".join(traceback.format_list(trace[:-1]))

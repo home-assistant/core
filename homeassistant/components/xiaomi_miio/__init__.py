@@ -1,13 +1,13 @@
 """Support for Xiaomi Miio."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from miio import (
     AirFresh,
     AirFreshA1,
@@ -105,7 +105,12 @@ HUMIDIFIER_PLATFORMS = [
     Platform.SWITCH,
 ]
 LIGHT_PLATFORMS = [Platform.LIGHT]
-VACUUM_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.VACUUM]
+VACUUM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.VACUUM,
+]
 AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {
@@ -171,7 +176,7 @@ def _async_update_data_default(hass, device):
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -260,7 +265,7 @@ def _async_update_data_vacuum(
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update() -> VacuumCoordinatorData:
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
+            async with asyncio.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -291,6 +296,7 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
+    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
@@ -307,38 +313,41 @@ async def async_create_miio_device_and_coordinator(
 
     # Humidifiers
     if model in MODELS_HUMIDIFIER_MIOT:
-        device = AirHumidifierMiot(host, token)
+        device = AirHumidifierMiot(host, token, lazy_discover=lazy_discover)
         migrate = True
     elif model in MODELS_HUMIDIFIER_MJJSQ:
-        device = AirHumidifierMjjsq(host, token, model=model)
+        device = AirHumidifierMjjsq(
+            host, token, lazy_discover=lazy_discover, model=model
+        )
         migrate = True
     elif model in MODELS_HUMIDIFIER_MIIO:
-        device = AirHumidifier(host, token, model=model)
+        device = AirHumidifier(host, token, lazy_discover=lazy_discover, model=model)
         migrate = True
     # Airpurifiers and Airfresh
     elif model in MODELS_PURIFIER_MIOT:
-        device = AirPurifierMiot(host, token)
+        device = AirPurifierMiot(host, token, lazy_discover=lazy_discover)
     elif model.startswith("zhimi.airpurifier."):
-        device = AirPurifier(host, token)
+        device = AirPurifier(host, token, lazy_discover=lazy_discover)
     elif model.startswith("zhimi.airfresh."):
-        device = AirFresh(host, token)
+        device = AirFresh(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_A1:
-        device = AirFreshA1(host, token)
+        device = AirFreshA1(host, token, lazy_discover=lazy_discover)
     elif model == MODEL_AIRFRESH_T2017:
-        device = AirFreshT2017(host, token)
+        device = AirFreshT2017(host, token, lazy_discover=lazy_discover)
     elif (
         model in MODELS_VACUUM
         or model.startswith(ROBOROCK_GENERIC)
         or model.startswith(ROCKROBO_GENERIC)
     ):
+        # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
         device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans
     elif model in MODEL_TO_CLASS_MAP:
-        device = MODEL_TO_CLASS_MAP[model](host, token)
+        device = MODEL_TO_CLASS_MAP[model](host, token, lazy_discover=lazy_discover)
     elif model in MODELS_FAN_MIIO:
-        device = Fan(host, token, model=model)
+        device = Fan(host, token, lazy_discover=lazy_discover, model=model)
     else:
         _LOGGER.error(
             (

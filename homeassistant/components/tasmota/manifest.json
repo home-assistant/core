@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["hatasmota"],
   "mqtt": ["tasmota/discovery/#"],
-  "requirements": ["hatasmota==0.6.4"]
+  "requirements": ["HATasmota==0.7.0"]
 }

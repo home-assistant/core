@@ -1,5 +1,7 @@
 """Tests for the Freebox config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
+
+from pytest_unordered import unordered
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox.const import DOMAIN, SERVICE_REBOOT
@@ -25,7 +27,7 @@ async def test_setup(hass: HomeAssistant, router: Mock) -> None:
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries() == [entry]
+    assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
     assert router().open.call_count == 1
@@ -57,7 +59,7 @@ async def test_setup_import(hass: HomeAssistant, router: Mock) -> None:
         hass, DOMAIN, {DOMAIN: {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}}
     )
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries() == [entry]
+    assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
     assert router().open.call_count == 1
