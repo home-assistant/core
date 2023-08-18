@@ -28,7 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
@@ -217,6 +217,9 @@ def async_log_errors(
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         receiver: DenonAVR,
@@ -225,7 +228,6 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
-        self._attr_name = receiver.name
         self._attr_unique_id = unique_id
         assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
@@ -234,7 +236,7 @@ class DenonDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],
-            name=config_entry.title,
+            name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
 

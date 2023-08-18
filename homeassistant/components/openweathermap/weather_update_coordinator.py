@@ -1,8 +1,8 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
@@ -46,7 +46,7 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
@@ -80,7 +80,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update the data."""
         data = {}
-        async with async_timeout.timeout(20):
+        async with asyncio.timeout(20):
             try:
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
@@ -267,7 +267,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 return ATTR_CONDITION_SUNNY
             return ATTR_CONDITION_CLEAR_NIGHT
 
-        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+        return CONDITION_MAP.get(weather_code)
 
 
 class LegacyWeather:

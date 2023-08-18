@@ -30,7 +30,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             address_left, separator, address_right = user_input[CONF_HOST].rpartition(
                 ":"
             )
-            # If no separator is found, 'rpartition' return ('', '', original_string).
+            # If no separator is found, 'rpartition' returns ('', '', original_string).
             if separator == "":
                 host = address_right
             else:
