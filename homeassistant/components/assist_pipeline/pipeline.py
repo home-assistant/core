@@ -856,13 +856,14 @@ class PipelineInput:
         """Run pipeline."""
         self.run.start()
         current_stage: PipelineStage | None = self.run.start_stage
-        audio_buffer: list[bytes] = []
+        stt_audio_buffer: list[bytes] = []
 
         try:
             if current_stage == PipelineStage.WAKE_WORD:
+                # wake-word-detection
                 assert self.stt_stream is not None
                 detect_result = await self.run.wake_word_detection(
-                    self.stt_stream, audio_buffer
+                    self.stt_stream, stt_audio_buffer
                 )
                 if detect_result is None:
                     # No wake word. Abort the rest of the pipeline.
@@ -877,19 +878,22 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert self.stt_stream is not None
 
-                if audio_buffer:
+                stt_stream = self.stt_stream
 
-                    async def buffered_stream() -> AsyncGenerator[bytes, None]:
-                        for chunk in audio_buffer:
+                if stt_audio_buffer:
+                    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+                    # This is basically an async itertools.chain.
+                    async def buffer_then_audio_stream() -> AsyncGenerator[bytes, None]:
+                        # Buffered audio
+                        for chunk in stt_audio_buffer:
                             yield chunk
 
+                        # Streamed audio
                         assert self.stt_stream is not None
                         async for chunk in self.stt_stream:
                             yield chunk
 
-                    stt_stream = cast(AsyncIterable[bytes], buffered_stream())
-                else:
-                    stt_stream = self.stt_stream
+                    stt_stream = buffer_then_audio_stream()
 
                 intent_input = await self.run.speech_to_text(
                     self.stt_metadata,
@@ -901,6 +905,7 @@ class PipelineInput:
                 tts_input = self.tts_input
 
                 if current_stage == PipelineStage.INTENT:
+                    # intent-recognition
                     assert intent_input is not None
                     tts_input = await self.run.recognize_intent(
                         intent_input,
@@ -910,6 +915,7 @@ class PipelineInput:
                     current_stage = PipelineStage.TTS
 
                 if self.run.end_stage != PipelineStage.INTENT:
+                    # text-to-speech
                     if current_stage == PipelineStage.TTS:
                         assert tts_input is not None
                         await self.run.text_to_speech(tts_input)
