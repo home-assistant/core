@@ -66,7 +66,7 @@ DEVICE_ICONS = {
 ATTR_DETECTION = "detection"
 
 
-class Freeboxlabel(StrEnum):
+class FreeboxHomeCategory(StrEnum):
     """Available Freebox label."""
 
     ALARM = "alarm"
