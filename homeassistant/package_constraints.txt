@@ -53,7 +53,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.2
-zeroconf==0.78.0
+zeroconf==0.80.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -148,7 +148,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.23.3
+protobuf==4.24.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
