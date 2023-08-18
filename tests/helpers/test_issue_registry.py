@@ -270,7 +270,7 @@ async def test_load_save_issues_read_only(
         "issue_id": "issue_2",
     }
 
-    registry: ir.IssueRegistry = hass.data[ir.DATA_REGISTRY]
+    registry = ir.async_get(hass)
     assert len(registry.issues) == 2
 
     registry2 = ir.IssueRegistry(hass)
