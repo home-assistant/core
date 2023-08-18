@@ -488,6 +488,7 @@ select = [
     "SIM401", # Use get from dict with default instead of an if block
     "T100", # Trace found: {name} used
     "T20",  # flake8-print
+    "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
     "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
@@ -530,6 +531,9 @@ voluptuous = "vol"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.ruff.flake8-tidy-imports.banned-api]
+"pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.isort]
 force-sort-within-sections = true
