@@ -782,7 +782,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 async def test_name(hass: HomeAssistant) -> None:
-    """Test number name."""
+    """Test update name."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -800,22 +800,22 @@ async def test_name(hass: HomeAssistant) -> None:
         ),
     )
 
-    # Unnamed sensor without device class -> no name
+    # Unnamed update entity without device class -> no name
     entity1 = UpdateEntity()
     entity1.entity_id = "update.test1"
 
-    # Unnamed sensor with device class but has_entity_name False -> no name
+    # Unnamed update entity with device class but has_entity_name False -> no name
     entity2 = UpdateEntity()
     entity2.entity_id = "update.test2"
     entity2._attr_device_class = UpdateDeviceClass.FIRMWARE
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed update entity with device class and has_entity_name True -> named
     entity3 = UpdateEntity()
     entity3.entity_id = "update.test3"
     entity3._attr_device_class = UpdateDeviceClass.FIRMWARE
     entity3._attr_has_entity_name = True
 
-    # Unnamed sensor with device class and has_entity_name True -> named
+    # Unnamed update entity with device class and has_entity_name True -> named
     entity4 = UpdateEntity()
     entity4.entity_id = "update.test4"
     entity4.entity_description = UpdateEntityDescription(
