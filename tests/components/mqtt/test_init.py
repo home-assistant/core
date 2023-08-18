@@ -434,8 +434,7 @@ async def test_value_template_fails(
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
-        "template: '{{ value_json.some_var * 2 }}' with payload: "
-        '{"some_var": null }'
+        "template: '{{ value_json.some_var * 2 }}'"
     ) in caplog.text
     caplog.clear()
     with pytest.raises(TypeError):
