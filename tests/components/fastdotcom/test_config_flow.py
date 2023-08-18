@@ -1,14 +1,18 @@
 """Test for the Fast.com config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.fastdotcom.const import DOMAIN
 from homeassistant.components.fastdotcom.coordinator import (
     FastdotcomDataUpdateCoordindator,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -34,6 +38,24 @@ async def test_user_form(hass: HomeAssistant) -> None:
     assert result["data"] == {}
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
+async def test_single_instance_allowed(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test we abort if already setup."""
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_import_flow_success(hass: HomeAssistant) -> None:
