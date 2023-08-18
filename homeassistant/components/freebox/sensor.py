@@ -245,8 +245,8 @@ class FreeboxBatterySensor(FreeboxHomeEntity):
         super().__init__(hass, router, node, sub_node)
 
     @property
-    def device_class(self) -> str | None:
-        """Return the devices' state attributes."""
+    def device_class(self) -> SensorDeviceClass:
+        """Return the class of this device."""
         return SensorDeviceClass.BATTERY
 
     @property
