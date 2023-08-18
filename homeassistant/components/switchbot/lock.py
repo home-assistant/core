@@ -34,7 +34,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._async_update_attrs()
-        if(self._device.is_night_latch_enabled()):
+        if self._device.is_night_latch_enabled():
             self._attr_supported_features = LockEntityFeature.OPEN
 
     def _async_update_attrs(self) -> None:
@@ -55,7 +55,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        if(self._device.is_night_latch_enabled()):
+        if self._device.is_night_latch_enabled():
             self._last_run_success = await self._device.unlock_without_unlatch()
         else:
             self._last_run_success = await self._device.unlock()
