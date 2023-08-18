@@ -97,7 +97,7 @@ LABEL_TO_STATE = {
     "alert": STATE_ALARM_TRIGGERED,
 }
 
-HOME_COMPATIBLE_PLATFORMS = [
+HOME_COMPATIBLE_CATEGORIES = [
     Freeboxlabel.CAMERA,
     Freeboxlabel.DWS,
     Freeboxlabel.KFB,
