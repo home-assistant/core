@@ -134,10 +134,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(None)
         else:
             self._attr_native_value = result
-        if self._attr_native_value is None:
-            self._attr_available = False
-        else:
-            self._attr_available = True
+        self._attr_available = self._attr_native_value is not None
         self._lazy_errors = self._lazy_error_count
         self.async_write_ha_state()
 
