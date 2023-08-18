@@ -83,13 +83,16 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Could not read overview") from err
 
         def unpack(overview: list, value: str) -> dict | list:
-            return next(
-                (
-                    item["data"]["installation"][value]
-                    for item in overview
-                    if value in item.get("data", {}).get("installation", {})
-                ),
-                [],
+            return (
+                next(
+                    (
+                        item["data"]["installation"][value]
+                        for item in overview
+                        if value in item.get("data", {}).get("installation", {})
+                    ),
+                    [],
+                )
+                or []
             )
 
         # Store data in a way Home Assistant can easily consume it
