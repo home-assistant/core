@@ -115,20 +115,6 @@ async def async_setup_entry(
                     percent_conv,
                 )
             )
-        # Fan Speed
-        if thermostat.has_variable_fan_speed():
-            entities.append(
-                NexiaThermostatSensor(
-                    coordinator,
-                    thermostat,
-                    "get_fan_speed_setpoint",
-                    "Fan Speed",
-                    None,
-                    PERCENTAGE,
-                    SensorStateClass.MEASUREMENT,
-                    percent_conv,
-                )
-            )
 
         # Zone Sensors
         for zone_id in thermostat.get_zone_ids():

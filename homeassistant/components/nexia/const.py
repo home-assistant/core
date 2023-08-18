@@ -7,6 +7,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.SCENE,
     Platform.SWITCH,
+    Platform.NUMBER,
 ]
 
 ATTRIBUTION = "Data provided by Trane Technologies"
