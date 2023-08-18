@@ -100,7 +100,5 @@ LABEL_TO_STATE = {
 HOME_COMPATIBLE_CATEGORIES = [
     Freeboxlabel.CAMERA,
     Freeboxlabel.DWS,
-    Freeboxlabel.KFB,
-    Freeboxlabel.OPENER,
     Freeboxlabel.PIR,
 ]
