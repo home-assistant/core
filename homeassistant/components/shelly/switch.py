@@ -35,10 +35,9 @@ class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
 
 GAS_VALVE_SWITCH = BlockSwitchDescription(
     key="valve|valve",
-    name="Valve opened",
-    icon="mdi:valve",
+    name="Valve",
     available=lambda block: block.valve not in ("failure", "checking"),
-    # removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
 )
 
 
@@ -142,6 +141,11 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     def is_on(self) -> bool:
         """If switch is on."""
         return self.attribute_value in ("closing", "opening", "opened")
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return "mdi:valve-open" if self.is_on else "mdi:valve-closed"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
