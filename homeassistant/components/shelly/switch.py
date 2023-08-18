@@ -38,7 +38,7 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
     name="Valve opened",
     icon="mdi:valve",
     available=lambda block: block.valve not in ("failure", "checking"),
-    removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+    # removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
 )
 
 
@@ -145,17 +145,12 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.async_set_valve("open")
+        await self.set_state(go="open")
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.async_set_valve("close")
-
-    async def async_set_valve(self, new_state: str) -> None:
-        """Set the valve state."""
-        await self.coordinator.device.http_request(
-            "get", f"settings/{self.block.type}/{self.block.channel}", {"go": new_state}
-        )
+        await self.set_state(go="close")
         self.async_write_ha_state()
 
 
