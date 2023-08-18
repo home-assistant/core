@@ -17,7 +17,7 @@
       }
     },
     "error": {
-      "invalid_phone": "Invalid phone number",
+      "invalid_phone": "Invalid phone number, please use the following format: +972xxxxxxxx",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
