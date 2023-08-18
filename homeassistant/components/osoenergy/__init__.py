@@ -37,13 +37,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except OSOEnergyReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    platforms = set()
     for ha_type, oso_type in PLATFORM_LOOKUP.items():
         device_list = devices.get(oso_type, [])
         if device_list:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, ha_type)
-            )
-
+            platforms.add(ha_type)
+    if platforms:
+        await hass.config_entries.async_forward_entry_setup(entry, platforms)
     return True
 
 
