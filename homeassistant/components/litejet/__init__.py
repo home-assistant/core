@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LiteJet component."""
     if DOMAIN in config:
-        # No config entry exists and configuration.yaml config exists, trigger the import flow.
+        # Configuration.yaml config exists, trigger the import flow.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
