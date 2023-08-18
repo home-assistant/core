@@ -117,6 +117,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_DEW_POINT,
         name="Dew Point",
+        icon="mdi:thermometer-water",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
@@ -141,6 +142,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
+        icon="mdi:cloud-arrow-down",
         unit_imperial=UnitOfLength.MILES,
         unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
@@ -153,6 +155,7 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
+        icon="mdi:cloud-arrow-up",
         unit_imperial=UnitOfLength.MILES,
         unit_metric=UnitOfLength.KILOMETERS,
         imperial_conversion=lambda val: DistanceConverter.convert(
@@ -164,12 +167,14 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_COVER,
         name="Cloud Cover",
+        icon="mdi:cloud-percent",
         native_unit_of_measurement=PERCENTAGE,
     ),
     # Data comes in as m/s, convert to mi/h for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
+        icon="mdi:weather-windy",
         unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
         unit_metric=UnitOfSpeed.METERS_PER_SECOND,
         imperial_conversion=lambda val: SpeedConverter.convert(
