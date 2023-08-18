@@ -655,7 +655,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
         self._render_templates(variables)
 
 
-class ManualTriggerSensorEntity(ManualTriggerEntity):
+class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     """Template entity based on manual trigger data for sensor."""
 
     def __init__(
