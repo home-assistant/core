@@ -521,8 +521,6 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-target-version = "py310"
-
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body

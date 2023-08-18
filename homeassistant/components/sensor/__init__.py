@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import ceil, floor, log10
@@ -528,8 +528,8 @@ class SensorEntity(Entity):
                         "which is missing timezone information"
                     )
 
-                if value.tzinfo != timezone.utc:
-                    value = value.astimezone(timezone.utc)
+                if value.tzinfo != UTC:
+                    value = value.astimezone(UTC)
 
                 return value.isoformat(timespec="seconds")
             except (AttributeError, OverflowError, TypeError) as err:
