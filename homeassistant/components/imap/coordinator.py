@@ -11,7 +11,6 @@ import logging
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -408,7 +407,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     await idle
 
             # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError

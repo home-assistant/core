@@ -50,10 +50,12 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
@@ -154,15 +156,25 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Initialize the switch."""
         super().__init__(hub, config)
         self._swap = config[CONF_SWAP]
+        if self._swap == CONF_SWAP_NONE:
+            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
-        self._count = config[CONF_COUNT]
+        self._slave_count = config.get(CONF_SLAVE_COUNT, 0)
+        self._slave_size = self._count = config[CONF_COUNT]
 
-    def _swap_registers(self, registers: list[int]) -> list[int]:
+    def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
+        if slave_count:
+            swapped = []
+            for i in range(0, self._slave_count + 1):
+                inx = i * self._slave_size
+                inx2 = inx + self._slave_size
+                swapped.extend(self._swap_registers(registers[inx:inx2], 0))
+            return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
@@ -192,7 +204,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
-        registers = self._swap_registers(registers)
+        if self._swap:
+            registers = self._swap_registers(registers, self._slave_count)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()

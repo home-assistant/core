@@ -89,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     tractive = TractiveClient(hass, client, creds["user_id"], entry)
-    tractive.subscribe()
 
     try:
         trackable_objects = await client.trackable_objects()
@@ -97,7 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *(_generate_trackables(client, item) for item in trackable_objects)
         )
     except aiotractive.exceptions.TractiveError as error:
-        await tractive.unsubscribe()
         raise ConfigEntryNotReady from error
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
@@ -173,6 +171,14 @@ class TractiveClient:
         """Return user id."""
         return self._user_id
 
+    @property
+    def subscribed(self) -> bool:
+        """Return True if subscribed."""
+        if self._listen_task is None:
+            return False
+
+        return not self._listen_task.cancelled()
+
     async def trackable_objects(
         self,
     ) -> list[aiotractive.trackable_object.TrackableObject]:
@@ -201,6 +207,7 @@ class TractiveClient:
         while True:
             try:
                 async for event in self._client.events():
+                    _LOGGER.debug("Received event: %s", event)
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False

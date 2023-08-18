@@ -210,7 +210,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             int.from_bytes(as_bytes[i : i + 2], "big")
             for i in range(0, len(as_bytes), 2)
         ]
-        registers = self._swap_registers(raw_regs)
+        registers = self._swap_registers(raw_regs, 0)
 
         if self._data_type in (
             DataType.INT16,
