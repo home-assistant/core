@@ -586,7 +586,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is str:  # noqa: E721
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
