@@ -202,14 +202,15 @@ class DatasetStore:
             raise HomeAssistantError("Invalid dataset")
 
         # Bail out if the dataset already exists
-        for dataset_id, entry in self.datasets.items():
+        entry: DatasetEntry | None
+        for entry in self.datasets.values():
             if entry.dataset == dataset:
                 if (
                     preferred_border_agent_id
                     and entry.preferred_border_agent_id is None
                 ):
                     self.async_set_preferred_border_agent_id(
-                        dataset_id, preferred_border_agent_id
+                        entry.id, preferred_border_agent_id
                     )
                 return
 
@@ -258,7 +259,7 @@ class DatasetStore:
             self.async_schedule_save()
             if preferred_border_agent_id and entry.preferred_border_agent_id is None:
                 self.async_set_preferred_border_agent_id(
-                    dataset_id, preferred_border_agent_id
+                    entry.id, preferred_border_agent_id
                 )
             return
 
