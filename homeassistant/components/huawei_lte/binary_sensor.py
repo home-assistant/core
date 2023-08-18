@@ -105,7 +105,7 @@ CONNECTION_STATE_ATTRIBUTES = {
 class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE mobile connection binary sensor."""
 
-    _attr_name: str = field(default="Mobile connection", init=False)
+    _attr_translation_key: str = field(default="mobile_connection", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -174,7 +174,7 @@ class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
 class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE WiFi status binary sensor."""
 
-    _attr_name: str = field(default="WiFi status", init=False)
+    _attr_translation_key: str = field(default="wifi_status", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -186,7 +186,7 @@ class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 class HuaweiLteWifi24ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE 2.4GHz WiFi status binary sensor."""
 
-    _attr_name: str = field(default="2.4GHz WiFi status", init=False)
+    _attr_translation_key: str = field(default="24ghz_wifi_status", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -198,7 +198,7 @@ class HuaweiLteWifi24ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
     """Huawei LTE 5GHz WiFi status binary sensor."""
 
-    _attr_name: str = field(default="5GHz WiFi status", init=False)
+    _attr_translation_key: str = field(default="5ghz_wifi_status", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -210,7 +210,7 @@ class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE SMS storage full binary sensor."""
 
-    _attr_name: str = field(default="SMS storage full", init=False)
+    _attr_translation_key: str = field(default="sms_storage_full", init=False)
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
