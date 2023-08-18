@@ -60,10 +60,6 @@ class AudioBuffer:
         """Get the number of bytes currently in the buffer."""
         return self._length
 
-    def __getitem__(self, item: Any) -> Any:
-        """Get a slice of the buffer."""
-        return self._buffer[item]
-
     def __setitem__(self, item: Any, value: Any) -> Any:
         """Set a slice of the buffer."""
         self._buffer[item] = value

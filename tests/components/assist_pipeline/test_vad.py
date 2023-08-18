@@ -2,7 +2,12 @@
 import itertools as it
 from unittest.mock import patch
 
-from homeassistant.components.assist_pipeline.vad import VoiceCommandSegmenter
+import pytest
+
+from homeassistant.components.assist_pipeline.vad import (
+    AudioBuffer,
+    VoiceCommandSegmenter,
+)
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
@@ -93,3 +98,14 @@ def test_audio_buffer() -> None:
             assert len(segmenter.audio_buffer) == 0
             assert mock_process.call_args_list[0][0][0] == two_chunks[:bytes_per_chunk]
             assert mock_process.call_args_list[1][0][0] == two_chunks[bytes_per_chunk:]
+
+
+def test_audio_buffer_errors() -> None:
+    """Test audio buffer errors."""
+    audio_buffer = AudioBuffer(1)
+
+    with pytest.raises(ValueError):
+        audio_buffer.length = 2
+
+    with pytest.raises(ValueError):
+        audio_buffer.length = -2

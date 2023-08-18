@@ -1,7 +1,7 @@
 """Test Voice Assistant init."""
 from dataclasses import asdict
 import itertools as it
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -308,26 +308,38 @@ async def test_pipeline_from_audio_stream_wake_word(
         yield b"wake word"
         yield b"part1"
         yield b"part2"
+        yield b"end"
         yield b""
 
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-        wake_word_settings=assist_pipeline.WakeWordSettings(
-            audio_seconds_to_buffer=1.5
-        ),
-    )
+    def continue_stt(self, chunk):
+        # Ensure stt_vad_start event is triggered
+        self.in_command = True
+
+        # Stop on fake end chunk to trigger stt_vad_end
+        return chunk != b"end"
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter.process",
+        continue_stt,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            wake_word_settings=assist_pipeline.WakeWordSettings(
+                audio_seconds_to_buffer=1.5
+            ),
+        )
 
     assert process_events(events) == snapshot
 

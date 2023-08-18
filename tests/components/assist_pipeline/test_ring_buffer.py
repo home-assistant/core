@@ -14,6 +14,7 @@ def test_ring_buffer_put_1() -> None:
     """Test putting some data smaller than the maximum length."""
     rb = RingBuffer(10)
     rb.put(bytes([1, 2, 3, 4, 5]))
+    assert len(rb) == 5
     assert rb.pos == 5
     assert rb.getvalue() == bytes([1, 2, 3, 4, 5])
 
@@ -23,6 +24,7 @@ def test_ring_buffer_put_2() -> None:
     rb = RingBuffer(10)
     rb.put(bytes([1, 2, 3, 4, 5]))
     rb.put(bytes([6, 7, 8, 9, 10, 11, 12]))
+    assert len(rb) == 10
     assert rb.pos == 2
     assert rb.getvalue() == bytes([3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
@@ -31,5 +33,6 @@ def test_ring_buffer_put_too_large() -> None:
     """Test putting data too large for the buffer."""
     rb = RingBuffer(10)
     rb.put(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
+    assert len(rb) == 10
     assert rb.pos == 2
     assert rb.getvalue() == bytes([3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
