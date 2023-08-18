@@ -89,7 +89,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         severity=IssueSeverity.ERROR,
                         translation_key="deprecated_yaml_serial_exception",
                         translation_placeholders={
-                            "set_up_the_integration": "[set up the integration](/config/integrations/dashboard/add?domain=litejet)"
+                            "url": "/config/integrations/dashboard/add?domain=litejet"
                         },
                     )
                 errors[CONF_PORT] = "open_failed"
