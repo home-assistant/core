@@ -18,7 +18,6 @@ import homeassistant.util.dt as dt_util
 
 from . import OSOEnergyEntity
 from .const import (
-    ATTR_PROFILE_HOURS,
     ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,
     DOMAIN,
@@ -63,38 +62,23 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_V40MIN,
-        {vol.Required(ATTR_V40MIN): vol.Coerce(float)},
+        {
+            vol.Required(ATTR_V40MIN): vol.All(
+                vol.Coerce(float), vol.Range(min=200, max=550)
+            ),
+        },
         "async_set_v40_min",
     )
 
+    service_set_profile_schema = {}
+    for hour in range(24):
+        service_set_profile_schema[vol.Optional(f"hour_{hour:02d}")] = vol.All(
+            vol.Coerce(int), vol.Range(min=10, max=75)
+        )
+
     platform.async_register_entity_service(
         SERVICE_SET_PROFILE,
-        {
-            vol.Optional(ATTR_PROFILE_HOURS["00"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["01"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["02"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["03"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["04"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["05"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["06"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["07"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["08"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["09"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["10"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["11"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["12"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["13"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["14"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["15"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["16"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["17"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["18"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["19"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["20"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["21"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["22"]): vol.Coerce(int),
-            vol.Optional(ATTR_PROFILE_HOURS["23"]): vol.Coerce(int),
-        },
+        service_set_profile_schema,
         "async_set_profile",
     )
 
@@ -148,11 +132,6 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         )
 
     @property
-    def name(self) -> str:
-        """Return the name of the water heater."""
-        return self.device["device_name"]
-
-    @property
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.get("attributes", {}).get("available", False)
@@ -195,18 +174,21 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
-        for attribute, ha_name in EXTRA_HEATER_ATTR.items():
+        for attribute, attribute_config in EXTRA_HEATER_ATTR.items():
             value = self.device.get("attributes", {}).get(attribute)
             final = value
-            if attribute == "profile":
-                final = _convert_profile_to_local(value)
-            elif attribute in ("heater_state", "heater_mode", "optimization_mode"):
-                value_key = f"{value}".lower()
-                final = OSO_ENERGY_TO_HASS_STATE.get(value_key, final)
 
-            attr.update({ha_name: final})
+            value_mappings = attribute_config.get("value_mapping")
+            is_profile = attribute_config.get("is_profile")
+            if is_profile:
+                final = _convert_profile_to_local(value)
+            elif value_mappings:
+                value_key = f"{value}".lower()
+                final = value_mappings.get(value_key, final)
+
+            attr.update({str(attribute_config.get("ha_name")): final})
 
         return attr
 
@@ -242,10 +224,10 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         profile = self.device.get("attributes", {}).get("profile")
 
         for hour in range(24):
-            hour_key = f"{hour:02d}"
+            hour_key = f"hour_{hour:02d}"
 
-            if ATTR_PROFILE_HOURS[hour_key] in kwargs:
-                profile[_get_utc_hour(hour)] = kwargs[ATTR_PROFILE_HOURS[hour_key]]
+            if hour_key in kwargs:
+                profile[_get_utc_hour(hour)] = kwargs[hour_key]
 
         await self.osoenergy.hotwater.set_profile(self.device, profile)
 

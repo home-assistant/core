@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device_list:
             platforms.add(ha_type)
     if platforms:
-        await hass.config_entries.async_forward_entry_setup(entry, platforms)
+        await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
