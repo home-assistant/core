@@ -69,7 +69,7 @@ async def async_setup_entry(
             None,
         )
         if sensor_cover_node and sensor_cover_node.get("value") is not None:
-            new_trackedcover.append(FreeboxSensorCover(hass, router, node))
+            binary_entities.append(FreeboxSensorCover(hass, router, node))
 
         tracked.add(nodeid)
 
