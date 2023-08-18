@@ -31,6 +31,7 @@ from .const import (
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
+from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,27 +84,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth_data = deepcopy(dict(entry.data))
     blink.auth = Auth(auth_data, no_prompt=True, session=async_get_clientsession(hass))
     blink.refresh_rate = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    coordinator = BlinkUpdateCoordinator(hass, blink)
 
     try:
-        await blink.start()
-        if blink.auth.check_key_required():
+        await coordinator.api.start()
+        if coordinator.api.auth.check_key_required():
             _LOGGER.debug("Attempting a reauth flow")
             _reauth_flow_wrapper(hass, auth_data)
     except (ClientError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
 
-    hass.data[DOMAIN][entry.entry_id] = blink
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     if not blink.available:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
-    await blink.refresh(force=True)
+
+    await coordinator.async_config_entry_first_refresh()
 
     async def blink_refresh(event_time=None):
         """Call blink to refresh info."""
-        await hass.data[DOMAIN][entry.entry_id].refresh(force_cache=True)
+        await hass.data[DOMAIN][entry.entry_id].api.refresh(force_cache=True)
 
     async def async_save_video(call):
         """Call save video service handler."""
@@ -116,8 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
-        await hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
-            hass.data[DOMAIN][entry.entry_id],
+        await hass.data[DOMAIN][entry.entry_id].api.auth.send_auth_key(
+            hass.data[DOMAIN][entry.entry_id].api,
             pin,
         )
 
@@ -152,26 +155,19 @@ def _async_import_options_from_data_if_missing(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Blink entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    if not unload_ok:
-        return False
+        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+        hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    if len(hass.data[DOMAIN]) != 0:
-        return True
-
-    hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
-    hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
-
-    return True
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    blink: Blink = hass.data[DOMAIN][entry.entry_id]
+    blink: Blink = hass.data[DOMAIN][entry.entry_id].api
     blink.refresh_rate = entry.options[CONF_SCAN_INTERVAL]
 
 
@@ -185,7 +181,7 @@ async def async_handle_save_video_service(
         _LOGGER.error("Can't write %s, no access to path!", video_path)
         return
     try:
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
+        all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
         if camera_name in all_cameras:
             await all_cameras[camera_name].video_to_file(video_path)
 
@@ -204,7 +200,7 @@ async def async_handle_save_recent_clips_service(
         return
 
     try:
-        all_cameras = hass.data[DOMAIN][entry.entry_id].cameras
+        all_cameras = hass.data[DOMAIN][entry.entry_id].api.cameras
         if camera_name in all_cameras:
             await all_cameras[camera_name].save_recent_clips(output_dir=clips_dir)
     except OSError as err:

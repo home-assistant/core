@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from blinkpy.blinkpy import Blink
+from blinkpy.blinkpy import Blink, BlinkSyncModule
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -16,12 +16,13 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .coordinator import BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +33,15 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Blink Alarm Control Panels."""
-    data = hass.data[DOMAIN][config.entry_id]
+    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
 
     sync_modules = []
-    for sync_name, sync_module in data.sync.items():
-        sync_modules.append(BlinkSyncModuleHA(data, sync_name, sync_module))
-    async_add_entities(sync_modules, update_before_add=True)
+    for sync_name, sync_module in coordinator.api.sync.items():
+        sync_modules.append(BlinkSyncModuleHA(coordinator, sync_name, sync_module))
+    async_add_entities(sync_modules)
 
 
-class BlinkSyncModuleHA(AlarmControlPanelEntity):
+class BlinkSyncModuleHA(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Blink Alarm Control Panel."""
 
     _attr_icon = ICON
@@ -48,9 +49,13 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
     _attr_name = None
     _attr_has_entity_name = True
 
-    def __init__(self, data, name: str, sync) -> None:
+    def __init__(
+        self, coordinator: BlinkUpdateCoordinator, name: str, sync: BlinkSyncModule
+    ) -> None:
         """Initialize the alarm control panel."""
-        self.data: Blink = data
+        super().__init__(coordinator)
+        self.api: Blink = coordinator.api
+        self._coordinator = coordinator
         self.sync = sync
         self._name: str = name
         self._attr_unique_id: str = sync.serial
@@ -60,38 +65,24 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
             manufacturer=DEFAULT_BRAND,
         )
 
-    async def async_update(self) -> None:
-        """Update the state of the device."""
-        if self.data.check_if_ok_to_update():
-            _LOGGER.debug(
-                "Initiating a blink.refresh() from BlinkSyncModule('%s') (%s)",
-                self._name,
-                self.data,
-            )
-            try:
-                await self.data.refresh(force=True)
-                self._attr_available = True
-            except asyncio.TimeoutError:
-                self._attr_available = False
-
-            _LOGGER.info("Updating State of Blink Alarm Control Panel '%s'", self._name)
-
-        self.sync.attributes["network_info"] = self.data.networks
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        self.sync.attributes["network_info"] = self.api.networks
         self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
         self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         self._attr_extra_state_attributes = self.sync.attributes
-
-    @property
-    def state(self) -> StateType:
-        """Return state of alarm."""
-        return STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
+        self._attr_state = (
+            STATE_ALARM_ARMED_AWAY if self.sync.arm else STATE_ALARM_DISARMED
+        )
+        self._attr_available = True
+        self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
-            await self.sync.refresh()
-            self.async_write_ha_state()
+            await self._coordinator.async_refresh()
         except asyncio.TimeoutError:
             self._attr_available = False
 
@@ -99,7 +90,6 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
-            await self.sync.refresh()
-            self.async_write_ha_state()
+            await self._coordinator.async_refresh()
         except asyncio.TimeoutError:
             self._attr_available = False
