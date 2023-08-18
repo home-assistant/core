@@ -7,7 +7,6 @@ import logging
 
 import async_timeout
 import ergast_py as ergast
-import pytz
 from requests import exceptions as RequestsExceptions
 
 from homeassistant.core import HomeAssistant
@@ -170,12 +169,12 @@ class F1UpdateCoordinator(DataUpdateCoordinator[None]):
         now = datetime.now(timezone.utc)
 
         for race in self.races:
-            race_date = race.date.replace(tzinfo=pytz.UTC)
+            race_date = race.date.replace(tzinfo=timezone.utc)
             if race_date > now:
                 return race
 
         for race in self.races_next_year:
-            race_date = race.date.replace(tzinfo=pytz.UTC)
+            race_date = race.date.replace(tzinfo=timezone.utc)
             if race_date > now:
                 return race
 
