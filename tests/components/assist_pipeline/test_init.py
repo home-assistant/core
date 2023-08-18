@@ -49,9 +49,9 @@ async def test_pipeline_from_audio_stream_auto(
 
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
-        Context(),
-        events.append,
-        stt.SpeechMetadata(
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
             language="",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
@@ -59,7 +59,7 @@ async def test_pipeline_from_audio_stream_auto(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
-        audio_data(),
+        stt_stream=audio_data(),
     )
 
     assert process_events(events) == snapshot
@@ -108,9 +108,9 @@ async def test_pipeline_from_audio_stream_legacy(
     # Use the created pipeline
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
-        Context(),
-        events.append,
-        stt.SpeechMetadata(
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
             language="en-UK",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
@@ -118,7 +118,7 @@ async def test_pipeline_from_audio_stream_legacy(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
-        audio_data(),
+        stt_stream=audio_data(),
         pipeline_id=pipeline_id,
     )
 
@@ -168,9 +168,9 @@ async def test_pipeline_from_audio_stream_entity(
     # Use the created pipeline
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
-        Context(),
-        events.append,
-        stt.SpeechMetadata(
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
             language="en-UK",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
@@ -178,7 +178,7 @@ async def test_pipeline_from_audio_stream_entity(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
-        audio_data(),
+        stt_stream=audio_data(),
         pipeline_id=pipeline_id,
     )
 
@@ -229,9 +229,9 @@ async def test_pipeline_from_audio_stream_no_stt(
     with pytest.raises(assist_pipeline.pipeline.PipelineRunValidationError):
         await assist_pipeline.async_pipeline_from_audio_stream(
             hass,
-            Context(),
-            events.append,
-            stt.SpeechMetadata(
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
                 language="en-UK",
                 format=stt.AudioFormats.WAV,
                 codec=stt.AudioCodecs.PCM,
@@ -239,7 +239,7 @@ async def test_pipeline_from_audio_stream_no_stt(
                 sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
-            audio_data(),
+            stt_stream=audio_data(),
             pipeline_id=pipeline_id,
         )
 
@@ -268,9 +268,9 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
     with pytest.raises(assist_pipeline.PipelineNotFound):
         await assist_pipeline.async_pipeline_from_audio_stream(
             hass,
-            Context(),
-            events.append,
-            stt.SpeechMetadata(
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
                 language="en-UK",
                 format=stt.AudioFormats.WAV,
                 codec=stt.AudioCodecs.PCM,
@@ -278,7 +278,7 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
                 sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
-            audio_data(),
+            stt_stream=audio_data(),
             pipeline_id="blah",
         )
 
@@ -312,9 +312,9 @@ async def test_pipeline_from_audio_stream_wake_word(
 
     await assist_pipeline.async_pipeline_from_audio_stream(
         hass,
-        Context(),
-        events.append,
-        stt.SpeechMetadata(
+        context=Context(),
+        event_callback=events.append,
+        stt_metadata=stt.SpeechMetadata(
             language="",
             format=stt.AudioFormats.WAV,
             codec=stt.AudioCodecs.PCM,
@@ -322,7 +322,7 @@ async def test_pipeline_from_audio_stream_wake_word(
             sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
             channel=stt.AudioChannels.CHANNEL_MONO,
         ),
-        audio_data(),
+        stt_stream=audio_data(),
         start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
         wake_word_settings=assist_pipeline.WakeWordSettings(
             audio_seconds_to_buffer=1.5
