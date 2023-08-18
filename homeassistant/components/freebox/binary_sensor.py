@@ -58,7 +58,7 @@ async def async_setup_entry(
             continue
         if node["category"] == FreeboxHomeCategory.PIR:
             binary_entities.append(FreeboxPir(hass, router, node))
-        elif node["category"] == "dws":
+        elif node["category"] == FreeboxHomeCategory.DWS:
             binary_entities.append(FreeboxDws(hass, router, node))
 
         sensor_cover_node = next(
