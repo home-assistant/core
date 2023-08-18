@@ -116,7 +116,7 @@ async def async_setup_entry(
             None,
         )
         if battery_node and battery_node.get("value") is not None:
-            new_tracked.append(FreeboxBatterySensor(hass, router, node, battery_node))
+            entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
 
         tracked.add(nodeid)
 
