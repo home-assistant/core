@@ -68,7 +68,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
         if slave_count:
-            self._count = self._count * slave_count
+            self._count = self._count * (slave_count + 1)
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
