@@ -247,4 +247,4 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
             )
             await coordinator.async_write_coil(self._coil_use_room_sensor, "OFF")
         else:
-            raise HomeAssistantError(f"Mode not supported {hvac_mode}")
+            raise HomeAssistantError(f"{hvac_mode} mode not supported for {self.name}")
