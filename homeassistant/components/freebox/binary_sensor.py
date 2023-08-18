@@ -110,7 +110,7 @@ class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
         return BinarySensorDeviceClass.MOTION
 
 
-class FreeboxDws(FreeboxPir):
+class FreeboxDwsSensor(FreeboxPir):
     """Representation of a Freebox door opener binary sensor."""
 
     @property
