@@ -240,12 +240,11 @@ class MqttValueTemplate:
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: "
-                    "'%s' with payload: %s",
+                    "'%s'",
                     type(ex).__name__,
                     ex,
                     self._entity.entity_id if self._entity else "n/a",
                     self._value_template.template,
-                    payload,
                 )
                 raise ex
             return rendered_payload
