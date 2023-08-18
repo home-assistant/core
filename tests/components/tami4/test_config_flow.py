@@ -2,8 +2,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from Tami4EdgeAPI.device import Device
 import pytest
+from Tami4EdgeAPI.Tami4EdgeAPI import Device
 
 from homeassistant import config_entries
 from homeassistant.components.tami4.const import CONF_PHONE, DOMAIN
@@ -66,7 +66,7 @@ async def test_step_user_valid_number(
     mock_request_otp,
     mock_submit_otp,
     mock__get_devices,
-):
+) -> None:
     """Test user step with valid phone number."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,7 +98,7 @@ async def test_step_user_invalid_number(
     mock_request_otp,
     mock_submit_otp,
     mock__get_devices,
-):
+) -> None:
     """Test user step with invalid phone number."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
