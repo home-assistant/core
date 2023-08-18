@@ -33,7 +33,6 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,7 +44,6 @@ from .const import (
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_RUN_MODE,
     DOMAIN,
-    SERVICE_SET_FAN_SPEED,
 )
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
@@ -139,11 +137,6 @@ async def async_setup_entry(
         SET_HVAC_RUN_MODE_SCHEMA,
         f"async_{SERVICE_SET_HVAC_RUN_MODE}",
     )
-    platform.async_register_entity_service(
-        SERVICE_SET_FAN_SPEED,
-        {vol.Required(ATTR_FAN_SPEED): vol.Coerce(int)},
-        f"async_{SERVICE_SET_FAN_SPEED}",
-    )
 
     entities: list[NexiaZone] = []
     for thermostat_id in nexia_home.get_thermostat_ids():
@@ -219,16 +212,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             return percent_conv(self._thermostat.get_fan_speed_setpoint())
 
         return None
-
-    async def async_set_fan_speed(self, fan_speed: int) -> None:
-        """Set new target fan mode."""
-        if self._has_fan_speed_support:
-            await self._thermostat.set_fan_setpoint(fan_speed / 100)
-            self._signal_thermostat_update()
-        else:
-            raise HomeAssistantError(
-                f"Entity {self.entity_id} does not support this service."
-            )
 
     async def async_set_hvac_run_mode(self, run_mode, hvac_mode):
         """Set the hvac run mode."""

@@ -52,16 +52,6 @@
           "description": "The HVAC mode to use for the schedule or hold. If not specified, the current HVAC mode will be used."
         }
       }
-    },
-    "set_fan_speed": {
-      "name": "Set fan speed",
-      "description": "Sets fan speed.",
-      "fields": {
-        "fan_speed": {
-          "name": "Fan speed",
-          "description": "Fan speed."
-        }
-      }
     }
   }
 }
