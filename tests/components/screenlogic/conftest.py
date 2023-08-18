@@ -227,6 +227,7 @@ def create_mock_gateway(mock_data):
     gateway = Mock(spec=ScreenLogicGateway)
     type(gateway).async_connect = AsyncMock(return_value=mock_async_connect)
     type(gateway).get_data = Mock(side_effect=mock_get_data)
+    type(gateway).get_debug = Mock(return_value={})
     type(gateway).is_connected = PropertyMock(return_value=True)
     type(gateway).is_client = PropertyMock(return_value=False)
     type(gateway).equipment_flags = PropertyMock(
@@ -258,6 +259,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SCAN_INTERVAL: 30,
         },
         unique_id=MOCK_ADAPTER_MAC,
+        entry_id="screenlogictest",
     )
 
 
