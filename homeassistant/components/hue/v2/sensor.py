@@ -156,6 +156,14 @@ class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "zigbee_connectivity"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [
+        "connected",
+        "disconnected",
+        "connectivity_issue",
+        "unidirectional_incoming",
+    ]
     _attr_entity_registry_enabled_default = False
 
     @property
