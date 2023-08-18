@@ -29,7 +29,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.7.1
 
 # homeassistant.components.tasmota
-HATasmota==0.6.5
+HATasmota==0.7.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
