@@ -241,7 +241,7 @@ class FreeboxBatterySensor(FreeboxHomeEntity):
     """Representation of a Freebox battery sensor."""
 
     def __init__(self, hass: HomeAssistant, router, node, sub_node) -> None:
-        """Initialize a Pir."""
+        """Initialize a battery sensor."""
         super().__init__(hass, router, node, sub_node)
 
     @property
