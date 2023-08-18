@@ -65,7 +65,6 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     slave_count = config.get(CONF_SLAVE_COUNT, 0) + 1
-    config.get(CONF_SLAVE, 0)
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     if (
         slave_count > 1
