@@ -294,13 +294,12 @@ class EntityTopicState:
             try:
                 entity.async_write_ha_state()
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Exception raised when updating state of %s, topic: "
                     "'%s' with payload: %s",
                     entity.entity_id,
                     msg.topic,
                     msg.payload,
-                    exc_info=True,
                 )
 
     @callback
