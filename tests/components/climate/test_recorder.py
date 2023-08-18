@@ -10,10 +10,8 @@ from homeassistant.components import climate
 from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
-    ATTR_MAX_FAN_SPEED,
     ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
-    ATTR_MIN_FAN_SPEED,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODES,
@@ -67,7 +65,5 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             assert ATTR_MAX_TEMP not in state.attributes
             assert ATTR_MIN_HUMIDITY not in state.attributes
             assert ATTR_MAX_HUMIDITY not in state.attributes
-            assert ATTR_MIN_FAN_SPEED not in state.attributes
-            assert ATTR_MAX_FAN_SPEED not in state.attributes
             assert ATTR_TARGET_TEMP_STEP not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes
