@@ -243,7 +243,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"Error in sensor {TEST_ENTITY_NAME} swap(word) not possible due to the registers count: 1, needed: 2",
+            f"{TEST_ENTITY_NAME}: `structure` illegal with `swap`",
         ),
     ],
 )
