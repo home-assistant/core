@@ -255,6 +255,6 @@ class FreeboxBatterySensor(FreeboxHomeEntity):
         return self.get_value("signal", "battery")
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def unit_of_measurement(self) -> str:
         """Return the unit_of_measurement of the device."""
         return PERCENTAGE
