@@ -18,6 +18,7 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
+from homeassistant.components.assist_pipeline.error import WakeWordDetectionError
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -258,6 +259,15 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 },
             )
             _LOGGER.warning("Pipeline not found")
+        except WakeWordDetectionError as e:
+            self.handle_event(
+                VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
+                {
+                    "code": e.code,
+                    "message": e.message,
+                },
+            )
+            _LOGGER.warning("No Wake word provider found")
         except asyncio.TimeoutError:
             if self.stopped:
                 # The pipeline was stopped gracefully
