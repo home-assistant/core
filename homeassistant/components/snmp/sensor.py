@@ -19,11 +19,7 @@ from pysnmp.hlapi.asyncio import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -178,23 +174,31 @@ async def async_setup_platform(
             continue
         trigger_entity_config[key] = config[key]
 
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+    if value_template is not None:
+        value_template.hass = hass
+
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
-    async_add_entities([SnmpSensor(hass, data, trigger_entity_config)])
+    async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])
 
 
-class SnmpSensor(ManualTriggerSensorEntity, SensorEntity):
+class SnmpSensor(ManualTriggerSensorEntity):
     """Representation of a SNMP sensor."""
 
     _attr_should_poll = True
 
-    def __init__(self, hass: HomeAssistant, data: SnmpData, config: ConfigType) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        data: SnmpData,
+        config: ConfigType,
+        value_template: Template | None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config)
         self.data = data
         self._state = None
-        self._value_template = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
+        self._value_template = value_template
 
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
