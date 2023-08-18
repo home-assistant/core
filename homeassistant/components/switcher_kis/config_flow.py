@@ -58,10 +58,9 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user-confirmation of the config flow."""
-        discovered_devices = await self.hass.data[DOMAIN][DATA_DISCOVERY]
-
         if user_input is None:
             return await self._show_setup_form(user_input)
+        discovered_devices = await self.hass.data[DOMAIN][DATA_DISCOVERY]
 
         if len(discovered_devices) == 0:
             self.hass.data[DOMAIN].pop(DATA_DISCOVERY)
