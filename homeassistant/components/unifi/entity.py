@@ -74,8 +74,11 @@ def async_client_device_tracker_device_info_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> DeviceInfo:
     """Create device registry entry for client device tracker."""
+    client = api.clients[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        default_name=client.name or client.hostname,
+        default_manufacturer=client.oui,
     )
 
 
