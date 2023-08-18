@@ -505,7 +505,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102],
             False,
-            str(int(0x0102)),
+            str(0x0102),
         ),
         (
             {
@@ -514,7 +514,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0201],
             False,
-            str(int(0x0102)),
+            str(0x0102),
         ),
         (
             {
@@ -523,7 +523,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x02010403)),
+            str(0x02010403),
         ),
         (
             {
@@ -532,7 +532,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x03040102)),
+            str(0x03040102),
         ),
         (
             {
@@ -541,25 +541,25 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x04030201)),
+            str(0x04030201),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_MAX_VALUE: int(0x02010400),
+                CONF_MAX_VALUE: 0x02010400,
             },
             [0x0201, 0x0403],
             False,
-            str(int(0x02010400)),
+            str(0x02010400),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_MIN_VALUE: int(0x02010404),
+                CONF_MIN_VALUE: 0x02010404,
             },
             [0x0201, 0x0403],
             False,
-            str(int(0x02010404)),
+            str(0x02010404),
         ),
         (
             {
@@ -573,20 +573,20 @@ async def test_config_wrong_struct_sensor(
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_ZERO_SUPPRESS: int(0x00000001),
+                CONF_ZERO_SUPPRESS: 0x00000001,
             },
             [0x0000, 0x0002],
             False,
-            str(int(0x00000002)),
+            str(0x00000002),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_ZERO_SUPPRESS: int(0x00000002),
+                CONF_ZERO_SUPPRESS: 0x00000002,
             },
             [0x0000, 0x0002],
             False,
-            str(int(0)),
+            str(0),
         ),
         (
             {
@@ -727,7 +727,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102],
             False,
-            [str(int(0x0201))],
+            [str(0x0201)],
         ),
         (
             {
@@ -738,7 +738,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304],
             False,
-            [str(int(0x03040102))],
+            [str(0x03040102)],
         ),
         (
             {
@@ -749,7 +749,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304, 0x0506, 0x0708],
             False,
-            [str(int(0x0708050603040102))],
+            [str(0x0708050603040102)],
         ),
         (
             {
@@ -760,7 +760,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304],
             False,
-            [str(int(0x0201)), str(int(0x0403))],
+            [str(0x0201), str(0x0403)],
         ),
         (
             {
@@ -771,7 +771,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304, 0x0506, 0x0708],
             False,
-            [str(int(0x03040102)), str(int(0x07080506))],
+            [str(0x03040102), str(0x07080506)],
         ),
         (
             {
@@ -782,7 +782,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304, 0x0506, 0x0708, 0x0901, 0x0902, 0x0903, 0x0904],
             False,
-            [str(int(0x0708050603040102)), str(int(0x0904090309020901))],
+            [str(0x0708050603040102), str(0x0904090309020901)],
         ),
         (
             {
@@ -793,7 +793,7 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             },
             [0x0102, 0x0304, 0x0506, 0x0708],
             False,
-            [str(int(0x0201)), str(int(0x0403)), str(int(0x0605)), str(int(0x0807))],
+            [str(0x0201), str(0x0403), str(0x0605), str(0x0807)],
         ),
         (
             {
@@ -814,10 +814,10 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             ],
             False,
             [
-                str(int(0x03040102)),
-                str(int(0x07080506)),
-                str(int(0x0B0C090A)),
-                str(int(0x0F000D0E)),
+                str(0x03040102),
+                str(0x07080506),
+                str(0x0B0C090A),
+                str(0x0F000D0E),
             ],
         ),
         (
@@ -847,10 +847,10 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
             ],
             False,
             [
-                str(int(0x0604060306020601)),
-                str(int(0x0704070307020701)),
-                str(int(0x0804080308020801)),
-                str(int(0x0904090309020901)),
+                str(0x0604060306020601),
+                str(0x0704070307020701),
+                str(0x0804080308020801),
+                str(0x0904090309020901),
             ],
         ),
     ],
