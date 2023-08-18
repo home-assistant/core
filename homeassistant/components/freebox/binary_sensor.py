@@ -73,12 +73,8 @@ async def async_setup_entry(
 
         tracked.add(nodeid)
 
-    if new_trackedpir:
-        async_add_entities(new_trackedpir, True)
-    if new_trackeddws:
-        async_add_entities(new_trackeddws, True)
-    if new_trackedcover:
-        async_add_entities(new_trackedcover, True)
+    if binary_entities:
+        async_add_entities(binary_entities, True)
 
 
 class FreeboxPir(FreeboxHomeEntity, BinarySensorEntity):
