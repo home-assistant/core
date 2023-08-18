@@ -34,7 +34,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{FASTDOTCOM_DOMAIN}",
-        breaks_in_ha_version="2023.12.0",
+        breaks_in_ha_version="2024.2.0",
         is_fixable=False,
         issue_domain=FASTDOTCOM_DOMAIN,
         severity=IssueSeverity.WARNING,
