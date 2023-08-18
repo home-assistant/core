@@ -80,11 +80,11 @@ class Freeboxlabel(StrEnum):
 
 
 CATEGORY_TO_MODEL = {
-    "pir": "F-HAPIR01A",
-    "camera": "F-HACAM01A",
-    "dws": "F-HADWS01A",
-    "kfb": "F-HAKFB01A",
-    "alarm": "F-MSEC07A",
+    FreeboxHomeCategory.PIR: "F-HAPIR01A",
+    FreeboxHomeCategory.CAMERA: "F-HACAM01A",
+    FreeboxHomeCategory.DWS: "F-HADWS01A",
+    FreeboxHomeCategory.KFB: "F-HAKFB01A",
+    FreeboxHomeCategory.ALARM: "F-MSEC07A",
 }
 
 LABEL_TO_STATE = {
