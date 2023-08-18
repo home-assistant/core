@@ -67,6 +67,17 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     slave_count = config.get(CONF_SLAVE_COUNT, 0) + 1
     slave = config.get(CONF_SLAVE, 0)
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
+    if (
+        slave_count > 1
+        and count > 1
+        and data_type not in (DataType.CUSTOM, DataType.STRING)
+    ):
+        error = f"{name}  {CONF_COUNT} cannot be mixed with {data_type}"
+        raise vol.Invalid(error)
+    if config[CONF_DATA_TYPE] != DataType.CUSTOM:
+        if structure:
+            error = f"{name}  structure: cannot be mixed with {data_type}"
+
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         if slave or slave_count > 1:
             error = f"{name}: `{CONF_STRUCTURE}` illegal with `{CONF_SLAVE_COUNT}` / `{CONF_SLAVE}`"
@@ -96,17 +107,11 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
             CONF_STRUCTURE: structure,
             CONF_SWAP: swap_type,
         }
-
-    if structure:
-        error = f"{name}  structure: cannot be mixed with {data_type}"
-        raise vol.Invalid(error)
     if data_type not in DEFAULT_STRUCT_FORMAT:
         error = f"Error in sensor {name}. data_type `{data_type}` not supported"
         raise vol.Invalid(error)
-    if (slave or slave_count > 1) and data_type == DataType.STRING:
-        error = (
-            f"{name}: `{data_type}`  illegal with `{CONF_SLAVE_COUNT}` / `{CONF_SLAVE}`"
-        )
+    if slave_count > 1 and data_type == DataType.STRING:
+        error = f"{name}: `{data_type}`  illegal with `{CONF_SLAVE_COUNT}`"
         raise vol.Invalid(error)
 
     if CONF_COUNT not in config:
