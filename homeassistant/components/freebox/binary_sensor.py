@@ -126,7 +126,6 @@ class FreeboxCoverSensor(FreeboxHomeEntity, BinarySensorEntity):
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
         """Initialize a cover for another device."""
-        # Get cover node
         cover_node = next(
             filter(
                 lambda x: (x["name"] == "cover" and x["ep_type"] == "signal"),
