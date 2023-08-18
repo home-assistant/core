@@ -38,6 +38,7 @@ from .const import (
     COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
+    FORECAST_MODE_DAILY_HOURLY,
     FORECAST_MODE_HOURLY,
     MANUFACTURER,
     MODEL,
@@ -59,13 +60,20 @@ async def async_setup_entry(
         COORDINATOR_FORECAST
     ]
 
-    async_add_entities(
-        [
+    if entry.options.get(CONF_MODE, FORECAST_MODE_DAILY) == FORECAST_MODE_DAILY_HOURLY:
+        sensors = [
+            MeteoFranceWeather(coordinator, FORECAST_MODE_DAILY, "dual"),
+            MeteoFranceWeather(coordinator, FORECAST_MODE_HOURLY, "dual"),
+        ]
+    else:
+        sensors = [
             MeteoFranceWeather(
-                coordinator,
-                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
-            )
-        ],
+                coordinator, entry.options.get(CONF_MODE, FORECAST_MODE_DAILY), "single"
+            ),
+        ]
+
+    async_add_entities(
+        sensors,
         True,
     )
     _LOGGER.debug(
@@ -86,12 +94,22 @@ class MeteoFranceWeather(
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
-    def __init__(self, coordinator: DataUpdateCoordinator[Forecast], mode: str) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[Forecast], mode: str, option
+    ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
         self._mode = mode
-        self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        self._option = option
+        if self._option == "dual":
+            self._suffix = "_" + self._mode
+        else:
+            self._suffix = ""
+        self._city_name = self.coordinator.data.position["name"] + self._suffix
+        self._unique_id = (
+            f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
+        ) + self._suffix
 
     @property
     def unique_id(self):
