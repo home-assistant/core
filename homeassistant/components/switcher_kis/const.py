@@ -3,6 +3,7 @@ DOMAIN = "switcher_kis"
 
 CONF_DEVICE_PASSWORD = "device_password"
 CONF_PHONE_ID = "phone_id"
+CONF_TOKEN = "token"
 
 DATA_BRIDGE = "bridge"
 DATA_DEVICE = "device"
