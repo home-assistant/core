@@ -18,7 +18,6 @@ from aioesphomeapi import (
     UserServiceArgType,
     VoiceAssistantEventType,
 )
-from aioesphomeapi.model import VoiceAssistantCommandFlag
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
