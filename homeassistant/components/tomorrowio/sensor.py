@@ -274,9 +274,9 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
+        icon="mdi:tree",
         value_map=PollenIndex,
         translation_key="pollen_index",
-        icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_WEED,
@@ -288,9 +288,9 @@ SENSOR_TYPES = (
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
+        icon="mdi:grass",
         value_map=PollenIndex,
         translation_key="pollen_index",
-        icon="mdi:flower-pollen",
     ),
     TomorrowioSensorEntityDescription(
         TMRW_ATTR_FIRE_INDEX,
@@ -307,7 +307,7 @@ SENSOR_TYPES = (
         name="UV Radiation Health Concern",
         value_map=UVDescription,
         translation_key="uv_index",
-        icon="mdi:sun-wireless",
+        icon="mdi:weather-sunny-alert",
     ),
 )
 
