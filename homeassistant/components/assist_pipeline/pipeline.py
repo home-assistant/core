@@ -49,6 +49,7 @@ from .error import (
     WakeWordDetectionError,
     WakeWordTimeoutError,
 )
+from .ring_buffer import RingBuffer
 from .vad import VoiceActivityTimeout, VoiceCommandSegmenter
 
 _LOGGER = logging.getLogger(__name__)
@@ -425,7 +426,6 @@ class PipelineRun:
 
     async def prepare_wake_word_detection(self) -> None:
         """Prepare wake-word-detection."""
-        # Need to add to pipeline store
         engine = wake_word.async_default_engine(self.hass)
         if engine is None:
             raise WakeWordDetectionError(
@@ -448,7 +448,7 @@ class PipelineRun:
     async def wake_word_detection(
         self,
         stream: AsyncIterable[bytes],
-        audio_buffer: list[bytes],
+        audio_chunks_for_stt: list[bytes],
     ) -> wake_word.DetectionResult | None:
         """Run wake-word-detection portion of pipeline. Returns detection result."""
         metadata_dict = asdict(
@@ -484,30 +484,25 @@ class PipelineRun:
             # Use VAD to determine timeout
             wake_word_vad = VoiceActivityTimeout(wake_word_settings.timeout)
 
-        # Audio chunk buffer.
-        audio_bytes_to_buffer = int(
-            wake_word_settings.audio_seconds_to_buffer * 16000 * 2
+        # Audio chunk buffer. This audio will be forwarded to speech-to-text
+        # after wake-word-detection.
+        num_audio_bytes_to_buffer = int(
+            wake_word_settings.audio_seconds_to_buffer * 16000 * 2  # 16-bit @ 16Khz
         )
-        audio_ring_buffer = b""
+        stt_audio_buffer = RingBuffer(num_audio_bytes_to_buffer)
 
         async def timestamped_stream() -> AsyncIterable[tuple[bytes, int]]:
             """Yield audio with timestamps (milliseconds since start of stream)."""
-            nonlocal audio_ring_buffer
-
             timestamp_ms = 0
             async for chunk in stream:
                 yield chunk, timestamp_ms
                 timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
 
-                # Keeping audio right before wake word detection allows the
-                # voice command to be spoken immediately after the wake word.
-                if audio_bytes_to_buffer > 0:
-                    audio_ring_buffer += chunk
-                    if len(audio_ring_buffer) > audio_bytes_to_buffer:
-                        # A proper ring buffer would be far more efficient
-                        audio_ring_buffer = audio_ring_buffer[
-                            len(audio_ring_buffer) - audio_bytes_to_buffer :
-                        ]
+                # Wake-word-detection occurs *after* the wake word was actually
+                # spoken. Keeping audio right before detection allows the voice
+                # command to be spoken immediately after the wake word.
+                if num_audio_bytes_to_buffer > 0:
+                    stt_audio_buffer.put(chunk)
 
                 if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
                     raise WakeWordTimeoutError(
@@ -520,10 +515,10 @@ class PipelineRun:
                 timestamped_stream()
             )
 
-            if audio_ring_buffer:
+            if num_audio_bytes_to_buffer > 0:
                 # All audio kept from right before the wake word was detected as
                 # a single chunk.
-                audio_buffer.append(audio_ring_buffer)
+                audio_chunks_for_stt.append(stt_audio_buffer.getvalue())
         except WakeWordTimeoutError:
             _LOGGER.debug("Timeout during wake word detection")
             raise
@@ -540,9 +535,14 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             if result.queued_audio:
-                # Add audio that was pending at detection
+                # Add audio that was pending at detection.
+                #
+                # Because detection occurs *after* the wake word was actually
+                # spoken, we need to make sure pending audio is forwarded to
+                # speech-to-text so the user does not have to pause before
+                # speaking the voice command.
                 for chunk_ts in result.queued_audio:
-                    audio_buffer.append(chunk_ts[0])
+                    audio_chunks_for_stt.append(chunk_ts[0])
 
             wake_word_output = asdict(result)
 
