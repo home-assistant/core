@@ -53,7 +53,7 @@ class NexiaFanSpeedEntity(NexiaThermostatEntity, NumberEntity):
         super().__init__(
             coordinator,
             thermostat,
-            name=f"{thermostat.get_name()} Fan Speed",
+            name=f"{thermostat.get_name()} Fan speed",
             unique_id=f"{thermostat.thermostat_id}_fan_speed_setpoint",
         )
         min_value, max_value = valid_range
