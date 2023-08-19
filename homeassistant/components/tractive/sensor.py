@@ -176,6 +176,11 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:sleep",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         value_fn=lambda state: state if state is None else state.lower(),
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "ok",
+            "good",
+        ],
     ),
     TractiveSensorEntityDescription(
         key=ATTR_ACTIVITY_LABEL,
@@ -183,6 +188,11 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:run",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         value_fn=lambda state: state if state is None else state.lower(),
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "ok",
+            "good",
+        ],
     ),
 )
 
