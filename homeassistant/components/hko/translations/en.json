@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_location": "Invalid location"
+            "invalid_location": "Invalid location",
+            "unknown": "Unexpected error"
         },
         "step": {
             "init": {
