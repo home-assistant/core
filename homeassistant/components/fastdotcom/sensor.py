@@ -8,14 +8,16 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
+from .const import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
 
 async def async_setup_platform(
@@ -23,6 +25,29 @@ async def async_setup_platform(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Fast.com sensor."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{FASTDOTCOM_DOMAIN}",
+        breaks_in_ha_version="2024.2.0",
+        is_fixable=False,
+        issue_domain=FASTDOTCOM_DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": FASTDOTCOM_DOMAIN,
+            "integration_title": "Fast.com",
+        },
+    )
+    async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
@@ -42,6 +67,7 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._speedtest_data = speedtest_data
+        self._attr_unique_id = f"{FASTDOTCOM_DOMAIN}"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
