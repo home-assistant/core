@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Fast.com component."""
     # conf = entry.data[DOMAIN]
     data = hass.data[DOMAIN] = SpeedtestData(hass)
-    await data.update()
 
     async_track_time_interval(hass, data.update, timedelta(hours=DEFAULT_INTERVAL))
 
