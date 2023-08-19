@@ -4,8 +4,8 @@ from homeassistant.core import HomeAssistant
 from .util import async_init_integration
 
 
-async def test_create_fan_speed_sensors(hass: HomeAssistant) -> None:
-    """Test creation of fan speed sensors."""
+async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
+    """Test creation of fan speed number entities."""
 
     await async_init_integration(hass)
 

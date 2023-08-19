@@ -2,12 +2,12 @@
 from homeassistant.const import Platform
 
 PLATFORMS = [
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.SCENE,
-    Platform.SWITCH,
     Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 ATTRIBUTION = "Data provided by Trane Technologies"
