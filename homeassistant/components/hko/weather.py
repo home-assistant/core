@@ -1,9 +1,13 @@
 """Support for the HKO service."""
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import (
+    Forecast,
+    WeatherEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LOCATION, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -37,6 +41,9 @@ async def async_setup_entry(
 class HKOEntity(CoordinatorEntity, WeatherEntity):
     """Define a HKO entity."""
 
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    # _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+
     def __init__(self, name, unique_id, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
@@ -61,11 +68,11 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": MANUFACTURER,
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=MANUFACTURER,
+        )
 
     @property
     def condition(self) -> str:
@@ -78,16 +85,10 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data[API_CURRENT][API_TEMPERATURE]
 
     @property
-    def native_temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
     def humidity(self) -> int:
         """Return the humidity."""
         return self.coordinator.data[API_CURRENT][API_HUMIDITY]
 
-    @property
-    def forecast(self):
-        """Return the forecast array."""
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the forecast data."""
         return self.coordinator.data[API_FORECAST]
