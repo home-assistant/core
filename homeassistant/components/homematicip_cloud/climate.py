@@ -180,7 +180,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ) or self._has_switch:
             if not profile_names:
                 presets.append(PRESET_NONE)
-            presets.append(PRESET_BOOST)
+            presets.extend([PRESET_BOOST, PRESET_ECO])
 
         presets.extend(profile_names)
 
@@ -223,6 +223,8 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
+        if preset_mode == PRESET_ECO:
+            await self._device.set_control_mode(HMIP_ECO_CM)
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             if self._device.controlMode != HMIP_AUTOMATIC_CM:
