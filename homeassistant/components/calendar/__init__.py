@@ -534,23 +534,23 @@ class CalendarEntity(Entity):
         event = self.event
         if event is None or now >= event.end_datetime_local:
             return
+
+        @callback
+        def update(_: datetime.datetime) -> None:
+            """Run when the active or upcoming event starts or ends."""
+            self._async_write_ha_state()
+
         if now < event.start_datetime_local:
             self._alarm_unsubs.append(
                 async_track_point_in_time(
                     self.hass,
-                    self._event_start_or_end_trigger,
+                    update,
                     event.start_datetime_local,
                 )
             )
         self._alarm_unsubs.append(
-            async_track_point_in_time(
-                self.hass, self._event_start_or_end_trigger, event.end_datetime_local
-            )
+            async_track_point_in_time(self.hass, update, event.end_datetime_local)
         )
-
-    async def _event_start_or_end_trigger(self, _: datetime.datetime) -> None:
-        """Run when the active or upcoming event starts or ends."""
-        self._async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
