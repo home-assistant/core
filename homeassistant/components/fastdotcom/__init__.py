@@ -59,7 +59,6 @@ async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Fast.com component."""
-    # conf = entry.data[DOMAIN]
     data = hass.data[DOMAIN] = SpeedtestData(hass)
 
     async_track_time_interval(hass, data.update, timedelta(hours=DEFAULT_INTERVAL))
@@ -84,7 +83,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-# Legacy support for the Platform. Not sure at the moment if this is needed.
 class SpeedtestData:
     """Get the latest data from Fast.com."""
 
