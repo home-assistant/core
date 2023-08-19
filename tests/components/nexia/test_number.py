@@ -1,4 +1,10 @@
 """The number entity tests for the nexia platform."""
+
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
@@ -36,3 +42,21 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     assert all(
         state.attributes[key] == expected_attributes[key] for key in expected_attributes
     )
+
+
+async def test_set_fan_speed(hass: HomeAssistant) -> None:
+    """Test setting fan speed."""
+
+    await async_init_integration(hass)
+
+    state_before = hass.states.get("number.master_suite_fan_speed")
+    assert state_before.state == "35.0"
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 50},
+        blocking=True,
+        target={"entity_id": "number.master_suite_fan_speed"},
+    )
+    state = hass.states.get("number.master_suite_fan_speed")
+    assert state.state == "50.0"
