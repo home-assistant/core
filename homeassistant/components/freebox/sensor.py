@@ -65,8 +65,8 @@ async def async_setup_entry(
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     entities = []
+    new_entities = []
     tracked: set = set()
-    new_tracked = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -102,8 +102,6 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    async_add_entities(entities, True)
-
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
@@ -116,11 +114,14 @@ async def async_setup_entry(
             None,
         )
         if battery_node and battery_node.get("value") is not None:
-            entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
+            new_entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
 
         tracked.add(nodeid)
 
-    async_add_entities(entities, True)
+    if entities:
+        async_add_entities(entities, True)
+    if new_entities:
+        async_add_entities(new_entities, True)
 
 
 class FreeboxSensor(SensorEntity):

@@ -1,7 +1,6 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime
@@ -10,7 +9,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-import aiohttp.client_exceptions
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
@@ -99,14 +97,6 @@ class FreeboxRouter:
         except HttpRequestError as error:
             _LOGGER.warning("The Freebox API URL devices error %s", error)
             return
-        except asyncio.TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during update device trackers")
-            return
-        except aiohttp.client_exceptions.ClientError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during update device trackers %s", error
-            )
-            return
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -167,14 +157,7 @@ class FreeboxRouter:
         except HttpRequestError as error:
             _LOGGER.warning("The Freebox API URL sensors error %s", error)
             return
-        except asyncio.TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during update sensors")
-            return
-        except aiohttp.client_exceptions.ClientError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during update sensors %s", error
-            )
-            return
+
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
@@ -191,7 +174,7 @@ class FreeboxRouter:
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
-        
+
         # None at first request
         try:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
@@ -211,17 +194,6 @@ class FreeboxRouter:
         except InsufficientPermissionsError:
             self.home_granted = False
             _LOGGER.warning("Home access is not granted")
-            return
-        except HttpRequestError:
-            _LOGGER.warning("The Freebox API HttpRequest Error")
-            return
-        except asyncio.TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during nodes retrieval")
-            return
-        except aiohttp.client_exceptions.ClientError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during nodes retrieval %s", error
-            )
             return
 
         new_device = False

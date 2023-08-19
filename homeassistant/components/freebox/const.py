@@ -1,16 +1,10 @@
 """Freebox component constants."""
 from __future__ import annotations
 
+import enum
 import socket
 
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_TRIGGERED,
-    Platform,
-)
+from homeassistant.const import Platform
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
@@ -30,7 +24,6 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
-    Platform.BINARY_SENSOR,
 ]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
@@ -66,7 +59,7 @@ DEVICE_ICONS = {
 ATTR_DETECTION = "detection"
 
 
-class FreeboxHomeCategory(StrEnum):
+class Freeboxlabel(enum.StrEnum):
     """Available Freebox label."""
 
     ALARM = "alarm"
@@ -80,25 +73,20 @@ class FreeboxHomeCategory(StrEnum):
 
 
 CATEGORY_TO_MODEL = {
-    FreeboxHomeCategory.PIR: "F-HAPIR01A",
-    FreeboxHomeCategory.CAMERA: "F-HACAM01A",
-    FreeboxHomeCategory.DWS: "F-HADWS01A",
-    FreeboxHomeCategory.KFB: "F-HAKFB01A",
-    FreeboxHomeCategory.ALARM: "F-MSEC07A",
+    Freeboxlabel.PIR: "F-HAPIR01A",
+    Freeboxlabel.CAMERA: "F-HACAM01A",
+    Freeboxlabel.DWS: "F-HADWS01A",
+    Freeboxlabel.KFB: "F-HAKFB01A",
+    Freeboxlabel.ALARM: "F-MSEC07A",
+    Freeboxlabel.RTS: "RTS",
+    Freeboxlabel.IOHOME: "IOHome",
 }
 
-LABEL_TO_STATE = {
-    "alarm1_arming": STATE_ALARM_ARMING,
-    "alarm2_arming": STATE_ALARM_ARMING,
-    "alarm1_armed": STATE_ALARM_ARMED_AWAY,
-    "alarm2_armed": STATE_ALARM_ARMED_NIGHT,
-    "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
-    "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
-    "alert": STATE_ALARM_TRIGGERED,
-}
-
-HOME_COMPATIBLE_CATEGORIES = [
+HOME_COMPATIBLE_PLATFORMS = [
     Freeboxlabel.CAMERA,
     Freeboxlabel.DWS,
+    Freeboxlabel.IOHOME,
+    Freeboxlabel.KFB,
     Freeboxlabel.PIR,
+    Freeboxlabel.RTS,
 ]

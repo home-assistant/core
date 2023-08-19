@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, Freeboxlabel
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -50,16 +50,13 @@ async def async_setup_entry(
         for description in RAID_SENSORS
     ]
 
-    if binary_entities:
-        async_add_entities(binary_entities, True)
-
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
-        if node["category"] == FreeboxHomeCategory.PIR:
-            binary_entities.append(FreeboxPir(hass, router, node))
-        elif node["category"] == FreeboxHomeCategory.DWS:
-            binary_entities.append(FreeboxDws(hass, router, node))
+        if node["category"] == Freeboxlabel.PIR:
+            new_trackedpir.append(FreeboxPirSensor(hass, router, node))
+        elif node["category"] == Freeboxlabel.DWS:
+            new_trackeddws.append(FreeboxDwsSensor(hass, router, node))
 
         sensor_cover_node = next(
             filter(
@@ -69,12 +66,18 @@ async def async_setup_entry(
             None,
         )
         if sensor_cover_node and sensor_cover_node.get("value") is not None:
-            binary_entities.append(FreeboxSensorCover(hass, router, node))
+            new_trackedcover.append(FreeboxCoverSensor(hass, router, node))
 
         tracked.add(nodeid)
 
     if binary_entities:
         async_add_entities(binary_entities, True)
+    if new_trackedpir:
+        async_add_entities(new_trackedpir, True)
+    if new_trackeddws:
+        async_add_entities(new_trackeddws, True)
+    if new_trackedcover:
+        async_add_entities(new_trackedcover, True)
 
 
 class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
@@ -110,7 +113,7 @@ class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
         return BinarySensorDeviceClass.MOTION
 
 
-class FreeboxDwsSensor(FreeboxPir):
+class FreeboxDwsSensor(FreeboxPirSensor):
     """Representation of a Freebox door opener binary sensor."""
 
     @property
