@@ -27,8 +27,8 @@ class FanFunction(StrEnum):
 class FanMode(StrEnum):
     """Fan mode enum."""
 
-    HOME = "home"
     AWAY = "away"
+    HOME = "home"
     HIGH = "high"
     COOKER_HOOD = "cooker_hood"
     FIREPLACE = "fireplace"
@@ -44,16 +44,16 @@ async def async_setup_entry(
 
     async_add_devices(
         [
-            FlexitFanEntity(device, FanMode.AWAY, FanFunction.SUPPLY, 30, 73),
-            FlexitFanEntity(device, FanMode.AWAY, FanFunction.EXTRACT, 30, 66),
-            FlexitFanEntity(device, FanMode.HOME, FanFunction.SUPPLY, 30, 75),
-            FlexitFanEntity(device, FanMode.HOME, FanFunction.EXTRACT, 60, 100),
-            FlexitFanEntity(device, FanMode.HIGH, FanFunction.SUPPLY, 73, 100),
-            FlexitFanEntity(device, FanMode.HIGH, FanFunction.EXTRACT, 66, 100),
-            FlexitFanEntity(device, FanMode.COOKER_HOOD, FanFunction.SUPPLY, 30, 100),
-            FlexitFanEntity(device, FanMode.COOKER_HOOD, FanFunction.EXTRACT, 66, 100),
-            FlexitFanEntity(device, FanMode.FIREPLACE, FanFunction.SUPPLY, 30, 100),
-            FlexitFanEntity(device, FanMode.FIREPLACE, FanFunction.EXTRACT, 30, 100),
+            FlexitFanEntity(device, FanMode.AWAY, FanFunction.SUPPLY),
+            FlexitFanEntity(device, FanMode.AWAY, FanFunction.EXTRACT),
+            FlexitFanEntity(device, FanMode.HOME, FanFunction.SUPPLY),
+            FlexitFanEntity(device, FanMode.HOME, FanFunction.EXTRACT),
+            FlexitFanEntity(device, FanMode.HIGH, FanFunction.SUPPLY),
+            FlexitFanEntity(device, FanMode.HIGH, FanFunction.EXTRACT),
+            FlexitFanEntity(device, FanMode.COOKER_HOOD, FanFunction.SUPPLY),
+            FlexitFanEntity(device, FanMode.COOKER_HOOD, FanFunction.EXTRACT),
+            FlexitFanEntity(device, FanMode.FIREPLACE, FanFunction.SUPPLY),
+            FlexitFanEntity(device, FanMode.FIREPLACE, FanFunction.EXTRACT),
         ]
     )
 
@@ -69,37 +69,32 @@ class FlexitFanEntity(FanEntity):
         device: FlexitBACnet,
         fan_mode: FanMode,
         fan_function: FanFunction,
-        min_percentage: int,
-        max_percentage: int,
     ) -> None:
         """Initialize the entity."""
         self._device = device
         self._fan_function = fan_function
         self._fan_mode = fan_mode
-        self._min_percentage = min_percentage
-        self._max_percentage = max_percentage
-        self._attr_unique_id = f"{device.serial_number}.{fan_function}.{fan_mode}.fan"
+        self._attr_unique_id = f"{device.serial_number}.{fan_mode}.{fan_function}.fan"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, device.serial_number),
             },
-            name="Ventilation",
+            name="Fan",
             manufacturer="Flexit",
             model="Nordic",
         )
 
     async def async_update(self) -> None:
         """Refresh unit state."""
-        await self._device.update()
 
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return f"{self._device.device_name}.{self._fan_function}.{self._fan_mode}"
+        return f"{self._device.device_name}.{self._fan_mode}.{self._fan_function}"
 
     @property
     def percentage(self) -> int | None:
-        """Retrieve percentage of the fan speed."""
+        """Retrieve speed percentage of the fan."""
         match self._fan_function:
             case FanFunction.SUPPLY:
                 return self._get_supply_fan_percentage()
@@ -108,7 +103,6 @@ class FlexitFanEntity(FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        percentage = max(min(self._max_percentage, percentage), self._min_percentage)
         try:
             match self._fan_function:
                 case FanFunction.SUPPLY:
@@ -120,10 +114,10 @@ class FlexitFanEntity(FanEntity):
 
     def _get_supply_fan_percentage(self) -> int:
         match self._fan_mode:
-            case FanMode.HOME:
-                return self._device.fan_setpoint_supply_air_home
             case FanMode.AWAY:
                 return self._device.fan_setpoint_supply_air_away
+            case FanMode.HOME:
+                return self._device.fan_setpoint_supply_air_home
             case FanMode.HIGH:
                 return self._device.fan_setpoint_supply_air_high
             case FanMode.COOKER_HOOD:
@@ -133,10 +127,10 @@ class FlexitFanEntity(FanEntity):
 
     def _get_extract_fan_percentage(self) -> int:
         match self._fan_mode:
-            case FanMode.HOME:
-                return self._device.fan_setpoint_extract_air_home
             case FanMode.AWAY:
                 return self._device.fan_setpoint_extract_air_away
+            case FanMode.HOME:
+                return self._device.fan_setpoint_extract_air_home
             case FanMode.HIGH:
                 return self._device.fan_setpoint_extract_air_high
             case FanMode.COOKER_HOOD:
@@ -147,15 +141,24 @@ class FlexitFanEntity(FanEntity):
     async def _set_supply_fan_percentage(self, percentage: int) -> None:
         try:
             match self._fan_mode:
-                case FanMode.HOME:
-                    await self._device.set_fan_setpoint_supply_air_home(percentage)
                 case FanMode.AWAY:
+                    max_percentage = self._device.fan_setpoint_supply_air_home
+                    percentage = self._clamp(percentage, 30, max_percentage)
                     await self._device.set_fan_setpoint_supply_air_away(percentage)
+                case FanMode.HOME:
+                    min_percentage = self._device.fan_setpoint_supply_air_away
+                    max_percentage = self._device.fan_setpoint_supply_air_high
+                    percentage = self._clamp(percentage, min_percentage, max_percentage)
+                    await self._device.set_fan_setpoint_supply_air_home(percentage)
                 case FanMode.HIGH:
+                    min_percentage = self._device.fan_setpoint_supply_air_home
+                    percentage = self._clamp(percentage, min_percentage, 100)
                     await self._device.set_fan_setpoint_supply_air_high(percentage)
                 case FanMode.COOKER_HOOD:
+                    percentage = self._clamp(percentage, 30, 100)
                     await self._device.set_fan_setpoint_supply_air_cooker(percentage)
                 case FanMode.FIREPLACE:
+                    percentage = self._clamp(percentage, 30, 100)
                     await self._device.set_fan_setpoint_supply_air_fire(percentage)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
@@ -163,15 +166,27 @@ class FlexitFanEntity(FanEntity):
     async def _set_extract_fan_percentage(self, percentage: int) -> None:
         try:
             match self._fan_mode:
-                case FanMode.HOME:
-                    await self._device.set_fan_setpoint_extract_air_home(percentage)
                 case FanMode.AWAY:
+                    max_percentage = self._device.fan_setpoint_extract_air_home
+                    percentage = self._clamp(percentage, 30, max_percentage)
                     await self._device.set_fan_setpoint_extract_air_away(percentage)
+                case FanMode.HOME:
+                    min_percentage = self._device.fan_setpoint_extract_air_away
+                    max_percentage = self._device.fan_setpoint_extract_air_high
+                    percentage = self._clamp(percentage, min_percentage, max_percentage)
+                    await self._device.set_fan_setpoint_extract_air_home(percentage)
                 case FanMode.HIGH:
+                    min_percentage = self._device.fan_setpoint_extract_air_home
+                    percentage = self._clamp(percentage, min_percentage, 100)
                     await self._device.set_fan_setpoint_extract_air_high(percentage)
                 case FanMode.COOKER_HOOD:
+                    percentage = self._clamp(percentage, 30, 100)
                     await self._device.set_fan_setpoint_extract_air_cooker(percentage)
                 case FanMode.FIREPLACE:
+                    percentage = self._clamp(percentage, 30, 100)
                     await self._device.set_fan_setpoint_extract_air_fire(percentage)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
+
+    def _clamp(self, percentage: int, min_percentage: int, max_percentage: int) -> int:
+        return max(min(percentage, max_percentage), min_percentage)
