@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.FAN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_ID = 2
+DEFAULT_DEVICE_ID = 1
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
