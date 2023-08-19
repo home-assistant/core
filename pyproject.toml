@@ -429,7 +429,96 @@ norecursedirs = [
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
-filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
+filterwarnings = [
+    "error::sqlalchemy.exc.SAWarning",
+
+    # -- HomeAssistant - aiohttp
+    # Overwrite web.Application to pass a custom default argument to _make_request
+    "ignore:Inheritance class HomeAssistantApplication from web.Application is discouraged:DeprecationWarning",
+    # Hass wraps `ClientSession.close` to emit a warning if the session is closed accidentally
+    "ignore:Setting custom ClientSession.close attribute is discouraged:DeprecationWarning:homeassistant.helpers.aiohttp_client",
+    # Modify app state for testing
+    "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
+
+    # -- Tests
+    # Ignore custom pytest marks
+    "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
+
+    # -- design choice 3rd party
+    # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
+    "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
+    # https://github.com/michaeldavie/env_canada/blob/v0.5.36/env_canada/ec_cache.py
+    "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
+    # https://github.com/bachya/regenmaschine/blob/2023.08.0/regenmaschine/client.py#L51
+    "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
+
+    # -- Setuptools DeprecationWarnings
+    # https://github.com/googleapis/google-cloud-python/issues/11184
+    # https://github.com/zopefoundation/meta/issues/194
+    "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
+    "ignore:Deprecated call to `pkg_resources.declare_namespace\\('google.*'\\)`:DeprecationWarning:google.rpc",
+
+    # -- tracked upstream / open PRs
+    # https://github.com/caronc/apprise/issues/659 - v1.4.5
+    "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:apprise.AppriseLocal",
+    # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
+    "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
+    # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
+    "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
+    # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
+    # https://github.com/grahamwetzler/smart-meter-texas/pull/143
+    "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
+    # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
+    # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
+    "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
+    # https://github.com/eclipse/paho.mqtt.python/blob/v1.6.1/src/paho/mqtt/client.py#L788-L791
+
+    # -- fixed, waiting for release / update
+    # https://github.com/gurumitts/pylutron-caseta/pull/143 - >0.18.1
+    "ignore:ssl.PROTOCOL_TLSv1_2 is deprecated:DeprecationWarning:pylutron_caseta.smartbridge",
+    # https://github.com/Danielhiversen/pyMillLocal/pull/8 - >=0.3.0
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:mill_local",
+    # https://github.com/home-assistant/core/pull/98619 - update botocore to >=1.31.17
+    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:botocore.utils",
+    "ignore:'urllib3.contrib.pyopenssl' module is deprecated and will be removed in a future release of urllib3 2.x:DeprecationWarning:botocore.httpsession",
+
+    # -- not helpful
+    # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
+    "ignore:The module pyatmo.* is deprecated:DeprecationWarning:pyatmo",
+
+    # -- unmaintained projects, last release about 2+ years
+    # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
+    # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
+    # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
+    # https://pypi.org/project/emulated-roku/ - v0.2.1 - 2020-01-23 (archived)
+    "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
+    # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+    # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
+    # https://pypi.org/project/commentjson/ - v0.9.0 - 2020-10-05
+    # https://github.com/vaidik/commentjson/issues/51
+    # Fixed upstream, commentjson depends on old version and seems to be unmaintained
+    "ignore:module '(sre_parse|sre_constants)' is deprecate:DeprecationWarning:lark.utils",
+    # https://pypi.org/project/lomond/ - v0.3.3 - 2018-09-21
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:lomond.session",
+    # https://pypi.org/project/paho-mqtt/ - v1.6.1 - 2021-10-21
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
+    # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
+    "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
+    # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
+    "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
+    # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
+    "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
+    # https://pypi.org/project/vilfo-api-client/ - v0.4.1 - 2021-11-06
+    "ignore:Function 'semver.compare' is deprecated. Deprecated since version 3.0.0:PendingDeprecationWarning:.*vilfo.client",
+    # https://pypi.org/project/webrtcvad/ - v2.0.10 - 2017-01-08
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
+]
 
 [tool.ruff]
 target-version = "py310"
