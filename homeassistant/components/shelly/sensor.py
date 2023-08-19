@@ -314,8 +314,8 @@ SENSORS: Final = {
     ),
     ("valve", "valve"): BlockSensorDescription(
         key="valve|valve",
-        name="Valve state",
-        translation_key="valve_state",
+        name="Valve status",
+        translation_key="valve_status",
         icon="mdi:valve",
         device_class=SensorDeviceClass.ENUM,
         options=[

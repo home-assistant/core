@@ -117,7 +117,7 @@
           }
         }
       },
-      "valve_state": {
+      "valve_status": {
         "state": {
           "checking": "Checking",
           "closed": "Closed",
