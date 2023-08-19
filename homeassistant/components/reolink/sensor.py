@@ -28,7 +28,7 @@ from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntit
 class ReolinkSensorEntityDescriptionMixin:
     """Mixin values for Reolink  sensor entities for a camera channel."""
 
-    value: Callable[[Host, int], float]
+    value: Callable[[Host, int], int]
 
 
 @dataclass
@@ -44,7 +44,7 @@ class ReolinkSensorEntityDescription(
 class ReolinkHostSensorEntityDescriptionMixin:
     """Mixin values for Reolink host sensor entities."""
 
-    value: Callable[[Host], float]
+    value: Callable[[Host], int]
 
 
 @dataclass
