@@ -1187,6 +1187,7 @@ omit =
     homeassistant/components/starlink/binary_sensor.py
     homeassistant/components/starlink/button.py
     homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/device_tracker.py
     homeassistant/components/starlink/sensor.py
     homeassistant/components/starlink/switch.py
     homeassistant/components/starline/__init__.py
