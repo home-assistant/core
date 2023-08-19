@@ -1248,7 +1248,7 @@ async def test_set_preset_mode_pessimistic(
 
 # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
 # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support will be removed in HA Core 2024.6
+# Support will be removed in HA Core 2024.3
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -1287,7 +1287,7 @@ async def test_set_aux_pessimistic(
 
 # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
 # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support will be removed in HA Core 2024.6
+# Support will be removed in HA Core 2024.3
 # "aux_command_topic": "aux-topic"
 @pytest.mark.parametrize(
     "hass_config",
@@ -1576,7 +1576,7 @@ async def test_get_with_templates(
 
     # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
     # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-    # Support will be removed in HA Core 2024.6
+    # Support will be removed in HA Core 2024.3
     assert state.attributes.get("aux_heat") == "off"
     async_fire_mqtt_message(hass, "aux-state", "switchmeon")
     state = hass.states.get(ENTITY_CLIMATE)

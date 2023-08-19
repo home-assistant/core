@@ -15,6 +15,10 @@
     "entity_name_startswith_device_name_yaml": {
       "title": "Manual configured MQTT entities with a name that starts with the device name",
       "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped off the entity name as a work-a-round. Please update your configuration and restart Home Assistant to fix this issue. \n\nList of affected entities:\n\n{config}"
+    },
+    "deprecated_climate_aux_property": {
+      "title": "MQTT entities with auxiliary heat support found",
+      "description": "Entity `{entity_id}` has auxiliary heat support enabled, which has been deprecated for MQTT climate devices. Please adjust your configuration and remove deperated config options from your configration and restart HA to fix this issue."
     }
   },
   "config": {
