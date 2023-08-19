@@ -67,7 +67,6 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._speedtest_data = speedtest_data
-        self._attr_unique_id = f"{FASTDOTCOM_DOMAIN}"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
