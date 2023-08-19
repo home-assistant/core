@@ -6,6 +6,7 @@ from typing import Any
 
 from doorbirdpy import DoorBird
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
@@ -19,20 +20,28 @@ class ConfiguredDoorBird:
     """Attach additional information to pass along with configured device."""
 
     def __init__(
-        self, device: DoorBird, name: str | None, custom_url: str | None, token: str
+        self,
+        device: DoorBird,
+        name: str | None,
+        custom_url: str | None,
+        token: str,
+        event_entity_ids: dict[str, str],
     ) -> None:
         """Initialize configured device."""
         self._name = name
         self._device = device
         self._custom_url = custom_url
-        self.events = None
-        self.doorstation_events = None
         self._token = token
+        self._event_entity_ids = event_entity_ids
+        self.events: list[str] = []
+        self.door_station_events: list[str] = []
 
-    def update_events(self, events):
+    def update_events(self, events: list[str]) -> None:
         """Update the doorbird events."""
         self.events = events
-        self.doorstation_events = [self._get_event_name(event) for event in self.events]
+        self.door_station_events = [
+            self._get_event_name(event) for event in self.events
+        ]
 
     @property
     def name(self) -> str | None:
@@ -63,12 +72,12 @@ class ConfiguredDoorBird:
         if self.custom_url is not None:
             hass_url = self.custom_url
 
-        if not self.doorstation_events:
+        if not self.door_station_events:
             # User may not have permission to get the favorites
             return
 
         favorites = self.device.favorites()
-        for event in self.doorstation_events:
+        for event in self.door_station_events:
             if self._register_event(hass_url, event, favs=favorites):
                 _LOGGER.info(
                     "Successfully registered URL for %s on %s", event, self.name
@@ -126,7 +135,7 @@ class ConfiguredDoorBird:
 
         return None
 
-    def get_event_data(self) -> dict[str, str]:
+    def get_event_data(self, event: str) -> dict[str, str | None]:
         """Get data to pass along with HA event."""
         return {
             "timestamp": dt_util.utcnow().isoformat(),
@@ -134,4 +143,5 @@ class ConfiguredDoorBird:
             "live_image_url": self._device.live_image_url,
             "rtsp_live_video_url": self._device.rtsp_live_video_url,
             "html5_viewer_url": self._device.html5_viewer_url,
+            ATTR_ENTITY_ID: self._event_entity_ids.get(event),
         }
