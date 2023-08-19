@@ -58,8 +58,7 @@ def api_call(
             await func(self, *args, **kwargs)
         except OSError as exc:
             raise HomeAssistantError(
-                f"Error calling {func.__name__} on entity {self.entity_id},"
-                f" packet transmit failed"
+                f"Error calling {func.__name__} on entity {self.entity_id}"
             ) from exc
 
     return cmd_wrapper
