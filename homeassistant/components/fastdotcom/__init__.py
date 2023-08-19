@@ -9,10 +9,9 @@ from fastdotcom import fast_com
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -37,23 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Fast.com component."""
-    conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(hass)
-
-    if not conf[CONF_MANUAL]:
-        async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
-
-    async def update(service_call: ServiceCall | None = None) -> None:
-        """Service call to manually update the data."""
-        await data.update()
-
-    hass.services.async_register(DOMAIN, "speedtest", update)
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
-    )
-
+    """Set up the Fast.com component. (deprecated)."""
     return True
 
 
