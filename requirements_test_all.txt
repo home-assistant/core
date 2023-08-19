@@ -1941,7 +1941,7 @@ voip-utils==0.1.0
 volvooncall==0.10.3
 
 # homeassistant.components.verisure
-vsure==2.6.5
+vsure==2.6.6
 
 # homeassistant.components.vulcan
 vulcan-api==2.3.0
