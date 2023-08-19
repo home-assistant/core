@@ -77,6 +77,42 @@
       },
       "visitor": {
         "name": "Visitor"
+      },
+      "motion_lens_0": {
+        "name": "Motion lens 0"
+      },
+      "face_lens_0": {
+        "name": "Face lens 0"
+      },
+      "person_lens_0": {
+        "name": "Person lens 0"
+      },
+      "vehicle_lens_0": {
+        "name": "Vehicle lens 0"
+      },
+      "pet_lens_0": {
+        "name": "Pet lens 0"
+      },
+      "visitor_lens_0": {
+        "name": "Visitor lens 0"
+      },
+      "motion_lens_1": {
+        "name": "Motion lens 1"
+      },
+      "face_lens_1": {
+        "name": "Face lens 1"
+      },
+      "person_lens_1": {
+        "name": "Person lens 1"
+      },
+      "vehicle_lens_1": {
+        "name": "Vehicle lens 1"
+      },
+      "pet_lens_1": {
+        "name": "Pet lens 1"
+      },
+      "visitor_lens_1": {
+        "name": "Visitor lens 1"
       }
     },
     "button": {
