@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import Trackables, TractiveClient
 from .const import (
@@ -56,7 +57,7 @@ class TractiveSensorEntityDescription(
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
-    value_fn: Callable[[str | None], str | None] | None = None
+    value_fn: Callable[[StateType], StateType] = lambda state: state
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -88,12 +89,9 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
-        if self.entity_description.value_fn:
-            value = self.entity_description.value_fn(event[self.entity_description.key])
-        else:
-            value = event[self.entity_description.key]
-
-        self._attr_native_value = value
+        self._attr_native_value = self.entity_description.value_fn(
+            event[self.entity_description.key]
+        )
 
         super().handle_status_update(event)
 
@@ -175,7 +173,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         translation_key="sleep",
         icon="mdi:sleep",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
-        value_fn=lambda state: state if state is None else state.lower(),
+        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "ok",
@@ -187,7 +185,7 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         translation_key="activity",
         icon="mdi:run",
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
-        value_fn=lambda state: state if state is None else state.lower(),
+        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "ok",
