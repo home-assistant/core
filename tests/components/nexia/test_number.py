@@ -19,7 +19,7 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     assert state.state == "35.0"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Master Suite Fan Speed",
+        "friendly_name": "Master Suite Fan speed",
         "min": 35,
         "max": 100,
     }
@@ -33,7 +33,7 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     assert state.state == "35.0"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Downstairs East Wing Fan Speed",
+        "friendly_name": "Downstairs East Wing Fan speed",
         "min": 35,
         "max": 100,
     }
