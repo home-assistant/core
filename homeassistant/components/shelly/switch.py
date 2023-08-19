@@ -140,7 +140,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return self.attribute_value in ("closing", "opening", "opened")
+        return self.attribute_value in ("opening", "opened")
 
     @property
     def icon(self) -> str:
