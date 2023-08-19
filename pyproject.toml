@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools~=68.0", "wheel~=0.40.0"]
+requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,8 +25,8 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.2",
-    "attrs==22.2.0",
+    "async-timeout==4.0.3",
+    "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==4.0.1",
@@ -488,6 +488,7 @@ select = [
     "SIM401", # Use get from dict with default instead of an if block
     "T100", # Trace found: {name} used
     "T20",  # flake8-print
+    "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
     "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
@@ -530,6 +531,9 @@ voluptuous = "vol"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.ruff.flake8-tidy-imports.banned-api]
+"pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.isort]
 force-sort-within-sections = true

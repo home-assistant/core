@@ -1,6 +1,7 @@
 """The AccuWeather component."""
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Any
@@ -8,7 +9,6 @@ from typing import Any
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry

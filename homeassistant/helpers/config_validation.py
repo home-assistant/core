@@ -1122,6 +1122,7 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
+        # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(

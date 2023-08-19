@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
@@ -47,11 +47,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def format_condition(condition: str):
-    """Return condition from dict CONDITION_CLASSES."""
-    for key, value in CONDITION_CLASSES.items():
-        if condition in value:
-            return key
-    return condition
+    """Return condition from dict CONDITION_MAP."""
+    return CONDITION_MAP.get(condition, condition)
 
 
 async def async_setup_entry(
