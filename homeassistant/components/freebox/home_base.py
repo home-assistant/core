@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CATEGORY_TO_MODEL, DOMAIN
+from .const import CATEGORY_TO_MODEL, DOMAIN, Freeboxlabel
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,10 +51,10 @@ class FreeboxHomeEntity(Entity):
         if self._model is None:
             if node["type"].get("inherit") == "node::rts":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get("rts")
+                self._model = CATEGORY_TO_MODEL.get(Freeboxlabel.RTS)
             elif node["type"].get("inherit") == "node::ios":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get("iohome")
+                self._model = CATEGORY_TO_MODEL.get(Freeboxlabel.IOHOME)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._id)},
@@ -144,7 +144,7 @@ class FreeboxHomeEntity(Entity):
         )
         if node is None:
             _LOGGER.warning(
-                "The Freebox Home device has no node for: " + ep_type + "/" + name
+                "The Freebox Home device has no node for: %s/%s", ep_type, name
             )
             return
         node["value"] = value
