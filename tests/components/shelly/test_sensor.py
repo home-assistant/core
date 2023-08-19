@@ -262,7 +262,7 @@ async def test_block_sensor_unknown_value(
 
 async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
     """Test RPC sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_cover_0_power"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_cover_0_power"
     await init_integration(hass, 2)
 
     assert hass.states.get(entity_id).state == "85.3"
