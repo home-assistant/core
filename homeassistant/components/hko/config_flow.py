@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     except HKOError as error:
         raise CannotConnect from error
     except Exception as error:
-        raise CannotConnect from error
+        raise UnknownError from error
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,6 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidLocation:
             errors["base"] = "invalid_location"
+        except UnknownError:
+            errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
                 user_input[CONF_LOCATION], raise_on_progress=False
@@ -93,3 +95,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidLocation(HomeAssistantError):
     """Error to indicate an invalid location has been selected."""
+
+
+class UnknownError(HomeAssistantError):
+    """Error for an unknown_exception."""
