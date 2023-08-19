@@ -4,6 +4,22 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i3 (+ REX) Charging Mode',
+        'icon': 'mdi:vector-point-select',
+        'options': list([
+          'IMMEDIATE_CHARGING',
+          'DELAYED_CHARGING',
+        ]),
+      }),
+      'context': <ANY>,
+      'entity_id': 'select.i3_rex_charging_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'DELAYED_CHARGING',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 AC Charging Limit',
         'icon': 'mdi:current-ac',
         'options': list([
@@ -44,22 +60,6 @@
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'IMMEDIATE_CHARGING',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Charging Mode',
-        'icon': 'mdi:vector-point-select',
-        'options': list([
-          'IMMEDIATE_CHARGING',
-          'DELAYED_CHARGING',
-        ]),
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.i3_rex_charging_mode',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'DELAYED_CHARGING',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

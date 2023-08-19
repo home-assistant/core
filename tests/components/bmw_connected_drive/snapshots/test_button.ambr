@@ -4,11 +4,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Flash lights',
+        'friendly_name': 'i3 (+ REX) Flash lights',
         'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_flash_lights',
+      'entity_id': 'button.i3_rex_flash_lights',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -16,11 +16,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Sound horn',
+        'friendly_name': 'i3 (+ REX) Sound horn',
         'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_sound_horn',
+      'entity_id': 'button.i3_rex_sound_horn',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -28,11 +28,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Activate air conditioning',
+        'friendly_name': 'i3 (+ REX) Activate air conditioning',
         'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_activate_air_conditioning',
+      'entity_id': 'button.i3_rex_activate_air_conditioning',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -40,23 +40,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Deactivate air conditioning',
-        'icon': 'mdi:hvac-off',
-      }),
-      'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_deactivate_air_conditioning',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': 'unknown',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Find vehicle',
+        'friendly_name': 'i3 (+ REX) Find vehicle',
         'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i4_edrive40_find_vehicle',
+      'entity_id': 'button.i3_rex_find_vehicle',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -124,11 +112,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Flash lights',
+        'friendly_name': 'i4 eDrive40 Flash lights',
         'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i3_rex_flash_lights',
+      'entity_id': 'button.i4_edrive40_flash_lights',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -136,11 +124,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Sound horn',
+        'friendly_name': 'i4 eDrive40 Sound horn',
         'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i3_rex_sound_horn',
+      'entity_id': 'button.i4_edrive40_sound_horn',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -148,11 +136,11 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Activate air conditioning',
+        'friendly_name': 'i4 eDrive40 Activate air conditioning',
         'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i3_rex_activate_air_conditioning',
+      'entity_id': 'button.i4_edrive40_activate_air_conditioning',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
@@ -160,11 +148,23 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Find vehicle',
+        'friendly_name': 'i4 eDrive40 Deactivate air conditioning',
+        'icon': 'mdi:hvac-off',
+      }),
+      'context': <ANY>,
+      'entity_id': 'button.i4_edrive40_deactivate_air_conditioning',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'unknown',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'i4 eDrive40 Find vehicle',
         'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
-      'entity_id': 'button.i3_rex_find_vehicle',
+      'entity_id': 'button.i4_edrive40_find_vehicle',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
