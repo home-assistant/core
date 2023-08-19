@@ -116,6 +116,17 @@
             }
           }
         }
+      },
+      "valve_state": {
+        "state": {
+          "checking": "Checking",
+          "closed": "Closed",
+          "closing": "Closing",
+          "failure": "Failure",
+          "opened": "Opened",
+          "opening": "Opening",
+          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+        }
       }
     }
   },
