@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import DuotecnoEntity, cmd
+from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
@@ -34,12 +34,12 @@ class DuotecnoSwitch(DuotecnoEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self._unit.is_on()
 
-    @cmd
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         await self._unit.turn_on()
 
-    @cmd
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         await self._unit.turn_off()

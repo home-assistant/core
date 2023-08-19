@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import DuotecnoEntity, cmd
+from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
@@ -39,7 +39,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
         """Return the brightness of the light."""
         return int((self._unit.get_dimmer_state() * 255) / 100)
 
-    @cmd
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if (val := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -50,7 +50,7 @@ class DuotecnoLight(DuotecnoEntity, LightEntity):
             val = None
         await self._unit.set_dimmer_state(val)
 
-    @cmd
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._unit.set_dimmer_state(0)

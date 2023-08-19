@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import DuotecnoEntity, cmd
+from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
@@ -53,17 +53,17 @@ class DuotecnoCover(DuotecnoEntity, CoverEntity):
         """Return if the cover is closing."""
         return self._unit.is_closing()
 
-    @cmd
+    @api_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._unit.open()
 
-    @cmd
+    @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._unit.close()
 
-    @cmd
+    @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._unit.stop()

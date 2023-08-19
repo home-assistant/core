@@ -46,7 +46,7 @@ _T = TypeVar("_T", bound="DuotecnoEntity")
 _P = ParamSpec("_P")
 
 
-def cmd(
+def api_call(
     func: Callable[Concatenate[_T, _P], Awaitable[None]]
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
