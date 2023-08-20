@@ -5,7 +5,6 @@ import asyncio
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from async_timeout import timeout
 import pymelcloud
 import voluptuous as vol
 
@@ -78,7 +77,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ):
         """Create client."""
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 if (acquired_token := token) is None:
                     acquired_token = await pymelcloud.login(
                         username,

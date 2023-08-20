@@ -41,8 +41,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -105,6 +104,15 @@ async def async_dpi_group_control_fn(
             for app_id in dpi_group.dpiapp_ids or []
         ]
     )
+
+
+@callback
+def async_outlet_supports_switching_fn(
+    controller: UniFiController, obj_id: str
+) -> bool:
+    """Determine if an outlet supports switching."""
+    outlet = controller.api.outlets[obj_id]
+    return outlet.has_relay or outlet.caps in (1, 3)
 
 
 async def async_outlet_control_fn(
@@ -211,7 +219,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=False,
-        supported_fn=lambda c, obj_id: c.api.outlets[obj_id].has_relay,
+        supported_fn=async_outlet_supports_switching_fn,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
@@ -266,7 +274,7 @@ async def async_setup_entry(
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    if controller.site_role != "admin":
+    if not controller.is_admin:
         return
 
     for mac in controller.option_block_clients:

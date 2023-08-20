@@ -12,10 +12,14 @@ from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
+from aiounifi.interfaces.devices import Devices
+from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
+from aiounifi.models.device import Device
+from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
 
@@ -82,6 +86,22 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
             < controller.option_detection_time
         ]
     )
+
+
+@callback
+def async_device_outlet_power_supported_fn(
+    controller: UniFiController, obj_id: str
+) -> bool:
+    """Determine if an outlet has the power property."""
+    # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
+    # supports metering
+    return controller.api.outlets[obj_id].caps == 3
+
+
+@callback
+def async_device_outlet_supported_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Determine if a device supports reading overall power metrics."""
+    return controller.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
 @dataclass
@@ -192,6 +212,65 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"wlan_clients-{obj_id}",
         value_fn=async_wlan_client_value_fn,
+    ),
+    UnifiSensorEntityDescription[Outlets, Outlet](
+        key="Outlet power metering",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.outlets,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda outlet: f"{outlet.name} Outlet Power",
+        object_fn=lambda api, obj_id: api.outlets[obj_id],
+        should_poll=True,
+        supported_fn=async_device_outlet_power_supported_fn,
+        unique_id_fn=lambda controller, obj_id: f"outlet_power-{obj_id}",
+        value_fn=lambda _, obj: obj.power if obj.relay_state else "0",
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="SmartPower AC power budget",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=1,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda device: "AC Power Budget",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
+        supported_fn=async_device_outlet_supported_fn,
+        unique_id_fn=lambda controller, obj_id: f"ac_power_budget-{obj_id}",
+        value_fn=lambda controller, device: device.outlet_ac_power_budget,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="SmartPower AC power consumption",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=1,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda device: "AC Power Consumption",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
+        supported_fn=async_device_outlet_supported_fn,
+        unique_id_fn=lambda controller, obj_id: f"ac_power_conumption-{obj_id}",
+        value_fn=lambda controller, device: device.outlet_ac_power_consumption,
     ),
 )
 
