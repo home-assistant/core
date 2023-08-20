@@ -37,7 +37,7 @@
       }),
       'disabled_by': None,
       'domain': 'airvisual',
-      'entry_id': '3791f68060ef368f86bfb9314ff99b70',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'options': dict({
         'show_on_map': True,
       }),
