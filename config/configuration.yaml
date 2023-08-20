@@ -10,12 +10,16 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 logger:
-  default: info
+  default: debug
   logs:
     homeassistant.components.cloud: debug
+    homeassistant.components.bluetooth: debug
 
 hello_state:
 
 # Example configuration.yaml entry
 sensor:
   - platform: example_sensor
+
+kindhome_solarbeaker:
+

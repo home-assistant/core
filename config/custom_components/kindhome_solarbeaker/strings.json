@@ -1,0 +1,21 @@
+{
+  "config": {
+    "flow_title": "Custom title",
+    "step": {
+      "user": {
+        "description": "custom user step description",
+        "data": {
+          "address": "custom address description"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "custom bluetooth confirm description"
+      }
+    },
+    "abort": {
+      "no_devices_found": "No kindhome solarbeaker devices found!",
+      "already_in_progress": "custom already in progress description",
+      "already_configured": "custom already configured description"
+    }
+  }
+}

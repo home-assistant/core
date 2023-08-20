@@ -1729,7 +1729,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             persistent_notification.async_dismiss(
                 self.hass, RECONFIGURE_NOTIFICATION_ID
             )
-
+        _LOGGER.info(
+            f"description_placeholders: MATI async_abort: {description_placeholders}"
+        )
         return super().async_abort(
             reason=reason, description_placeholders=description_placeholders
         )
@@ -1738,7 +1740,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
-        return await self._async_step_discovery_without_unique_id()
+        return await self._async_step_discovery_without_unique_id() 
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
