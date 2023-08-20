@@ -124,6 +124,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._ac_index: int = ac_index
         self._attr_should_poll = True
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_has_entity_name = True
 
     @property
     def unique_id(self) -> str:
