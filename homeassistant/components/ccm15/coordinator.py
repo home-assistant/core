@@ -145,12 +145,11 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def current_temperature(self) -> Optional[int]:
         """Return current temperature."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return None
-
-        _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
-        return data.temperature
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
+            return data.temperature
+        
+        return None
 
     @property
     def target_temperature(self) -> Optional[int]:
