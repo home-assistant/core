@@ -101,18 +101,16 @@ async def async_setup_entry(
         config_entry.entry_id
     ].coordinator
 
-    entities: list = []
-    for description in BINARY_SENSORS:
-        entities.append(RensonBinarySensor(description, api, coordinator))
-
-    async_add_entities(entities)
+    async_add_entities(
+        RensonBinarySensor(description, api, coordinator)
+        for description in BINARY_SENSORS
+    )
 
 
 class RensonBinarySensor(RensonEntity, BinarySensorEntity):
     """Get sensor data from the Renson API and store it in the state of the class."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
