@@ -485,6 +485,8 @@ omit =
     homeassistant/components/hive/sensor.py
     homeassistant/components/hive/switch.py
     homeassistant/components/hive/water_heater.py
+    homeassistant/components/hko/__init__.py
+    homeassistant/components/hko/weather.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
     homeassistant/components/home_connect/__init__.py
