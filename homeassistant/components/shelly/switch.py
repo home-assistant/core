@@ -128,6 +128,8 @@ def async_setup_rpc_entry(
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """Entity that controls a Gas Valve on Block based Shelly devices."""
 
+    entity_description: BlockSwitchDescription
+
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
