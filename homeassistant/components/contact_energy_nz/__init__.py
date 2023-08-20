@@ -18,13 +18,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 TOKEN = "token"
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Contact Energy NZ component."""
-
-    hass.data[DOMAIN] = config
-    return True
-
-
 def _handle_auth_failure(
     hass: HomeAssistant, entry: ConfigEntry, err: Exception
 ) -> bool:
@@ -44,8 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     keys = entry.data.keys()
-    if TOKEN in keys and entry.data[TOKEN] is not None:
-        connector = ContactEnergyApi.from_token(entry.data[CONF_TOKEN])
+    if (token := entry.data.get(TOKEN)) is not None:
+        connector = ContactEnergyApi.from_token(token)
     else:
         try:
             # This method will attempt to authenticate and grab a token. If creds are wrong - it'll throw AuthException

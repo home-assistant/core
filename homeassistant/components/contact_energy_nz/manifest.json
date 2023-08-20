@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["contact_energy_nz"],
-  "requirements": ["contact-energy-nz==0.1.4684953769"]
+  "requirements": ["contact-energy-nz==0.1.5917054733"]
 }

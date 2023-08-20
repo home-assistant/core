@@ -10,7 +10,7 @@ from contact_energy_nz import AuthException, ContactEnergyApi
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -23,7 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_API_KEY, "z840P4lQCH9TqcjC9L2pP157DZcZJMcr5tVQCvyx"): str,
     }
 )
 
