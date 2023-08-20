@@ -1,7 +1,7 @@
 """Climate device for CCM15 coordinator."""
 import datetime
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
 import httpx
@@ -219,10 +219,9 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return {}
-        return {"error_code": data.error_code}
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            return {"error_code": data.error_code}
+        return {}
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
