@@ -120,18 +120,6 @@ fail-on = [
 
 [tool.pylint.BASIC]
 class-const-naming-style = "any"
-good-names = [
-    "_",
-    "ev",
-    "ex",
-    "fp",
-    "i",
-    "id",
-    "j",
-    "k",
-    "Run",
-    "ip",
-]
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
