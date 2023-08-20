@@ -201,6 +201,7 @@ FLOWS = {
         "here_travel_time",
         "hisense_aehw4a1",
         "hive",
+        "hko",
         "hlk_sw16",
         "holiday",
         "home_connect",
