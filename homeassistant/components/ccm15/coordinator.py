@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -214,17 +215,17 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
             },
-            "name": self.name,
-            "manufacturer": "Midea",
-            "model": "CCM15",
-        }
+            name=self.name,
+            manufacturer="Midea",
+            model="CCM15",
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
