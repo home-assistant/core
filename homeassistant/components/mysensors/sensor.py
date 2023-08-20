@@ -222,7 +222,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
+class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     _attr_force_update = True
