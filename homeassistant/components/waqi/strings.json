@@ -25,7 +25,11 @@
     },
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The WAQI YAML configuration import failed",
-      "description": "Configuring World Air Quality Index using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=waqi) manually."
+      "description": "Configuring World Air Quality Index using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to WAQI works and restart Home Assistant to try again or remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=waqi) manually."
+    },
+    "deprecated_yaml_import_issue_already_configured": {
+      "title": "The WAQI YAML configuration import failed",
+      "description": "Configuring World Air Quality Index using YAML is being removed but the measuring station was already imported when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the World Air Quality Index YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
     }
   }
 }

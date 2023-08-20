@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import LocationSelector
 from homeassistant.helpers.typing import ConfigType
 
@@ -95,7 +96,19 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: ConfigType) -> FlowResult:
         """Handle importing from yaml."""
         await self.async_set_unique_id(str(import_config[CONF_STATION_NUMBER]))
-        self._abort_if_unique_id_configured()
+        try:
+            self._abort_if_unique_id_configured()
+        except AbortFlow as exc:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_already_configured",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="deprecated_yaml_import_issue_already_configured",
+            )
+            raise exc
 
         return self.async_create_entry(
             title=import_config[CONF_NAME],
