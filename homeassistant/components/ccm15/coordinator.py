@@ -122,6 +122,8 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         super().__init__(coordinator)
         self._ac_host: str = ac_host
         self._ac_index: int = ac_index
+        self._attr_should_poll = True
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def unique_id(self) -> str:
@@ -132,16 +134,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def name(self) -> str:
         """Return name."""
         return f"Climate{self._ac_index}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return if should poll."""
-        return True
-
-    @property
-    def temperature_unit(self) -> UnitOfTemperature:
-        """Return temperature unit."""
-        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> int | None:
