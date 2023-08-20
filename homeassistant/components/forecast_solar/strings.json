@@ -24,7 +24,8 @@
         "data": {
           "api_key": "Forecast.Solar API Key (optional)",
           "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
-          "damping": "Damping factor: adjusts the results in the morning and evening",
+          "damping_morning": "Damping factor: adjusts the results in the morning",
+          "damping_evening": "Damping factor: adjusts the results in the evening",
           "inverter_size": "Inverter size (Watt)",
           "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
           "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
