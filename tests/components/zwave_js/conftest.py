@@ -693,6 +693,9 @@ def mock_client_fixture(
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
+        client.async_send_command.return_value = {
+            "result": {"success": True, "status": 255}
+        }
 
         yield client
 

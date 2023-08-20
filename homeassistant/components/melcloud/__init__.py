@@ -7,19 +7,16 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
 from pymelcloud import Device, get_devices
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -61,20 +58,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             context={"source": SOURCE_IMPORT},
             data={CONF_USERNAME: username, CONF_TOKEN: token},
         )
-    )
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.2.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "MELCloud",
-        },
     )
     return True
 
@@ -168,7 +151,7 @@ async def mel_devices_setup(
     """Query connected devices from MELCloud."""
     session = async_get_clientsession(hass)
     try:
-        async with timeout(10):
+        async with asyncio.timeout(10):
             all_devices = await get_devices(
                 token,
                 session,

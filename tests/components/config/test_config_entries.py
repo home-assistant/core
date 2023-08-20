@@ -825,6 +825,52 @@ async def test_options_flow(hass: HomeAssistant, client) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("endpoint", "method"),
+    [
+        ("/api/config/config_entries/options/flow", "post"),
+        ("/api/config/config_entries/options/flow/1", "get"),
+        ("/api/config/config_entries/options/flow/1", "post"),
+    ],
+)
+async def test_options_flow_unauth(
+    hass: HomeAssistant, client, hass_admin_user: MockUser, endpoint: str, method: str
+) -> None:
+    """Test unauthorized on options flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    schema = OrderedDict()
+                    schema[vol.Required("enabled")] = bool
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=schema,
+                        description_placeholders={"enabled": "Set to true to be true"},
+                    )
+
+            return OptionsFlowHandler()
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    hass_admin_user.groups = []
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(

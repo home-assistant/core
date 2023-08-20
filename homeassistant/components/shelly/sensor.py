@@ -97,6 +97,14 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("device", "neutralCurrent"): BlockSensorDescription(
+        key="device|neutralCurrent",
+        name="Neutral current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     ("light", "power"): BlockSensorDescription(
         key="light|power",
         name="Power",
@@ -533,7 +541,8 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda status: status["n_current"] is not None,
+        available=lambda status: (status and status["n_current"]) is not None,
+        removal_condition=lambda _config, status, _key: "n_current" not in status,
         entity_registry_enabled_default=False,
     ),
     "total_current": RpcSensorDescription(

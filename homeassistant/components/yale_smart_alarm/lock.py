@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_CODE
+from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,9 +52,7 @@ class YaleDoorlock(YaleEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
-        code: str | None = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_CODE)
-        )
+        code: str | None = kwargs.get(ATTR_CODE)
         return await self.async_set_lock("unlocked", code)
 
     async def async_lock(self, **kwargs: Any) -> None:

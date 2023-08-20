@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import async_timeout
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -30,7 +29,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
@@ -67,7 +66,7 @@ async def async_setup_entry(
         session=async_get_clientsession(hass),
     )
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             if not await version.check_supported():
                 raise ConfigEntryNotReady(
                     "You are not running a supported version of System Bridge. Please"
@@ -91,7 +90,7 @@ async def async_setup_entry(
         entry=entry,
     )
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -109,7 +108,7 @@ async def async_setup_entry(
 
     try:
         # Wait for initial data
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             while not coordinator.is_ready:
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
