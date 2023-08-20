@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import GAS_VALVE_OPEN_STATES
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -136,11 +137,15 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     ) -> None:
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
+        self.control_result: dict[str, Any] | None = None
 
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return self.attribute_value in ("opening", "opened")
+        if self.control_result:
+            return self.control_result["state"] in GAS_VALVE_OPEN_STATES
+
+        return self.attribute_value in GAS_VALVE_OPEN_STATES
 
     @property
     def icon(self) -> str:
@@ -149,13 +154,20 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.set_state(go="open")
+        self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.set_state(go="close")
+        self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
+
+    @callback
+    def _update_callback(self) -> None:
+        """When device updates, clear control result that overrides state."""
+        self.control_result = None
+
+        super()._update_callback()
 
 
 class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):

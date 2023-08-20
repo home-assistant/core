@@ -131,6 +131,15 @@ MOCK_BLOCKS = [
         description="emeter_0",
         type="emeter",
     ),
+    Mock(
+        sensor_ids={"valve": "closed"},
+        channel="0",
+        description="valve_0",
+        type="valve",
+        set_state=AsyncMock(
+            side_effect=lambda go: {"state": "opening" if go == "open" else "closing"}
+        ),
+    ),
 ]
 
 MOCK_CONFIG = {
