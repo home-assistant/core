@@ -137,13 +137,13 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
         attribute: str,
         description: BlockSwitchDescription,
     ) -> None:
-        """Initialize relay switch."""
+        """Initialize valve."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
 
     @property
     def is_on(self) -> bool:
-        """If switch is on."""
+        """If valve is open."""
         if self.control_result:
             return self.control_result["state"] in GAS_VALVE_OPEN_STATES
 
@@ -155,12 +155,12 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
         return "mdi:valve-open" if self.is_on else "mdi:valve-closed"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
+        """Open valve."""
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
+        """Close valve."""
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
