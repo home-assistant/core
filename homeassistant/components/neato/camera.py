@@ -14,12 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    NEATO_LOGIN,
-    NEATO_MAP_DATA,
-    NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
-)
+from .const import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
