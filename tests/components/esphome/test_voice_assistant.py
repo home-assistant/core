@@ -7,7 +7,12 @@ from unittest.mock import Mock, patch
 from aioesphomeapi import VoiceAssistantEventType
 import pytest
 
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.assist_pipeline import (
+    PipelineEvent,
+    PipelineEventType,
+    PipelineStage,
+)
+from homeassistant.components.assist_pipeline.error import WakeWordDetectionError
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
@@ -71,6 +76,13 @@ async def test_pipeline_events(
 
         event_callback = kwargs["event_callback"]
 
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.WAKE_WORD_END,
+                data={"wake_word_output": {}},
+            )
+        )
+
         # Fake events
         event_callback(
             PipelineEvent(
@@ -112,6 +124,8 @@ async def test_pipeline_events(
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert data is not None
             assert data["url"] == _TEST_OUTPUT_URL
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
+            assert data is None
 
     voice_assistant_udp_server_v1.handle_event = handle_event
 
@@ -341,3 +355,59 @@ async def test_send_tts(
         await voice_assistant_udp_server_v2._tts_done.wait()
 
         voice_assistant_udp_server_v2.transport.sendto.assert_called()
+
+
+async def test_wake_word(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, start_stage, **kwargs):
+        assert start_stage == PipelineStage.WAKE_WORD
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+            pipeline_timeout=1,
+        )
+
+
+async def test_wake_word_exception(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        raise WakeWordDetectionError("pipeline-not-found", "Pipeline not found")
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        def handle_event(
+            event_type: VoiceAssistantEventType, data: dict[str, str] | None
+        ) -> None:
+            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+                assert data is not None
+                assert data["code"] == "pipeline-not-found"
+                assert data["message"] == "Pipeline not found"
+
+        voice_assistant_udp_server_v2.handle_event = handle_event
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+            pipeline_timeout=1,
+        )
