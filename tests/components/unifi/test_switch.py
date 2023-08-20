@@ -36,8 +36,8 @@ from homeassistant.util import dt as dt_util
 
 from .test_controller import (
     CONTROLLER_HOST,
-    DESCRIPTION,
     ENTRY_CONFIG,
+    SITE,
     setup_unifi_integration,
 )
 
@@ -778,7 +778,7 @@ async def test_no_clients(
         },
     )
 
-    assert aioclient_mock.call_count == 10
+    assert aioclient_mock.call_count == 11
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -803,13 +803,13 @@ async def test_not_admin(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that switch platform only work on an admin account."""
-    description = deepcopy(DESCRIPTION)
-    description[0]["site_role"] = "not admin"
+    site = deepcopy(SITE)
+    site[0]["role"] = "not admin"
     await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
-        site_description=description,
+        sites=site,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
@@ -867,8 +867,8 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 11
-    assert aioclient_mock.mock_calls[10][2] == {
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "block-sta",
     }
@@ -876,8 +876,8 @@ async def test_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 12
-    assert aioclient_mock.mock_calls[11][2] == {
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "unblock-sta",
     }
@@ -894,8 +894,8 @@ async def test_switches(
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert aioclient_mock.call_count == 13
-    assert aioclient_mock.mock_calls[12][2] == {"enabled": False}
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[13][2] == {"enabled": False}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -903,8 +903,8 @@ async def test_switches(
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert aioclient_mock.call_count == 14
-    assert aioclient_mock.mock_calls[13][2] == {"enabled": True}
+    assert aioclient_mock.call_count == 15
+    assert aioclient_mock.mock_calls[14][2] == {"enabled": True}
 
 
 async def test_remove_switches(
@@ -990,8 +990,8 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 11
-    assert aioclient_mock.mock_calls[10][2] == {
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "block-sta",
     }
@@ -999,8 +999,8 @@ async def test_block_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert aioclient_mock.call_count == 12
-    assert aioclient_mock.mock_calls[11][2] == {
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {
         "mac": "00:00:00:00:01:01",
         "cmd": "unblock-sta",
     }

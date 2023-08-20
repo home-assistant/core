@@ -274,7 +274,7 @@ async def async_setup_entry(
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    if controller.site_role != "admin":
+    if not controller.is_admin:
         return
 
     for mac in controller.option_block_clients:

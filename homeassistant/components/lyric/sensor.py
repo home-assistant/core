@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -76,6 +76,11 @@ async def async_setup_entry(
     for location in coordinator.data.locations:
         for device in location.devices:
             if device.indoorTemperature:
+                if device.units == "Fahrenheit":
+                    native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                else:
+                    native_temperature_unit = UnitOfTemperature.CELSIUS
+
                 entities.append(
                     LyricSensor(
                         coordinator,
@@ -84,7 +89,7 @@ async def async_setup_entry(
                             name="Indoor Temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=hass.config.units.temperature_unit,
+                            native_unit_of_measurement=native_temperature_unit,
                             value=lambda device: device.indoorTemperature,
                         ),
                         location,
@@ -108,6 +113,11 @@ async def async_setup_entry(
                     )
                 )
             if device.outdoorTemperature:
+                if device.units == "Fahrenheit":
+                    native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                else:
+                    native_temperature_unit = UnitOfTemperature.CELSIUS
+
                 entities.append(
                     LyricSensor(
                         coordinator,
@@ -116,7 +126,7 @@ async def async_setup_entry(
                             name="Outdoor Temperature",
                             device_class=SensorDeviceClass.TEMPERATURE,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement=hass.config.units.temperature_unit,
+                            native_unit_of_measurement=native_temperature_unit,
                             value=lambda device: device.outdoorTemperature,
                         ),
                         location,
