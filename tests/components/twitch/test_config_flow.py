@@ -8,11 +8,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.components.twitch import TwitchMock
-from tests.components.twitch.conftest import (
-    CLIENT_ID,
-    SCOPES,
-    TWITCH_AUTHORIZE_URI,
-)
+from tests.components.twitch.conftest import CLIENT_ID, SCOPES, TWITCH_AUTHORIZE_URI
 from tests.typing import ClientSessionGenerator
 
 
