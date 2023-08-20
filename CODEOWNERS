@@ -289,6 +289,8 @@ build.json @home-assistant/supervisor
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
 /tests/components/dormakaba_dkey/ @emontnemery
+/homeassistant/components/downloader/ @erwindouna
+/tests/components/downloader/ @erwindouna
 /homeassistant/components/dremel_3d_printer/ @tkdrob
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/dsmr/ @Robbie1221 @frenck

@@ -228,7 +228,7 @@ omit =
     homeassistant/components/dormakaba_dkey/lock.py
     homeassistant/components/dormakaba_dkey/sensor.py
     homeassistant/components/dovado/*
-    homeassistant/components/downloader/*
+    homeassistant/components/downloader/__init__.py
     homeassistant/components/dsmr_reader/__init__.py
     homeassistant/components/dsmr_reader/definitions.py
     homeassistant/components/dsmr_reader/sensor.py

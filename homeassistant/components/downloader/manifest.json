@@ -1,7 +1,7 @@
 {
   "domain": "downloader",
   "name": "Downloader",
-  "codeowners": [],
+  "codeowners": ["@erwindouna"],
   "documentation": "https://www.home-assistant.io/integrations/downloader",
   "quality_scale": "internal"
 }
