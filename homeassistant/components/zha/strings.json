@@ -62,7 +62,7 @@
       },
       "maybe_confirm_ezsp_restore": {
         "title": "Overwrite Radio IEEE Address",
-        "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
+        "description": "Your backup has a different IEEE address than your radio. For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
           "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
         }
@@ -83,7 +83,7 @@
     "step": {
       "init": {
         "title": "Reconfigure ZHA",
-        "description": "ZHA will be stopped.  Do you wish to continue?"
+        "description": "ZHA will be stopped. Do you wish to continue?"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -95,11 +95,11 @@
       },
       "intent_migrate": {
         "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
-        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
+        "description": "Before plugging in your new radio, your old radio needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
+        "description": "Your old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
       },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
@@ -425,8 +425,8 @@
       }
     },
     "warning_device_warn": {
-      "name": "Warning device warn",
-      "description": "This service starts the WD operation. The WD alerts the surrounding area by audible (siren) and visual (strobe) signals.",
+      "name": "Warning device starts alert",
+      "description": "This service starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -434,11 +434,11 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards."
+          "description": "The Warning Mode field is used as a 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the warning device in each mode is according to the relevant security standards."
         },
         "strobe": {
           "name": "[%key:component::zha::services::warning_device_squawk::fields::strobe::name%]",
-          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated."
+          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”), then only the strobe is activated."
         },
         "level": {
           "name": "Level",
@@ -446,11 +446,11 @@
         },
         "duration": {
           "name": "Duration",
-          "description": "Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are \"0\" this field SHALL be ignored."
+          "description": "Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are \"0\" this field is ignored."
         },
         "duty_cycle": {
           "name": "Duty cycle",
-          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
+          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if the Strobe Duty Cycle field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
         },
         "intensity": {
           "name": "Intensity",

@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_track_template_result,
@@ -37,6 +38,7 @@ from homeassistant.helpers.json import (
     json_dumps,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.typing import EventType
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -535,7 +537,8 @@ async def handle_render_template(
 
     @callback
     def _template_listener(
-        event: Event | None, updates: list[TrackTemplateResult]
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
         nonlocal info
         track_template_result = updates.pop()

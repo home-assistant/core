@@ -54,6 +54,7 @@ async def async_setup_entry(
 class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
 
     def __init__(

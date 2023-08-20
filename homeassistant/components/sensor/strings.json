@@ -25,6 +25,7 @@
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
       "is_ozone": "Current {entity_name} ozone concentration level",
+      "is_ph": "Current {entity_name} pH level",
       "is_pm1": "Current {entity_name} PM1 concentration level",
       "is_pm10": "Current {entity_name} PM10 concentration level",
       "is_pm25": "Current {entity_name} PM2.5 concentration level",
@@ -72,6 +73,7 @@
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
       "ozone": "{entity_name} ozone concentration changes",
+      "ph": "{entity_name} pH level changes",
       "pm1": "{entity_name} PM1 concentration changes",
       "pm10": "{entity_name} PM10 concentration changes",
       "pm25": "{entity_name} PM2.5 concentration changes",
@@ -197,6 +199,9 @@
     },
     "ozone": {
       "name": "Ozone"
+    },
+    "ph": {
+      "name": "pH"
     },
     "pm1": {
       "name": "PM1"

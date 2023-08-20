@@ -248,6 +248,7 @@ async def test_sensors_available_after_restart(hass: HomeAssistant) -> None:
                 CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
             },
         )
+        entry.add_to_hass(hass)
 
         device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(

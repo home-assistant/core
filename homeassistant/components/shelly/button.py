@@ -14,8 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -155,6 +154,7 @@ class ShellyButton(
     entity_description: ShellyButtonDescription[
         ShellyRpcCoordinator | ShellyBlockCoordinator
     ]
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -167,7 +167,6 @@ class ShellyButton(
         super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}

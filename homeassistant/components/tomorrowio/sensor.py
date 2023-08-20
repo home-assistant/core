@@ -11,12 +11,14 @@ from pytomorrowio.const import (
     PollenIndex,
     PrecipitationType,
     PrimaryPollutantType,
+    UVDescription,
 )
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,6 +66,8 @@ from .const import (
     TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
     TMRW_ATTR_SOLAR_GHI,
     TMRW_ATTR_SULPHUR_DIOXIDE,
+    TMRW_ATTR_UV_HEALTH_CONCERN,
+    TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
 
@@ -91,6 +95,10 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
                 "Entity descriptions must include both imperial and metric units or "
                 "they must both be None"
             )
+
+        if self.value_map is not None:
+            self.device_class = SensorDeviceClass.ENUM
+            self.options = [item.name.lower() for item in self.value_map]
 
 
 # From https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileID/14285
@@ -173,8 +181,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_PRECIPITATION_TYPE,
         name="Precipitation Type",
         value_map=PrecipitationType,
-        device_class=SensorDeviceClass.ENUM,
-        options=["freezing_rain", "ice_pellets", "none", "rain", "snow"],
         translation_key="precipitation_type",
         icon="mdi:weather-snowy-rainy",
     ),
@@ -234,20 +240,12 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_EPA_PRIMARY_POLLUTANT,
         name="US EPA Primary Pollutant",
         value_map=PrimaryPollutantType,
+        translation_key="primary_pollutant",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_EPA_HEALTH_CONCERN,
         name="US EPA Health Concern",
         value_map=HealthConcernType,
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "good",
-            "hazardous",
-            "moderate",
-            "unhealthy_for_sensitive_groups",
-            "unhealthy",
-            "very_unhealthy",
-        ],
         translation_key="health_concern",
         icon="mdi:hospital",
     ),
@@ -260,20 +258,12 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_CHINA_PRIMARY_POLLUTANT,
         name="China MEP Primary Pollutant",
         value_map=PrimaryPollutantType,
+        translation_key="primary_pollutant",
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CHINA_HEALTH_CONCERN,
         name="China MEP Health Concern",
         value_map=HealthConcernType,
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "good",
-            "hazardous",
-            "moderate",
-            "unhealthy_for_sensitive_groups",
-            "unhealthy",
-            "very_unhealthy",
-        ],
         translation_key="health_concern",
         icon="mdi:hospital",
     ),
@@ -281,8 +271,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_POLLEN_TREE,
         name="Tree Pollen Index",
         value_map=PollenIndex,
-        device_class=SensorDeviceClass.ENUM,
-        options=["high", "low", "medium", "none", "very_high", "very_low"],
         translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
@@ -290,8 +278,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_POLLEN_WEED,
         name="Weed Pollen Index",
         value_map=PollenIndex,
-        device_class=SensorDeviceClass.ENUM,
-        options=["high", "low", "medium", "none", "very_high", "very_low"],
         translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
@@ -299,8 +285,6 @@ SENSOR_TYPES = (
         key=TMRW_ATTR_POLLEN_GRASS,
         name="Grass Pollen Index",
         value_map=PollenIndex,
-        device_class=SensorDeviceClass.ENUM,
-        options=["high", "low", "medium", "none", "very_high", "very_low"],
         translation_key="pollen_index",
         icon="mdi:flower-pollen",
     ),
@@ -308,6 +292,19 @@ SENSOR_TYPES = (
         TMRW_ATTR_FIRE_INDEX,
         name="Fire Index",
         icon="mdi:fire",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_INDEX,
+        name="UV Index",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:sun-wireless",
+    ),
+    TomorrowioSensorEntityDescription(
+        key=TMRW_ATTR_UV_HEALTH_CONCERN,
+        name="UV Radiation Health Concern",
+        value_map=UVDescription,
+        translation_key="uv_index",
+        icon="mdi:sun-wireless",
     ),
 )
 

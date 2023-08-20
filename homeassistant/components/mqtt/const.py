@@ -28,6 +28,7 @@ CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
 CONF_PAYLOAD_RESET = "payload_reset"
+CONF_SUPPORTED_FEATURES = "supported_features"
 
 CONF_ACTION_TEMPLATE = "action_template"
 CONF_ACTION_TOPIC = "action_topic"
@@ -40,6 +41,8 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_POWER_COMMAND_TOPIC = "power_command_topic"
+CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
 CONF_PRECISION = "precision"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
@@ -112,6 +115,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
@@ -138,6 +142,7 @@ RELOADABLE_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,

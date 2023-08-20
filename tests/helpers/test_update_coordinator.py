@@ -594,3 +594,118 @@ async def test_async_set_update_error(
 
     # Remove callbacks to avoid lingering timers
     remove_callbacks()
+
+
+async def test_only_callback_on_change_when_always_update_is_false(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we do not callback listeners unless something has actually changed when always_update is false."""
+    update_callback = Mock()
+    crd.always_update = False
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_exception = None
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2}
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 2, "b": 3}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    remove_callbacks()
+
+
+async def test_always_callback_when_always_update_is_true(
+    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we callback listeners even though the data is the same when always_update is True."""
+    update_callback = Mock()
+    remove_callbacks = crd.async_add_listener(update_callback)
+    mocked_data = None
+    mocked_exception = None
+
+    async def _update_method() -> int:
+        nonlocal mocked_data
+        nonlocal mocked_exception
+        if mocked_exception is not None:
+            raise mocked_exception
+        return mocked_data
+
+    crd.update_method = _update_method
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = {"a": 1}
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    # But still don't fire it if we are only getting
+    # failure over and over
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_called_once()
+    update_callback.reset_mock()
+
+    mocked_data = None
+    mocked_exception = aiohttp.ClientError("Client Failure #1")
+    await crd.async_refresh()
+    update_callback.assert_not_called()
+    update_callback.reset_mock()
+
+    remove_callbacks()

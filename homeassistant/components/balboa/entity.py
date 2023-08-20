@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pybalboa import EVENT_UPDATE, SpaClient
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 

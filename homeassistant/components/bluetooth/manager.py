@@ -637,7 +637,7 @@ class BluetoothManager:
         else:
             # We could write out every item in the typed dict here
             # but that would be a bit inefficient and verbose.
-            callback_matcher.update(matcher)  # type: ignore[typeddict-item]
+            callback_matcher.update(matcher)
             callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
         connectable = callback_matcher[CONNECTABLE]

@@ -7,7 +7,6 @@ from time import sleep
 from verisure import (
     Error as VerisureError,
     LoginError as VerisureLoginError,
-    ResponseError as VerisureResponseError,
     Session as Verisure,
 )
 
@@ -50,7 +49,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureLoginError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
-        except VerisureResponseError as ex:
+        except VerisureError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
             return False
 
@@ -65,11 +64,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             await self.hass.async_add_executor_job(self.verisure.update_cookie)
         except VerisureLoginError as ex:
-            LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
-        except VerisureResponseError as ex:
-            LOGGER.error("Could not log in to verisure, %s", ex)
-            raise ConfigEntryAuthFailed("Could not log in to verisure") from ex
+        except VerisureError as ex:
+            raise UpdateFailed("Unable to update cookie") from ex
         try:
             overview = await self.hass.async_add_executor_job(
                 self.verisure.request,
@@ -81,26 +78,20 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 self.verisure.smart_lock(),
                 self.verisure.smartplugs(),
             )
-        except VerisureResponseError as err:
-            LOGGER.debug("Cookie expired or service unavailable, %s", err)
-            overview = self._overview
-            try:
-                await self.hass.async_add_executor_job(self.verisure.update_cookie)
-            except VerisureResponseError as ex:
-                raise ConfigEntryAuthFailed("Credentials for Verisure expired.") from ex
         except VerisureError as err:
             LOGGER.error("Could not read overview, %s", err)
             raise UpdateFailed("Could not read overview") from err
 
         def unpack(overview: list, value: str) -> dict | list:
-            return next(
+            unpacked: dict | list | None = next(
                 (
                     item["data"]["installation"][value]
                     for item in overview
                     if value in item.get("data", {}).get("installation", {})
                 ),
-                [],
+                None,
             )
+            return unpacked or []
 
         # Store data in a way Home Assistant can easily consume it
         self._overview = overview

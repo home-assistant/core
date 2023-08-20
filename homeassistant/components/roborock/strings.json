@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "cleaning_area": {
         "name": "Cleaning area"
@@ -145,8 +150,25 @@
       "dnd_switch": {
         "name": "Do not disturb"
       },
+      "off_peak_switch": {
+        "name": "Off-peak charging"
+      },
       "status_indicator": {
         "name": "Status indicator light"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
+      },
+      "off_peak_start_time": {
+        "name": "Off-peak start"
+      },
+      "off_peak_end_time": {
+        "name": "Off-peak end"
       }
     },
     "vacuum": {

@@ -50,11 +50,11 @@ async def _title(hass: HomeAssistant, discovery_info: HassioServiceInfo) -> str:
         addon_info = await async_get_addon_info(hass, discovery_info.slug)
         device = addon_info.get("options", {}).get("device")
 
-    if _is_yellow(hass) and device == "/dev/TTYAMA1":
-        return "Home Assistant Yellow"
+    if _is_yellow(hass) and device == "/dev/ttyAMA1":
+        return f"Home Assistant Yellow ({discovery_info.name})"
 
     if device and "SkyConnect" in device:
-        return "Home Assistant SkyConnect"
+        return f"Home Assistant SkyConnect ({discovery_info.name})"
 
     return discovery_info.name
 
@@ -129,6 +129,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
         config_entry_data = {"url": url}
+
+        if self._async_in_progress(include_uninitialized=True):
+            # We currently don't handle multiple config entries, abort if hassio
+            # discovers multiple addons with otbr support
+            return self.async_abort(reason="single_instance_allowed")
 
         if current_entries := self._async_current_entries():
             for current_entry in current_entries:

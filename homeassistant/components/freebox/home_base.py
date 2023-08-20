@@ -5,8 +5,9 @@ import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import CATEGORY_TO_MODEL, DOMAIN
 from .router import FreeboxRouter
@@ -125,7 +126,7 @@ class FreeboxHomeEntity(Entity):
         )
         if not node:
             _LOGGER.warning(
-                "The Freebox Home device has no node for: " + ep_type + "/" + name
+                "The Freebox Home device has no node for: %s/%s", ep_type, name
             )
             return None
         return node.get("value")

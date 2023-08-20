@@ -8,9 +8,8 @@ from datetime import timedelta
 import inspect
 import logging
 from math import ceil, floor
-from typing import Any, final
+from typing import Any, Self, final
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

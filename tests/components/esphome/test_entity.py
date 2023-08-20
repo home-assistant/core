@@ -8,10 +8,12 @@ from aioesphomeapi import (
     BinarySensorState,
     EntityInfo,
     EntityState,
+    SensorInfo,
+    SensorState,
     UserService,
 )
 
-from homeassistant.const import ATTR_RESTORED, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_RESTORED, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
@@ -149,10 +151,17 @@ async def test_deep_sleep_device(
             name="my binary_sensor",
             unique_id="my_binary_sensor",
         ),
+        SensorInfo(
+            object_id="my_sensor",
+            key=3,
+            name="my sensor",
+            unique_id="my_sensor",
+        ),
     ]
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
         BinarySensorState(key=2, state=True, missing_state=False),
+        SensorState(key=3, state=123.0, missing_state=False),
     ]
     user_service = []
     mock_device = await mock_esphome_device(
@@ -165,10 +174,16 @@ async def test_deep_sleep_device(
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "123"
 
     await mock_device.mock_disconnect(False)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -178,9 +193,75 @@ async def test_deep_sleep_device(
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "123"
+
+    await mock_device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+    mock_device.set_state(BinarySensorState(key=1, state=False, missing_state=False))
+    mock_device.set_state(SensorState(key=3, state=56, missing_state=False))
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_OFF
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "56"
 
     await mock_device.mock_disconnect(True)
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_OFF
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "56"
+
+    await mock_device.mock_connect()
+    await hass.async_block_till_done()
+    await mock_device.mock_disconnect(False)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_esphome_device_without_friendly_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device without friendly_name set."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="mybinary_sensor",
+            key=1,
+            name="my binary_sensor",
+            unique_id="my_binary_sensor",
+        ),
+    ]
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=True, missing_state=False),
+    ]
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+        device_info={"friendly_name": None},
+    )
+    state = hass.states.get("binary_sensor.my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON

@@ -7,7 +7,6 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -27,10 +26,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    PlatformNotReady,
-)
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -48,7 +44,7 @@ from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
-    from .entity import DeviceInfo, Entity
+    from .entity import Entity
 
 
 SLOW_SETUP_WARNING = 10
@@ -59,37 +55,6 @@ SLOW_ADD_MIN_TIMEOUT = 500
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
-
-DEVICE_INFO_TYPES = {
-    # Device info is categorized by finding the first device info type which has all
-    # the keys of the device info. The link device info type must be kept first
-    # to make it preferred over primary.
-    "link": {
-        "connections",
-        "identifiers",
-    },
-    "primary": {
-        "configuration_url",
-        "connections",
-        "entry_type",
-        "hw_version",
-        "identifiers",
-        "manufacturer",
-        "model",
-        "name",
-        "suggested_area",
-        "sw_version",
-        "via_device",
-    },
-    "secondary": {
-        "connections",
-        "default_manufacturer",
-        "default_model",
-        "default_name",
-        # Used by Fritz
-        "via_device",
-    },
-}
 
 _LOGGER = getLogger(__name__)
 
@@ -601,7 +566,8 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
-        # Update properties before we generate the entity_id
+        # Update properties before we generate the entity_id. This will happen
+        # also for disabled entities.
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)
@@ -646,7 +612,19 @@ class EntityPlatform:
                     return
 
             if self.config_entry and (device_info := entity.device_info):
-                device = self._async_process_device_info(device_info)
+                try:
+                    device = dev_reg.async_get(self.hass).async_get_or_create(
+                        config_entry_id=self.config_entry.entry_id,
+                        **device_info,
+                    )
+                except dev_reg.DeviceInfoError as exc:
+                    self.logger.error(
+                        "%s: Not adding entity with invalid device info: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return
             else:
                 device = None
 
@@ -772,62 +750,6 @@ class EntityPlatform:
         entity.async_on_remove(remove_entity_cb)
 
         await entity.add_to_platform_finish()
-
-    @callback
-    def _async_process_device_info(
-        self, device_info: DeviceInfo
-    ) -> dev_reg.DeviceEntry | None:
-        """Process a device info."""
-        keys = set(device_info)
-
-        # If no keys or not enough info to match up, abort
-        if len(keys & {"connections", "identifiers"}) == 0:
-            self.logger.error(
-                "Ignoring device info without identifiers or connections: %s",
-                device_info,
-            )
-            return None
-
-        device_info_type: str | None = None
-
-        # Find the first device info type which has all keys in the device info
-        for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
-            if keys <= allowed_keys:
-                device_info_type = possible_type
-                break
-
-        if device_info_type is None:
-            self.logger.error(
-                "Device info for %s needs to either describe a device, "
-                "link to existing device or provide extra information.",
-                device_info,
-            )
-            return None
-
-        if (config_url := device_info.get("configuration_url")) is not None:
-            if type(config_url) is not str or urlparse(config_url).scheme not in [
-                "http",
-                "https",
-                "homeassistant",
-            ]:
-                self.logger.error(
-                    "Ignoring device info with invalid configuration_url '%s'",
-                    config_url,
-                )
-                return None
-
-        assert self.config_entry is not None
-
-        if device_info_type == "primary" and not device_info.get("name"):
-            device_info = {
-                **device_info,  # type: ignore[misc]
-                "name": self.config_entry.title,
-            }
-
-        return dev_reg.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            **device_info,
-        )
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

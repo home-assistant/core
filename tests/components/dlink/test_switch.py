@@ -28,7 +28,7 @@ async def test_switch_state(hass: HomeAssistant, mocked_plug: AsyncMock) -> None
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = "switch.mock_title_switch"
+    entity_id = "switch.mock_title"
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] == 1040.0
@@ -62,7 +62,7 @@ async def test_switch_no_value(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("switch.mock_title_switch")
+    state = hass.states.get("switch.mock_title")
     assert state.state == STATE_OFF
     assert state.attributes["total_consumption"] is None
     assert state.attributes["temperature"] is None

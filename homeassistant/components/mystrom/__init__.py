@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     info.setdefault("type", 101)
 
     device_type = info["type"]
-    if device_type in [101, 106, 107]:
+    if device_type in [101, 106, 107, 120]:
         device = _get_mystrom_switch(host)
         platforms = PLATFORMS_SWITCH
         await _async_get_device_state(device, info["ip"])
@@ -86,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     device_type = hass.data[DOMAIN][entry.entry_id].info["type"]
     platforms = []
-    if device_type in [101, 106, 107]:
+    if device_type in [101, 106, 107, 120]:
         platforms.extend(PLATFORMS_SWITCH)
     elif device_type in [102, 105]:
         platforms.extend(PLATFORMS_BULB)

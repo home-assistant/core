@@ -6,17 +6,14 @@ from collections import ChainMap
 from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from copy import deepcopy
-from enum import Enum
+from enum import Enum, StrEnum
 import functools
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, TypeVar, cast
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from . import data_entry_flow, loader
-from .backports.enum import StrEnum
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
@@ -338,7 +335,7 @@ class ConfigEntry:
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
-            self.async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+            self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
             self.supports_unload = await support_entry_unload(hass, self.domain)
@@ -357,7 +354,9 @@ class ConfigEntry:
                 err,
             )
             if self.domain == integration.domain:
-                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
+                self._async_set_state(
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                )
             return
 
         if self.domain == integration.domain:
@@ -373,12 +372,14 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, "Import error")
+                self._async_set_state(
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                )
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self.async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
                 return
 
         error_reason = None
@@ -418,7 +419,7 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
-            self.async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
             wait_time = 2 ** min(tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
@@ -479,9 +480,9 @@ class ConfigEntry:
             return
 
         if result:
-            self.async_set_state(hass, ConfigEntryState.LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
-            self.async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+            self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -502,7 +503,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
             return True
 
         if self.state == ConfigEntryState.NOT_LOADED:
@@ -516,7 +517,7 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         component = integration.get_component()
@@ -527,14 +528,14 @@ class ConfigEntry:
 
             if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
 
         if not supports_unload:
             if integration.domain == self.domain:
-                self.async_set_state(
+                self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
                 )
             return False
@@ -546,7 +547,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self.async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
 
             await self._async_process_on_unload(hass)
 
@@ -556,7 +557,7 @@ class ConfigEntry:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
-                self.async_set_state(
+                self._async_set_state(
                     hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
                 )
             return False
@@ -588,7 +589,7 @@ class ConfigEntry:
             )
 
     @callback
-    def async_set_state(
+    def _async_set_state(
         self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
     ) -> None:
         """Set the state of the config entry."""
@@ -683,13 +684,14 @@ class ConfigEntry:
         if self._on_unload is not None:
             while self._on_unload:
                 if job := self._on_unload.pop()():
-                    self._tasks.add(hass.async_create_task(job))
+                    self.async_create_task(hass, job)
 
         if not self._tasks and not self._background_tasks:
             return
 
+        cancel_message = f"Config entry {self.title} with {self.domain} unloading"
         for task in self._background_tasks:
-            task.cancel()
+            task.cancel(cancel_message)
 
         _, pending = await asyncio.wait(
             [*self._tasks, *self._background_tasks], timeout=10
@@ -881,7 +883,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         """Cancel any initializing flows."""
         for task_list in self._initialize_tasks.values():
             for task in task_list:
-                task.cancel()
+                task.cancel(
+                    "Config entry initialize canceled: Home Assistant is shutting down"
+                )
         await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
@@ -960,10 +964,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        await _load_integration(self.hass, handler_key, self._hass_config)
-        if (handler := HANDLERS.get(handler_key)) is None:
-            raise data_entry_flow.UnknownHandler
-
+        handler = await _async_get_flow_handler(
+            self.hass, handler_key, self._hass_config
+        )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
@@ -1826,12 +1829,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry is None:
             raise UnknownEntry(handler_key)
 
-        await _load_integration(self.hass, entry.domain, {})
-
-        if entry.domain not in HANDLERS:
-            raise data_entry_flow.UnknownHandler
-
-        return HANDLERS[entry.domain].async_get_options_flow(entry)
+        handler = await _async_get_flow_handler(self.hass, entry.domain, {})
+        return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -2017,9 +2016,15 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     return hasattr(component, "async_remove_config_entry_device")
 
 
-async def _load_integration(
+async def _async_get_flow_handler(
     hass: HomeAssistant, domain: str, hass_config: ConfigType
-) -> None:
+) -> type[ConfigFlow]:
+    """Get a flow handler for specified domain."""
+
+    # First check if there is a handler registered for the domain
+    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+        return handler
+
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound as err:
@@ -2038,3 +2043,8 @@ async def _load_integration(
             err,
         )
         raise data_entry_flow.UnknownHandler
+
+    if handler := HANDLERS.get(domain):
+        return handler
+
+    raise data_entry_flow.UnknownHandler
