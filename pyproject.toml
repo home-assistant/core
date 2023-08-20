@@ -470,7 +470,7 @@ filterwarnings = [
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
-    # https://github.com/grahamwetzler/smart-meter-texas/pull/143
+    # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - v0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
     # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
