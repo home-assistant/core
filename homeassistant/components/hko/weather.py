@@ -2,12 +2,11 @@
 from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LOCATION, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -22,7 +21,6 @@ from .const import (
     API_TEMPERATURE,
     ATTRIBUTION,
     DOMAIN,
-    MANUFACTURER,
 )
 
 
@@ -42,7 +40,7 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     """Define a HKO entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    # _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(self, name, unique_id, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
@@ -64,15 +62,6 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._unique_id)},
-            manufacturer=MANUFACTURER,
-        )
 
     @property
     def condition(self) -> str:

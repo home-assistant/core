@@ -9,11 +9,11 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "location": "Location"
                 },
-                "description": "HKO"
+                "description": "Select location to use for weather forecasting"
             }
         }
     }

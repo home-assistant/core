@@ -9,11 +9,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "init": {
+      "user": {
+        "description": "Please select a location to use for weather forecasting.",
         "data": {
-          "location": "Location"
-        },
-        "description": "HKO"
+          "location": "[%key:common::config_flow::data::location%]"
+        }
       }
     }
   }
