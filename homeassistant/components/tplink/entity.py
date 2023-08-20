@@ -70,11 +70,9 @@ class CoordinatedTPLinkChildEntity(CoordinatedTPLinkEntity):
         super().__init__(device, coordinator)
         self.plug = plug
         self._attr_device_info = DeviceInfo(
-            connections={(DOMAIN, str(device.device_id))},
             identifiers={(DOMAIN, str(plug.device_id))},
             manufacturer="TP-Link",
             model=plug.model,
             name=plug.alias,
-            sw_version=plug.hw_info["sw_ver"],
-            hw_version=plug.hw_info["hw_ver"],
+            via_device=(DOMAIN, str(device.device_id)),
         )
