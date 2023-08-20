@@ -227,7 +227,7 @@ class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
-    _attr_condition: str | None
+    _attr_condition: str | None = None
     # _attr_forecast is deprecated, implement async_forecast_daily,
     # async_forecast_hourly or async_forecast_twice daily instead
     _attr_forecast: list[Forecast] | None = None

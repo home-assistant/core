@@ -9,7 +9,7 @@ from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
 

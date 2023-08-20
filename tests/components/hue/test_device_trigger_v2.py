@@ -11,10 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 
-from tests.common import (
-    async_capture_events,
-    async_get_device_automations,
-)
+from tests.common import async_capture_events, async_get_device_automations
 
 
 async def test_hue_event(

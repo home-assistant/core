@@ -40,7 +40,7 @@ async def test_pipeline_from_audio_stream_auto(
     In this test, no pipeline is specified.
     """
 
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
         yield b"part1"
@@ -79,7 +79,7 @@ async def test_pipeline_from_audio_stream_legacy(
     """
     client = await hass_ws_client(hass)
 
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
         yield b"part1"
@@ -139,7 +139,7 @@ async def test_pipeline_from_audio_stream_entity(
     """
     client = await hass_ws_client(hass)
 
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
         yield b"part1"
@@ -199,7 +199,7 @@ async def test_pipeline_from_audio_stream_no_stt(
     """
     client = await hass_ws_client(hass)
 
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
         yield b"part1"
@@ -257,7 +257,7 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
 
     In this test, the pipeline does not exist.
     """
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
         yield b"part1"
@@ -294,7 +294,7 @@ async def test_pipeline_from_audio_stream_wake_word(
 ) -> None:
     """Test creating a pipeline from an audio stream with wake word."""
 
-    events = []
+    events: list[assist_pipeline.PipelineEvent] = []
 
     # [0, 1, ...]
     wake_chunk_1 = bytes(it.islice(it.cycle(range(256)), BYTES_ONE_SECOND))
