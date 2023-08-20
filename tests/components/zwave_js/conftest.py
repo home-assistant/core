@@ -650,6 +650,12 @@ def nice_ibt4zwave_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
 
 
+@pytest.fixture(name="logic_group_zdb5100_light_state", scope="session")
+def light_logic_group_zdb5100_light_state_fixture():
+    """Load the Logic Group ZDB5100 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
+
+
 # model fixtures
 
 
@@ -1249,5 +1255,13 @@ def energy_production_fixture(client, energy_production_state):
 def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
     """Mock a Nice IBT4ZWAVE cover node."""
     node = Node(client, copy.deepcopy(nice_ibt4zwave_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="logic_group_zdb5100")
+def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
+    """Mock a ZDB5100 light node."""
+    node = Node(client, copy.deepcopy(logic_group_zdb5100_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
