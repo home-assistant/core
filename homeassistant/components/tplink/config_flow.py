@@ -45,10 +45,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_handle_discovery(self, host: str, mac: str) -> FlowResult:
         """Handle any discovery."""
-        hSplit = host.split(":")
-        if len(hSplit) == 2:  # If exactly one semicolon
-            host = hSplit[0]
-            port = hSplit[1]
+        parts = host.split(":")
+        if len(parts) == 2:  # If exactly one colon
+            host = parts[0]
+            port = parts[1]
         else:
             port = None
 
@@ -97,10 +97,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                hSplit = host.split(":")
-                if len(hSplit) == 2:  # If exactly one semicolon
-                    host = hSplit[0]
-                    port = hSplit[1]
+                parts = host.split(":")
+                if len(parts) == 2:  # If exactly one colon
+                    host = parts[0]
+                    port = parts[1]
                 else:
                     port = None
 

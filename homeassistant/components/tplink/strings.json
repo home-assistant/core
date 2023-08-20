@@ -3,7 +3,7 @@
     "flow_title": "{name} {model} ({host})",
     "step": {
       "user": {
-        "description": "If you leave the host empty, discovery will be used to find devices.",
+        "description": "If you leave the host empty, discovery will be used to find devices. You can specify a port in the host by using a colon to separate the IP address or hostname from the port number.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
