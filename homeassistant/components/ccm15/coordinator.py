@@ -84,7 +84,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         if await self._ccm15.async_set_state(ac_index, state, value):
             await self.async_request_refresh()
 
-    def get_ac_data(self, ac_index: int) -> Optional[CCM15SlaveDevice]:
+    def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
         if ac_index < 0 or ac_index >= len(self.data.devices):
             # Index is out of bounds or not an integer
@@ -143,23 +143,20 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
-    def current_temperature(self) -> Optional[int]:
+    def current_temperature(self) -> int | None:
         """Return current temperature."""
         if data := self.coordinator.get_ac_data(self._ac_index):
             _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
             return data.temperature
-        
         return None
 
     @property
-    def target_temperature(self) -> Optional[int]:
+    def target_temperature(self) -> int | None:
         """Return target temperature."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return None
-
-        _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
-        return data.temperature_setpoint
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
+            return data.temperature_setpoint
+        return None
 
     @property
     def target_temperature_step(self) -> int:
@@ -167,15 +164,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return 1
 
     @property
-    def hvac_mode(self) -> Optional[HVACMode]:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return None
-
-        mode = data.ac_mode
-        _LOGGER.debug("hvac_mode[%s]=%s", self._ac_index, mode)
-        return CONST_CMD_STATE_MAP[mode]
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            mode = data.ac_mode
+            _LOGGER.debug("hvac_mode[%s]=%s", self._ac_index, mode)
+            return CONST_CMD_STATE_MAP[mode]
+        return None
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -183,14 +178,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY, HVACMode.AUTO]
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return fan mode."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return None
-        mode = data.fan_mode
-        _LOGGER.debug("fan_mode[%s]=%s", self._ac_index, mode)
-        return CONST_CMD_FAN_MAP[mode]
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            mode = data.fan_mode
+            _LOGGER.debug("fan_mode[%s]=%s", self._ac_index, mode)
+            return CONST_CMD_FAN_MAP[mode]
+        return None
 
     @property
     def fan_modes(self) -> list[str]:
@@ -198,13 +192,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     @property
-    def swing_mode(self) -> Optional[str]:
+    def swing_mode(self) -> str | None:
         """Return swing mode."""
-        data: Optional[CCM15SlaveDevice] = self.coordinator.get_ac_data(self._ac_index)
-        if data is None:
-            return None
-        _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
-        return SWING_ON if data.is_swing_on else SWING_OFF
+        if data := self.coordinator.get_ac_data(self._ac_index):
+            _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
+            return SWING_ON if data.is_swing_on else SWING_OFF
+        return None
 
     @property
     def swing_modes(self) -> list[str]:
