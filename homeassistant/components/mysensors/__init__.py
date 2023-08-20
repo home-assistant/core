@@ -15,6 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import (
     ATTR_DEVICES,
     DOMAIN,
+    MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_GATEWAYS,
     MYSENSORS_ON_UNLOAD,
     PLATFORMS,
@@ -72,6 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(key)
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
+    hass.data[DOMAIN].pop(MYSENSORS_DISCOVERED_NODES.format(entry.entry_id), None)
 
     await gw_stop(hass, entry, gateway)
     return True
@@ -90,6 +92,11 @@ async def async_remove_config_entry_device(
     node_id = int(device_id.partition("-")[2])
     gateway.sensors.pop(node_id, None)
     gateway.tasks.persistence.need_save = True
+
+    # remove node from discovered nodes
+    hass.data[DOMAIN].setdefault(
+        MYSENSORS_DISCOVERED_NODES.format(config_entry.entry_id), set()
+    ).remove(node_id)
 
     return True
 
