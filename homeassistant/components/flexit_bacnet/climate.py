@@ -27,6 +27,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
+    MANUFACTURER,
+    MODEL,
+    NAME,
     PRESET_TO_VENTILATION_MODE_MAP,
     VENTILATION_TO_PRESET_MODE_MAP,
 )
@@ -35,12 +38,12 @@ from .const import (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
     device = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_devices([FlexitClimateEntity(device)])
+    async_add_entities([FlexitClimateEntity(device)])
 
 
 class FlexitClimateEntity(ClimateEntity):
@@ -76,9 +79,9 @@ class FlexitClimateEntity(ClimateEntity):
             identifiers={
                 (DOMAIN, device.serial_number),
             },
-            name="Ventilation",
-            manufacturer="Flexit",
-            model="Nordic",
+            name=NAME,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
         )
 
     async def async_update(self) -> None:
