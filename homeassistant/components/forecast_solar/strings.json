@@ -27,7 +27,7 @@
           "damping": "Damping factor: adjusts the results in the morning and evening",
           "inverter_size": "Inverter size (Watt)",
           "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
-          "modules power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
         }
       }
     }
