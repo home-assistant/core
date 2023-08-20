@@ -5,7 +5,6 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-import pytz
 from pyunifiprotect.data import (
     Bootstrap,
     Camera,
@@ -441,7 +440,7 @@ ONE_MONTH_SIMPLE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     1,
 )
@@ -454,7 +453,7 @@ TWO_MONTH_SIMPLE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     2,
 )
@@ -513,7 +512,7 @@ ONE_MONTH_TIMEZONE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     1,
 )
@@ -526,7 +525,7 @@ TWO_MONTH_TIMEZONE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     2,
 )

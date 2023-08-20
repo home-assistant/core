@@ -586,7 +586,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is str:  # noqa: E721
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -1122,6 +1122,7 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
+        # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(

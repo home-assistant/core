@@ -51,16 +51,12 @@ ENCHARGE_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda encharge: not encharge.dc_switch_off,
     ),
-    EnvoyEnchargeBinarySensorEntityDescription(
-        key="operating",
-        translation_key="operating",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda encharge: encharge.operating,
-    ),
 )
 
 RELAY_STATUS_SENSOR = BinarySensorEntityDescription(
-    key="relay_status", icon="mdi:power-plug", has_entity_name=True
+    key="relay_status",
+    translation_key="relay",
+    icon="mdi:power-plug",
 )
 
 
@@ -87,12 +83,6 @@ ENPOWER_SENSORS = (
         value_fn=lambda enpower: enpower.communicating,
     ),
     EnvoyEnpowerBinarySensorEntityDescription(
-        key="operating",
-        translation_key="operating",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda enpower: enpower.operating,
-    ),
-    EnvoyEnpowerBinarySensorEntityDescription(
         key="mains_oper_state",
         translation_key="grid_status",
         icon="mdi:transmission-tower",
@@ -110,8 +100,6 @@ async def async_setup_entry(
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    envoy_serial_num = config_entry.unique_id
-    assert envoy_serial_num is not None
     entities: list[BinarySensorEntity] = []
     if envoy_data.encharge_inventory:
         entities.extend(
@@ -186,13 +174,12 @@ class EnvoyEnpowerBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_unique_id = f"{enpower.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, enpower.serial_number)},
             manufacturer="Enphase",
             model="Enpower",
-            name=f"Enpower {self._serial_number}",
+            name=f"Enpower {enpower.serial_number}",
             sw_version=str(enpower.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )
@@ -218,21 +205,19 @@ class EnvoyRelayBinarySensorEntity(EnvoyBaseBinarySensorEntity):
         super().__init__(coordinator, description)
         enpower = self.data.enpower
         assert enpower is not None
-        self.relay_id = relay_id
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_relay_{relay_id}"
+        self._relay_id = relay_id
+        self._attr_unique_id = f"{enpower.serial_number}_relay_{relay_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, relay_id)},
             manufacturer="Enphase",
-            model="Enpower",
-            name=f"Enpower {self._serial_number}",
+            model="Dry contact relay",
+            name=self.data.dry_contact_settings[relay_id].load_name,
             sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
+            via_device=(DOMAIN, enpower.serial_number),
         )
-        self._attr_name = f"{self.data.dry_contact_settings[relay_id].load_name} Relay"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the Enpower binary_sensor."""
-        relay = self.data.dry_contact_status[self.relay_id]
+        relay = self.data.dry_contact_status[self._relay_id]
         return relay.status == DryContactStatus.CLOSED
