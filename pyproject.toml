@@ -463,6 +463,9 @@ filterwarnings = [
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:apprise.AppriseLocal",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
+    # https://github.com/eclipse/paho.mqtt.python/issues/653 - v1.6.1
+    # https://github.com/eclipse/paho.mqtt.python/pull/665
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
@@ -505,8 +508,6 @@ filterwarnings = [
     "ignore:module '(sre_parse|sre_constants)' is deprecate:DeprecationWarning:lark.utils",
     # https://pypi.org/project/lomond/ - v0.3.3 - 2018-09-21
     "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:lomond.session",
-    # https://pypi.org/project/paho-mqtt/ - v1.6.1 - 2021-10-21
-    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
     "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
     # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
