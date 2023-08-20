@@ -255,7 +255,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
                 {
                     "code": "pipeline not found",
-                    "message": "Selected pipeline timeout",
+                    "message": "Selected pipeline not found",
                 },
             )
             _LOGGER.warning("Pipeline not found")
