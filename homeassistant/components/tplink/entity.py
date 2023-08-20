@@ -40,22 +40,41 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._attr_unique_id = self.device.device_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            identifiers={(DOMAIN, str(self.device.device_id))},
+        self._attr_unique_id = device.device_id
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
-            model=self.device.model,
-            name=self.device.alias,
-            sw_version=self.device.hw_info["sw_ver"],
-            hw_version=self.device.hw_info["hw_ver"],
+            model=device.model,
+            name=device.alias,
+            sw_version=device.hw_info["sw_ver"],
+            hw_version=device.hw_info["hw_ver"],
         )
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return bool(self.device.is_on)
+
+
+class CoordinatedTPLinkChildEntity(CoordinatedTPLinkEntity):
+    """Common base class for all power plug children."""
+
+    def __init__(
+        self,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+        plug: SmartDevice,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(device, coordinator)
+        self.plug = plug
+        self._attr_device_info = DeviceInfo(
+            connections={(DOMAIN, str(device.device_id))},
+            identifiers={(DOMAIN, str(plug.device_id))},
+            manufacturer="TP-Link",
+            model=plug.model,
+            name=plug.alias,
+            sw_version=plug.hw_info["sw_ver"],
+            hw_version=plug.hw_info["hw_ver"],
+        )

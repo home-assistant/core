@@ -15,7 +15,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkChildEntity,
+    CoordinatedTPLinkEntity,
+    async_refresh_after,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,8 +111,10 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         await self.device.turn_off()
 
 
-class SmartPlugSwitchChild(SmartPlugSwitch):
+class SmartPlugSwitchChild(CoordinatedTPLinkChildEntity, SwitchEntity):
     """Representation of an individual plug of a TPLink Smart Plug strip."""
+
+    _attr_name = None
 
     def __init__(
         self,
@@ -117,22 +123,20 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
         plug: SmartDevice,
     ) -> None:
         """Initialize the child switch."""
-        super().__init__(device, coordinator)
-        self._plug = plug
+        super().__init__(device, coordinator, plug)
         self._attr_unique_id = legacy_device_id(plug)
-        self._attr_name = plug.alias
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the child switch on."""
-        await self._plug.turn_on()
+        await self.plug.turn_on()
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the child switch off."""
-        await self._plug.turn_off()
+        await self.plug.turn_off()
 
     @property
     def is_on(self) -> bool:
         """Return true if child switch is on."""
-        return bool(self._plug.is_on)
+        return bool(self.plug.is_on)
