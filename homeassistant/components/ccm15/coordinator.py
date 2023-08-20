@@ -125,16 +125,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._attr_should_poll = True
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_has_entity_name = True
+        self._attr_name = f"{self._ac_index}"
 
     @property
     def unique_id(self) -> str:
         """Return unique id."""
         return f"{self._ac_host}.{self._ac_index}"
-
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return f"Climate{self._ac_index}"
 
     @property
     def current_temperature(self) -> int | None:
@@ -215,7 +211,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
             },
-            name=self.name,
+            name=self._attr_name,
             manufacturer="Midea",
             model="CCM15",
         )
