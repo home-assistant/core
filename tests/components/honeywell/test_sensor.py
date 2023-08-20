@@ -26,8 +26,8 @@ async def test_outdoor_sensor(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    temperature_state = hass.states.get("sensor.device1_outdoor_temperature")
-    humidity_state = hass.states.get("sensor.device1_outdoor_humidity")
+    temperature_state = hass.states.get("sensor.device3_outdoor_temperature")
+    humidity_state = hass.states.get("sensor.device3_outdoor_humidity")
 
     assert temperature_state
     assert humidity_state
@@ -40,23 +40,26 @@ async def test_indoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     location: Location,
-    device_with_outdoor_sensor: Device,
+    device_with_indoor_sensors_only: Device,
     unit,
     temp,
 ) -> None:
-    """Test indoor temperature sensor."""
-    device_with_outdoor_sensor.temperature_unit = unit
-    device_with_outdoor_sensor.current_temperature = 5
-    device_with_outdoor_sensor.current_humidity = 25
+    """Test indoor temperature sensor with no outdoor sensors."""
+    device_with_indoor_sensors_only.temperature_unit = unit
+    device_with_indoor_sensors_only.current_temperature = 5
+    device_with_indoor_sensors_only.current_humidity = 25
     location.devices_by_id[
-        device_with_outdoor_sensor.deviceid
-    ] = device_with_outdoor_sensor
+        device_with_indoor_sensors_only.deviceid
+    ] = device_with_indoor_sensors_only
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    temperature_state = hass.states.get("sensor.device1_temperature")
-    humidity_state = hass.states.get("sensor.device1_humidity")
+    assert hass.states.get("sensor.device4_outdoor_temperature") is None
+    assert hass.states.get("sensor.device4_outdoor_humidity") is None
+
+    temperature_state = hass.states.get("sensor.device4_temperature")
+    humidity_state = hass.states.get("sensor.device4_humidity")
 
     assert temperature_state
     assert humidity_state
