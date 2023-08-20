@@ -8,7 +8,6 @@ import logging
 import platform
 from typing import Any
 
-import async_timeout
 import bleak
 from bleak import BleakError
 from bleak.assigned_numbers import AdvertisementDataType
@@ -220,7 +219,7 @@ class HaScanner(BaseHaScanner):
                 START_ATTEMPTS,
             )
             try:
-                async with async_timeout.timeout(START_TIMEOUT):
+                async with asyncio.timeout(START_TIMEOUT):
                     await self.scanner.start()  # type: ignore[no-untyped-call]
             except InvalidMessageError as ex:
                 _LOGGER.debug(
@@ -350,11 +349,10 @@ class HaScanner(BaseHaScanner):
             try:
                 await self._async_start()
             except ScannerStartError as ex:
-                _LOGGER.error(
+                _LOGGER.exception(
                     "%s: Failed to restart Bluetooth scanner: %s",
                     self.name,
                     ex,
-                    exc_info=True,
                 )
 
     async def _async_reset_adapter(self) -> None:

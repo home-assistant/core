@@ -8,24 +8,27 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.wlan import Wlan
 
-from homeassistant.components.image import DOMAIN, ImageEntity, ImageEntityDescription
+from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
-from .entity import HandlerT, UnifiEntity, UnifiEntityDescription
+from .entity import (
+    HandlerT,
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_wlan_available_fn,
+    async_wlan_device_info_fn,
+)
 
 
 @callback
@@ -34,25 +37,12 @@ def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> byte
     return controller.api.wlans.generate_wlan_qr_code(wlan)
 
 
-@callback
-def async_wlan_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for WLAN."""
-    wlan = api.wlans[obj_id]
-    return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, wlan.id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Network",
-        name=wlan.name,
-    )
-
-
 @dataclass
 class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     image_fn: Callable[[UniFiController, ApiItemT], bytes]
-    value_fn: Callable[[ApiItemT], str]
+    value_fn: Callable[[ApiItemT], str | None]
 
 
 @dataclass
@@ -72,12 +62,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.wlans,
-        available_fn=lambda controller, _: controller.available,
+        available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        name_fn=lambda _: "QR Code",
+        name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
+        should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
@@ -93,6 +84,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up image platform for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    if not controller.is_admin:
+        return
+
     controller.register_platform_add_entities(
         UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
     )
@@ -105,7 +100,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     _attr_content_type = "image/png"
 
     current_image: bytes | None = None
-    previous_value = ""
+    previous_value: str | None = None
 
     def __init__(
         self,

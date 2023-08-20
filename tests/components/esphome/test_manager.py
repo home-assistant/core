@@ -1,12 +1,7 @@
 """Test ESPHome manager."""
 from collections.abc import Awaitable, Callable
 
-from aioesphomeapi import (
-    APIClient,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, EntityInfo, EntityState, UserService
 
 from homeassistant.components.esphome.const import DOMAIN, STABLE_BLE_VERSION_STR
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT

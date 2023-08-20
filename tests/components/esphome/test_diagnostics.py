@@ -1,10 +1,7 @@
 """Tests for the diagnostics data provided by the ESPHome integration."""
 
 
-from homeassistant.components.esphome.const import (
-    CONF_DEVICE_NAME,
-    CONF_NOISE_PSK,
-)
+from homeassistant.components.esphome.const import CONF_DEVICE_NAME, CONF_NOISE_PSK
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 

@@ -9,11 +9,11 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (

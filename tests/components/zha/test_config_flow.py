@@ -80,6 +80,9 @@ def mock_app():
             "can_rewrite_custom_eui64": False,
         }
     }
+    mock_app.add_listener = MagicMock()
+    mock_app.groups = MagicMock()
+    mock_app.devices = MagicMock()
 
     with patch(
         "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)

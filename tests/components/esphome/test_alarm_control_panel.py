@@ -21,11 +21,7 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.components.esphome.alarm_control_panel import EspHomeACPFeatures
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 

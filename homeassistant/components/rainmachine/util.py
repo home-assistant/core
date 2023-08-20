@@ -106,6 +106,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
         self._rebooting = False
