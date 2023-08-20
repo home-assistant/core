@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_diagnostics[hass_config0]
+  dict({
+    'config_entry_data': dict({
+      'connection_type': 'automatic',
+      'individual_address': '0.0.240',
+      'multicast_group': '224.0.23.12',
+      'multicast_port': 3671,
+      'rate_limit': 0,
+      'state_updater': True,
+    }),
+    'configuration_error': None,
+    'configuration_yaml': None,
+    'project_info': None,
+    'xknx': dict({
+      'current_address': '0.0.0',
+      'version': '1.0.0',
+    }),
+  })
+# ---
