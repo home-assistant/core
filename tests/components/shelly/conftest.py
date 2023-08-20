@@ -133,6 +133,7 @@ MOCK_BLOCKS = [
     ),
     Mock(
         sensor_ids={"valve": "closed"},
+        valve="closed",
         channel="0",
         description="valve_0",
         type="valve",
