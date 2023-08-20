@@ -80,7 +80,7 @@ async def async_setup_entry(
         async_add_entities(new_trackedcover, True)
 
 
-class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
+class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox motion binary sensor."""
 
     def __init__(
@@ -107,13 +107,17 @@ class FreeboxPirSensor(FreeboxHomeEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._detection
 
+
+class FreeboxPirSensor(FreeboxBinarySensor):
+    """Representation of a Freebox door opener binary sensor."""
+
     @property
     def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.MOTION
 
 
-class FreeboxDwsSensor(FreeboxPirSensor):
+class FreeboxDwsSensor(FreeboxBinarySensor):
     """Representation of a Freebox door opener binary sensor."""
 
     @property
