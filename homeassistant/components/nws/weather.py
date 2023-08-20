@@ -8,6 +8,9 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
@@ -26,42 +29,34 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 from homeassistant.util.unit_system import UnitSystem
 
-from . import base_unique_id, device_info
+from . import NWSData, base_unique_id, device_info
 from .const import (
-    ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
-    COORDINATOR_FORECAST,
-    COORDINATOR_FORECAST_HOURLY,
-    COORDINATOR_OBSERVATION,
     DAYNIGHT,
     DOMAIN,
     FORECAST_VALID_TIME,
     HOURLY,
-    NWS_DATA,
     OBSERVATION_VALID_TIME,
 )
 
 PARALLEL_UPDATES = 0
 
 
-def convert_condition(
-    time: str, weather: tuple[tuple[str, int | None], ...]
-) -> tuple[str, int | None]:
+def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) -> str:
     """Convert NWS codes to HA condition.
 
     Choose first condition in CONDITION_CLASSES that exists in weather code.
     If no match is found, return first condition from NWS
     """
     conditions: list[str] = [w[0] for w in weather]
-    prec_probs = [w[1] or 0 for w in weather]
 
     # Choose condition with highest priority.
     cond = next(
@@ -75,22 +70,22 @@ def convert_condition(
 
     if cond == "clear":
         if time == "day":
-            return ATTR_CONDITION_SUNNY, max(prec_probs)
+            return ATTR_CONDITION_SUNNY
         if time == "night":
-            return ATTR_CONDITION_CLEAR_NIGHT, max(prec_probs)
-    return cond, max(prec_probs)
+            return ATTR_CONDITION_CLEAR_NIGHT
+    return cond
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the NWS weather platform."""
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
-            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
+            NWSWeather(entry.data, nws_data, DAYNIGHT, hass.config.units),
+            NWSWeather(entry.data, nws_data, HOURLY, hass.config.units),
         ],
         False,
     )
@@ -102,7 +97,6 @@ if TYPE_CHECKING:
         """Forecast with extra fields needed for NWS."""
 
         detailed_description: str | None
-        daytime: bool | None
 
 
 class NWSWeather(WeatherEntity):
@@ -114,19 +108,19 @@ class NWSWeather(WeatherEntity):
     def __init__(
         self,
         entry_data: MappingProxyType[str, Any],
-        hass_data: dict[str, Any],
+        nws_data: NWSData,
         mode: str,
         units: UnitSystem,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
-        self.nws = hass_data[NWS_DATA]
+        self.nws = nws_data.api
         self.latitude = entry_data[CONF_LATITUDE]
         self.longitude = entry_data[CONF_LONGITUDE]
-        self.coordinator_observation = hass_data[COORDINATOR_OBSERVATION]
+        self.coordinator_observation = nws_data.coordinator_observation
         if mode == DAYNIGHT:
-            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST]
+            self.coordinator_forecast = nws_data.coordinator_forecast
         else:
-            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST_HOURLY]
+            self.coordinator_forecast = nws_data.coordinator_forecast_hourly
         self.station = self.nws.station
 
         self.mode = mode
@@ -219,8 +213,7 @@ class NWSWeather(WeatherEntity):
             time = self.observation.get("iconTime")
 
         if weather:
-            cond, _ = convert_condition(time, weather)
-            return cond
+            return convert_condition(time, weather)
         return None
 
     @property
@@ -256,16 +249,27 @@ class NWSWeather(WeatherEntity):
             else:
                 data[ATTR_FORECAST_NATIVE_TEMP] = None
 
+            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = forecast_entry.get(
+                "probabilityOfPrecipitation"
+            )
+
+            if (dewp := forecast_entry.get("dewpoint")) is not None:
+                data[ATTR_FORECAST_NATIVE_DEW_POINT] = TemperatureConverter.convert(
+                    dewp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
+            else:
+                data[ATTR_FORECAST_NATIVE_DEW_POINT] = None
+
+            data[ATTR_FORECAST_HUMIDITY] = forecast_entry.get("relativeHumidity")
+
             if self.mode == DAYNIGHT:
-                data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
+                data[ATTR_FORECAST_IS_DAYTIME] = forecast_entry.get("isDaytime")
+
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
-            if time and weather:
-                cond, precip = convert_condition(time, weather)
-            else:
-                cond, precip = None, None
-            data[ATTR_FORECAST_CONDITION] = cond
-            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precip
+            data[ATTR_FORECAST_CONDITION] = (
+                convert_condition(time, weather) if time and weather else None
+            )
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")

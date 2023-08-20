@@ -17,5 +17,17 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "services": {
+    "set_hold_time": {
+      "name": "Set Hold Time",
+      "description": "Sets the time to hold until.",
+      "fields": {
+        "time_period": {
+          "name": "Time Period",
+          "description": "Time to hold until."
+        }
+      }
+    }
   }
 }

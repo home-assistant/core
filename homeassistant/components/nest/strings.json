@@ -29,33 +29,15 @@
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
-          "cloud_project_id": "Google Cloud Project ID"
+          "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
-      },
-      "init": {
-        "title": "Authentication Provider",
-        "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "flow_impl": "Provider"
-        }
-      },
-      "link": {
-        "title": "Link Nest Account",
-        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
-        "data": {
-          "code": "[%key:common::config_flow::data::pin%]"
-        }
       }
     },
     "error": {
-      "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid PIN",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
       "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
       "subscriber_error": "Unknown subscriber error, see logs"
@@ -82,18 +64,60 @@
     }
   },
   "issues": {
-    "legacy_nest_deprecated": {
-      "title": "Legacy Works With Nest is being removed",
-      "description": "Legacy Works With Nest is being removed from Home Assistant.\n\nYou must take action to use the SDM API. Remove all `nest` configuration from `configuration.yaml` and restart Home Assistant, then see the Nest [integration instructions]({documentation_url}) for set up instructions and supported devices."
+    "legacy_nest_removed": {
+      "title": "Legacy Works With Nest has been removed",
+      "description": "Legacy Works With Nest has been removed from Home Assistant, and the API shuts down as of September 2023.\n\nYou must take action to use the SDM API. Remove all `nest` configuration from `configuration.yaml` and restart Home Assistant, then see the Nest [integration instructions]({documentation_url}) for set up instructions and supported devices."
     }
   },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+  "services": {
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Sets the away mode for a Nest structure.",
+      "fields": {
+        "away_mode": {
+          "name": "Away mode",
+          "description": "New mode to set."
+        },
+        "structure": {
+          "name": "Structure",
+          "description": "Name(s) of structure(s) to change. Defaults to all structures if not specified."
+        }
+      }
+    },
+    "set_eta": {
+      "name": "Set estimated time of arrival",
+      "description": "Sets or update the estimated time of arrival window for a Nest structure.",
+      "fields": {
+        "eta": {
+          "name": "ETA",
+          "description": "Estimated time of arrival from now."
+        },
+        "eta_window": {
+          "name": "ETA window",
+          "description": "Estimated time of arrival window."
+        },
+        "trip_id": {
+          "name": "Trip ID",
+          "description": "Unique ID for the trip. Default is auto-generated using a timestamp."
+        },
+        "structure": {
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
+        }
+      }
+    },
+    "cancel_eta": {
+      "name": "Cancel ETA",
+      "description": "Cancels an existing estimated time of arrival window for a Nest structure.",
+      "fields": {
+        "trip_id": {
+          "name": "[%key:component::nest::services::set_eta::fields::trip_id::name%]",
+          "description": "Unique ID for the trip."
+        },
+        "structure": {
+          "name": "[%key:component::nest::services::set_away_mode::fields::structure::name%]",
+          "description": "[%key:component::nest::services::set_away_mode::fields::structure::description%]"
+        }
       }
     }
   }

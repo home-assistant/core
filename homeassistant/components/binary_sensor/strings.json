@@ -52,8 +52,8 @@
       "is_no_vibration": "{entity_name} is not detecting vibration",
       "is_open": "{entity_name} is open",
       "is_not_open": "{entity_name} is closed",
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
@@ -106,8 +106,8 @@
       "no_vibration": "{entity_name} stopped detecting vibration",
       "opened": "{entity_name} opened",
       "not_opened": "{entity_name} closed",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
   "entity_component": {
@@ -237,6 +237,13 @@
         "on": "Plugged in"
       }
     },
+    "power": {
+      "name": "Power",
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
+    },
     "presence": {
       "name": "Presence",
       "state": {
@@ -299,26 +306,6 @@
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
       }
-    }
-  },
-  "device_class": {
-    "co": "carbon_monoxide",
-    "cold": "cold",
-    "gas": "gas",
-    "heat": "heat",
-    "moisture": "moisture",
-    "motion": "motion",
-    "occupancy": "occupancy",
-    "power": "power",
-    "problem": "problem",
-    "smoke": "smoke",
-    "sound": "sound",
-    "vibration": "vibration"
-  },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
     }
   }
 }

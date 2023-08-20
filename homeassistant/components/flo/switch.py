@@ -68,9 +68,11 @@ async def async_setup_entry(
 class FloSwitch(FloEntity, SwitchEntity):
     """Switch class for the Flo by Moen valve."""
 
+    _attr_translation_key = "shutoff_valve"
+
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff valve", device)
+        super().__init__("shutoff_valve", device)
         self._state = self._device.last_known_valve_state == "open"
 
     @property

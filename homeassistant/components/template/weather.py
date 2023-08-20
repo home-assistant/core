@@ -72,6 +72,10 @@ CONF_PRESSURE_UNIT = "pressure_unit"
 CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 CONF_VISIBILITY_UNIT = "visibility_unit"
 CONF_PRECIPITATION_UNIT = "precipitation_unit"
+CONF_WIND_GUST_SPEED_TEMPLATE = "wind_gust_speed_template"
+CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+CONF_DEW_POINT_TEMPLATE = "dew_point_template"
+CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -92,6 +96,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
+        vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
     }
 )
 
@@ -143,6 +151,12 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
         self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
         self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
+        self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED_TEMPLATE)
+        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
+        self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
+        self._apparent_temperature_template = config.get(
+            CONF_APPARENT_TEMPERATURE_TEMPLATE
+        )
 
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
@@ -161,6 +175,10 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._wind_bearing = None
         self._ozone = None
         self._visibility = None
+        self._wind_gust_speed = None
+        self._cloud_coverage = None
+        self._dew_point = None
+        self._apparent_temperature = None
         self._forecast: list[Forecast] = []
 
     @property
@@ -202,6 +220,26 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def native_pressure(self) -> float | None:
         """Return the air pressure."""
         return self._pressure
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        return self._wind_gust_speed
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self._cloud_coverage
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self._dew_point
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return self._apparent_temperature
 
     @property
     def forecast(self) -> list[Forecast]:
@@ -263,6 +301,26 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             self.add_template_attribute(
                 "_visibility",
                 self._visibility_template,
+            )
+        if self._wind_gust_speed_template:
+            self.add_template_attribute(
+                "_wind_gust_speed",
+                self._wind_gust_speed_template,
+            )
+        if self._cloud_coverage_template:
+            self.add_template_attribute(
+                "_cloud_coverage",
+                self._cloud_coverage_template,
+            )
+        if self._dew_point_template:
+            self.add_template_attribute(
+                "_dew_point",
+                self._dew_point_template,
+            )
+        if self._apparent_temperature_template:
+            self.add_template_attribute(
+                "_apparent_temperature",
+                self._apparent_temperature_template,
             )
         if self._forecast_template:
             self.add_template_attribute(

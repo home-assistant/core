@@ -23,6 +23,10 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
+    # SystemBridgeBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable = round
 
 

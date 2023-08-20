@@ -5,6 +5,7 @@ import logging
 from typing import Any, Literal
 
 from reolink_aio.exceptions import ReolinkError
+from reolink_aio.software_version import NewSoftwareVersion
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -39,7 +40,6 @@ class ReolinkUpdateEntity(
     """Update entity for a Netgear device."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_release_url = "https://reolink.com/download-center/"
     _attr_name = "Update"
 
@@ -67,6 +67,26 @@ class ReolinkUpdateEntity(
             return self.coordinator.data
 
         return self.coordinator.data.version_string
+
+    @property
+    def supported_features(self) -> UpdateEntityFeature:
+        """Flag supported features."""
+        supported_features = UpdateEntityFeature.INSTALL
+        if isinstance(self.coordinator.data, NewSoftwareVersion):
+            supported_features |= UpdateEntityFeature.RELEASE_NOTES
+        return supported_features
+
+    async def async_release_notes(self) -> str | None:
+        """Return the release notes."""
+        if not isinstance(self.coordinator.data, NewSoftwareVersion):
+            return None
+
+        return (
+            "If the install button fails, download this"
+            f" [firmware zip file]({self.coordinator.data.download_url})."
+            " Then, follow the installation guide (PDF in the zip file).\n\n"
+            f"## Release notes\n\n{self.coordinator.data.release_notes}"
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

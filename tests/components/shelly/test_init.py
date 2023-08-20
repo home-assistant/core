@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_MAC, init_integration
+from . import MOCK_MAC, init_integration, mutate_rpc_device_status
 
 from tests.common import MockConfigEntry
 
@@ -153,6 +153,22 @@ async def test_sleeping_rpc_device_online(
     mock_rpc_device.mock_update()
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
+
+
+async def test_sleeping_rpc_device_online_new_firmware(
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    entry = await init_integration(hass, 2, sleep_period=None)
+    assert "will resume when device is online" in caplog.text
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
+    mock_rpc_device.mock_update()
+    assert "online, resuming setup" in caplog.text
+    assert entry.data["sleep_period"] == 1500
 
 
 @pytest.mark.parametrize(

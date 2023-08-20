@@ -68,9 +68,10 @@ def mock_handlers() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
+async def manager(hass: HomeAssistant) -> config_entries.ConfigEntries:
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
     hass.config_entries = manager
     return manager
 
@@ -712,7 +713,9 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_discovery_notification(hass: HomeAssistant) -> None:
+async def test_discovery_notification(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test that we create/dismiss a notification when source is discovery."""
     mock_integration(hass, MockModule("test"))
     mock_entity_platform(hass, "config_flow.test", None)
@@ -1052,7 +1055,9 @@ async def test_setup_does_not_retry_during_shutdown(hass: HomeAssistant) -> None
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_create_entry_options(hass: HomeAssistant) -> None:
+async def test_create_entry_options(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test a config entry being created with options."""
 
     async def mock_async_setup(hass, config):
@@ -1532,6 +1537,28 @@ async def test_init_custom_integration(hass: HomeAssistant) -> None:
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
+
+
+async def test_init_custom_integration_with_missing_handler(
+    hass: HomeAssistant,
+) -> None:
+    """Test initializing flow for custom integration with a missing handler."""
+    integration = loader.Integration(
+        hass,
+        "custom_components.hue",
+        None,
+        {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
+    )
+    mock_integration(
+        hass,
+        MockModule("hue"),
+    )
+    mock_entity_platform(hass, "config_flow.hue", None)
     with pytest.raises(data_entry_flow.UnknownHandler), patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
@@ -2482,7 +2509,9 @@ async def test_partial_flows_hidden(
         assert "config_entry_discovery" in notifications
 
 
-async def test_async_setup_init_entry(hass: HomeAssistant) -> None:
+async def test_async_setup_init_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
     """Test a config entry being initialized during integration setup."""
 
     async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -2527,7 +2556,7 @@ async def test_async_setup_init_entry(hass: HomeAssistant) -> None:
 
 
 async def test_async_setup_init_entry_completes_before_loaded_event_fires(
-    hass: HomeAssistant,
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test a config entry being initialized during integration setup before the loaded event fires."""
     load_events: list[Event] = []

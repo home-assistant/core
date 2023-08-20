@@ -35,6 +35,116 @@
       "preheater": {
         "name": "Preheater"
       }
+    },
+    "sensor": {
+      "co2_quality_category": {
+        "name": "CO2 quality category",
+        "state": {
+          "good": "Good",
+          "bad": "Bad",
+          "poor": "Poor"
+        }
+      },
+      "air_quality_category": {
+        "name": "Air quality category",
+        "state": {
+          "good": "[%key:component::renson::entity::sensor::co2_quality_category::state::good%]",
+          "bad": "[%key:component::renson::entity::sensor::co2_quality_category::state::bad%]",
+          "poor": "[%key:component::renson::entity::sensor::co2_quality_category::state::poor%]"
+        }
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "ventilation_level": {
+        "name": "Ventilation level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "level4": "Level 4",
+          "breeze": "Breeze",
+          "holiday": "Holiday"
+        }
+      },
+      "total_airflow_out": {
+        "name": "Total airflow out"
+      },
+      "total_airflow_in": {
+        "name": "Total airflow in"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "extract_air_temperature": {
+        "name": "Extract air temperature"
+      },
+      "filter_change": {
+        "name": "Filter change"
+      },
+      "manual_level": {
+        "name": "Manual level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+          "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]",
+          "holiday": "[%key:component::renson::entity::sensor::ventilation_level::state::holiday%]"
+        }
+      },
+      "breeze_temperature": {
+        "name": "Breeze temperature"
+      },
+      "breeze_level": {
+        "name": "Breeze level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+          "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]"
+        }
+      },
+      "start_day_time": {
+        "name": "Start day time"
+      },
+      "start_night_time": {
+        "name": "Start night time"
+      },
+      "day_pollution_level": {
+        "name": "Day pollution level",
+        "state": {
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]"
+        }
+      },
+      "night_pollution_level": {
+        "name": "Night pollution level",
+        "state": {
+          "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+          "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+          "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+          "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]"
+        }
+      },
+      "co2_threshold": {
+        "name": "CO2 threshold"
+      },
+      "co2_hysteresis": {
+        "name": "CO2 hysteresis"
+      },
+      "bypass_activation_temperature": {
+        "name": "Bypass activation temperature"
+      },
+      "bypass_level": {
+        "name": "Bypass level"
+      }
     }
   }
 }
