@@ -67,7 +67,7 @@
       "description": "Resume any paused zone runs or schedules.",
       "fields": {
         "devices": {
-          "name": "Devices",
+          "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",
           "description": "Name of controllers to resume. Defaults to all controllers on the account if not provided."
         }
       }
@@ -77,7 +77,7 @@
       "description": "Stop any currently running zones or schedules.",
       "fields": {
         "devices": {
-          "name": "Devices",
+          "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",
           "description": "Name of controllers to stop. Defaults to all controllers on the account if not provided."
         }
       }

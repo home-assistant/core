@@ -124,17 +124,12 @@
     },
     "time": {
       "sleep_mode_start_time": {
-        "name": "Sleep mode start time"
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
       }
     },
     "vacuum": {
       "litter_box": {
         "name": "Litter box"
-      }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
       }
     }
   },
@@ -144,7 +139,7 @@
       "description": "Sets the sleep mode and start time.",
       "fields": {
         "enabled": {
-          "name": "Enabled",
+          "name": "[%key:common::state::enabled%]",
           "description": "Whether sleep mode should be enabled."
         },
         "start_time": {

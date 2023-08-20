@@ -38,7 +38,7 @@
           "description": "The server to talk to."
         },
         "path": {
-          "name": "Path",
+          "name": "[%key:common::config_flow::data::path%]",
           "description": "Path to open."
         }
       }
@@ -48,11 +48,11 @@
       "description": "Opens a URL on the server using the default application.",
       "fields": {
         "bridge": {
-          "name": "Bridge",
-          "description": "The server to talk to."
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
         },
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "URL to open."
         }
       }
@@ -62,7 +62,7 @@
       "description": "Sends a keyboard keypress.",
       "fields": {
         "bridge": {
-          "name": "Bridge",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
           "description": "The server to send the command to."
         },
         "key": {
@@ -76,8 +76,8 @@
       "description": "Sends text for the server to type.",
       "fields": {
         "bridge": {
-          "name": "Bridge",
-          "description": "The server to send the command to."
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
         },
         "text": {
           "name": "Text",

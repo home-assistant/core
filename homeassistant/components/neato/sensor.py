@@ -12,7 +12,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
@@ -44,11 +44,12 @@ async def async_setup_entry(
 class NeatoSensor(SensorEntity):
     """Neato sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, neato: NeatoHub, robot: Robot) -> None:
         """Initialize Neato sensor."""
         self.robot = robot
         self._available: bool = False
-        self._robot_name: str = f"{self.robot.name} {BATTERY}"
         self._robot_serial: str = self.robot.serial
         self._state: dict[str, Any] | None = None
 
@@ -67,11 +68,6 @@ class NeatoSensor(SensorEntity):
 
         self._available = True
         _LOGGER.debug("self._state=%s", self._state)
-
-    @property
-    def name(self) -> str:
-        """Return the name of this sensor."""
-        return self._robot_name
 
     @property
     def unique_id(self) -> str:
@@ -108,4 +104,7 @@ class NeatoSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})
+        return DeviceInfo(
+            identifiers={(NEATO_DOMAIN, self._robot_serial)},
+            name=self.robot.name,
+        )

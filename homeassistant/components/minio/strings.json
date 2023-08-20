@@ -23,16 +23,16 @@
       "description": "Uploads file to Minio.",
       "fields": {
         "bucket": {
-          "name": "Bucket",
-          "description": "Bucket to use."
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
         },
         "key": {
           "name": "Key",
-          "description": "Object key of the file."
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
         },
         "file_path": {
           "name": "File path",
-          "description": "File path on local filesystem."
+          "description": "[%key:component::minio::services::get::fields::file_path::description%]"
         }
       }
     },
@@ -41,12 +41,12 @@
       "description": "Deletes file from Minio.",
       "fields": {
         "bucket": {
-          "name": "Bucket",
-          "description": "Bucket to use."
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
         },
         "key": {
           "name": "Key",
-          "description": "Object key of the file."
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
         }
       }
     }

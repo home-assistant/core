@@ -27,6 +27,17 @@
     "no_platform_setup": {
       "title": "Unused YAML configuration for the {platform} integration",
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
+    },
+    "storage_corruption": {
+      "title": "Storage corruption detected for `{storage_key}`",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::homeassistant::issues::storage_corruption::title%]",
+            "description": "The `{storage_key}` storage could not be parsed and has been renamed to `{corrupt_path}` to allow Home Assistant to continue.\n\nA default `{storage_key}` may have been created automatically.\n\nIf you made manual edits to the storage file, fix any syntax errors in `{corrupt_path}`, restore the file to the original path `{original_path}`, and restart Home Assistant. Otherwise, restore the system from a backup.\n\nClick SUBMIT below to confirm you have repaired the file or restored from a backup.\n\nThe exact error was: {error}"
+          }
+        }
+      }
     }
   },
   "system_health": {
@@ -44,6 +55,72 @@
       "user": "User",
       "version": "Version",
       "virtualenv": "Virtual Environment"
+    }
+  },
+  "services": {
+    "check_config": {
+      "name": "Check configuration",
+      "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs."
+    },
+    "reload_core_config": {
+      "name": "Reload core configuration",
+      "description": "Reloads the core configuration from the YAML-configuration."
+    },
+    "restart": {
+      "name": "[%key:common::action::restart%]",
+      "description": "Restarts Home Assistant."
+    },
+    "set_location": {
+      "name": "Set location",
+      "description": "Updates the Home Assistant location.",
+      "fields": {
+        "latitude": {
+          "name": "[%key:common::config_flow::data::latitude%]",
+          "description": "Latitude of your location."
+        },
+        "longitude": {
+          "name": "[%key:common::config_flow::data::longitude%]",
+          "description": "Longitude of your location."
+        }
+      }
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops Home Assistant."
+    },
+    "toggle": {
+      "name": "Generic toggle",
+      "description": "Generic service to toggle devices on/off under any domain."
+    },
+    "turn_on": {
+      "name": "Generic turn on",
+      "description": "Generic service to turn devices on under any domain."
+    },
+    "turn_off": {
+      "name": "Generic turn off",
+      "description": "Generic service to turn devices off under any domain."
+    },
+    "update_entity": {
+      "name": "Update entity",
+      "description": "Forces one or more entities to update its data."
+    },
+    "reload_custom_templates": {
+      "name": "Reload custom Jinja2 templates",
+      "description": "Reloads Jinja2 templates found in the `custom_templates` folder in your config. New values will be applied on the next render of the template."
+    },
+    "reload_config_entry": {
+      "name": "Reload config entry",
+      "description": "Reloads the specified config entry.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry ID",
+          "description": "The configuration entry ID of the entry to be reloaded."
+        }
+      }
+    },
+    "save_persistent_states": {
+      "name": "Save persistent states",
+      "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval."
     }
   }
 }

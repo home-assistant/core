@@ -43,13 +43,35 @@
   },
   "entity": {
     "sensor": {
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
       "transmission_status": {
+        "name": "Status",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "up_down": "Up/Down",
           "seeding": "Seeding",
           "downloading": "Downloading"
         }
+      },
+      "active_torrents": {
+        "name": "Active torrents"
+      },
+      "paused_torrents": {
+        "name": "Paused torrents"
+      },
+      "total_torrents": {
+        "name": "Total torrents"
+      },
+      "completed_torrents": {
+        "name": "Completed torrents"
+      },
+      "started_torrents": {
+        "name": "Started torrents"
       }
     }
   },
@@ -73,8 +95,8 @@
       "description": "Removes a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
@@ -91,12 +113,12 @@
       "description": "Starts a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
-          "description": "ID of a torrent."
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
         }
       }
     },
@@ -105,12 +127,12 @@
       "description": "Stops a torrent.",
       "fields": {
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "Config entry id."
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
         },
         "id": {
           "name": "ID",
-          "description": "ID of a torrent."
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
         }
       }
     }

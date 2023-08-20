@@ -86,7 +86,7 @@
   },
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads generic cameras from the YAML-configuration."
     }
   }

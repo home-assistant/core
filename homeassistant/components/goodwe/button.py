@@ -10,7 +10,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
@@ -34,7 +34,7 @@ class GoodweButtonEntityDescription(
 
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
-    name="Synchronize inverter clock",
+    translation_key="synchronize_clock",
     icon="mdi:clock-check-outline",
     entity_category=EntityCategory.CONFIG,
     action=lambda inv: inv.write_setting("time", datetime.now()),
@@ -66,6 +66,7 @@ class GoodweButtonEntity(ButtonEntity):
     """Entity representing the inverter clock synchronization button."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     entity_description: GoodweButtonEntityDescription
 
     def __init__(

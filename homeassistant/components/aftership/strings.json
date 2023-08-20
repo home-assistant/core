@@ -23,11 +23,11 @@
       "description": "Removes a tracking number from Aftership.",
       "fields": {
         "tracking_number": {
-          "name": "Tracking number",
+          "name": "[%key:component::aftership::services::add_tracking::fields::tracking_number::name%]",
           "description": "Tracking number of the tracking to remove."
         },
         "slug": {
-          "name": "Slug",
+          "name": "[%key:component::aftership::services::add_tracking::fields::slug::name%]",
           "description": "Slug (carrier) of the tracking to remove."
         }
       }

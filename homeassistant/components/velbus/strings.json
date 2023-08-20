@@ -33,8 +33,8 @@
       "description": "Scans the velbus modules, this will be need if you see unknown module warnings in the logs, or when you added new modules.",
       "fields": {
         "interface": {
-          "name": "Interface",
-          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
         }
       }
     },
@@ -43,8 +43,8 @@
       "description": "Clears the velbuscache and then starts a new scan.",
       "fields": {
         "interface": {
-          "name": "Interface",
-          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
         },
         "address": {
           "name": "Address",
@@ -57,8 +57,8 @@
       "description": "Sets the memo text to the display of modules like VMBGPO, VMBGPOD Be sure the page(s) of the module is configured to display the memo text.\n.",
       "fields": {
         "interface": {
-          "name": "Interface",
-          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+          "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
         },
         "address": {
           "name": "Address",

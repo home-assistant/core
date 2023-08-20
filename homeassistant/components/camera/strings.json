@@ -25,8 +25,8 @@
         "motion_detection": {
           "name": "Motion detection",
           "state": {
-            "true": "Enabled",
-            "false": "Disabled"
+            "true": "[%key:common::state::enabled%]",
+            "false": "[%key:common::state::disabled%]"
           }
         },
         "model_name": {
@@ -37,11 +37,11 @@
   },
   "services": {
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turns off the camera."
     },
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turns on the camera."
     },
     "enable_motion_detection": {

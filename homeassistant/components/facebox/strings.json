@@ -9,7 +9,7 @@
           "description": "The facebox entity to teach."
         },
         "name": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "description": "The name of the face to teach."
         },
         "file_path": {

@@ -66,7 +66,7 @@
             "description": "You are using v{version} of UniFi Protect which is an Early Access version. [Early Access versions are not supported by Home Assistant](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access) and it is recommended to go back to a stable release as soon as possible.\n\nBy submitting this form you have either [downgraded UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) or you agree to run an unsupported version of UniFi Protect."
           },
           "confirm": {
-            "title": "v{version} is an Early Access version",
+            "title": "[%key:component::unifiprotect::issues::ea_warning::fix_flow::step::start::title%]",
             "description": "Are you sure you want to run unsupported versions of UniFi Protect? This may cause your Home Assistant integration to break."
           }
         }
@@ -106,11 +106,11 @@
       "description": "Removes an existing message for doorbells.",
       "fields": {
         "device_id": {
-          "name": "UniFi Protect NVR",
-          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
+          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
         },
         "message": {
-          "name": "Custom message",
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::message::name%]",
           "description": "Existing custom message to remove for doorbells."
         }
       }
@@ -120,8 +120,8 @@
       "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
       "fields": {
         "device_id": {
-          "name": "UniFi Protect NVR",
-          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
+          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
         },
         "message": {
           "name": "Default message",

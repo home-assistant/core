@@ -13,7 +13,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "description": "Connect to the API of your Advantage Air wall mounted tablet.",
-        "title": "Connect"
+        "title": "[%key:common::action::connect%]"
       }
     }
   },

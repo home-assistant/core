@@ -573,6 +573,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
             f"{translation_key_prefix}.description": "Translated description",
             f"{translation_key_prefix}.fields.level.name": "Field name",
             f"{translation_key_prefix}.fields.level.description": "Field description",
+            f"{translation_key_prefix}.fields.level.example": "Field example",
         }
 
     with patch(
@@ -598,6 +599,10 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
             "description"
         ]
         == "Field description"
+    )
+    assert (
+        descriptions[logger.DOMAIN]["set_default_level"]["fields"]["level"]["example"]
+        == "Field example"
     )
 
     hass.services.async_register(logger.DOMAIN, "new_service", lambda x: None, None)
@@ -677,6 +682,9 @@ async def test_async_get_all_descriptions_failing_integration(
     with patch(
         "homeassistant.helpers.service.async_get_integrations",
         return_value={"logger": ImportError},
+    ), patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={},
     ):
         descriptions = await service.async_get_all_descriptions(hass)
 
@@ -756,7 +764,29 @@ async def test_async_get_all_descriptions_dynamically_created_services(
         "description": "",
         "fields": {},
         "name": "",
+        "response": {"optional": True},
     }
+
+
+async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
+    """Test registering a service with mixed case.
+
+    For backwards compatibility, we have historically allowed mixed case,
+    and automatically converted it to lowercase.
+    """
+    logger = hass.components.logger
+    logger_config = {logger.DOMAIN: {}}
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    logger_domain_mixed = "LoGgEr"
+    hass.services.async_register(
+        logger_domain_mixed, "NeW_SeRVICE", lambda x: None, None
+    )
+    service.async_set_service_schema(
+        hass, logger_domain_mixed, "NeW_SeRVICE", {"description": "new service"}
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger.DOMAIN]["new_service"]
+    assert descriptions[logger.DOMAIN]["new_service"]["description"] == "new service"
 
 
 async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -> None:

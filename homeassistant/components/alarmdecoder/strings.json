@@ -37,7 +37,7 @@
         }
       },
       "arm_settings": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "data": {
           "auto_bypass": "Auto Bypass on Arm",
           "code_arm_required": "Code Required for Arming",
@@ -45,14 +45,14 @@
         }
       },
       "zone_select": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "description": "Enter the zone number you'd like to to add, edit, or remove.",
         "data": {
           "zone_number": "Zone Number"
         }
       },
       "zone_details": {
-        "title": "Configure AlarmDecoder",
+        "title": "[%key:component::alarmdecoder::options::step::init::title%]",
         "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
         "data": {
           "zone_name": "Zone Name",
@@ -77,7 +77,7 @@
       "description": "Sends custom keypresses to the alarm.",
       "fields": {
         "keypress": {
-          "name": "Key press",
+          "name": "[%key:component::alarmdecoder::services::alarm_keypress::name%]",
           "description": "String to send to the alarm panel."
         }
       }

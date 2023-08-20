@@ -243,7 +243,7 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
       "fields": {
         "transition": {
@@ -264,7 +264,7 @@
         },
         "color_name": {
           "name": "Color name",
-          "description": "A human readable color name."
+          "description": "A human-readable color name."
         },
         "hs_color": {
           "name": "Hue/Sat color",
@@ -308,7 +308,7 @@
         },
         "flash": {
           "name": "Flash",
-          "description": "If the light should flash."
+          "description": "Tell light to flash, can be either value short or long."
         },
         "effect": {
           "name": "Effect",
@@ -317,7 +317,7 @@
       }
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Turn off one or more lights.",
       "fields": {
         "transition": {
@@ -331,7 +331,7 @@
       }
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
       "fields": {
         "transition": {

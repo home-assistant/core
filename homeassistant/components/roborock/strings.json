@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter your Roborock email address.",
         "data": {
-          "username": "Email"
+          "username": "[%key:common::config_flow::data::email%]"
         }
       },
       "code": {
@@ -27,6 +27,11 @@
     }
   },
   "entity": {
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "cleaning_area": {
         "name": "Cleaning area"
@@ -51,14 +56,14 @@
         "state": {
           "starting": "Starting",
           "charger_disconnected": "Charger disconnected",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "remote_control_active": "Remote control active",
           "cleaning": "Cleaning",
           "returning_home": "Returning home",
           "manual_mode": "Manual mode",
           "charging": "Charging",
           "charging_problem": "Charging problem",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "spot_cleaning": "Spot cleaning",
           "error": "Error",
           "shutting_down": "Shutting down",
@@ -134,7 +139,7 @@
           "moderate": "Moderate",
           "high": "High",
           "intense": "Intense",
-          "custom": "Custom"
+          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]"
         }
       }
     },
@@ -145,8 +150,25 @@
       "dnd_switch": {
         "name": "Do not disturb"
       },
+      "off_peak_switch": {
+        "name": "Off-peak charging"
+      },
       "status_indicator": {
         "name": "Status indicator light"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
+      },
+      "off_peak_start_time": {
+        "name": "Off-peak start"
+      },
+      "off_peak_end_time": {
+        "name": "Off-peak end"
       }
     },
     "vacuum": {
@@ -156,7 +178,7 @@
             "state": {
               "auto": "Auto",
               "balanced": "Balanced",
-              "custom": "Custom",
+              "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
               "max": "Max",
@@ -164,7 +186,7 @@
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
-              "standard": "Standard",
+              "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
               "turbo": "Turbo"
             }
           }

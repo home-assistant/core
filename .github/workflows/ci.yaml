@@ -32,9 +32,9 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2023.8
-  DEFAULT_PYTHON: "3.10"
-  ALL_PYTHON_VERSIONS: "['3.10', '3.11']"
+  HA_SHORT_VERSION: 2023.9
+  DEFAULT_PYTHON: "3.11"
+  ALL_PYTHON_VERSIONS: "['3.11']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -209,7 +209,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -253,7 +253,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -299,7 +299,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -348,7 +348,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -443,7 +443,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -492,9 +492,9 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.3.1,<23.2" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -U "pip>=21.3.1" setuptools wheel
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_all.txt
+          PIP_CACHE_DIR=$PIP_CACHE pip install -r requirements_test.txt
           pip install -e . --config-settings editable_mode=compat
 
   hassfest:
@@ -511,7 +511,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -543,7 +543,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -576,7 +576,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -620,7 +620,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -702,7 +702,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -734,9 +734,14 @@ jobs:
       - name: Run pytest (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
+        id: pytest-full
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -749,14 +754,19 @@ jobs:
             --cov-report=xml \
             -o console_output_style=count \
             -p no:sugar \
-            tests
+            tests \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Run pytest (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         timeout-minutes: 10
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
 
           if [[ ! -f "tests/components/${{ matrix.group }}/__init__.py" ]]; then
             echo "::error:: missing file tests/components/${{ matrix.group }}/__init__.py"
@@ -774,7 +784,14 @@ jobs:
             --durations=0 \
             --durations-min=1 \
             -p no:sugar \
-            tests/components/${{ matrix.group }}
+            tests/components/${{ matrix.group }} \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
+      - name: Upload pytest output
+        if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -827,7 +844,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -862,10 +879,15 @@ jobs:
           python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+          mariadb=$(echo "${{ matrix.mariadb-group }}" | sed "s/:/-/g")
 
           python3 -X dev -m pytest \
             -qq \
@@ -881,7 +903,14 @@ jobs:
             tests/components/history \
             tests/components/logbook \
             tests/components/recorder \
-            tests/components/sensor
+            tests/components/sensor \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.2
         with:
@@ -934,7 +963,7 @@ jobs:
         uses: actions/checkout@v3.5.3
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4.7.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -969,10 +998,15 @@ jobs:
           python3 -m script.translations develop --all
       - name: Run pytest (partially)
         timeout-minutes: 20
+        id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
+          set -o pipefail
+          postgresql=$(echo "${{ matrix.postgresql-group }}" | sed "s/:/-/g")
 
           python3 -X dev -m pytest \
             -qq \
@@ -989,7 +1023,14 @@ jobs:
             tests/components/history \
             tests/components/logbook \
             tests/components/recorder \
-            tests/components/sensor
+            tests/components/sensor \
+              2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
+      - name: Upload pytest output
+        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: pytest-${{ github.run_number }}
+          path: pytest-*.txt
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:

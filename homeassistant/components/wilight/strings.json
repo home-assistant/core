@@ -12,6 +12,16 @@
       "not_wilight_device": "This Device is not WiLight"
     }
   },
+  "entity": {
+    "switch": {
+      "watering": {
+        "name": "Watering"
+      },
+      "pause": {
+        "name": "Pause"
+      }
+    }
+  },
   "services": {
     "set_watering_time": {
       "name": "Set watering time",

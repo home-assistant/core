@@ -91,11 +91,6 @@
       "hot_days_extra_watering": {
         "name": "Extra water on hot days"
       }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
-      }
     }
   },
   "services": {
@@ -118,7 +113,7 @@
       "description": "Restricts all watering activities from starting for a time period.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller whose watering activities should be restricted."
         },
         "duration": {
@@ -146,7 +141,7 @@
       "description": "Stops all watering activities.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller whose watering activities should be stopped."
         }
       }
@@ -164,7 +159,7 @@
       "description": "Unpauses all paused watering activities.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller whose watering activities should be unpaused."
         }
       }
@@ -174,7 +169,7 @@
       "description": "Push flow meter data to the RainMachine device.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller to send flow meter data to."
         },
         "value": {
@@ -192,7 +187,7 @@
       "description": "Push weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller for the weather data to be pushed."
         },
         "timestamp": {
@@ -201,15 +196,15 @@
         },
         "mintemp": {
           "name": "Min temp",
-          "description": "Minimum temperature (\u00b0C)."
+          "description": "Minimum temperature (°C)."
         },
         "maxtemp": {
           "name": "Max temp",
-          "description": "Maximum temperature (\u00b0C)."
+          "description": "Maximum temperature (°C)."
         },
         "temperature": {
           "name": "Temperature",
-          "description": "Current temperature (\u00b0C)."
+          "description": "Current temperature (°C)."
         },
         "wind": {
           "name": "Wind speed",
@@ -217,7 +212,7 @@
         },
         "solarrad": {
           "name": "Solar radiation",
-          "description": "Solar radiation (MJ/m\u00b2/h)."
+          "description": "Solar radiation (MJ/m²/h)."
         },
         "et": {
           "name": "Evapotranspiration",
@@ -249,7 +244,7 @@
         },
         "dewpoint": {
           "name": "Dew point",
-          "description": "Dew point (\u00b0C)."
+          "description": "Dew point (°C)."
         }
       }
     },
@@ -258,7 +253,7 @@
       "description": "Unrestrict all watering activities.",
       "fields": {
         "device_id": {
-          "name": "Controller",
+          "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
           "description": "The controller whose watering activities should be unrestricted."
         }
       }

@@ -11,21 +11,21 @@
         }
       },
       "two_factor": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Two factor authentication required",
         "data": {
           "contact_method": "Please select a contact method:"
         }
       },
       "two_factor_validate": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Please enter validation code received",
         "data": {
           "validation_code": "Validation code"
         }
       },
       "pin": {
-        "title": "Subaru Starlink Configuration",
+        "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
         "data": {
           "pin": "PIN"
@@ -54,6 +54,48 @@
         "data": {
           "update_enabled": "Enable vehicle polling"
         }
+      }
+    }
+  },
+  "entity": {
+    "lock": {
+      "door_locks": {
+        "name": "Door locks"
+      }
+    },
+    "sensor": {
+      "odometer": {
+        "name": "Odometer"
+      },
+      "average_fuel_consumption": {
+        "name": "Average fuel consumption"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "tire_pressure_front_left": {
+        "name": "Tire pressure front left"
+      },
+      "tire_pressure_front_right": {
+        "name": "Tire pressure front right"
+      },
+      "tire_pressure_rear_left": {
+        "name": "Tire pressure rear left"
+      },
+      "tire_pressure_rear_right": {
+        "name": "Tire pressure rear right"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "ev_range": {
+        "name": "EV range"
+      },
+      "ev_battery_level": {
+        "name": "EV battery level"
+      },
+      "ev_time_to_full_charge": {
+        "name": "EV time to full charge"
       }
     }
   },

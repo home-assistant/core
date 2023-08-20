@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "title": "Connect"
+        "title": "[%key:common::action::connect%]"
       }
     },
     "abort": {

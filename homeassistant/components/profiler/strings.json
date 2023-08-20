@@ -11,7 +11,7 @@
   },
   "services": {
     "start": {
-      "name": "Start",
+      "name": "[%key:common::action::start%]",
       "description": "Starts the Profiler.",
       "fields": {
         "seconds": {
@@ -60,7 +60,7 @@
       "fields": {
         "scan_interval": {
           "name": "Scan interval",
-          "description": "The number of seconds between logging objects."
+          "description": "[%key:component::profiler::services::start_log_objects::fields::scan_interval::description%]"
         },
         "max_objects": {
           "name": "Maximum objects",

@@ -44,8 +44,8 @@
       "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint service call with a value other than 0), the gateway automatically enables the central heating override to start heating. This service can then be used to control the central heating override status. To return control of the central heating to the thermostat, call the set_control_setpoint service with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "ch_override": {
           "name": "Central heating override",
@@ -58,8 +58,8 @@
       "description": "Sets the clock and day of the week on the connected thermostat.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "date": {
           "name": "Date",
@@ -76,8 +76,8 @@
       "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "temperature": {
           "name": "Temperature",
@@ -90,8 +90,8 @@
       "description": "Sets the domestic hot water enable option on the gateway.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "dhw_override": {
           "name": "Domestic hot water override",
@@ -104,8 +104,8 @@
       "description": "Sets the domestic hot water setpoint on the gateway.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "temperature": {
           "name": "Temperature",
@@ -118,15 +118,15 @@
       "description": "Changes the function of the GPIO pins of the gateway.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "id": {
           "name": "ID",
           "description": "The ID of the GPIO pin."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO \"B\". See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.\n."
         }
       }
@@ -136,15 +136,15 @@
       "description": "Changes the function of the LEDs of the gateway.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "id": {
           "name": "ID",
           "description": "The ID of the LED."
         },
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "The function to assign to the LED. See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.\n."
         }
       }
@@ -154,8 +154,8 @@
       "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "level": {
           "name": "Level",
@@ -168,8 +168,8 @@
       "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.\n.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "temperature": {
           "name": "Temperature",
@@ -182,8 +182,8 @@
       "description": "Configures the setback temperature to be used with the GPIO away mode function.",
       "fields": {
         "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
+          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
+          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
         },
         "temperature": {
           "name": "Temperature",

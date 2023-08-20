@@ -16,7 +16,7 @@
   },
   "services": {
     "pause": {
-      "name": "Pause",
+      "name": "[%key:common::action::pause%]",
       "description": "Pauses downloads.",
       "fields": {
         "api_key": {
@@ -30,7 +30,7 @@
       "description": "Resumes downloads.",
       "fields": {
         "api_key": {
-          "name": "SABnzbd API key",
+          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
           "description": "The SABnzbd API key to resume downloads."
         }
       }
@@ -40,7 +40,7 @@
       "description": "Sets the download speed limit.",
       "fields": {
         "api_key": {
-          "name": "SABnzbd API key",
+          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
           "description": "The SABnzbd API key to set speed limit."
         },
         "speed": {

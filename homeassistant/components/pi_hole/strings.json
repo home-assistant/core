@@ -82,7 +82,7 @@
   },
   "services": {
     "disable": {
-      "name": "Disable",
+      "name": "[%key:common::action::disable%]",
       "description": "Disables configured Pi-hole(s) for an amount of time.",
       "fields": {
         "duration": {

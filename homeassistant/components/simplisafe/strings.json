@@ -57,7 +57,7 @@
       "description": "Sets/updates a PIN.",
       "fields": {
         "device_id": {
-          "name": "System",
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
           "description": "The system to set the PIN on."
         },
         "label": {
@@ -75,7 +75,7 @@
       "description": "Sets one or more system properties.",
       "fields": {
         "device_id": {
-          "name": "System",
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
           "description": "The system whose properties should be set."
         },
         "alarm_duration": {

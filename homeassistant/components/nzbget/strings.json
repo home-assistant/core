@@ -34,7 +34,7 @@
   },
   "services": {
     "pause": {
-      "name": "Pause",
+      "name": "[%key:common::action::pause%]",
       "description": "Pauses download queue."
     },
     "resume": {

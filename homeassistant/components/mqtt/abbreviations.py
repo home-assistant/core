@@ -60,6 +60,7 @@ ABBREVIATIONS = {
     "ent_pic": "entity_picture",
     "err_t": "error_topic",
     "err_tpl": "error_template",
+    "evt_typ": "event_types",
     "fanspd_t": "fan_speed_topic",
     "fanspd_tpl": "fan_speed_template",
     "fanspd_lst": "fan_speed_list",

@@ -52,7 +52,7 @@
           "description": "Name of the master entity that is coordinating the multi-room zone. Platform dependent."
         },
         "slaves": {
-          "name": "Slaves",
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
           "description": "Name of slaves entities to add to the existing zone."
         }
       }
@@ -63,10 +63,10 @@
       "fields": {
         "master": {
           "name": "Master",
-          "description": "Name of the master entity that is coordinating the multi-room zone. Platform dependent."
+          "description": "[%key:component::soundtouch::services::add_zone_slave::fields::master::description%]"
         },
         "slaves": {
-          "name": "Slaves",
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
           "description": "Name of slaves entities to remove from the existing zone."
         }
       }

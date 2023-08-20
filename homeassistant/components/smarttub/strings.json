@@ -42,7 +42,7 @@
       "description": "Updates the secondary filtration settings.",
       "fields": {
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "The secondary filtration mode."
         }
       }
@@ -62,7 +62,7 @@
       "description": "Reset a reminder, and set the next time it will be triggered.",
       "fields": {
         "days": {
-          "name": "Days",
+          "name": "[%key:component::smarttub::services::snooze_reminder::fields::days::name%]",
           "description": "The number of days when the next reminder should trigger."
         }
       }

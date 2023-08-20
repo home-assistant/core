@@ -15,7 +15,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Fill in your Abode login information",
+        "title": "[%key:component::abode::config::step::user::title%]",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"

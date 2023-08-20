@@ -2,7 +2,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from twitchAPI.object import FollowedChannelsResult, TwitchUser
 from twitchAPI.twitch import (
@@ -94,7 +94,7 @@ class TwitchMock:
         pass
 
     async def get_users(
-        self, user_ids: Optional[list[str]] = None, logins: Optional[list[str]] = None
+        self, user_ids: list[str] | None = None, logins: list[str] | None = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
         users = [_get_twitch_user("234" if self._different_user_id else "123")]
@@ -110,7 +110,7 @@ class TwitchMock:
         return True
 
     async def get_users_follows(
-        self, to_id: Optional[str] = None, from_id: Optional[str] = None
+        self, to_id: str | None = None, from_id: str | None = None
     ) -> TwitchUserFollowResultMock:
         """Return the followers of the user."""
         if self._is_following:
@@ -186,7 +186,7 @@ class TwitchInvalidUserMock(TwitchMock):
     """Twitch mock to test invalid user."""
 
     async def get_users(
-        self, user_ids: Optional[list[str]] = None, logins: Optional[list[str]] = None
+        self, user_ids: list[str] | None = None, logins: list[str] | None = None
     ) -> AsyncGenerator[TwitchUser, None]:
         """Get list of mock users."""
         if user_ids is not None or logins is not None:

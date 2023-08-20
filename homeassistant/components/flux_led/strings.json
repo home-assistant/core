@@ -27,7 +27,7 @@
         "data": {
           "mode": "The chosen brightness mode.",
           "custom_effect_colors": "Custom Effect: List of 1 to 16 [R,G,B] colors. Example: [255,0,255],[60,128,0]",
-          "custom_effect_speed_pct": "Custom Effect: Speed in percents for the effect that switch colors.",
+          "custom_effect_speed_pct": "Custom Effect: Speed in percentage for the effects that switch colors.",
           "custom_effect_transition": "Custom Effect: Type of transition between the colors."
         }
       }
@@ -114,12 +114,12 @@
       "description": "Sets strip zones for Addressable v3 controllers (0xA3).",
       "fields": {
         "colors": {
-          "name": "Colors",
+          "name": "[%key:component::flux_led::services::set_custom_effect::fields::colors::name%]",
           "description": "List of colors for each zone (RGB). The length of each zone is the number of pixels per segment divided by the number of colors. (Max 2048 Colors)."
         },
         "speed_pct": {
           "name": "Speed",
-          "description": "Effect speed for the custom effect (0-100)."
+          "description": "[%key:component::flux_led::services::set_custom_effect::fields::speed_pct::description%]"
         },
         "effect": {
           "name": "Effect",

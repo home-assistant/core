@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
@@ -52,7 +52,7 @@
       "description": "Controls the HEV LEDs on a LIFX Clean bulb.",
       "fields": {
         "power": {
-          "name": "Enable",
+          "name": "[%key:common::action::enable%]",
           "description": "Start or stop a Clean cycle."
         },
         "duration": {
@@ -88,7 +88,7 @@
       "description": "Runs a flash effect by changing to a color and back.",
       "fields": {
         "mode": {
-          "name": "Mode",
+          "name": "[%key:common::config_flow::data::mode%]",
           "description": "Decides how colors are changed."
         },
         "brightness": {
@@ -101,7 +101,7 @@
         },
         "color_name": {
           "name": "Color name",
-          "description": "A human readable color name."
+          "description": "A human-readable color name."
         },
         "rgb_color": {
           "name": "RGB color",
@@ -142,7 +142,7 @@
           "description": "Percentage indicating the maximum saturation of the colors in the loop."
         },
         "period": {
-          "name": "Period",
+          "name": "[%key:component::lifx::services::effect_pulse::fields::period::name%]",
           "description": "Duration between color changes."
         },
         "change": {
@@ -155,7 +155,7 @@
         },
         "power_on": {
           "name": "Power on",
-          "description": "Powered off lights are temporarily turned on during the effect."
+          "description": "[%key:component::lifx::services::effect_pulse::fields::power_on::description%]"
         }
       }
     },
@@ -172,7 +172,7 @@
           "description": "Direction the effect will move across the device."
         },
         "theme": {
-          "name": "Theme",
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
           "description": "(Optional) set one of the predefined themes onto the device before starting the effect."
         },
         "power_on": {
@@ -191,7 +191,7 @@
         },
         "power_on": {
           "name": "Power on",
-          "description": "Powered off lights will be turned on before starting the effect."
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
         }
       }
     },
@@ -208,12 +208,12 @@
           "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute."
         },
         "theme": {
-          "name": "Theme",
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
           "description": "Predefined color theme to use for the effect. Overridden by the palette attribute."
         },
         "power_on": {
           "name": "Power on",
-          "description": "Powered off lights will be turned on before starting the effect."
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
         }
       }
     },

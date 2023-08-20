@@ -21,7 +21,7 @@
       "description": "Requests Dynalite to report the preset for an area.",
       "fields": {
         "host": {
-          "name": "Host",
+          "name": "[%key:common::config_flow::data::host%]",
           "description": "Host gateway IP to send to or all configured gateways if not specified."
         },
         "area": {
@@ -39,11 +39,11 @@
       "description": "Requests Dynalite to report the level of a specific channel.",
       "fields": {
         "host": {
-          "name": "Host",
-          "description": "Host gateway IP to send to or all configured gateways if not specified."
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "[%key:component::dynalite::services::request_area_preset::fields::host::description%]"
         },
         "area": {
-          "name": "Area",
+          "name": "[%key:component::dynalite::services::request_area_preset::fields::area::name%]",
           "description": "Area for the requested channel."
         },
         "channel": {

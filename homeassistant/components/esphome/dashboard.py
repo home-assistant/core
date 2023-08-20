@@ -93,13 +93,6 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
-        if not cur_dashboard and not dashboard.last_update_success:
-            # If there was no previous dashboard and the new one is not available,
-            # we skip setup and wait for discovery.
-            _LOGGER.error(
-                "Dashboard unavailable; skipping setup: %s", dashboard.last_exception
-            )
-            return
 
         self._current_dashboard = dashboard
 
@@ -179,6 +172,7 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
             _LOGGER,
             name="ESPHome Dashboard",
             update_interval=timedelta(minutes=5),
+            always_update=False,
         )
         self.addon_slug = addon_slug
         self.url = url

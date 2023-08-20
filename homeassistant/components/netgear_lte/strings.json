@@ -5,7 +5,7 @@
       "description": "Deletes messages from the modem inbox.",
       "fields": {
         "host": {
-          "name": "Host",
+          "name": "[%key:common::config_flow::data::host%]",
           "description": "The modem that should have a message deleted."
         },
         "sms_id": {
@@ -19,7 +19,7 @@
       "description": "Sets options on the modem.",
       "fields": {
         "host": {
-          "name": "Host",
+          "name": "[%key:common::config_flow::data::host%]",
           "description": "The modem to set options on."
         },
         "failover": {
@@ -37,7 +37,7 @@
       "description": "Asks the modem to establish the LTE connection.",
       "fields": {
         "host": {
-          "name": "Host",
+          "name": "[%key:common::config_flow::data::host%]",
           "description": "The modem that should connect."
         }
       }
@@ -47,7 +47,7 @@
       "description": "Asks the modem to close the LTE connection.",
       "fields": {
         "host": {
-          "name": "Host",
+          "name": "[%key:common::config_flow::data::host%]",
           "description": "The modem that should disconnect."
         }
       }

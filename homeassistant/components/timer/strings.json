@@ -32,7 +32,7 @@
   },
   "services": {
     "start": {
-      "name": "Start",
+      "name": "[%key:common::action::start%]",
       "description": "Starts a timer.",
       "fields": {
         "duration": {
@@ -42,7 +42,7 @@
       }
     },
     "pause": {
-      "name": "Pause",
+      "name": "[%key:common::action::pause%]",
       "description": "Pauses a timer."
     },
     "cancel": {

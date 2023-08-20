@@ -11,7 +11,7 @@
   },
   "services": {
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads bayesian sensors from the YAML-configuration."
     }
   }

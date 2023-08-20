@@ -5,7 +5,7 @@
       "description": "Downloads a file to the download location.",
       "fields": {
         "url": {
-          "name": "URL",
+          "name": "[%key:common::config_flow::data::url%]",
           "description": "The URL of the file to download."
         },
         "subdir": {

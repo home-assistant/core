@@ -47,11 +47,11 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn on",
+      "name": "[%key:common::action::turn_on%]",
       "description": "Enables an automation."
     },
     "turn_off": {
-      "name": "Turn off",
+      "name": "[%key:common::action::turn_off%]",
       "description": "Disables an automation.",
       "fields": {
         "stop_actions": {
@@ -61,7 +61,7 @@
       }
     },
     "toggle": {
-      "name": "Toggle",
+      "name": "[%key:common::action::toggle%]",
       "description": "Toggles (enable / disable) an automation."
     },
     "trigger": {
@@ -75,7 +75,7 @@
       }
     },
     "reload": {
-      "name": "Reload",
+      "name": "[%key:common::action::reload%]",
       "description": "Reloads the automation configuration."
     }
   }

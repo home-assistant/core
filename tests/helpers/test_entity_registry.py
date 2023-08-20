@@ -1017,6 +1017,7 @@ async def test_remove_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1046,7 +1047,9 @@ async def test_remove_config_entry_from_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device when config entry is removed."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1112,7 +1115,9 @@ async def test_remove_config_entry_from_device_removes_entities_2(
 ) -> None:
     """Test that we don't remove entities with no config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1155,6 +1160,7 @@ async def test_update_device_race(
 ) -> None:
     """Test race when a device is created, updated and removed."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Create device
     device_entry = device_registry.async_get_or_create(
@@ -1331,6 +1337,7 @@ async def test_disabled_entities_excluded_from_entity_list(
 ) -> None:
     """Test that disabled entities are excluded from async_entries_for_device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

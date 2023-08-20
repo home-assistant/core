@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging
 from typing import Literal
 
-import async_timeout
+from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntry
@@ -77,15 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 await host.update_states()
             except ReolinkError as err:
-                raise UpdateFailed(
-                    f"Error updating Reolink {host.api.nvr_name}"
-                ) from err
+                raise UpdateFailed(str(err)) from err
 
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
     async def async_check_firmware_update() -> str | Literal[False]:
@@ -93,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if not host.api.supported(None, "update"):
             return False
 
-        async with async_timeout.timeout(host.api.timeout):
+        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 return await host.api.check_new_firmware()
             except (ReolinkError, asyncio.exceptions.CancelledError) as err:

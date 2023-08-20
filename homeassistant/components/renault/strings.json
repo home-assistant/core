@@ -66,7 +66,7 @@
     },
     "device_tracker": {
       "location": {
-        "name": "Location"
+        "name": "[%key:common::config_flow::data::location%]"
       }
     },
     "select": {
@@ -74,7 +74,7 @@
         "name": "Charge mode",
         "state": {
           "always": "Instant",
-          "always_charging": "Instant",
+          "always_charging": "[%key:component::renault::entity::select::charge_mode::state::always%]",
           "schedule_mode": "Planner"
         }
       }
@@ -163,7 +163,7 @@
         },
         "temperature": {
           "name": "Temperature",
-          "description": "Target A/C temperature in \u00b0C."
+          "description": "Target A/C temperature in °C."
         },
         "when": {
           "name": "When",
@@ -177,7 +177,7 @@
       "fields": {
         "vehicle": {
           "name": "Vehicle",
-          "description": "The vehicle to send the command to."
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]"
         }
       }
     },
@@ -187,7 +187,7 @@
       "fields": {
         "vehicle": {
           "name": "Vehicle",
-          "description": "The vehicle to send the command to."
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]"
         },
         "schedules": {
           "name": "Schedules",
