@@ -1,7 +1,6 @@
 """Config flow for Hong Kong Observatory integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from async_timeout import timeout
@@ -16,8 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_LOCATION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_loc_name(item):
