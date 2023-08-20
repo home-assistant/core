@@ -131,25 +131,6 @@ def device_with_outdoor_sensor():
 
 
 @pytest.fixture
-def device_with_indoor_sensors_only():
-    """Mock a somecomfort.Device."""
-    mock_device = create_autospec(aiosomecomfort.device.Device, instance=True)
-    mock_device.deviceid = 1234567
-    mock_device._data = {
-        "canControlHumidification": False,
-        "hasFan": False,
-    }
-    mock_device.system_mode = "off"
-    mock_device.name = "device4"
-    mock_device.current_temperature = CURRENTTEMPERATURE
-    mock_device.mac_address = "macaddress1"
-    mock_device.temperature_unit = "C"
-    mock_device.outdoor_temperature = None
-    mock_device.outdoor_humidity = None
-    return mock_device
-
-
-@pytest.fixture
 def another_device():
     """Mock a somecomfort.Device."""
     mock_device = create_autospec(aiosomecomfort.device.Device, instance=True)

@@ -40,26 +40,24 @@ async def test_indoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     location: Location,
-    device_with_indoor_sensors_only: Device,
+    device: Device,
     unit,
     temp,
 ) -> None:
     """Test indoor temperature sensor with no outdoor sensors."""
-    device_with_indoor_sensors_only.temperature_unit = unit
-    device_with_indoor_sensors_only.current_temperature = 5
-    device_with_indoor_sensors_only.current_humidity = 25
-    location.devices_by_id[
-        device_with_indoor_sensors_only.deviceid
-    ] = device_with_indoor_sensors_only
+    device.temperature_unit = unit
+    device.current_temperature = 5
+    device.current_humidity = 25
+    location.devices_by_id[device.deviceid] = device
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device4_outdoor_temperature") is None
-    assert hass.states.get("sensor.device4_outdoor_humidity") is None
+    assert hass.states.get("sensor.device1_outdoor_temperature") is None
+    assert hass.states.get("sensor.device1_outdoor_humidity") is None
 
-    temperature_state = hass.states.get("sensor.device4_temperature")
-    humidity_state = hass.states.get("sensor.device4_humidity")
+    temperature_state = hass.states.get("sensor.device1_temperature")
+    humidity_state = hass.states.get("sensor.device1_humidity")
 
     assert temperature_state
     assert humidity_state
