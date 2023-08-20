@@ -8,7 +8,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture(name="hko_config_flow_connect", autouse=True)
-def tomorrowio_config_flow_connect():
+def hko_config_flow_connect():
     """Mock valid config flow setup."""
     with patch(
         "homeassistant.components.hko.config_flow.HKO.weather",
