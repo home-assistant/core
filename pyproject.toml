@@ -475,7 +475,6 @@ filterwarnings = [
     # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
     # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
-    # https://github.com/eclipse/paho.mqtt.python/blob/v1.6.1/src/paho/mqtt/client.py#L788-L791
 
     # -- fixed, waiting for release / update
     # https://github.com/gurumitts/pylutron-caseta/pull/143 - >0.18.1
