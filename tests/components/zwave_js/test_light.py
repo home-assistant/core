@@ -35,7 +35,7 @@ from .common import (
 )
 
 HSM200_V1_ENTITY = "light.hsm200"
-ZDB5100_ENTITY = "light.zdb5100"
+ZDB5100_ENTITY = "light.matrix_office"
 
 
 async def test_light(
