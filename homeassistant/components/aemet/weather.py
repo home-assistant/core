@@ -11,8 +11,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,10 +22,9 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CONDITION,
@@ -111,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
+class AemetWeather(CoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -138,15 +137,6 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
         )
         self._attr_name = name
         self._attr_unique_id = unique_id
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
 
     @property
     def condition(self):
