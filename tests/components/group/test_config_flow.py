@@ -570,3 +570,51 @@ async def test_option_flow_sensor_preview(
         },
         "state": "10.0",
     }
+
+
+async def test_option_flow_sensor_preview_config_entry_removed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the option flow preview where the config entry is removed."""
+    client = await hass_ws_client(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": ["sensor.input_one", "sensor.input_two"],
+            "group_type": "sensor",
+            "hide_members": False,
+            "name": "My sensor group",
+            "type": "min",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    input_sensors = ["sensor.input_one", "sensor.input_two"]
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group_sensor"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/sensor/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "entities": input_sensors,
+                "type": "min",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}
