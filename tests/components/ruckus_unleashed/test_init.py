@@ -4,10 +4,7 @@ from unittest.mock import AsyncMock
 from aioruckus.const import CONNECT_ERROR_TIMEOUT, LOGIN_ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
-from homeassistant.components.ruckus_unleashed import (
-    DOMAIN,
-    MANUFACTURER,
-)
+from homeassistant.components.ruckus_unleashed import DOMAIN, MANUFACTURER
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
     API_AP_MAC,
