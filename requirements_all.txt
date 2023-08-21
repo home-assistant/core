@@ -333,7 +333,7 @@ aiorecollect==1.0.8
 aioridwell==2023.07.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.30
+aioruckus==0.31
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
