@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    STATE_UNAVAILABLE,
     EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
@@ -183,9 +182,13 @@ class AirthingsSensor(
         )
 
     @property
+    def available(self) -> bool:
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data.sensors
+        )
+
+    @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        try:
-            return self.coordinator.data.sensors[self.entity_description.key]
-        except KeyError:
-            return STATE_UNAVAILABLE
+        return self.coordinator.data.sensors[self.entity_description.key]
