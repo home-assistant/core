@@ -25,7 +25,7 @@
       }),
       'disabled_by': None,
       'domain': 'airnow',
-      'entry_id': '522b38676984672fbf0db2c8cbfb2f05',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'options': dict({
       }),
       'pref_disable_new_entities': False,
