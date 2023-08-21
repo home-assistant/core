@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'account': dict({
+      'rate_limit': 60,
+      'timezone': 'Europe/Amsterdam',
+      'type': 'public',
+    }),
+    'data': dict({
+      'energy_current_hour': 800000,
+      'energy_production_today': 100000,
+      'energy_production_today_remaining': 50000,
+      'energy_production_tomorrow': 200000,
+      'power_production_now': 300000,
+      'watts': dict({
+        '2021-06-27T13:00:00-07:00': 10,
+        '2022-06-27T13:00:00-07:00': 100,
+      }),
+      'wh_days': dict({
+        '2021-06-27T13:00:00-07:00': 20,
+        '2022-06-27T13:00:00-07:00': 200,
+      }),
+      'wh_period': dict({
+        '2021-06-27T13:00:00-07:00': 30,
+        '2022-06-27T13:00:00-07:00': 300,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+      }),
+      'options': dict({
+        'api_key': '**REDACTED**',
+        'azimuth': 190,
+        'damping': 0.5,
+        'declination': 30,
+        'inverter_size': 2000,
+        'modules power': 5100,
+      }),
+      'title': 'Green House',
+    }),
+  })
+# ---

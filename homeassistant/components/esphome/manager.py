@@ -18,16 +18,13 @@ from aioesphomeapi import (
     UserServiceArgType,
     VoiceAssistantEventType,
 )
+from aioesphomeapi.model import VoiceAssistantCommandFlag
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_MODE,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
@@ -323,7 +320,7 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, use_vad: bool
+        self, conversation_id: str, use_vad: int
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -343,7 +340,8 @@ class ESPHomeManager:
             voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
-                use_vad=use_vad,
+                use_vad=VoiceAssistantCommandFlag(use_vad)
+                == VoiceAssistantCommandFlag.USE_VAD,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )

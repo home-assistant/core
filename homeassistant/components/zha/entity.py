@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -79,11 +79,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._extra_state_attributes
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
-        return entity.DeviceInfo(
+        return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],

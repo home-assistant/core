@@ -51,6 +51,8 @@ from .const import (
     CONF_MODE_LIST,
     CONF_MODE_STATE_TEMPLATE,
     CONF_MODE_STATE_TOPIC,
+    CONF_POWER_COMMAND_TEMPLATE,
+    CONF_POWER_COMMAND_TOPIC,
     CONF_PRECISION,
     CONF_RETAIN,
     CONF_TEMP_COMMAND_TEMPLATE,
@@ -91,6 +93,7 @@ VALUE_TEMPLATE_KEYS = (
 COMMAND_TEMPLATE_KEYS = {
     CONF_MODE_COMMAND_TEMPLATE,
     CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_POWER_COMMAND_TEMPLATE,
 }
 
 
@@ -98,6 +101,7 @@ TOPIC_KEYS = (
     CONF_CURRENT_TEMP_TOPIC,
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
+    CONF_POWER_COMMAND_TOPIC,
     CONF_TEMP_COMMAND_TOPIC,
     CONF_TEMP_STATE_TOPIC,
 )
@@ -127,6 +131,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
@@ -266,6 +272,9 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         ):
             support |= WaterHeaterEntityFeature.OPERATION_MODE
 
+        if self._topic[CONF_POWER_COMMAND_TOPIC] is not None:
+            support |= WaterHeaterEntityFeature.ON_OFF
+
         self._attr_supported_features = support
 
     def _prepare_subscribe_topics(self) -> None:
@@ -317,3 +326,19 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        if CONF_POWER_COMMAND_TOPIC in self._config:
+            mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](
+                self._config[CONF_PAYLOAD_ON]
+            )
+            await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        if CONF_POWER_COMMAND_TOPIC in self._config:
+            mqtt_payload = self._command_templates[CONF_POWER_COMMAND_TEMPLATE](
+                self._config[CONF_PAYLOAD_OFF]
+            )
+            await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)

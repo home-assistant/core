@@ -71,6 +71,30 @@
     }
   },
   "entity": {
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "Double press",
+              "long_press": "Long press",
+              "single_press": "Single press"
+            }
+          }
+        }
+      },
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::double_press%]",
+              "long_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::long_press%]",
+              "single_press": "[%key:component::homekit_controller::entity::event::doorbell::state_attributes::event_type::state::single_press%]"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "ecobee_mode": {
         "state": {

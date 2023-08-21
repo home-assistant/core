@@ -1,15 +1,15 @@
 """Entity representing a YouTube account."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_TITLE, DOMAIN, MANUFACTURER
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
-class YouTubeChannelEntity(CoordinatorEntity):
+class YouTubeChannelEntity(CoordinatorEntity[YouTubeDataUpdateCoordinator]):
     """An HA implementation for YouTube entity."""
 
     _attr_has_entity_name = True

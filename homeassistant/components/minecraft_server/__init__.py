@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -10,16 +11,12 @@ from mcstatus.server import JavaServer
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import helpers
-from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
+from .const import DOMAIN, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -66,6 +63,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
+@dataclass
+class MinecraftServerData:
+    """Representation of Minecraft server data."""
+
+    latency: float | None = None
+    motd: str | None = None
+    players_max: int | None = None
+    players_online: int | None = None
+    players_list: list[str] | None = None
+    protocol_version: int | None = None
+    version: str | None = None
+
+
 class MinecraftServer:
     """Representation of a Minecraft server."""
 
@@ -88,13 +98,7 @@ class MinecraftServer:
         self._server = JavaServer(self.host, self.port)
 
         # Data provided by 3rd party library
-        self.version: str | None = None
-        self.protocol_version: int | None = None
-        self.latency_time: float | None = None
-        self.players_online: int | None = None
-        self.players_max: int | None = None
-        self.players_list: list[str] | None = None
-        self.motd: str | None = None
+        self.data: MinecraftServerData = MinecraftServerData()
 
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
@@ -174,18 +178,18 @@ class MinecraftServer:
             status_response = await self._server.async_status()
 
             # Got answer to request, update properties.
-            self.version = status_response.version.name
-            self.protocol_version = status_response.version.protocol
-            self.players_online = status_response.players.online
-            self.players_max = status_response.players.max
-            self.latency_time = status_response.latency
-            self.motd = status_response.motd.to_plain()
+            self.data.version = status_response.version.name
+            self.data.protocol_version = status_response.version.protocol
+            self.data.players_online = status_response.players.online
+            self.data.players_max = status_response.players.max
+            self.data.latency = status_response.latency
+            self.data.motd = status_response.motd.to_plain()
 
-            self.players_list = []
+            self.data.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
-                    self.players_list.append(player.name)
-                self.players_list.sort()
+                    self.data.players_list.append(player.name)
+                self.data.players_list.sort()
 
             # Inform user once about successful update if necessary.
             if self._last_status_request_failed:
@@ -197,13 +201,13 @@ class MinecraftServer:
             self._last_status_request_failed = False
         except OSError as error:
             # No answer to request, set all properties to unknown.
-            self.version = None
-            self.protocol_version = None
-            self.players_online = None
-            self.players_max = None
-            self.latency_time = None
-            self.players_list = None
-            self.motd = None
+            self.data.version = None
+            self.data.protocol_version = None
+            self.data.players_online = None
+            self.data.players_max = None
+            self.data.latency = None
+            self.data.players_list = None
+            self.data.motd = None
 
             # Inform user once about failed update if necessary.
             if not self._last_status_request_failed:
@@ -214,52 +218,3 @@ class MinecraftServer:
                     error,
                 )
             self._last_status_request_failed = True
-
-
-class MinecraftServerEntity(Entity):
-    """Representation of a Minecraft Server base entity."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        server: MinecraftServer,
-        type_name: str,
-        icon: str,
-        device_class: str | None,
-    ) -> None:
-        """Initialize base entity."""
-        self._server = server
-        self._attr_icon = icon
-        self._attr_unique_id = f"{self._server.unique_id}-{type_name}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._server.unique_id)},
-            manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({self._server.version})",
-            name=self._server.name,
-            sw_version=str(self._server.protocol_version),
-        )
-        self._attr_device_class = device_class
-        self._extra_state_attributes = None
-        self._disconnect_dispatcher: CALLBACK_TYPE | None = None
-
-    async def async_update(self) -> None:
-        """Fetch data from the server."""
-        raise NotImplementedError()
-
-    async def async_added_to_hass(self) -> None:
-        """Connect dispatcher to signal from server."""
-        self._disconnect_dispatcher = async_dispatcher_connect(
-            self.hass, self._server.signal_name, self._update_callback
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher before removal."""
-        if self._disconnect_dispatcher:
-            self._disconnect_dispatcher()
-
-    @callback
-    def _update_callback(self) -> None:
-        """Triggers update of properties after receiving signal from server."""
-        self.async_schedule_update_ha_state(force_refresh=True)

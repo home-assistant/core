@@ -61,7 +61,9 @@ CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-urllib3>=1.26.5
+# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
+# https://github.com/home-assistant/core/issues/97248
+urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
@@ -123,10 +125,6 @@ python-socketio>=4.6.0,<5.0
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Required for compatibility with point integration - ensure_active_token
-# https://github.com/home-assistant/core/pull/68176
-authlib<1.0
-
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
@@ -151,7 +149,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.23.3
+protobuf==4.24.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

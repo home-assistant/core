@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

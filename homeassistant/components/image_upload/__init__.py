@@ -78,8 +78,12 @@ class ImageStorageCollection(collection.DictStorageCollection):
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
 
-        if not uploaded_file.content_type.startswith("image/"):
-            raise vol.Invalid("Only images are allowed")
+        if uploaded_file.content_type not in (
+            "image/gif",
+            "image/jpeg",
+            "image/png",
+        ):
+            raise vol.Invalid("Only jpeg, png, and gif images are allowed")
 
         data[CONF_ID] = secrets.token_hex(16)
         data["filesize"] = await self.hass.async_add_executor_job(self._move_data, data)
