@@ -358,6 +358,7 @@ class ESPHomeManager:
         unique_id = entry.unique_id
         entry_data = self.entry_data
         reconnect_logic = self.reconnect_logic
+        assert reconnect_logic is not None, "Reconnect logic must be set"
         hass = self.hass
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
@@ -403,9 +404,15 @@ class ESPHomeManager:
                 device_info.name,
                 device_mac,
             )
-            # Re-connection logic will trigger after this and hopefully
-            # discovery has updated the IP address of the device.
             await cli.disconnect()
+            await reconnect_logic.stop()
+            # We don't want to reconnect to the wrong device
+            # so we stop the reconnect logic and disconnect
+            # the client. When discovery finds the new IP address
+            # for the device, the config entry will be updated
+            # and we will connect to the correct device when
+            # the config entry gets reloaded by the discovery
+            # flow.
             return
 
         # Make sure we have the correct device name stored
@@ -425,9 +432,8 @@ class ESPHomeManager:
         # We use this to determine if a deep sleep device should
         # be marked as unavailable or not.
         entry_data.expected_disconnect = True
-        if entry_data.device_info.name:
-            assert reconnect_logic is not None, "Reconnect logic must be set"
-            reconnect_logic.name = entry_data.device_info.name
+        if device_info.name:
+            reconnect_logic.name = device_info.name
 
         if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
             entry_data.disconnect_callbacks.append(
