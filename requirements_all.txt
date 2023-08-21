@@ -188,7 +188,7 @@ aioairq==0.2.4
 aioairzone-cloud==0.2.1
 
 # homeassistant.components.airzone
-aioairzone==0.6.6
+aioairzone==0.6.7
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -324,7 +324,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.2
+aioqsw==0.3.3
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -339,7 +339,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==5.4.0
+aioshelly==6.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -829,7 +829,7 @@ fritzconnection[qr]==1.12.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.0.2
+gardena_bluetooth==1.2.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -1887,7 +1887,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.4.2
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.11
+pyoctoprintapi==0.1.12
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -2038,7 +2038,7 @@ pysnooz==0.8.3
 pysoma==0.0.12
 
 # homeassistant.components.spc
-pyspcwebgw==0.4.0
+pyspcwebgw==0.7.0
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.6.3
@@ -2728,7 +2728,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.2.3
 
 # homeassistant.components.august
-yalexs==1.5.2
+yalexs==1.7.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.13

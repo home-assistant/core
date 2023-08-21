@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'AQI': 44,
+      'Category.Name': 'Good',
+      'Category.Number': 1,
+      'DateObserved': '2020-12-20',
+      'HourObserved': 15,
+      'Latitude': '**REDACTED**',
+      'Longitude': '**REDACTED**',
+      'O3': 0.048,
+      'PM10': 12,
+      'PM2.5': 8.9,
+      'Pollutant': 'O3',
+      'ReportingArea': '**REDACTED**',
+      'StateCode': '**REDACTED**',
+    }),
+    'entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'radius': 75,
+      }),
+      'disabled_by': None,
+      'domain': 'airnow',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---
