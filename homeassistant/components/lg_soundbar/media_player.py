@@ -45,6 +45,8 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, host, port, unique_id):
         """Initialize the LG speakers."""
