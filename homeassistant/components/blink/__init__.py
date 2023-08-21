@@ -43,7 +43,7 @@ SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
 )
 
 
-def _reauth_flow_wrapper(hass, data):
+async def _reauth_flow_wrapper(hass, data):
     """Reauth flow wrapper."""
     hass.add_job(
         hass.config_entries.flow.async_init(
@@ -66,10 +66,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = {**entry.data}
     if entry.version == 1:
         data.pop("login_response", None)
-        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        await _reauth_flow_wrapper(hass, data)
         return False
     if entry.version == 2:
-        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        await _reauth_flow_wrapper(hass, data)
         return False
     return True
 
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await blink.start()
         if blink.auth.check_key_required():
             _LOGGER.debug("Attempting a reauth flow")
-            _reauth_flow_wrapper(hass, auth_data)
+            raise ConfigEntryAuthFailed("Need 2FA for Blink") from ex
     except (ClientError, asyncio.TimeoutError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
 
