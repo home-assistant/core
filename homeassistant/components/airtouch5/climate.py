@@ -11,22 +11,14 @@ from airtouch5py.packets.ac_control import (
     SetpointControl,
     SetPowerSetting,
 )
-from airtouch5py.packets.ac_status import (
-    AcFanSpeed,
-    AcMode,
-    AcPowerState,
-    AcStatus,
-)
+from airtouch5py.packets.ac_status import AcFanSpeed, AcMode, AcPowerState, AcStatus
 from airtouch5py.packets.zone_control import (
     ZoneControlZone,
     ZoneSettingPower,
     ZoneSettingValue,
 )
 from airtouch5py.packets.zone_name import ZoneName
-from airtouch5py.packets.zone_status import (
-    ZonePowerState,
-    ZoneStatusZone,
-)
+from airtouch5py.packets.zone_status import ZonePowerState, ZoneStatusZone
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -44,7 +36,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, FAN_INTELLIGENT_AUTO, FAN_TURBO
