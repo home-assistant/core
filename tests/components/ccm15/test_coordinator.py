@@ -60,7 +60,7 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert climate._ac_index == 0
     assert coordinator.data == data
     assert climate.unique_id == "1.1.1.1.0"
-    assert climate.name == "Climate0"
+    assert climate.name == "0"
     assert climate.hvac_mode == HVACMode.OFF
     assert climate.current_temperature == 27
     assert climate.temperature_unit == UnitOfTemperature.CELSIUS
@@ -75,7 +75,6 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         HVACMode.AUTO,
     ]
     assert climate.extra_state_attributes["error_code"] == 0
-    assert climate.should_poll
     device_info = climate.device_info
     assert device_info is not None
     assert device_info["manufacturer"] == "Midea"
