@@ -7,7 +7,6 @@ from typing import Any
 
 from doorbirdpy import DoorBird
 import requests
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -31,19 +30,6 @@ from .view import DoorBirdRequestView
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOM_URL = "hass_url_override"
-
-
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_EVENTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_CUSTOM_URL): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
