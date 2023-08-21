@@ -100,7 +100,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     dr.async_get(hass).async_get_or_create(
         name="Device from other integration",
         config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_CLIENT_MAC])},
     )
 
     with RuckusAjaxApiPatchContext():
