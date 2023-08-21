@@ -98,6 +98,12 @@ ROTATION_SPEED_LOW = 33
 ROTATION_SPEED_MEDIUM = 66
 ROTATION_SPEED_HIGH = 100
 
+HASS_FAN_MODE_TO_HOMEKIT_ROTATION = {
+    FAN_LOW: ROTATION_SPEED_LOW,
+    FAN_MEDIUM: ROTATION_SPEED_MEDIUM,
+    FAN_HIGH: ROTATION_SPEED_HIGH,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -186,9 +192,9 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         ]
 
     def _get_rotation_speed_range(self) -> tuple[float, float]:
-        return (
-            round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1,
-            round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100),
+        rotation_speed = self.service[CharacteristicsTypes.ROTATION_SPEED]
+        return round(rotation_speed.minValue or 0) + 1, round(
+            rotation_speed.maxValue or 100
         )
 
     @property
@@ -217,14 +223,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        rotation = 0
-        if fan_mode == FAN_LOW:
-            rotation = ROTATION_SPEED_LOW
-        elif fan_mode == FAN_MEDIUM:
-            rotation = ROTATION_SPEED_MEDIUM
-        elif fan_mode == FAN_HIGH:
-            rotation = ROTATION_SPEED_HIGH
-
+        rotation = HASS_FAN_MODE_TO_HOMEKIT_ROTATION.get(fan_mode, 0)
         speed_range = self._get_rotation_speed_range()
         speed = round(percentage_to_ranged_value(speed_range, rotation))
         await self.async_put_characteristics(
