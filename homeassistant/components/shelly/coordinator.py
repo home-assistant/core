@@ -290,7 +290,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             )
         elif update_type == BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
-            if self._push_update_failures > MAX_PUSH_UPDATE_FAILURES:
+            if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
                 LOGGER.debug(
                     "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
                 )
