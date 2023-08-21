@@ -1,4 +1,6 @@
 """Closures cluster handlers module for Zigbee Home Automation."""
+from typing import Any
+
 from zigpy.zcl.clusters import closures
 
 from homeassistant.core import callback
@@ -48,7 +50,7 @@ class DoorLockClusterHandler(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from lock cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(
@@ -144,7 +146,7 @@ class WindowCovering(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute update from window_covering cluster."""
         attr_name = self._get_attribute_name(attrid)
         self.debug(

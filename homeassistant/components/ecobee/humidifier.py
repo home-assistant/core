@@ -13,7 +13,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -44,26 +44,18 @@ class EcobeeHumidifier(HumidifierEntity):
     """A humidifier class for an ecobee thermostat with humidifier attached."""
 
     _attr_supported_features = HumidifierEntityFeature.MODES
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, data, thermostat_index):
         """Initialize ecobee humidifier platform."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self._name = self.thermostat["name"]
+        self._attr_unique_id = self.thermostat["identifier"]
         self._last_humidifier_on_mode = MODE_MANUAL
 
         self.update_without_throttle = False
-
-    @property
-    def name(self):
-        """Return the name of the humidifier."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return unique_id for humidifier."""
-        return f"{self.thermostat['identifier']}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -79,7 +71,7 @@ class EcobeeHumidifier(HumidifierEntity):
             identifiers={(DOMAIN, self.thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self.thermostat["name"],
         )
 
     @property

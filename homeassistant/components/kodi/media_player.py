@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
@@ -259,6 +259,8 @@ def cmd(
 class KodiEntity(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -290,7 +292,11 @@ class KodiEntity(MediaPlayerEntity):
         self._media_position = None
         self._connect_error = False
 
-        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, uid)},
+            manufacturer="Kodi",
+            name=name,
+        )
 
     def _reset_state(self, players=None):
         self._players = players
@@ -369,15 +375,6 @@ class KodiEntity(MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Kodi",
-            name=self.name,
-        )
-
-    @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
@@ -425,7 +422,7 @@ class KodiEntity(MediaPlayerEntity):
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
         self._device_id = device.id
 

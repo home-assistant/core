@@ -4,9 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-from typing import Any, Final
+from typing import Any, Final, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,11 +26,19 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import (
     CONF_ROUND_DIGITS,
@@ -140,6 +147,28 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
+    source_entity = er.EntityRegistry.async_get(registry, source_entity_id)
+    dev_reg = dr.async_get(hass)
+    # Resolve source entity device
+    if (
+        (source_entity is not None)
+        and (source_entity.device_id is not None)
+        and (
+            (
+                device := dev_reg.async_get(
+                    device_id=source_entity.device_id,
+                )
+            )
+            is not None
+        )
+    ):
+        device_info = DeviceInfo(
+            identifiers=device.identifiers,
+            connections=device.connections,
+        )
+    else:
+        device_info = None
+
     unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
     if unit_prefix == "none":
         unit_prefix = None
@@ -152,6 +181,7 @@ async def async_setup_entry(
         unique_id=config_entry.entry_id,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
+        device_info=device_info,
     )
 
     async_add_entities([integral])
@@ -194,6 +224,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id
@@ -211,6 +242,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
+        self._attr_device_info = device_info
 
     def _unit(self, source_unit: str) -> str:
         """Derive unit from the source sensor, SI prefix and time unit."""
@@ -261,23 +293,19 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
-        def calc_integration(event: Event) -> None:
+        def calc_integration(event: EventType[EventStateChangedData]) -> None:
             """Handle the sensor state changes."""
-            old_state: State | None = event.data.get("old_state")
-            new_state: State | None = event.data.get("new_state")
-
-            # We may want to update our state before an early return,
-            # based on the source sensor's unit_of_measurement
-            # or device_class.
-            update_state = False
+            old_state = event.data["old_state"]
+            new_state = event.data["new_state"]
 
             if (
                 source_state := self.hass.states.get(self._sensor_source_id)
             ) is None or source_state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
-                update_state = True
-            else:
-                self._attr_available = True
+                self.async_write_ha_state()
+                return
+
+            self._attr_available = True
 
             if old_state is None or new_state is None:
                 # we can't calculate the elapsed time, so we can't calculate the integral
@@ -285,10 +313,7 @@ class IntegrationSensor(RestoreSensor):
 
             unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit is not None:
-                new_unit_of_measurement = self._unit(unit)
-                if self._unit_of_measurement != new_unit_of_measurement:
-                    self._unit_of_measurement = new_unit_of_measurement
-                    update_state = True
+                self._unit_of_measurement = self._unit(unit)
 
             if (
                 self.device_class is None
@@ -297,10 +322,8 @@ class IntegrationSensor(RestoreSensor):
             ):
                 self._attr_device_class = SensorDeviceClass.ENERGY
                 self._attr_icon = None
-                update_state = True
 
-            if update_state:
-                self.async_write_ha_state()
+            self.async_write_ha_state()
 
             try:
                 # integration as the Riemann integral of previous measures.

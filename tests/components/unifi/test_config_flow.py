@@ -74,9 +74,14 @@ DEVICES = [
 ]
 
 WLANS = [
-    {"name": "SSID 1"},
-    {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
-    {"name": "SSID 4", "name_combine_enabled": False},
+    {"_id": "1", "name": "SSID 1"},
+    {
+        "_id": "2",
+        "name": "SSID 2",
+        "name_combine_enabled": False,
+        "name_combine_suffix": "_IOT",
+    },
+    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False},
 ]
 
 DPI_GROUPS = [

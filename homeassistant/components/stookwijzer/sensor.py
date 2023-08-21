@@ -8,8 +8,7 @@ from stookwijzer import Stookwijzer
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, StookwijzerState
@@ -33,6 +32,7 @@ class StookwijzerSensor(SensorEntity):
     _attr_attribution = "Data provided by stookwijzer.nu"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_translation_key = "stookwijzer"
 
     def __init__(self, client: Stookwijzer, entry: ConfigEntry) -> None:

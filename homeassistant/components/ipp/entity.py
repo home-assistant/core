@@ -1,7 +1,7 @@
 """Entities for The Internet Printing Protocol (IPP) integration."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN

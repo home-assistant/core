@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -75,6 +75,8 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
@@ -83,11 +85,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self._temperature_unit = temperature_unit
         self._schedule_mode = None
         self._target_temperature = None
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._thermostat.room
 
     @property
     def temperature_unit(self) -> str:

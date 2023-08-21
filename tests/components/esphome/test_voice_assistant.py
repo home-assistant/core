@@ -5,10 +5,8 @@ import socket
 from unittest.mock import Mock, patch
 
 from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
 import pytest
 
-from homeassistant.components import esphome
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
@@ -103,15 +101,15 @@ async def test_pipeline_events(
         )
 
     def handle_event(
-        event_type: esphome.VoiceAssistantEventType, data: dict[str, str] | None
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
-        if event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert data is not None
             assert data["text"] == _TEST_INPUT_TEXT
-        elif event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert data is not None
             assert data["text"] == _TEST_OUTPUT_TEXT
-        elif event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert data is not None
             assert data["url"] == _TEST_OUTPUT_URL
 
@@ -149,7 +147,7 @@ async def test_udp_server(
         sock.sendto(b"test", ("127.0.0.1", port))
 
         # Give the socket some time to send/receive the data
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             while voice_assistant_udp_server_v1.queue.qsize() == 0:
                 await asyncio.sleep(0.1)
 
@@ -274,7 +272,7 @@ async def test_error_event_type(
         )
     )
 
-    assert voice_assistant_udp_server_v1.handle_event.called_with(
+    voice_assistant_udp_server_v1.handle_event.assert_called_with(
         VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
         {"code": "code", "message": "message"},
     )
@@ -399,9 +397,9 @@ async def test_no_speech(
         return sum(chunk) > 0
 
     def handle_event(
-        event_type: esphome.VoiceAssistantEventType, data: dict[str, str] | None
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
-        assert event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_ERROR
+        assert event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR
         assert data is not None
         assert data["code"] == "speech-timeout"
 

@@ -2,7 +2,8 @@
   "domain": "opensky",
   "name": "OpenSky Network",
   "codeowners": ["@joostlek"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opensky",
   "iot_class": "cloud_polling",
-  "requirements": ["python-opensky==0.0.9"]
+  "requirements": ["python-opensky==0.2.0"]
 }

@@ -13,7 +13,6 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
-import async_timeout
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
@@ -553,10 +552,10 @@ class Recorder(threading.Thread):
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        new_size = self.hass.states.async_entity_ids_count() * 2
-        self.state_attributes_manager.adjust_lru_size(new_size)
-        self.states_meta_manager.adjust_lru_size(new_size)
-        self.statistics_meta_manager.adjust_lru_size(new_size)
+        if new_size := self.hass.states.async_entity_ids_count() * 2:
+            self.state_attributes_manager.adjust_lru_size(new_size)
+            self.states_meta_manager.adjust_lru_size(new_size)
+            self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -1306,7 +1305,7 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+            async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()

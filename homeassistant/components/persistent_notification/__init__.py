@@ -1,16 +1,16 @@
 """Support for displaying persistent notifications."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import Any, Final, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, singleton
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -61,6 +61,17 @@ SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+@callback
+def async_register_callback(
+    hass: HomeAssistant,
+    _callback: Callable[[UpdateType, dict[str, Notification]], None],
+) -> CALLBACK_TYPE:
+    """Register a callback."""
+    return async_dispatcher_connect(
+        hass, SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED, _callback
+    )
 
 
 @bind_hass
@@ -129,6 +140,20 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     )
 
 
+@callback
+def async_dismiss_all(hass: HomeAssistant) -> None:
+    """Remove all notifications."""
+    notifications = _async_get_or_create_notifications(hass)
+    notifications_copy = notifications.copy()
+    notifications.clear()
+    async_dispatcher_send(
+        hass,
+        SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
+        UpdateType.REMOVED,
+        notifications_copy,
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
 
@@ -147,6 +172,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle the dismiss notification service call."""
         async_dismiss(hass, call.data[ATTR_NOTIFICATION_ID])
 
+    @callback
+    def dismiss_all_service(call: ServiceCall) -> None:
+        """Handle the dismiss all notification service call."""
+        async_dismiss_all(hass)
+
     hass.services.async_register(
         DOMAIN,
         "create",
@@ -163,6 +193,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, "dismiss", dismiss_service, SCHEMA_SERVICE_NOTIFICATION
     )
+
+    hass.services.async_register(DOMAIN, "dismiss_all", dismiss_all_service, None)
 
     websocket_api.async_register_command(hass, websocket_get_notifications)
     websocket_api.async_register_command(hass, websocket_subscribe_notifications)

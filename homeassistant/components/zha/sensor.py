@@ -5,9 +5,8 @@ import enum
 import functools
 import numbers
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -148,7 +147,10 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes:
+        if (
+            cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes
+            or cls.SENSOR_ATTR not in cluster_handler.cluster.attributes_by_name
+        ):
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -275,8 +277,14 @@ class ElectricalMeasurement(Sensor):
             attrs["measurement_type"] = self._cluster_handler.measurement_type
 
         max_attr_name = f"{self.SENSOR_ATTR}_max"
-        if (max_v := self._cluster_handler.cluster.get(max_attr_name)) is not None:
-            attrs[max_attr_name] = str(self.formatter(max_v))
+
+        try:
+            max_v = self._cluster_handler.cluster.get(max_attr_name)
+        except KeyError:
+            pass
+        else:
+            if max_v is not None:
+                attrs[max_attr_name] = str(self.formatter(max_v))
 
         return attrs
 
@@ -960,6 +968,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -972,6 +981,7 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 class AqaraFeedingSource(types.enum8):

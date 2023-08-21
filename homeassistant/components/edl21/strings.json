@@ -11,5 +11,102 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "ownership_id": {
+        "name": "Ownership ID"
+      },
+      "electricity_id": {
+        "name": "Electricity ID"
+      },
+      "configuration_program_version_number": {
+        "name": "Configuration program version number"
+      },
+      "firmware_version_number": {
+        "name": "Firmware version number"
+      },
+      "positive_active_instantaneous_power": {
+        "name": "Positive active instantaneous power"
+      },
+      "positive_active_energy_total": {
+        "name": "Positive active energy total"
+      },
+      "positive_active_energy_tariff_t1": {
+        "name": "Positive active energy in tariff T1"
+      },
+      "positive_active_energy_tariff_t2": {
+        "name": "Positive active energy in tariff T2"
+      },
+      "last_signed_positive_active_energy_total": {
+        "name": "Last signed positive active energy total"
+      },
+      "negative_active_energy_total": {
+        "name": "Negative active energy total"
+      },
+      "negative_active_energy_tariff_t1": {
+        "name": "Negative active energy in tariff T1"
+      },
+      "negative_active_energy_tariff_t2": {
+        "name": "Negative active energy in tariff T2"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
+      },
+      "absolute_active_instantaneous_power": {
+        "name": "Absolute active instantaneous power"
+      },
+      "sum_active_instantaneous_power": {
+        "name": "Sum active instantaneous power"
+      },
+      "l1_active_instantaneous_amperage": {
+        "name": "L1 active instantaneous amperage"
+      },
+      "l1_active_instantaneous_voltage": {
+        "name": "L1 active instantaneous voltage"
+      },
+      "l1_active_instantaneous_power": {
+        "name": "L1 active instantaneous power"
+      },
+      "l2_active_instantaneous_amperage": {
+        "name": "L2 active instantaneous amperage"
+      },
+      "l2_active_instantaneous_voltage": {
+        "name": "L2 active instantaneous voltage"
+      },
+      "l2_active_instantaneous_power": {
+        "name": "L2 active instantaneous power"
+      },
+      "l3_active_instantaneous_amperage": {
+        "name": "L3 active instantaneous amperage"
+      },
+      "l3_active_instantaneous_voltage": {
+        "name": "L3 active instantaneous voltage"
+      },
+      "l3_active_instantaneous_power": {
+        "name": "L3 active instantaneous power"
+      },
+      "u_l2_u_l1_phase_angle": {
+        "name": "U(L2)/U(L1) phase angle"
+      },
+      "u_l3_u_l1_phase_angle": {
+        "name": "U(L3)/U(L1) phase angle"
+      },
+      "u_l1_i_l1_phase_angle": {
+        "name": "U(L1)/I(L1) phase angle"
+      },
+      "u_l2_i_l2_phase_angle": {
+        "name": "U(L2)/I(L2) phase angle"
+      },
+      "u_l3_i_l3_phase_angle": {
+        "name": "U(L3)/I(L3) phase angle"
+      },
+      "metering_point_id_1": {
+        "name": "Metering point ID 1"
+      },
+      "internal_operating_status": {
+        "name": "Internal operating status"
+      }
+    }
   }
 }

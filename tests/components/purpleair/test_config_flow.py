@@ -288,7 +288,9 @@ async def test_options_remove_sensor(
     assert result["step_id"] == "remove_sensor"
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, str(TEST_SENSOR_INDEX1))})
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},
@@ -302,3 +304,29 @@ async def test_options_remove_sensor(
     # Unload to make sure the update does not run after the
     # mock is removed.
     await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_settings(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
+    """Test setting settings via the options flow."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"next_step_id": "settings"}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"show_on_map": True}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "sensor_indices": [TEST_SENSOR_INDEX1],
+        "show_on_map": True,
+    }
+
+    assert config_entry.options["show_on_map"] is True

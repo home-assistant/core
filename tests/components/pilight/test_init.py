@@ -11,7 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,9 +226,9 @@ async def test_start_stop(mock_pilight_error, hass: HomeAssistant) -> None:
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
-async def test_receive_code(mock_debug, hass: HomeAssistant) -> None:
+async def test_receive_code(hass: HomeAssistant) -> None:
     """Check if code receiving via pilight daemon works."""
+    events = async_capture_events(hass, pilight.EVENT)
     with assert_setup_component(4):
         assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
@@ -239,18 +243,13 @@ async def test_receive_code(mock_debug, hass: HomeAssistant) -> None:
             },
             **PilightDaemonSim.test_message["message"],
         )
-        debug_log_call = mock_debug.call_args_list[-1]
-
-        # Check if all message parts are put on event bus
-        for key, value in expected_message.items():
-            assert str(key) in str(debug_log_call)
-            assert str(value) in str(debug_log_call)
+        assert events[0].data == expected_message
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
-async def test_whitelist_exact_match(mock_debug, hass: HomeAssistant) -> None:
+async def test_whitelist_exact_match(hass: HomeAssistant) -> None:
     """Check whitelist filter with matched data."""
+    events = async_capture_events(hass, pilight.EVENT)
     with assert_setup_component(4):
         whitelist = {
             "protocol": [PilightDaemonSim.test_message["protocol"]],
@@ -272,18 +271,14 @@ async def test_whitelist_exact_match(mock_debug, hass: HomeAssistant) -> None:
             },
             **PilightDaemonSim.test_message["message"],
         )
-        debug_log_call = mock_debug.call_args_list[-1]
-
         # Check if all message parts are put on event bus
-        for key, value in expected_message.items():
-            assert str(key) in str(debug_log_call)
-            assert str(value) in str(debug_log_call)
+        assert events[0].data == expected_message
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
-async def test_whitelist_partial_match(mock_debug, hass: HomeAssistant) -> None:
+async def test_whitelist_partial_match(hass: HomeAssistant) -> None:
     """Check whitelist filter with partially matched data, should work."""
+    events = async_capture_events(hass, pilight.EVENT)
     with assert_setup_component(4):
         whitelist = {
             "protocol": [PilightDaemonSim.test_message["protocol"]],
@@ -303,18 +298,15 @@ async def test_whitelist_partial_match(mock_debug, hass: HomeAssistant) -> None:
             },
             **PilightDaemonSim.test_message["message"],
         )
-        debug_log_call = mock_debug.call_args_list[-1]
-
         # Check if all message parts are put on event bus
-        for key, value in expected_message.items():
-            assert str(key) in str(debug_log_call)
-            assert str(value) in str(debug_log_call)
+        assert events[0].data == expected_message
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
-async def test_whitelist_or_match(mock_debug, hass: HomeAssistant) -> None:
+async def test_whitelist_or_match(hass: HomeAssistant) -> None:
     """Check whitelist filter with several subsection, should work."""
+    events = async_capture_events(hass, pilight.EVENT)
+
     with assert_setup_component(4):
         whitelist = {
             "protocol": [
@@ -337,18 +329,15 @@ async def test_whitelist_or_match(mock_debug, hass: HomeAssistant) -> None:
             },
             **PilightDaemonSim.test_message["message"],
         )
-        debug_log_call = mock_debug.call_args_list[-1]
-
         # Check if all message parts are put on event bus
-        for key, value in expected_message.items():
-            assert str(key) in str(debug_log_call)
-            assert str(value) in str(debug_log_call)
+        assert events[0].data == expected_message
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
-@patch("homeassistant.core._LOGGER.debug")
-async def test_whitelist_no_match(mock_debug, hass: HomeAssistant) -> None:
+async def test_whitelist_no_match(hass: HomeAssistant) -> None:
     """Check whitelist filter with unmatched data, should not work."""
+    events = async_capture_events(hass, pilight.EVENT)
+
     with assert_setup_component(4):
         whitelist = {
             "protocol": ["wrong_protocol"],
@@ -360,9 +349,8 @@ async def test_whitelist_no_match(mock_debug, hass: HomeAssistant) -> None:
 
         await hass.async_start()
         await hass.async_block_till_done()
-        debug_log_call = mock_debug.call_args_list[-1]
 
-        assert "Event pilight_received" not in debug_log_call
+        assert len(events) == 0
 
 
 async def test_call_rate_delay_throttle_enabled(hass: HomeAssistant) -> None:

@@ -65,25 +65,24 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     name = config[CONF_NAME]
     structure = config.get(CONF_STRUCTURE)
     slave_count = config.get(CONF_SLAVE_COUNT, 0) + 1
-    swap_type = config.get(CONF_SWAP)
+    swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
+    if (
+        slave_count > 1
+        and count > 1
+        and data_type not in (DataType.CUSTOM, DataType.STRING)
+    ):
+        error = f"{name}  {CONF_COUNT} cannot be mixed with {data_type}"
+        raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] != DataType.CUSTOM:
         if structure:
             error = f"{name}  structure: cannot be mixed with {data_type}"
-            raise vol.Invalid(error)
-        if data_type not in DEFAULT_STRUCT_FORMAT:
-            error = f"Error in sensor {name}. data_type `{data_type}` not supported"
-            raise vol.Invalid(error)
 
-        structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
-        if CONF_COUNT not in config:
-            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+    if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         if slave_count > 1:
-            structure = f">{slave_count}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
-        else:
-            structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
-    else:
-        if slave_count > 1:
-            error = f"{name}  structure: cannot be mixed with {CONF_SLAVE_COUNT}"
+            error = f"{name}: `{CONF_STRUCTURE}` illegal with `{CONF_SLAVE_COUNT}` / `{CONF_SLAVE}`"
+            raise vol.Invalid(error)
+        if swap_type != CONF_SWAP_NONE:
+            error = f"{name}: `{CONF_STRUCTURE}` illegal with `{CONF_SWAP}`"
             raise vol.Invalid(error)
         if not structure:
             error = (
@@ -102,19 +101,37 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
                 f"Structure request {size} bytes, "
                 f"but {count} registers have a size of {bytecount} bytes"
             )
+        return {
+            **config,
+            CONF_STRUCTURE: structure,
+            CONF_SWAP: swap_type,
+        }
+    if data_type not in DEFAULT_STRUCT_FORMAT:
+        error = f"Error in sensor {name}. data_type `{data_type}` not supported"
+        raise vol.Invalid(error)
+    if slave_count > 1 and data_type == DataType.STRING:
+        error = f"{name}: `{data_type}`  illegal with `{CONF_SLAVE_COUNT}`"
+        raise vol.Invalid(error)
 
-        if swap_type != CONF_SWAP_NONE:
-            if swap_type == CONF_SWAP_BYTE:
-                regs_needed = 1
-            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-                regs_needed = 2
-            if count < regs_needed or (count % regs_needed) != 0:
-                raise vol.Invalid(
-                    f"Error in sensor {name} swap({swap_type}) "
-                    "not possible due to the registers "
-                    f"count: {count}, needed: {regs_needed}"
-                )
-
+    if CONF_COUNT not in config:
+        config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+    if swap_type != CONF_SWAP_NONE:
+        if swap_type == CONF_SWAP_BYTE:
+            regs_needed = 1
+        else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
+            regs_needed = 2
+        count = config[CONF_COUNT]
+        if count < regs_needed or (count % regs_needed) != 0:
+            raise vol.Invalid(
+                f"Error in sensor {name} swap({swap_type}) "
+                "not possible due to the registers "
+                f"count: {count}, needed: {regs_needed}"
+            )
+    structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
+    if slave_count > 1:
+        structure = f">{slave_count}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
+    else:
+        structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
     return {
         **config,
         CONF_STRUCTURE: structure,
@@ -135,6 +152,20 @@ def number_validator(value: Any) -> int | float:
         pass
     try:
         return float(value)
+    except (TypeError, ValueError) as err:
+        raise vol.Invalid(f"invalid number {value}") from err
+
+
+def nan_validator(value: Any) -> int:
+    """Convert nan string to number (can be hex string or int)."""
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        pass
+    try:
+        return int(value, 16)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
