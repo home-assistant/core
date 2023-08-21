@@ -51,8 +51,8 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
     ) -> None:
         """Initialize Neato cleaning map."""
+        super().__init__(robot)
         Camera.__init__(self)
-        NeatoEntity.__init__(self, robot)
         self.neato = neato
         self._mapdata = mapdata
         self._available = neato is not None
