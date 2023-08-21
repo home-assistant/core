@@ -209,17 +209,14 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         speed_percentage = ranged_value_to_percentage(
             speed_range, self.service.value(CharacteristicsTypes.ROTATION_SPEED)
         )
-        fan_mode = FAN_OFF
-
         # homekit value 0 33 66 100
         if speed_percentage > ROTATION_SPEED_MEDIUM:
-            fan_mode = FAN_HIGH
-        elif speed_percentage > ROTATION_SPEED_LOW:
-            fan_mode = FAN_MEDIUM
-        elif speed_percentage > 0:
-            fan_mode = FAN_LOW
-
-        return fan_mode
+            return FAN_HIGH
+        if speed_percentage > ROTATION_SPEED_LOW:
+            return FAN_MEDIUM
+        if speed_percentage > 0:
+            return FAN_LOW
+        return FAN_OFF
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
