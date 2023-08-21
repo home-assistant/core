@@ -45,6 +45,12 @@ class CountryFixFlow(RepairsFlow):
         if user_input is not None:
             all_countries = list_supported_countries()
             if not all_countries[user_input[CONF_COUNTRY]]:
+                options = dict(self.entry.options)
+                new_options = {**options, **user_input, CONF_PROVINCE: None}
+                self.hass.config_entries.async_update_entry(
+                    self.entry, options=new_options
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_create_entry(data={})
             self.country = user_input[CONF_COUNTRY]
             return await self.async_step_province()
