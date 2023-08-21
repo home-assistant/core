@@ -105,11 +105,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="plug",
         ),
     ),
-    # Cirquit Breaker
+    # Circuit Breaker
     "dlq": (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
-            translation_key="asd",
+            translation_key="child_lock",
             icon="mdi:account-lock",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -571,6 +571,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="open_window_detection",
             icon="mdi:window-open",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Air Conditioner Mate (Smart IR Socket)
+    "wnykq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name=None,
         ),
     ),
     # SIREN: Siren (switch) with Temperature and humidity sensor

@@ -120,7 +120,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
@@ -128,7 +128,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
@@ -142,7 +142,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, 1, self._input_type
         )
         self._call_active = False

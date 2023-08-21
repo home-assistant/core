@@ -597,7 +597,7 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, missing)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # pylint: disable=unidiomatic-typecheck
+            if type(int_or_exc) is Integration:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
@@ -666,6 +666,10 @@ async def async_get_all_descriptions(
                     f"component.{domain}.services.{service_name}.fields.{field_name}.description"
                 ):
                     field_schema["description"] = desc
+                if example := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
+                ):
+                    field_schema["example"] = example
 
             if "target" in yaml_description:
                 description["target"] = yaml_description["target"]

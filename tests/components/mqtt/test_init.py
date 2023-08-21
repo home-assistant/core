@@ -41,6 +41,7 @@ from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
+    MockEntity,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -415,6 +416,37 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
         assert template_state_calls.call_count == 1
+
+
+async def test_value_template_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+
+    # test rendering a value fails
+    entity = MockEntity(entity_id="sensor.test")
+    entity.hass = hass
+    tpl = template.Template("{{ value_json.some_var * 2 }}")
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
+    with pytest.raises(TypeError):
+        val_tpl.async_render_with_possible_json_value('{"some_var": null }')
+    await hass.async_block_till_done()
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
+        "rendering template for entity 'sensor.test', "
+        "template: '{{ value_json.some_var * 2 }}'"
+    ) in caplog.text
+    caplog.clear()
+    with pytest.raises(TypeError):
+        val_tpl.async_render_with_possible_json_value(
+            '{"some_var": null }', default=100
+        )
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
+        "rendering template for entity 'sensor.test', "
+        "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
+        '{"some_var": null }'
+    ) in caplog.text
 
 
 async def test_service_call_without_topic_does_not_publish(
@@ -2821,7 +2853,7 @@ async def test_mqtt_ws_get_device_debug_info(
     expected_result = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -2884,7 +2916,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     expected_result = {
         "entities": [
             {
-                "entity_id": "camera.mqtt_camera",
+                "entity_id": "camera.none_mqtt_camera",
                 "subscriptions": [
                     {
                         "topic": "foobar/image",

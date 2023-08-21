@@ -30,14 +30,21 @@
       }
     },
     "sensor": {
+      "activity": {
+        "name": "Activity",
+        "state": {
+          "ok": "OK",
+          "good": "Good"
+        }
+      },
+      "activity_time": {
+        "name": "Activity time"
+      },
       "calories": {
         "name": "Calories burned"
       },
       "daily_goal": {
         "name": "Daily goal"
-      },
-      "minutes_active": {
-        "name": "Minutes active"
       },
       "minutes_day_sleep": {
         "name": "Day sleep"
@@ -45,8 +52,15 @@
       "minutes_night_sleep": {
         "name": "Night sleep"
       },
-      "minutes_rest": {
-        "name": "Minutes rest"
+      "rest_time": {
+        "name": "Rest time"
+      },
+      "sleep": {
+        "name": "Sleep",
+        "state": {
+          "ok": "OK",
+          "good": "Good"
+        }
       },
       "tracker_battery_level": {
         "name": "Tracker battery"

@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -84,6 +84,9 @@ async def async_setup_entry(
 class AirtouchAC(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 ac."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -107,7 +110,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         """Return device info for this device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
+            name=f"AC {self._ac_number}",
             manufacturer="Airtouch",
             model="Airtouch 4",
         )
@@ -121,11 +124,6 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         return self._unit.Temperature
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return f"AC {self._ac_number}"
 
     @property
     def fan_mode(self):
@@ -200,6 +198,8 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
 class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     """Representation of an AirTouch 4 group."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
@@ -224,7 +224,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Airtouch",
             model="Airtouch 4",
-            name=self.name,
+            name=self._unit.GroupName,
         )
 
     @property
@@ -241,11 +241,6 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     def max_temp(self):
         """Return Max Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MaxSetpoint
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._unit.GroupName
 
     @property
     def current_temperature(self):

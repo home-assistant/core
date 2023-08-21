@@ -510,6 +510,23 @@ async def test_cover(client, cover_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_device_tracker(client, device_tracker_entities) -> None:
+    """Test prometheus metrics for device_tracker."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 1.0' in body
+    )
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.watch",'
+        'friendly_name="Watch"} 0.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_counter(client, counter_entities) -> None:
     """Test prometheus metrics for counter."""
     body = await generate_latest_metrics(client)
@@ -1581,6 +1598,7 @@ async def test_full_config(hass: HomeAssistant, mock_client) -> None:
             "namespace": "ns",
             "default_metric": "m",
             "override_metric": "m",
+            "requires_auth": False,
             "component_config": {"fake.test": {"override_metric": "km"}},
             "component_config_glob": {"fake.time_*": {"override_metric": "h"}},
             "component_config_domain": {"climate": {"override_metric": "°C"}},

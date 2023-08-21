@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from functools import cache
-from typing import Any, Generic, Literal, TypedDict, TypeVar, cast
+from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
 from uuid import UUID
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
@@ -94,6 +92,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.cover import CoverEntityFeature
     from homeassistant.components.fan import FanEntityFeature
     from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -102,6 +101,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
+    from homeassistant.components.weather import WeatherEntityFeature
 
     return {
         "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
@@ -111,6 +111,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "CoverEntityFeature": CoverEntityFeature,
         "FanEntityFeature": FanEntityFeature,
         "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LawnMowerEntityFeature": LawnMowerEntityFeature,
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
@@ -119,6 +120,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
+        "WeatherEntityFeature": WeatherEntityFeature,
     }
 
 
@@ -541,7 +543,7 @@ class ConversationAgentSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("conversation_agent")
-class COnversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
+class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
     """Selector for a conversation agent."""
 
     selector_type = "conversation_agent"
@@ -990,6 +992,7 @@ class SelectSelectorConfig(TypedDict, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    sort: bool
 
 
 @SELECTORS.register("select")
@@ -1007,6 +1010,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("sort", default=False): cv.boolean,
         }
     )
 

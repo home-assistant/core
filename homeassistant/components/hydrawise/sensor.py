@@ -77,7 +77,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the states."""
         LOGGER.debug("Updating Hydrawise sensor: %s", self.name)
-        relay_data = self.coordinator.api.relays[self.data["relay"] - 1]
+        relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
         if self.entity_description.key == "watering_time":
             if relay_data["timestr"] == "Now":
                 self._attr_native_value = int(relay_data["run"] / 60)

@@ -1,8 +1,8 @@
 """The Legrand Home+ Control integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await api.async_get_modules()
         except HomePlusControlApiError as err:
             raise UpdateFailed(

@@ -1,6 +1,7 @@
 """Test Gardena Bluetooth sensor."""
 
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, call
 
 from gardena_bluetooth.const import Reset
@@ -8,10 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_entry
@@ -31,15 +29,16 @@ async def test_setup(
     snapshot: SnapshotAssertion,
     mock_entry: MockConfigEntry,
     mock_switch_chars: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
 ) -> None:
     """Test setup creates expected entities."""
 
     entity_id = "button.mock_title_factory_reset"
-    coordinator = await setup_entry(hass, mock_entry, [Platform.BUTTON])
+    await setup_entry(hass, mock_entry, [Platform.BUTTON])
     assert hass.states.get(entity_id) == snapshot
 
     mock_switch_chars[Reset.factory_reset.uuid] = b"\x01"
-    await coordinator.async_refresh()
+    await scan_step()
     assert hass.states.get(entity_id) == snapshot
 
 

@@ -1,6 +1,7 @@
 """Test Gardena Bluetooth sensor."""
 
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import Mock, call
 
@@ -18,10 +19,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_entry
@@ -62,6 +60,7 @@ async def test_setup(
     snapshot: SnapshotAssertion,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
     uuid: str,
     raw: list[bytes],
     entity_id: str,
@@ -69,12 +68,12 @@ async def test_setup(
     """Test setup creates expected entities."""
 
     mock_read_char_raw[uuid] = raw[0]
-    coordinator = await setup_entry(hass, mock_entry, [Platform.NUMBER])
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
     assert hass.states.get(entity_id) == snapshot
 
     for char_raw in raw[1:]:
         mock_read_char_raw[uuid] = char_raw
-        await coordinator.async_refresh()
+        await scan_step()
         assert hass.states.get(entity_id) == snapshot
 
 
@@ -128,6 +127,7 @@ async def test_bluetooth_error_unavailable(
     snapshot: SnapshotAssertion,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
 ) -> None:
     """Verify that a connectivity error makes all entities unavailable."""
 
@@ -138,7 +138,7 @@ async def test_bluetooth_error_unavailable(
         Valve.remaining_open_time.uuid
     ] = Valve.remaining_open_time.encode(0)
 
-    coordinator = await setup_entry(hass, mock_entry, [Platform.NUMBER])
+    await setup_entry(hass, mock_entry, [Platform.NUMBER])
     assert hass.states.get("number.mock_title_remaining_open_time") == snapshot
     assert hass.states.get("number.mock_title_manual_watering_time") == snapshot
 
@@ -146,6 +146,6 @@ async def test_bluetooth_error_unavailable(
         "Test for errors on bluetooth"
     )
 
-    await coordinator.async_refresh()
+    await scan_step()
     assert hass.states.get("number.mock_title_remaining_open_time") == snapshot
     assert hass.states.get("number.mock_title_manual_watering_time") == snapshot

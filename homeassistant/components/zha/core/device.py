@@ -8,9 +8,8 @@ from enum import Enum
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 import zigpy.device
 import zigpy.exceptions

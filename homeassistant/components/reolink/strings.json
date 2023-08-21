@@ -22,7 +22,8 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -42,6 +43,10 @@
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
       "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+    },
+    "ssl": {
+      "title": "Reolink incompatible with global SSL certificate",
+      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore, the Reolink device can not reach Home Assistant to push its motion/AI events. Please make sure the local HTTP address is not covered by the SSL certificate, by for instance using [NGINX add-on]({nginx_link}) instead of a globally enforced SSL certificate."
     },
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
@@ -97,6 +102,9 @@
     "sensor": {
       "wifi_signal": {
         "name": "Wi-Fi signal"
+      },
+      "ptz_pan_position": {
+        "name": "PTZ pan position"
       }
     }
   }

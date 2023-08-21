@@ -6,10 +6,7 @@ from dataclasses import dataclass, field
 from gardena_bluetooth.const import Reset
 from gardena_bluetooth.parse import CharacteristicBool
 
-from homeassistant.components.button import (
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -40,7 +37,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up binary sensor based on a config entry."""
+    """Set up button based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
         GardenaBluetoothButton(coordinator, description)
@@ -51,7 +48,7 @@ async def async_setup_entry(
 
 
 class GardenaBluetoothButton(GardenaBluetoothDescriptorEntity, ButtonEntity):
-    """Representation of a binary sensor."""
+    """Representation of a button."""
 
     entity_description: GardenaBluetoothButtonEntityDescription
 

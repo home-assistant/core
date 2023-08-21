@@ -11,7 +11,6 @@ import logging
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -298,7 +297,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             except (AioImapException, asyncio.TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
-            self.imap_client = None
+            finally:
+                self.imap_client = None
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
@@ -370,7 +370,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
 
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
-        cleanup = False
         while True:
             try:
                 number_of_messages = await self._async_fetch_number_of_messages()
@@ -408,13 +407,10 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     await idle
 
             # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except asyncio.CancelledError as ex:
-                cleanup = True
-                raise asyncio.CancelledError from ex
             except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
@@ -423,9 +419,6 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
-            finally:
-                if cleanup:
-                    await self._cleanup()
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""

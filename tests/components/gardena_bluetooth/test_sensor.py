@@ -1,5 +1,5 @@
 """Test Gardena Bluetooth sensor."""
-
+from collections.abc import Awaitable, Callable
 
 from gardena_bluetooth.const import Battery, Valve
 import pytest
@@ -37,6 +37,7 @@ async def test_setup(
     snapshot: SnapshotAssertion,
     mock_entry: MockConfigEntry,
     mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
     uuid: str,
     raw: list[bytes],
     entity_id: str,
@@ -44,10 +45,10 @@ async def test_setup(
     """Test setup creates expected entities."""
 
     mock_read_char_raw[uuid] = raw[0]
-    coordinator = await setup_entry(hass, mock_entry, [Platform.SENSOR])
+    await setup_entry(hass, mock_entry, [Platform.SENSOR])
     assert hass.states.get(entity_id) == snapshot
 
     for char_raw in raw[1:]:
         mock_read_char_raw[uuid] = char_raw
-        await coordinator.async_refresh()
+        await scan_step()
         assert hass.states.get(entity_id) == snapshot
