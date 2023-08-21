@@ -124,8 +124,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         if count < regs_needed or (count % regs_needed) != 0:
             raise vol.Invalid(
                 f"Error in sensor {name} swap({swap_type}) "
-                "not possible due to the registers "
-                f"count: {count}, needed: {regs_needed}"
+                f"impossible because datatype({data_type}) is too small"
             )
     structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
     if slave_count > 1:
