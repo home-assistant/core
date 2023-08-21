@@ -60,6 +60,12 @@ def store_v_2_1(hass):
     )
 
 
+@pytest.fixture
+def read_only_store(hass):
+    """Fixture of a read only store."""
+    return storage.Store(hass, MOCK_VERSION, MOCK_KEY, read_only=True)
+
+
 async def test_loading(hass: HomeAssistant, store) -> None:
     """Test we can save and load data."""
     await store.async_save(MOCK_DATA)
@@ -703,3 +709,27 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
         await store.async_load()
 
     await hass.async_stop(force=True)
+
+
+async def test_read_only_store(
+    hass: HomeAssistant, read_only_store, hass_storage: dict[str, Any]
+) -> None:
+    """Test store opened in read only mode does not save."""
+    read_only_store.async_delay_save(lambda: MOCK_DATA, 1)
+    assert read_only_store.key not in hass_storage
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert read_only_store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert read_only_store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert read_only_store.key not in hass_storage

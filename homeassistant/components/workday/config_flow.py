@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import holidays
-from holidays import HolidayBase, list_supported_countries
+from holidays import HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -77,12 +76,14 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    cls: HolidayBase = getattr(holidays, user_input[CONF_COUNTRY])
+    cls: HolidayBase = country_holidays(user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
-
-    obj_holidays = cls(
-        subdiv=user_input.get(CONF_PROVINCE), years=year, language=cls.default_language
-    )  # type: ignore[operator]
+    obj_holidays: HolidayBase = country_holidays(
+        user_input[CONF_COUNTRY],
+        subdiv=user_input.get(CONF_PROVINCE),
+        years=year,
+        language=cls.default_language,
+    )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
         if dt_util.parse_date(remove_date) is None:

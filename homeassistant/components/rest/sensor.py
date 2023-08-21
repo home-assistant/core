@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
-    SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
@@ -118,7 +117,7 @@ async def async_setup_platform(
     )
 
 
-class RestSensor(ManualTriggerSensorEntity, RestEntity, SensorEntity):
+class RestSensor(ManualTriggerSensorEntity, RestEntity):
     """Implementation of a REST sensor."""
 
     def __init__(

@@ -46,6 +46,11 @@ CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
 }
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}
 
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=30)
 
@@ -237,9 +242,7 @@ class DemoWeather(WeatherEntity):
     @property
     def condition(self) -> str:
         """Return the weather condition."""
-        return [
-            k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
-        ][0]
+        return CONDITION_MAP[self._condition.lower()]
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast."""

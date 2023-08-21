@@ -28,7 +28,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.7.1
 
 # homeassistant.components.tasmota
-HATasmota==0.6.5
+HATasmota==0.7.0
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -63,7 +63,7 @@ PyMetEireann==2021.8.0
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
-PyMetno==0.10.0
+PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
 PyMicroBot==0.0.9
@@ -189,6 +189,9 @@ aiobafi6==0.8.2
 # homeassistant.components.aws
 aiobotocore==2.1.0
 
+# homeassistant.components.comelit
+aiocomelit==0.0.5
+
 # homeassistant.components.dhcp
 aiodiscover==1.4.16
 
@@ -209,7 +212,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==15.1.15
+aioesphomeapi==16.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -332,7 +335,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==53
+aiounifi==55
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -512,7 +515,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.91.2
+dbus-fast==1.92.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -768,7 +771,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230802.0
+home-assistant-frontend==20230802.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1004,7 +1007,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==5.1.0
+odp-amsterdam==5.3.0
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -1031,7 +1034,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.29
+opower==0.0.31
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1588,7 +1591,7 @@ python-smarttub==0.0.33
 python-songpal==0.15.2
 
 # homeassistant.components.tado
-python-tado==0.16.0
+python-tado==0.15.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -1671,7 +1674,7 @@ rapt-ble==0.1.2
 regenmaschine==2023.06.0
 
 # homeassistant.components.renault
-renault-api==0.1.13
+renault-api==0.2.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.5.0

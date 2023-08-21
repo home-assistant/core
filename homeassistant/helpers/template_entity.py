@@ -486,7 +486,7 @@ class TriggerBaseEntity(Entity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
@@ -623,7 +623,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         TriggerBaseEntity.__init__(self, hass, config)
@@ -655,13 +655,13 @@ class ManualTriggerEntity(TriggerBaseEntity):
         self._render_templates(variables)
 
 
-class ManualTriggerSensorEntity(ManualTriggerEntity):
+class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     """Template entity based on manual trigger data for sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the sensor entity."""
         ManualTriggerEntity.__init__(self, hass, config)
