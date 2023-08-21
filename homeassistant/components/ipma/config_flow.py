@@ -2,10 +2,10 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, FORECAST_MODE, HOME_LOCATION_NAME
+from .const import DOMAIN, HOME_LOCATION_NAME
 
 
 class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,14 +22,14 @@ class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            if user_input[CONF_NAME] not in self.hass.config_entries.async_entries(
-                DOMAIN
-            ):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+            self._async_abort_entries_match(
+                {
+                    CONF_LATITUDE: user_input[CONF_LATITUDE],
+                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                }
+            )
 
-            self._errors[CONF_NAME] = "name_exists"
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         # default location is set hass configuration
         return await self._show_config_form(
@@ -47,7 +47,6 @@ class IpmaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=name): str,
                     vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
                     vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-                    vol.Required(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
                 }
             ),
             errors=self._errors,

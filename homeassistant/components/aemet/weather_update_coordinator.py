@@ -1,6 +1,7 @@
 """Weather data coordinator for the AEMET OpenData service."""
 from __future__ import annotations
 
+from asyncio import timeout
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -41,7 +42,6 @@ from aemet_opendata.helpers import (
     get_forecast_hour_value,
     get_forecast_interval_value,
 )
-import async_timeout
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -139,7 +139,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        async with async_timeout.timeout(120):
+        async with timeout(120):
             weather_response = await self._get_aemet_weather()
         data = self._convert_weather_response(weather_response)
         return data
