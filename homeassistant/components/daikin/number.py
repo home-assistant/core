@@ -8,14 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
-
-ZONE_ICON = "mdi:thermostat"
 
 
 async def async_setup_platform(
@@ -32,13 +29,15 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api: DaikinApi = hass.data[DAIKIN_DOMAIN][entry.entry_id]
-    temperatures: list[DaikinZoneTemperature] = []
     if zones := daikin_api.device.zones:
-        temperatures.extend(
+        async_add_entities(
             [
                 DaikinZoneTemperature(daikin_api, zone_id)
                 for zone_id, zone in enumerate(zones)
@@ -46,13 +45,12 @@ async def async_setup_entry(
             ]
         )
 
-    async_add_entities(temperatures)
-
 
 class DaikinZoneTemperature(NumberEntity):
     """Representation of a zone temperature setting."""
 
-    _attr_icon = ZONE_ICON
+    _attr_icon = "mdi:thermostat"
+    _attr_native_step = 1
     _attr_has_entity_name = True
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
@@ -71,16 +69,11 @@ class DaikinZoneTemperature(NumberEntity):
         self._target_temperature = self._api.device.target_temperature
         self._previous_value = None
         self._current_value = self._api.device.zones[self._zone_id][2]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._api.device.mac}-zone-temp{self._zone_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._api.device.zones[self._zone_id][0]} temperature"
+        self._attr_device_info = self._api.device_info
+        self._attr_unique_id = f"{self._api.device.mac}-zone-temp{self._zone_id}"
+        self._attr_name = f"{self._api.device.zones[self._zone_id][0]} temperature"
+        self._attr_native_min_value = self._target_temperature - 2
+        self._attr_native_max_value = self._target_temperature + 2
 
     @property
     def native_value(self) -> float:
@@ -89,16 +82,6 @@ class DaikinZoneTemperature(NumberEntity):
             self._previous_value = None
             self._current_value = self._api.device.zones[self._zone_id][2]
         return self._current_value
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the mainimum temperature we can reach."""
-        return self._target_temperature - 2
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum temperature we can reach."""
-        return self._target_temperature + 2
 
     def has_updated_value(self) -> bool:
         """Detect if api has an updated value."""
@@ -161,16 +144,6 @@ class DaikinZoneTemperature(NumberEntity):
         if self._registry is None:
             self._registry = er.async_get(self.hass)
         return self._registry
-
-    @property
-    def native_step(self) -> float:
-        """Return the supported step of zone temperature."""
-        return 1
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return self._api.device_info
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
