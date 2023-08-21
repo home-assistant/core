@@ -34,8 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AuroraAbbDataUpdateCoordinator(hass, comport, address)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -58,8 +57,8 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, comport: str, address: int) -> None:
         """Initialize the data update coordinator."""
-        self.available_prev: bool = False
-        self.available: bool = False
+        self.available_prev = False
+        self.available = False
         self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -69,29 +68,26 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
         This is the only function that should fetch new data for Home Assistant.
         """
         data: dict[str, float] = {}
+        self.available_prev = self.available
         try:
-            self.available_prev = self.available
             self.client.connect()
 
             # read ADC channel 3 (grid power output)
             power_watts = self.client.measure(3, True)
-            data["instantaneouspower"] = round(power_watts, 1)
-
             temperature_c = self.client.measure(21)
-            data["temp"] = round(temperature_c, 1)
-
             energy_wh = self.client.cumulated_energy(5)
-            data["totalenergy"] = round(energy_wh / 1000, 2)
-            self.available = True
-
         except AuroraTimeoutError:
-            data = {}
             self.available = False
             _LOGGER.debug("No response from inverter (could be dark)")
         except AuroraError as error:
-            data = {}
             self.available = False
             raise error
+        else:
+            data["instantaneouspower"] = round(power_watts, 1)
+            data["temp"] = round(temperature_c, 1)
+            data["totalenergy"] = round(energy_wh / 1000, 2)
+            self.available = True
+
         finally:
             if self.available != self.available_prev:
                 if self.available:

@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -95,18 +95,14 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         super().__init__(coordinator)
         self._data = data
         self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{data[ATTR_SERIAL_NUMBER]}_{self.entity_description.key}"
+        )
 
     @property
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
         return self.coordinator.data.get(self.entity_description.key)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id for this device."""
-        if (serial := self._data.get(ATTR_SERIAL_NUMBER)) is None:
-            return None
-        return f"{serial}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
