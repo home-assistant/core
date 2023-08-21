@@ -34,12 +34,13 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, str] = {}
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfoBleak
+            self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        log("async_step_bluetooth", "called!")
+        log("async_step_bluetooth", f"called! {discovery_info.as_dict()}")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
+        log("async_step_bluetooth", f"address: {discovery_info.address} hasn't been configured")
         device = KindhomeBluetoothDeviceData()
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
@@ -48,7 +49,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
         log("async_step_bluetooth_confirm", "called!")
@@ -57,8 +58,11 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
 
+        log("async_step_bluetooth_confirm", "initial assertion passed")
         title = device.get_device_name() or discovery_info.name
 
+        log("async_step_bluetooth_confirm",
+            f"title = {title}, device.get_device_name() = {device.get_device_name()}, discovery_info.name = {discovery_info.name}")
         # TODO Mati: what does it do?
         # if user_input is not None:
         #     return self.async_create_entry(title=title, data={})
@@ -71,7 +75,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user step to pick discovered device."""
 
@@ -95,13 +99,13 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             device = KindhomeBluetoothDeviceData()
             if device.supported(discovery_info):
                 self._discovered_devices[address] = (
-                    device.get_device_name() or discovery_info.name
+                        device.get_device_name() or discovery_info.name
                 )
 
         if not self._discovered_devices:
             log("async_step_user", "no devices found, aborting!")
             return self.async_abort(reason="no_devices_found")
-    
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(

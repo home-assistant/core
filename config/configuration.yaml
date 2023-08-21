@@ -10,7 +10,7 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 logger:
-  default: debug
+  default: info
   logs:
     homeassistant.components.cloud: debug
     homeassistant.components.bluetooth: debug

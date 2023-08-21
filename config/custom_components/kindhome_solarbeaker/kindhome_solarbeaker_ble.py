@@ -3,7 +3,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 class KindhomeBluetoothDeviceData:
     def supported(self, data: BluetoothServiceInfoBleak) -> bool:
-        pass
+        return True
 
     def get_device_name(self) -> str:
-        pass
+        return "Markiza"
