@@ -1,4 +1,49 @@
 # serializer version: 1
+# name: test_diagnostic_config_error[hass_config0]
+  dict({
+    'config_entry_data': dict({
+      'connection_type': 'automatic',
+      'individual_address': '0.0.240',
+      'multicast_group': '224.0.23.12',
+      'multicast_port': 3671,
+      'rate_limit': 0,
+      'state_updater': True,
+    }),
+    'configuration_error': "extra keys not allowed @ data['knx']['wrong_key']",
+    'configuration_yaml': dict({
+      'wrong_key': dict({
+      }),
+    }),
+    'project_info': None,
+    'xknx': dict({
+      'current_address': '0.0.0',
+      'version': '0.0.0',
+    }),
+  })
+# ---
+# name: test_diagnostic_redact[hass_config0]
+  dict({
+    'config_entry_data': dict({
+      'backbone_key': '**REDACTED**',
+      'connection_type': 'automatic',
+      'device_authentication': '**REDACTED**',
+      'individual_address': '0.0.240',
+      'knxkeys_password': '**REDACTED**',
+      'multicast_group': '224.0.23.12',
+      'multicast_port': 3671,
+      'rate_limit': 0,
+      'state_updater': True,
+      'user_password': '**REDACTED**',
+    }),
+    'configuration_error': None,
+    'configuration_yaml': None,
+    'project_info': None,
+    'xknx': dict({
+      'current_address': '0.0.0',
+      'version': '0.0.0',
+    }),
+  })
+# ---
 # name: test_diagnostics[hass_config0]
   dict({
     'config_entry_data': dict({
@@ -14,7 +59,37 @@
     'project_info': None,
     'xknx': dict({
       'current_address': '0.0.0',
-      'version': '1.0.0',
+      'version': '0.0.0',
+    }),
+  })
+# ---
+# name: test_diagnostics_project[hass_config0]
+  dict({
+    'config_entry_data': dict({
+      'connection_type': 'automatic',
+      'individual_address': '0.0.240',
+      'multicast_group': '224.0.23.12',
+      'multicast_port': 3671,
+      'rate_limit': 0,
+      'state_updater': True,
+    }),
+    'configuration_error': None,
+    'configuration_yaml': None,
+    'project_info': dict({
+      'created_by': 'ETS5',
+      'group_address_style': 'ThreeLevel',
+      'guid': '6a019e80-5945-489e-95a3-378735c642d1',
+      'language_code': 'de-DE',
+      'last_modified': '2023-04-30T09:04:04.4043671Z',
+      'name': '**REDACTED**',
+      'project_id': 'P-04FF',
+      'schema_version': '20',
+      'tool_version': '5.7.1428.39779',
+      'xknxproject_version': '3.1.0',
+    }),
+    'xknx': dict({
+      'current_address': '0.0.0',
+      'version': '0.0.0',
     }),
   })
 # ---
