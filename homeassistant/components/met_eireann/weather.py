@@ -7,8 +7,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -21,14 +21,11 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import MetEireannWeatherData
@@ -78,7 +75,7 @@ def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> st
 
 
 class MetEireannWeather(
-    CoordinatorEntity[DataUpdateCoordinator[MetEireannWeatherData]], WeatherEntity
+    CoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
 ):
     """Implementation of a Met Éireann weather condition."""
 
@@ -97,15 +94,6 @@ class MetEireannWeather(
         self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._hourly = hourly
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
 
     @property
     def name(self):
