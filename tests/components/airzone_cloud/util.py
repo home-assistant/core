@@ -223,6 +223,7 @@ async def async_init_integration(
 
     config_entry = MockConfigEntry(
         data=CONFIG,
+        entry_id="d186e31edb46d64d14b9b2f11f1ebd9f",
         domain=DOMAIN,
         unique_id=CONFIG[CONF_ID],
     )
