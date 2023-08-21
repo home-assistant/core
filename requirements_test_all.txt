@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.2.2
+AEMET-OpenData==0.3.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
