@@ -1,7 +1,8 @@
 """Tests for ScreenLogic integration data processing."""
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
+from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 
 from homeassistant.components.screenlogic import DOMAIN
@@ -10,7 +11,13 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MOCK_ADAPTER_MAC, MOCK_ADAPTER_NAME
+from . import (
+    DATA_MIN_ENTITY_CLEANUP,
+    GATEWAY_DISCOVERY_IMPORT_PATH,
+    MOCK_ADAPTER_MAC,
+    MOCK_ADAPTER_NAME,
+    stub_async_connect,
+)
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +25,6 @@ from tests.common import MockConfigEntry
 async def test_async_cleanup_entries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_cleanup_gateway,
 ) -> None:
     """Test cleanup of unused entities."""
 
@@ -50,11 +56,15 @@ async def test_async_cleanup_entries(
     assert unused_entity.unique_id == TEST_UNUSED_ENTRY["unique_id"]
 
     with patch(
-        "homeassistant.components.screenlogic.coordinator.async_discover_gateways_by_unique_id",
+        GATEWAY_DISCOVERY_IMPORT_PATH,
         return_value={},
-    ), patch(
-        "homeassistant.components.screenlogic.ScreenLogicGateway",
-        return_value=mock_cleanup_gateway,
+    ), patch.multiple(
+        ScreenLogicGateway,
+        async_connect=lambda *args, **kwargs: stub_async_connect(
+            DATA_MIN_ENTITY_CLEANUP, *args, **kwargs
+        ),
+        is_connected=True,
+        _async_connected_request=DEFAULT,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

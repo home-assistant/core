@@ -1,13 +1,18 @@
 """Testing for ScreenLogic diagnostics."""
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
+from screenlogicpy import ScreenLogicGateway
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import DATA_FULL_CHEM
-from .conftest import MOCK_ADAPTER_MAC, create_mock_gateway
+from . import (
+    DATA_FULL_CHEM,
+    GATEWAY_DISCOVERY_IMPORT_PATH,
+    MOCK_ADAPTER_MAC,
+    stub_async_connect,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -30,11 +35,16 @@ async def test_diagnostics(
         connections={(dr.CONNECTION_NETWORK_MAC, MOCK_ADAPTER_MAC)},
     )
     with patch(
-        "homeassistant.components.screenlogic.coordinator.async_discover_gateways_by_unique_id",
+        GATEWAY_DISCOVERY_IMPORT_PATH,
         return_value={},
-    ), patch(
-        "homeassistant.components.screenlogic.ScreenLogicGateway",
-        return_value=create_mock_gateway(DATA_FULL_CHEM),
+    ), patch.multiple(
+        ScreenLogicGateway,
+        async_connect=lambda *args, **kwargs: stub_async_connect(
+            DATA_FULL_CHEM, *args, **kwargs
+        ),
+        is_connected=True,
+        _async_connected_request=DEFAULT,
+        get_debug=lambda self: {},
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
