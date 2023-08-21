@@ -119,6 +119,8 @@ class FlexitSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the actual real sensor value."""
-        return getattr(self.coordinator.flexit_bacnet, self.entity_description.key, 0.0)
+        return getattr(
+            self.coordinator.flexit_bacnet, self.entity_description.key, None
+        )
