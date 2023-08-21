@@ -11,7 +11,7 @@ from homeassistant.components.shelly.utils import (
     get_rpc_input_triggers,
     is_block_momentary_input,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 DEVICE_BLOCK_ID = 4
 
@@ -58,7 +58,7 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
-        == "Test name channel 1"
+        == "Channel 1"
     )
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHEM-3")
@@ -68,7 +68,7 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
-        == "Test name channel A"
+        == "Channel A"
     )
 
     monkeypatch.setitem(
@@ -153,12 +153,12 @@ async def test_get_block_device_sleep_period(settings, sleep_period) -> None:
 async def test_get_device_uptime() -> None:
     """Test block test get device uptime."""
     assert get_device_uptime(
-        55, dt.as_utc(dt.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt.as_utc(dt.parse_datetime("2019-01-10 18:42:00+00:00"))
+        55, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
+    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
 
     assert get_device_uptime(
-        50, dt.as_utc(dt.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt.as_utc(dt.parse_datetime("2019-01-10 18:42:10+00:00"))
+        50, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
+    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:10+00:00"))
 
 
 async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
@@ -207,7 +207,7 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
 async def test_get_rpc_channel_name(mock_rpc_device) -> None:
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "test switch_0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name switch_3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Switch 3"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:

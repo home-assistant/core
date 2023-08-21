@@ -5,17 +5,19 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import email
+from email.header import decode_header, make_header
+from email.utils import parseaddr, parsedate_to_datetime
 import logging
 from typing import Any
 
 from aioimaplib import AUTH, IMAP4_SSL, NONAUTH, SELECTED, AioImapException
-import async_timeout
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     CONTENT_TYPE_TEXT_PLAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -27,7 +29,11 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import SSLCipherList, client_context
+from homeassistant.util.ssl import (
+    SSLCipherList,
+    client_context,
+    create_no_verify_ssl_context,
+)
 
 from .const import (
     CONF_CHARSET,
@@ -47,14 +53,17 @@ _LOGGER = logging.getLogger(__name__)
 BACKOFF_TIME = 10
 
 EVENT_IMAP = "imap_content"
+MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
     """Connect to imap server and return client."""
-    ssl_context = client_context(
-        ssl_cipher_list=data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
-    )
+    ssl_cipher_list: str = data.get(CONF_SSL_CIPHER_LIST, SSLCipherList.PYTHON_DEFAULT)
+    if data.get(CONF_VERIFY_SSL, True):
+        ssl_context = client_context(ssl_cipher_list=ssl_cipher_list)
+    else:
+        ssl_context = create_no_verify_ssl_context()
     client = IMAP4_SSL(data[CONF_SERVER], data[CONF_PORT], ssl_context=ssl_context)
 
     await client.wait_hello_from_server()
@@ -82,9 +91,9 @@ class ImapMessage:
         """Get the email headers."""
         header_base: dict[str, tuple[str,]] = {}
         for key, value in self.email_message.items():
-            header: tuple[str,] = (str(value),)
-            if header_base.setdefault(key, header) != header:
-                header_base[key] += header  # type: ignore[assignment]
+            header_instances: tuple[str,] = (str(value),)
+            if header_base.setdefault(key, header_instances) != header_instances:
+                header_base[key] += header_instances  # type: ignore[assignment]
         return header_base
 
     @property
@@ -94,23 +103,26 @@ class ImapMessage:
         date_str: str | None
         if (date_str := self.email_message["Date"]) is None:
             return None
-        # In some cases a timezone or comment is added in parenthesis after the date
-        # We want to strip that part to avoid parsing errors
-        return datetime.strptime(
-            date_str.split("(")[0].strip(), "%a, %d %b %Y %H:%M:%S %z"
-        )
+        try:
+            mail_dt_tm = parsedate_to_datetime(date_str)
+        except ValueError:
+            _LOGGER.debug(
+                "Parsed date %s is not compliant with rfc2822#section-3.3", date_str
+            )
+            return None
+        return mail_dt_tm
 
     @property
     def sender(self) -> str:
         """Get the parsed message sender from the email."""
-        return str(email.utils.parseaddr(self.email_message["From"])[1])
+        return str(parseaddr(self.email_message["From"])[1])
 
     @property
     def subject(self) -> str:
         """Decode the message subject."""
-        decoded_header = email.header.decode_header(self.email_message["Subject"])
-        header = email.header.make_header(decoded_header)
-        return str(header)
+        decoded_header = decode_header(self.email_message["Subject"] or "")
+        subject_header = make_header(decoded_header)
+        return str(subject_header)
 
     @property
     def text(self) -> str:
@@ -162,6 +174,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     ) -> None:
         """Initiate imap client."""
         self.imap_client = imap_client
+        self.auth_errors: int = 0
         self._last_message_id: str | None = None
         self.custom_event_template = None
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
@@ -284,7 +297,8 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             except (AioImapException, asyncio.TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
-            self.imap_client = None
+            finally:
+                self.imap_client = None
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
@@ -303,7 +317,9 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
     async def _async_update_data(self) -> int | None:
         """Update the number of unread emails."""
         try:
-            return await self._async_fetch_number_of_messages()
+            messages = await self._async_fetch_number_of_messages()
+            self.auth_errors = 0
+            return messages
         except (
             AioImapException,
             UpdateFailed,
@@ -318,8 +334,15 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
             self.async_set_update_error(ex)
             raise ConfigEntryError("Selected mailbox folder is invalid.") from ex
         except InvalidAuth as ex:
-            _LOGGER.warning("Username or password incorrect, starting reauthentication")
             await self._cleanup()
+            self.auth_errors += 1
+            if self.auth_errors <= MAX_ERRORS:
+                _LOGGER.warning("Authentication failed, retrying")
+            else:
+                _LOGGER.warning(
+                    "Username or password incorrect, starting reauthentication"
+                )
+                self.config_entry.async_start_reauth(self.hass)
             self.async_set_update_error(ex)
             raise ConfigEntryAuthFailed() from ex
 
@@ -351,23 +374,23 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             try:
                 number_of_messages = await self._async_fetch_number_of_messages()
             except InvalidAuth as ex:
+                self.auth_errors += 1
                 await self._cleanup()
-                _LOGGER.warning(
-                    "Username or password incorrect, starting reauthentication"
-                )
-                self.config_entry.async_start_reauth(self.hass)
+                if self.auth_errors <= MAX_ERRORS:
+                    _LOGGER.warning("Authentication failed, retrying")
+                else:
+                    _LOGGER.warning(
+                        "Username or password incorrect, starting reauthentication"
+                    )
+                    self.config_entry.async_start_reauth(self.hass)
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
             except InvalidFolder as ex:
                 _LOGGER.warning("Selected mailbox folder is invalid")
                 await self._cleanup()
-                self.config_entry.async_set_state(
-                    self.hass,
-                    ConfigEntryState.SETUP_ERROR,
-                    "Selected mailbox folder is invalid.",
-                )
                 self.async_set_update_error(ex)
                 await asyncio.sleep(BACKOFF_TIME)
+                continue
             except (
                 UpdateFailed,
                 AioImapException,
@@ -378,14 +401,16 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 await asyncio.sleep(BACKOFF_TIME)
                 continue
             else:
+                self.auth_errors = 0
                 self.async_set_updated_data(number_of_messages)
             try:
                 idle: asyncio.Future = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     await idle
 
+            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
             except (AioImapException, asyncio.TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",

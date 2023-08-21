@@ -858,7 +858,7 @@ async def test_options_flow_disabled_gen_1(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )
@@ -879,7 +879,7 @@ async def test_options_flow_enabled_gen_2(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )
@@ -900,7 +900,7 @@ async def test_options_flow_disabled_sleepy_gen_2(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": "config_entries/get_matching",
+            "type": "config_entries/get",
             "domain": "shelly",
         }
     )
@@ -1117,3 +1117,35 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 0
     assert "device did not update" not in caplog.text
+
+
+async def test_sleeping_device_gen2_with_new_firmware(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 666)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "test-mac", "gen": 2},
+    ), patch("homeassistant.components.shelly.async_setup", return_value=True), patch(
+        "homeassistant.components.shelly.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["data"] == {
+        "host": "1.1.1.1",
+        "model": "SNSW-002P16EU",
+        "sleep_period": 666,
+        "gen": 2,
+    }

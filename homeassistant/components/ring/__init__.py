@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
-from pathlib import Path
 from typing import Any
 
 from oauthlib.oauth2 import AccessDeniedError
@@ -18,7 +17,6 @@ from homeassistant.const import Platform, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,22 +37,6 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.SIREN,
 ]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Ring component."""
-    if DOMAIN not in config:
-        return True
-
-    def legacy_cleanup():
-        """Clean up old tokens."""
-        old_cache = Path(hass.config.path(".ring_cache.pickle"))
-        if old_cache.is_file():
-            old_cache.unlink()
-
-    await hass.async_add_executor_job(legacy_cleanup)
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

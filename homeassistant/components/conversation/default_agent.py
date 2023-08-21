@@ -3,14 +3,22 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
+import functools
 import logging
 from pathlib import Path
 import re
 from typing import IO, Any
 
-from hassil.intents import Intents, ResponseType, SlotList, TextSlotList
+from hassil.expression import Expression, ListReference, Sequence
+from hassil.intents import (
+    Intents,
+    ResponseType,
+    SlotList,
+    TextSlotList,
+    WildcardSlotList,
+)
 from hassil.recognize import RecognizeResult, recognize_all
 from hassil.util import merge_dict
 from home_assistant_intents import get_domains_and_languages, get_intents
@@ -31,7 +39,11 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_added_domain,
+)
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .agent import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -42,6 +54,9 @@ _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
+TRIGGER_CALLBACK_TYPE = Callable[  # pylint: disable=invalid-name
+    [str, RecognizeResult], Awaitable[str | None]
+]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -58,6 +73,14 @@ class LanguageIntents:
     intent_responses: dict[str, Any]
     error_responses: dict[str, Any]
     loaded_components: set[str]
+
+
+@dataclass(slots=True)
+class TriggerData:
+    """List of sentences and the callback for a trigger."""
+
+    sentences: list[str]
+    callback: TRIGGER_CALLBACK_TYPE
 
 
 def _get_language_variations(language: str) -> Iterable[str]:
@@ -83,7 +106,7 @@ def async_setup(hass: core.HomeAssistant) -> None:
         async_should_expose(hass, DOMAIN, entity_id)
 
     @core.callback
-    def async_entity_state_listener(event: core.Event) -> None:
+    def async_entity_state_listener(event: EventType[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
@@ -109,6 +132,10 @@ class DefaultAgent(AbstractConversationAgent):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = {}
         self._slot_lists: dict[str, SlotList] | None = None
+
+        # Sentences that will trigger a callback (skipping intent recognition)
+        self._trigger_sentences: list[TriggerData] = []
+        self._trigger_intents: Intents | None = None
 
     @property
     def supported_languages(self) -> list[str]:
@@ -143,11 +170,12 @@ class DefaultAgent(AbstractConversationAgent):
             self.hass, DOMAIN, self._async_exposed_entities_updated
         )
 
-    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
-        """Process a sentence."""
+    async def async_recognize(
+        self, user_input: ConversationInput
+    ) -> RecognizeResult | None:
+        """Recognize intent from user input."""
         language = user_input.language or self.hass.config.language
         lang_intents = self._lang_intents.get(language)
-        conversation_id = None  # Not supported
 
         # Reload intents if missing or new components
         if lang_intents is None or (
@@ -159,21 +187,29 @@ class DefaultAgent(AbstractConversationAgent):
         if lang_intents is None:
             # No intents loaded
             _LOGGER.warning("No intents were loaded for language: %s", language)
-            return _make_error_result(
-                language,
-                intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                _DEFAULT_ERROR_TEXT,
-                conversation_id,
-            )
+            return None
 
         slot_lists = self._make_slot_lists()
-
         result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
             slot_lists,
         )
+
+        return result
+
+    async def async_process(self, user_input: ConversationInput) -> ConversationResult:
+        """Process a sentence."""
+        if trigger_result := await self._match_triggers(user_input.text):
+            return trigger_result
+
+        language = user_input.language or self.hass.config.language
+        conversation_id = None  # Not supported
+
+        result = await self.async_recognize(user_input)
+        lang_intents = self._lang_intents.get(language)
+
         if result is None:
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
@@ -182,6 +218,10 @@ class DefaultAgent(AbstractConversationAgent):
                 self._get_error_text(ResponseType.NO_INTENT, lang_intents),
                 conversation_id,
             )
+
+        # Will never happen because result will be None when no intents are
+        # loaded in async_recognize.
+        assert lang_intents is not None
 
         try:
             intent_response = await intent.async_handle(
@@ -278,13 +318,13 @@ class DefaultAgent(AbstractConversationAgent):
         all_states = matched + unmatched
         domains = {state.domain for state in all_states}
         translations = await translation.async_get_translations(
-            self.hass, language, "state", domains
+            self.hass, language, "entity_component", domains
         )
 
         # Use translated state names
         for state in all_states:
             device_class = state.attributes.get("device_class", "_")
-            key = f"component.{state.domain}.state.{device_class}.{state.state}"
+            key = f"component.{state.domain}.entity_component.{device_class}.state.{state.state}"
             state.state = translations.get(key, state.state)
 
         # Get first matched or unmatched state.
@@ -413,9 +453,18 @@ class DefaultAgent(AbstractConversationAgent):
                             encoding="utf-8"
                         ) as custom_sentences_file:
                             # Merge custom sentences
-                            merge_dict(
-                                intents_dict, yaml.safe_load(custom_sentences_file)
-                            )
+                            if isinstance(
+                                custom_sentences_yaml := yaml.safe_load(
+                                    custom_sentences_file
+                                ),
+                                dict,
+                            ):
+                                merge_dict(intents_dict, custom_sentences_yaml)
+                            else:
+                                _LOGGER.warning(
+                                    "Custom sentences file does not match expected format path=%s",
+                                    custom_sentences_file.name,
+                                )
 
                         # Will need to recreate graph
                         intents_changed = True
@@ -576,12 +625,119 @@ class DefaultAgent(AbstractConversationAgent):
         return self._slot_lists
 
     def _get_error_text(
-        self, response_type: ResponseType, lang_intents: LanguageIntents
+        self, response_type: ResponseType, lang_intents: LanguageIntents | None
     ) -> str:
         """Get response error text by type."""
+        if lang_intents is None:
+            return _DEFAULT_ERROR_TEXT
+
         response_key = response_type.value
         response_str = lang_intents.error_responses.get(response_key)
         return response_str or _DEFAULT_ERROR_TEXT
+
+    def register_trigger(
+        self,
+        sentences: list[str],
+        callback: TRIGGER_CALLBACK_TYPE,
+    ) -> core.CALLBACK_TYPE:
+        """Register a list of sentences that will trigger a callback when recognized."""
+        trigger_data = TriggerData(sentences=sentences, callback=callback)
+        self._trigger_sentences.append(trigger_data)
+
+        # Force rebuild on next use
+        self._trigger_intents = None
+
+        unregister = functools.partial(self._unregister_trigger, trigger_data)
+        return unregister
+
+    def _rebuild_trigger_intents(self) -> None:
+        """Rebuild the HassIL intents object from the current trigger sentences."""
+        intents_dict = {
+            "language": self.hass.config.language,
+            "intents": {
+                # Use trigger data index as a virtual intent name for HassIL.
+                # This works because the intents are rebuilt on every
+                # register/unregister.
+                str(trigger_id): {"data": [{"sentences": trigger_data.sentences}]}
+                for trigger_id, trigger_data in enumerate(self._trigger_sentences)
+            },
+        }
+
+        self._trigger_intents = Intents.from_dict(intents_dict)
+
+        # Assume slot list references are wildcards
+        wildcard_names: set[str] = set()
+        for trigger_intent in self._trigger_intents.intents.values():
+            for intent_data in trigger_intent.data:
+                for sentence in intent_data.sentences:
+                    _collect_list_references(sentence, wildcard_names)
+
+        for wildcard_name in wildcard_names:
+            self._trigger_intents.slot_lists[wildcard_name] = WildcardSlotList()
+
+        _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
+
+    def _unregister_trigger(self, trigger_data: TriggerData) -> None:
+        """Unregister a set of trigger sentences."""
+        self._trigger_sentences.remove(trigger_data)
+
+        # Force rebuild on next use
+        self._trigger_intents = None
+
+    async def _match_triggers(self, sentence: str) -> ConversationResult | None:
+        """Try to match sentence against registered trigger sentences.
+
+        Calls the registered callbacks if there's a match and returns a positive
+        conversation result.
+        """
+        if not self._trigger_sentences:
+            # No triggers registered
+            return None
+
+        if self._trigger_intents is None:
+            # Need to rebuild intents before matching
+            self._rebuild_trigger_intents()
+
+        assert self._trigger_intents is not None
+
+        matched_triggers: dict[int, RecognizeResult] = {}
+        for result in recognize_all(sentence, self._trigger_intents):
+            trigger_id = int(result.intent.name)
+            if trigger_id in matched_triggers:
+                # Already matched a sentence from this trigger
+                break
+
+            matched_triggers[trigger_id] = result
+
+        if not matched_triggers:
+            # Sentence did not match any trigger sentences
+            return None
+
+        _LOGGER.debug(
+            "'%s' matched %s trigger(s): %s",
+            sentence,
+            len(matched_triggers),
+            list(matched_triggers),
+        )
+
+        # Gather callback responses in parallel
+        trigger_responses = await asyncio.gather(
+            *(
+                self._trigger_sentences[trigger_id].callback(sentence, result)
+                for trigger_id, result in matched_triggers.items()
+            )
+        )
+
+        # Use last non-empty result as speech response
+        speech: str | None = None
+        for trigger_response in trigger_responses:
+            speech = speech or trigger_response
+
+        response = intent.IntentResponse(language=self.hass.config.language)
+        response.response_type = intent.IntentResponseType.ACTION_DONE
+        response.async_set_speech(speech or "")
+
+        return ConversationResult(response=response)
 
 
 def _make_error_result(
@@ -595,3 +751,15 @@ def _make_error_result(
     response.async_set_error(error_code, response_text)
 
     return ConversationResult(response, conversation_id)
+
+
+def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
+    """Collect list reference names recursively."""
+    if isinstance(expression, Sequence):
+        seq: Sequence = expression
+        for item in seq.items:
+            _collect_list_references(item, list_names)
+    elif isinstance(expression, ListReference):
+        # {list}
+        list_ref: ListReference = expression
+        list_names.add(list_ref.slot_name)

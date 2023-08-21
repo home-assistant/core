@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from holidays import country_holidays, list_supported_countries
+from holidays import HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -24,7 +24,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_DAYS,
@@ -73,16 +73,20 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
 
     for add_date in user_input[CONF_ADD_HOLIDAYS]:
-        if dt.parse_date(add_date) is None:
+        if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
-    year: int = dt.now().year
-    obj_holidays = country_holidays(
-        user_input[CONF_COUNTRY], user_input.get(CONF_PROVINCE), year
+    cls: HolidayBase = country_holidays(user_input[CONF_COUNTRY])
+    year: int = dt_util.now().year
+    obj_holidays: HolidayBase = country_holidays(
+        user_input[CONF_COUNTRY],
+        subdiv=user_input.get(CONF_PROVINCE),
+        years=year,
+        language=cls.default_language,
     )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
-        if dt.parse_date(remove_date) is None:
+        if dt_util.parse_date(remove_date) is None:
             if obj_holidays.get_named(remove_date) == []:
                 raise RemoveDatesError("Incorrect date or name")
 
@@ -247,7 +251,10 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="options",
             data_schema=new_schema,
             errors=errors,
-            description_placeholders={"name": self.data[CONF_NAME]},
+            description_placeholders={
+                "name": self.data[CONF_NAME],
+                "country": self.data[CONF_COUNTRY],
+            },
         )
 
 
@@ -304,6 +311,10 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             step_id="init",
             data_schema=new_schema,
             errors=errors,
+            description_placeholders={
+                "name": self.options[CONF_NAME],
+                "country": self.options[CONF_COUNTRY],
+            },
         )
 
 

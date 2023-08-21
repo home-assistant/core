@@ -114,7 +114,7 @@ async def test_number(
     assert "engineering_units" in attr_reads
     assert "application_type" in attr_reads
 
-    entity_id = await find_entity_id(Platform.NUMBER, zha_device, hass)
+    entity_id = find_entity_id(Platform.NUMBER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -211,7 +211,7 @@ async def test_level_control_number(
     }
     zha_device = await zha_device_joined(light)
 
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.NUMBER,
         zha_device,
         hass,
@@ -344,7 +344,7 @@ async def test_color_number(
     }
     zha_device = await zha_device_joined(light)
 
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.NUMBER,
         zha_device,
         hass,

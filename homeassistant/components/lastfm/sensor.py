@@ -2,20 +2,20 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Any
 
-from pylast import LastFMNetwork, Track, User, WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_LAST_PLAYED,
@@ -24,9 +24,9 @@ from .const import (
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
-    LOGGER,
     STATE_NOT_SCROBBLING,
 )
+from .coordinator import LastFMDataUpdateCoordinator, LastFMUserData
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,11 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
-
-
-def format_track(track: Track) -> str:
-    """Format the track."""
-    return f"{track.artist} - {track.title}"
 
 
 async def async_setup_platform(
@@ -51,12 +46,17 @@ async def async_setup_platform(
 
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.8.0",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.12.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "LastFM",
+        },
     )
 
     hass.async_create_task(
@@ -73,57 +73,77 @@ async def async_setup_entry(
 ) -> None:
     """Initialize the entries."""
 
-    lastfm_api = LastFMNetwork(api_key=entry.options[CONF_API_KEY])
+    coordinator: LastFMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         (
-            LastFmSensor(lastfm_api.get_user(user), entry.entry_id)
-            for user in entry.options[CONF_USERS]
+            LastFmSensor(coordinator, username, entry.entry_id)
+            for username in entry.options[CONF_USERS]
         ),
-        True,
     )
 
 
-class LastFmSensor(SensorEntity):
+class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity):
     """A class for the Last.fm account."""
 
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, user: User, entry_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: LastFMDataUpdateCoordinator,
+        username: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._user = user
-        self._attr_unique_id = hashlib.sha256(user.name.encode("utf-8")).hexdigest()
-        self._attr_name = user.name
+        super().__init__(coordinator)
+        self._username = username
+        self._attr_unique_id = hashlib.sha256(username.encode("utf-8")).hexdigest()
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.last.fm",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{entry_id}_{self._attr_unique_id}")},
             manufacturer=DEFAULT_NAME,
-            name=f"{DEFAULT_NAME} {user.name}",
+            name=f"{DEFAULT_NAME} {username}",
         )
 
-    def update(self) -> None:
-        """Update device state."""
-        try:
-            self._user.get_playcount()
-        except WSError as exc:
-            self._attr_available = False
-            LOGGER.error("Failed to load LastFM user `%s`: %r", self._user.name, exc)
-            return
-        self._attr_entity_picture = self._user.get_image()
-        if now_playing := self._user.get_now_playing():
-            self._attr_native_value = format_track(now_playing)
-        else:
-            self._attr_native_value = STATE_NOT_SCROBBLING
-        top_played = None
-        if top_tracks := self._user.get_top_tracks(limit=1):
-            top_played = format_track(top_tracks[0].item)
-        last_played = None
-        if last_tracks := self._user.get_recent_tracks(limit=1):
-            last_played = format_track(last_tracks[0].track)
-        play_count = self._user.get_playcount()
-        self._attr_extra_state_attributes = {
-            ATTR_LAST_PLAYED: last_played,
+    @property
+    def user_data(self) -> LastFMUserData | None:
+        """Returns the user from the coordinator."""
+        return self.coordinator.data.get(self._username)
+
+    @property
+    def available(self) -> bool:
+        """If user not found in coordinator, entity is unavailable."""
+        return super().available and self.user_data is not None
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return user avatar."""
+        if self.user_data and self.user_data.image is not None:
+            return self.user_data.image
+        return None
+
+    @property
+    def native_value(self) -> str:
+        """Return value of sensor."""
+        if self.user_data and self.user_data.now_playing is not None:
+            return self.user_data.now_playing
+        return STATE_NOT_SCROBBLING
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes."""
+        play_count = None
+        last_track = None
+        top_track = None
+        if self.user_data:
+            play_count = self.user_data.play_count
+            last_track = self.user_data.last_track
+            top_track = self.user_data.top_track
+        return {
             ATTR_PLAY_COUNT: play_count,
-            ATTR_TOP_PLAYED: top_played,
+            ATTR_LAST_PLAYED: last_track,
+            ATTR_TOP_PLAYED: top_track,
         }

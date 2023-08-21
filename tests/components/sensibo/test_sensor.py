@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -44,12 +44,12 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "°C",
         "on": True,
-        "targetTemperature": 21,
-        "temperatureUnit": "C",
+        "targettemperature": 21,
+        "temperatureunit": "c",
         "mode": "heat",
-        "fanLevel": "low",
+        "fanlevel": "low",
         "swing": "stopped",
-        "horizontalSwing": "stopped",
+        "horizontalswing": "stopped",
         "light": "on",
     }
 
@@ -61,7 +61,7 @@ async def test_sensor(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 

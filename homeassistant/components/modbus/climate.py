@@ -45,6 +45,7 @@ from .const import (
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
     DataType,
 )
@@ -84,6 +85,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Initialize the modbus thermostat."""
         super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._target_temperature_write_registers = config[
+            CONF_TARGET_TEMP_WRITE_REGISTERS
+        ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
 
         self._attr_current_temperature = None
@@ -107,7 +111,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
-            self._hvac_mode_write_type = mode_config[CONF_WRITE_REGISTERS]
+            self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
 
             for hvac_mode_kw, hvac_mode in (
@@ -133,7 +137,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
-            self._hvac_onoff_write_type = config[CONF_WRITE_REGISTERS]
+            self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
         else:
@@ -150,15 +154,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
             # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
-            if self._hvac_onoff_write_type:
-                await self._hub.async_pymodbus_call(
+            if self._hvac_onoff_write_registers:
+                await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
                     [0 if hvac_mode == HVACMode.OFF else 1],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
-                await self._hub.async_pymodbus_call(
+                await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
                     0 if hvac_mode == HVACMode.OFF else 1,
@@ -169,15 +173,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
                 if mode == hvac_mode:
-                    if self._hvac_mode_write_type:
-                        await self._hub.async_pymodbus_call(
+                    if self._hvac_mode_write_registers:
+                        await self._hub.async_pb_call(
                             self._slave,
                             self._hvac_mode_register,
                             [value],
                             CALL_TYPE_WRITE_REGISTERS,
                         )
                     else:
-                        await self._hub.async_pymodbus_call(
+                        await self._hub.async_pb_call(
                             self._slave,
                             self._hvac_mode_register,
                             value,
@@ -206,20 +210,28 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             int.from_bytes(as_bytes[i : i + 2], "big")
             for i in range(0, len(as_bytes), 2)
         ]
-        registers = self._swap_registers(raw_regs)
+        registers = self._swap_registers(raw_regs, 0)
 
         if self._data_type in (
             DataType.INT16,
             DataType.UINT16,
         ):
-            result = await self._hub.async_pymodbus_call(
-                self._slave,
-                self._target_temperature_register,
-                int(float(registers[0])),
-                CALL_TYPE_WRITE_REGISTER,
-            )
+            if self._target_temperature_write_registers:
+                result = await self._hub.async_pb_call(
+                    self._slave,
+                    self._target_temperature_register,
+                    [int(float(registers[0]))],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                result = await self._hub.async_pb_call(
+                    self._slave,
+                    self._target_temperature_register,
+                    int(float(registers[0])),
+                    CALL_TYPE_WRITE_REGISTER,
+                )
         else:
-            result = await self._hub.async_pymodbus_call(
+            result = await self._hub.async_pb_call(
                 self._slave,
                 self._target_temperature_register,
                 [int(float(i)) for i in registers],
@@ -275,7 +287,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self, register_type: str, register: int, raw: bool | None = False
     ) -> float | None:
         """Read register using the Modbus hub slave."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, register, self._count, register_type
         )
         if result is None:

@@ -15,7 +15,6 @@ from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
 
-from . import ClusterHandler, ClusterHandlerStatus
 from .. import registries
 from ..const import (
     SIGNAL_ATTR_UPDATED,
@@ -25,6 +24,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from . import ClusterHandler, ClusterHandlerStatus
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -388,7 +388,7 @@ class IASZoneClusterHandler(ClusterHandler):
         self.debug("finished IASZoneClusterHandler configuration")
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == IasZone.attributes_by_name["zone_status"].id:
             self.async_send_signal(

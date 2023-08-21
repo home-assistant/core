@@ -8,8 +8,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,31 +18,31 @@ from .const import DOMAIN, NAME
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="Fajr",
-        name="Fajr prayer",
+        translation_key="fajr",
     ),
     SensorEntityDescription(
         key="Sunrise",
-        name="Sunrise time",
+        translation_key="sunrise",
     ),
     SensorEntityDescription(
         key="Dhuhr",
-        name="Dhuhr prayer",
+        translation_key="dhuhr",
     ),
     SensorEntityDescription(
         key="Asr",
-        name="Asr prayer",
+        translation_key="asr",
     ),
     SensorEntityDescription(
         key="Maghrib",
-        name="Maghrib prayer",
+        translation_key="maghrib",
     ),
     SensorEntityDescription(
         key="Isha",
-        name="Isha prayer",
+        translation_key="isha",
     ),
     SensorEntityDescription(
         key="Midnight",
-        name="Midnight time",
+        translation_key="midnight",
     ),
 )
 

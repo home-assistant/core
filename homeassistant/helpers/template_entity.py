@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -27,13 +26,18 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .event import TrackTemplate, TrackTemplateResult, async_track_template_result
+from .event import (
+    EventStateChangedData,
+    TrackTemplate,
+    TrackTemplateResult,
+    async_track_template_result,
+)
 from .script import Script, _VarsType
 from .template import (
     Template,
@@ -42,7 +46,7 @@ from .template import (
     render_complex,
     result_as_boolean,
 )
-from .typing import ConfigType
+from .typing import ConfigType, EventType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +68,19 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
+
+
+def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+    """Return a schema with default name."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ICON): cv.template,
+            vol.Optional(CONF_NAME, default=default_name): cv.template,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+
 
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
@@ -114,7 +131,7 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: Event | None,
+        event: EventType[EventStateChangedData] | None,
         template: Template,
         last_result: str | None | TemplateError,
         result: str | TemplateError,
@@ -314,14 +331,14 @@ class TemplateEntity(Entity):
     @callback
     def _handle_results(
         self,
-        event: Event | None,
+        event: EventType[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
         if event:
             self.async_set_context(event.context)
 
-        entity_id = event and event.data.get(ATTR_ENTITY_ID)
+        entity_id = event and event.data["entity_id"]
 
         if entity_id and entity_id == self.entity_id:
             self._self_ref_update_count += 1
@@ -428,7 +445,7 @@ class TemplateEntity(Entity):
         """Run an action script."""
         if run_variables is None:
             run_variables = {}
-        return await script.async_run(
+        await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                 **run_variables,
@@ -469,7 +486,7 @@ class TriggerBaseEntity(Entity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
@@ -547,6 +564,7 @@ class TriggerBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
         template_attach(self.hass, self._config)
 
     def _set_unique_id(self, unique_id: str | None) -> None:
@@ -605,13 +623,18 @@ class ManualTriggerEntity(TriggerBaseEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         TriggerBaseEntity.__init__(self, hass, config)
+        # Need initial rendering on `name` as it influence the `entity_id`
+        self._rendered[CONF_NAME] = config[CONF_NAME].async_render(
+            {},
+            parse_result=CONF_NAME in self._parse_result,
+        )
 
     @callback
-    def _process_manual_data(self, value: str | None = None) -> None:
+    def _process_manual_data(self, value: Any | None = None) -> None:
         """Process new data manually.
 
         Implementing class should call this last in update method to render templates.
@@ -630,3 +653,17 @@ class ManualTriggerEntity(TriggerBaseEntity):
         variables = {"this": this, **(run_variables or {})}
 
         self._render_templates(variables)
+
+
+class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
+    """Template entity based on manual trigger data for sensor."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the sensor entity."""
+        ManualTriggerEntity.__init__(self, hass, config)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)

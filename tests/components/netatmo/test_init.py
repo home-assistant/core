@@ -12,7 +12,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -339,7 +339,7 @@ async def test_setup_component_with_delay(hass: HomeAssistant, config_entry) -> 
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
 
@@ -415,7 +415,7 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
                 headers={},
                 real_url="http://example.com",
             ),
-            code=400,
+            status=400,
             history=(),
         )
 

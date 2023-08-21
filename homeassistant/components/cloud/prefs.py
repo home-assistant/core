@@ -47,7 +47,7 @@ GOOGLE_SETTINGS_VERSION = 3
 
 
 class CloudPreferencesStore(Store):
-    """Store entity registry data."""
+    """Store cloud preferences."""
 
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]

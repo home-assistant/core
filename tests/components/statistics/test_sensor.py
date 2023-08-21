@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components.recorder import Recorder
@@ -1286,12 +1287,14 @@ async def test_initialize_from_database(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
 
+@pytest.mark.freeze_time(
+    datetime(dt_util.utcnow().year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+)
 async def test_initialize_from_database_with_maxage(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test initializing the statistics from the database."""
-    now = dt_util.utcnow()
-    current_time = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+    current_time = dt_util.utcnow()
 
     # Testing correct retrieval from recorder, thus we do not
     # want purging to occur within the class itself.

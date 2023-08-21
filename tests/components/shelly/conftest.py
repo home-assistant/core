@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
-from aioshelly.block_device import BlockDevice
-from aioshelly.rpc_device import RpcDevice, UpdateType
+from aioshelly.block_device import BlockDevice, BlockUpdateType
+from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -189,6 +189,7 @@ MOCK_STATUS_RPC = {
         "current_pos": 50,
         "apower": 85.3,
     },
+    "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
     "illuminance:0": {"lux": 345},
     "sys": {
@@ -246,7 +247,14 @@ async def mock_block_device():
     with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
 
         def update():
-            block_device_mock.return_value.subscribe_updates.call_args[0][0]({})
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.COAP_PERIODIC
+            )
+
+        def update_reply():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.COAP_REPLY
+            )
 
         device = Mock(
             spec=BlockDevice,
@@ -262,6 +270,9 @@ async def mock_block_device():
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
         block_device_mock.return_value.mock_update = Mock(side_effect=update)
+        block_device_mock.return_value.mock_update_reply = Mock(
+            side_effect=update_reply
+        )
 
         yield block_device_mock.return_value
 
@@ -290,7 +301,7 @@ async def mock_pre_ble_rpc_device():
 
         def update():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, UpdateType.STATUS
+                {}, RpcUpdateType.STATUS
             )
 
         device = _mock_rpc_device("0.11.0")
@@ -309,17 +320,17 @@ async def mock_rpc_device():
 
         def update():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, UpdateType.STATUS
+                {}, RpcUpdateType.STATUS
             )
 
         def event():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, UpdateType.EVENT
+                {}, RpcUpdateType.EVENT
             )
 
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, UpdateType.DISCONNECTED
+                {}, RpcUpdateType.DISCONNECTED
             )
 
         device = _mock_rpc_device("0.12.0")

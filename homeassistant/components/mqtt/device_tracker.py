@@ -36,7 +36,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
-    warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .util import get_mqtt_data, valid_subscribe_topic
@@ -62,7 +61,7 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
@@ -77,11 +76,6 @@ PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 DISCOVERY_SCHEMA = vol.All(
     PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
 )
-
-# Configuring MQTT Device Trackers under the device_tracker platform key was deprecated
-# in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(warn_for_legacy_schema(device_tracker.DOMAIN))
 
 
 async def async_setup_entry(
@@ -110,6 +104,7 @@ async def _async_setup_entity(
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
+    _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _value_template: Callable[..., ReceivePayloadType]
 

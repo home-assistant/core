@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 from aioairzone_cloud.const import (
+    API_ACTIVE,
+    API_AZ_AIDOO,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
     API_CELSIUS,
@@ -14,6 +16,7 @@ from aioairzone_cloud.const import (
     API_DISCONNECTION_DATE,
     API_ERRORS,
     API_FAH,
+    API_GROUP_ID,
     API_GROUPS,
     API_HUMIDITY,
     API_INSTALLATION_ID,
@@ -31,6 +34,7 @@ from aioairzone_cloud.const import (
     API_SYSTEM_NUMBER,
     API_TYPE,
     API_WARNINGS,
+    API_WS_CONNECTED,
     API_WS_FW,
     API_WS_ID,
     API_WS_IDS,
@@ -38,6 +42,7 @@ from aioairzone_cloud.const import (
     API_ZONE_NUMBER,
 )
 from aioairzone_cloud.device import Device
+from aioairzone_cloud.webserver import WebServer
 
 from homeassistant.components.airzone_cloud import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
@@ -46,6 +51,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 WS_ID = "11:22:33:44:55:66"
+WS_ID_AIDOO = "11:22:33:44:55:67"
 
 CONFIG = {
     CONF_ID: "inst1",
@@ -56,6 +62,7 @@ CONFIG = {
 GET_INSTALLATION_MOCK = {
     API_GROUPS: [
         {
+            API_GROUP_ID: "grp1",
             API_NAME: "Group",
             API_DEVICES: [
                 {
@@ -88,6 +95,18 @@ GET_INSTALLATION_MOCK = {
                 },
             ],
         },
+        {
+            API_GROUP_ID: "grp2",
+            API_NAME: "Aidoo Group",
+            API_DEVICES: [
+                {
+                    API_DEVICE_ID: "aidoo1",
+                    API_NAME: "Bron",
+                    API_TYPE: API_AZ_AIDOO,
+                    API_WS_ID: WS_ID_AIDOO,
+                },
+            ],
+        },
     ],
 }
 
@@ -98,6 +117,7 @@ GET_INSTALLATIONS_MOCK = {
             API_NAME: "House",
             API_WS_IDS: [
                 WS_ID,
+                WS_ID_AIDOO,
             ],
         },
     ],
@@ -120,35 +140,80 @@ GET_WEBSERVER_MOCK = {
     },
 }
 
+GET_WEBSERVER_MOCK_AIDOO = {
+    API_WS_TYPE: "ws_aidoo",
+    API_CONFIG: {
+        API_WS_FW: "3.13",
+        API_STAT_SSID: "Wifi",
+        API_STAT_CHANNEL: 1,
+        API_STAT_AP_MAC: "00:00:00:00:00:01",
+    },
+    API_STATUS: {
+        API_IS_CONNECTED: True,
+        API_STAT_QUALITY: 4,
+        API_STAT_RSSI: -77,
+        API_CONNECTION_DATE: "2023-05-24 17:00:52 +0200",
+        API_DISCONNECTION_DATE: "2023-05-24 17:00:25 +0200",
+    },
+}
+
 
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
 
+    if device.get_id() == "aidoo1":
+        return {
+            API_ACTIVE: False,
+            API_ERRORS: [],
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_LOCAL_TEMP: {
+                API_CELSIUS: 21,
+                API_FAH: 70,
+            },
+            API_WARNINGS: [],
+        }
     if device.get_id() == "system1":
         return {
             API_ERRORS: [],
             API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_WARNINGS: [],
+        }
+    if device.get_id() == "zone1":
+        return {
+            API_ACTIVE: True,
+            API_HUMIDITY: 30,
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_LOCAL_TEMP: {
+                API_FAH: 68,
+                API_CELSIUS: 20,
+            },
             API_WARNINGS: [],
         }
     if device.get_id() == "zone2":
         return {
+            API_ACTIVE: False,
             API_HUMIDITY: 24,
             API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {
                 API_FAH: 77,
                 API_CELSIUS: 25,
             },
             API_WARNINGS: [],
         }
-    return {
-        API_HUMIDITY: 30,
-        API_IS_CONNECTED: True,
-        API_LOCAL_TEMP: {
-            API_FAH: 68,
-            API_CELSIUS: 20,
-        },
-        API_WARNINGS: [],
-    }
+    return None
+
+
+def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
+    """Mock API get webserver."""
+
+    if webserver.get_id() == WS_ID_AIDOO:
+        return GET_WEBSERVER_MOCK_AIDOO
+
+    return GET_WEBSERVER_MOCK
 
 
 async def async_init_integration(
@@ -174,7 +239,7 @@ async def async_init_integration(
         return_value=GET_INSTALLATIONS_MOCK,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_webserver",
-        return_value=GET_WEBSERVER_MOCK,
+        side_effect=mock_get_webserver,
     ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,

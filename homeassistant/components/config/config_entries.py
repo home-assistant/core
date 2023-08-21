@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -41,9 +41,9 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
-    websocket_api.async_register_command(hass, config_entries_get_matching)
+    websocket_api.async_register_command(hass, config_entries_get)
     websocket_api.async_register_command(hass, config_entry_disable)
-    websocket_api.async_register_command(hass, config_entry_get)
+    websocket_api.async_register_command(hass, config_entry_get_single)
     websocket_api.async_register_command(hass, config_entry_update)
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
@@ -138,12 +138,11 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         """Not implemented."""
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
     async def post(self, request):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
         # pylint: disable=no-value-for-parameter
         try:
             return await super().post(request)
@@ -164,19 +163,18 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/flow/{flow_id}"
     name = "api:config:config_entries:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
+    async def get(self, request, /, flow_id):
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
@@ -206,15 +204,14 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
     url = "/api/config/config_entries/options/flow"
     name = "api:config:config_entries:option:flow"
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
     async def post(self, request):
         """Handle a POST request.
 
         handler in request is entry_id.
         """
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
@@ -225,19 +222,18 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
     url = "/api/config/config_entries/options/flow/{flow_id}"
     name = "api:config:config_entries:options:flow:resource"
 
-    async def get(self, request, flow_id):
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
+    async def get(self, request, /, flow_id):
         """Get the current state of a data_entry_flow."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
         return await super().get(request, flow_id)
 
-    # pylint: disable=arguments-differ
+    @require_admin(
+        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    )
     async def post(self, request, flow_id):
         """Handle a POST request."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
 
@@ -288,12 +284,12 @@ def get_entry(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        "type": "config_entries/get",
+        "type": "config_entries/get_single",
         "entry_id": str,
     }
 )
 @websocket_api.async_response
-async def config_entry_get(
+async def config_entry_get_single(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -432,13 +428,13 @@ async def ignore_config_flow(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/get_matching",
+        vol.Required("type"): "config_entries/get",
         vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
         vol.Optional("domain"): str,
     }
 )
 @websocket_api.async_response
-async def config_entries_get_matching(
+async def config_entries_get(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],

@@ -53,7 +53,7 @@ async def test_device_info(
     entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "https://engage.efergy.com/user/login"
     assert device.connections == {("mac", "ff:ff:ff:ff:ff:ff")}

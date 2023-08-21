@@ -10,25 +10,30 @@ from aioimaplib import AioImapException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
+    TemplateSelector,
+    TemplateSelectorConfig,
 )
-from homeassistant.helpers.template import Template
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
+    CONF_ENABLE_PUSH,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -42,6 +47,7 @@ from .const import (
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
 
+BOOLEAN_SELECTOR = BooleanSelector()
 CIPHER_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=list(SSLCipherList),
@@ -49,9 +55,7 @@ CIPHER_SELECTOR = SelectSelector(
         translation_key=CONF_SSL_CIPHER_LIST,
     )
 )
-TEMPLATE_SELECTOR = TextSelector(
-    TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)
-)
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -68,6 +72,7 @@ CONFIG_SCHEMA_ADVANCED = {
     vol.Optional(
         CONF_SSL_CIPHER_LIST, default=SSLCipherList.PYTHON_DEFAULT
     ): CIPHER_SELECTOR,
+    vol.Optional(CONF_VERIFY_SSL, default=True): BOOLEAN_SELECTOR,
 }
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -83,6 +88,7 @@ OPTIONS_SCHEMA_ADVANCED = {
         cv.positive_int,
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
     ),
+    vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
 }
 
 
@@ -116,11 +122,6 @@ async def validate_input(
                 errors[CONF_CHARSET] = "invalid_charset"
             else:
                 errors[CONF_SEARCH] = "invalid_search"
-    if template := user_input.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE):
-        try:
-            Template(template, hass=hass).ensure_valid()
-        except TemplateError:
-            errors[CONF_CUSTOM_EVENT_DATA_TEMPLATE] = "invalid_template"
 
     return errors
 
@@ -177,7 +178,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=user_input)
 
-        schema = self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input)
+        schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

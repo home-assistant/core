@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALL_DAY,
@@ -120,7 +120,7 @@ async def async_setup_platform(
 
     api = TodoistAPIAsync(token)
     coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
@@ -214,14 +214,14 @@ async def async_setup_platform(
             data["due_lang"] = call.data[DUE_DATE_LANG]
 
         if DUE_DATE in call.data:
-            due_date = dt.parse_datetime(call.data[DUE_DATE])
+            due_date = dt_util.parse_datetime(call.data[DUE_DATE])
             if due_date is None:
-                due = dt.parse_date(call.data[DUE_DATE])
+                due = dt_util.parse_date(call.data[DUE_DATE])
                 if due is None:
                     raise ValueError(f"Invalid due_date: {call.data[DUE_DATE]}")
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
-            due_date = dt.as_utc(due_date)
+            due_date = dt_util.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M:%S"
             data["due_datetime"] = datetime.strftime(due_date, date_format)
 
@@ -239,16 +239,16 @@ async def async_setup_platform(
             _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
 
         if REMINDER_DATE in call.data:
-            due_date = dt.parse_datetime(call.data[REMINDER_DATE])
+            due_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
             if due_date is None:
-                due = dt.parse_date(call.data[REMINDER_DATE])
+                due = dt_util.parse_date(call.data[REMINDER_DATE])
                 if due is None:
                     raise ValueError(
                         f"Invalid reminder_date: {call.data[REMINDER_DATE]}"
                     )
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
-            due_date = dt.as_utc(due_date)
+            due_date = dt_util.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
@@ -453,7 +453,7 @@ class TodoistProjectData:
             LABELS: [],
             OVERDUE: False,
             PRIORITY: data.priority,
-            START: dt.now(),
+            START: dt_util.now(),
             SUMMARY: data.content,
         }
 
@@ -474,19 +474,19 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         if data.due is not None:
-            end = dt.parse_datetime(
+            end = dt_util.parse_datetime(
                 data.due.datetime if data.due.datetime else data.due.date
             )
-            task[END] = dt.as_utc(end) if end is not None else end
+            task[END] = dt_util.as_local(end) if end is not None else end
             if task[END] is not None:
                 if self._due_date_days is not None and (
-                    task[END] > dt.utcnow() + self._due_date_days
+                    task[END] > dt_util.now() + self._due_date_days
                 ):
                     # This task is out of range of our due date;
                     # it shouldn't be counted.
                     return None
 
-                task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
+                task[DUE_TODAY] = task[END].date() == dt_util.now().date()
 
                 # Special case: Task is overdue.
                 if task[END] <= task[START]:
@@ -669,10 +669,10 @@ class TodoistProjectData:
 def get_start(due: Due) -> datetime | date | None:
     """Return the task due date as a start date or date time."""
     if due.datetime:
-        start = dt.parse_datetime(due.datetime)
+        start = dt_util.parse_datetime(due.datetime)
         if not start:
             return None
-        return dt.as_local(start)
+        return dt_util.as_local(start)
     if due.date:
-        return dt.parse_date(due.date)
+        return dt_util.parse_date(due.date)
     return None

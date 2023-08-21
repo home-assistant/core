@@ -15,7 +15,6 @@ from random import SystemRandom
 from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
-import async_timeout
 import attr
 import voluptuous as vol
 
@@ -168,7 +167,7 @@ async def _async_get_image(
     are handled.
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             if image_bytes := await camera.async_camera_image(
                 width=width, height=height
             ):
@@ -247,8 +246,8 @@ async def async_get_still_stream(
         await response.write(
             bytes(
                 "--frameboundary\r\n"
-                "Content-Type: {}\r\n"
-                "Content-Length: {}\r\n\r\n".format(content_type, len(img_bytes)),
+                f"Content-Type: {content_type}\r\n"
+                f"Content-Length: {len(img_bytes)}\r\n\r\n",
                 "utf-8",
             )
             + img_bytes
@@ -514,8 +513,8 @@ class Camera(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.stream and not self.stream.available:
-            return self.stream.available
+        if (stream := self.stream) and not stream.available:
+            return False
         return super().available
 
     async def async_create_stream(self) -> Stream | None:
@@ -525,7 +524,7 @@ class Camera(Entity):
             self._create_stream_lock = asyncio.Lock()
         async with self._create_stream_lock:
             if not self.stream:
-                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                async with asyncio.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                     source = await self.stream_source()
                 if not source:
                     return None
@@ -673,7 +672,10 @@ class Camera(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        await self.async_refresh_providers()
+        # Avoid calling async_refresh_providers() in here because it
+        # it will write state a second time since state is always
+        # written when an entity is added to hass.
+        self._rtsp_to_webrtc = await self._async_use_rtsp_to_webrtc()
 
     async def async_refresh_providers(self) -> None:
         """Determine if any of the registered providers are suitable for this entity.

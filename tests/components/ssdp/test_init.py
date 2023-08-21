@@ -742,6 +742,8 @@ async def test_bind_failure_skips_adapter(
     SsdpListener.async_start = _async_start
     UpnpServer.async_start = _async_start
     await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
     assert "Failed to setup listener for" in caplog.text
 

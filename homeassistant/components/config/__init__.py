@@ -7,10 +7,11 @@ import os
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.file import write_utf8_file_atomic
@@ -31,6 +32,8 @@ SECTIONS = (
 )
 ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -100,6 +103,7 @@ class BaseEditConfigView(HomeAssistantView):
         """Delete value."""
         raise NotImplementedError
 
+    @require_admin
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app["hass"]
@@ -112,6 +116,7 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json(value)
 
+    @require_admin
     async def post(self, request, config_key):
         """Validate config and return results."""
         try:
@@ -153,6 +158,7 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json({"result": "ok"})
 
+    @require_admin
     async def delete(self, request, config_key):
         """Remove an entry."""
         hass = request.app["hass"]

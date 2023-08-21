@@ -449,6 +449,113 @@ async def test_person_lookup(hass: HomeAssistant) -> None:
     }
 
 
+async def test_automation_blueprint(hass):
+    """Test searching for automation blueprints."""
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "blueprint_automation_1",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "use_blueprint": {
+                        "path": "test_event_service.yaml",
+                        "input": {
+                            "trigger_event": "blueprint_event_1",
+                            "service_to_call": "test.automation_1",
+                            "a_number": 5,
+                        },
+                    },
+                },
+                {
+                    "alias": "blueprint_automation_2",
+                    "trigger": {"platform": "template", "value_template": "true"},
+                    "use_blueprint": {
+                        "path": "test_event_service.yaml",
+                        "input": {
+                            "trigger_event": "blueprint_event_2",
+                            "service_to_call": "test.automation_2",
+                            "a_number": 5,
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Ensure automations set up correctly.
+    assert hass.states.get("automation.blueprint_automation_1") is not None
+    assert hass.states.get("automation.blueprint_automation_1") is not None
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("automation", "automation.blueprint_automation_1") == {
+        "automation": {"automation.blueprint_automation_2"},
+        "automation_blueprint": {"test_event_service.yaml"},
+        "entity": {"light.kitchen"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("automation_blueprint", "test_event_service.yaml") == {
+        "automation": {
+            "automation.blueprint_automation_1",
+            "automation.blueprint_automation_2",
+        },
+    }
+
+
+async def test_script_blueprint(hass):
+    """Test searching for script blueprints."""
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "blueprint_script_1": {
+                    "use_blueprint": {
+                        "path": "test_service.yaml",
+                        "input": {
+                            "service_to_call": "test.automation",
+                        },
+                    }
+                },
+                "blueprint_script_2": {
+                    "use_blueprint": {
+                        "path": "test_service.yaml",
+                        "input": {
+                            "service_to_call": "test.automation",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    # Ensure automations set up correctly.
+    assert hass.states.get("script.blueprint_script_1") is not None
+    assert hass.states.get("script.blueprint_script_1") is not None
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("script", "script.blueprint_script_1") == {
+        "entity": {"light.kitchen"},
+        "script": {"script.blueprint_script_2"},
+        "script_blueprint": {"test_service.yaml"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("script_blueprint", "test_service.yaml") == {
+        "script": {"script.blueprint_script_1", "script.blueprint_script_2"},
+    }
+
+
 async def test_ws_api(hass: HomeAssistant, hass_ws_client: WebSocketGenerator) -> None:
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})

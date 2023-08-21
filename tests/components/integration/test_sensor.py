@@ -4,6 +4,7 @@ from datetime import timedelta
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.integration.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,10 +17,15 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
@@ -163,6 +169,100 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state.state == "100.00"
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
+    assert state.attributes.get("last_good_state") is None
+
+
+async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
+    """Test integration sensor state is restored correctly."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.integration",
+                    STATE_UNAVAILABLE,
+                    {
+                        "device_class": SensorDeviceClass.ENERGY,
+                        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": None,
+                    "native_unit_of_measurement": "kWh",
+                    "source_entity": "sensor.power",
+                    "last_valid_state": "100.00",
+                },
+            ),
+        ],
+    )
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state
+    assert state.state == "100.00"
+
+
+@pytest.mark.parametrize(
+    "extra_attributes",
+    [
+        {
+            "native_unit_of_measurement": "kWh",
+            "source_entity": "sensor.power",
+            "last_valid_state": "100.00",
+        },
+        {
+            "native_value": None,
+            "native_unit_of_measurement": "kWh",
+            "source_entity": "sensor.power",
+            "last_valid_state": "None",
+        },
+    ],
+)
+async def test_restore_unavailable_state_failed(
+    hass: HomeAssistant, extra_attributes
+) -> None:
+    """Test integration sensor state is restored correctly."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.integration",
+                    STATE_UNAVAILABLE,
+                    {
+                        "device_class": SensorDeviceClass.ENERGY,
+                        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                    },
+                ),
+                extra_attributes,
+            ),
+        ],
+    )
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+            "round": 2,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_restore_state_failed(hass: HomeAssistant) -> None:
@@ -577,3 +677,49 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state is not None
     assert round(float(state.state)) == 0 if method != "right" else 1
+
+
+async def test_device_id(hass: HomeAssistant) -> None:
+    """Test for source entity device for Riemann sum integral."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    integration_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "method": "trapezoidal",
+            "name": "integration",
+            "round": 1.0,
+            "source": "sensor.test_source",
+            "unit_prefix": "k",
+            "unit_time": "min",
+        },
+        title="Integration",
+    )
+
+    integration_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    integration_entity = entity_registry.async_get("sensor.integration")
+    assert integration_entity is not None
+    assert integration_entity.device_id == source_entity.device_id

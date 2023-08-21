@@ -14,8 +14,8 @@ import zoneinfo
 import ciso8601
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = dt.timezone.utc
-DEFAULT_TIME_ZONE: dt.tzinfo = dt.timezone.utc
+UTC = dt.UTC
+DEFAULT_TIME_ZONE: dt.tzinfo = dt.UTC
 CLOCK_MONOTONIC_COARSE = 6
 
 # EPOCHORDINAL is not exposed as a constant
@@ -81,7 +81,8 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    # pylint: disable-next=global-statement
+    global DEFAULT_TIME_ZONE  # noqa: PLW0603
 
     assert isinstance(time_zone, dt.tzinfo)
 
