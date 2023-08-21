@@ -1,4 +1,51 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "heater": "Heater",
+          "target_sensor": "Target sensor",
+          "advanced_settings": "Advanced settings"
+        },
+        "data_description": {
+          "heater": "Entity for heater switch, must be a toggle device. Becomes air conditioning switch when ac_mode is set to true.",
+          "target_sensor": "Entity for a temperature sensor, target_sensor.state must be temperature.",
+          "advanced_settings": "Continue the wizard to go through optional settings."
+        }
+      },
+      "advanced_settings": {
+        "data": {
+          "ac_mode": "AC mode",
+          "min_cycle_duration": "Minimum cycle duration",
+          "cold_tolerance": "Cold tolerance",
+          "hot_tolerance": "Hot tolerance",
+          "min_temp": "Minimum temperature",
+          "max_temp": "Maximum temperature",
+          "target_temp": "Target temperature",
+          "initial_hvac_mode": "Initial HVAC mode",
+          "away_temp": "Away temperature",
+          "precision": "Precision",
+          "send_if_off": "Send if off",
+          "keep_alive": "Keep alive"
+        },
+        "data_description": {
+          "ac_mode": "Set the switch specified in the heater option to be treated as a cooling device instead of a heating device.",
+          "min_cycle_duration": "Set a minimum amount of time that the switch specified in the heater option must be in its current state prior to being switched either off or on. This option will be ignored if the keep_alive option is set.",
+          "cold_tolerance": "Set a minimum amount of difference between the temperature read by the sensor specified in the target_sensor option and the target temperature that must change prior to being switched on. For example, if the target temperature is 25°C and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
+          "hot_tolerance": "Set a minimum amount of difference between the temperature read by the sensor specified in the target_sensor option and the target temperature that must change prior to being switched off. For example, if the target temperature is 25°C and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5.",
+          "min_temp": "Set minimum set point available. Default is 7.0°C.",
+          "max_temp": "Set maximum set point available.",
+          "target_temp": "Set initial target temperature. Failure to set this variable will result in target temperature being set to null on startup. As of version 0.59, it will retain the target temperature set before restart if available.",
+          "initial_hvac_mode": "Set the initial HVAC mode. Valid values are off, heat or cool. Value has to be double quoted. If this parameter is not set, it is preferable to set a keep_alive value. This is helpful to align any discrepancies between generic_thermostat and heater state.",
+          "away_temp": "Set the temperature used by preset_mode: away.",
+          "precision": "The desired precision for this device. Can be used to match your actual thermostat’s precision. Supported values are 0.1, 0.5 and 1.0. This value is also used as the step size for setting the target temperature.\nDefault: 0.1 for Celsius and 1.0 for Fahrenheit.",
+          "send_if_off": "If true, the thermostat will send the target temperature to the heater switch even if it is turned off.",
+          "keep_alive": "Set a keep-alive interval. If set, the switch specified in the heater option will be triggered every time the interval elapses. Use with heaters and A/C units that shut off if they don’t receive a signal from their remote for a while. Use also with switches that might lose state. The keep-alive call is done with the current valid climate integration state (either on or off). When keep_alive is set the min_cycle_duration option will be ignored."
+        }
+      }
+    }
+  },
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",

@@ -161,6 +161,7 @@ FLOWS = {
         "gardena_bluetooth",
         "gdacs",
         "generic",
+        "generic_thermostat",
         "geo_json_events",
         "geocaching",
         "geofency",
