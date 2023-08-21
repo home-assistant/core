@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio.exceptions
+from datetime import timedelta
+import logging
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
@@ -10,25 +12,55 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.FAN, Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+# PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.FAN, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.FAN]
+
+
+class FlexitDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching data from Flexit Nordic ventilation machine."""
+
+    def __init__(self, hass: HomeAssistant, flexit_bacnet: FlexitBACnet) -> None:
+        """Initialize shared Flexit data updater."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=flexit_bacnet.update,
+            update_interval=timedelta(seconds=30),
+        )
+        self.flexit_bacnet = flexit_bacnet
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flexit Nordic (BACnet) from a config entry."""
 
-    device = FlexitBACnet(entry.data[CONF_IP_ADDRESS], entry.data[CONF_DEVICE_ID])
+    flexit_bacnet = FlexitBACnet(
+        entry.data[CONF_IP_ADDRESS], entry.data[CONF_DEVICE_ID]
+    )
 
     try:
-        await device.update()
+        await flexit_bacnet.update()
     except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
         raise ConfigEntryNotReady(
-            f"Timeout while connecting to {entry.data['address']}"
+            f"Timeout while connecting to {entry.data[CONF_IP_ADDRESS]}"
         ) from exc
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
+    data_coordinator = FlexitDataUpdateCoordinator(
+        hass,
+        flexit_bacnet=flexit_bacnet,
+    )
+
+    # Fetch initial data from the Flexit unit. If fails, will start the
+    # configuration automatically process again.
+    await data_coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
