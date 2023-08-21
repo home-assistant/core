@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
+import math
 from typing import Any
 from unittest.mock import patch
 
@@ -919,6 +920,14 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
             "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "mean_circular",
+            "value_0": STATE_UNKNOWN,
+            "value_1": float(VALUES_NUMERIC[-1]),
+            "value_9": float(round(math.degrees(math.atan2(sum(math.sin(math.radians(x)) for x in VALUES_NUMERIC), sum(math.cos(math.radians(x)) for x in VALUES_NUMERIC))), 2)),
+            "unit": "°",
         },
         {
             "source_sensor_domain": "sensor",
