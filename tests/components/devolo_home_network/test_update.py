@@ -63,7 +63,7 @@ async def test_update_firmware(
 
     assert entity_registry.async_get(state_key).entity_category == EntityCategory.CONFIG
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         PLATFORM,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: state_key},
@@ -130,7 +130,6 @@ async def test_device_failure_update(
             {ATTR_ENTITY_ID: state_key},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -153,7 +152,7 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
             {ATTR_ENTITY_ID: state_key},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
