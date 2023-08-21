@@ -2038,7 +2038,7 @@ pysnooz==0.8.3
 pysoma==0.0.12
 
 # homeassistant.components.spc
-pyspcwebgw==0.4.0
+pyspcwebgw==0.7.0
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.6.3
