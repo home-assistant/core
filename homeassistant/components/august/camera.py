@@ -33,16 +33,17 @@ async def async_setup_entry(
 
 
 class AugustCamera(AugustEntityMixin, Camera):
-    """An implementation of a August security camera."""
+    """An implementation of an August security camera."""
+
+    _attr_translation_key = "camera"
 
     def __init__(self, data, device, session, timeout):
-        """Initialize a August security camera."""
+        """Initialize an August security camera."""
         super().__init__(data, device)
         self._timeout = timeout
         self._session = session
         self._image_url = None
         self._image_content = None
-        self._attr_name = f"{device.device_name} Camera"
         self._attr_unique_id = f"{self._device_id:s}_camera"
 
     @property

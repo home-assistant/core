@@ -1,9 +1,9 @@
 """Control switches."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.components.switch import SwitchEntity
@@ -33,7 +33,7 @@ async def async_setup_entry(
 
     async def async_update_data():
         """Fetch data from API endpoint of board."""
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             return await board_api.get_switches()
 
     coordinator = DataUpdateCoordinator(

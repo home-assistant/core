@@ -1,10 +1,11 @@
 """Arcam media player."""
 from __future__ import annotations
 
+import functools
 import logging
 from typing import Any
 
-from arcam.fmj import SourceCodes
+from arcam.fmj import ConnectionFailed, SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
@@ -19,6 +20,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,6 +57,21 @@ async def async_setup_entry(
         ],
         True,
     )
+
+
+def convert_exception(func):
+    """Return decorator to convert a connection error into a home assistant error."""
+
+    @functools.wraps(func)
+    async def _convert_exception(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except ConnectionFailed as exception:
+            raise HomeAssistantError(
+                f"Connection failed to device during {func}"
+            ) from exception
+
+    return _convert_exception
 
 
 class ArcamFmj(MediaPlayerEntity):
@@ -105,7 +122,10 @@ class ArcamFmj(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Once registered, add listener for events."""
         await self._state.start()
-        await self._state.update()
+        try:
+            await self._state.update()
+        except ConnectionFailed as connection:
+            _LOGGER.debug("Connection lost during addition: %s", connection)
 
         @callback
         def _data(host: str) -> None:
@@ -137,13 +157,18 @@ class ArcamFmj(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Force update of state."""
         _LOGGER.debug("Update state %s", self.name)
-        await self._state.update()
+        try:
+            await self._state.update()
+        except ConnectionFailed as connection:
+            _LOGGER.debug("Connection lost during update: %s", connection)
 
+    @convert_exception
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._state.set_mute(mute)
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_select_source(self, source: str) -> None:
         """Select a specific source."""
         try:
@@ -155,31 +180,37 @@ class ArcamFmj(MediaPlayerEntity):
         await self._state.set_source(value)
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a specific source."""
         try:
             await self._state.set_decode_mode(sound_mode)
-        except (KeyError, ValueError):
-            _LOGGER.error("Unsupported sound_mode %s", sound_mode)
-            return
+        except (KeyError, ValueError) as exception:
+            raise HomeAssistantError(
+                f"Unsupported sound_mode {sound_mode}"
+            ) from exception
 
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._state.set_volume(round(volume * 99.0))
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._state.inc_volume()
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_volume_down(self) -> None:
         """Turn volume up for media player."""
         await self._state.dec_volume()
         self.async_write_ha_state()
 
+    @convert_exception
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if self._state.get_power() is not None:
@@ -189,6 +220,7 @@ class ArcamFmj(MediaPlayerEntity):
             _LOGGER.debug("Firing event to turn on device")
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
+    @convert_exception
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._state.set_power(False)
@@ -230,6 +262,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         return root
 
+    @convert_exception
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:

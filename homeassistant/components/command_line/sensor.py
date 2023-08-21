@@ -16,13 +16,12 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_DEVICE_CLASS,
+    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
@@ -36,7 +35,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import ManualTriggerEntity
+from homeassistant.helpers.template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    ManualTriggerSensorEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -46,6 +49,16 @@ from .utils import check_output_or_log
 CONF_JSON_ATTRIBUTES = "json_attributes"
 
 DEFAULT_NAME = "Command Sensor"
+
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+    CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -87,30 +100,25 @@ async def async_setup_platform(
 
     name: str = sensor_config[CONF_NAME]
     command: str = sensor_config[CONF_COMMAND]
-    unit: str | None = sensor_config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = sensor_config.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    state_class: SensorStateClass | None = sensor_config.get(CONF_STATE_CLASS)
     data = CommandSensorData(hass, command, command_timeout)
 
-    trigger_entity_config = {
-        CONF_UNIQUE_ID: unique_id,
-        CONF_NAME: Template(name, hass),
-        CONF_DEVICE_CLASS: sensor_config.get(CONF_DEVICE_CLASS),
-    }
+    trigger_entity_config = {CONF_NAME: Template(name, hass)}
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in sensor_config:
+            continue
+        trigger_entity_config[key] = sensor_config[key]
 
     async_add_entities(
         [
             CommandSensor(
                 data,
                 trigger_entity_config,
-                unit,
-                state_class,
                 value_template,
                 json_attributes,
                 scan_interval,
@@ -119,7 +127,7 @@ async def async_setup_platform(
     )
 
 
-class CommandSensor(ManualTriggerEntity, SensorEntity):
+class CommandSensor(ManualTriggerSensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     _attr_should_poll = False
@@ -128,8 +136,6 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
         self,
         data: CommandSensorData,
         config: ConfigType,
-        unit_of_measurement: str | None,
-        state_class: SensorStateClass | None,
         value_template: Template | None,
         json_attributes: list[str] | None,
         scan_interval: timedelta,
@@ -141,8 +147,6 @@ class CommandSensor(ManualTriggerEntity, SensorEntity):
         self._json_attributes = json_attributes
         self._attr_native_value = None
         self._value_template = value_template
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_state_class = state_class
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
