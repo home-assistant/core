@@ -36,7 +36,6 @@ from . import (
     mock_rest_update,
     register_entity,
 )
-from .conftest import MOCK_BLOCKS
 
 from tests.common import async_fire_time_changed
 
@@ -259,21 +258,22 @@ async def test_block_device_push_updates_failure(
     """Test block device with push updates failure."""
     issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
-    monkeypatch.setattr(
-        mock_block_device,
-        "update",
-        AsyncMock(return_value=MOCK_BLOCKS),
-    )
     await init_integration(hass, 1)
 
-    # Move time to force polling
+    # Updates with COAP_REPLAY type should creates an issue
     for _ in range(MAX_PUSH_UPDATE_FAILURES + 1):
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15)
-        )
+        mock_block_device.mock_update_reply()
         await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
+    )
+
+    # An update with COAP_PERIODIC type should clear the issue
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
         domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
     )
 
