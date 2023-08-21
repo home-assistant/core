@@ -67,9 +67,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 def _check_new_discovered_device(
     known: Collection[HttpDeviceInfo], discovered: Collection[HttpDeviceInfo]
 ) -> bool:
-    known_ids = [dev.uuid for dev in known]
-    unknown = [dev for dev in discovered if dev.uuid not in known_ids]
-    return len(unknown) > 0
+    known_devices = {dev.uuid: dev for dev in known}
+    for dev in discovered:
+        if dev.uuid not in known_devices:
+            LOGGER.info(
+                f"Add new device: device_type:{dev.device_type},ip: {dev.inner_ip}"
+            )
+            return True
+        else:
+            known_device = known_devices[dev.uuid]
+            if known_device.inner_ip != dev.inner_ip:
+                LOGGER.info(
+                    f"device_type:{known_device.device_type}, update device, ip: {known_device.inner_ip} => {dev.inner_ip}"
+                )
+                return True
+    return False
 
 
 async def async_unload_entry(hass, entry):

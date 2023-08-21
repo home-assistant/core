@@ -17,7 +17,8 @@ from refoss_ha.socket_util import SocketUtil
 from refoss_ha.enums import Namespace
 from refoss_ha.controller.toggle import ToggleXMix
 from refoss_ha.controller.system import SystemAllMixin
-from refoss_ha.const import LOGGER, PUSH
+from refoss_ha.const import LOGGER, PUSH, DOMAIN
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 T = TypeVar("T", bound=BaseDevice)
 
@@ -149,8 +150,17 @@ class RefossCoordinator(DataUpdateCoordinator):
         res = []
         for device in http_devices:
             if self.lookup_base_by_uuid(device.uuid) is not None:
-                res.append(self.lookup_base_by_uuid(device.uuid))
-                continue
+                exists_device = self.lookup_base_by_uuid(device.uuid)
+                if exists_device.inner_ip == device.inner_ip:
+                    continue
+                else:
+                    device_registry = dr.async_get(self.hass)
+                    device_entry = device_registry.async_get_device(
+                        identifiers={(DOMAIN, device.uuid)}
+                    )
+                    if device_entry is not None:
+                        device_registry.async_remove_device(device_entry.id)
+                        self._devices_by_internal_id.pop(device.uuid)
 
             dev = await self._async_enroll_new_http_dev(device)
 
