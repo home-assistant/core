@@ -170,7 +170,7 @@ def process_supported_values(
             platform_domain, SL_DOMAIN, unique_id
         ):
             _LOGGER.debug(
-                f"Removing existing entity '{entity_id}' per data inclusion rule"
+                "Removing existing entity '%s' per data inclusion rule", entity_id
             )
             entity_registry.async_remove(entity_id)
 
@@ -199,7 +199,7 @@ def process_supported_values(
                 try:
                     value_data = gateway.get_data(*data_path, strict=True)
                 except KeyError:
-                    _LOGGER.debug(f"Failed to find {data_path}")
+                    _LOGGER.debug("Failed to find %s", data_path)
                     continue
 
                 sub_code = value_params.get(
