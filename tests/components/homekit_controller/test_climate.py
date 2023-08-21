@@ -922,6 +922,17 @@ async def test_heater_cooler_read_fan_speed(hass: HomeAssistant, utcnow) -> None
     """Test that we can read the state of a HomeKit thermostat accessory."""
     helper = await setup_test_component(hass, create_heater_cooler_service)
 
+    # Simulate that fan speed is off
+    await helper.async_update(
+        ServicesTypes.HEATER_COOLER,
+        {
+            CharacteristicsTypes.ROTATION_SPEED: 0,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["fan_mode"] == "off"
+
     # Simulate that fan speed is low
     await helper.async_update(
         ServicesTypes.HEATER_COOLER,
