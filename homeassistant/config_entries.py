@@ -2060,7 +2060,7 @@ async def _async_get_flow_handler(
     # First check if there is a handler registered for the domain
     if domain in hass.config.components and (handler := HANDLERS.get(domain)):
         return handler
-    
+
     await _load_integration(hass, domain, hass_config)
 
     if handler := HANDLERS.get(domain):
