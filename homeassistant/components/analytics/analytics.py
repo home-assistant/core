@@ -21,12 +21,22 @@ from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
 )
+import homeassistant.config as conf_util
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+)
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.loader import IntegrationNotFound, async_get_integrations
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integrations,
+)
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
@@ -206,8 +216,25 @@ class Analytics:
         if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
             ATTR_STATISTICS, False
         ):
+            ent_reg = er.async_get(self.hass)
+
+            try:
+                yaml_configuration = await conf_util.async_hass_config_yaml(self.hass)
+            except HomeAssistantError as err:
+                LOGGER.error(err)
+                return
+
+            configuration_set = set(yaml_configuration)
+            er_platforms = {
+                entity.platform
+                for entity in ent_reg.entities.values()
+                if not entity.disabled
+            }
+
             domains = async_get_loaded_integrations(self.hass)
             configured_integrations = await async_get_integrations(self.hass, domains)
+            enabled_domains = set(configured_integrations)
+
             for integration in configured_integrations.values():
                 if isinstance(integration, IntegrationNotFound):
                     continue
@@ -215,7 +242,11 @@ class Analytics:
                 if isinstance(integration, BaseException):
                     raise integration
 
-                if integration.disabled:
+                if not self._async_should_report_integration(
+                    integration=integration,
+                    yaml_domains=configuration_set,
+                    entity_registry_platforms=er_platforms,
+                ):
                     continue
 
                 if not integration.is_built_in:
@@ -253,12 +284,12 @@ class Analytics:
             if supervisor_info is not None:
                 payload[ATTR_ADDONS] = addons
 
-            if ENERGY_DOMAIN in integrations:
+            if ENERGY_DOMAIN in enabled_domains:
                 payload[ATTR_ENERGY] = {
                     ATTR_CONFIGURED: await energy_is_configured(self.hass)
                 }
 
-            if RECORDER_DOMAIN in integrations:
+            if RECORDER_DOMAIN in enabled_domains:
                 instance = get_recorder_instance(self.hass)
                 engine = instance.database_engine
                 if engine and engine.version is not None:
@@ -306,3 +337,34 @@ class Analytics:
             LOGGER.error(
                 "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
             )
+
+    @callback
+    def _async_should_report_integration(
+        self,
+        integration: Integration,
+        yaml_domains: set[str],
+        entity_registry_platforms: set[str],
+    ) -> bool:
+        """Return a bool to indicate if this integration should be reported."""
+        if integration.disabled:
+            return False
+
+        # Check if the integration is defined in YAML or in the entity registry
+        if (
+            integration.domain in yaml_domains
+            or integration.domain in entity_registry_platforms
+        ):
+            return True
+
+        # Check if the integration provide a config flow
+        if not integration.config_flow:
+            return False
+
+        entries = self.hass.config_entries.async_entries(integration.domain)
+
+        # Filter out ignored and disabled entries
+        return any(
+            entry
+            for entry in entries
+            if entry.source != SOURCE_IGNORE and entry.disabled_by is None
+        )

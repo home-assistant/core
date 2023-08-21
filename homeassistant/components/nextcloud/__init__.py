@@ -1,5 +1,4 @@
 """The Nextcloud integration."""
-import logging
 
 from nextcloudmonitor import (
     NextcloudMonitor,
@@ -7,12 +6,10 @@ from nextcloudmonitor import (
     NextcloudMonitorConnectionError,
     NextcloudMonitorRequestError,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -21,58 +18,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
-# Validate user configuration
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_URL): cv.url,
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                },
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Nextcloud integration."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml",
-            breaks_in_ha_version="2023.6.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-        )
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

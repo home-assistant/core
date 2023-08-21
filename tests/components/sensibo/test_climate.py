@@ -55,7 +55,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -86,21 +86,21 @@ async def test_climate(
     assert state1.state == "heat"
     assert state1.attributes == {
         "hvac_modes": [
-            "cool",
-            "heat",
-            "dry",
             "heat_cool",
+            "cool",
+            "dry",
             "fan_only",
+            "heat",
             "off",
         ],
         "min_temp": 10,
         "max_temp": 20,
         "target_temp_step": 1,
-        "fan_modes": ["quiet", "low", "medium"],
+        "fan_modes": ["low", "medium", "quiet"],
         "swing_modes": [
-            "stopped",
-            "fixedtop",
             "fixedmiddletop",
+            "fixedtop",
+            "stopped",
         ],
         "current_temperature": 21.2,
         "temperature": 25,
@@ -162,7 +162,7 @@ async def test_climate_fan(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -228,7 +228,7 @@ async def test_climate_swing(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -381,7 +381,7 @@ async def test_climate_temperatures(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -434,7 +434,7 @@ async def test_climate_temperature_is_none(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -488,7 +488,7 @@ async def test_climate_hvac_mode(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -520,7 +520,7 @@ async def test_climate_hvac_mode(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -559,7 +559,7 @@ async def test_climate_on_off(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -619,7 +619,7 @@ async def test_climate_service_failed(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -658,7 +658,7 @@ async def test_climate_assumed_state(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -707,7 +707,7 @@ async def test_climate_no_fan_no_swing(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -733,7 +733,7 @@ async def test_climate_set_timer(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -803,7 +803,7 @@ async def test_climate_set_timer(
     monkeypatch.setattr(
         get_data.parsed["ABC999111"],
         "timer_time",
-        datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt.UTC),
+        datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt_util.UTC),
     )
 
     with patch(
@@ -812,7 +812,7 @@ async def test_climate_set_timer(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -837,7 +837,7 @@ async def test_climate_pure_boost(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -908,7 +908,7 @@ async def test_climate_pure_boost(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -941,7 +941,7 @@ async def test_climate_climate_react(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -1075,7 +1075,7 @@ async def test_climate_climate_react(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -1104,7 +1104,7 @@ async def test_climate_climate_react_fahrenheit(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -1218,7 +1218,7 @@ async def test_climate_climate_react_fahrenheit(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -1247,7 +1247,7 @@ async def test_climate_full_ac_state(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
@@ -1311,7 +1311,7 @@ async def test_climate_full_ac_state(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 

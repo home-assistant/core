@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -60,6 +61,7 @@ from .const import (
     CONF_KNX_SECURE_USER_ID,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_LOG_SIZE,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -68,10 +70,11 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
     SUPPORTED_PLATFORMS,
+    TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
-from .project import KNXProject
+from .project import STORAGE_KEY as PROJECT_STORAGE_KEY, KNXProject
 from .schema import (
     BinarySensorSchema,
     ButtonSchema,
@@ -88,10 +91,12 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     TextSchema,
+    TimeSchema,
     WeatherSchema,
     ga_validator,
     sensor_type_validator,
 )
+from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,6 +145,7 @@ CONFIG_SCHEMA = vol.Schema(
                     **SensorSchema.platform_node(),
                     **SwitchSchema.platform_node(),
                     **TextSchema.platform_node(),
+                    **TimeSchema.platform_node(),
                     **WeatherSchema.platform_node(),
                 }
             ),
@@ -307,6 +313,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
+    async def _reload_integration(call: ServiceCall) -> None:
+        """Reload the integration."""
+        await hass.config_entries.async_reload(entry.entry_id)
+        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_integration)
+
     await register_panel(hass)
 
     return True
@@ -347,16 +360,21 @@ async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
 
-    def remove_keyring_files(file_path: Path) -> None:
-        """Remove keyring files."""
+    def remove_files(storage_dir: Path, knxkeys_filename: str | None) -> None:
+        """Remove KNX files."""
+        if knxkeys_filename is not None:
+            with contextlib.suppress(FileNotFoundError):
+                (storage_dir / knxkeys_filename).unlink()
         with contextlib.suppress(FileNotFoundError):
-            file_path.unlink()
+            (storage_dir / PROJECT_STORAGE_KEY).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError, OSError):
-            file_path.parent.rmdir()
+            (storage_dir / DOMAIN).rmdir()
 
-    if (_knxkeys_file := entry.data.get(CONF_KNX_KNXKEY_FILENAME)) is not None:
-        file_path = Path(hass.config.path(STORAGE_DIR)) / _knxkeys_file
-        await hass.async_add_executor_job(remove_keyring_files, file_path)
+    storage_dir = Path(hass.config.path(STORAGE_DIR))
+    knxkeys_filename = entry.data.get(CONF_KNX_KNXKEY_FILENAME)
+    await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
 class KNXModule:
@@ -383,6 +401,12 @@ class KNXModule:
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
+        self.telegrams = Telegrams(
+            hass=hass,
+            xknx=self.xknx,
+            project=self.project,
+            log_size=entry.data.get(CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT),
+        )
         self.interface_device = KNXInterfaceDevice(
             hass=hass, entry=entry, xknx=self.xknx
         )
@@ -401,11 +425,13 @@ class KNXModule:
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.project.load_project()
+        await self.telegrams.load_history()
         await self.xknx.start()
 
     async def stop(self, event: Event | None = None) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
+        await self.telegrams.save_history()
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
@@ -674,6 +700,7 @@ class KNXModule:
                 payload=GroupValueResponse(payload)
                 if attr_response
                 else GroupValueWrite(payload),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)
 
@@ -683,5 +710,6 @@ class KNXModule:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
+                source_address=self.xknx.current_address,
             )
             await self.xknx.telegrams.put(telegram)

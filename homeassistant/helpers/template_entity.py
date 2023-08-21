@@ -65,6 +65,19 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     }
 )
 
+
+def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+    """Return a schema with default name."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ICON): cv.template,
+            vol.Optional(CONF_NAME, default=default_name): cv.template,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+
+
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -171,8 +184,6 @@ class _TemplateAttribute:
 
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
-
-    _attr_name: str | None
 
     _attr_available = True
     _attr_entity_picture = None
@@ -430,7 +441,7 @@ class TemplateEntity(Entity):
         """Run an action script."""
         if run_variables is None:
             run_variables = {}
-        return await script.async_run(
+        await script.async_run(
             run_variables={
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                 **run_variables,

@@ -536,6 +536,8 @@ def get_media_url(
 class MotionEyeEntity(CoordinatorEntity):
     """Base class for motionEye entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         config_entry_id: str,

@@ -10,6 +10,8 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -64,6 +66,8 @@ async def async_setup_platform(
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),
+                conf[CONF_MINIMUM],
+                conf[CONF_MAXIMUM],
             )
         ]
     )
@@ -83,6 +87,8 @@ class CompensationSensor(SensorEntity):
         precision: int,
         polynomial: np.poly1d,
         unit_of_measurement: str | None,
+        minimum: tuple[float, float] | None,
+        maximum: tuple[float, float] | None,
     ) -> None:
         """Initialize the Compensation sensor."""
         self._source_entity_id = source
@@ -93,6 +99,8 @@ class CompensationSensor(SensorEntity):
         self._coefficients = polynomial.coefficients.tolist()
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._minimum = minimum
+        self._maximum = maximum
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -132,7 +140,14 @@ class CompensationSensor(SensorEntity):
         else:
             value = None if new_state.state == STATE_UNKNOWN else new_state.state
         try:
-            self._attr_native_value = round(self._poly(float(value)), self._precision)
+            x_value = float(value)
+            if self._minimum is not None and x_value <= self._minimum[0]:
+                y_value = self._minimum[1]
+            elif self._maximum is not None and x_value >= self._maximum[0]:
+                y_value = self._maximum[1]
+            else:
+                y_value = self._poly(x_value)
+            self._attr_native_value = round(y_value, self._precision)
 
         except (ValueError, TypeError):
             self._attr_native_value = None

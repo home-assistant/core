@@ -29,6 +29,8 @@ async def async_setup_entry(
 class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntity):
     """Representation of a Minecraft Server status binary sensor."""
 
+    _attr_translation_key = "status"
+
     def __init__(self, server: MinecraftServer) -> None:
         """Initialize status binary sensor."""
         super().__init__(

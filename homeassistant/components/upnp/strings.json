@@ -7,7 +7,7 @@
       },
       "user": {
         "data": {
-          "unique_id": "Device"
+          "unique_id": "[%key:common::config_flow::data::device%]"
         }
       }
     },

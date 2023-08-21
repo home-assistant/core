@@ -325,9 +325,7 @@ async def assert_devices_and_entities_created(
         #   we have detected broken serial numbers (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
-            {
-                (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
-            }
+            identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
         )
 
         logger.debug("Comparing device %r to %r", device, expected)

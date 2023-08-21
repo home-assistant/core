@@ -102,12 +102,13 @@ async def test_select_option(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
@@ -305,12 +306,13 @@ async def test_set_options_service(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 

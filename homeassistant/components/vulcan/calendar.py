@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -64,19 +64,19 @@ class VulcanCalendarEntity(CalendarEntity):
         self._unique_id = f"vulcan_calendar_{self.student_info['id']}"
         self._attr_name = f"Vulcan calendar - {self.student_info['full_name']}"
         self._attr_unique_id = f"vulcan_calendar_{self.student_info['id']}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
-            "entry_type": DeviceEntryType.SERVICE,
-            "name": f"{self.student_info['full_name']}: Calendar",
-            "model": (
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"calendar_{self.student_info['id']}")},
+            entry_type=DeviceEntryType.SERVICE,
+            name=f"{self.student_info['full_name']}: Calendar",
+            model=(
                 f"{self.student_info['full_name']} -"
                 f" {self.student_info['class']} {self.student_info['school']}"
             ),
-            "manufacturer": "Uonet +",
-            "configuration_url": (
+            manufacturer="Uonet +",
+            configuration_url=(
                 f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}"
             ),
-        }
+        )
 
     @property
     def event(self) -> CalendarEvent | None:

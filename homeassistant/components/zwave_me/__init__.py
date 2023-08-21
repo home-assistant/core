@@ -96,7 +96,7 @@ class ZWaveMeController:
         """Remove old-format devices in the registry."""
         for device_id in self.device_ids:
             device = registry.async_get_device(
-                {(DOMAIN, f"{self.config.unique_id}-{device_id}")}
+                identifiers={(DOMAIN, f"{self.config.unique_id}-{device_id}")}
             )
             if device is not None:
                 registry.async_remove_device(device.id)
@@ -115,7 +115,7 @@ async def async_setup_platforms(
 class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
-    def __init__(self, controller: ZWaveMeController, device: ZWaveMeData) -> None:
+    def __init__(self, controller, device):
         """Initialize the device."""
         self.controller = controller
         self.device = device
@@ -124,9 +124,13 @@ class ZWaveMeEntity(Entity):
             f"{self.controller.config.unique_id}-{self.device.id}"
         )
         self._attr_should_poll = False
-        self._attr_device_info = DeviceInfo(
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
             identifiers={(DOMAIN, self.device.deviceIdentifier)},
-            name=device.title,
+            name=self._attr_name,
             manufacturer=self.device.manufacturer,
             sw_version=self.device.firmware,
             suggested_area=self.device.locationName,

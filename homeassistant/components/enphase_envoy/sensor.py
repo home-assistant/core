@@ -18,6 +18,7 @@ from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -168,7 +169,7 @@ class EnvoyInverter(CoordinatorEntity, SensorEntity):
         """Initialize Envoy inverter entity."""
         self.entity_description = description
         self._serial_number = serial_number
-        if description.name:
+        if description.name is not UNDEFINED:
             self._attr_name = (
                 f"{envoy_name} Inverter {serial_number} {description.name}"
             )

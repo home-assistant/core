@@ -12,6 +12,7 @@ from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -873,7 +874,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, sentence, agent_id
+    hass: HomeAssistant, init_components, sentence, agent_id, snapshot
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
@@ -882,14 +883,35 @@ async def test_turn_on_intent(
     data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
-    await hass.services.async_call("conversation", "process", data)
-    await hass.async_block_till_done()
+    result = await hass.services.async_call(
+        "conversation",
+        "process",
+        data,
+        blocking=True,
+        return_response=True,
+    )
 
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == LIGHT_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.kitchen"]}
+
+    assert result == snapshot
+
+
+async def test_service_fails(hass: HomeAssistant, init_components) -> None:
+    """Test calling the turn on intent."""
+    with pytest.raises(HomeAssistantError), patch(
+        "homeassistant.components.conversation.async_converse",
+        side_effect=intent.IntentHandleError,
+    ):
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {"text": "bla"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
@@ -1032,16 +1054,16 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-@pytest.mark.parametrize("agent_id", (None, "mock-entry"))
 async def test_custom_agent(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_admin_user: MockUser,
     mock_agent,
-    agent_id,
 ) -> None:
     """Test a custom conversation agent."""
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
 
     client = await hass_client()
 
@@ -1049,9 +1071,8 @@ async def test_custom_agent(
         "text": "Test Text",
         "conversation_id": "test-conv-id",
         "language": "test-language",
+        "agent_id": mock_agent.agent_id,
     }
-    if agent_id is not None:
-        data["agent_id"] = agent_id
 
     resp = await client.post("/api/conversation/process", json=data)
     assert resp.status == HTTPStatus.OK
@@ -1371,6 +1392,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             text="open the front door",
             context=Context(),
             conversation_id=None,
+            device_id=None,
             language=hass.config.language,
         )
     )
@@ -1576,8 +1598,7 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert agent_info.id == mock_agent.agent_id
-    assert agent_info == snapshot
+    assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
     assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
     assert conversation.async_get_agent_info(hass, mock_agent.agent_id) == snapshot
     assert conversation.async_get_agent_info(hass, "not exist") is None
@@ -1590,38 +1611,49 @@ async def test_get_agent_info(
     assert agent_info == snapshot
 
 
-async def test_ws_get_agent_info(
+async def test_ws_hass_agent_debug(
     hass: HomeAssistant,
     init_components,
-    mock_agent,
     hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test get agent info."""
+    """Test homeassistant agent debug websocket command."""
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id({"type": "conversation/agent/info"})
+    kitchen_area = area_registry.async_create("kitchen")
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(
+        "light.kitchen",
+        aliases={"my cool light"},
+        area_id=kitchen_area.id,
+    )
+    hass.states.async_set("light.kitchen", "off")
+
+    on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    off_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/debug",
+            "sentences": [
+                "turn on my cool light",
+                "turn my cool light off",
+                "turn on all lights in the kitchen",
+                "how many lights are on in the kitchen?",
+                "this will not match anything",  # null in results
+            ],
+        }
+    )
+
     msg = await client.receive_json()
+
     assert msg["success"]
     assert msg["result"] == snapshot
 
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "homeassistant"}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": mock_agent.agent_id}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "not_exist"}
-    )
-    msg = await client.receive_json()
-    assert not msg["success"]
-    assert msg["error"] == snapshot
+    # Light state should not have been changed
+    assert len(on_calls) == 0
+    assert len(off_calls) == 0

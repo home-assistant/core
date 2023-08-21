@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import create_unique_id
@@ -48,7 +48,7 @@ async def async_setup_entry(
     to_station = hass.data[DOMAIN][entry.entry_id][CONF_TO]
     from_station = hass.data[DOMAIN][entry.entry_id][CONF_FROM]
     get_time: str | None = entry.data.get(CONF_TIME)
-    train_time = dt.parse_time(get_time) if get_time else None
+    train_time = dt_util.parse_time(get_time) if get_time else None
 
     async_add_entities(
         [
@@ -89,7 +89,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return dt.as_utc(traintime).isoformat()
+    return dt_util.as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -98,6 +98,7 @@ class TrainSensor(SensorEntity):
     _attr_icon = ICON
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -131,12 +132,14 @@ class TrainSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = dt.now()
+        when = dt_util.now()
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(
-                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
+                departure_day,
+                self._time,
+                dt_util.get_time_zone(self.hass.config.time_zone),
             )
         try:
             if self._time:
@@ -162,11 +165,11 @@ class TrainSensor(SensorEntity):
         # The original datetime doesn't provide a timezone so therefore attaching it here.
         if TYPE_CHECKING:
             assert _state.advertised_time_at_location
-        self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
+        self._attr_native_value = dt_util.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = dt.as_utc(_state.time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = dt.as_utc(_state.estimated_time_at_location)
+            self._attr_native_value = dt_util.as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 

@@ -20,17 +20,17 @@ else:
     import tomli as tomllib
 
 COMMENT_REQUIREMENTS = (
-    "Adafruit_BBIO",
+    "Adafruit-BBIO",
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
-    "beewi_smartclim",  # depends on bluepy
+    "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora_wifi",
+    "decora-wifi",
     "evdev",
-    "face_recognition",
+    "face-recognition",
     "opencv-python-headless",
     "pybluez",
     "pycups",
@@ -104,9 +104,9 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.6.2
+anyio==3.7.0
 h11==0.14.0
-httpcore==0.17.0
+httpcore==0.17.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -132,9 +132,8 @@ authlib<1.0
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Breaking change in version
-# https://github.com/samuelcolvin/pydantic/issues/4092
-pydantic!=1.9.1
+# Require to avoid issues with decorators (#93904). v2 has breaking changes.
+pydantic>=1.10.8,<2.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -158,7 +157,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.22.3
+protobuf==4.23.3
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -179,6 +178,10 @@ pysnmplib==5.0.21
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -430,7 +433,8 @@ def gather_constraints() -> str:
                     *core_requirements(),
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
-                }
+                },
+                key=lambda name: name.lower(),
             )
             + [""]
         )

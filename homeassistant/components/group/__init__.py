@@ -10,7 +10,6 @@ from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
-from homeassistant import core as ha
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -81,6 +80,8 @@ PLATFORMS = [
 ]
 
 REG_KEY = f"{DOMAIN}_registry"
+
+ENTITY_PREFIX = f"{DOMAIN}."
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,29 +181,19 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             continue
 
         entity_id = entity_id.lower()
-
-        try:
-            # If entity_id points at a group, expand it
-            domain, _ = ha.split_entity_id(entity_id)
-
-            if domain == DOMAIN:
-                child_entities = get_entity_ids(hass, entity_id)
-                if entity_id in child_entities:
-                    child_entities = list(child_entities)
-                    child_entities.remove(entity_id)
-                found_ids.extend(
-                    ent_id
-                    for ent_id in expand_entity_ids(hass, child_entities)
-                    if ent_id not in found_ids
-                )
-
-            else:
-                if entity_id not in found_ids:
-                    found_ids.append(entity_id)
-
-        except AttributeError:
-            # Raised by split_entity_id if entity_id is not a string
-            pass
+        # If entity_id points at a group, expand it
+        if entity_id.startswith(ENTITY_PREFIX):
+            child_entities = get_entity_ids(hass, entity_id)
+            if entity_id in child_entities:
+                child_entities = list(child_entities)
+                child_entities.remove(entity_id)
+            found_ids.extend(
+                ent_id
+                for ent_id in expand_entity_ids(hass, child_entities)
+                if ent_id not in found_ids
+            )
+        elif entity_id not in found_ids:
+            found_ids.append(entity_id)
 
     return found_ids
 

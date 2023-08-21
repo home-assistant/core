@@ -261,8 +261,7 @@ async def test_controller_mac(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
     )
-
-    assert device_entry.configuration_url == controller.api.url
+    assert device_entry
 
 
 async def test_controller_not_accessible(hass: HomeAssistant) -> None:

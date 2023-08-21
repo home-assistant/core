@@ -7,8 +7,12 @@ import pytest
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture(autouse=True)
@@ -133,7 +137,7 @@ async def test_webhook_allowed_methods_internet(
                     "platform": "webhook",
                     "webhook_id": "post_webhook",
                     "allowed_methods": "PUT",
-                    # Enable after 2023.4.0: "local_only": False,
+                    # Enable after 2023.11.0: "local_only": False,
                 },
                 "action": {
                     "event": "test_success",

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/asterisk_mbox",
   "iot_class": "local_push",
   "loggers": ["asterisk_mbox"],
-  "requirements": ["asterisk_mbox==0.5.0"]
+  "requirements": ["asterisk-mbox==0.5.0"]
 }

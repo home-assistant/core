@@ -19,6 +19,7 @@ import yarl
 from . import config as conf_util, config_entries, core, loader
 from .components import http
 from .const import (
+    FORMAT_DATETIME,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -31,6 +32,7 @@ from .helpers import (
     entity_registry,
     issue_registry,
     recorder,
+    restore_state,
     template,
 )
 from .helpers.dispatcher import async_dispatcher_send
@@ -247,6 +249,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
+        restore_state.async_load(hass),
     )
 
 
@@ -347,7 +350,6 @@ def async_enable_logging(
     fmt = (
         "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
-    datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
         try:
@@ -362,7 +364,7 @@ def async_enable_logging(
             logging.getLogger().handlers[0].setFormatter(
                 ColoredFormatter(
                     colorfmt,
-                    datefmt=datefmt,
+                    datefmt=FORMAT_DATETIME,
                     reset=True,
                     log_colors={
                         "DEBUG": "cyan",
@@ -378,12 +380,18 @@ def async_enable_logging(
 
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+
+    # Capture warnings.warn(...) and friends messages in logs.
+    # The standard destination for them is stderr, which may end up unnoticed.
+    # This way they're where other messages are, and can be filtered as usual.
+    logging.captureWarnings(True)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore[arg-type]
@@ -430,7 +438,7 @@ def async_enable_logging(
             _LOGGER.error("Error rolling over log file: %s", err)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)

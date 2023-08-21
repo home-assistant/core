@@ -167,12 +167,9 @@ class AmazonPollyProvider(Provider):
         self,
         message: str,
         language: str,
-        options: dict[str, Any] | None = None,
+        options: dict[str, Any],
     ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        if options is None or language is None:
-            _LOGGER.debug("language and/or options were missing")
-            return None, None
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices[voice_id]
         if language != voice_in_dict.get("LanguageCode"):

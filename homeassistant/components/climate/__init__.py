@@ -214,9 +214,9 @@ class ClimateEntity(Entity):
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
-    _attr_hvac_action: HVACAction | str | None = None
-    _attr_hvac_mode: HVACMode | str | None
-    _attr_hvac_modes: list[HVACMode] | list[str]
+    _attr_hvac_action: HVACAction | None = None
+    _attr_hvac_mode: HVACMode | None
+    _attr_hvac_modes: list[HVACMode]
     _attr_is_aux_heat: bool | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
@@ -361,17 +361,17 @@ class ClimateEntity(Entity):
         return self._attr_target_humidity
 
     @property
-    def hvac_mode(self) -> HVACMode | str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
 
     @property
-    def hvac_modes(self) -> list[HVACMode] | list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
     @property
-    def hvac_action(self) -> HVACAction | str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
@@ -533,6 +533,14 @@ class ClimateEntity(Entity):
         if hasattr(self, "turn_on"):
             await self.hass.async_add_executor_job(self.turn_on)
             return
+
+        # If there are only two HVAC modes, and one of those modes is OFF,
+        # then we can just turn on the other mode.
+        if len(self.hvac_modes) == 2 and HVACMode.OFF in self.hvac_modes:
+            for mode in self.hvac_modes:
+                if mode != HVACMode.OFF:
+                    await self.async_set_hvac_mode(mode)
+                    return
 
         # Fake turn on
         for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):

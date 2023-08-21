@@ -32,6 +32,8 @@
     }),
     dict({
       'data': dict({
+        'conversation_id': None,
+        'device_id': None,
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
         'language': 'en',
@@ -119,6 +121,8 @@
     }),
     dict({
       'data': dict({
+        'conversation_id': None,
+        'device_id': None,
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
         'language': 'en-US',
@@ -206,6 +210,8 @@
     }),
     dict({
       'data': dict({
+        'conversation_id': None,
+        'device_id': None,
         'engine': 'homeassistant',
         'intent_input': 'test transcript',
         'language': 'en-US',

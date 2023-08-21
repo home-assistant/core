@@ -14,12 +14,6 @@ from zigpy.zcl.foundation import Status
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    AttrReportConfig,
-    ClientClusterHandler,
-    ClusterHandler,
-    parse_and_log_command,
-)
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -32,6 +26,12 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
+)
+from . import (
+    AttrReportConfig,
+    ClientClusterHandler,
+    ClusterHandler,
+    parse_and_log_command,
 )
 from .helpers import is_hue_motion_sensor
 
@@ -297,7 +297,7 @@ class LevelControlClusterHandler(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         self.debug("received attribute: %s update with value: %s", attrid, value)
         if attrid == self.CURRENT_LEVEL:
@@ -358,7 +358,7 @@ class OnOffClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
         self._off_listener = None
 
-        if self.cluster.endpoint.model in (
+        if self.cluster.endpoint.model not in (
             "TS011F",
             "TS0121",
             "TS0001",
@@ -366,13 +366,19 @@ class OnOffClusterHandler(ClusterHandler):
             "TS0003",
             "TS0004",
         ):
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
-            self.ZCL_INIT_ATTRS["backlight_mode"] = True
-            self.ZCL_INIT_ATTRS["power_on_state"] = True
-            if self.cluster.endpoint.model == "TS011F":
-                self.ZCL_INIT_ATTRS["child_lock"] = True
+            return
+
+        try:
+            self.cluster.find_attribute("backlight_mode")
+        except KeyError:
+            return
+
+        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()  # pylint: disable=invalid-name
+        self.ZCL_INIT_ATTRS["backlight_mode"] = True
+        self.ZCL_INIT_ATTRS["power_on_state"] = True
+
+        if self.cluster.endpoint.model == "TS011F":
+            self.ZCL_INIT_ATTRS["child_lock"] = True
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
@@ -438,7 +444,7 @@ class OnOffClusterHandler(ClusterHandler):
         self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
             self.async_send_signal(

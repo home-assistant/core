@@ -9,10 +9,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
-SENSORS = {
-    "in_meeting": "In Meeting",
-    "muted": "Muted",
-}
+SENSORS = (
+    "in_meeting",
+    "muted",
+)
 
 
 async def async_setup_entry(
@@ -30,15 +30,13 @@ async def async_setup_entry(
 class MuteStatus(update_coordinator.CoordinatorEntity, BinarySensorEntity):
     """Mütesync binary sensors."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator, sensor_type):
         """Initialize our sensor."""
         super().__init__(coordinator)
         self._sensor_type = sensor_type
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return SENSORS[self._sensor_type]
+        self._attr_translation_key = sensor_type
 
     @property
     def unique_id(self):

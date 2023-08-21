@@ -1,0 +1,8 @@
+{
+  "services": {
+    "start": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Starts the Remote Python Debugger."
+    }
+  }
+}

@@ -53,23 +53,24 @@ async def load_wyoming_info(
 
     for _ in range(retries + 1):
         try:
-            async with AsyncTcpClient(host, port) as client:
-                with async_timeout.timeout(timeout):
-                    # Describe -> Info
-                    await client.write_event(Describe().event())
-                    while True:
-                        event = await client.read_event()
-                        if event is None:
-                            raise WyomingError(
-                                "Connection closed unexpectedly",
-                            )
+            async with AsyncTcpClient(host, port) as client, async_timeout.timeout(
+                timeout
+            ):
+                # Describe -> Info
+                await client.write_event(Describe().event())
+                while True:
+                    event = await client.read_event()
+                    if event is None:
+                        raise WyomingError(
+                            "Connection closed unexpectedly",
+                        )
 
-                        if Info.is_type(event.type):
-                            wyoming_info = Info.from_event(event)
-                            break  # while
+                    if Info.is_type(event.type):
+                        wyoming_info = Info.from_event(event)
+                        break  # while
 
-                    if wyoming_info is not None:
-                        break  # for
+                if wyoming_info is not None:
+                    break  # for
         except (asyncio.TimeoutError, OSError, WyomingError):
             # Sleep and try again
             await asyncio.sleep(retry_wait)

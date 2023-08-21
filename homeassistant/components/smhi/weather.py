@@ -27,15 +27,17 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ROUNDING_PRECISION,
     Forecast,
     WeatherEntity,
 )
@@ -58,12 +60,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
-from homeassistant.util.unit_conversion import SpeedConverter
 
 from .const import (
-    ATTR_SMHI_CLOUDINESS,
     ATTR_SMHI_THUNDER_PROBABILITY,
-    ATTR_SMHI_WIND_GUST_SPEED,
     DOMAIN,
     ENTITY_ID_SENSOR_FORMAT,
 )
@@ -128,6 +127,7 @@ class SmhiWeather(WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -156,14 +156,7 @@ class SmhiWeather(WeatherEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self._forecasts:
-            wind_gust = SpeedConverter.convert(
-                self._forecasts[0].wind_gust,
-                UnitOfSpeed.METERS_PER_SECOND,
-                self._wind_speed_unit,
-            )
             return {
-                ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
-                ATTR_SMHI_WIND_GUST_SPEED: round(wind_gust, ROUNDING_PRECISION),
                 ATTR_SMHI_THUNDER_PROBABILITY: self._forecasts[0].thunder,
             }
         return None
@@ -189,6 +182,8 @@ class SmhiWeather(WeatherEntity):
             self._attr_wind_bearing = self._forecasts[0].wind_direction
             self._attr_native_visibility = self._forecasts[0].horizontal_visibility
             self._attr_native_pressure = self._forecasts[0].pressure
+            self._attr_native_wind_gust_speed = self._forecasts[0].wind_gust
+            self._attr_cloud_coverage = self._forecasts[0].cloudiness
             self._attr_condition = next(
                 (
                     k
@@ -227,6 +222,9 @@ class SmhiWeather(WeatherEntity):
                     ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
                     ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
                     ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
+                    ATTR_FORECAST_HUMIDITY: forecast.humidity,
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast.wind_gust,
+                    ATTR_FORECAST_CLOUD_COVERAGE: forecast.cloudiness,
                 }
             )
 

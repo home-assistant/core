@@ -16,6 +16,7 @@ from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 
 from homeassistant.backports.enum import StrEnum
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
@@ -619,7 +620,7 @@ class DmsDeviceSource:
         """Make an identifier for BrowseMediaSource."""
         return f"{self.source_id}/{action}{object_id}"
 
-    @functools.cached_property
+    @cached_property
     def _sort_criteria(self) -> list[str]:
         """Return criteria to be used for sorting results.
 

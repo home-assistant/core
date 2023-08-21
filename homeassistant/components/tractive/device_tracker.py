@@ -36,7 +36,6 @@ async def async_setup_entry(
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
-    _attr_has_entity_name = True
     _attr_icon = "mdi:paw"
     _attr_translation_key = "tracker"
 

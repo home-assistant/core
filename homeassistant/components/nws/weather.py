@@ -8,6 +8,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
@@ -52,16 +54,13 @@ from .const import (
 PARALLEL_UPDATES = 0
 
 
-def convert_condition(
-    time: str, weather: tuple[tuple[str, int | None], ...]
-) -> tuple[str, int | None]:
+def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) -> str:
     """Convert NWS codes to HA condition.
 
     Choose first condition in CONDITION_CLASSES that exists in weather code.
     If no match is found, return first condition from NWS
     """
     conditions: list[str] = [w[0] for w in weather]
-    prec_probs = [w[1] or 0 for w in weather]
 
     # Choose condition with highest priority.
     cond = next(
@@ -75,10 +74,10 @@ def convert_condition(
 
     if cond == "clear":
         if time == "day":
-            return ATTR_CONDITION_SUNNY, max(prec_probs)
+            return ATTR_CONDITION_SUNNY
         if time == "night":
-            return ATTR_CONDITION_CLEAR_NIGHT, max(prec_probs)
-    return cond, max(prec_probs)
+            return ATTR_CONDITION_CLEAR_NIGHT
+    return cond
 
 
 async def async_setup_entry(
@@ -219,8 +218,7 @@ class NWSWeather(WeatherEntity):
             time = self.observation.get("iconTime")
 
         if weather:
-            cond, _ = convert_condition(time, weather)
-            return cond
+            return convert_condition(time, weather)
         return None
 
     @property
@@ -256,16 +254,27 @@ class NWSWeather(WeatherEntity):
             else:
                 data[ATTR_FORECAST_NATIVE_TEMP] = None
 
+            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = forecast_entry.get(
+                "probabilityOfPrecipitation"
+            )
+
+            if (dewp := forecast_entry.get("dewpoint")) is not None:
+                data[ATTR_FORECAST_NATIVE_DEW_POINT] = TemperatureConverter.convert(
+                    dewp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+                )
+            else:
+                data[ATTR_FORECAST_NATIVE_DEW_POINT] = None
+
+            data[ATTR_FORECAST_HUMIDITY] = forecast_entry.get("relativeHumidity")
+
             if self.mode == DAYNIGHT:
                 data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
+
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
-            if time and weather:
-                cond, precip = convert_condition(time, weather)
-            else:
-                cond, precip = None, None
-            data[ATTR_FORECAST_CONDITION] = cond
-            data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precip
+            data[ATTR_FORECAST_CONDITION] = (
+                convert_condition(time, weather) if time and weather else None
+            )
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")

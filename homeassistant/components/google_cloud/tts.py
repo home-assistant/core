@@ -241,7 +241,7 @@ class GoogleCloudTTSProvider(Provider):
             CONF_TEXT_TYPE: self._text_type,
         }
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         options_schema = vol.Schema(
             {

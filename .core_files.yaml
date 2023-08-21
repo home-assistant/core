@@ -21,11 +21,13 @@ base_platforms: &base_platforms
   - homeassistant/components/climate/**
   - homeassistant/components/cover/**
   - homeassistant/components/date/**
+  - homeassistant/components/datetime/**
   - homeassistant/components/device_tracker/**
   - homeassistant/components/diagnostics/**
   - homeassistant/components/fan/**
   - homeassistant/components/geo_location/**
   - homeassistant/components/humidifier/**
+  - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**

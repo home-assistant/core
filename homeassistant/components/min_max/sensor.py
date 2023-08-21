@@ -30,7 +30,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
-    EventType,
     StateType,
 )
 
@@ -287,7 +286,7 @@ class MinMaxSensor(SensorEntity):
 
     @callback
     def _async_min_max_sensor_state_listener(
-        self, event: EventType, update_state: bool = True
+        self, event: Event, update_state: bool = True
     ) -> None:
         """Handle the sensor state changes."""
         new_state: State | None = event.data.get("new_state")

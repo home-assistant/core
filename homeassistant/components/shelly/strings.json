@@ -76,8 +76,8 @@
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "disabled": "Disabled",
-        "active": "Active",
+        "disabled": "[%key:common::state::disabled%]",
+        "active": "[%key:common::state::active%]",
         "passive": "Passive"
       }
     }
@@ -103,7 +103,7 @@
         "state": {
           "unknown": "Unknown",
           "warmup": "Warm-up",
-          "normal": "normal",
+          "normal": "Normal",
           "fault": "Fault"
         },
         "state_attributes": {

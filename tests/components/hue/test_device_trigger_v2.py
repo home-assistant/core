@@ -1,16 +1,17 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
 from aiohue.v2.models.button import ButtonEvent
+from pytest_unordered import unordered
 
 from homeassistant.components import hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 
 from tests.common import (
-    assert_lists_same,
     async_capture_events,
     async_get_device_automations,
 )
@@ -47,7 +48,11 @@ async def test_hue_event(
 
 
 async def test_get_triggers(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data, device_reg
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
+    device_reg,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -55,7 +60,10 @@ async def test_get_triggers(
 
     # Get triggers for `Wall switch with 2 controls`
     hue_wall_switch_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
+        identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
+    )
+    hue_bat_sensor = entity_registry.async_get(
+        "sensor.wall_switch_with_2_controls_battery"
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, hue_wall_switch_device.id
@@ -66,7 +74,7 @@ async def test_get_triggers(
         "domain": "sensor",
         "device_id": hue_wall_switch_device.id,
         "type": "battery_level",
-        "entity_id": "sensor.wall_switch_with_2_controls_battery",
+        "entity_id": hue_bat_sensor.id,
         "metadata": {"secondary": True},
     }
 
@@ -96,4 +104,4 @@ async def test_get_triggers(
         ),
     ]
 
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)

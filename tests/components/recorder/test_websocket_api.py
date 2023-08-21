@@ -1973,6 +1973,36 @@ async def test_change_statistics_unit(
         ],
     }
 
+    # Changing to the same unit is allowed but does nothing
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "recorder/change_statistics_unit",
+            "statistic_id": "sensor.test",
+            "new_unit_of_measurement": "W",
+            "old_unit_of_measurement": "W",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    await client.send_json({"id": 7, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "W",
+            "unit_class": "power",
+        }
+    ]
+
 
 async def test_change_statistics_unit_errors(
     recorder_mock: Recorder,

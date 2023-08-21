@@ -64,7 +64,6 @@ from .test_common import (
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
-    help_test_validate_platform_config,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -131,7 +130,7 @@ def alarm_control_panel_platform_only():
 
 
 @pytest.mark.parametrize(
-    ("config", "valid"),
+    ("hass_config", "valid"),
     [
         (
             {
@@ -170,10 +169,14 @@ def alarm_control_panel_platform_only():
     ],
 )
 async def test_fail_setup_without_state_or_command_topic(
-    hass: HomeAssistant, config, valid
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator, valid
 ) -> None:
     """Test for failing setup with no state or command topic."""
-    assert help_test_validate_platform_config(hass, config) == valid
+    if valid:
+        await mqtt_mock_entry()
+        return
+    with pytest.raises(AssertionError):
+        await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1093,7 +1096,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

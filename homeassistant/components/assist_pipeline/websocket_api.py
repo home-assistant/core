@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import language as language_util
 
 from .const import DOMAIN
+from .error import PipelineNotFound
 from .pipeline import (
     PipelineData,
     PipelineError,
@@ -55,6 +56,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("input"): dict,
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
+                vol.Optional("device_id"): vol.Any(str, None),
                 vol.Optional("timeout"): vol.Any(float, int),
             },
         ),
@@ -85,8 +87,9 @@ async def websocket_run(
 ) -> None:
     """Run a pipeline."""
     pipeline_id = msg.get("pipeline")
-    pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
-    if pipeline is None:
+    try:
+        pipeline = async_get_pipeline(hass, pipeline_id=pipeline_id)
+    except PipelineNotFound:
         connection.send_error(
             msg["id"],
             "pipeline-not-found",
@@ -103,6 +106,7 @@ async def websocket_run(
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
         "conversation_id": msg.get("conversation_id"),
+        "device_id": msg.get("device_id"),
     }
 
     if start_stage == PipelineStage.STT:
@@ -151,7 +155,7 @@ async def websocket_run(
         # Input to conversation agent
         input_args["intent_input"] = msg["input"]["text"]
     elif start_stage == PipelineStage.TTS:
-        # Input to text to speech system
+        # Input to text-to-speech system
         input_args["tts_input"] = msg["input"]["text"]
 
     input_args["run"] = PipelineRun(
@@ -278,7 +282,6 @@ def websocket_get_run(
     )
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_pipeline/language/list",

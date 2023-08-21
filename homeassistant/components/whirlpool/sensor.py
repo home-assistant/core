@@ -105,7 +105,6 @@ class WhirlpoolSensorEntityDescription(
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
-        name="State",
         translation_key="whirlpool_machine",
         device_class=SensorDeviceClass.ENUM,
         options=(
@@ -117,7 +116,6 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
-        name="Detergent Level",
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
@@ -131,7 +129,7 @@ SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
 SENSOR_TIMER: tuple[SensorEntityDescription] = (
     SensorEntityDescription(
         key="timeremaining",
-        name="End Time",
+        translation_key="end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
@@ -183,6 +181,7 @@ class WasherDryerClass(SensorEntity):
     """A class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -205,7 +204,6 @@ class WasherDryerClass(SensorEntity):
             name=name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
@@ -231,6 +229,7 @@ class WasherDryerTimeClass(RestoreSensor):
     """A timestamp class for the whirlpool/maytag washer account."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -254,7 +253,6 @@ class WasherDryerTimeClass(RestoreSensor):
             name=name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
@@ -290,12 +288,15 @@ class WasherDryerTimeClass(RestoreSensor):
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
+
             new_timestamp = now + timedelta(
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            if isinstance(self._attr_native_value, datetime) and abs(
-                new_timestamp - self._attr_native_value
-            ) > timedelta(seconds=60):
+            if (
+                self._attr_native_value is None
+                or isinstance(self._attr_native_value, datetime)
+                and abs(new_timestamp - self._attr_native_value) > timedelta(seconds=60)
+            ):
                 self._attr_native_value = new_timestamp
                 self._async_write_ha_state()

@@ -131,8 +131,6 @@ async def async_setup_entry(
 class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
-    _attr_name: str
-
     def __init__(
         self,
         config_entry: ConfigEntry,

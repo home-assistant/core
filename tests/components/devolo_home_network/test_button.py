@@ -228,7 +228,8 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
             {ATTR_ENTITY_ID: state_key},
             blocking=True,
         )
-        await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

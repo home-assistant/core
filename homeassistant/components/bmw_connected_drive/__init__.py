@@ -44,6 +44,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 SERVICE_UPDATE_STATE = "update_state"

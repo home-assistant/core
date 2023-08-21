@@ -17,7 +17,6 @@ from .const import DOMAIN, GATEWAY, NETWORK_COORDINATOR, SIGNAL_COORDINATOR, SMS
 SIGNAL_SENSORS = (
     SensorEntityDescription(
         key="SignalStrength",
-        translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,

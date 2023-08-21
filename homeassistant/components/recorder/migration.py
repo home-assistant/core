@@ -1303,7 +1303,7 @@ def _migrate_statistics_columns_to_timestamp(
             with session_scope(session=session_maker()) as session:
                 session.connection().execute(
                     text(
-                        f"UPDATE {table} set start_ts=strftime('%s',start) + "
+                        f"UPDATE {table} set start_ts=strftime('%s',start) + "  # noqa: S608
                         "cast(substr(start,-7) AS FLOAT), "
                         f"created_ts=strftime('%s',created) + "
                         "cast(substr(created,-7) AS FLOAT), "
@@ -1321,7 +1321,7 @@ def _migrate_statistics_columns_to_timestamp(
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
-                            f"UPDATE {table} set start_ts="
+                            f"UPDATE {table} set start_ts="  # noqa: S608
                             "IF(start is NULL or UNIX_TIMESTAMP(start) is NULL,0,"
                             "UNIX_TIMESTAMP(start) "
                             "), "
@@ -1343,7 +1343,7 @@ def _migrate_statistics_columns_to_timestamp(
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
-                            f"UPDATE {table} set start_ts="  # nosec
+                            f"UPDATE {table} set start_ts="  # noqa: S608
                             "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
                             "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
                             "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "

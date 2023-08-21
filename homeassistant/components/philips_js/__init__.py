@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
@@ -99,6 +100,19 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self.unique_id),
+            },
+            manufacturer="Philips",
+            model=self.system.get("model"),
+            name=self.system["name"],
+            sw_version=self.system.get("softwareversion"),
         )
 
     @property

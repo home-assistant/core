@@ -75,20 +75,25 @@ class MatterEntity(Entity):
         await super().async_added_to_hass()
 
         # Subscribe to attribute updates.
+        sub_paths: list[str] = []
         for attr_cls in self._entity_info.attributes_to_watch:
             attr_path = self.get_matter_attribute_path(attr_cls)
             self._attributes_map[attr_cls] = attr_path
+            sub_paths.append(attr_path)
             self._unsubscribes.append(
-                self.matter_client.subscribe(
+                self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
                     attr_path_filter=attr_path,
                 )
             )
+        await self.matter_client.subscribe_attribute(
+            self._endpoint.node.node_id, sub_paths
+        )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
                 node_filter=self._endpoint.node.node_id,

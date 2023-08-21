@@ -164,16 +164,19 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_has_matching_flow(
-        self, handler: str, context: dict[str, Any], data: Any
+        self, handler: str, match_context: dict[str, Any], data: Any
     ) -> bool:
         """Check if an existing matching flow is in progress.
 
         A flow with the same handler, context, and data.
+
+        If match_context is passed, only return flows with a context that is a
+        superset of match_context.
         """
         return any(
             flow
-            for flow in self._async_progress_by_handler(handler)
-            if flow.context["source"] == context["source"] and flow.init_data == data
+            for flow in self._async_progress_by_handler(handler, match_context)
+            if flow.init_data == data
         )
 
     @callback
@@ -192,11 +195,19 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_progress_by_handler(
-        self, handler: str, include_uninitialized: bool = False
+        self,
+        handler: str,
+        include_uninitialized: bool = False,
+        match_context: dict[str, Any] | None = None,
     ) -> list[FlowResult]:
-        """Return the flows in progress by handler as a partial FlowResult."""
+        """Return the flows in progress by handler as a partial FlowResult.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
         return _async_flow_handler_to_flow_result(
-            self._async_progress_by_handler(handler), include_uninitialized
+            self._async_progress_by_handler(handler, match_context),
+            include_uninitialized,
         )
 
     @callback
@@ -217,11 +228,26 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def _async_progress_by_handler(self, handler: str) -> list[FlowHandler]:
-        """Return the flows in progress by handler."""
+    def _async_progress_by_handler(
+        self, handler: str, match_context: dict[str, Any] | None
+    ) -> list[FlowHandler]:
+        """Return the flows in progress by handler.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
+        match_context_items = match_context.items() if match_context else None
         return [
-            self._progress[flow_id]
+            progress
             for flow_id in self._handler_progress_index.get(handler, {})
+            if (progress := self._progress[flow_id])
+            and (
+                not match_context_items
+                or (
+                    (context := progress.context)
+                    and match_context_items <= context.items()
+                )
+            )
         ]
 
     async def async_init(

@@ -1,46 +1,5 @@
 {
   "title": "Demo",
-  "issues": {
-    "bad_psu": {
-      "title": "The power supply is not stable",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The power supply needs to be replaced",
-            "description": "Press SUBMIT to confirm the power supply has been replaced"
-          }
-        }
-      }
-    },
-    "out_of_blinker_fluid": {
-      "title": "The blinker fluid is empty and needs to be refilled",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Blinker fluid needs to be refilled",
-            "description": "Press SUBMIT when blinker fluid has been refilled"
-          }
-        }
-      }
-    },
-    "cold_tea": {
-      "title": "The tea is cold",
-      "fix_flow": {
-        "step": {},
-        "abort": {
-          "not_tea_time": "Can not re-heat the tea at this time"
-        }
-      }
-    },
-    "transmogrifier_deprecated": {
-      "title": "The transmogrifier component is deprecated",
-      "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
-    },
-    "unfixable_problem": {
-      "title": "This is not a fixable problem",
-      "description": "This issue is never going to give up."
-    }
-  },
   "options": {
     "step": {
       "init": {
@@ -81,7 +40,7 @@
               "2": "2",
               "3": "3",
               "auto": "Auto",
-              "off": "Off"
+              "off": "[%key:common::state::off%]"
             }
           }
         }
@@ -100,7 +59,7 @@
       "thermostat_mode": {
         "name": "Thermostat mode",
         "state": {
-          "away": "Away",
+          "away": "[%key:common::state::not_home%]",
           "comfort": "Comfort",
           "eco": "Eco",
           "sleep": "Sleep"
@@ -115,6 +74,12 @@
           }
         }
       }
+    }
+  },
+  "services": {
+    "randomize_device_tracker_data": {
+      "name": "Randomize device tracker data",
+      "description": "Demonstrates using a device tracker to see where devices are located."
     }
   }
 }

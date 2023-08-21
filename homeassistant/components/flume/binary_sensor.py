@@ -34,8 +34,7 @@ from .entity import FlumeEntity
 from .util import get_valid_flume_devices
 
 BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
-    name="Connected",
-    key="connected",
+    key="connected", device_class=BinarySensorDeviceClass.CONNECTIVITY
 )
 
 
@@ -56,14 +55,14 @@ class FlumeBinarySensorEntityDescription(
 FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
     FlumeBinarySensorEntityDescription(
         key="leak",
-        name="Leak detected",
+        translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_LEAK_DETECTED,
         icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
-        name="High flow",
+        translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",

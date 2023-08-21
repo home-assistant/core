@@ -17,7 +17,7 @@ from homeassistant.const import CONF_UNIQUE_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import (
     YAML_CONFIG,
@@ -218,7 +218,7 @@ async def test_invalid_url_on_update(
         await init_integration(hass, config)
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
@@ -399,7 +399,7 @@ async def test_no_issue_when_view_has_the_text_entity_id_in_it(
         )
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=1),
+            dt_util.utcnow() + timedelta(minutes=1),
         )
         await hass.async_block_till_done()
 
@@ -457,3 +457,47 @@ async def test_engine_is_disposed_at_stop(
         await hass.async_stop()
 
     assert mock_engine_dispose.call_count == 2
+
+
+async def test_attributes_from_entry_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test attributes from entry config."""
+
+    await init_integration(
+        hass,
+        config={
+            "name": "Get Value - With",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+            "device_class": SensorDeviceClass.DATA_SIZE,
+            "state_class": SensorStateClass.TOTAL,
+        },
+        entry_id="8693d4782ced4fb1ecca4743f29ab8f1",
+    )
+
+    state = hass.states.get("sensor.get_value_with")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL
+
+    await init_integration(
+        hass,
+        config={
+            "name": "Get Value - Without",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+        },
+        entry_id="7aec7cd8045fba4778bb0621469e3cd9",
+    )
+
+    state = hass.states.get("sensor.get_value_without")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert "device_class" not in state.attributes
+    assert "state_class" not in state.attributes

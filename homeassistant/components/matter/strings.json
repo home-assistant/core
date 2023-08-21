@@ -43,5 +43,24 @@
       "install_addon": "Please wait while the Matter Server add-on installation finishes. This can take several minutes.",
       "start_addon": "Please wait while the Matter Server add-on starts. This add-on is what powers Matter in Home Assistant. This may take some seconds."
     }
+  },
+  "entity": {
+    "sensor": {
+      "flow": {
+        "name": "Flow"
+      }
+    }
+  },
+  "services": {
+    "open_commissioning_window": {
+      "name": "Open commissioning window",
+      "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "The Matter device to add to the other Matter network."
+        }
+      }
+    }
   }
 }

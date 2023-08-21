@@ -87,6 +87,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_name = None
 
     def __init__(self, fan):
         """Initialize the VeSync fan device."""

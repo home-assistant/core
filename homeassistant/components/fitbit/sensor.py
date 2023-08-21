@@ -442,14 +442,13 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = f"{hours}:{minutes:02d} {setting}"
                 else:
                     self._attr_native_value = raw_state
+            elif self.is_metric:
+                self._attr_native_value = raw_state
             else:
-                if self.is_metric:
+                try:
+                    self._attr_native_value = int(raw_state)
+                except TypeError:
                     self._attr_native_value = raw_state
-                else:
-                    try:
-                        self._attr_native_value = int(raw_state)
-                    except TypeError:
-                        self._attr_native_value = raw_state
 
         if resource_type == "activities/heart":
             self._attr_native_value = (

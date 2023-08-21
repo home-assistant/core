@@ -35,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class ButtonDeviceClass(StrEnum):
     """Device class for buttons."""
 
+    IDENTIFY = "identify"
     RESTART = "restart"
     UPDATE = "update"
 
@@ -87,6 +88,13 @@ class ButtonEntity(RestoreEntity):
     _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
     __last_pressed: datetime | None = None
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For buttons this is True if the entity has a device class.
+        """
+        return self.device_class is not None
 
     @property
     def device_class(self) -> ButtonDeviceClass | None:

@@ -9,10 +9,10 @@ import io
 import logging
 from typing import Any
 
-import PIL
 from aiohttp import web
 from async_timeout import timeout
 from httpx import HTTPStatusError, RequestError, TimeoutException
+import PIL
 import voluptuous as vol
 import yarl
 
@@ -426,24 +426,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # is always jpeg
                     still_format = "image/jpeg"
                 data = {
-                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
+                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                    ),
+                    **user_input,
                     CONF_CONTENT_TYPE: still_format
                     or self.config_entry.options.get(CONF_CONTENT_TYPE),
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                    ],
-                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                        self.config_entry.options.get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                        ),
-                    ),
                 }
                 self.user_input = data
                 # temporary preview for user to check the image

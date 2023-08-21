@@ -55,7 +55,7 @@ async def test_gvh5178_error(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 0
     inject_bluetooth_service_info(hass, GVH5178_SERVICE_INFO_ERROR)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 3
 
     temp_sensor = hass.states.get("sensor.b51782bc8_remote_temperature")
     assert temp_sensor.state == STATE_UNAVAILABLE

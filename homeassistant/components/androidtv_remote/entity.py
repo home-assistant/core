@@ -16,6 +16,7 @@ from .const import DOMAIN
 class AndroidTVRemoteBaseEntity(Entity):
     """Android TV Remote Base Entity."""
 
+    _attr_name = None
     _attr_has_entity_name = True
     _attr_should_poll = False
 

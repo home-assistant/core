@@ -21,6 +21,7 @@ from elmax_api.model.panel import PanelEntry, PanelStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -168,17 +169,17 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         return self._device.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self._panel.hash)},
-            "name": self._panel.get_name_by_user(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._panel.hash)},
+            name=self._panel.get_name_by_user(
                 self.coordinator.http_client.get_authenticated_username()
             ),
-            "manufacturer": "Elmax",
-            "model": self._panel_version,
-            "sw_version": self._panel_version,
-        }
+            manufacturer="Elmax",
+            model=self._panel_version,
+            sw_version=self._panel_version,
+        )
 
     @property
     def available(self) -> bool:

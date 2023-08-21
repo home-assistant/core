@@ -47,9 +47,15 @@ def generate_config_parameter_subtype(config_value: ConfigurationValue) -> str:
     if config_value.property_key:
         # Property keys for config values are always an int
         assert isinstance(config_value.property_key, int)
-        parameter = f"{parameter}[{hex(config_value.property_key)}]"
+        parameter = (
+            f"{parameter}[{hex(config_value.property_key)}] on endpoint "
+            f"{config_value.endpoint}"
+        )
 
-    return f"{parameter} ({config_value.property_name})"
+    return (
+        f"{parameter} ({config_value.property_name}) on endpoint "
+        f"{config_value.endpoint}"
+    )
 
 
 @callback

@@ -1,7 +1,7 @@
 """Diagnostics support for ESPHome."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
@@ -28,7 +28,6 @@ async def async_get_config_entry_diagnostics(
     entry_data = DomainData.get(hass).get_entry_data(config_entry)
 
     if (storage_data := await entry_data.store.async_load()) is not None:
-        storage_data = cast("dict[str, Any]", storage_data)
         diag["storage_data"] = storage_data
 
     if config_entry.unique_id and (

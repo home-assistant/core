@@ -31,23 +31,45 @@
     }
   },
   "entity": {
-    "sensor": {
-      "sensitivity": {
-        "state": {
-          "n": "Normal",
-          "s": "Sensitive"
-        }
+    "binary_sensor": {
+      "filter_clean": {
+        "name": "Filter clean required"
       },
-      "smart_type": {
-        "state": {
-          "temperature": "Temperature",
-          "feelslike": "Feels like",
-          "humidity": "Humidity"
-        }
+      "is_main_sensor": {
+        "name": "Main sensor"
+      },
+      "room_occupied": {
+        "name": "Room occupied"
+      },
+      "pure_ac_integration": {
+        "name": "Pure Boost linked with AC"
+      },
+      "pure_geo_integration": {
+        "name": "Pure Boost linked with presence"
+      },
+      "pure_measure_integration": {
+        "name": "Pure Boost linked with indoor air quality"
+      },
+      "pure_prime_integration": {
+        "name": "Pure Boost linked with outdoor air quality"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "number": {
+      "calibration_temperature": {
+        "name": "Temperature calibration"
+      },
+      "calibration_humidity": {
+        "name": "Humidity calibration"
       }
     },
     "select": {
       "horizontalswing": {
+        "name": "Horizontal swing",
         "state": {
           "stopped": "Stopped",
           "fixedleft": "Fixed left",
@@ -61,10 +83,181 @@
         }
       },
       "light": {
+        "name": "Light",
         "state": {
-          "on": "On",
+          "on": "[%key:common::state::on%]",
           "dim": "Dim",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "sensor": {
+      "filter_last_reset": {
+        "name": "Filter last reset"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "sensitivity": {
+        "name": "Pure sensitivity",
+        "state": {
+          "n": "Normal",
+          "s": "Sensitive"
+        }
+      },
+      "timer_time": {
+        "name": "Timer end time"
+      },
+      "feels_like": {
+        "name": "Temperature feels like"
+      },
+      "climate_react_low": {
+        "name": "Climate React low temperature threshold"
+      },
+      "climate_react_high": {
+        "name": "Climate React high temperature threshold"
+      },
+      "smart_type": {
+        "name": "Climate React type",
+        "state": {
+          "temperature": "Temperature",
+          "feelslike": "Feels like",
+          "humidity": "Humidity"
+        }
+      },
+      "airq_tvoc": {
+        "name": "AirQ TVOC"
+      },
+      "airq_co2": {
+        "name": "AirQ CO2"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "ethanol": {
+        "name": "Ethanol"
+      }
+    },
+    "switch": {
+      "timer_on_switch": {
+        "name": "Timer"
+      },
+      "climate_react_switch": {
+        "name": "Climate React"
+      },
+      "pure_boost_switch": {
+        "name": "Pure Boost"
+      }
+    },
+    "update": {
+      "fw_ver_available": {
+        "name": "Update available"
+      }
+    }
+  },
+  "services": {
+    "assume_state": {
+      "name": "Assume state",
+      "description": "Sets Sensibo device to external state.",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "State to set."
+        }
+      }
+    },
+    "enable_timer": {
+      "name": "Enable timer",
+      "description": "Enables the timer with custom time.",
+      "fields": {
+        "minutes": {
+          "name": "Minutes",
+          "description": "Countdown for timer (for timer state on)."
+        }
+      }
+    },
+    "enable_pure_boost": {
+      "name": "Enable pure boost",
+      "description": "Enables and configures Pure Boost settings.",
+      "fields": {
+        "ac_integration": {
+          "name": "AC integration",
+          "description": "Integrate with Air Conditioner."
+        },
+        "geo_integration": {
+          "name": "Geo integration",
+          "description": "Integrate with Presence."
+        },
+        "indoor_integration": {
+          "name": "Indoor air quality",
+          "description": "Integrate with checking indoor air quality."
+        },
+        "outdoor_integration": {
+          "name": "Outdoor air quality",
+          "description": "Integrate with checking outdoor air quality."
+        },
+        "sensitivity": {
+          "name": "Sensitivity",
+          "description": "Set the sensitivity for Pure Boost."
+        }
+      }
+    },
+    "full_state": {
+      "name": "Set full state",
+      "description": "Sets full state for Sensibo device.",
+      "fields": {
+        "mode": {
+          "name": "HVAC mode",
+          "description": "HVAC mode to set."
+        },
+        "target_temperature": {
+          "name": "Target temperature",
+          "description": "Set target temperature."
+        },
+        "fan_mode": {
+          "name": "Fan mode",
+          "description": "set fan mode."
+        },
+        "swing_mode": {
+          "name": "Swing mode",
+          "description": "Set swing mode."
+        },
+        "horizontal_swing_mode": {
+          "name": "Horizontal swing mode",
+          "description": "Set horizontal swing mode."
+        },
+        "light": {
+          "name": "Light",
+          "description": "Set light on or off."
+        }
+      }
+    },
+    "enable_climate_react": {
+      "name": "Enable climate react",
+      "description": "Enables and configures climate react.",
+      "fields": {
+        "high_temperature_threshold": {
+          "name": "Threshold high",
+          "description": "When temp/humidity goes above."
+        },
+        "high_temperature_state": {
+          "name": "State high threshold",
+          "description": "What should happen at high threshold. Requires full state."
+        },
+        "low_temperature_threshold": {
+          "name": "Threshold low",
+          "description": "When temp/humidity goes below."
+        },
+        "low_temperature_state": {
+          "name": "State low threshold",
+          "description": "What should happen at low threshold. Requires full state."
+        },
+        "smart_type": {
+          "name": "Trigger type",
+          "description": "Choose between temperature/feels like/humidity."
         }
       }
     }

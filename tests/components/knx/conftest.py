@@ -12,13 +12,7 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import (
-    APCI,
-    GroupValueRead,
-    GroupValueResponse,
-    GroupValueWrite,
-    IndividualAddressRead,
-)
+from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -143,13 +137,14 @@ class KNXTestKit:
         """Assert outgoing telegram. One by one in timely order."""
         await self.xknx.telegrams.join()
         await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done()
         try:
             telegram = self._outgoing_telegrams.get_nowait()
-        except asyncio.QueueEmpty:
+        except asyncio.QueueEmpty as err:
             raise AssertionError(
                 f"No Telegram found. Expected: {apci_type.__name__} -"
                 f" {group_address} - {payload}"
-            )
+            ) from err
 
         assert isinstance(
             telegram.payload, apci_type
@@ -204,19 +199,6 @@ class KNXTestKit:
                 direction=TelegramDirection.INCOMING,
                 payload=payload,
                 source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
-            )
-        )
-        await self.xknx.telegrams.join()
-        await self.hass.async_block_till_done()
-
-    async def receive_individual_address_read(self, source: str | None = None):
-        """Inject incoming IndividualAddressRead telegram."""
-        self.xknx.telegrams.put_nowait(
-            Telegram(
-                destination_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
-                direction=TelegramDirection.INCOMING,
-                payload=IndividualAddressRead(),
-                source_address=IndividualAddress(source or "1.3.5"),
             )
         )
         await self.xknx.telegrams.join()

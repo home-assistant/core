@@ -7,7 +7,6 @@ import re
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -728,7 +727,7 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
@@ -752,7 +751,7 @@ async def test_cleanup_device(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
@@ -787,7 +786,7 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
@@ -800,7 +799,7 @@ async def test_cleanup_device_mqtt(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_registry.async_get_device({("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
     assert entity_entry is None
@@ -867,7 +866,7 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {
@@ -898,7 +897,7 @@ async def test_cleanup_device_multiple_config_entries(
 
     # Verify device is still there but entity is cleared
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
@@ -967,7 +966,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify device and registry entries are created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     assert device_entry.config_entries == {
@@ -990,7 +989,7 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 
     # Verify device is still there but entity is cleared
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
     entity_entry = entity_registry.async_get("sensor.mqtt_sensor")
@@ -1115,7 +1114,6 @@ async def test_discovery_expansion_2(
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH])
-@pytest.mark.no_fail_on_log_exception
 async def test_discovery_expansion_3(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -1146,10 +1144,7 @@ async def test_discovery_expansion_3(
     assert hass.states.get("switch.DiscoveryExpansionTest1") is None
     # Make sure the malformed availability data does not trip up discovery by asserting
     # there are schema valdiation errors in the log
-    assert (
-        "voluptuous.error.MultipleInvalid: expected a dictionary @ data['availability'][0]"
-        in caplog.text
-    )
+    assert "expected a dictionary @ data['availability'][0]" in caplog.text
 
 
 async def test_discovery_expansion_without_encoding_and_value_template_1(
@@ -1523,7 +1518,7 @@ async def test_clear_config_topic_disabled_entity(
 
     # Verify device is created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
 
@@ -1589,7 +1584,7 @@ async def test_clean_up_registry_monitoring(
 
     # Verify device is created
     device_entry = device_registry.async_get_device(
-        set(), {("mac", "12:34:56:AB:CD:EF")}
+        connections={("mac", "12:34:56:AB:CD:EF")}
     )
     assert device_entry is not None
 
@@ -1647,7 +1642,6 @@ async def test_unique_id_collission_has_priority(
     assert entity_registry.async_get("sensor.sbfspot_12345_2") is None
 
 
-@pytest.mark.xfail(raises=MultipleInvalid)
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_update_with_bad_config_not_breaks_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator

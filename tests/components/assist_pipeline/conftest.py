@@ -9,7 +9,10 @@ import pytest
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import DOMAIN
-from homeassistant.components.assist_pipeline.pipeline import PipelineStorageCollection
+from homeassistant.components.assist_pipeline.pipeline import (
+    PipelineData,
+    PipelineStorageCollection,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,13 +26,14 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.components.tts.conftest import (  # noqa: F401, pylint: disable=unused-import
-    init_cache_dir_side_effect,
-    mock_get_cache_files,
-    mock_init_cache_dir,
-)
 
 _TRANSCRIPT = "test transcript"
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
 
 
 class BaseProvider:
@@ -126,7 +130,7 @@ class MockTTSProvider(tts.Provider):
         return ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> tts.TtsAudioType:
         """Load TTS data."""
         return ("mp3", b"")
@@ -190,9 +194,6 @@ async def init_supporting_components(
     mock_stt_provider_entity: MockSttProviderEntity,
     mock_tts_provider: MockTTSProvider,
     config_flow_fixture,
-    init_cache_dir_side_effect,  # noqa: F811
-    mock_get_cache_files,  # noqa: F811
-    mock_init_cache_dir,  # noqa: F811
 ):
     """Initialize relevant components with empty configs."""
 
@@ -262,6 +263,12 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-def pipeline_storage(hass: HomeAssistant, init_components) -> PipelineStorageCollection:
+def pipeline_data(hass: HomeAssistant, init_components) -> PipelineData:
+    """Return pipeline data."""
+    return hass.data[DOMAIN]
+
+
+@pytest.fixture
+def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
-    return hass.data[DOMAIN].pipeline_store
+    return pipeline_data.pipeline_store

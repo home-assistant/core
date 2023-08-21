@@ -12,7 +12,7 @@ async def test_kill_process() -> None:
     """Test killing a process."""
     sleeper = subprocess.Popen(
         "sleep 1000",
-        shell=True,  # nosec # shell by design
+        shell=True,  # noqa: S602 # shell by design
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

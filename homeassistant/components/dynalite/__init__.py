@@ -43,19 +43,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Dynalite platform."""
-    conf = config.get(DOMAIN)
+    conf = config.get(DOMAIN, {})
     LOGGER.debug("Setting up dynalite component config = %s", conf)
-
-    if conf is None:
-        conf = {}
-
     hass.data[DOMAIN] = {}
 
-    # User has configured bridges
-    if CONF_BRIDGES not in conf:
-        return True
-
-    bridges = conf[CONF_BRIDGES]
+    bridges = conf.get(CONF_BRIDGES, [])
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]

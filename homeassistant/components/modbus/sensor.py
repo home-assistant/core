@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DEVICE_CLASS_NAME
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -80,11 +79,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         # this ensures that idx = bit position of value in result
         # polling is done with the base class
         name = self._attr_name if self._attr_name else "modbus_sensor"
-
-        # DataUpdateCoordinator does not support DEVICE_CLASS_NAME
-        # the assert satisfies the type checker and will catch attempts
-        # to use DEVICE_CLASS_NAME in _attr_name.
-        assert name is not DEVICE_CLASS_NAME
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,

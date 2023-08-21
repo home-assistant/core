@@ -11,6 +11,19 @@
       "addon_installed_other_device": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_installed_other_device::title%]"
       },
+      "addon_menu": {
+        "menu_options": {
+          "reconfigure_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::reconfigure_addon%]",
+          "uninstall_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::addon_menu::menu_options::uninstall_addon%]"
+        }
+      },
+      "change_channel": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::title%]",
+        "data": {
+          "channel": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::data::channel%]"
+        },
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::change_channel::description%]"
+      },
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
@@ -22,11 +35,19 @@
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
       },
+      "notify_channel_change": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"
+      },
       "main_menu": {
         "menu_options": {
           "hardware_settings": "[%key:component::homeassistant_yellow::options::step::hardware_settings::title%]",
           "multipan_settings": "Configure IEEE 802.15.4 radio multiprotocol support"
         }
+      },
+      "notify_unknown_multipan_user": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::title%]",
+        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_unknown_multipan_user::description%]"
       },
       "reboot_menu": {
         "title": "Reboot required",
@@ -36,12 +57,18 @@
           "reboot_now": "Reboot now"
         }
       },
+      "reconfigure_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
+      },
       "show_revert_guide": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::show_revert_guide::description%]"
       },
       "start_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_addon::title%]"
+      },
+      "uninstall_addon": {
+        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::title%]"
       }
     },
     "error": {

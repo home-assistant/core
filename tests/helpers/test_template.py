@@ -3889,6 +3889,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
 
     hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test3", "-0.0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set("sensor.test4", "-0", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
 
     # state_with_unit property
     tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
@@ -3905,6 +3907,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     # AllStates.__call__ and rounded=True
     tpl7 = template.Template("{{ states('sensor.test', rounded=True) }}", hass)
     tpl8 = template.Template("{{ states('sensor.test2', rounded=True) }}", hass)
+    tpl9 = template.Template("{{ states('sensor.test3', rounded=True) }}", hass)
+    tpl10 = template.Template("{{ states('sensor.test4', rounded=True) }}", hass)
 
     assert tpl.async_render() == "23.00 beers"
     assert tpl2.async_render() == "23 beers"
@@ -3914,6 +3918,8 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
     assert tpl6.async_render() == "23 beers"
     assert tpl7.async_render() == 23.0
     assert tpl8.async_render() == 23
+    assert tpl9.async_render() == 0.0
+    assert tpl10.async_render() == 0
 
     hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
     hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
@@ -4527,20 +4533,22 @@ async def test_render_to_info_with_exception(hass: HomeAssistant) -> None:
 async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     """Test that the template internal LRU cache increases with many entities."""
     # We do not actually want to record 4096 entities so we mock the entity count
-    mock_entity_count = 4096
+    mock_entity_count = 16
 
     assert template.CACHED_TEMPLATE_LRU.get_size() == template.CACHED_TEMPLATE_STATES
     assert (
         template.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size()
         == template.CACHED_TEMPLATE_STATES
     )
+    template.CACHED_TEMPLATE_LRU.set_size(8)
+    template.CACHED_TEMPLATE_NO_COLLECT_LRU.set_size(8)
 
     template.async_setup(hass)
-    with patch.object(
-        hass.states, "async_entity_ids_count", return_value=mock_entity_count
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done()
+    for i in range(mock_entity_count):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
 
     assert template.CACHED_TEMPLATE_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)
@@ -4550,9 +4558,12 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     )
 
     await hass.async_stop()
-    with patch.object(hass.states, "async_entity_ids_count", return_value=8192):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+
+    for i in range(mock_entity_count):
+        hass.states.async_set(f"sensor.sensor_add_{i}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+    await hass.async_block_till_done()
 
     assert template.CACHED_TEMPLATE_LRU.get_size() == int(
         round(mock_entity_count * template.ENTITY_COUNT_GROWTH_FACTOR)

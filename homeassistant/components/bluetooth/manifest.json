@@ -1,7 +1,6 @@
 {
   "domain": "bluetooth",
   "name": "Bluetooth",
-  "after_dependencies": ["hassio"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["logger", "usb"],
@@ -17,9 +16,9 @@
   "requirements": [
     "bleak==0.20.2",
     "bleak-retry-connector==3.0.2",
-    "bluetooth-adapters==0.15.3",
-    "bluetooth-auto-recovery==1.2.0",
-    "bluetooth-data-tools==0.4.0",
+    "bluetooth-adapters==0.16.0",
+    "bluetooth-auto-recovery==1.2.1",
+    "bluetooth-data-tools==1.6.0",
     "dbus-fast==1.86.0"
   ]
 }

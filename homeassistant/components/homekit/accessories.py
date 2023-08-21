@@ -281,7 +281,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
             iid_manager=HomeIIDManager(driver.iid_storage),
-            *args,
+            *args,  # noqa: B026
             **kwargs,
         )
         self.config = config or {}
@@ -626,10 +626,10 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
-        self, client_uuid: UUID, client_public: str, client_permissions: int
+        self, client_username_bytes: bytes, client_public: str, client_permissions: int
     ) -> bool:
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public, client_permissions)
+        success = super().pair(client_username_bytes, client_public, client_permissions)
         if success:
             async_dismiss_setup_message(self.hass, self._entry_id)
         return cast(bool, success)

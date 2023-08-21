@@ -19,8 +19,13 @@ from homeassistant.util.ssl import (
 
 from .frame import warn_use
 
+# We have a lot of integrations that poll every 10-30 seconds
+# and we want to keep the connection open for a while so we
+# don't have to reconnect every time so we use 15s to match aiohttp.
+KEEP_ALIVE_TIMEOUT = 15
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
+DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
 SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
     APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
@@ -78,6 +83,7 @@ def create_async_httpx_client(
     client = HassHttpXAsyncClient(
         verify=ssl_context,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        limits=DEFAULT_LIMITS,
         **kwargs,
     )
 

@@ -12,13 +12,13 @@ from tests.common import get_fixture_path
 
 
 @pytest.fixture
-def mock_ping():
+def mock_ping() -> None:
     """Mock icmplib.ping."""
     with patch("homeassistant.components.ping.icmp_ping"):
         yield
 
 
-async def test_reload(hass: HomeAssistant, mock_ping) -> None:
+async def test_reload(hass: HomeAssistant, mock_ping: None) -> None:
     """Verify we can reload trend sensors."""
 
     await setup.async_setup_component(

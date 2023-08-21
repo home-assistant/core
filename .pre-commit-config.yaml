@@ -1,12 +1,12 @@
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.262
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.277
     hooks:
       - id: ruff
         args:
           - --fix
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
         args:
@@ -22,19 +22,6 @@ repos:
           - --quiet-level=2
         exclude_types: [csv, json]
         exclude: ^tests/fixtures/|homeassistant/generated/
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.4
-    hooks:
-      - id: bandit
-        args:
-          - --quiet
-          - --format=custom
-          - --configfile=tests/bandit.yaml
-        files: ^(homeassistant|script|tests)/.+\.py$
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -48,7 +35,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.28.0
+    rev: v1.32.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier

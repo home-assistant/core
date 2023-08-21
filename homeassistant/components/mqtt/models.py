@@ -289,7 +289,7 @@ class MqttData:
     """Keep the MQTT entry data."""
 
     client: MQTT
-    config: ConfigType
+    config: list[ConfigType]
     debug_info_entities: dict[str, EntityDebugInfo] = field(default_factory=dict)
     debug_info_triggers: dict[tuple[str, str], TriggerDebugInfo] = field(
         default_factory=dict
@@ -307,12 +307,9 @@ class MqttData:
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_entry: bool = False
     reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
         default_factory=dict
     )
-    reload_needed: bool = False
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
-    updated_config: ConfigType = field(default_factory=dict)

@@ -9,20 +9,28 @@
       "registered_devices": true
     },
     {
-      "hostname": "es*",
+      "hostname": "e[sp]*",
       "macaddress": "54AF97*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "E848B8*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "1C61B4*"
     },
     {
-      "hostname": "ep*",
+      "hostname": "e[sp]*",
       "macaddress": "003192*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "B4B024*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "9C5322*"
     },
     {
       "hostname": "hs*",
@@ -131,11 +139,19 @@
     {
       "hostname": "k[lp]*",
       "macaddress": "6C5AB0*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "54AF97*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "AC15A2*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa==0.5.1"]
+  "requirements": ["python-kasa[speedups]==0.5.2"]
 }

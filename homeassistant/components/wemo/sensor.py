@@ -28,9 +28,8 @@ from .wemo_device import DeviceCoordinator
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
-    # AttributeSensor does not support DEVICE_CLASS_NAME
-    # the assert satisfies the type checker and will catch attempts
-    # to use DEVICE_CLASS_NAME in the entity descriptions.
+    # AttributeSensor does not support UNDEFINED,
+    # restrict the type to str | None.
     name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None

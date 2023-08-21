@@ -4,6 +4,8 @@
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
       "is_not_bat_low": "{entity_name} battery is normal",
+      "is_charging": "{entity_name} is charging",
+      "is_not_charging": "{entity_name} is not charging",
       "is_co": "{entity_name} is detecting carbon monoxide",
       "is_no_co": "{entity_name} is not detecting carbon monoxide",
       "is_cold": "{entity_name} is cold",
@@ -50,12 +52,14 @@
       "is_no_vibration": "{entity_name} is not detecting vibration",
       "is_open": "{entity_name} is open",
       "is_not_open": "{entity_name} is closed",
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
+      "charging": "{entity_name} charging",
+      "not_charging": "{entity_name} not charging",
       "co": "{entity_name} started detecting carbon monoxide",
       "no_co": "{entity_name} stopped detecting carbon monoxide",
       "cold": "{entity_name} became cold",
@@ -102,8 +106,8 @@
       "no_vibration": "{entity_name} stopped detecting vibration",
       "opened": "{entity_name} opened",
       "not_opened": "{entity_name} closed",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
   "entity_component": {
@@ -296,19 +300,5 @@
         "on": "[%key:common::state::open%]"
       }
     }
-  },
-  "device_class": {
-    "co": "carbon_monoxide",
-    "cold": "cold",
-    "gas": "gas",
-    "heat": "heat",
-    "moisture": "moisture",
-    "motion": "motion",
-    "occupancy": "occupancy",
-    "power": "power",
-    "problem": "problem",
-    "smoke": "smoke",
-    "sound": "sound",
-    "vibration": "vibration"
   }
 }
