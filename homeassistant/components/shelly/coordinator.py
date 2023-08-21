@@ -274,8 +274,23 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
+            device_update_info(self.hass, self.device, self.entry)
+
+    @callback
+    def _async_handle_update(
+        self, device_: BlockDevice, update_type: BlockUpdateType
+    ) -> None:
+        """Handle device update."""
+        if update_type == BlockUpdateType.COAP_PERIODIC:
+            self._push_update_failures = 0
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
+            )
+        elif update_type == BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
-            if self._push_update_failures > MAX_PUSH_UPDATE_FAILURES:
+            if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
                 LOGGER.debug(
                     "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
                 )
@@ -293,13 +308,9 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                         "ip_address": self.device.ip_address,
                     },
                 )
-            device_update_info(self.hass, self.device, self.entry)
-
-    @callback
-    def _async_handle_update(
-        self, device_: BlockDevice, update_type: BlockUpdateType
-    ) -> None:
-        """Handle device update."""
+        LOGGER.debug(
+            "Push update failures for %s: %s", self.name, self._push_update_failures
+        )
         self.async_set_updated_data(None)
 
     def async_setup(self) -> None:
