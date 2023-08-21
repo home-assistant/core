@@ -21,12 +21,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entry."""
 
     if entry.version == 1:
-        new_options = {**entry.options}
-        new_options[CONF_MODULES_POWER] = new_options["modules power"]
-        new_options[CONF_DAMPING_MORNING] = new_options.get(CONF_DAMPING, 0.0)
-        new_options[CONF_DAMPING_EVENING] = new_options.get(CONF_DAMPING, 0.0)
-        new_options.pop("modules power")
-        new_options.pop(CONF_DAMPING)
+        new_options = entry.options.copy()
+        new_options |= {
+            CONF_MODULES_POWER: new_options.pop("modules power"),
+            CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, 0.0),
+            CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
+        }
 
         entry.version = 2
 
