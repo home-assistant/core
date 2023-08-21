@@ -26,7 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
-from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN, CONF_DEVICE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
