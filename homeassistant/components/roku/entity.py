@@ -12,6 +12,8 @@ from .const import DOMAIN
 class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
     """Defines a base Roku entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,
@@ -25,10 +27,6 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
 
         if description is not None:
             self.entity_description = description
-
-        self._attr_has_entity_name = True
-
-        if description is not None:
             self._attr_unique_id = f"{device_id}_{description.key}"
         else:
             self._attr_unique_id = device_id
