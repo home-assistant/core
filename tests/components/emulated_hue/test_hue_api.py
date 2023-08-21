@@ -314,7 +314,7 @@ async def test_discover_lights(hass: HomeAssistant, hue_client) -> None:
     await hass.async_block_till_done()
 
     result_json = await async_get_lights(hue_client)
-    assert "1" not in result_json.keys()
+    assert "1" not in result_json
     devices = {val["uniqueid"] for val in result_json.values()}
     assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
 
