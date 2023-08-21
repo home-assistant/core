@@ -22,6 +22,7 @@ from homeassistant.helpers import entity_registry as er
 from . import init_integration
 
 RELAY_BLOCK_ID = 0
+GAS_VALVE_BLOCK_ID = 6
 
 
 async def test_block_device_services(hass: HomeAssistant, mock_block_device) -> None:
@@ -267,3 +268,12 @@ async def test_block_device_gas_valve(
     assert state
     assert state.state == STATE_OFF  # valve is closed
     assert state.attributes.get(ATTR_ICON) == "mdi:valve-closed"
+
+    monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON  # valve is open
+    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
