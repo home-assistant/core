@@ -651,7 +651,7 @@ def nice_ibt4zwave_state_fixture():
 
 
 @pytest.fixture(name="logic_group_zdb5100_state", scope="session")
-def light_logic_group_zdb5100_light_state_fixture():
+def logic_group_zdb5100_state_fixture():
     """Load the Logic Group ZDB5100 node state fixture data."""
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
