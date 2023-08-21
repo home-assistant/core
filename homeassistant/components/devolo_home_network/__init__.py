@@ -9,6 +9,7 @@ from devolo_plc_api import Device
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
+    UpdateFirmwareCheck,
     WifiGuestAccessGet,
 )
 from devolo_plc_api.exceptions.device import (
@@ -37,6 +38,7 @@ from .const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
+    REGULAR_FIRMWARE,
     SHORT_UPDATE_INTERVAL,
     SWITCH_GUEST_WIFI,
     SWITCH_LEDS,
@@ -45,7 +47,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up devolo Home Network from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
@@ -65,6 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device}
+
+    async def async_update_firmware_available() -> UpdateFirmwareCheck:
+        """Fetch data from API endpoint."""
+        assert device.device
+        try:
+            async with asyncio.timeout(10):
+                return await device.device.async_check_firmware_available()
+        except DeviceUnavailable as err:
+            raise UpdateFailed(err) from err
 
     async def async_update_connected_plc_devices() -> LogicalNetwork:
         """Fetch data from API endpoint."""
@@ -134,6 +147,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_method=async_update_led_status,
             update_interval=SHORT_UPDATE_INTERVAL,
         )
+    if device.device and "update" in device.device.features:
+        coordinators[REGULAR_FIRMWARE] = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=REGULAR_FIRMWARE,
+            update_method=async_update_firmware_available,
+            update_interval=LONG_UPDATE_INTERVAL,
+        )
     if device.device and "wifi1" in device.device.features:
         coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(
             hass,
@@ -192,4 +213,6 @@ def platforms(device: Device) -> set[Platform]:
         supported_platforms.add(Platform.BINARY_SENSOR)
     if device.device and "wifi1" in device.device.features:
         supported_platforms.add(Platform.DEVICE_TRACKER)
+    if device.device and "update" in device.device.features:
+        supported_platforms.add(Platform.UPDATE)
     return supported_platforms

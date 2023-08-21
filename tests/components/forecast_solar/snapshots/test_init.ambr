@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_migration
+  ConfigEntrySnapshot({
+    'data': dict({
+      'latitude': 52.42,
+      'longitude': 4.42,
+    }),
+    'disabled_by': None,
+    'domain': 'forecast_solar',
+    'entry_id': <ANY>,
+    'options': dict({
+      'api_key': 'abcdef12345',
+      'azimuth': 190,
+      'damping_evening': 0.5,
+      'damping_morning': 0.5,
+      'declination': 30,
+      'inverter_size': 2000,
+      'modules_power': 5100,
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'Green House',
+    'unique_id': 'unique',
+    'version': 2,
+  })
+# ---

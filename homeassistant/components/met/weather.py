@@ -16,8 +16,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,11 +30,10 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import MetDataUpdateCoordinator
@@ -92,7 +91,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
+class MetWeather(CoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     """Implementation of a Met.no weather condition."""
 
     _attr_attribution = (
@@ -147,15 +146,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._hourly
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
 
     @property
     def condition(self) -> str | None:
