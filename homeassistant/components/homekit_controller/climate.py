@@ -194,9 +194,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
-        if self.service.has(CharacteristicsTypes.ROTATION_SPEED):
-            return [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-        return None
+        return [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     @property
     def fan_mode(self) -> str | None:
