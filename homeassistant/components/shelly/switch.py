@@ -73,6 +73,7 @@ def async_setup_block_entry(
             {("valve", "valve"): GAS_VALVE_SWITCH},
             BlockValveSwitch,
         )
+        return
 
     # In roller mode the relay blocks exist but do not contain required info
     if (
