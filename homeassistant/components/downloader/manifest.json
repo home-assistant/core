@@ -2,6 +2,7 @@
   "domain": "downloader",
   "name": "Downloader",
   "codeowners": ["@erwindouna"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/downloader",
   "quality_scale": "internal"
 }
