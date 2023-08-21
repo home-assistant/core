@@ -470,7 +470,7 @@ async def test_config_flow_sensor_preview(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "sensor"
     assert result["errors"] is None
-    assert result["preview"] == "sensor_group_preview"
+    assert result["preview"] == "group_sensor"
 
     await client.send_json_auto_id(
         {
@@ -550,7 +550,7 @@ async def test_option_flow_sensor_preview(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == "sensor_group_preview"
+    assert result["preview"] == "group_sensor"
 
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("sensor.input_two", "20")
