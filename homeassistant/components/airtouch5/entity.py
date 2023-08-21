@@ -21,11 +21,10 @@ class Airtouch5Entity(Entity):
         self._attr_available = True
 
     @callback
-    def _receive_connection_callback(self, state: Airtouch5ConnectionStateChange):
-        if state is Airtouch5ConnectionStateChange.CONNECTED:
-            self._attr_available = True
-        else:
-            self._attr_available = False
+    def _receive_connection_callback(
+        self, state: Airtouch5ConnectionStateChange
+    ) -> None:
+        self._attr_available = state is Airtouch5ConnectionStateChange.CONNECTED
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -35,7 +34,7 @@ class Airtouch5Entity(Entity):
         )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Remove data updated listener after this object has been initialized."""
+        """Remove data updated listener when entity is removed from homeassistant."""
         self._client.connection_state_callbacks.remove(
             self._receive_connection_callback
         )
