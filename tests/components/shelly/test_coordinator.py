@@ -260,7 +260,7 @@ async def test_block_device_push_updates_failure(
 
     await init_integration(hass, 1)
 
-    # Updates with COAP_REPLAY type should creates an issue
+    # Updates with COAP_REPLAY type should create an issue
     for _ in range(MAX_PUSH_UPDATE_FAILURES + 1):
         mock_block_device.mock_update_reply()
         await hass.async_block_till_done()
