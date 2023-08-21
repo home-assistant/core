@@ -1,4 +1,17 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select a location to get to store downloads. The setup will check if the directory exists."
+      }
+    },
+    "error": {
+      "cannot_connect": "The directory could not be reached. Please check your settings."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
   "services": {
     "download_file": {
       "name": "Download file",
