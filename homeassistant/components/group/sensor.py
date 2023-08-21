@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -304,10 +304,25 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._extra_state_attribute: dict[str, Any] = {}
 
     @callback
-    def async_preview(self) -> tuple[str, Mapping[str, Any]]:
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
         """Render a preview."""
-        self.async_update_group_state()
-        return self._async_generate_attributes()
+
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None,
+        ) -> None:
+            """Handle child updates."""
+            self.async_update_group_state()
+            state, attributes = self._async_generate_attributes()
+            preview_callback(state, attributes)
+
+        async_state_changed_listener(None)
+        return async_track_state_change_event(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

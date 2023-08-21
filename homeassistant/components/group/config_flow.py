@@ -277,7 +277,7 @@ def _async_hide_members(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "group/sensor/preview",
+        vol.Required("type"): "group/sensor/start_preview",
         vol.Required("flow_id"): str,
         vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
         vol.Required("user_input"): dict,
@@ -300,6 +300,16 @@ async def ws_preview_sensor(
             raise HomeAssistantError
         ignore_non_numeric = validated[CONF_IGNORE_NON_NUMERIC]
         name = config_entry.options["name"]
+
+    @callback
+    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
+        """Forward config entry state events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"], {"state": state, "attributes": attributes}
+            )
+        )
+
     sensor = SensorGroup(
         None,
         name,
@@ -311,6 +321,8 @@ async def ws_preview_sensor(
         None,
     )
     sensor.hass = hass
-    state, attr = sensor.async_preview()
 
-    connection.send_result(msg["id"], {"state": state, "attributes": attr})
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = sensor.async_start_preview(
+        async_preview_updated
+    )

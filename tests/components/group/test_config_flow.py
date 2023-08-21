@@ -474,7 +474,7 @@ async def test_config_flow_sensor_preview(
 
     await client.send_json_auto_id(
         {
-            "type": "group/sensor/preview",
+            "type": "group/sensor/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
             "user_input": {
@@ -486,7 +486,10 @@ async def test_config_flow_sensor_preview(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
         "attributes": {
             "friendly_name": "My sensor group",
             "icon": "mdi:calculator",
@@ -497,21 +500,8 @@ async def test_config_flow_sensor_preview(
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("sensor.input_two", "20")
 
-    await client.send_json_auto_id(
-        {
-            "type": "group/sensor/preview",
-            "flow_id": result["flow_id"],
-            "flow_type": "config_flow",
-            "user_input": {
-                "name": "My sensor group",
-                "entities": input_sensors,
-                "type": "max",
-            },
-        }
-    )
     msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
+    assert msg["event"] == {
         "attributes": {
             "entity_id": ["sensor.input_one", "sensor.input_two"],
             "friendly_name": "My sensor group",
@@ -557,7 +547,7 @@ async def test_option_flow_sensor_preview(
 
     await client.send_json_auto_id(
         {
-            "type": "group/sensor/preview",
+            "type": "group/sensor/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
             "user_input": {
@@ -568,7 +558,10 @@ async def test_option_flow_sensor_preview(
     )
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
         "attributes": {
             "entity_id": ["sensor.input_one", "sensor.input_two"],
             "friendly_name": "My sensor group",
