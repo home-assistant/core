@@ -183,6 +183,7 @@ class AirthingsSensor(
 
     @property
     def available(self) -> bool:
+        """Check if device and sensor is available in data."""
         return (
             super().available
             and self.entity_description.key in self.coordinator.data.sensors
