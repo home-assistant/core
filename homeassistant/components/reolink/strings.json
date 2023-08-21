@@ -102,6 +102,9 @@
     "sensor": {
       "wifi_signal": {
         "name": "Wi-Fi signal"
+      },
+      "ptz_pan_position": {
+        "name": "PTZ pan position"
       }
     }
   }

@@ -3,7 +3,7 @@
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
-      'name': 'Timer',
+      'name': 'Gardena Water Computer',
     }),
     'errors': None,
     'flow_id': <ANY>,
@@ -19,7 +19,7 @@
       'confirm_only': True,
       'source': 'bluetooth',
       'title_placeholders': dict({
-        'name': 'Timer',
+        'name': 'Gardena Water Computer',
       }),
       'unique_id': '00000000-0000-0000-0000-000000000001',
     }),
@@ -44,11 +44,11 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'bluetooth',
-      'title': 'Timer',
+      'title': 'Gardena Water Computer',
       'unique_id': '00000000-0000-0000-0000-000000000001',
       'version': 1,
     }),
-    'title': 'Timer',
+    'title': 'Gardena Water Computer',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
   })
@@ -124,7 +124,7 @@
         'options': list([
           tuple(
             '00000000-0000-0000-0000-000000000001',
-            'Timer',
+            'Gardena Water Computer',
           ),
         ]),
         'required': True,
@@ -144,7 +144,7 @@
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
-      'name': 'Timer',
+      'name': 'Gardena Water Computer',
     }),
     'errors': None,
     'flow_id': <ANY>,
@@ -182,11 +182,11 @@
         'options': list([
           tuple(
             '00000000-0000-0000-0000-000000000001',
-            'Timer',
+            'Gardena Water Computer',
           ),
           tuple(
             '00000000-0000-0000-0000-000000000002',
-            'Gardena Device',
+            'Gardena Water Computer',
           ),
         ]),
         'required': True,
@@ -206,7 +206,7 @@
   FlowResultSnapshot({
     'data_schema': None,
     'description_placeholders': dict({
-      'name': 'Timer',
+      'name': 'Gardena Water Computer',
     }),
     'errors': None,
     'flow_id': <ANY>,
@@ -222,7 +222,7 @@
       'confirm_only': True,
       'source': 'user',
       'title_placeholders': dict({
-        'name': 'Timer',
+        'name': 'Gardena Water Computer',
       }),
       'unique_id': '00000000-0000-0000-0000-000000000001',
     }),
@@ -247,11 +247,11 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'title': 'Timer',
+      'title': 'Gardena Water Computer',
       'unique_id': '00000000-0000-0000-0000-000000000001',
       'version': 1,
     }),
-    'title': 'Timer',
+    'title': 'Gardena Water Computer',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
   })
