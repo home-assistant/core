@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -139,7 +140,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             entry_id=entry.entry_id,
             description=description,
-            name=name if description.key == "next_launch" else None,
+            name=name,
         )
         for description in SENSOR_DESCRIPTIONS
     )
@@ -163,10 +164,13 @@ class LaunchLibrarySensor(
     ) -> None:
         """Initialize a Launch Library sensor."""
         super().__init__(coordinator)
-        if name:
-            self._attr_name = name
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name=name,
+        )
 
     @property
     def native_value(self) -> datetime | str | int | None:
