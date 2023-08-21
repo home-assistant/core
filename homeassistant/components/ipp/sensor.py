@@ -53,6 +53,7 @@ class IPPSensorEntityDescription(
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="printer",
+        name=None,
         translation_key="printer",
         icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
