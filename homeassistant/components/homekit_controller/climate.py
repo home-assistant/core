@@ -141,7 +141,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
     @property
-    def fan_modes(self) -> list[str]:
+    def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             return [FAN_ON, FAN_AUTO]
@@ -192,7 +192,7 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         )
 
     @property
-    def fan_modes(self) -> list[str] | None:
+    def fan_modes(self) -> list[str]:
         """Return the available fan modes."""
         return [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
