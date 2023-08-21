@@ -83,6 +83,7 @@ ABBREVIATIONS = {
     "hs_cmd_tpl": "hs_command_template",
     "hs_stat_t": "hs_state_topic",
     "hs_val_tpl": "hs_value_template",
+    "i": "integration",
     "ic": "icon",
     "img_e": "image_encoding",
     "img_t": "image_topic",
@@ -274,4 +275,12 @@ DEVICE_ABBREVIATIONS = {
     "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
+}
+
+INTEGRATION_ABBREVIATIONS = {
+    "name": "name",
+    "mf": "manufacturer",
+    "hw": "hw_version",
+    "sw": "sw_version",
+    "url": "support_url",
 }

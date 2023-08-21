@@ -24,12 +24,17 @@ from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 
 from .. import mqtt
-from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
+from .abbreviations import (
+    ABBREVIATIONS,
+    DEVICE_ABBREVIATIONS,
+    INTEGRATION_ABBREVIATIONS,
+)
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_INTEGRATION,
     CONF_TOPIC,
     DOMAIN,
 )
@@ -148,6 +153,13 @@ async def async_start(  # noqa: C901
                 abbreviated_key = key
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
+
+        if CONF_INTEGRATION in discovery_payload:
+            integration_info = discovery_payload[CONF_INTEGRATION]
+            for key in list(integration_info):
+                abbreviated_key = key
+                key = INTEGRATION_ABBREVIATIONS.get(key, key)
+                integration_info[key] = integration_info.pop(abbreviated_key)
 
         if CONF_AVAILABILITY in discovery_payload:
             for availability_conf in cv.ensure_list(

@@ -168,6 +168,50 @@ async def test_correct_config_discovery(
     assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_discovery_integration_info(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending in correct JSON."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.0" } }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is not None
+    assert state.name == "Beer"
+
+    assert (
+        "Entity binary_sensor.beer was added, from an external application bla2mqtt, software version: 1.0"
+        in caplog.text
+    )
+    caplog.clear()
+
+    # Send an update and add support url
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.1","hw": "0.1", "mf": "Milk Company", "url": "https://github.com/bla2mqtt" } }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is not None
+    assert state.name == "Milk"
+
+    assert (
+        "Entity binary_sensor.beer was updated, from an external application bla2mqtt by Milk Company, software version: 1.1, hardware version: 0.1, support URL: https://github.com/bla2mqtt"
+        in caplog.text
+    )
+
+
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
 async def test_discover_fan(
     hass: HomeAssistant,
@@ -1266,6 +1310,8 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_WILL_MESSAGE",
     "CONF_WS_PATH",
     "CONF_WS_HEADERS",
+    # Integration info
+    "CONF_SUPPORT_URL",
     # Undocumented device configuration
     "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",

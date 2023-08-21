@@ -70,6 +70,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_ENCODING,
+    CONF_INTEGRATION,
     CONF_QOS,
     CONF_TOPIC,
     DEFAULT_ENCODING,
@@ -89,6 +90,7 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
+    MqttIntegrationInfo,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -129,6 +131,7 @@ CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
+CONF_SUPPORT_URL = "support_url"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -225,9 +228,22 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     validate_device_has_at_least_one_identifier,
 )
 
+MQTT_ENTITY_INTEGRATION_INFO_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(CONF_MANUFACTURER): cv.string,
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_HW_VERSION): cv.string,
+            vol.Optional(CONF_SW_VERSION): cv.string,
+            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
+        }
+    ),
+)
+
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_INTEGRATION): MQTT_ENTITY_INTEGRATION_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
@@ -766,6 +782,8 @@ class MqttDiscoveryDeviceUpdate(ABC):
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message for entity based platforms."""
 
+    _integration_info: MqttIntegrationInfo | None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -822,6 +840,13 @@ class MqttDiscoveryUpdate(Entity):
             """Process discovery update."""
             try:
                 await discovery_update(payload)
+                if integration_info := payload.get(CONF_INTEGRATION):
+                    self._integration_info = MQTT_ENTITY_INTEGRATION_INFO_SCHEMA(
+                        integration_info
+                    )
+                    self.async_log_integration_info(
+                        f"Entity {self.entity_id} was updated"
+                    )
             finally:
                 send_discovery_done(self.hass, discovery_data)
 
@@ -932,6 +957,36 @@ class MqttDiscoveryUpdate(Entity):
             )
             self._removed_from_hass = True
 
+    @callback
+    def async_log_integration_info(
+        self, message: str, level: int = logging.INFO
+    ) -> None:
+        """Log information about the entity."""
+        if self._integration_info is None:
+            return
+        manufacturer_log = ""
+        if manufacturer := self._integration_info.get("manufacturer"):
+            manufacturer_log = f" by {manufacturer}"
+        sw_version_log = ""
+        if sw_version := self._integration_info.get("sw_version"):
+            sw_version_log = f", software version: {sw_version}"
+        hw_version_log = ""
+        if hw_version := self._integration_info.get("hw_version"):
+            hw_version_log = f", hardware version: {hw_version}"
+        support_url_log = ""
+        if support_url := self._integration_info.get("support_url"):
+            support_url_log = f", support URL: {support_url}"
+        _LOGGER.log(
+            level,
+            "%s, from an external application %s%s%s%s%s",
+            message,
+            self._integration_info["name"],
+            manufacturer_log,
+            sw_version_log,
+            hw_version_log,
+            support_url_log,
+        )
+
 
 def device_info_from_specifications(
     specifications: dict[str, Any] | None
@@ -1029,6 +1084,9 @@ class MqttEntity(
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
         self._discovery = discovery_data is not None
+        self._integration_info = (
+            config.get(CONF_INTEGRATION) if self._discovery else None
+        )
 
         # Load config
         self._setup_from_config(self._config)
@@ -1059,6 +1117,7 @@ class MqttEntity(
         await self.mqtt_async_added_to_hass()
         if self._discovery_data is not None:
             send_discovery_done(self.hass, self._discovery_data)
+            self.async_log_integration_info(f"Entity {self.entity_id} was added")
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.
