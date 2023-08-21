@@ -168,7 +168,8 @@ class FreeboxRouter:
         except HttpRequestError:
             self.supports_raid = False
             _LOGGER.warning(
-                "This router model apparently does not support raid, will not enumerate further"
+                "Router %s API does not seem to support raid, will not enumerate further",
+                self.name,
             )
             return
 
