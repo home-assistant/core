@@ -435,11 +435,11 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 raise vol.Invalid(
                     "Only valid keys in Forecast are allowed, see Weather documentation https://www.home-assistant.io/integrations/weather/"
                 )
-            if forecast_type == "twice_daily" and "is_daytime" not in forecast.keys():
+            if forecast_type == "twice_daily" and "is_daytime" not in forecast:
                 raise vol.Invalid(
                     "`is_daytime` is missing in twice_daily forecast, see Weather documentation https://www.home-assistant.io/integrations/weather/"
                 )
-            if "datetime" not in forecast.keys():
+            if "datetime" not in forecast:
                 raise vol.Invalid(
                     "`datetime` is required in forecasts, see Weather documentation https://www.home-assistant.io/integrations/weather/"
                 )
