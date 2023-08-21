@@ -31,11 +31,7 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_clients(self) -> dict:
         """Fetch clients from the API and format them."""
-        try:
-            clients = await self.ruckus.api.get_active_clients()
-        except Exception as error:
-            _LOGGER.exception("Error getting clients: %s", error)
-            raise error
+        clients = await self.ruckus.api.get_active_clients()
         _LOGGER.debug("fetched %d active clients", len(clients))
         return {client[API_CLIENT_MAC]: client for client in clients}
 
@@ -45,5 +41,5 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
             return {KEY_SYS_CLIENTS: await self._fetch_clients()}
         except AuthenticationError as autherror:
             raise UpdateFailed(autherror) from autherror
-        except Exception as error:
-            raise UpdateFailed(error) from error
+        except (ConnectionRefusedError, ConnectionError) as conerr:
+            raise UpdateFailed(conerr) from conerr

@@ -39,11 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
         )
         await ruckus.login()
-    except ConnectionError as conerr:
-        _LOGGER.exception("ConnectionError: %s", conerr)
+    except (ConnectionRefusedError, ConnectionError) as conerr:
         raise ConfigEntryNotReady from conerr
     except AuthenticationError as autherr:
-        _LOGGER.exception("AuthenticationError: %s", autherr)
         raise ConfigEntryAuthFailed from autherr
 
     coordinator = RuckusUnleashedDataUpdateCoordinator(hass, ruckus=ruckus)
@@ -82,7 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("unloading")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

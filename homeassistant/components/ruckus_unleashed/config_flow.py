@@ -61,7 +61,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             }
     except AuthenticationError as autherr:
         raise InvalidAuth from autherr
-    except (ConnectionError, KeyError) as connerr:
+    except (ConnectionRefusedError, ConnectionError, KeyError) as connerr:
         raise CannotConnect from connerr
 
 
@@ -82,9 +82,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", error)
-                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info[KEY_SYS_SERIAL])
                 self._abort_if_unique_id_configured()
