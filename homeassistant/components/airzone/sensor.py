@@ -43,7 +43,6 @@ HOT_WATER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key=AZD_TEMP,
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -159,10 +158,9 @@ class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
         self._attr_unique_id = f"{self._attr_unique_id}_dhw_{description.key}"
         self.entity_description = description
 
-        if description.key == AZD_TEMP:
-            self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
-                self.get_airzone_value(AZD_TEMP_UNIT)
-            )
+        self._attr_native_unit_of_measurement = TEMP_UNIT_LIB_TO_HASS.get(
+            self.get_airzone_value(AZD_TEMP_UNIT)
+        )
 
         self._async_update_attrs()
 
