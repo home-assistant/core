@@ -3,12 +3,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.downloader.const import DOMAIN
+from homeassistant import config_entries
+from homeassistant.components.downloader.config_flow import CannotConnect
+from homeassistant.components.downloader.const import CONF_DOWNLOAD_DIR, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+CONFIG = {CONF_DOWNLOAD_DIR: "download_dir"}
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -17,23 +21,38 @@ async def test_user_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     with patch(
         "homeassistant.components.downloader.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"downloads"},
+            user_input=CONFIG,
+        )
+        assert result["type"] == FlowResultType.FORM
+
+        with patch(
+            "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+            side_effect=CannotConnect,
+        ):
+            assert result["type"] == FlowResultType.FORM
+            assert result["step_id"] == "user"
+            assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.downloader.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Downloader"
-    assert result["data"] == {}
-    assert result["options"] == {}
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Downloader"
+        assert result["data"] == {"download_dir": "download_dir"}
 
 
 @pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
@@ -52,3 +71,24 @@ async def test_single_instance_allowed(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_import_flow_success(hass: HomeAssistant) -> None:
+    """Test import flow."""
+    with patch(
+        "homeassistant.components.downloader.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.downloader.config_flow.DownloaderConfigFlow._validate_input",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Downloader"
+        assert result["data"] == {}
+        assert result["options"] == {}

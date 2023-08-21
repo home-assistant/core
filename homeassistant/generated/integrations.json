@@ -1202,7 +1202,7 @@
     "downloader": {
       "name": "Downloader",
       "integration_type": "hub",
-      "config_flow": false
+      "config_flow": true
     },
     "dremel_3d_printer": {
       "name": "Dremel 3D Printer",
