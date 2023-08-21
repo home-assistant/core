@@ -355,51 +355,91 @@ class ESPHomeManager:
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
+        unique_id = entry.unique_id
         entry_data = self.entry_data
         reconnect_logic = self.reconnect_logic
         hass = self.hass
         cli = self.cli
+        stored_device_name = entry.data.get(CONF_DEVICE_NAME)
+        unique_id_is_mac_address = unique_id and ":" in unique_id
         try:
             device_info = await cli.device_info()
+        except APIConnectionError as err:
+            _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
+            # Re-connection logic will trigger after this
+            await cli.disconnect()
+            return
 
-            # Migrate config entry to new unique ID if necessary
-            # This was changed in 2023.1
-            if entry.unique_id != format_mac(device_info.mac_address):
-                hass.config_entries.async_update_entry(
-                    entry, unique_id=format_mac(device_info.mac_address)
+        device_mac = format_mac(device_info.mac_address)
+        mac_address_matches = unique_id == device_mac
+        name_matches = stored_device_name == device_info.name
+        #
+        # Migrate config entry to new unique ID if the current
+        # unique id is not a mac address
+        #
+        # This was changed in 2023.1
+        #
+        if not unique_id_is_mac_address and not mac_address_matches:
+            hass.config_entries.async_update_entry(entry, unique_id=device_mac)
+
+        if (
+            stored_device_name
+            and unique_id_is_mac_address
+            and not name_matches
+            and not mac_address_matches
+        ):
+            # If we have a stored named, the unique id is a mac address
+            # and nothing matches we have the wrong device and we need
+            # to abort the connection. This can happen if the DHCP
+            # server changes the IP address of the device and we end up
+            # connecting to the wrong device.
+            _LOGGER.error(
+                "Unexpected device found at %s; "
+                "expected %s with mac address %s, "
+                "found %s with mac address %s",
+                self.host,
+                stored_device_name,
+                unique_id,
+                device_info.name,
+                device_mac,
+            )
+            # Re-connection logic will trigger after this and hopefully
+            # discovery has updated the IP address of the device.
+            await cli.disconnect()
+            return
+
+        # Make sure we have the correct device name stored
+        # so we can map the device to ESPHome Dashboard config
+        if not name_matches:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+            )
+
+        entry_data.device_info = device_info
+        assert cli.api_version is not None
+        entry_data.api_version = cli.api_version
+        entry_data.available = True
+        # Reset expected disconnect flag on successful reconnect
+        # as it will be flipped to False on unexpected disconnect.
+        #
+        # We use this to determine if a deep sleep device should
+        # be marked as unavailable or not.
+        entry_data.expected_disconnect = True
+        if entry_data.device_info.name:
+            assert reconnect_logic is not None, "Reconnect logic must be set"
+            reconnect_logic.name = entry_data.device_info.name
+
+        if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
+            entry_data.disconnect_callbacks.append(
+                await async_connect_scanner(
+                    hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
+            )
 
-            # Make sure we have the correct device name stored
-            # so we can map the device to ESPHome Dashboard config
-            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
-                hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
-                )
+        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
+        entry_data.async_update_device_state(hass)
 
-            entry_data.device_info = device_info
-            assert cli.api_version is not None
-            entry_data.api_version = cli.api_version
-            entry_data.available = True
-            # Reset expected disconnect flag on successful reconnect
-            # as it will be flipped to False on unexpected disconnect.
-            #
-            # We use this to determine if a deep sleep device should
-            # be marked as unavailable or not.
-            entry_data.expected_disconnect = True
-            if entry_data.device_info.name:
-                assert reconnect_logic is not None, "Reconnect logic must be set"
-                reconnect_logic.name = entry_data.device_info.name
-
-            if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-                entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(
-                        hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
-                    )
-                )
-
-            self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-            entry_data.async_update_device_state(hass)
-
+        try:
             entity_infos, services = await cli.list_entities_services()
             await entry_data.async_update_static_infos(hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
