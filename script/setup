@@ -17,9 +17,12 @@ fi
 mkdir -p config
 
 if [ ! -n "$DEVCONTAINER" ] && [ ! -n "$VIRTUAL_ENV" ];then
-  python3 -m venv venv
+  python3.11 -m venv venv
   source venv/bin/activate
 fi
+
+pip3 install --upgrade pip
+pip --version
 
 script/bootstrap
 
