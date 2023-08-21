@@ -316,8 +316,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         ) -> None:
             """Handle child updates."""
             self.async_update_group_state()
-            state, attributes = self._async_generate_attributes()
-            preview_callback(state, attributes)
+            preview_callback(*self._async_generate_attributes())
 
         async_state_changed_listener(None)
         return async_track_state_change_event(
