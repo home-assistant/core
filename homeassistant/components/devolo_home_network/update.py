@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from devolo_plc_api.device import Device
@@ -25,8 +24,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
