@@ -4,9 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -29,10 +28,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -198,7 +196,6 @@ class Alert(collection.CollectionEntity, Entity):
             return STATE_ON
         return STATE_IDLE
 
-
     async def async_added_to_hass(self) -> None:
         """Add hass to templates and register for tracking state changes."""
         self._update_with_hass()
@@ -211,8 +208,7 @@ class Alert(collection.CollectionEntity, Entity):
 
     async def watched_entity_change(
         self, event: EventType[EventStateChangedData]
-    ) -> None:      
-
+    ) -> None:
         """Determine if the alert should start or stop."""
         if (to_state := event.data["new_state"]) is None:
             return
