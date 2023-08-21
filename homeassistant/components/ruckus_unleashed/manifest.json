@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioruckus", "xmltodict"],
-  "requirements": ["aioruckus==0.30", "xmltodict==0.13.0"]
+  "requirements": ["aioruckus==0.31", "xmltodict==0.13.0"]
 }
