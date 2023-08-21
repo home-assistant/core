@@ -71,20 +71,11 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     ),
     IPPSensorEntityDescription(
         key="uptime",
-        name="Uptime",
+        translation_key="uptime",
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        attributes_fn=lambda printer: {
-            ATTR_INFO: printer.info.printer_info,
-            ATTR_SERIAL: printer.info.serial,
-            ATTR_LOCATION: printer.info.location,
-            ATTR_STATE_MESSAGE: printer.state.message,
-            ATTR_STATE_REASON: printer.state.reasons,
-            ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
-        },
         value_fn=lambda printer: (utcnow() - timedelta(seconds=printer.info.uptime)),
     ),
 )
