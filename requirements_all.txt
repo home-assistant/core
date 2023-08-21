@@ -1887,7 +1887,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.4.2
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.11
+pyoctoprintapi==0.1.12
 
 # homeassistant.components.ombi
 pyombi==0.1.10
