@@ -1,13 +1,16 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, TypedDict, final
+from typing import Any, Final, Literal, Required, TypedDict, TypeVar, final
+
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +21,15 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -26,6 +37,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (  # noqa: F401
@@ -103,6 +119,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
+SERVICE_GET_FORECAST: Final = "get_forecast"
+
+_DataUpdateCoordinatorT = TypeVar(
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+)
+
 # mypy: disallow-any-generics
 
 
@@ -158,6 +180,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
+    component.async_register_entity_service(
+        SERVICE_GET_FORECAST,
+        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        async_get_forecast_service,
+        required_features=[
+            WeatherEntityFeature.FORECAST_DAILY,
+            WeatherEntityFeature.FORECAST_HOURLY,
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+        ],
+        supports_response=SupportsResponse.ONLY,
+    )
     async_setup_ws_api(hass)
     await component.async_setup(config)
     return True
@@ -180,11 +213,29 @@ class WeatherEntityDescription(EntityDescription):
     """A class that describes weather entities."""
 
 
-class WeatherEntity(Entity):
+class PostInitMeta(abc.ABCMeta):
+    """Meta class which calls __post_init__ after __new__ and __init__."""
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+        """Create an instance."""
+        instance: PostInit = super().__call__(*args, **kwargs)
+        instance.__post_init__(*args, **kwargs)
+        return instance
+
+
+class PostInit(metaclass=PostInitMeta):
+    """Class which calls __post_init__ after __new__ and __init__."""
+
+    @abc.abstractmethod
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
+
+
+class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
-    _attr_condition: str | None
+    _attr_condition: str | None = None
     # _attr_forecast is deprecated, implement async_forecast_daily,
     # async_forecast_hourly or async_forecast_twice daily instead
     _attr_forecast: list[Forecast] | None = None
@@ -238,7 +289,7 @@ class WeatherEntity(Entity):
 
     _forecast_listeners: dict[
         Literal["daily", "hourly", "twice_daily"],
-        list[Callable[[list[dict[str, Any]] | None], None]],
+        list[Callable[[list[JsonValueType] | None], None]],
     ]
 
     _weather_option_temperature_unit: str | None = None
@@ -247,9 +298,14 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
+    def __post_init__(self, *args: Any, **kwargs: Any) -> None:
+        """Finish initializing."""
+        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
+
         _reported = False
         if any(
             method in cls.__dict__
@@ -302,7 +358,6 @@ class WeatherEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
-        self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
         if not self.registry_entry:
             return
         self.async_registry_entry_updated()
@@ -789,9 +844,9 @@ class WeatherEntity(Entity):
     @final
     def _convert_forecast(
         self, native_forecast_list: list[Forecast]
-    ) -> list[dict[str, Any]]:
+    ) -> list[JsonValueType]:
         """Convert a forecast in native units to the unit configured by the user."""
-        converted_forecast_list: list[dict[str, Any]] = []
+        converted_forecast_list: list[JsonValueType] = []
         precision = self.precision
 
         from_temp_unit = self.native_temperature_unit or self._default_temperature_unit
@@ -1029,7 +1084,7 @@ class WeatherEntity(Entity):
     def async_subscribe_forecast(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-        forecast_listener: Callable[[list[dict[str, Any]] | None], None],
+        forecast_listener: Callable[[list[JsonValueType] | None], None],
     ) -> CALLBACK_TYPE:
         """Subscribe to forecast updates.
 
@@ -1073,3 +1128,53 @@ class WeatherEntity(Entity):
             converted_forecast_list = self._convert_forecast(native_forecast_list)
             for listener in self._forecast_listeners[forecast_type]:
                 listener(converted_forecast_list)
+
+
+def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
+    """Raise error on attempt to get an unsupported forecast."""
+    raise HomeAssistantError(
+        f"Weather entity '{entity_id}' does not support '{forecast_type}' forecast"
+    )
+
+
+async def async_get_forecast_service(
+    weather: WeatherEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """Get weather forecast."""
+    forecast_type = service_call.data["type"]
+    supported_features = weather.supported_features or 0
+    if forecast_type == "daily":
+        if (supported_features & WeatherEntityFeature.FORECAST_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_daily()
+    elif forecast_type == "hourly":
+        if (supported_features & WeatherEntityFeature.FORECAST_HOURLY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_hourly()
+    else:
+        if (supported_features & WeatherEntityFeature.FORECAST_TWICE_DAILY) == 0:
+            raise_unsupported_forecast(weather.entity_id, forecast_type)
+        native_forecast_list = await weather.async_forecast_twice_daily()
+    if native_forecast_list is None:
+        converted_forecast_list = []
+    else:
+        # pylint: disable-next=protected-access
+        converted_forecast_list = weather._convert_forecast(native_forecast_list)
+    return {
+        "forecast": converted_forecast_list,
+    }
+
+
+class CoordinatorWeatherEntity(
+    CoordinatorEntity[_DataUpdateCoordinatorT], WeatherEntity
+):
+    """A class for weather entities using a single DataUpdateCoordinator."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        assert self.coordinator.config_entry
+        self.coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(None)
+        )

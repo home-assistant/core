@@ -81,7 +81,7 @@ class RestData:
                     "REST xml result could not be parsed and converted to JSON"
                 )
             else:
-                _LOGGER.debug("JSON converted from XML: %s", self.data)
+                _LOGGER.debug("JSON converted from XML: %s", value)
         return value
 
     async def async_update(self, log_errors: bool = True) -> None:

@@ -9,6 +9,7 @@ from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockEntityPlatform
 
@@ -94,6 +95,8 @@ async def player_setup_fixture(hass: HomeAssistant, state_1, state_2, client):
             return state_1
         if zone == 2:
             return state_2
+
+    await async_setup_component(hass, "homeassistant", {})
 
     with patch("homeassistant.components.arcam_fmj.Client", return_value=client), patch(
         "homeassistant.components.arcam_fmj.media_player.State", side_effect=state_mock

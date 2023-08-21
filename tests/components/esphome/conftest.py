@@ -1,6 +1,7 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -15,13 +16,10 @@ from aioesphomeapi import (
     ReconnectLogic,
     UserService,
 )
-import async_timeout
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import (
-    dashboard,
-)
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -254,7 +252,7 @@ async def _mock_generic_device_entry(
         "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        async with async_timeout.timeout(2):
+        async with asyncio.timeout(2):
             await try_connect_done.wait()
 
     await hass.async_block_till_done()

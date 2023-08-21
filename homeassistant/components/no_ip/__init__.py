@@ -6,7 +6,6 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
@@ -100,7 +99,7 @@ async def _update_no_ip(
     }
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
-import sys
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
@@ -485,7 +484,7 @@ class SmartEnergyMetering(Sensor):
         if self._cluster_handler.device_type is not None:
             attrs["device_type"] = self._cluster_handler.device_type
         if (status := self._cluster_handler.status) is not None:
-            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+            if isinstance(status, enum.IntFlag):
                 attrs["status"] = str(
                     status.name if status.name is not None else status.value
                 )
@@ -968,6 +967,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -980,6 +980,7 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 class AqaraFeedingSource(types.enum8):

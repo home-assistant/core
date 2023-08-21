@@ -883,6 +883,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "comelit": {
+      "name": "Comelit SimpleHome",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "comfoconnect": {
       "name": "Zehnder ComfoAir Q",
       "integration_type": "hub",
@@ -1113,7 +1119,7 @@
     },
     "discovergy": {
       "name": "Discovergy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

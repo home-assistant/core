@@ -99,13 +99,13 @@ class ElectricKiwiHOPEntity(
 
     def __init__(
         self,
-        hop_coordinator: ElectricKiwiHOPDataCoordinator,
+        coordinator: ElectricKiwiHOPDataCoordinator,
         description: ElectricKiwiHOPSensorEntityDescription,
     ) -> None:
         """Entity object for Electric Kiwi sensor."""
-        super().__init__(hop_coordinator)
+        super().__init__(coordinator)
 
-        self._attr_unique_id = f"{self.coordinator._ek_api.customer_number}_{self.coordinator._ek_api.connection_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
         self.entity_description = description
 
     @property

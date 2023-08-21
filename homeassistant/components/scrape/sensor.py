@@ -6,11 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorEntity,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
@@ -31,6 +28,7 @@ from homeassistant.helpers.template_entity import (
     CONF_PICTURE,
     TEMPLATE_SENSOR_BASE_SCHEMA,
     ManualTriggerEntity,
+    ManualTriggerSensorEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,6 +37,16 @@ from .const import CONF_INDEX, CONF_SELECT, DOMAIN
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+    CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 
 async def async_setup_platform(
@@ -62,25 +70,17 @@ async def async_setup_platform(
         if value_template is not None:
             value_template.hass = hass
 
-        trigger_entity_config = {
-            CONF_NAME: sensor_config[CONF_NAME],
-            CONF_DEVICE_CLASS: sensor_config.get(CONF_DEVICE_CLASS),
-            CONF_UNIQUE_ID: sensor_config.get(CONF_UNIQUE_ID),
-        }
-        if available := sensor_config.get(CONF_AVAILABILITY):
-            trigger_entity_config[CONF_AVAILABILITY] = available
-        if icon := sensor_config.get(CONF_ICON):
-            trigger_entity_config[CONF_ICON] = icon
-        if picture := sensor_config.get(CONF_PICTURE):
-            trigger_entity_config[CONF_PICTURE] = picture
+        trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in sensor_config:
+                continue
+            trigger_entity_config[key] = sensor_config[key]
 
         entities.append(
             ScrapeSensor(
                 hass,
                 coordinator,
                 trigger_entity_config,
-                sensor_config.get(CONF_UNIT_OF_MEASUREMENT),
-                sensor_config.get(CONF_STATE_CLASS),
                 sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
@@ -112,19 +112,17 @@ async def async_setup_entry(
             Template(value_string, hass) if value_string is not None else None
         )
 
-        trigger_entity_config = {
-            CONF_NAME: name,
-            CONF_DEVICE_CLASS: sensor_config.get(CONF_DEVICE_CLASS),
-            CONF_UNIQUE_ID: sensor_config[CONF_UNIQUE_ID],
-        }
+        trigger_entity_config = {CONF_NAME: name}
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in sensor_config:
+                continue
+            trigger_entity_config[key] = sensor_config[key]
 
         entities.append(
             ScrapeSensor(
                 hass,
                 coordinator,
                 trigger_entity_config,
-                sensor_config.get(CONF_UNIT_OF_MEASUREMENT),
-                sensor_config.get(CONF_STATE_CLASS),
                 sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
@@ -136,9 +134,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ScrapeSensor(
-    CoordinatorEntity[ScrapeCoordinator], ManualTriggerEntity, SensorEntity
-):
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):
     """Representation of a web scrape sensor."""
 
     def __init__(
@@ -146,8 +142,6 @@ class ScrapeSensor(
         hass: HomeAssistant,
         coordinator: ScrapeCoordinator,
         trigger_entity_config: ConfigType,
-        unit_of_measurement: str | None,
-        state_class: str | None,
         select: str,
         attr: str | None,
         index: int,
@@ -156,18 +150,26 @@ class ScrapeSensor(
     ) -> None:
         """Initialize a web scrape sensor."""
         CoordinatorEntity.__init__(self, coordinator)
-        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_state_class = state_class
+        ManualTriggerSensorEntity.__init__(self, hass, trigger_entity_config)
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
         self._attr_native_value = None
+        if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
+            self._attr_name = None
+            self._attr_has_entity_name = True
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer="Scrape",
+                name=self.name,
+            )
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
+        value: str | list[str] | None
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]

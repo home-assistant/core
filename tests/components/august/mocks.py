@@ -166,24 +166,23 @@ async def _create_august_api_with_devices(  # noqa: C901
             _mock_door_operation_activity(lock, "dooropen", 0),
         ]
 
-    if "get_lock_detail" not in api_call_side_effects:
-        api_call_side_effects["get_lock_detail"] = get_lock_detail_side_effect
-    if "get_doorbell_detail" not in api_call_side_effects:
-        api_call_side_effects["get_doorbell_detail"] = get_doorbell_detail_side_effect
-    if "get_operable_locks" not in api_call_side_effects:
-        api_call_side_effects["get_operable_locks"] = get_operable_locks_side_effect
-    if "get_doorbells" not in api_call_side_effects:
-        api_call_side_effects["get_doorbells"] = get_doorbells_side_effect
-    if "get_house_activities" not in api_call_side_effects:
-        api_call_side_effects["get_house_activities"] = get_house_activities_side_effect
-    if "lock_return_activities" not in api_call_side_effects:
-        api_call_side_effects[
-            "lock_return_activities"
-        ] = lock_return_activities_side_effect
-    if "unlock_return_activities" not in api_call_side_effects:
-        api_call_side_effects[
-            "unlock_return_activities"
-        ] = unlock_return_activities_side_effect
+    api_call_side_effects.setdefault("get_lock_detail", get_lock_detail_side_effect)
+    api_call_side_effects.setdefault(
+        "get_doorbell_detail", get_doorbell_detail_side_effect
+    )
+    api_call_side_effects.setdefault(
+        "get_operable_locks", get_operable_locks_side_effect
+    )
+    api_call_side_effects.setdefault("get_doorbells", get_doorbells_side_effect)
+    api_call_side_effects.setdefault(
+        "get_house_activities", get_house_activities_side_effect
+    )
+    api_call_side_effects.setdefault(
+        "lock_return_activities", lock_return_activities_side_effect
+    )
+    api_call_side_effects.setdefault(
+        "unlock_return_activities", unlock_return_activities_side_effect
+    )
 
     api_instance, entry = await _mock_setup_august_with_api_side_effects(
         hass, api_call_side_effects, pubnub
