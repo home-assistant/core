@@ -82,6 +82,7 @@ STAT_DISTANCE_95P = "distance_95_percent_of_values"
 STAT_DISTANCE_99P = "distance_99_percent_of_values"
 STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
+STAT_MEAN_CIRCULAR = "mean_circular"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
 STAT_PERCENTILE = "percentile"
@@ -111,6 +112,7 @@ STATS_NUMERIC_SUPPORT = {
     STAT_DISTANCE_99P,
     STAT_DISTANCE_ABSOLUTE,
     STAT_MEAN,
+    STAT_MEAN_CIRCULAR,
     STAT_MEDIAN,
     STAT_NOISINESS,
     STAT_PERCENTILE,
@@ -160,6 +162,7 @@ STATS_NUMERIC_RETAIN_UNIT = {
     STAT_DISTANCE_99P,
     STAT_DISTANCE_ABSOLUTE,
     STAT_MEAN,
+    STAT_MEAN_CIRCULAR,
     STAT_MEDIAN,
     STAT_NOISINESS,
     STAT_PERCENTILE,
@@ -680,7 +683,14 @@ class StatisticsSensor(SensorEntity):
         if len(self.states) > 0:
             return statistics.mean(self.states)
         return None
-
+        
+    def _stat_mean_circular(self) -> StateType:
+        if len(self.states) > 0:
+            sin_sum = sum(math.sin(math.radians(x)) for x in self.states)
+            cos_sum = sum(math.cos(math.radians(x)) for x in self.states)
+            return math.degrees(math.atan2(sin_sum, cos_sum))
+        return None
+    
     def _stat_median(self) -> StateType:
         if len(self.states) > 0:
             return statistics.median(self.states)
