@@ -20,6 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import HoneywellData
 from .const import (
     CURRENT_HUMIDITY_STATUS_KEY,
     CURRENT_TEMPERATURE_STATUS_KEY,
