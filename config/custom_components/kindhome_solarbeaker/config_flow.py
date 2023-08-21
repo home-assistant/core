@@ -1,18 +1,16 @@
+import logging
 from typing import Any
 
-from .kindhome_solarbeaker_ble import KindhomeBluetoothDeviceData
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.config_entries import ConfigFlow
 
 from .const import DOMAIN
-
-import logging
+from .kindhome_solarbeaker_ble import KindhomeBluetoothDeviceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +62,8 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         log("async_step_bluetooth_confirm",
             f"title = {title}, device.get_device_name() = {device.get_device_name()}, discovery_info.name = {discovery_info.name}")
         # TODO Mati: what does it do?
-        # if user_input is not None:
-        #     return self.async_create_entry(title=title, data={})
+        if user_input is not None:
+            return self.async_create_entry(title=title, data={})
 
         self._set_confirm_only()
         placeholders = {"name": title}
