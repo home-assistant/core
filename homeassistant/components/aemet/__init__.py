@@ -6,6 +6,7 @@ from aemet_opendata.interface import AEMET
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_STATION_UPDATES,
@@ -27,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = entry.data[CONF_LONGITUDE]
     station_updates = entry.options.get(CONF_STATION_UPDATES, True)
 
-    aemet = AEMET(api_key)
+    aemet = AEMET(aiohttp_client.async_get_clientsession(hass), api_key)
     weather_coordinator = WeatherUpdateCoordinator(
         hass, aemet, latitude, longitude, station_updates
     )
