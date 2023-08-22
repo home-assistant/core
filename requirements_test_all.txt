@@ -368,7 +368,7 @@ amberelectric==1.0.4
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.13
+androidtvremote2==0.0.14
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
@@ -475,7 +475,7 @@ brottsplatskartan==0.0.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.0.0
+bthome-ble==3.1.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1295,7 +1295,7 @@ pyinsteon==1.4.3
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.14.3
+pyipp==0.14.4
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
