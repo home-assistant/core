@@ -55,7 +55,7 @@ class HoneywellSensorEntityDescription(
 SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     HoneywellSensorEntityDescription(
         key=OUTDOOR_TEMPERATURE_STATUS_KEY,
-        translation_key="outdoor_temperature",
+        translation_key=OUTDOOR_TEMPERATURE_STATUS_KEY,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.outdoor_temperature,
