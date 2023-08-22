@@ -42,6 +42,7 @@ DATA_MULTIPROTOCOL_ADDON_MANAGER = "silabs_multiprotocol_addon_manager"
 DATA_FLASHER_ADDON_MANAGER = "silabs_flasher"
 
 ADDON_STATE_POLL_INTERVAL = 3
+ADDON_INFO_POLL_TIMEOUT = 15 * 60
 
 CONF_ADDON_AUTOFLASH_FW = "autoflash_firmware"
 CONF_ADDON_DEVICE = "device"
@@ -67,7 +68,57 @@ async def get_multiprotocol_addon_manager(
     return manager
 
 
-class MultiprotocolAddonManager(AddonManager):
+class SyncAddonManager(AddonManager):
+    """Addon manager which supports synchronous operations for managing an addon."""
+
+    async def async_wait_until_addon_state(self, *states: AddonState) -> None:
+        """Poll an addon's info until it is in a specific state."""
+        async with async_timeout.timeout(ADDON_INFO_POLL_TIMEOUT):
+            while True:
+                try:
+                    info = await self.async_get_addon_info()
+                except AddonError:
+                    info = None
+
+                _LOGGER.debug("Waiting for addon to be in state %s: %s", states, info)
+
+                if info is not None and info.state in states:
+                    break
+
+                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
+
+    async def async_start_addon_sync(self, *, wait_until_done: bool = False) -> None:
+        """Start an add-on."""
+        await self.async_schedule_start_addon()
+        await self.async_wait_until_addon_state(AddonState.RUNNING)
+
+        if wait_until_done:
+            await self.async_wait_until_addon_state(AddonState.NOT_RUNNING)
+
+    async def async_install_addon_sync(self) -> None:
+        """Install an add-on."""
+        await self.async_schedule_install_addon()
+        await self.async_wait_until_addon_state(
+            AddonState.RUNNING,
+            AddonState.NOT_RUNNING,
+        )
+
+    async def async_uninstall_addon_sync(self) -> None:
+        """Uninstall an add-on."""
+        try:
+            info = await self.async_get_addon_info()
+        except AddonError:
+            info = None
+
+        # Do not try to uninstall an addon if it is already uninstalled
+        if info is not None and info.state == AddonState.NOT_INSTALLED:
+            return
+
+        await self.async_uninstall_addon()
+        await self.async_wait_until_addon_state(AddonState.NOT_INSTALLED)
+
+
+class MultiprotocolAddonManager(SyncAddonManager):
     """Silicon Labs Multiprotocol add-on manager."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -213,9 +264,9 @@ class MultipanProtocol(Protocol):
 
 @singleton(DATA_FLASHER_ADDON_MANAGER)
 @callback
-def get_flasher_addon_manager(hass: HomeAssistant) -> AddonManager:
+def get_flasher_addon_manager(hass: HomeAssistant) -> SyncAddonManager:
     """Get the flasher add-on manager."""
-    return AddonManager(
+    return SyncAddonManager(
         hass,
         LOGGER,
         "Silicon Labs Flasher",
@@ -314,10 +365,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
 
-    async def _async_install_addon(self, addon_manager: AddonManager) -> None:
+    async def _async_install_addon(self, addon_manager: SyncAddonManager) -> None:
         """Install an add-on."""
         try:
-            await addon_manager.async_schedule_install_addon()
+            await addon_manager.async_install_addon_sync()
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -325,23 +376,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             )
 
     async def _async_uninstall_addon(
-        self, addon_manager: AddonManager, *, continue_flow: bool = True
+        self, addon_manager: SyncAddonManager, *, continue_flow: bool = True
     ) -> None:
         """Uninstall an add-on."""
         try:
-            try:
-                info = await addon_manager.async_get_addon_info()
-            except AddonError:
-                info = None
-
-            # Do not try to uninstall an addon if it is already uninstalled
-            if info is not None and info.state == AddonState.NOT_INSTALLED:
-                return
-
-            await addon_manager.async_uninstall_addon()
-            await self._async_wait_until_addon_state(
-                addon_manager, AddonState.NOT_INSTALLED
-            )
+            await addon_manager.async_uninstall_addon_sync()
         finally:
             if continue_flow:
                 # Continue the flow after show progress when the task is done.
@@ -350,44 +389,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                 )
 
     async def _async_start_addon(
-        self, addon_manager: AddonManager, wait_until_done: bool = False
+        self, addon_manager: SyncAddonManager, wait_until_done: bool = False
     ) -> None:
         """Start an add-on."""
         try:
-            await addon_manager.async_schedule_start_addon()
-            await self._async_wait_until_addon_state(addon_manager, AddonState.RUNNING)
-
-            if wait_until_done:
-                await self._async_wait_until_addon_state(
-                    addon_manager, AddonState.NOT_RUNNING
-                )
+            await addon_manager.async_start_addon_sync(wait_until_done=wait_until_done)
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
                 self.flow_manager.async_configure(flow_id=self.flow_id)
             )
-
-    async def _async_wait_until_addon_state(
-        self,
-        addon_manager: AddonManager,
-        state: AddonState,
-        *,
-        timeout: float = 15 * 60,
-    ) -> None:
-        """Poll an addon's info until it is in a specific state."""
-        async with async_timeout.timeout(timeout):
-            while True:
-                try:
-                    info = await addon_manager.async_get_addon_info()
-                except AddonError:
-                    info = None
-
-                _LOGGER.debug("Waiting for addon to be in state %s: %s", state, info)
-
-                if info is not None and info.state == state:
-                    break
-
-                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -402,9 +413,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when on Supervisor host."""
-        multipan_manager: AddonManager = await get_multiprotocol_addon_manager(
-            self.hass
-        )
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(multipan_manager)
 
         if addon_info.state == AddonState.NOT_INSTALLED:
@@ -433,9 +442,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Install Silicon Labs Multiprotocol add-on."""
         if not self.install_task:
-            multipan_manager: AddonManager = await get_multiprotocol_addon_manager(
-                self.hass
-            )
+            multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.install_task = self.hass.async_create_task(
                 self._async_install_addon(multipan_manager),
                 "SiLabs Multiprotocol addon install",
@@ -482,9 +489,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             async_get_channel as async_get_zha_channel,
         )
 
-        multipan_manager: AddonManager = await get_multiprotocol_addon_manager(
-            self.hass
-        )
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(multipan_manager)
 
         addon_config = addon_info.options
@@ -541,9 +546,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Start Silicon Labs Multiprotocol add-on."""
         if not self.start_task:
-            multipan_manager: AddonManager = await get_multiprotocol_addon_manager(
-                self.hass
-            )
+            multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
                 self._async_start_addon(multipan_manager)
             )
@@ -603,9 +606,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when the addon is already installed."""
-        multipan_manager: AddonManager = await get_multiprotocol_addon_manager(
-            self.hass
-        )
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(multipan_manager)
 
         serial_device = (await self._async_serial_port_settings()).device
@@ -881,7 +882,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Finish flashing and update the config entry."""
-        flasher_manager: AddonManager = get_flasher_addon_manager(self.hass)
+        flasher_manager = get_flasher_addon_manager(self.hass)
         await self._async_uninstall_addon(flasher_manager, continue_flow=False)
 
         # Finish ZHA migration if needed
@@ -931,7 +932,7 @@ async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) ->
     if not is_hassio(hass):
         return False
 
-    multipan_manager: AddonManager = await get_multiprotocol_addon_manager(hass)
+    multipan_manager = await get_multiprotocol_addon_manager(hass)
     addon_info: AddonInfo = await multipan_manager.async_get_addon_info()
 
     if addon_info.state != AddonState.RUNNING:
