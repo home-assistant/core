@@ -132,10 +132,7 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         sensor_type = self.entity_description.key
         value = self.coordinator.data["status"].get(sensor_type)
 
-        if value is None:
-            _LOGGER.warning("Unable to locate value for %s", sensor_type)
-            return None
-        if "UpTimeSec" in sensor_type and value > 0:
+        if value is not None and "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow().replace(microsecond=0) - timedelta(seconds=value)
             if not isinstance(self._attr_native_value, datetime) or abs(
                 uptime - self._attr_native_value
