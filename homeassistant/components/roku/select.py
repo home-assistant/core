@@ -128,7 +128,6 @@ async def async_setup_entry(
     for description in ENTITIES:
         entities.append(
             RokuSelectEntity(
-                device_id=coordinator.device_id,
                 coordinator=coordinator,
                 description=description,
             )
@@ -137,7 +136,6 @@ async def async_setup_entry(
     if len(device.channels) > 0:
         entities.append(
             RokuSelectEntity(
-                device_id=coordinator.device_id,
                 coordinator=coordinator,
                 description=CHANNEL_ENTITY,
             )

@@ -59,7 +59,6 @@ async def async_setup_entry(
 
     async_add_entities(
         RokuSensorEntity(
-            device_id=coordinator.device_id,
             coordinator=coordinator,
             description=description,
         )
