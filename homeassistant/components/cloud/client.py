@@ -54,7 +54,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property

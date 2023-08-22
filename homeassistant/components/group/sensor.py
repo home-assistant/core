@@ -1,7 +1,7 @@
 """Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 import statistics
@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -302,6 +302,26 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        @callback
+        def async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None,
+        ) -> None:
+            """Handle child updates."""
+            self.async_update_group_state()
+            preview_callback(*self._async_generate_attributes())
+
+        async_state_changed_listener(None)
+        return async_track_state_change_event(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

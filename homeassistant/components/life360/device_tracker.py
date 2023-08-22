@@ -10,6 +10,7 @@ from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -111,6 +112,7 @@ class Life360DeviceTracker(
         self._prev_data = self._data
 
         self._attr_name = self._data.name
+        self._name = self._data.name
         self._attr_entity_picture = self._data.entity_picture
 
         # Server sends a pair of address values on alternate updates. Keep the pair of
@@ -123,6 +125,11 @@ class Life360DeviceTracker(
         if (address := self._data.address) == self._data.place:
             address = None
         self._addresses = [address]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(identifiers={(DOMAIN, self._attr_unique_id)}, name=self._name)
 
     @property
     def _options(self) -> Mapping[str, Any]:

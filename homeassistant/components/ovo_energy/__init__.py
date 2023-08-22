@@ -1,11 +1,11 @@
 """Support for OVO Energy."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             try:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],

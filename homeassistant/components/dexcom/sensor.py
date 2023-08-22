@@ -5,8 +5,12 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
 
@@ -22,25 +26,47 @@ async def async_setup_entry(
     unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
     async_add_entities(
         [
-            DexcomGlucoseTrendSensor(coordinator, username),
-            DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement),
+            DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
+            DexcomGlucoseValueSensor(
+                coordinator, username, config_entry.entry_id, unit_of_measurement
+            ),
         ],
         False,
     )
 
 
-class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
+class DexcomSensorEntity(CoordinatorEntity, SensorEntity):
+    """Base Dexcom sensor entity."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, username: str, entry_id: str, key: str
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{username}-{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=username,
+        )
+
+
+class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
     _attr_icon = GLUCOSE_VALUE_ICON
 
-    def __init__(self, coordinator, username, unit_of_measurement):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        username: str,
+        entry_id: str,
+        unit_of_measurement: str,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, username, entry_id, "value")
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._key = "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
         self._attr_name = f"{DOMAIN}_{username}_glucose_value"
-        self._attr_unique_id = f"{username}-value"
 
     @property
     def native_value(self):
@@ -50,14 +76,15 @@ class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
         return None
 
 
-class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
+class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose trend sensor."""
 
-    def __init__(self, coordinator, username):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, username: str, entry_id: str
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, username, entry_id, "trend")
         self._attr_name = f"{DOMAIN}_{username}_glucose_trend"
-        self._attr_unique_id = f"{username}-trend"
 
     @property
     def icon(self):

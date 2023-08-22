@@ -8,7 +8,7 @@ from homeassistant.components import otbr, thread
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import BASE_URL, DATASET_CH15, DATASET_CH16
+from . import BASE_URL, DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -31,7 +31,14 @@ async def test_get_info(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset",
         return_value=python_otbr_api.ActiveDataSet(channel=16),
-    ), patch("python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16):
+    ), patch(
+        "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
+    ), patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=bytes.fromhex("4EF6C4F3FF750626"),
+    ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
 
@@ -40,6 +47,8 @@ async def test_get_info(
         "url": BASE_URL,
         "active_dataset_tlvs": DATASET_CH16.hex().lower(),
         "channel": 16,
+        "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
+        "extended_address": "4EF6C4F3FF750626".lower(),
     }
 
 
@@ -68,12 +77,14 @@ async def test_get_info_fetch_fails(
     with patch(
         "python_otbr_api.OTBR.get_active_dataset",
         side_effect=python_otbr_api.OTBRError,
+    ), patch(
+        "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "get_dataset_failed"
+    assert msg["error"]["code"] == "otbr_info_failed"
 
 
 async def test_create_network(
@@ -433,58 +444,6 @@ async def test_set_network_fails_3(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "set_enabled_failed"
-
-
-async def test_get_extended_address(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    otbr_config_entry_multipan,
-    websocket_client,
-) -> None:
-    """Test get extended address."""
-
-    with patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        return_value=bytes.fromhex("4EF6C4F3FF750626"),
-    ):
-        await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
-        msg = await websocket_client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == {"extended_address": "4EF6C4F3FF750626".lower()}
-
-
-async def test_get_extended_address_no_entry(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test get extended address."""
-    await async_setup_component(hass, "otbr", {})
-    websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
-
-    msg = await websocket_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_loaded"
-
-
-async def test_get_extended_address_fetch_fails(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    otbr_config_entry_multipan,
-    websocket_client,
-) -> None:
-    """Test get extended address."""
-    with patch(
-        "python_otbr_api.OTBR.get_extended_address",
-        side_effect=python_otbr_api.OTBRError,
-    ):
-        await websocket_client.send_json_auto_id({"type": "otbr/get_extended_address"})
-        msg = await websocket_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == "get_extended_address_failed"
 
 
 async def test_set_channel(
