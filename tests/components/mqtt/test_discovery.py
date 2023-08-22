@@ -174,7 +174,7 @@ async def test_discovery_integration_info(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test sending in correct JSON."""
+    """Test logging discovery of new and updated items."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -189,7 +189,7 @@ async def test_discovery_integration_info(
     assert state.name == "Beer"
 
     assert (
-        "Entity binary_sensor.beer was added, from an external application bla2mqtt, software version: 1.0"
+        "Found new component: binary_sensor bla from external application bla2mqtt, version: 1.0"
         in caplog.text
     )
     caplog.clear()
@@ -198,7 +198,7 @@ async def test_discovery_integration_info(
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
-        '{ "name": "Milk", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.1","hw": "0.1", "mf": "Milk Company", "url": "https://github.com/bla2mqtt" } }',
+        '{ "name": "Milk", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.1", "url": "https://bla2mqtt.example.com/support" } }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
@@ -207,7 +207,41 @@ async def test_discovery_integration_info(
     assert state.name == "Milk"
 
     assert (
-        "Entity binary_sensor.beer was updated, from an external application bla2mqtt by Milk Company, software version: 1.1, hardware version: 0.1, support URL: https://github.com/bla2mqtt"
+        "Component has already been discovered: binary_sensor bla, sending update from external application bla2mqtt, version: 1.1, support URL: https://bla2mqtt.example.com/support"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "config_message",
+    [
+        '{ "name": "Beer", "state_topic": "test-topic", "i": "bla2mqtt" }',
+        '{ "name": "Beer", "state_topic": "test-topic", "i": 2.0 }',
+        '{ "name": "Beer", "state_topic": "test-topic", "i": null }',
+        '{ "name": "Beer", "state_topic": "test-topic", "i": {"sw": "bla2mqtt"} }',
+    ],
+)
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_discovery_with_invalid_integration_info(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    config_message: str,
+) -> None:
+    """Test sending in correct JSON."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        config_message,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.beer")
+
+    assert state is None
+    assert (
+        "Unable to parse integration information from discovery message, got"
         in caplog.text
     )
 

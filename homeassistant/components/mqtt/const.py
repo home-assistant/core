@@ -58,6 +58,19 @@ CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 
+# Device and integration info options
+CONF_IDENTIFIERS = "identifiers"
+CONF_CONNECTIONS = "connections"
+CONF_MANUFACTURER = "manufacturer"
+CONF_HW_VERSION = "hw_version"
+CONF_SW_VERSION = "sw_version"
+CONF_VIA_DEVICE = "via_device"
+CONF_DEPRECATED_VIA_HUB = "via_hub"
+CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
+CONF_OBJECT_ID = "object_id"
+CONF_SUPPORT_URL = "support_url"
+
 DATA_MQTT = "mqtt"
 DATA_MQTT_AVAILABLE = "mqtt_client_available"
 

@@ -9,8 +9,10 @@ import re
 import time
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
@@ -35,6 +37,8 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_INTEGRATION,
+    CONF_SUPPORT_URL,
+    CONF_SW_VERSION,
     CONF_TOPIC,
     DOMAIN,
 )
@@ -82,6 +86,16 @@ MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 
 TOPIC_BASE = "~"
 
+MQTT_ENTITY_INTEGRATION_INFO_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_SW_VERSION): cv.string,
+            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
+        }
+    ),
+)
+
 
 class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
@@ -97,6 +111,30 @@ def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Add entry to already discovered list."""
     get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
+
+
+@callback
+def async_log_integration_discovery_info(
+    message: str, discovery_payload: MQTTDiscoveryPayload
+) -> None:
+    """Log information about the entity."""
+    if CONF_INTEGRATION not in discovery_payload:
+        _LOGGER.info(message)
+        return
+    integration_info = discovery_payload[CONF_INTEGRATION]
+    sw_version_log = ""
+    if sw_version := integration_info.get("sw_version"):
+        sw_version_log = f", version: {sw_version}"
+    support_url_log = ""
+    if support_url := integration_info.get("support_url"):
+        support_url_log = f", support URL: {support_url}"
+    _LOGGER.info(
+        "%s from external application %s%s%s",
+        message,
+        integration_info["name"],
+        sw_version_log,
+        support_url_log,
+    )
 
 
 async def async_start(  # noqa: C901
@@ -155,11 +193,20 @@ async def async_start(  # noqa: C901
                 device[key] = device.pop(abbreviated_key)
 
         if CONF_INTEGRATION in discovery_payload:
-            integration_info = discovery_payload[CONF_INTEGRATION]
-            for key in list(integration_info):
-                abbreviated_key = key
-                key = INTEGRATION_ABBREVIATIONS.get(key, key)
-                integration_info[key] = integration_info.pop(abbreviated_key)
+            integration_info: dict[str, Any] = discovery_payload[CONF_INTEGRATION]
+            try:
+                for key in list(integration_info):
+                    abbreviated_key = key
+                    key = INTEGRATION_ABBREVIATIONS.get(key, key)
+                    integration_info[key] = integration_info.pop(abbreviated_key)
+                MQTT_ENTITY_INTEGRATION_INFO_SCHEMA(discovery_payload[CONF_INTEGRATION])
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.warning(
+                    "Unable to parse integration information "
+                    "from discovery message, got %s",
+                    discovery_payload[CONF_INTEGRATION],
+                )
+                return
 
         if CONF_AVAILABILITY in discovery_payload:
             for availability_conf in cv.ensure_list(
@@ -258,17 +305,15 @@ async def async_start(  # noqa: C901
 
         if discovery_hash in mqtt_data.discovery_already_discovered:
             # Dispatch update
-            _LOGGER.info(
-                "Component has already been discovered: %s %s, sending update",
-                component,
-                discovery_id,
-            )
+            message = f"Component has already been discovered: {component} {discovery_id}, sending update"
+            async_log_integration_discovery_info(message, payload)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
             )
         elif payload:
             # Add component
-            _LOGGER.info("Found new component: %s %s", component, discovery_id)
+            message = f"Found new component: {component} {discovery_id}"
+            async_log_integration_discovery_info(message, payload)
             mqtt_data.discovery_already_discovered.add(discovery_hash)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
