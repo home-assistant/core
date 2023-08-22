@@ -101,7 +101,6 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
-    MqttIntegrationInfo,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -769,8 +768,6 @@ class MqttDiscoveryDeviceUpdate(ABC):
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message for entity based platforms."""
 
-    _integration_info: MqttIntegrationInfo | None
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -827,10 +824,6 @@ class MqttDiscoveryUpdate(Entity):
             """Process discovery update."""
             try:
                 await discovery_update(payload)
-                if integration_info := payload.get(CONF_INTEGRATION):
-                    self._integration_info = MQTT_ENTITY_INTEGRATION_INFO_SCHEMA(
-                        integration_info
-                    )
             finally:
                 send_discovery_done(self.hass, discovery_data)
 
