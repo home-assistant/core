@@ -40,7 +40,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 
     hass.states.async_set(
         "event.button_1",
-        "on",
+        "2021-01-01T23:59:59.123+00:00",
         {"event_type": "double_press", "event_types": ["single_press", "double_press"]},
     )
     await hass.async_block_till_done()
@@ -57,7 +57,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     # State changed
     hass.states.async_set(
         "event.button_1",
-        "on",
+        "2021-01-01T23:59:59.123+00:00",
         {"event_type": "single_press", "event_types": ["single_press", "double_press"]},
     )
     await hass.async_block_till_done()
@@ -74,7 +74,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     # State changed, second remote came online
     hass.states.async_set(
         "event.button_2",
-        "on",
+        "2021-01-01T23:59:59.123+00:00",
         {"event_type": "double_press", "event_types": ["double_press", "triple_press"]},
     )
     await hass.async_block_till_done()
@@ -92,7 +92,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     # State changed, now it fires an event
     hass.states.async_set(
         "event.button_2",
-        "on",
+        "2021-01-01T23:59:59.123+00:00",
         {
             "event_type": "triple_press",
             "event_types": ["double_press", "triple_press"],
