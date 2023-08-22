@@ -59,9 +59,9 @@ def _get_marker_attributes_fn(
 
 
 def _get_marker_value_fn(
-    marker_index: int, attributes_fn: Callable[[Marker], StateType | datetime]
+    marker_index: int, value_fn: Callable[[Marker], StateType | datetime]
 ) -> Callable[[Printer], StateType | datetime]:
-    return lambda printer: attributes_fn(printer.markers[marker_index])
+    return lambda printer: value_fn(printer.markers[marker_index])
 
 
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
