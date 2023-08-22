@@ -62,7 +62,6 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
-    "discovery",
     "downloader",
     "ffmpeg",
     "file_upload",
@@ -398,4 +397,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
             + manifests_resorted,
             stdout=subprocess.DEVNULL,
+            check=True,
         )

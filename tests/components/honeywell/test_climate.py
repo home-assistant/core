@@ -48,13 +48,13 @@ FAN_ACTION = "fan_action"
 PRESET_HOLD = "Hold"
 
 
-async def test_no_thermostats(
+async def test_no_thermostat_options(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are no appliances available."""
+    """Test the setup of the climate entities when there are no additional options available."""
     device._data = {}
     await init_integration(hass, config_entry)
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_static_attributes(

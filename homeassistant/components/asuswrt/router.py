@@ -15,12 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .bridge import AsusWrtBridge, WrtDevice
 from .const import (
@@ -39,7 +38,6 @@ from .const import (
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
-DEFAULT_NAME = "Asuswrt"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -179,6 +177,44 @@ class AsusWrtRouter:
             self.hass, dict(self._entry.data), self._options
         )
 
+    def _migrate_entities_unique_id(self) -> None:
+        """Migrate router entities to new unique id format."""
+        _ENTITY_MIGRATION_ID = {
+            "sensor_connected_device": "Devices Connected",
+            "sensor_rx_bytes": "Download",
+            "sensor_tx_bytes": "Upload",
+            "sensor_rx_rates": "Download Speed",
+            "sensor_tx_rates": "Upload Speed",
+            "sensor_load_avg1": "Load Avg (1m)",
+            "sensor_load_avg5": "Load Avg (5m)",
+            "sensor_load_avg15": "Load Avg (15m)",
+            "2.4GHz": "2.4GHz Temperature",
+            "5.0GHz": "5GHz Temperature",
+            "CPU": "CPU Temperature",
+        }
+
+        entity_reg = er.async_get(self.hass)
+        router_entries = er.async_entries_for_config_entry(
+            entity_reg, self._entry.entry_id
+        )
+
+        migrate_entities: dict[str, str] = {}
+        for entry in router_entries:
+            if entry.domain == TRACKER_DOMAIN:
+                continue
+            old_unique_id = entry.unique_id
+            if not old_unique_id.startswith(DOMAIN):
+                continue
+            for new_id, old_id in _ENTITY_MIGRATION_ID.items():
+                if old_unique_id.endswith(old_id):
+                    migrate_entities[entry.entity_id] = slugify(
+                        f"{self.unique_id}_{new_id}"
+                    )
+                    break
+
+        for entity_id, unique_id in migrate_entities.items():
+            entity_reg.async_update_entity(entity_id, new_unique_id=unique_id)
+
     async def setup(self) -> None:
         """Set up a AsusWrt router."""
         try:
@@ -214,6 +250,9 @@ class AsusWrtRouter:
                 )
 
             self._devices[device_mac] = AsusWrtDevInfo(device_mac, entry.original_name)
+
+        # Migrate entities to new unique id format
+        self._migrate_entities_unique_id()
 
         # Update devices
         await self.update_devices()
@@ -337,7 +376,7 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id or "AsusWRT")},
+            identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
             manufacturer="Asus",
@@ -364,14 +403,9 @@ class AsusWrtRouter:
         return self._api.host
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return router unique id."""
-        return self._entry.unique_id
-
-    @property
-    def name(self) -> str:
-        """Return router name."""
-        return self.host if self.unique_id else DEFAULT_NAME
+        return self._entry.unique_id or self._entry.entry_id
 
     @property
     def devices(self) -> dict[str, AsusWrtDevInfo]:

@@ -4,6 +4,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, PLATFORMS
@@ -60,3 +61,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove device from a config entry."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data.coordinators["sessions"]
+
+    return not device_entry.identifiers.intersection(
+        (
+            (DOMAIN, coordinator.server_id),
+            *((DOMAIN, id) for id in coordinator.device_ids),
+        )
+    )

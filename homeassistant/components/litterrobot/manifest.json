@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["pylitterbot"],
-  "requirements": ["pylitterbot==2023.4.2"]
+  "requirements": ["pylitterbot==2023.4.4"]
 }

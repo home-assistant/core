@@ -19,11 +19,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
@@ -116,6 +116,8 @@ async def async_setup_entry(
 class HyperionLight(LightEntity):
     """A Hyperion light that acts as a client for the configured priority."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
@@ -131,7 +133,6 @@ class HyperionLight(LightEntity):
     ) -> None:
         """Initialize the light."""
         self._unique_id = self._compute_unique_id(server_id, instance_num)
-        self._name = self._compute_name(instance_name)
         self._device_id = get_hyperion_device_id(server_id, instance_num)
         self._instance_name = instance_name
         self._options = options
@@ -157,19 +158,10 @@ class HyperionLight(LightEntity):
         """Compute a unique id for this instance."""
         return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
 
-    def _compute_name(self, instance_name: str) -> str:
-        """Compute the name of the light."""
-        return f"{instance_name}".strip()
-
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Whether or not the entity is enabled by default."""
         return True
-
-    @property
-    def name(self) -> str:
-        """Return the name of the light."""
-        return self._name
 
     @property
     def brightness(self) -> int:

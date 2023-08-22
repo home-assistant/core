@@ -35,7 +35,7 @@ from .const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from .dashboard import async_get_dashboard, async_set_dashboard_info
+from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
@@ -406,7 +406,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         if (
             self._device_name is None
-            or (dashboard := async_get_dashboard(self.hass)) is None
+            or (manager := await async_get_or_create_dashboard_manager(self.hass))
+            is None
+            or (dashboard := manager.async_get()) is None
         ):
             return False
 
@@ -425,9 +427,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
         except json.JSONDecodeError as err:
-            _LOGGER.error(
-                "Error parsing response from dashboard: %s", err, exc_info=True
-            )
+            _LOGGER.exception("Error parsing response from dashboard: %s", err)
             return False
 
         self._noise_psk = noise_psk

@@ -18,9 +18,9 @@
       },
       "zeroconf_confirm": {
         "data": {
-          "username": "Email / devolo ID",
+          "username": "[%key:component::devolo_home_control::config::step::user::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "mydevolo URL"
+          "mydevolo_url": "[%key:component::devolo_home_control::config::step::user::data::mydevolo_url%]"
         }
       }
     }

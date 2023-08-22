@@ -22,7 +22,8 @@
           "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]",
           "data": {
             "channel": "Channel"
-          }
+          },
+          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this is an advanced operation and can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you have selected **Submit**, the channel change starts quietly in the background and will finish after a few minutes."
         },
         "install_addon": {
           "title": "The Silicon Labs Multiprotocol add-on installation has started"

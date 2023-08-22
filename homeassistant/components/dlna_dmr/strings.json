@@ -34,7 +34,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_dmr": "Device is not a supported Digital Media Renderer"
+      "not_dmr": "[%key:component::dlna_dmr::config::abort::not_dmr%]"
     }
   },
   "options": {
