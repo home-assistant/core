@@ -88,29 +88,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    # config flow sets this to either UUID, serial number or None
-    if (unique_id := entry.unique_id) is None:
-        unique_id = entry.entry_id
-
-    sensors: list[SensorEntity] = []
-
-    sensors.extend(
-        [
-            IPPSensor(
-                unique_id,
-                coordinator,
-                description,
-            )
-            for description in PRINTER_SENSORS
-        ]
-    )
+    sensors: list[SensorEntity] = [
+        IPPSensor(
+            coordinator,
+            description,
+        )
+        for description in PRINTER_SENSORS
+    ]
 
     for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
             IPPMarkerSensor(
                 index,
-                unique_id,
                 coordinator,
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
@@ -135,24 +124,6 @@ class IPPSensor(IPPEntity, SensorEntity):
 
     entity_description: IPPSensorEntityDescription
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        device_id: str,
-        coordinator: IPPDataUpdateCoordinator,
-        description: IPPSensorEntityDescription,
-    ) -> None:
-        """Initialize IPP sensor."""
-        self.entity_description = description
-
-        super().__init__(
-            device_id,
-            coordinator,
-        )
-
-        self._attr_unique_id = f"{device_id}_{description.key}"
-
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
@@ -169,25 +140,19 @@ class IPPMarkerSensor(IPPEntity, SensorEntity):
 
     entity_description: IPPSensorEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         marker_index: int,
-        device_id: str,
         coordinator: IPPDataUpdateCoordinator,
         description: IPPSensorEntityDescription,
     ) -> None:
         """Initialize IPP marker sensor."""
-        self.entity_description = description
         self.marker_index = marker_index
 
         super().__init__(
-            device_id,
             coordinator,
+            description,
         )
-
-        self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
