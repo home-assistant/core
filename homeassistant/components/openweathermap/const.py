@@ -157,3 +157,8 @@ CONDITION_CLASSES = {
         904,
     ],
 }
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}

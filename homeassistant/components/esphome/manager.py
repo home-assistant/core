@@ -319,7 +319,7 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, use_vad: bool
+        self, conversation_id: str, flags: int
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -339,11 +339,10 @@ class ESPHomeManager:
             voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
-                use_vad=use_vad,
+                flags=flags,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
-        self.entry_data.async_set_assist_pipeline_state(True)
 
         return port
 

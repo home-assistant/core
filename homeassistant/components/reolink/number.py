@@ -176,6 +176,70 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
     ReolinkNumberEntityDescription(
+        key="ai_face_delay",
+        name="AI face delay",
+        icon="mdi:face-recognition",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "face")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "face"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "face"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_person_delay",
+        name="AI person delay",
+        icon="mdi:account",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "people")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "people"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "people"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_vehicle_delay",
+        name="AI vehicle delay",
+        icon="mdi:car",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "vehicle")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "vehicle"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "vehicle"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_pet_delay",
+        name="AI pet delay",
+        icon="mdi:dog-side",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "dog_cat")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "dog_cat"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
         key="auto_quick_reply_time",
         name="Auto quick reply time",
         icon="mdi:message-reply-text-outline",

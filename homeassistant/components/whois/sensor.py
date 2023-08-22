@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import cast
 
 from whois import Domain
@@ -55,7 +55,7 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 
     # If timezone info isn't provided by the Whois, assume UTC.
     if timestamp.tzinfo is None:
-        return timestamp.replace(tzinfo=timezone.utc)
+        return timestamp.replace(tzinfo=UTC)
 
     return timestamp
 

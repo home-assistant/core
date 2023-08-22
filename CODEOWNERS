@@ -209,6 +209,8 @@ build.json @home-assistant/supervisor
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
+/homeassistant/components/comelit/ @chemelli74
+/tests/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts
 /tests/components/comfoconnect/ @michaelarnauts
 /homeassistant/components/command_line/ @gjohansson-ST
@@ -607,8 +609,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
 /homeassistant/components/iperf3/ @rohankapoorcom
-/homeassistant/components/ipma/ @dgomes @abmantis
-/tests/components/ipma/ @dgomes @abmantis
+/homeassistant/components/ipma/ @dgomes
+/tests/components/ipma/ @dgomes
 /homeassistant/components/ipp/ @ctalkington
 /tests/components/ipp/ @ctalkington
 /homeassistant/components/iqvia/ @bachya
@@ -672,6 +674,8 @@ build.json @home-assistant/supervisor
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry
 /tests/components/laundrify/ @xLarry
+/homeassistant/components/lawn_mower/ @home-assistant/core
+/tests/components/lawn_mower/ @home-assistant/core
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/ld2410_ble/ @930913

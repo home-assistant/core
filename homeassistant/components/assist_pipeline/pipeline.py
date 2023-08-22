@@ -254,6 +254,8 @@ class PipelineEventType(StrEnum):
     WAKE_WORD_START = "wake_word-start"
     WAKE_WORD_END = "wake_word-end"
     STT_START = "stt-start"
+    STT_VAD_START = "stt-vad-start"
+    STT_VAD_END = "stt-vad-end"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
     INTENT_END = "intent-end"
@@ -612,11 +614,31 @@ class PipelineRun:
                 stream: AsyncIterable[bytes],
             ) -> AsyncGenerator[bytes, None]:
                 """Stop stream when voice command is finished."""
+                sent_vad_start = False
+                timestamp_ms = 0
                 async for chunk in stream:
                     if not segmenter.process(chunk):
+                        # Silence detected at the end of voice command
+                        self.process_event(
+                            PipelineEvent(
+                                PipelineEventType.STT_VAD_END,
+                                {"timestamp": timestamp_ms},
+                            )
+                        )
                         break
 
+                    if segmenter.in_command and (not sent_vad_start):
+                        # Speech detected at start of voice command
+                        self.process_event(
+                            PipelineEvent(
+                                PipelineEventType.STT_VAD_START,
+                                {"timestamp": timestamp_ms},
+                            )
+                        )
+                        sent_vad_start = True
+
                     yield chunk
+                    timestamp_ms += (len(chunk) // 2) // 16  # milliseconds @ 16Khz
 
             # Transcribe audio stream
             result = await self.stt_provider.async_process_audio_stream(
