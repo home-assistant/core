@@ -11,7 +11,7 @@ from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedExcepti
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER
@@ -70,9 +70,9 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
                 active_zones = await self.controller.fetch_active_zones()
                 return YardianDeviceState(zones=zones, active_zones=active_zones)
 
-        except asyncio.TimeoutError:
-            raise UpdateFailed("Communication with Device was time out")
-        except NotAuthorizedException:
-            raise UpdateFailed("Invalid access token")
-        except NetworkException:
-            raise UpdateFailed("Failed to communicate with Device")
+        except asyncio.TimeoutError as e:
+            raise UpdateFailed("Communication with Device was time out") from e
+        except NotAuthorizedException as e:
+            raise UpdateFailed("Invalid access token") from e
+        except NetworkException as e:
+            raise UpdateFailed("Failed to communicate with Device") from e
