@@ -67,6 +67,11 @@
       "speed_limit": {
         "name": "Speed limit"
       }
+    },
+    "switch": {
+      "download": {
+        "name": "Download"
+      }
     }
   },
   "services": {
