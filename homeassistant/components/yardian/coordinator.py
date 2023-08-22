@@ -38,6 +38,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         entry: ConfigEntry,
         controller: AsyncYardianClient,
     ) -> None:
+        """Initialize Yardian API communication."""
         super().__init__(
             hass,
             _LOGGER,

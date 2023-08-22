@@ -35,6 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_fetch_device_info(self, host: str, access_token: str) -> DeviceInfo:
+        """Fetch device info from Yardian."""
         yarcli = AsyncYardianClient(
             async_get_clientsession(self.hass),
             host,
