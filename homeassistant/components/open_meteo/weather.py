@@ -4,19 +4,16 @@ from __future__ import annotations
 from open_meteo import Forecast as OpenMeteoForecast
 
 from homeassistant.components.weather import (
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
 
@@ -32,7 +29,7 @@ async def async_setup_entry(
 
 
 class OpenMeteoWeatherEntity(
-    CoordinatorEntity[DataUpdateCoordinator[OpenMeteoForecast]], WeatherEntity
+    CoordinatorWeatherEntity[DataUpdateCoordinator[OpenMeteoForecast]]
 ):
     """Defines an Open-Meteo weather entity."""
 
@@ -58,15 +55,6 @@ class OpenMeteoWeatherEntity(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Open-Meteo",
             name=entry.title,
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily",))
         )
 
     @property
