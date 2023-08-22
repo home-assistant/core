@@ -1,5 +1,4 @@
 """Test the Panasonic Viera media player entity."""
-
 from datetime import timedelta
 from unittest.mock import Mock
 from urllib.error import HTTPError, URLError
@@ -21,6 +20,24 @@ async def test_media_player_handle_URLerror(
 
     # simulate timeout error
     mock_remote.get_mute = Mock(side_effect=URLError(None, None))
+
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=2))
+    await hass.async_block_till_done()
+
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    assert state_tv.state == STATE_UNAVAILABLE
+
+
+async def test_media_player_handle_exception(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_remote: Mock
+) -> None:
+    """Test remote handle Exception as Unavailable."""
+
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    assert state_tv.state == STATE_ON
+
+    # simulate timeout error
+    mock_remote.get_mute = Mock(side_effect=Exception())
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=2))
     await hass.async_block_till_done()

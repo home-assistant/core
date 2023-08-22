@@ -921,6 +921,7 @@ omit =
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
+    homeassistant/components/panasonic_viera/__init__.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
