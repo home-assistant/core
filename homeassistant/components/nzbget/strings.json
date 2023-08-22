@@ -23,15 +23,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update frequency (seconds)"
-        }
-      }
-    }
-  },
   "services": {
     "pause": {
       "name": "[%key:common::action::pause%]",
