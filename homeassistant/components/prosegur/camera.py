@@ -51,7 +51,6 @@ class ProsegurCamera(Camera):
     """Representation of a Smart Prosegur Camera."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self, installation: Installation, camera: InstallationCamera, auth: Auth
@@ -62,13 +61,14 @@ class ProsegurCamera(Camera):
         self._installation = installation
         self._camera = camera
         self._auth = auth
-        self._attr_unique_id = f"{self._installation.contract} {camera.id}"
+        self._attr_unique_id = f"{installation.contract} {camera.id}"
+        self._attr_name = camera.description
 
         self._attr_device_info = DeviceInfo(
-            name=self._camera.description,
+            name=f"Contract {installation.contract}",
             manufacturer="Prosegur",
-            model="smart camera",
-            identifiers={(DOMAIN, self._installation.contract)},
+            model="smart",
+            identifiers={(DOMAIN, installation.contract)},
             configuration_url="https://smart.prosegur.com",
         )
 
