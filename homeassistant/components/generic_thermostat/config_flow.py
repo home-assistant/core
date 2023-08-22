@@ -1,9 +1,12 @@
 """Config flow for the Generic Thermostat integration."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
 from homeassistant.data_entry_flow import FlowResult
@@ -11,7 +14,6 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_AC_MODE,
-    CONF_ADVANCED_SETTINGS,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
@@ -42,15 +44,24 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
+
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the form(s)."""
         if user_input is None:
             return await self._async_step_basic()
 
-        if user_input.get(CONF_ADVANCED_SETTINGS):
+        self.data = user_input
+        return await self._async_show_advanced_settings()
+
+    async def async_step_advanced_settings(self, user_input=None) -> FlowResult:
+        """Handle the advanced settings form."""
+        if user_input is None:
             return await self._async_show_advanced_settings()
 
-        return self.async_create_entry(title="Generic Thermostat", data={})
+        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def _async_step_basic(self) -> FlowResult:
         """Handle the basic needed settings."""
@@ -63,9 +74,11 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
                         selector.EntitySelectorConfig(domain=["input_boolean"]),
                     ),
                     vol.Required(CONF_SENSOR): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["sensor"]),
+                        selector.EntitySelectorConfig(
+                            domain=["sensor"],
+                            device_class=SensorDeviceClass.TEMPERATURE,
+                        ),
                     ),
-                    vol.Optional(CONF_ADVANCED_SETTINGS): bool,
                 }
             ),
         )
