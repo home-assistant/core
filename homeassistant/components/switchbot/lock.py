@@ -5,6 +5,7 @@ import switchbot
 from switchbot.const import LockStatus
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
