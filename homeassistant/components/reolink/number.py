@@ -45,7 +45,7 @@ class ReolinkNumberEntityDescription(
 NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="zoom",
-        name="Zoom",
+        translation_key="zoom",
         icon="mdi:magnify",
         mode=NumberMode.SLIDER,
         native_step=1,
@@ -57,7 +57,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="focus",
-        name="Focus",
+        translation_key="focus",
         icon="mdi:focus-field",
         mode=NumberMode.SLIDER,
         native_step=1,
@@ -72,7 +72,7 @@ NUMBER_ENTITIES = (
     # or when using the "light.floodlight" entity.
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
-        name="Floodlight turn on brightness",
+        translation_key="floodlight_brightness",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -84,7 +84,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="volume",
-        name="Volume",
+        translation_key="volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -96,7 +96,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="guard_return_time",
-        name="Guard return time",
+        translation_key="guard_return_time",
         icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -109,7 +109,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="motion_sensitivity",
-        name="Motion sensitivity",
+        translation_key="motion_sensitivity",
         icon="mdi:motion-sensor",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -121,7 +121,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
-        name="AI face sensitivity",
+        translation_key="ai_face_sensititvity",
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -135,7 +135,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_person_sensititvity",
-        name="AI person sensitivity",
+        translation_key="ai_person_sensititvity",
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -149,7 +149,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_sensititvity",
-        name="AI vehicle sensitivity",
+        translation_key="ai_vehicle_sensititvity",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -163,7 +163,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
-        name="AI pet sensitivity",
+        translation_key="ai_pet_sensititvity",
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -177,7 +177,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_delay",
-        name="AI face delay",
+        translation_key="ai_face_delay",
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -193,7 +193,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_person_delay",
-        name="AI person delay",
+        translation_key="ai_person_delay",
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -209,7 +209,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_delay",
-        name="AI vehicle delay",
+        translation_key="ai_vehicle_delay",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -225,7 +225,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
-        name="AI pet delay",
+        translation_key="ai_pet_delay",
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -241,7 +241,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_quick_reply_time",
-        name="Auto quick reply time",
+        translation_key="auto_quick_reply_time",
         icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -254,7 +254,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_limit_left",
-        name="Auto track limit left",
+        translation_key="auto_track_limit_left",
         icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
@@ -267,7 +267,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_limit_right",
-        name="Auto track limit right",
+        translation_key="auto_track_limit_right",
         icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
@@ -280,7 +280,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_disappear_time",
-        name="Auto track disappear time",
+        translation_key="auto_track_disappear_time",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -295,7 +295,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_stop_time",
-        name="Auto track stop time",
+        translation_key="auto_track_stop_time",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
