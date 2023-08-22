@@ -299,7 +299,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             _LOGGER.error(err)
             raise AbortFlow(
                 "addon_info_failed",
-                description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+                description_placeholders={"addon_name": addon_manager.addon_name},
             ) from err
 
         return addon_info
@@ -443,7 +443,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_progress(
                 step_id="install_addon",
                 progress_action="install_addon",
-                description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+                description_placeholders={"addon_name": multipan_manager.addon_name},
             )
 
         try:
@@ -550,7 +550,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_progress(
                 step_id="start_addon",
                 progress_action="start_addon",
-                description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+                description_placeholders={"addon_name": multipan_manager.addon_name},
             )
 
         try:
@@ -724,7 +724,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         # If the addon is already installed and running, fail
         return self.async_abort(
             reason="addon_install_failed",
-            description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+            description_placeholders={"addon_name": flasher_manager.addon_name},
         )
 
     async def async_step_install_flasher_addon(
@@ -744,7 +744,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_progress(
                 step_id="install_flasher_addon",
                 progress_action="install_addon",
-                description_placeholders={"addon_name": "Silicon Labs Flasher"},
+                description_placeholders={"addon_name": flasher_manager.addon_name},
             )
 
         try:
@@ -831,7 +831,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_progress(
                 step_id="uninstall_multiprotocol_addon",
                 progress_action="uninstall_multiprotocol_addon",
-                description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+                description_placeholders={"addon_name": multipan_manager.addon_name},
             )
 
         try:
@@ -855,7 +855,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             return self.async_show_progress(
                 step_id="start_flasher_addon",
                 progress_action="start_flasher_addon",
-                description_placeholders={"addon_name": "Silicon Labs Flasher"},
+                description_placeholders={"addon_name": flasher_manager.addon_name},
             )
 
         try:
