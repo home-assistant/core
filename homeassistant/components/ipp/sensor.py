@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from pyipp import Marker, Printer
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -38,7 +40,7 @@ from .entity import IPPEntity
 class IPPSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Any], StateType | datetime]
+    value_fn: Callable[[Printer], StateType | datetime]
 
 
 @dataclass
@@ -47,7 +49,19 @@ class IPPSensorEntityDescription(
 ):
     """Describes IPP sensor entity."""
 
-    attributes_fn: Callable[[Any], dict[Any, StateType]] = lambda _: {}
+    attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
+
+
+def _get_marker_attributes_fn(
+    marker_index: int, attributes_fn: Callable[[Marker], dict[Any, StateType]]
+) -> Callable[[Printer], dict[Any, StateType]]:
+    return lambda printer: attributes_fn(printer.markers[marker_index])
+
+
+def _get_marker_value_fn(
+    marker_index: int, attributes_fn: Callable[[Marker], StateType | datetime]
+) -> Callable[[Printer], StateType | datetime]:
+    return lambda printer: attributes_fn(printer.markers[marker_index])
 
 
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
@@ -65,7 +79,7 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_STATE_MESSAGE: printer.state.message,
             ATTR_STATE_REASON: printer.state.reasons,
             ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
+            ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
         },
         value_fn=lambda printer: printer.state.printer_state,
     ),
@@ -98,20 +112,22 @@ async def async_setup_entry(
 
     for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
-            IPPMarkerSensor(
-                index,
+            IPPSensor(
                 coordinator,
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
                     icon="mdi:water",
                     native_unit_of_measurement=PERCENTAGE,
-                    attributes_fn=lambda marker: {
-                        ATTR_MARKER_HIGH_LEVEL: marker.high_level,
-                        ATTR_MARKER_LOW_LEVEL: marker.low_level,
-                        ATTR_MARKER_TYPE: marker.marker_type,
-                    },
-                    value_fn=lambda marker: marker.level,
+                    attributes_fn=_get_marker_attributes_fn(
+                        index,
+                        lambda marker: {
+                            ATTR_MARKER_HIGH_LEVEL: marker.high_level,
+                            ATTR_MARKER_LOW_LEVEL: marker.low_level,
+                            ATTR_MARKER_TYPE: marker.marker_type,
+                        },
+                    ),
+                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
                 ),
             )
         )
@@ -133,37 +149,3 @@ class IPPSensor(IPPEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-
-class IPPMarkerSensor(IPPEntity, SensorEntity):
-    """Defines an IPP marker sensor."""
-
-    entity_description: IPPSensorEntityDescription
-
-    def __init__(
-        self,
-        marker_index: int,
-        coordinator: IPPDataUpdateCoordinator,
-        description: IPPSensorEntityDescription,
-    ) -> None:
-        """Initialize IPP marker sensor."""
-        self.marker_index = marker_index
-
-        super().__init__(
-            coordinator,
-            description,
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the entity."""
-        return self.entity_description.attributes_fn(
-            self.coordinator.data.markers[self.marker_index]
-        )
-
-    @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.data.markers[self.marker_index]
-        )
