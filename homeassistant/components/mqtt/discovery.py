@@ -56,6 +56,7 @@ SUPPORTED_COMPONENTS = [
     "fan",
     "humidifier",
     "image",
+    "lawn_mower",
     "light",
     "lock",
     "number",

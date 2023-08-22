@@ -58,6 +58,7 @@ class EntitySubscription:
         if not self.subscribe_task:
             return
         self.unsubscribe_callback = await self.subscribe_task
+        self.subscribe_task = None
 
     def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
         """Check if we should re-subscribe to the topic using the old state."""
