@@ -1,7 +1,7 @@
 """The DataUpdateCoordinator for formula_one."""
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from json import JSONDecodeError
 import logging
 
@@ -166,15 +166,15 @@ class F1UpdateCoordinator(DataUpdateCoordinator[None]):
 
     def get_next_race(self) -> ergast.Race | None:
         """Get the next Race."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for race in self.races:
-            race_date = race.date.replace(tzinfo=timezone.utc)
+            race_date = race.date.replace(tzinfo=UTC)
             if race_date > now:
                 return race
 
         for race in self.races_next_year:
-            race_date = race.date.replace(tzinfo=timezone.utc)
+            race_date = race.date.replace(tzinfo=UTC)
             if race_date > now:
                 return race
 
