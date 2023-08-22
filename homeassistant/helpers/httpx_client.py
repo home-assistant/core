@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import sys
-from typing import Any
+from typing import Any, Self
 
 import httpx
-from typing_extensions import Self
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback

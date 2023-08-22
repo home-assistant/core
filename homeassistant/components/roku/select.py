@@ -122,14 +122,12 @@ async def async_setup_entry(
     """Set up Roku select based on a config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device: RokuDevice = coordinator.data
-    unique_id = device.info.serial_number
 
     entities: list[RokuSelectEntity] = []
 
     for description in ENTITIES:
         entities.append(
             RokuSelectEntity(
-                device_id=unique_id,
                 coordinator=coordinator,
                 description=description,
             )
@@ -138,7 +136,6 @@ async def async_setup_entry(
     if len(device.channels) > 0:
         entities.append(
             RokuSelectEntity(
-                device_id=unique_id,
                 coordinator=coordinator,
                 description=CHANNEL_ENTITY,
             )

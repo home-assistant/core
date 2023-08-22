@@ -12,7 +12,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity_registry import async_get as er_async_get
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -73,26 +72,26 @@ def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
-) -> str:
+) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
+    if description and channel_name:
+        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return f"{channel_name} {description.lower()}"
+        return description
 
     return channel_name
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get name based on device and channel name."""
-    entity_name = device.name
-
     if (
         not block
         or block.type == "device"
         or get_number_of_channels(device, block) == 1
     ):
-        return entity_name
+        return None
 
     assert block.channel
 
@@ -109,7 +108,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     else:
         base = ord("1")
 
-    return f"{entity_name} channel {chr(int(block.channel)+base)}"
+    return f"Channel {chr(int(block.channel)+base)}"
 
 
 def is_block_momentary_input(
@@ -211,7 +210,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     await context.initialize(port)
 
     @callback
-    def shutdown_listener(ev: EventType) -> None:
+    def shutdown_listener(ev: Event) -> None:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
@@ -286,32 +285,32 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
-    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name", device_name)
+        entity_name = device.config[key].get("name")
 
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
-            return f"{device_name} {key.replace(':', '_')}"
-        return device_name
+            return key.replace(":", " ").capitalize()
 
     return entity_name
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str:
+) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
+    if description and channel_name:
+        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return f"{channel_name} {description.lower()}"
+        return description
 
     return channel_name
 
@@ -406,3 +405,8 @@ def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
     mac = name.partition(".")[0].partition("-")[-1]
     return mac.upper() if len(mac) == 12 else None
+
+
+def uncapitalize(description: str) -> str:
+    """Uncapitalize the first letter of a description."""
+    return description[:1].lower() + description[1:]

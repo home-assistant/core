@@ -307,6 +307,9 @@ async def test_auth_failed(
         await hass.services.async_call(
             PLATFORM, SERVICE_TURN_ON, {"entity_id": state_key}, blocking=True
         )
+
+    await hass.async_block_till_done()
+
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 

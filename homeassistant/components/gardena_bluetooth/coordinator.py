@@ -15,7 +15,8 @@ from gardena_bluetooth.parse import Characteristic, CharacteristicType
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -80,7 +81,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
                 ) from exception
         return data
 
-    def read_cached(
+    def get_cached(
         self, char: Characteristic[CharacteristicType]
     ) -> CharacteristicType | None:
         """Read cached characteristic."""
@@ -119,3 +120,15 @@ class GardenaBluetoothEntity(CoordinatorEntity[Coordinator]):
         return super().available and bluetooth.async_address_present(
             self.hass, self.coordinator.address, True
         )
+
+
+class GardenaBluetoothDescriptorEntity(GardenaBluetoothEntity):
+    """Coordinator entity for entities with entity description."""
+
+    def __init__(
+        self, coordinator: Coordinator, description: EntityDescription
+    ) -> None:
+        """Initialize description entity."""
+        super().__init__(coordinator, {description.key})
+        self._attr_unique_id = f"{coordinator.address}-{description.key}"
+        self.entity_description = description

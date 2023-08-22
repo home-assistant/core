@@ -1,9 +1,9 @@
 """Support for SRP Energy Sensor."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
-import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
 from homeassistant.components.sensor import (
@@ -52,7 +52,7 @@ async def async_setup_entry(
             end_date = dt_util.now(phx_time_zone)
             start_date = end_date - timedelta(days=1)
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
                     api.usage,
                     start_date,

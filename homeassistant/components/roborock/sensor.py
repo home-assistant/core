@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import AREA_SQUARE_METERS, EntityCategory, UnitOfTime
+from homeassistant.const import (
+    AREA_SQUARE_METERS,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -121,6 +126,13 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.error_code.name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockErrorCode.keys(),
+    ),
+    RoborockSensorDescription(
+        key="battery",
+        value_fn=lambda data: data.status.battery,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
     ),
 ]
 

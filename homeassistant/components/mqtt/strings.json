@@ -7,6 +7,14 @@
     "deprecation_mqtt_legacy_vacuum_discovery": {
       "title": "MQTT vacuum entities with legacy schema added through MQTT discovery",
       "description": "MQTT vacuum entities that use the legacy schema are deprecated, please adjust your devices to use the correct schema and restart Home Assistant to fix this issue."
+    },
+    "entity_name_is_device_name_yaml": {
+      "title": "Manual configured MQTT entities with a name that is equal to the device name",
+      "description": "Some MQTT entities have an entity name equal to the device name. This is not expected. The entity name is set to `null` as a work-a-round to avoid a duplicate name. Please update your configuration and restart Home Assistant to fix this issue.\n\nList of affected entities:\n\n{config}"
+    },
+    "entity_name_startswith_device_name_yaml": {
+      "title": "Manual configured MQTT entities with a name that starts with the device name",
+      "description": "Some MQTT entities have an entity name that starts with the device name. This is not expected. To avoid a duplicate name the device name prefix is stripped off the entity name as a work-a-round. Please update your configuration and restart Home Assistant to fix this issue. \n\nList of affected entities:\n\n{config}"
     }
   },
   "config": {

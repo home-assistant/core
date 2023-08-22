@@ -196,6 +196,15 @@ async def test_setup_with_invalid_configs(
             "has invalid object id",
             "invalid slug Bad Script",
         ),
+        (
+            "turn_on",
+            {},
+            "has invalid object id",
+            (
+                "A script's object_id must not be one of "
+                "reload, toggle, turn_off, turn_on. Got 'turn_on'"
+            ),
+        ),
     ),
 )
 async def test_bad_config_validation_critical(

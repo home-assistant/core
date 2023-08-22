@@ -47,9 +47,6 @@
   },
   "entity": {
     "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      },
       "terminate_apps": {
         "name": "Terminate apps"
       }

@@ -16,12 +16,16 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from .coordinator import (
+    Coordinator,
+    GardenaBluetoothDescriptorEntity,
+    GardenaBluetoothEntity,
+)
 
 
 @dataclass
@@ -37,7 +41,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=Valve.manual_watering_time.uuid,
         translation_key="manual_watering_time",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         mode=NumberMode.BOX,
         native_min_value=0.0,
         native_max_value=24 * 60 * 60,
@@ -48,7 +52,7 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=Valve.remaining_open_time.uuid,
         translation_key="remaining_open_time",
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0.0,
         native_max_value=24 * 60 * 60,
         native_step=60.0,
@@ -58,24 +62,24 @@ DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
         key=DeviceConfiguration.rain_pause.uuid,
         translation_key="rain_pause",
-        native_unit_of_measurement="d",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         mode=NumberMode.BOX,
         native_min_value=0.0,
-        native_max_value=127.0,
-        native_step=1.0,
+        native_max_value=7 * 24 * 60,
+        native_step=6 * 60.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.rain_pause,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.season_pause.uuid,
-        translation_key="season_pause",
-        native_unit_of_measurement="d",
+        key=DeviceConfiguration.seasonal_adjust.uuid,
+        translation_key="seasonal_adjust",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
-        native_min_value=0.0,
-        native_max_value=365.0,
+        native_min_value=-128.0,
+        native_max_value=127.0,
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
-        char=DeviceConfiguration.season_pause,
+        char=DeviceConfiguration.seasonal_adjust,
     ),
 )
 
@@ -90,30 +94,22 @@ async def async_setup_entry(
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
-    entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
+    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+        entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
     async_add_entities(entities)
 
 
-class GardenaBluetoothNumber(GardenaBluetoothEntity, NumberEntity):
+class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
     """Representation of a number."""
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
-    def __init__(
-        self,
-        coordinator: Coordinator,
-        description: GardenaBluetoothNumberEntityDescription,
-    ) -> None:
-        """Initialize the number entity."""
-        super().__init__(coordinator, {description.key})
-        self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self.entity_description = description
-
     def _handle_coordinator_update(self) -> None:
-        if data := self.coordinator.data.get(self.entity_description.char.uuid):
-            self._attr_native_value = float(self.entity_description.char.decode(data))
-        else:
+        data = self.coordinator.get_cached(self.entity_description.char)
+        if data is None:
             self._attr_native_value = None
+        else:
+            self._attr_native_value = float(data)
         super()._handle_coordinator_update()
 
     async def async_set_native_value(self, value: float) -> None:

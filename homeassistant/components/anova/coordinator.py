@@ -1,12 +1,12 @@
 """Support for Anova Coordinators."""
+from asyncio import timeout
 from datetime import timedelta
 import logging
 
 from anova_wifi import AnovaOffline, AnovaPrecisionCooker, APCUpdate
-import async_timeout
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -47,7 +47,7 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
 
     async def _async_update_data(self) -> APCUpdate:
         try:
-            async with async_timeout.timeout(5):
+            async with timeout(5):
                 return await self.anova_device.update()
         except AnovaOffline as err:
             raise UpdateFailed(err) from err

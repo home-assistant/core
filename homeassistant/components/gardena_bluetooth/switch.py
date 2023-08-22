@@ -35,7 +35,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
     characteristics = {
         Valve.state.uuid,
         Valve.manual_watering_time.uuid,
-        Valve.manual_watering_time.uuid,
+        Valve.remaining_open_time.uuid,
     }
 
     def __init__(
@@ -51,10 +51,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_is_on = None
 
     def _handle_coordinator_update(self) -> None:
-        if data := self.coordinator.data.get(Valve.state.uuid):
-            self._attr_is_on = Valve.state.decode(data)
-        else:
-            self._attr_is_on = None
+        self._attr_is_on = self.coordinator.get_cached(Valve.state)
         super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
