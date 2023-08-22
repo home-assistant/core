@@ -18,5 +18,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "blood_sugar": {
+        "name": "Blood sugar"
+      }
+    }
   }
 }

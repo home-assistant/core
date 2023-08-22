@@ -13,6 +13,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
@@ -31,21 +32,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    async_add_entities([NightscoutSensor(api, entry.unique_id)], True)
 
 
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
+    _attr_has_entity_name = True
+    _attr_translation_key = "blood_sugar"
+    _attr_native_unit_of_measurement = "mg/dL"
+    _attr_icon = "mdi:cloud-question"
+
+    def __init__(self, api: NightscoutAPI, unique_id) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id
-        self._attr_name = name
         self._attr_extra_state_attributes: dict[str, Any] = {}
-        self._attr_native_unit_of_measurement = "mg/dL"
-        self._attr_icon = "mdi:cloud-question"
         self._attr_available = False
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     async def async_update(self) -> None:
         """Fetch the latest data from Nightscout REST API and update the state."""
