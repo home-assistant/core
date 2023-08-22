@@ -1079,6 +1079,22 @@ class WeatherEntity(Entity, PostInit):
             ) and custom_unit_visibility in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]:
                 self._weather_option_visibility_unit = custom_unit_visibility
 
+    @callback
+    def _async_subscription_started(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """Start subscription to forecast_type."""
+        return None
+
+    @callback
+    def _async_subscription_ended(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """End subscription to forecast_type."""
+        return None
+
     @final
     @callback
     def async_subscribe_forecast(
@@ -1090,11 +1106,16 @@ class WeatherEntity(Entity, PostInit):
 
         Called by websocket API.
         """
+        subscription_started = not self._forecast_listeners[forecast_type]
         self._forecast_listeners[forecast_type].append(forecast_listener)
+        if subscription_started:
+            self._async_subscription_started(forecast_type)
 
         @callback
         def unsubscribe() -> None:
             self._forecast_listeners[forecast_type].remove(forecast_listener)
+            if not self._forecast_listeners[forecast_type]:
+                self._async_subscription_ended(forecast_type)
 
         return unsubscribe
 
