@@ -35,7 +35,7 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
         "average_speed": (
             "AverageDownloadRate",
             "1250000",
-            UnitOfDataRate.MEGABYTES_PER_SECOND,
+            UnitOfDataRate.BYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
