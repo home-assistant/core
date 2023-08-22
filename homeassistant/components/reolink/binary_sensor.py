@@ -129,11 +129,10 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         self.entity_description = entity_description
 
         if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-            key = (
-                entity_description.translation_key
-                if entity_description.translation_key is not None
-                else entity_description.key
-            )
+            if entity_description.translation_key is not None:
+                key = entity_description.translation_key
+            else:
+                key = entity_description.key
             self._attr_translation_key = f"{key}_lens_{self._channel}"
 
         self._attr_unique_id = (
