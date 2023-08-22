@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -146,9 +146,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="Boot time",
         device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:av-timer",
-        value=lambda data: datetime.fromtimestamp(
-            data.system.boot_time, tz=timezone.utc
-        ),
+        value=lambda data: datetime.fromtimestamp(data.system.boot_time, tz=UTC),
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_power_package",

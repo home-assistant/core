@@ -18,7 +18,6 @@ from aioesphomeapi import (
     UserServiceArgType,
     VoiceAssistantEventType,
 )
-from aioesphomeapi.model import VoiceAssistantCommandFlag
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
@@ -320,7 +319,7 @@ class ESPHomeManager:
             self.voice_assistant_udp_server = None
 
     async def _handle_pipeline_start(
-        self, conversation_id: str, use_vad: int
+        self, conversation_id: str, flags: int
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -340,8 +339,7 @@ class ESPHomeManager:
             voice_assistant_udp_server.run_pipeline(
                 device_id=self.device_id,
                 conversation_id=conversation_id or None,
-                use_vad=VoiceAssistantCommandFlag(use_vad)
-                == VoiceAssistantCommandFlag.USE_VAD,
+                flags=flags,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )

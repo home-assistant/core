@@ -16,6 +16,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "headers": "Headers",
           "method": "Method",
+          "payload": "Payload",
           "timeout": "Timeout",
           "encoding": "Character encoding"
         },
@@ -25,7 +26,8 @@
           "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
           "headers": "Headers to use for the web request",
           "timeout": "Timeout for connection to website",
-          "encoding": "Character encoding to use. Defaults to UTF-8"
+          "encoding": "Character encoding to use. Defaults to UTF-8",
+          "payload": "Payload to use when method is POST"
         }
       },
       "sensor": {
@@ -107,6 +109,7 @@
         "data": {
           "resource": "[%key:component::scrape::config::step::user::data::resource%]",
           "method": "[%key:component::scrape::config::step::user::data::method%]",
+          "payload": "[%key:component::scrape::config::step::user::data::payload%]",
           "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
           "username": "[%key:component::scrape::config::step::user::data::username%]",
           "password": "[%key:component::scrape::config::step::user::data::password%]",
@@ -121,7 +124,8 @@
           "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
           "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
           "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
-          "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]"
+          "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]",
+          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]"
         }
       }
     }
