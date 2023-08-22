@@ -15,8 +15,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
+    DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,10 +30,10 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import MetDataUpdateCoordinator
@@ -48,19 +49,38 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            MetWeather(
-                coordinator,
-                config_entry.data,
-                hass.config.units is METRIC_SYSTEM,
-                False,
-            ),
+    entity_registry = er.async_get(hass)
+
+    entities = [
+        MetWeather(
+            coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, False
+        )
+    ]
+
+    # Add hourly entity to legacy config entries
+    if entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        _calculate_unique_id(config_entry.data, True),
+    ):
+        entities.append(
             MetWeather(
                 coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, True
-            ),
-        ]
-    )
+            )
+        )
+
+    async_add_entities(entities)
+
+
+def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+    """Calculate unique ID."""
+    name_appendix = ""
+    if hourly:
+        name_appendix = "-hourly"
+    if config.get(CONF_TRACK_HOME):
+        return f"home{name_appendix}"
+
+    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
 
 
 def format_condition(condition: str) -> str:
@@ -71,7 +91,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
+class MetWeather(CoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     """Implementation of a Met.no weather condition."""
 
     _attr_attribution = (
@@ -96,6 +116,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
+        self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._is_metric = is_metric
         self._hourly = hourly
@@ -104,17 +125,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def track_home(self) -> Any | bool:
         """Return if we are tracking home."""
         return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = "-hourly"
-        if self.track_home:
-            return f"home{name_appendix}"
-
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self) -> str:
@@ -136,15 +146,6 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return not self._hourly
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
 
     @property
     def condition(self) -> str | None:

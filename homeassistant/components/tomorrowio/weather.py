@@ -7,6 +7,8 @@ from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
@@ -15,8 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +31,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
@@ -44,6 +46,7 @@ from .const import (
     DOMAIN,
     MAX_FORECASTS,
     TMRW_ATTR_CONDITION,
+    TMRW_ATTR_DEW_POINT,
     TMRW_ATTR_HUMIDITY,
     TMRW_ATTR_OZONE,
     TMRW_ATTR_PRECIPITATION,
@@ -90,7 +93,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, forecast_type: str)
     return f"{config_entry_unique_id}_{forecast_type}"
 
 
-class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
+class TomorrowioWeatherEntity(TomorrowioEntity, CoordinatorWeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -120,15 +123,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             config_entry.unique_id, forecast_type
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
-
     def _forecast_dict(
         self,
         forecast_dt: datetime,
@@ -138,6 +132,8 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         precipitation_probability: int | None,
         temp: float | None,
         temp_low: float | None,
+        humidity: float | None,
+        dew_point: float | None,
         wind_direction: float | None,
         wind_speed: float | None,
     ) -> Forecast:
@@ -156,6 +152,8 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
             ATTR_FORECAST_NATIVE_TEMP: temp,
             ATTR_FORECAST_NATIVE_TEMP_LOW: temp_low,
+            ATTR_FORECAST_HUMIDITY: humidity,
+            ATTR_FORECAST_NATIVE_DEW_POINT: dew_point,
             ATTR_FORECAST_WIND_BEARING: wind_direction,
             ATTR_FORECAST_NATIVE_WIND_SPEED: wind_speed,
         }
@@ -259,6 +257,8 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
 
             temp = values.get(TMRW_ATTR_TEMPERATURE_HIGH)
             temp_low = None
+            dew_point = values.get(TMRW_ATTR_DEW_POINT)
+            humidity = values.get(TMRW_ATTR_HUMIDITY)
 
             wind_direction = values.get(TMRW_ATTR_WIND_DIRECTION)
             wind_speed = values.get(TMRW_ATTR_WIND_SPEED)
@@ -285,6 +285,8 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
                     precipitation_probability,
                     temp,
                     temp_low,
+                    humidity,
+                    dew_point,
                     wind_direction,
                     wind_speed,
                 )
