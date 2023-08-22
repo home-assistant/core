@@ -402,7 +402,7 @@ amcrest==1.9.7
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.13
+androidtvremote2==0.0.14
 
 # homeassistant.components.anel_pwrctrl
 anel-pwrctrl-homeassistant==0.0.1.dev2
@@ -571,7 +571,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.0.0
+bthome-ble==3.1.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
