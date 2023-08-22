@@ -366,7 +366,7 @@ class ESPHomeManager:
         try:
             device_info = await cli.device_info()
         except APIConnectionError as err:
-            _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
+            _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
             # Re-connection logic will trigger after this
             await cli.disconnect()
             return
