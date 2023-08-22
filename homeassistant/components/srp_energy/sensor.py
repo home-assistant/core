@@ -132,7 +132,6 @@ class SrpEntity(SensorEntity):
         self.coordinator = coordinator
         self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._state = None
-        self._config_name = config_name
         unique_id: str = f"{config_name}_energy_usage".lower()
         LOGGER.debug("Setting unique id %s", unique_id)
         self._attr_unique_id = unique_id
