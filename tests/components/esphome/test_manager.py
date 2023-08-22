@@ -147,10 +147,10 @@ async def test_unique_id_updated_to_mac(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
-async def test_unique_id_updated_if_name_same_and_already_mac(
+async def test_unique_id_not_updated_if_name_same_and_already_mac(
     hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
 ) -> None:
-    """Test we update config entry unique ID if the name is the same."""
+    """Test we never update the entry unique ID event if the name is the same."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -170,14 +170,14 @@ async def test_unique_id_updated_if_name_same_and_already_mac(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Mac should be updated because name is the same
-    assert entry.unique_id == "11:22:33:44:55:ab"
+    # Mac should never update
+    assert entry.unique_id == "11:22:33:44:55:aa"
 
 
 async def test_unique_id_updated_if_name_unset_and_already_mac(
     hass: HomeAssistant, mock_client: APIClient, mock_zeroconf: None
 ) -> None:
-    """Test we update config entry unique ID if the name is unset."""
+    """Test we never update config entry unique ID even if the name is unset."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
@@ -192,8 +192,8 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Mac should be updated because name was unset
-    assert entry.unique_id == "11:22:33:44:55:ab"
+    # Mac should never update
+    assert entry.unique_id == "11:22:33:44:55:aa"
 
 
 async def test_unique_id_not_updated_if_name_different_and_already_mac(
@@ -319,7 +319,7 @@ async def test_connection_aborted_wrong_device(
         macaddress="1122334455aa",
     )
     new_info = AsyncMock(
-        return_value=DeviceInfo(mac_address="1122334455ab", name="test")
+        return_value=DeviceInfo(mac_address="1122334455aa", name="test")
     )
     mock_client.device_info = new_info
     result = await hass.config_entries.flow.async_init(

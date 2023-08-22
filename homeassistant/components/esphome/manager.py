@@ -373,30 +373,17 @@ class ESPHomeManager:
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
-        name_matches = stored_device_name == device_info.name
         #
         # Migrate config entry to new unique ID if the current
         # unique id is not a mac address.
         #
         # This was changed in 2023.1
-        #
-        # If the device name matches, we also update the unique id
-        # to the mac address. This is to handle a board change (ie
-        # device replaced after failure, but config is the same)
-        #
-        if not mac_address_matches and (
-            not unique_id_is_mac_address or name_matches or not stored_device_name
-        ):
+        if not mac_address_matches and not unique_id_is_mac_address:
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
-        if (
-            stored_device_name
-            and unique_id_is_mac_address
-            and not name_matches
-            and not mac_address_matches
-        ):
-            # If we have a stored named, the unique id is a mac address
-            # and nothing matches we have the wrong device and we need
+        if not mac_address_matches and unique_id_is_mac_address:
+            # If the unique id is a mac address
+            # and does not match we have the wrong device and we need
             # to abort the connection. This can happen if the DHCP
             # server changes the IP address of the device and we end up
             # connecting to the wrong device.
@@ -426,7 +413,7 @@ class ESPHomeManager:
         # If we got here, we know the mac address matches or we
         # did a migration to the mac address so we can update
         # the device name.
-        if not name_matches:
+        if stored_device_name != device_info.name:
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
             )
