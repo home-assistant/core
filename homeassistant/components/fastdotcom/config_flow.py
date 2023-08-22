@@ -44,7 +44,7 @@ class FastdotcomConfigFlow(ConfigFlow, domain=DOMAIN):
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": "Ping",
+                "integration_title": "Fast.com",
             },
         )
 
