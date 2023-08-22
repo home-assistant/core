@@ -26,23 +26,19 @@ from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 
 from .. import mqtt
-from .abbreviations import (
-    ABBREVIATIONS,
-    DEVICE_ABBREVIATIONS,
-    INTEGRATION_ABBREVIATIONS,
-)
+from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
-    CONF_INTEGRATION,
+    CONF_ORIGIN,
     CONF_SUPPORT_URL,
     CONF_SW_VERSION,
     CONF_TOPIC,
     DOMAIN,
 )
-from .models import ReceiveMessage
+from .models import MqttOriginInfo, ReceiveMessage
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,7 +82,7 @@ MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 
 TOPIC_BASE = "~"
 
-MQTT_ENTITY_INTEGRATION_INFO_SCHEMA = vol.All(
+MQTT_ORIGIN_INFO_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_NAME): cv.string,
@@ -118,10 +114,10 @@ def async_log_integration_discovery_info(
     message: str, discovery_payload: MQTTDiscoveryPayload
 ) -> None:
     """Log information about the entity."""
-    if CONF_INTEGRATION not in discovery_payload:
+    if CONF_ORIGIN not in discovery_payload:
         _LOGGER.info(message)
         return
-    integration_info = discovery_payload[CONF_INTEGRATION]
+    integration_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
     sw_version_log = ""
     if sw_version := integration_info.get("sw_version"):
         sw_version_log = f", version: {sw_version}"
@@ -192,19 +188,19 @@ async def async_start(  # noqa: C901
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
 
-        if CONF_INTEGRATION in discovery_payload:
-            integration_info: dict[str, Any] = discovery_payload[CONF_INTEGRATION]
+        if CONF_ORIGIN in discovery_payload:
+            integration_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
             try:
                 for key in list(integration_info):
                     abbreviated_key = key
-                    key = INTEGRATION_ABBREVIATIONS.get(key, key)
+                    key = ORIGIN_ABBREVIATIONS.get(key, key)
                     integration_info[key] = integration_info.pop(abbreviated_key)
-                MQTT_ENTITY_INTEGRATION_INFO_SCHEMA(discovery_payload[CONF_INTEGRATION])
+                MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.warning(
-                    "Unable to parse integration information "
+                    "Unable to parse origin information "
                     "from discovery message, got %s",
-                    discovery_payload[CONF_INTEGRATION],
+                    discovery_payload[CONF_ORIGIN],
                 )
                 return
 

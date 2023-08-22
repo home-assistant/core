@@ -99,7 +99,7 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
-class MqttIntegrationInfo(TypedDict, total=False):
+class MqttOriginInfo(TypedDict, total=False):
     """Integration info of discovered entity."""
 
     name: str

@@ -83,7 +83,6 @@ ABBREVIATIONS = {
     "hs_cmd_tpl": "hs_command_template",
     "hs_stat_t": "hs_state_topic",
     "hs_val_tpl": "hs_value_template",
-    "i": "integration",
     "ic": "icon",
     "img_e": "image_encoding",
     "img_t": "image_topic",
@@ -112,6 +111,7 @@ ABBREVIATIONS = {
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
     "name": "name",
+    "o": "origin",
     "obj_id": "object_id",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
@@ -277,10 +277,8 @@ DEVICE_ABBREVIATIONS = {
     "sa": "suggested_area",
 }
 
-INTEGRATION_ABBREVIATIONS = {
+ORIGIN_ABBREVIATIONS = {
     "name": "name",
-    "mf": "manufacturer",
-    "hw": "hw_version",
     "sw": "sw_version",
     "url": "support_url",
 }

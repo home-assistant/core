@@ -179,7 +179,7 @@ async def test_discovery_integration_info(
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
-        '{ "name": "Beer", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.0" } }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": {"name": "bla2mqtt", "sw": "1.0" } }',
     )
     await hass.async_block_till_done()
 
@@ -198,7 +198,7 @@ async def test_discovery_integration_info(
     async_fire_mqtt_message(
         hass,
         "homeassistant/binary_sensor/bla/config",
-        '{ "name": "Milk", "state_topic": "test-topic", "i": {"name": "bla2mqtt", "sw": "1.1", "url": "https://bla2mqtt.example.com/support" } }',
+        '{ "name": "Milk", "state_topic": "test-topic", "o": {"name": "bla2mqtt", "sw": "1.1", "url": "https://bla2mqtt.example.com/support" } }',
     )
     await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.beer")
@@ -215,10 +215,10 @@ async def test_discovery_integration_info(
 @pytest.mark.parametrize(
     "config_message",
     [
-        '{ "name": "Beer", "state_topic": "test-topic", "i": "bla2mqtt" }',
-        '{ "name": "Beer", "state_topic": "test-topic", "i": 2.0 }',
-        '{ "name": "Beer", "state_topic": "test-topic", "i": null }',
-        '{ "name": "Beer", "state_topic": "test-topic", "i": {"sw": "bla2mqtt"} }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": "bla2mqtt" }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": 2.0 }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": null }',
+        '{ "name": "Beer", "state_topic": "test-topic", "o": {"sw": "bla2mqtt"} }',
     ],
 )
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
@@ -241,8 +241,7 @@ async def test_discovery_with_invalid_integration_info(
 
     assert state is None
     assert (
-        "Unable to parse integration information from discovery message, got"
-        in caplog.text
+        "Unable to parse origin information from discovery message, got" in caplog.text
     )
 
 

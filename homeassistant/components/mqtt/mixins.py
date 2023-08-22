@@ -75,9 +75,9 @@ from .const import (
     CONF_ENCODING,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
-    CONF_INTEGRATION,
     CONF_MANUFACTURER,
     CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_QOS,
     CONF_SUGGESTED_AREA,
     CONF_SW_VERSION,
@@ -95,7 +95,7 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
-    MQTT_ENTITY_INTEGRATION_INFO_SCHEMA,
+    MQTT_ORIGIN_INFO_SCHEMA,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
     set_discovery_hash,
@@ -229,7 +229,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_INTEGRATION): MQTT_ENTITY_INTEGRATION_INFO_SCHEMA,
+        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
@@ -1031,9 +1031,6 @@ class MqttEntity(
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
         self._discovery = discovery_data is not None
-        self._integration_info = (
-            config.get(CONF_INTEGRATION) if self._discovery else None
-        )
 
         # Load config
         self._setup_from_config(self._config)
