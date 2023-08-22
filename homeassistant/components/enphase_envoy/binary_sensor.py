@@ -51,12 +51,6 @@ ENCHARGE_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda encharge: not encharge.dc_switch_off,
     ),
-    EnvoyEnchargeBinarySensorEntityDescription(
-        key="operating",
-        translation_key="operating",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda encharge: encharge.operating,
-    ),
 )
 
 RELAY_STATUS_SENSOR = BinarySensorEntityDescription(
@@ -87,12 +81,6 @@ ENPOWER_SENSORS = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda enpower: enpower.communicating,
-    ),
-    EnvoyEnpowerBinarySensorEntityDescription(
-        key="operating",
-        translation_key="operating",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda enpower: enpower.operating,
     ),
     EnvoyEnpowerBinarySensorEntityDescription(
         key="mains_oper_state",

@@ -675,6 +675,8 @@ build.json @home-assistant/supervisor
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry
 /tests/components/laundrify/ @xLarry
+/homeassistant/components/lawn_mower/ @home-assistant/core
+/tests/components/lawn_mower/ @home-assistant/core
 /homeassistant/components/lcn/ @alengwenus
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/ld2410_ble/ @930913
