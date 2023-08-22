@@ -16,5 +16,11 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "issues": {
+    "move_to_netamo": {
+      "title": "Legrand Home+ Control deprecation",
+      "description": "Managing Legrand Home+ Control solution is available on Netatmo Connect platform. This integration is only functional until December, when Netatmo is shutting down the Legrand API. We adwise you to switch to [Netatmo]({url}) to continue controlling your devcies."
+    }
   }
 }
