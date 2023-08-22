@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock
 from aioesphomeapi import APIClient, DeviceInfo, EntityInfo, EntityState, UserService
 import pytest
 
+from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.esphome.const import (
     CONF_DEVICE_NAME,
     DOMAIN,
@@ -12,6 +14,7 @@ from homeassistant.components.esphome.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
 from .conftest import MockESPHomeDevice
@@ -286,7 +289,7 @@ async def test_connection_aborted_wrong_device(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "test.local",
+            CONF_HOST: "192.168.43.183",
             CONF_PORT: 6053,
             CONF_PASSWORD: "",
             CONF_DEVICE_NAME: "test",
@@ -303,7 +306,29 @@ async def test_connection_aborted_wrong_device(
     await hass.async_block_till_done()
 
     assert (
-        "Unexpected device found at test.local; expected `test` "
+        "Unexpected device found at 192.168.43.183; expected `test` "
         "with mac address `11:22:33:44:55:aa`, found `different` "
         "with mac address `11:22:33:44:55:ab`" in caplog.text
     )
+
+    caplog.clear()
+    # Make sure discovery triggers a reconnect to the correct device
+    service_info = dhcp.DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test",
+        macaddress="1122334455aa",
+    )
+    new_info = AsyncMock(
+        return_value=DeviceInfo(mac_address="1122334455ab", name="test")
+    )
+    mock_client.device_info = new_info
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "192.168.43.184"
+    await hass.async_block_till_done()
+    assert len(new_info.mock_calls) == 1
+    assert "Unexpected device found at" not in caplog.text
