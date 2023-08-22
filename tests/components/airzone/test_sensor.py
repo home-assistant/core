@@ -28,6 +28,10 @@ async def test_airzone_create_sensors(
 
     await async_init_integration(hass)
 
+    # Hot Water
+    state = hass.states.get("sensor.airzone_dhw_temperature")
+    assert state.state == "43"
+
     # WebServer
     state = hass.states.get("sensor.webserver_rssi")
     assert state.state == "-42"
