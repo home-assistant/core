@@ -95,7 +95,7 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="ptz_zoom_in",
-        name="PTZ zoom in",
+        translation_key="ptz_zoom_in",
         icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),
@@ -103,7 +103,7 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="ptz_zoom_out",
-        name="PTZ zoom out",
+        translation_key="ptz_zoom_out",
         icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),

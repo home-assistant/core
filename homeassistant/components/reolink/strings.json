@@ -131,6 +131,12 @@
       "ptz_down": {
         "name": "PTZ down"
       },
+      "ptz_zoom_in": {
+        "name": "PTZ zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ zoom out"
+      },
       "ptz_calibrate": {
         "name": "PTZ calibrate"
       },
@@ -182,6 +188,18 @@
       },
       "ai_pet_sensititvity": {
         "name": "AI pet sensitivity"
+      },
+      "ai_face_delay": {
+        "name": "AI face delay"
+      },
+      "ai_person_delay": {
+        "name": "AI person delay"
+      },
+      "ai_vehicle_delay": {
+        "name": "AI vehicle delay"
+      },
+      "ai_pet_delay": {
+        "name": "AI pet delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"

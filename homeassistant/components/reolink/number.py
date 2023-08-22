@@ -177,7 +177,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_delay",
-        name="AI face delay",
+        translation_key="ai_face_delay",
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -193,7 +193,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_person_delay",
-        name="AI person delay",
+        translation_key="ai_person_delay",
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -209,7 +209,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_delay",
-        name="AI vehicle delay",
+        translation_key="ai_vehicle_delay",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -225,7 +225,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
-        name="AI pet delay",
+        translation_key="ai_pet_delay",
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
