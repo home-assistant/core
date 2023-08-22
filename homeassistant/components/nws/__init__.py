@@ -90,7 +90,6 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # the base class allows None, but this one doesn't
                 assert self.update_interval is not None
             update_interval = self.update_interval
-            self.last_update_success_time = utcnow()
         else:
             update_interval = self.failed_update_interval
         self._unsub_refresh = async_track_point_in_utc_time(
@@ -98,6 +97,23 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._handle_refresh_interval,
             utcnow().replace(microsecond=0) + update_interval,
         )
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        await super()._async_refresh(
+            log_failures,
+            raise_on_auth_failed,
+            scheduled,
+            raise_on_entry_error,
+        )
+        if self.last_update_success:
+            self.last_update_success_time = utcnow()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
