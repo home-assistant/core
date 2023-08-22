@@ -197,7 +197,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         await self._get_weather_town()
 
-        daily = await self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
+        daily = await self._aemet.get_specific_forecast_town_daily(
+            self._town[AEMET_ATTR_ID]
+        )
         if not daily:
             _LOGGER.error(
                 'Error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
