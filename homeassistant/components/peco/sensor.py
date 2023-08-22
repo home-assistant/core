@@ -43,7 +43,7 @@ PARALLEL_UPDATES: Final = 0
 SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
     PECOSensorEntityDescription(
         key="customers_out",
-        name="Customers Out",
+        translation_key="customers_out",
         value_fn=lambda data: int(data.outages.customers_out),
         attribute_fn=lambda data: {},
         icon="mdi:power-plug-off",
@@ -51,7 +51,7 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
     ),
     PECOSensorEntityDescription(
         key="percent_customers_out",
-        name="Percent Customers Out",
+        translation_key="percent_customers_out",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: int(data.outages.percent_customers_out),
         attribute_fn=lambda data: {},
@@ -60,7 +60,7 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
     ),
     PECOSensorEntityDescription(
         key="outage_count",
-        name="Outage Count",
+        translation_key="outage_count",
         value_fn=lambda data: int(data.outages.outage_count),
         attribute_fn=lambda data: {},
         icon="mdi:power-plug-off",
@@ -68,7 +68,7 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
     ),
     PECOSensorEntityDescription(
         key="customers_served",
-        name="Customers Served",
+        translation_key="customers_served",
         value_fn=lambda data: int(data.outages.customers_served),
         attribute_fn=lambda data: {},
         icon="mdi:power-plug-off",
@@ -76,7 +76,7 @@ SENSOR_LIST: tuple[PECOSensorEntityDescription, ...] = (
     ),
     PECOSensorEntityDescription(
         key="map_alert",
-        name="Map Alert",
+        translation_key="map_alert",
         value_fn=lambda data: str(data.alerts.alert_title),
         attribute_fn=lambda data: {ATTR_CONTENT: data.alerts.alert_content},
         icon="mdi:alert",
