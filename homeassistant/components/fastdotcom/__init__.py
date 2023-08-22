@@ -8,7 +8,7 @@ from typing import Any
 from fastdotcom import fast_com
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -37,13 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Fast.com component. (deprecated)."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
     return True
 
 
@@ -52,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = hass.data[DOMAIN] = SpeedtestData(hass)
 
     async_track_time_interval(hass, data.update, timedelta(hours=DEFAULT_INTERVAL))
+    # Run an initial update to get a starting state
+    await data.update()
 
     async def update(service_call: ServiceCall | None = None) -> None:
         """Service call to manually update the data."""
@@ -70,8 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fast.com config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
