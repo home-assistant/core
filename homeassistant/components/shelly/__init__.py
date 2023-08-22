@@ -4,10 +4,10 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final
 
-from aioshelly.block_device import BlockDevice
+from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
-from aioshelly.rpc_device import RpcDevice, UpdateType
+from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -168,7 +168,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any) -> None:
+    def _async_device_online(_: Any, update_type: BlockUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 
@@ -253,7 +253,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any, update_type: UpdateType) -> None:
+    def _async_device_online(_: Any, update_type: RpcUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 

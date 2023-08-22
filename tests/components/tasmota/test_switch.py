@@ -47,34 +47,34 @@ async def test_controlling_state_via_mqtt(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
 
@@ -95,30 +95,30 @@ async def test_sending_mqtt_commands(
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
 
     # Turn the switch on and verify MQTT message is sent
-    await common.async_turn_on(hass, "switch.test")
+    await common.async_turn_on(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Tasmota is not optimistic, the state should still be off
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
     # Turn the switch off and verify MQTT message is sent
-    await common.async_turn_off(hass, "switch.test")
+    await common.async_turn_off(hass, "switch.tasmota_test")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
     )
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state.state == STATE_OFF
 
 
@@ -138,9 +138,9 @@ async def test_relay_as_light(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state is None
-    state = hass.states.get("light.test")
+    state = hass.states.get("light.tasmota_test")
     assert state is not None
 
 
