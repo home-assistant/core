@@ -6,9 +6,20 @@ from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import inspect
 import logging
-from typing import Any, Final, Generic, Literal, Required, TypedDict, TypeVar, final
+from typing import (
+    Any,
+    Final,
+    Generic,
+    Literal,
+    Required,
+    TypedDict,
+    TypeVar,
+    cast,
+    final,
+)
 
 import voluptuous as vol
 
@@ -1228,40 +1239,36 @@ class CoordinatorWeatherEntity(
     ) -> None:
         """Initialize."""
         super().__init__(observation_coordinator, context)
-        self.daily_coordinator = daily_coordinator
-        self.hourly_coordinator = hourly_coordinator
-        self.twice_daily_coordinator = twice_daily_coordinator
-        self.daily_forecast_valid = daily_forecast_valid
-        self.hourly_forecast_valid = hourly_forecast_valid
-        self.twice_daily_forecast_valid = twice_daily_forecast_valid
-        self._unsub_daily_forecast: Callable[[], None] | None = None
-        self._unsub_hourly_forecast: Callable[[], None] | None = None
-        self._unsub_twice_daily_forecast: Callable[[], None] | None = None
+        self.forecast_coordinators = {
+            "daily": daily_coordinator,
+            "hourly": hourly_coordinator,
+            "twice_daily": twice_daily_coordinator,
+        }
+        self.forecast_valid = {
+            "daily": daily_forecast_valid,
+            "hourly": hourly_forecast_valid,
+            "twice_daily": twice_daily_forecast_valid,
+        }
+        self.unsub_forecast: dict[str, Callable[[], None] | None] = {
+            "daily": None,
+            "hourly": None,
+            "twice_daily": None,
+        }
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(self._remove_daily_forecast_listener)
-        self.async_on_remove(self._remove_hourly_forecast_listener)
-        self.async_on_remove(self._remove_twice_daily_forecast_listener)
+        self.async_on_remove(partial(self._remove_forecast_listener, "daily"))
+        self.async_on_remove(partial(self._remove_forecast_listener, "hourly"))
+        self.async_on_remove(partial(self._remove_forecast_listener, "twice_daily"))
 
-    def _remove_daily_forecast_listener(self) -> None:
-        """Remove daily forecast listener."""
-        if self._unsub_daily_forecast:
-            self._unsub_daily_forecast()
-            self._unsub_daily_forecast = None
-
-    def _remove_hourly_forecast_listener(self) -> None:
-        """Remove hourly forecast listener."""
-        if self._unsub_hourly_forecast:
-            self._unsub_hourly_forecast()
-            self._unsub_hourly_forecast = None
-
-    def _remove_twice_daily_forecast_listener(self) -> None:
-        """Remove twice daily forecast listener."""
-        if self._unsub_daily_forecast:
-            self._unsub_daily_forecast()
-            self._unsub_daily_forecast = None
+    def _remove_forecast_listener(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Remove weather forecast listener."""
+        if unsub_fn := self.unsub_forecast[forecast_type]:
+            unsub_fn()
+            self.unsub_forecast[forecast_type] = None
 
     @callback
     def _async_subscription_started(
@@ -1269,29 +1276,11 @@ class CoordinatorWeatherEntity(
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """Start subscription to forecast_type."""
-        if forecast_type == "daily":
-            if not self.daily_coordinator:
-                return
-            self._unsub_daily_forecast = self.daily_coordinator.async_add_listener(
-                self.__daily_update_callback
-            )
+        if not (coordinator := self.forecast_coordinators[forecast_type]):
             return
-        if forecast_type == "hourly":
-            if not self.hourly_coordinator:
-                return
-            self._unsub_hourly_forecast = self.hourly_coordinator.async_add_listener(
-                self.__hourly_update_callback
-            )
-            return
-        if forecast_type == "twice_daily":
-            if not self.twice_daily_coordinator:
-                return
-            self._unsub_daily_forecast = (
-                self.twice_daily_coordinator.async_add_listener(
-                    self.__twice_daily_update_callback
-                )
-            )
-            return
+        self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
+            partial(self._forecast_update_callback, forecast_type)
+        )
 
     @callback
     def _daily_update_callback(self) -> None:
@@ -1310,35 +1299,16 @@ class CoordinatorWeatherEntity(
 
     @final
     @callback
-    def __daily_update_callback(self) -> None:
-        """Update daily forecast data."""
-        assert self.daily_coordinator
-        assert self.daily_coordinator.config_entry is not None
-        self._daily_update_callback()
-        self.daily_coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily",))
-        )
-
-    @final
-    @callback
-    def __hourly_update_callback(self) -> None:
-        """Update hourly forecast data."""
-        assert self.hourly_coordinator
-        assert self.hourly_coordinator.config_entry is not None
-        self._hourly_update_callback()
-        self.hourly_coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("hourly",))
-        )
-
-    @final
-    @callback
-    def __twice_daily_update_callback(self) -> None:
-        """Update twice daily forecast data."""
-        assert self.twice_daily_coordinator
-        assert self.twice_daily_coordinator.config_entry is not None
-        self._twice_daily_update_callback()
-        self.twice_daily_coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("twice_daily",))
+    def _forecast_update_callback(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> None:
+        """Update forecast data."""
+        coordinator = self.forecast_coordinators[forecast_type]
+        assert coordinator
+        assert coordinator.config_entry is not None
+        getattr(self, f"_{forecast_type}_update_callback")()
+        coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners((forecast_type,))
         )
 
     @callback
@@ -1347,12 +1317,7 @@ class CoordinatorWeatherEntity(
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """End subscription to forecast_type."""
-        if forecast_type == "daily":
-            self._remove_daily_forecast_listener()
-        elif forecast_type == "hourly":
-            self._remove_hourly_forecast_listener()
-        else:  # forecast_type == "twice_daily"
-            self._remove_twice_daily_forecast_listener()
+        self._remove_forecast_listener(forecast_type)
 
     @final
     async def _async_refresh_forecast(
@@ -1393,31 +1358,33 @@ class CoordinatorWeatherEntity(
         raise NotImplementedError
 
     @final
-    async def async_forecast_daily(self) -> list[Forecast] | None:
-        """Return the daily forecast in native units."""
-        if self.daily_coordinator and not await self._async_refresh_forecast(
-            self.daily_coordinator, self.daily_forecast_valid
+    async def _async_forecast(
+        self, forecast_type: Literal["daily", "hourly", "twice_daily"]
+    ) -> list[Forecast] | None:
+        """Return the forecast in native units."""
+        coordinator = self.forecast_coordinators[forecast_type]
+        if coordinator and not await self._async_refresh_forecast(
+            coordinator, self.forecast_valid[forecast_type]
         ):
             return None
-        return self._async_forecast_daily()
+        return cast(
+            list[Forecast] | None, getattr(self, f"_async_forecast_{forecast_type}")()
+        )
+
+    @final
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return await self._async_forecast("daily")
 
     @final
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        if self.hourly_coordinator and not await self._async_refresh_forecast(
-            self.hourly_coordinator, self.hourly_forecast_valid
-        ):
-            return None
-        return self._async_forecast_hourly()
+        return await self._async_forecast("hourly")
 
     @final
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
-        if self.twice_daily_coordinator and not await self._async_refresh_forecast(
-            self.twice_daily_coordinator, self.twice_daily_forecast_valid
-        ):
-            return None
-        return self._async_forecast_twice_daily()
+        return await self._async_forecast("twice_daily")
 
 
 class SingleCoordinatorWeatherEntity(
