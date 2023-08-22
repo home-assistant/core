@@ -58,7 +58,9 @@ SAVE_DELAY = 10
 
 
 @singleton(DATA_MULTIPROTOCOL_ADDON_MANAGER)
-async def get_addon_manager(hass: HomeAssistant) -> MultiprotocolAddonManager:
+async def get_multiprotocol_addon_manager(
+    hass: HomeAssistant,
+) -> MultiprotocolAddonManager:
     """Get the add-on manager."""
     manager = MultiprotocolAddonManager(hass)
     await manager.async_setup()
@@ -401,7 +403,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when on Supervisor host."""
-        addon_manager: AddonManager = await get_addon_manager(self.hass)
+        addon_manager: AddonManager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
         if addon_info.state == AddonState.NOT_INSTALLED:
@@ -430,7 +432,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Install Silicon Labs Multiprotocol add-on."""
         if not self.install_task:
-            addon_manager: AddonManager = await get_addon_manager(self.hass)
+            addon_manager: AddonManager = await get_multiprotocol_addon_manager(
+                self.hass
+            )
             self.install_task = self.hass.async_create_task(
                 self._async_install_addon(addon_manager),
                 "SiLabs Multiprotocol addon install",
@@ -478,7 +482,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             async_get_channel as async_get_zha_channel,
         )
 
-        addon_manager: AddonManager = await get_addon_manager(self.hass)
+        addon_manager: AddonManager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
         addon_config = addon_info.options
@@ -519,7 +523,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                 multipan_channel = zha_channel
 
         # Initialize the shared channel
-        multipan_manager = await get_addon_manager(self.hass)
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         multipan_manager.async_set_channel(multipan_channel)
 
         if new_addon_config != addon_config:
@@ -535,7 +539,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Start Silicon Labs Multiprotocol add-on."""
         if not self.start_task:
-            addon_manager: AddonManager = await get_addon_manager(self.hass)
+            addon_manager: AddonManager = await get_multiprotocol_addon_manager(
+                self.hass
+            )
             self.start_task = self.hass.async_create_task(
                 self._async_start_addon(addon_manager)
             )
@@ -595,7 +601,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when the addon is already installed."""
-        addon_manager: AddonManager = await get_addon_manager(self.hass)
+        addon_manager: AddonManager = await get_multiprotocol_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
         serial_device = (await self._async_serial_port_settings()).device
@@ -619,7 +625,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Reconfigure the addon."""
-        multipan_manager = await get_addon_manager(self.hass)
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         active_platforms = await multipan_manager.async_active_platforms()
         if set(active_platforms) != {"otbr", "zha"}:
             return await self.async_step_notify_unknown_multipan_user()
@@ -639,7 +645,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Change the channel."""
-        multipan_manager = await get_addon_manager(self.hass)
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         if user_input is None:
             channels = [str(x) for x in range(11, 27)]
             suggested_channel = DEFAULT_CHANNEL
@@ -813,7 +819,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         """Uninstall Silicon Labs Multiprotocol add-on."""
 
         if not self.stop_task:
-            addon_manager: AddonManager = await get_addon_manager(self.hass)
+            addon_manager: AddonManager = await get_multiprotocol_addon_manager(
+                self.hass
+            )
             self.stop_task = self.hass.async_create_task(
                 self._async_uninstall_addon(addon_manager),
                 "SiLabs Multiprotocol addon uninstall",
@@ -894,7 +902,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     if not is_hassio(hass):
         return
 
-    addon_manager: AddonManager = await get_addon_manager(hass)
+    addon_manager: AddonManager = await get_multiprotocol_addon_manager(hass)
     try:
         addon_info: AddonInfo = await addon_manager.async_get_addon_info()
     except AddonError as err:
@@ -921,7 +929,7 @@ async def multi_pan_addon_using_device(hass: HomeAssistant, device_path: str) ->
     if not is_hassio(hass):
         return False
 
-    addon_manager: AddonManager = await get_addon_manager(hass)
+    addon_manager: AddonManager = await get_multiprotocol_addon_manager(hass)
     addon_info: AddonInfo = await addon_manager.async_get_addon_info()
 
     if addon_info.state != AddonState.RUNNING:

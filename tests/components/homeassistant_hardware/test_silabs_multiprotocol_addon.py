@@ -189,7 +189,9 @@ async def test_uninstall_addon(
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     flow = hass.config_entries.options._progress[result["flow_id"]]
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     multipan_manager.async_get_addon_info = AsyncMock()
     multipan_manager.async_uninstall_addon = AsyncMock(
         wraps=multipan_manager.async_uninstall_addon
@@ -337,7 +339,9 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert result["step_id"] == "configure_addon"
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     assert multipan_manager._channel is None
     with patch(
         "homeassistant.components.zha.silabs_multiprotocol.async_get_channel",
@@ -538,7 +542,9 @@ async def test_option_flow_addon_installed_same_device_reconfigure_unexpected_us
     mock_integration(hass, MockModule("hassio"))
     addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
 
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     multipan_manager._channel = configured_channel
 
     # Setup the config entry
@@ -599,7 +605,9 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     mock_integration(hass, MockModule("hassio"))
     addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
 
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     multipan_manager._channel = configured_channel
 
     # Setup the config entry
@@ -1635,7 +1643,9 @@ async def test_import_channel(
     new_multipan_channel: int | None,
 ) -> None:
     """Test channel is initialized from first platform."""
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     multipan_manager._channel = initial_multipan_channel
 
     mock_multiprotocol_platform = MockMultiprotocolPlatform()
@@ -1669,7 +1679,9 @@ async def test_change_channel(
     expected_calls: list[int],
 ) -> None:
     """Test channel is initialized from first platform."""
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     mock_multiprotocol_platform.using_multipan = platform_using_multipan
 
     await multipan_manager.async_change_channel(15, 10)
@@ -1678,7 +1690,9 @@ async def test_change_channel(
 
 async def test_load_preferences(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
     assert multipan_manager._channel != 11
     multipan_manager.async_set_channel(11)
 
@@ -1709,7 +1723,9 @@ async def test_active_plaforms(
     active_platforms: list[str],
 ) -> None:
     """Test async_active_platforms."""
-    multipan_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
 
     for domain, platform_using_multipan in multipan_platforms.items():
         mock_multiprotocol_platform = MockMultiprotocolPlatform()
