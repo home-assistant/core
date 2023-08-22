@@ -34,15 +34,15 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1250000",
-            UnitOfDataRate.BYTES_PER_SECOND,
+            "1.250000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2500000",
-            UnitOfDataRate.BYTES_PER_SECOND,
+            "2.500000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "size": (
@@ -68,8 +68,8 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "1000000",
-            UnitOfDataRate.BYTES_PER_SECOND,
+            "1.000000",
+            UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
     }

@@ -34,6 +34,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Average Speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
@@ -44,6 +45,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
@@ -82,6 +84,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Speed Limit",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
 )
 
