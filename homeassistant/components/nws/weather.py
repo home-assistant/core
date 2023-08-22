@@ -1,9 +1,8 @@
 """Support for NWS weather service."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -18,8 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -38,13 +37,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import (
-    DEFAULT_SCAN_INTERVAL,
-    NWSData,
-    NwsDataUpdateCoordinator,
-    base_unique_id,
-    device_info,
-)
+from . import NWSData, base_unique_id, device_info
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTRIBUTION,
@@ -120,7 +113,7 @@ def _calculate_unique_id(entry_data: MappingProxyType[str, Any], mode: str) -> s
     return f"{base_unique_id(latitude, longitude)}_{mode}"
 
 
-class NWSWeather(WeatherEntity):
+class NWSWeather(CoordinatorWeatherEntity):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
@@ -136,19 +129,21 @@ class NWSWeather(WeatherEntity):
         mode: str,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
+        super().__init__(
+            observation_coordinator=nws_data.coordinator_observation,
+            hourly_coordinator=nws_data.coordinator_forecast_hourly,
+            twice_daily_coordinator=nws_data.coordinator_forecast,
+            hourly_forecast_valid=FORECAST_VALID_TIME,
+            twice_daily_forecast_valid=FORECAST_VALID_TIME,
+        )
         self.nws = nws_data.api
         self.latitude = entry_data[CONF_LATITUDE]
         self.longitude = entry_data[CONF_LONGITUDE]
-        self.coordinator_forecast_hourly = nws_data.coordinator_forecast_hourly
-        self.coordinator_forecast_twice_daily = nws_data.coordinator_forecast
-        self.coordinator_observation = nws_data.coordinator_observation
         if mode == DAYNIGHT:
             self.coordinator_forecast_legacy = nws_data.coordinator_forecast
         else:
             self.coordinator_forecast_legacy = nws_data.coordinator_forecast_hourly
         self.station = self.nws.station
-        self._unsub_hourly_forecast: Callable[[], None] | None = None
-        self._unsub_twice_daily_forecast: Callable[[], None] | None = None
 
         self.mode = mode
 
@@ -161,59 +156,11 @@ class NWSWeather(WeatherEntity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
-        self.async_on_remove(
-            self.coordinator_observation.async_add_listener(self._update_callback)
-        )
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator_forecast_legacy.async_add_listener(self._update_callback)
         )
-        self.async_on_remove(self._remove_hourly_forecast_listener)
-        self.async_on_remove(self._remove_twice_daily_forecast_listener)
         self._update_callback()
-
-    def _remove_hourly_forecast_listener(self) -> None:
-        """Remove hourly forecast listener."""
-        if self._unsub_hourly_forecast:
-            self._unsub_hourly_forecast()
-            self._unsub_hourly_forecast = None
-
-    def _remove_twice_daily_forecast_listener(self) -> None:
-        """Remove hourly forecast listener."""
-        if self._unsub_twice_daily_forecast:
-            self._unsub_twice_daily_forecast()
-            self._unsub_twice_daily_forecast = None
-
-    @callback
-    def _async_subscription_started(
-        self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
-    ) -> None:
-        """Start subscription to forecast_type."""
-        if forecast_type == "hourly" and self.mode == DAYNIGHT:
-            self._unsub_hourly_forecast = (
-                self.coordinator_forecast_hourly.async_add_listener(
-                    self._update_callback
-                )
-            )
-            return
-        if forecast_type == "twice_daily" and self.mode == HOURLY:
-            self._unsub_twice_daily_forecast = (
-                self.coordinator_forecast_twice_daily.async_add_listener(
-                    self._update_callback
-                )
-            )
-            return
-
-    @callback
-    def _async_subscription_ended(
-        self,
-        forecast_type: Literal["daily", "hourly", "twice_daily"],
-    ) -> None:
-        """End subscription to forecast_type."""
-        if forecast_type == "hourly" and self.mode == DAYNIGHT:
-            self._remove_hourly_forecast_listener()
-        if forecast_type == "twice_daily" and self.mode == HOURLY:
-            self._remove_twice_daily_forecast_listener()
 
     @callback
     def _update_callback(self) -> None:
@@ -231,6 +178,16 @@ class NWSWeather(WeatherEntity):
         self.platform.config_entry.async_create_task(
             self.hass, self.async_update_listeners(("hourly", "twice_daily"))
         )
+
+    @callback
+    def _hourly_update_callback(self) -> None:
+        """Update hourly forecast data."""
+        self._forecast_hourly = self.nws.forecast_hourly
+
+    @callback
+    def _twice_daily_update_callback(self) -> None:
+        """Update twice daily forecast data."""
+        self._forecast_twice_daily = self.nws.forecast
 
     @property
     def name(self) -> str:
@@ -373,50 +330,29 @@ class NWSWeather(WeatherEntity):
         """Return forecast."""
         return self._forecast(self._forecast_legacy, self.mode)
 
-    async def _async_forecast(
-        self,
-        coordinator: NwsDataUpdateCoordinator,
-        nws_forecast: list[dict[str, Any]] | None,
-        mode: str,
-    ) -> list[Forecast] | None:
-        """Refresh stale forecast and return it in native units."""
-        if (
-            not (last_success_time := coordinator.last_update_success_time)
-            or utcnow() - last_success_time >= DEFAULT_SCAN_INTERVAL
-        ):
-            await coordinator.async_refresh()
-        if (
-            not (last_success_time := coordinator.last_update_success_time)
-            or utcnow() - last_success_time >= FORECAST_VALID_TIME
-        ):
-            return None
-        return self._forecast(nws_forecast, mode)
-
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        coordinator = self.coordinator_forecast_hourly
-        return await self._async_forecast(coordinator, self._forecast_hourly, HOURLY)
+        return self._forecast(self._forecast_hourly, HOURLY)
 
-    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
-        coordinator = self.coordinator_forecast_twice_daily
-        return await self._async_forecast(
-            coordinator, self._forecast_twice_daily, DAYNIGHT
-        )
+        return self._forecast(self._forecast_twice_daily, DAYNIGHT)
 
     @property
     def available(self) -> bool:
         """Return if state is available."""
         last_success = (
-            self.coordinator_observation.last_update_success
+            self.coordinator.last_update_success
             and self.coordinator_forecast_legacy.last_update_success
         )
         if (
-            self.coordinator_observation.last_update_success_time
+            self.coordinator.last_update_success_time
             and self.coordinator_forecast_legacy.last_update_success_time
         ):
             last_success_time = (
-                utcnow() - self.coordinator_observation.last_update_success_time
+                utcnow() - self.coordinator.last_update_success_time
                 < OBSERVATION_VALID_TIME
                 and utcnow() - self.coordinator_forecast_legacy.last_update_success_time
                 < FORECAST_VALID_TIME
@@ -430,7 +366,7 @@ class NWSWeather(WeatherEntity):
 
         Only used by the generic entity update service.
         """
-        await self.coordinator_observation.async_request_refresh()
+        await self.coordinator.async_request_refresh()
         await self.coordinator_forecast_legacy.async_request_refresh()
 
     @property

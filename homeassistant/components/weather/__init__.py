@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, TypedDict, TypeVar, final
+from typing import Any, Final, Generic, Literal, Required, TypedDict, TypeVar, final
 
 import voluptuous as vol
 
@@ -40,7 +40,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    TimestampDataUpdateCoordinator,
 )
+from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -121,8 +123,22 @@ ROUNDING_PRECISION = 2
 
 SERVICE_GET_FORECAST: Final = "get_forecast"
 
-_DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+_ObservationUpdateCoordinatorT = TypeVar(
+    "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+)
+
+# Note:
+# Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
+# forecast cooordinators optional, bound=TimestampDataUpdateCoordinator[Any] | None
+
+_DailyForecastUpdateCoordinatorT = TypeVar(
+    "_DailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+)
+_HourlyForecastUpdateCoordinatorT = TypeVar(
+    "_HourlyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
+)
+_TwiceDailyForecastUpdateCoordinatorT = TypeVar(
+    "_TwiceDailyForecastUpdateCoordinatorT", bound="TimestampDataUpdateCoordinator[Any]"
 )
 
 # mypy: disallow-any-generics
@@ -1187,9 +1203,240 @@ async def async_get_forecast_service(
 
 
 class CoordinatorWeatherEntity(
-    CoordinatorEntity[_DataUpdateCoordinatorT], WeatherEntity
+    CoordinatorEntity[_ObservationUpdateCoordinatorT],
+    WeatherEntity,
+    Generic[
+        _ObservationUpdateCoordinatorT,
+        _DailyForecastUpdateCoordinatorT,
+        _HourlyForecastUpdateCoordinatorT,
+        _TwiceDailyForecastUpdateCoordinatorT,
+    ],
 ):
-    """A class for weather entities using a single DataUpdateCoordinator."""
+    """A class for weather entities using DataUpdateCoordinators."""
+
+    def __init__(
+        self,
+        observation_coordinator: _ObservationUpdateCoordinatorT,
+        *,
+        context: Any = None,
+        daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        hourly_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        twice_daily_coordinator: _DailyForecastUpdateCoordinatorT | None = None,
+        daily_forecast_valid: timedelta | None = None,
+        hourly_forecast_valid: timedelta | None = None,
+        twice_daily_forecast_valid: timedelta | None = None,
+    ) -> None:
+        """Initialize."""
+        super().__init__(observation_coordinator, context)
+        self.daily_coordinator = daily_coordinator
+        self.hourly_coordinator = hourly_coordinator
+        self.twice_daily_coordinator = twice_daily_coordinator
+        self.daily_forecast_valid = daily_forecast_valid
+        self.hourly_forecast_valid = hourly_forecast_valid
+        self.twice_daily_forecast_valid = twice_daily_forecast_valid
+        self._unsub_daily_forecast: Callable[[], None] | None = None
+        self._unsub_hourly_forecast: Callable[[], None] | None = None
+        self._unsub_twice_daily_forecast: Callable[[], None] | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self._remove_daily_forecast_listener)
+        self.async_on_remove(self._remove_hourly_forecast_listener)
+        self.async_on_remove(self._remove_twice_daily_forecast_listener)
+
+    def _remove_daily_forecast_listener(self) -> None:
+        """Remove daily forecast listener."""
+        if self._unsub_daily_forecast:
+            self._unsub_daily_forecast()
+            self._unsub_daily_forecast = None
+
+    def _remove_hourly_forecast_listener(self) -> None:
+        """Remove hourly forecast listener."""
+        if self._unsub_hourly_forecast:
+            self._unsub_hourly_forecast()
+            self._unsub_hourly_forecast = None
+
+    def _remove_twice_daily_forecast_listener(self) -> None:
+        """Remove twice daily forecast listener."""
+        if self._unsub_daily_forecast:
+            self._unsub_daily_forecast()
+            self._unsub_daily_forecast = None
+
+    @callback
+    def _async_subscription_started(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """Start subscription to forecast_type."""
+        if forecast_type == "daily":
+            if not self.daily_coordinator:
+                return
+            self._unsub_daily_forecast = self.daily_coordinator.async_add_listener(
+                self.__daily_update_callback
+            )
+            return
+        if forecast_type == "hourly":
+            if not self.hourly_coordinator:
+                return
+            self._unsub_hourly_forecast = self.hourly_coordinator.async_add_listener(
+                self.__hourly_update_callback
+            )
+            return
+        if forecast_type == "twice_daily":
+            if not self.twice_daily_coordinator:
+                return
+            self._unsub_daily_forecast = (
+                self.twice_daily_coordinator.async_add_listener(
+                    self.__twice_daily_update_callback
+                )
+            )
+            return
+
+    @callback
+    def _daily_update_callback(self) -> None:
+        """Update daily forecast data."""
+        raise NotImplementedError
+
+    @callback
+    def _hourly_update_callback(self) -> None:
+        """Update hourly forecast data."""
+        raise NotImplementedError
+
+    @callback
+    def _twice_daily_update_callback(self) -> None:
+        """Update twice daily forecast data."""
+        raise NotImplementedError
+
+    @final
+    @callback
+    def __daily_update_callback(self) -> None:
+        """Update daily forecast data."""
+        assert self.daily_coordinator
+        assert self.daily_coordinator.config_entry is not None
+        self._daily_update_callback()
+        self.daily_coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("daily",))
+        )
+
+    @final
+    @callback
+    def __hourly_update_callback(self) -> None:
+        """Update hourly forecast data."""
+        assert self.hourly_coordinator
+        assert self.hourly_coordinator.config_entry is not None
+        self._hourly_update_callback()
+        self.hourly_coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("hourly",))
+        )
+
+    @final
+    @callback
+    def __twice_daily_update_callback(self) -> None:
+        """Update twice daily forecast data."""
+        assert self.twice_daily_coordinator
+        assert self.twice_daily_coordinator.config_entry is not None
+        self._twice_daily_update_callback()
+        self.twice_daily_coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(("twice_daily",))
+        )
+
+    @callback
+    def _async_subscription_ended(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """End subscription to forecast_type."""
+        if forecast_type == "daily":
+            self._remove_daily_forecast_listener()
+        elif forecast_type == "hourly":
+            self._remove_hourly_forecast_listener()
+        else:  # forecast_type == "twice_daily"
+            self._remove_twice_daily_forecast_listener()
+
+    @final
+    async def _async_refresh_forecast(
+        self,
+        coordinator: TimestampDataUpdateCoordinator[Any],
+        forecast_valid_time: timedelta | None,
+    ) -> bool:
+        """Refresh stale forecast if needed."""
+        if coordinator.update_interval is None:
+            return True
+        if forecast_valid_time is None:
+            forecast_valid_time = coordinator.update_interval
+        if (
+            not (last_success_time := coordinator.last_update_success_time)
+            or utcnow() - last_success_time >= coordinator.update_interval
+        ):
+            await coordinator.async_refresh()
+        if (
+            not (last_success_time := coordinator.last_update_success_time)
+            or utcnow() - last_success_time >= forecast_valid_time
+        ):
+            return False
+        return True
+
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        raise NotImplementedError
+
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        raise NotImplementedError
+
+    @callback
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the twice daily forecast in native units."""
+        raise NotImplementedError
+
+    @final
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        if self.daily_coordinator and not await self._async_refresh_forecast(
+            self.daily_coordinator, self.daily_forecast_valid
+        ):
+            return None
+        return self._async_forecast_daily()
+
+    @final
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        if self.hourly_coordinator and not await self._async_refresh_forecast(
+            self.hourly_coordinator, self.hourly_forecast_valid
+        ):
+            return None
+        return self._async_forecast_hourly()
+
+    @final
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the twice daily forecast in native units."""
+        if self.twice_daily_coordinator and not await self._async_refresh_forecast(
+            self.twice_daily_coordinator, self.twice_daily_forecast_valid
+        ):
+            return None
+        return self._async_forecast_twice_daily()
+
+
+class SingleCoordinatorWeatherEntity(
+    CoordinatorWeatherEntity[
+        _ObservationUpdateCoordinatorT,
+        TimestampDataUpdateCoordinator[None],
+        TimestampDataUpdateCoordinator[None],
+        TimestampDataUpdateCoordinator[None],
+    ],
+):
+    """A class for weather entities using a single DataUpdateCoordinators."""
+
+    def __init__(
+        self,
+        coordinator: _ObservationUpdateCoordinatorT,
+        context: Any = None,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, context=context)
 
     @callback
     def _handle_coordinator_update(self) -> None:
