@@ -4,7 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
+from pyyardian import (
+    AsyncYardianClient,
+    DeviceInfo,
+    NetworkException,
+    NotAuthorizedException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -29,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_fetch_device_info(self, host: str, access_token: str):
+    async def async_fetch_device_info(self, host: str, access_token: str) -> DeviceInfo:
         yarcli = AsyncYardianClient(
             async_get_clientsession(self.hass),
             host,

@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yardian",
   "iot_class": "local_polling",
-  "requirements": ["pyyardian==1.0.3"]
+  "requirements": ["pyyardian==1.0.4"]
 }

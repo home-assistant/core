@@ -2245,7 +2245,7 @@ pyws66i==1.1
 pyxeoma==1.4.1
 
 # homeassistant.components.yardian
-pyyardian==1.0.3
+pyyardian==1.0.4
 
 # homeassistant.components.qrcode
 pyzbar==0.1.7
