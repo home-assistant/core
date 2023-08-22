@@ -2028,7 +2028,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.80.0
+zeroconf==0.81.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
