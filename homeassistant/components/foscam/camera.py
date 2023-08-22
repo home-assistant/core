@@ -102,12 +102,14 @@ async def async_setup_entry(
 class HassFoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, camera: FoscamCamera, config_entry: ConfigEntry) -> None:
         """Initialize a Foscam camera."""
         super().__init__()
 
         self._foscam_session = camera
-        self._attr_name = config_entry.title
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
@@ -117,7 +119,6 @@ class HassFoscamCamera(Camera):
             self._attr_supported_features = CameraEntityFeature.STREAM
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name=config_entry.title,
             manufacturer="Foscam",
         )
 
