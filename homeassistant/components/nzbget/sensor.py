@@ -24,61 +24,61 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ArticleCacheMB",
-        name="Article Cache",
+        translation_key="article_cache",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="AverageDownloadRate",
-        name="Average Speed",
+        translation_key="average_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadPaused",
-        name="Download Paused",
+        translation_key="download_paused",
     ),
     SensorEntityDescription(
         key="DownloadRate",
-        name="Speed",
+        translation_key="speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
     SensorEntityDescription(
         key="DownloadedSizeMB",
-        name="Size",
+        translation_key="size",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="FreeDiskSpaceMB",
-        name="Disk Free",
+        translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="PostJobCount",
-        name="Post Processing Jobs",
+        translation_key="post_processing_jobs",
         native_unit_of_measurement="Jobs",
     ),
     SensorEntityDescription(
         key="PostPaused",
-        name="Post Processing Paused",
+        translation_key="post_processing_paused",
     ),
     SensorEntityDescription(
         key="RemainingSizeMB",
-        name="Queue Size",
+        translation_key="queue_size",
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
     ),
     SensorEntityDescription(
         key="UpTimeSec",
-        name="Uptime",
+        translation_key="uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="DownloadLimit",
-        name="Speed Limit",
+        translation_key="speed_limit",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
     ),
@@ -116,7 +116,7 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            name=f"{entry_name} {description.name}",
+            entry_name=entry_name,
         )
 
         self.entity_description = description
