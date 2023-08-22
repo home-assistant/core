@@ -11,7 +11,10 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -66,6 +69,9 @@ class LGDevice(MediaPlayerEntity):
         self._bass = 0
         self._treble = 0
         self._device = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)}, name=host
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""

@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
-    from .entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +63,26 @@ class DeviceEntryDisabler(StrEnum):
 DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
 DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
 DISABLED_USER = DeviceEntryDisabler.USER.value
+
+
+class DeviceInfo(TypedDict, total=False):
+    """Entity device information for device registry."""
+
+    configuration_url: str | URL | None
+    connections: set[tuple[str, str]]
+    default_manufacturer: str
+    default_model: str
+    default_name: str
+    entry_type: DeviceEntryType | None
+    identifiers: set[tuple[str, str]]
+    manufacturer: str | None
+    model: str | None
+    name: str | None
+    suggested_area: str | None
+    sw_version: str | None
+    hw_version: str | None
+    via_device: tuple[str, str]
+
 
 DEVICE_INFO_TYPES = {
     # Device info is categorized by finding the first device info type which has all
@@ -139,7 +158,7 @@ class DeviceInfoError(HomeAssistantError):
 
 
 def _validate_device_info(
-    config_entry: ConfigEntry | None,
+    config_entry: ConfigEntry,
     device_info: DeviceInfo,
 ) -> str:
     """Process a device info."""
@@ -148,7 +167,7 @@ def _validate_device_info(
     # If no keys or not enough info to match up, abort
     if not device_info.get("connections") and not device_info.get("identifiers"):
         raise DeviceInfoError(
-            config_entry.domain if config_entry else "unknown",
+            config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
@@ -163,7 +182,7 @@ def _validate_device_info(
 
     if device_info_type is None:
         raise DeviceInfoError(
-            config_entry.domain if config_entry else "unknown",
+            config_entry.domain,
             device_info,
             (
                 "device info needs to either describe a device, "
@@ -508,6 +527,10 @@ class DeviceRegistry:
             device_info[key] = val  # type: ignore[literal-required]
 
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
@@ -531,11 +554,7 @@ class DeviceRegistry:
                 )
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
-            if (
-                device_info_type == "primary"
-                and (not name or name is UNDEFINED)
-                and config_entry
-            ):
+            if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
 
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:

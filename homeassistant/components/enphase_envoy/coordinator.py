@@ -7,11 +7,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyenphase import (
-    Envoy,
-    EnvoyError,
-    EnvoyTokenAuth,
-)
+from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME

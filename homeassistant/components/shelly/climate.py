@@ -21,8 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -131,6 +130,7 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -173,11 +173,6 @@ class BlockSleepingClimate(
     def unique_id(self) -> str:
         """Set unique id of entity."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Name of entity."""
-        return self.coordinator.name
 
     @property
     def target_temperature(self) -> float | None:
@@ -355,7 +350,7 @@ class BlockSleepingClimate(
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="device_not_calibrated",
                 translation_placeholders={
-                    "device_name": self.name,
+                    "device_name": self.coordinator.name,
                     "ip_address": self.coordinator.device.ip_address,
                 },
             )
