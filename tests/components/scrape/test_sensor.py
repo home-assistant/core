@@ -1,12 +1,16 @@
 """The tests for the Scrape sensor platform."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.scrape.const import (
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_SCAN_INTERVAL,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -14,6 +18,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -21,7 +28,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.template_entity import CONF_AVAILABILITY, CONF_PICTURE
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import MockRestData, return_integration_config
 
@@ -469,3 +478,83 @@ async def test_setup_config_entry(
     entity = entity_reg.async_get("sensor.current_version")
 
     assert entity.unique_id == "3699ef88-69e6-11ed-a1eb-0242ac120002"
+
+
+async def test_templates_with_yaml(hass: HomeAssistant) -> None:
+    """Test the Scrape sensor from yaml config with templates."""
+
+    hass.states.async_set("sensor.input1", "on")
+    hass.states.async_set("sensor.input2", "on")
+    await hass.async_block_till_done()
+
+    config = {
+        DOMAIN: [
+            return_integration_config(
+                sensors=[
+                    {
+                        CONF_NAME: "Get values with template",
+                        CONF_SELECT: ".current-version h1",
+                        CONF_INDEX: 0,
+                        CONF_UNIQUE_ID: "3699ef88-69e6-11ed-a1eb-0242ac120002",
+                        CONF_ICON: '{% if states("sensor.input1")=="on" %} mdi:on {% else %} mdi:off {% endif %}',
+                        CONF_PICTURE: '{% if states("sensor.input1")=="on" %} /local/picture1.jpg {% else %} /local/picture2.jpg {% endif %}',
+                        CONF_AVAILABILITY: '{{ states("sensor.input2")=="on" }}',
+                    }
+                ]
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "Current Version: 2021.12.10"
+    assert state.attributes[CONF_ICON] == "mdi:on"
+    assert state.attributes["entity_picture"] == "/local/picture1.jpg"
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=10),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "Current Version: 2021.12.10"
+    assert state.attributes[CONF_ICON] == "mdi:off"
+    assert state.attributes["entity_picture"] == "/local/picture2.jpg"
+
+    hass.states.async_set("sensor.input2", "off")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=20),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.input1", "on")
+    hass.states.async_set("sensor.input2", "on")
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=30),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_values_with_template")
+    assert state.state == "Current Version: 2021.12.10"
+    assert state.attributes[CONF_ICON] == "mdi:on"
+    assert state.attributes["entity_picture"] == "/local/picture1.jpg"

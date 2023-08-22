@@ -41,7 +41,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "is_light": BinarySensorEntityDescription(
         key="is_light",
-        translation_key="light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
     "door_open": BinarySensorEntityDescription(

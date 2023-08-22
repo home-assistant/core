@@ -13,6 +13,7 @@ from homeassistant.components.shelly.const import (
     ATTR_GENERATION,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
@@ -24,9 +25,11 @@ from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
 )
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import (
+    MOCK_MAC,
     init_integration,
     inject_rpc_device_event,
     mock_polling_rpc_update,
@@ -249,6 +252,32 @@ async def test_block_sleeping_device_no_periodic_updates(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+async def test_block_device_push_updates_failure(
+    hass: HomeAssistant, mock_block_device, monkeypatch
+) -> None:
+    """Test block device with push updates failure."""
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    await init_integration(hass, 1)
+
+    # Updates with COAP_REPLAY type should create an issue
+    for _ in range(MAX_PUSH_UPDATE_FAILURES):
+        mock_block_device.mock_update_reply()
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
+    )
+
+    # An update with COAP_PERIODIC type should clear the issue
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
+    )
+
+
 async def test_block_button_click_event(
     hass: HomeAssistant, mock_block_device, events, monkeypatch
 ) -> None:
@@ -324,7 +353,7 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is not None
+    assert hass.states.get("switch.test_name_test_switch_0") is not None
 
     # Wait for debouncer
     async_fire_time_changed(
@@ -332,7 +361,7 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is None
+    assert hass.states.get("switch.test_name_test_switch_0") is None
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -559,7 +588,7 @@ async def test_rpc_reconnect_error(
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
 
-    assert hass.states.get("switch.test_switch_0").state == STATE_ON
+    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(
@@ -576,7 +605,7 @@ async def test_rpc_reconnect_error(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_UNAVAILABLE
 
 
 async def test_rpc_polling_connection_error(

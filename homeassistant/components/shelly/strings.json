@@ -76,8 +76,8 @@
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "disabled": "Disabled",
-        "active": "Active",
+        "disabled": "[%key:common::state::disabled%]",
+        "active": "[%key:common::state::active%]",
         "passive": "Passive"
       }
     }
@@ -116,7 +116,28 @@
             }
           }
         }
+      },
+      "valve_status": {
+        "state": {
+          "checking": "Checking",
+          "closed": "Closed",
+          "closing": "Closing",
+          "failure": "Failure",
+          "opened": "Opened",
+          "opening": "Opening",
+          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+        }
       }
+    }
+  },
+  "issues": {
+    "device_not_calibrated": {
+      "title": "Shelly device {device_name} is not calibrated",
+      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
+    },
+    "push_update_failure": {
+      "title": "Shelly device {device_name} push update failure",
+      "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
     }
   }
 }

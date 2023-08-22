@@ -27,9 +27,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -96,7 +96,7 @@ async def async_setup_entry(
     async_add_entities([owm_weather], False)
 
 
-class OpenWeatherMapWeather(WeatherEntity):
+class OpenWeatherMapWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     """Implementation of an OpenWeatherMap sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -114,6 +114,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         weather_coordinator: WeatherUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(weather_coordinator)
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
@@ -122,62 +123,61 @@ class OpenWeatherMapWeather(WeatherEntity):
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
-        self._weather_coordinator = weather_coordinator
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self._weather_coordinator.data[ATTR_API_CONDITION]
+        return self.coordinator.data[ATTR_API_CONDITION]
 
     @property
     def cloud_coverage(self) -> float | None:
         """Return the Cloud coverage in %."""
-        return self._weather_coordinator.data[ATTR_API_CLOUDS]
+        return self.coordinator.data[ATTR_API_CLOUDS]
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
-        return self._weather_coordinator.data[ATTR_API_FEELS_LIKE_TEMPERATURE]
+        return self.coordinator.data[ATTR_API_FEELS_LIKE_TEMPERATURE]
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self._weather_coordinator.data[ATTR_API_TEMPERATURE]
+        return self.coordinator.data[ATTR_API_TEMPERATURE]
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self._weather_coordinator.data[ATTR_API_PRESSURE]
+        return self.coordinator.data[ATTR_API_PRESSURE]
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""
-        return self._weather_coordinator.data[ATTR_API_HUMIDITY]
+        return self.coordinator.data[ATTR_API_HUMIDITY]
 
     @property
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
-        return self._weather_coordinator.data[ATTR_API_DEW_POINT]
+        return self.coordinator.data[ATTR_API_DEW_POINT]
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
-        return self._weather_coordinator.data[ATTR_API_WIND_GUST]
+        return self.coordinator.data[ATTR_API_WIND_GUST]
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self._weather_coordinator.data[ATTR_API_WIND_SPEED]
+        return self.coordinator.data[ATTR_API_WIND_SPEED]
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self._weather_coordinator.data[ATTR_API_WIND_BEARING]
+        return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        api_forecasts = self._weather_coordinator.data[ATTR_API_FORECAST]
+        api_forecasts = self.coordinator.data[ATTR_API_FORECAST]
         forecasts = [
             {
                 ha_key: forecast[api_key]
@@ -187,18 +187,3 @@ class OpenWeatherMapWeather(WeatherEntity):
             for forecast in api_forecasts
         ]
         return cast(list[Forecast], forecasts)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._weather_coordinator.last_update_success
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self._weather_coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Get the latest data from OWM and updates the states."""
-        await self._weather_coordinator.async_request_refresh()

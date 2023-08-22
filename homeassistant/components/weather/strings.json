@@ -71,6 +71,30 @@
         },
         "wind_speed_unit": {
           "name": "Wind speed unit"
+        },
+        "uv_index": {
+          "name": "UV index"
+        }
+      }
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Get forecast",
+      "description": "Get weather forecast.",
+      "fields": {
+        "type": {
+          "name": "Forecast type",
+          "description": "Forecast type: daily, hourly or twice daily."
         }
       }
     }

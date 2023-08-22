@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import datetime
 import logging
 from typing import TYPE_CHECKING
@@ -13,21 +14,12 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Pla
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    CONF_STATION,
-    COORDINATOR_FORECAST,
-    COORDINATOR_FORECAST_HOURLY,
-    COORDINATOR_OBSERVATION,
-    DOMAIN,
-    NWS_DATA,
-    UPDATE_TIME_PERIOD,
-)
+from .const import CONF_STATION, DOMAIN, UPDATE_TIME_PERIOD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +33,16 @@ DEBOUNCE_TIME = 60  # in seconds
 def base_unique_id(latitude: float, longitude: float) -> str:
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
+
+
+@dataclass
+class NWSData:
+    """Data for the National Weather Service integration."""
+
+    api: SimpleNWS
+    coordinator_observation: NwsDataUpdateCoordinator
+    coordinator_forecast: NwsDataUpdateCoordinator
+    coordinator_forecast_hourly: NwsDataUpdateCoordinator
 
 
 class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -88,7 +90,6 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # the base class allows None, but this one doesn't
                 assert self.update_interval is not None
             update_interval = self.update_interval
-            self.last_update_success_time = utcnow()
         else:
             update_interval = self.failed_update_interval
         self._unsub_refresh = async_track_point_in_utc_time(
@@ -96,6 +97,23 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._handle_refresh_interval,
             utcnow().replace(microsecond=0) + update_interval,
         )
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        await super()._async_refresh(
+            log_failures,
+            raise_on_auth_failed,
+            scheduled,
+            raise_on_entry_error,
+        )
+        if self.last_update_success:
+            self.last_update_success_time = utcnow()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -151,12 +169,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
     nws_hass_data = hass.data.setdefault(DOMAIN, {})
-    nws_hass_data[entry.entry_id] = {
-        NWS_DATA: nws_data,
-        COORDINATOR_OBSERVATION: coordinator_observation,
-        COORDINATOR_FORECAST: coordinator_forecast,
-        COORDINATOR_FORECAST_HOURLY: coordinator_forecast_hourly,
-    }
+    nws_hass_data[entry.entry_id] = NWSData(
+        nws_data,
+        coordinator_observation,
+        coordinator_forecast,
+        coordinator_forecast_hourly,
+    )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator_observation.async_refresh()

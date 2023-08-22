@@ -530,7 +530,78 @@ async def test_transitions(
     light2_state = hass.states.get(device_2_entity_id)
     assert light2_state.state == STATE_OFF
 
-    # first test 0 length transition with no color provided
+    # first test 0 length transition with no color and no brightness provided
+    dev1_cluster_on_off.request.reset_mock()
+    dev1_cluster_level.request.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": device_1_entity_id, "transition": 0},
+        blocking=True,
+    )
+    assert dev1_cluster_on_off.request.call_count == 0
+    assert dev1_cluster_on_off.request.await_count == 0
+    assert dev1_cluster_color.request.call_count == 0
+    assert dev1_cluster_color.request.await_count == 0
+    assert dev1_cluster_level.request.call_count == 1
+    assert dev1_cluster_level.request.await_count == 1
+    assert dev1_cluster_level.request.call_args == call(
+        False,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        level=254,  # default "full on" brightness
+        transition_time=0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+
+    light1_state = hass.states.get(device_1_entity_id)
+    assert light1_state.state == STATE_ON
+    assert light1_state.attributes["brightness"] == 254
+
+    # test 0 length transition with no color and no brightness provided again, but for "force on" lights
+    eWeLink_cluster_on_off.request.reset_mock()
+    eWeLink_cluster_level.request.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": eWeLink_light_entity_id, "transition": 0},
+        blocking=True,
+    )
+    assert eWeLink_cluster_on_off.request.call_count == 1
+    assert eWeLink_cluster_on_off.request.await_count == 1
+    assert eWeLink_cluster_on_off.request.call_args_list[0] == call(
+        False,
+        eWeLink_cluster_on_off.commands_by_name["on"].id,
+        eWeLink_cluster_on_off.commands_by_name["on"].schema,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+    assert eWeLink_cluster_color.request.call_count == 0
+    assert eWeLink_cluster_color.request.await_count == 0
+    assert eWeLink_cluster_level.request.call_count == 1
+    assert eWeLink_cluster_level.request.await_count == 1
+    assert eWeLink_cluster_level.request.call_args == call(
+        False,
+        eWeLink_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
+        eWeLink_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        level=254,  # default "full on" brightness
+        transition_time=0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
+
+    eWeLink_state = hass.states.get(eWeLink_light_entity_id)
+    assert eWeLink_state.state == STATE_ON
+    assert eWeLink_state.attributes["brightness"] == 254
+
+    eWeLink_cluster_on_off.request.reset_mock()
+    eWeLink_cluster_level.request.reset_mock()
+
+    # test 0 length transition with brightness, but no color provided
     dev1_cluster_on_off.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
     await hass.services.async_call(
@@ -1423,18 +1494,10 @@ async def async_test_level_on_off_from_hass(
         {"entity_id": entity_id, "transition": 10},
         blocking=True,
     )
-    assert on_off_cluster.request.call_count == 1
-    assert on_off_cluster.request.await_count == 1
+    assert on_off_cluster.request.call_count == 0
+    assert on_off_cluster.request.await_count == 0
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
-    assert on_off_cluster.request.call_args == call(
-        False,
-        on_off_cluster.commands_by_name["on"].id,
-        on_off_cluster.commands_by_name["on"].schema,
-        expect_reply=True,
-        manufacturer=None,
-        tsn=None,
-    )
     assert level_cluster.request.call_args == call(
         False,
         level_cluster.commands_by_name["move_to_level_with_on_off"].id,

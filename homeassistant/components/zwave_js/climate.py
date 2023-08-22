@@ -37,6 +37,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DATA_CLIENT, DOMAIN, LOGGER
@@ -502,13 +503,28 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
-        # Dry and Fan preset modes are deprecated as of 2023.8
-        # Use Dry and Fan HVAC modes instead
+        # Dry and Fan preset modes are deprecated as of Home Assistant 2023.8.
+        # Please use Dry and Fan HVAC modes instead.
         if preset_mode_value in (ThermostatMode.DRY, ThermostatMode.FAN):
             LOGGER.warning(
-                "Dry and Fan preset modes are deprecated and will be removed in a future release. "
-                "Use the corresponding Dry and Fan HVAC modes instead"
+                "Dry and Fan preset modes are deprecated and will be removed in Home "
+                "Assistant 2024.2. Please use the corresponding Dry and Fan HVAC "
+                "modes instead"
             )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"dry_fan_presets_deprecation_{self.entity_id}",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="dry_fan_presets_deprecation",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
         await self._async_set_value(self._current_mode, preset_mode_value)
 
 

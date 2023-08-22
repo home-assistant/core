@@ -212,6 +212,7 @@ async def test_issues_created(
         "flow_id": ANY,
         "handler": DOMAIN,
         "last_step": None,
+        "preview": None,
         "step_id": "confirm",
         "type": "form",
     }

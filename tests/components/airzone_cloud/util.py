@@ -163,6 +163,7 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
 
     if device.get_id() == "aidoo1":
         return {
+            API_ACTIVE: False,
             API_ERRORS: [],
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
@@ -222,6 +223,7 @@ async def async_init_integration(
 
     config_entry = MockConfigEntry(
         data=CONFIG,
+        entry_id="d186e31edb46d64d14b9b2f11f1ebd9f",
         domain=DOMAIN,
         unique_id=CONFIG[CONF_ID],
     )

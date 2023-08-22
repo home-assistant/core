@@ -25,13 +25,13 @@
         "data": {
           "device": "Select device"
         },
-        "title": "Device"
+        "title": "[%key:common::config_flow::data::device%]"
       },
       "setup_serial_manual_path": {
         "data": {
           "device": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Path"
+        "title": "[%key:common::config_flow::data::path%]"
       }
     }
   },
@@ -134,6 +134,18 @@
       },
       "uv_index": {
         "name": "UV index"
+      }
+    }
+  },
+  "services": {
+    "send": {
+      "name": "Send",
+      "description": "Sends a raw event on radio.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "A hexadecimal string to send."
+        }
       }
     }
   }
