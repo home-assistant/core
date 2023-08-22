@@ -303,6 +303,7 @@ async def test_connection_aborted_wrong_device(
     await hass.async_block_till_done()
 
     assert (
-        "Unexpected device found at test.local; expected `test` with mac address `11:22:33:44:55:aa`, found `different` with mac address `11:22:33:44:55:ab`"
-        in caplog.text
+        "Unexpected device found at test.local; expected `test` "
+        "with mac address `11:22:33:44:55:aa`, found `different` "
+        "with mac address `11:22:33:44:55:ab`" in caplog.text
     )
