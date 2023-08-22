@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -104,6 +105,8 @@ class PecoSensor(
 
     entity_description: PECOSensorEntityDescription
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: PECOSensorEntityDescription,
@@ -112,8 +115,10 @@ class PecoSensor(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{county.capitalize()} {description.name}"
         self._attr_unique_id = f"{county}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, county)}, name=county.capitalize()
+        )
         self.entity_description = description
 
     @property
