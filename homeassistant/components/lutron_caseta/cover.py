@@ -17,6 +17,9 @@ from . import LutronCasetaDeviceUpdatableEntity
 from .const import DOMAIN as CASETA_DOMAIN
 from .models import LutronCasetaData
 
+LUTRON_SHADE_POSITION_OPEN = 100
+LUTRON_SHADE_POSITION_CLOSED = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -42,7 +45,6 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
     _attr_device_class = CoverDeviceClass.SHADE
@@ -57,21 +59,13 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         """Return the current position of cover."""
         return self._device["current_state"]
 
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Top the cover."""
-        await self._smartbridge.stop_cover(self.device_id)
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._smartbridge.lower_cover(self.device_id)
-        await self.async_update()
-        self.async_write_ha_state()
+        await self._smartbridge.set_value(self.device_id, LUTRON_SHADE_POSITION_CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._smartbridge.raise_cover(self.device_id)
-        await self.async_update()
-        self.async_write_ha_state()
+        await self._smartbridge.set_value(self.device_id, LUTRON_SHADE_POSITION_OPEN)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
