@@ -53,7 +53,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.2
-zeroconf==0.82.0
+zeroconf==0.82.1
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
