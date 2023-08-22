@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioruckus.const import CONNECT_ERROR_EOF, LOGIN_ERROR_LOGIN_INCORRECT
+from aioruckus.const import ERROR_CONNECT_EOF, ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
 from homeassistant.components.ruckus_unleashed import DOMAIN
@@ -57,7 +57,7 @@ async def test_clients_update_failed(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=60)
     with RuckusAjaxApiPatchContext(
-        active_clients=AsyncMock(side_effect=ConnectionError(CONNECT_ERROR_EOF))
+        active_clients=AsyncMock(side_effect=ConnectionError(ERROR_CONNECT_EOF))
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -73,9 +73,7 @@ async def test_clients_update_auth_failed(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=60)
     with RuckusAjaxApiPatchContext(
-        active_clients=AsyncMock(
-            side_effect=AuthenticationError(LOGIN_ERROR_LOGIN_INCORRECT)
-        )
+        active_clients=AsyncMock(side_effect=AuthenticationError(ERROR_LOGIN_INCORRECT))
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

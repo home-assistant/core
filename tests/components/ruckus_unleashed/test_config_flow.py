@@ -2,7 +2,11 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aioruckus.const import CONNECT_ERROR_TIMEOUT, LOGIN_ERROR_LOGIN_INCORRECT
+from aioruckus.const import (
+    ERROR_CONNECT_TEMPORARY,
+    ERROR_CONNECT_TIMEOUT,
+    ERROR_LOGIN_INCORRECT,
+)
 from aioruckus.exceptions import AuthenticationError
 
 from homeassistant import config_entries, data_entry_flow
@@ -47,9 +51,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with RuckusAjaxApiPatchContext(
-        login_mock=AsyncMock(
-            side_effect=AuthenticationError(LOGIN_ERROR_LOGIN_INCORRECT)
-        )
+        login_mock=AsyncMock(side_effect=AuthenticationError(ERROR_LOGIN_INCORRECT))
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -97,7 +99,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with RuckusAjaxApiPatchContext(
-        login_mock=AsyncMock(side_effect=ConnectionError(CONNECT_ERROR_TIMEOUT))
+        login_mock=AsyncMock(side_effect=ConnectionError(ERROR_CONNECT_TIMEOUT))
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -108,20 +110,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
+async def test_form_unexpected_response(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with RuckusAjaxApiPatchContext(login_mock=AsyncMock(side_effect=Exception)):
+    with RuckusAjaxApiPatchContext(
+        login_mock=AsyncMock(
+            side_effect=ConnectionRefusedError(ERROR_CONNECT_TEMPORARY)
+        )
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_cannot_connect_unknown_serial(hass: HomeAssistant) -> None:

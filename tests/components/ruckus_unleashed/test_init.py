@@ -1,7 +1,7 @@
 """Test the Ruckus Unleashed config flow."""
 from unittest.mock import AsyncMock
 
-from aioruckus.const import CONNECT_ERROR_TIMEOUT, LOGIN_ERROR_LOGIN_INCORRECT
+from aioruckus.const import ERROR_CONNECT_TIMEOUT, ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
 
 from homeassistant.components.ruckus_unleashed import DOMAIN, MANUFACTURER
@@ -30,9 +30,7 @@ async def test_setup_entry_login_error(hass: HomeAssistant) -> None:
     """Test entry setup failed due to login error."""
     entry = mock_config_entry()
     with RuckusAjaxApiPatchContext(
-        login_mock=AsyncMock(
-            side_effect=AuthenticationError(LOGIN_ERROR_LOGIN_INCORRECT)
-        )
+        login_mock=AsyncMock(side_effect=AuthenticationError(ERROR_LOGIN_INCORRECT))
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)
@@ -45,7 +43,7 @@ async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
     """Test entry setup failed due to connection error."""
     entry = mock_config_entry()
     with RuckusAjaxApiPatchContext(
-        login_mock=AsyncMock(side_effect=ConnectionError(CONNECT_ERROR_TIMEOUT))
+        login_mock=AsyncMock(side_effect=ConnectionError(ERROR_CONNECT_TIMEOUT))
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
