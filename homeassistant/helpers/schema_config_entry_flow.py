@@ -78,6 +78,9 @@ class SchemaFlowFormStep(SchemaFlowStep):
     have priority over the suggested values.
     """
 
+    preview: str | None = None
+    """Optional preview component."""
+
 
 @dataclass(slots=True)
 class SchemaFlowMenuStep(SchemaFlowStep):
@@ -237,6 +240,7 @@ class SchemaCommonFlowHandler:
             data_schema=data_schema,
             errors=errors,
             last_step=last_step,
+            preview=form_step.preview,
         )
 
     async def _async_menu_step(
@@ -271,7 +275,10 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
                 raise UnknownHandler
 
             return SchemaOptionsFlowHandler(
-                config_entry, cls.options_flow, cls.async_options_flow_finished
+                config_entry,
+                cls.options_flow,
+                cls.async_options_flow_finished,
+                cls.async_setup_preview,
             )
 
         # Create an async_get_options_flow method
@@ -284,6 +291,11 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
     def __init__(self) -> None:
         """Initialize config flow."""
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
+
+    @callback
+    @staticmethod
+    def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview."""
 
     @classmethod
     @callback
@@ -357,6 +369,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
+        async_setup_preview: Callable[[HomeAssistant], None] | None = None,
     ) -> None:
         """Initialize options flow.
 
@@ -377,6 +390,9 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 f"async_step_{step}",
                 types.MethodType(self._async_step(step), self),
             )
+
+        if async_setup_preview:
+            setattr(self, "async_setup_preview", async_setup_preview)
 
     @staticmethod
     def _async_step(step_id: str) -> Callable:
