@@ -6,6 +6,7 @@ from collections.abc import Callable
 import contextlib
 from datetime import datetime, timedelta
 import logging
+import math
 import statistics
 from typing import Any, cast
 
