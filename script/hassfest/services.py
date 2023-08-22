@@ -25,10 +25,8 @@ def exists(value: Any) -> Any:
     return value
 
 
-FIELD_SCHEMA = vol.Schema(
+CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
@@ -46,7 +44,26 @@ FIELD_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_SCHEMA = vol.Any(
+CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
+    {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+    }
+)
+
+CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Optional("target"): vol.Any(
+                selector.TargetSelector.CONFIG_SCHEMA, None
+            ),
+            vol.Optional("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+        }
+    ),
+    None,
+)
+
+CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
             vol.Optional("description"): str,
@@ -54,13 +71,18 @@ SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
         }
     ),
     None,
 )
 
-SERVICES_SCHEMA = vol.Schema({cv.slug: SERVICE_SCHEMA})
+CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+    {cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA}
+)
+CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
+    {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
+)
 
 
 def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool:
@@ -99,7 +121,10 @@ def validate_services(config: Config, integration: Integration) -> None:
         return
 
     try:
-        services = SERVICES_SCHEMA(data)
+        if integration.core:
+            services = CORE_INTEGRATION_SERVICES_SCHEMA(data)
+        else:
+            services = CUSTOM_INTEGRATION_SERVICES_SCHEMA(data)
     except vol.Invalid as err:
         integration.add_error(
             "services", f"Invalid services.yaml: {humanize_error(data, err)}"
