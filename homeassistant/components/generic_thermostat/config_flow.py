@@ -52,16 +52,17 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the form(s)."""
         if user_input is None:
             return await self._async_step_basic()
-
         self.data = user_input
-        return await self._async_show_advanced_settings()
+        return await self._async_show_advanced_settings({})
 
-    async def async_step_advanced_settings(self, user_input=None) -> FlowResult:
+    async def async_step_advanced_settings(
+        self, user_input: dict[str, Any] | None
+    ) -> FlowResult:
         """Handle the advanced settings form."""
         if user_input is None:
-            return await self._async_show_advanced_settings()
+            return await self._async_show_advanced_settings({})
 
-        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+        return self.async_create_entry(title=DEFAULT_NAME, data=self.data)
 
     async def _async_step_basic(self) -> FlowResult:
         """Handle the basic needed settings."""
@@ -83,8 +84,12 @@ class GenericThermostatConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def _async_show_advanced_settings(self) -> FlowResult:
+    async def _async_show_advanced_settings(
+        self, user_input: dict[str, Any]
+    ) -> FlowResult:
         """Show the advanced settings form."""
+        if user_input is None:
+            user_input = {}
         return self.async_show_form(
             step_id="advanced_settings",
             data_schema=vol.Schema(

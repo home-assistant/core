@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -145,6 +146,57 @@ async def async_setup_platform(
     target_temperature_step = config.get(CONF_TEMP_STEP)
     unit = hass.config.units.temperature_unit
     unique_id = config.get(CONF_UNIQUE_ID)
+
+    async_add_entities(
+        [
+            GenericThermostat(
+                name,
+                heater_entity_id,
+                sensor_entity_id,
+                min_temp,
+                max_temp,
+                target_temp,
+                ac_mode,
+                min_cycle_duration,
+                cold_tolerance,
+                hot_tolerance,
+                keep_alive,
+                initial_hvac_mode,
+                presets,
+                precision,
+                target_temperature_step,
+                unit,
+                unique_id,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the generic thermostat platform."""
+    name = entry.data.get(CONF_NAME)
+    heater_entity_id = entry.data.get(CONF_HEATER)
+    sensor_entity_id = entry.data.get(CONF_SENSOR)
+    min_temp = entry.data.get(CONF_MIN_TEMP)
+    max_temp = entry.data.get(CONF_MAX_TEMP)
+    target_temp = entry.data.get(CONF_TARGET_TEMP)
+    ac_mode = entry.data.get(CONF_AC_MODE)
+    min_cycle_duration = entry.data.get(CONF_MIN_DUR)
+    cold_tolerance = entry.data.get(CONF_COLD_TOLERANCE)
+    hot_tolerance = entry.data.get(CONF_HOT_TOLERANCE)
+    keep_alive = entry.data.get(CONF_KEEP_ALIVE)
+    initial_hvac_mode = entry.data.get(CONF_INITIAL_HVAC_MODE)
+    presets = {
+        key: entry.data[value]
+        for key, value in CONF_PRESETS.items()
+        if value in entry.data
+    }
+    precision = entry.data.get(CONF_PRECISION)
+    target_temperature_step = entry.data.get(CONF_TEMP_STEP)
+    unit = hass.config.units.temperature_unit
+    unique_id = f"{DOMAIN}-{entry.entry_id}-{sensor_entity_id}"
 
     async_add_entities(
         [
