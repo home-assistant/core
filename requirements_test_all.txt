@@ -10,7 +10,7 @@ AEMET-OpenData==0.2.2
 AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.15
+AIOSomecomfort==0.0.16
 
 # homeassistant.components.adax
 Adax-local==0.1.5
