@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_SERVER_IDENTIFIER,
     DOMAIN,
-    NAME_FORMAT,
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
 )
@@ -71,13 +70,15 @@ async def async_setup_entry(
 class PlexSensor(SensorEntity):
     """Representation of a Plex now playing sensor."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_icon = "mdi:plex"
+    _attr_should_poll = False
+    _attr_native_unit_of_measurement = "Watching"
+
     def __init__(self, hass, plex_server):
         """Initialize the sensor."""
-        self._attr_icon = "mdi:plex"
-        self._attr_name = NAME_FORMAT.format(plex_server.friendly_name)
-        self._attr_should_poll = False
         self._attr_unique_id = f"sensor-{plex_server.machine_identifier}"
-        self._attr_native_unit_of_measurement = "Watching"
 
         self._server = plex_server
         self.async_refresh_sensor = Debouncer(
@@ -113,9 +114,6 @@ class PlexSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        if self.unique_id is None:
-            return None
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._server.machine_identifier)},
             manufacturer="Plex",

@@ -32,11 +32,13 @@ class PlexScanClientsButton(ButtonEntity):
     """Representation of a scan_clients button entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
+    _attr_translation_key = "scan_clients"
 
     def __init__(self, server_id: str, server_name: str) -> None:
         """Initialize a scan_clients Plex button entity."""
         self.server_id = server_id
-        self._attr_name = f"Scan Clients ({server_name})"
+        self._server_name = server_name
         self._attr_unique_id = f"plex-scan_clients-{self.server_id}"
 
     async def async_press(self) -> None:
@@ -51,4 +53,5 @@ class PlexScanClientsButton(ButtonEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.server_id)},
             manufacturer="Plex",
+            name=self._server_name,
         )
