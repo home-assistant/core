@@ -343,7 +343,6 @@ class ESPHomeManager:
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
-        self.entry_data.async_set_assist_pipeline_state(True)
 
         return port
 
