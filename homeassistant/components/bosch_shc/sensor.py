@@ -198,6 +198,7 @@ class HumiditySensor(SHCEntity, SensorEntity):
 class PuritySensor(SHCEntity, SensorEntity):
     """Representation of an SHC purity reporting sensor."""
 
+    _attr_translation_key = "purity"
     _attr_icon = "mdi:molecule-co2"
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 

@@ -42,6 +42,9 @@
       "purity_rating": {
         "name": "Purity rating"
       },
+      "purity": {
+        "name": "Purity"
+      },
       "valvetappet": {
         "name": "Valvetappet"
       },
