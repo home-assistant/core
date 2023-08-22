@@ -376,11 +376,15 @@ class ESPHomeManager:
         name_matches = stored_device_name == device_info.name
         #
         # Migrate config entry to new unique ID if the current
-        # unique id is not a mac address
+        # unique id is not a mac address.
         #
         # This was changed in 2023.1
         #
-        if not unique_id_is_mac_address and not mac_address_matches:
+        # If the device name matches, we also update the unique id
+        # to the mac address. This is to handle a board change (ie
+        # device replaced after failure, but config is the same)
+        #
+        if (not unique_id_is_mac_address or name_matches) and not mac_address_matches:
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
         if (
