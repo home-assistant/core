@@ -384,7 +384,9 @@ class ESPHomeManager:
         # to the mac address. This is to handle a board change (ie
         # device replaced after failure, but config is the same)
         #
-        if (not unique_id_is_mac_address or name_matches) and not mac_address_matches:
+        if (
+            not unique_id_is_mac_address or name_matches or not stored_device_name
+        ) and not mac_address_matches:
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
         if (
@@ -400,8 +402,8 @@ class ESPHomeManager:
             # connecting to the wrong device.
             _LOGGER.error(
                 "Unexpected device found at %s; "
-                "expected %s with mac address %s, "
-                "found %s with mac address %s",
+                "expected `%s` with mac address `%s`, "
+                "found `%s` with mac address `%s`",
                 self.host,
                 stored_device_name,
                 unique_id,
