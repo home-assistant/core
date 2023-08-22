@@ -384,9 +384,9 @@ class ESPHomeManager:
         # to the mac address. This is to handle a board change (ie
         # device replaced after failure, but config is the same)
         #
-        if (
+        if not mac_address_matches and (
             not unique_id_is_mac_address or name_matches or not stored_device_name
-        ) and not mac_address_matches:
+        ):
             hass.config_entries.async_update_entry(entry, unique_id=device_mac)
 
         if (
@@ -423,6 +423,9 @@ class ESPHomeManager:
 
         # Make sure we have the correct device name stored
         # so we can map the device to ESPHome Dashboard config
+        # If we got here, we know the mac address matches or we
+        # did a migration to the mac address so we can update
+        # the device name.
         if not name_matches:
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
