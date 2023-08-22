@@ -71,10 +71,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = coordinator.data.info.serial_number
+
     async_add_entities(
         RokuBinarySensorEntity(
-            device_id=unique_id,
             coordinator=coordinator,
             description=description,
         )
