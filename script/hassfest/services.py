@@ -84,6 +84,11 @@ CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
 )
 
+VALIDATE_AS_CUSTOM_INTEGRATION = {
+    # Adding translations would be a breaking change
+    "foursquare",
+}
+
 
 def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool:
     """Recursively go through a dir and it's children and find the regex."""
@@ -121,7 +126,10 @@ def validate_services(config: Config, integration: Integration) -> None:
         return
 
     try:
-        if integration.core:
+        if (
+            integration.core
+            and integration.domain not in VALIDATE_AS_CUSTOM_INTEGRATION
+        ):
             services = CORE_INTEGRATION_SERVICES_SCHEMA(data)
         else:
             services = CUSTOM_INTEGRATION_SERVICES_SCHEMA(data)
