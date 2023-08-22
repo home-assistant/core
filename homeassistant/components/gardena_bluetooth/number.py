@@ -71,15 +71,15 @@ DESCRIPTIONS = (
         char=DeviceConfiguration.rain_pause,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.season_pause.uuid,
-        translation_key="season_pause",
+        key=DeviceConfiguration.seasonal_adjust.uuid,
+        translation_key="seasonal_adjust",
         native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
-        native_min_value=0.0,
-        native_max_value=365.0,
+        native_min_value=-128.0,
+        native_max_value=127.0,
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
-        char=DeviceConfiguration.season_pause,
+        char=DeviceConfiguration.seasonal_adjust,
     ),
 )
 

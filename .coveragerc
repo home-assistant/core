@@ -221,6 +221,7 @@ omit =
     homeassistant/components/doorbird/device.py
     homeassistant/components/doorbird/entity.py
     homeassistant/components/doorbird/util.py
+    homeassistant/components/doorbird/view.py
     homeassistant/components/dormakaba_dkey/__init__.py
     homeassistant/components/dormakaba_dkey/binary_sensor.py
     homeassistant/components/dormakaba_dkey/entity.py
@@ -780,6 +781,7 @@ omit =
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
+    homeassistant/components/neato/entity.py
     homeassistant/components/neato/hub.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
@@ -1187,6 +1189,7 @@ omit =
     homeassistant/components/starlink/binary_sensor.py
     homeassistant/components/starlink/button.py
     homeassistant/components/starlink/coordinator.py
+    homeassistant/components/starlink/device_tracker.py
     homeassistant/components/starlink/sensor.py
     homeassistant/components/starlink/switch.py
     homeassistant/components/starline/__init__.py
