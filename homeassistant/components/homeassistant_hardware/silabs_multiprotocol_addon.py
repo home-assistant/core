@@ -449,7 +449,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         try:
             await self.install_task
         except AddonError as err:
-            self.install_task = None
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
         finally:
