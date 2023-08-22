@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Awaitable
 import dataclasses
 import logging
 from typing import Any, Protocol
@@ -342,6 +343,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         """Return the correct flow manager."""
         return self.hass.config_entries.options
 
+    async def _resume_flow_when_done(self, awaitable: Awaitable) -> None:
+        try:
+            await awaitable
+        finally:
+            self.hass.async_create_task(
+                self.flow_manager.async_configure(flow_id=self.flow_id)
+            )
+
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
         """Return and cache Silicon Labs Multiprotocol add-on info."""
         try:
@@ -364,41 +373,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
-
-    async def _async_install_addon(self, addon_manager: SyncAddonManager) -> None:
-        """Install an add-on."""
-        try:
-            await addon_manager.async_install_addon_sync()
-        finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
-
-    async def _async_uninstall_addon(
-        self, addon_manager: SyncAddonManager, *, continue_flow: bool = True
-    ) -> None:
-        """Uninstall an add-on."""
-        try:
-            await addon_manager.async_uninstall_addon_sync()
-        finally:
-            if continue_flow:
-                # Continue the flow after show progress when the task is done.
-                self.hass.async_create_task(
-                    self.flow_manager.async_configure(flow_id=self.flow_id)
-                )
-
-    async def _async_start_addon(
-        self, addon_manager: SyncAddonManager, wait_until_done: bool = False
-    ) -> None:
-        """Start an add-on."""
-        try:
-            await addon_manager.async_start_addon_sync(wait_until_done=wait_until_done)
-        finally:
-            # Continue the flow after show progress when the task is done.
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -444,7 +418,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.install_task:
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.install_task = self.hass.async_create_task(
-                self._async_install_addon(multipan_manager),
+                self._resume_flow_when_done(
+                    multipan_manager.async_install_addon_sync()
+                ),
                 "SiLabs Multiprotocol addon install",
             )
             return self.async_show_progress(
@@ -548,7 +524,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.start_task:
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
-                self._async_start_addon(multipan_manager)
+                self._resume_flow_when_done(multipan_manager.async_start_addon_sync())
             )
             return self.async_show_progress(
                 step_id="start_addon",
@@ -739,7 +715,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
         if not self.install_task:
             self.install_task = self.hass.async_create_task(
-                self._async_install_addon(flasher_manager),
+                self._resume_flow_when_done(flasher_manager.async_install_addon_sync()),
                 "SiLabs Flasher addon install",
             )
             return self.async_show_progress(
@@ -826,7 +802,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.stop_task:
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.stop_task = self.hass.async_create_task(
-                self._async_uninstall_addon(multipan_manager),
+                self._resume_flow_when_done(
+                    multipan_manager.async_uninstall_addon_sync()
+                ),
                 "SiLabs Multiprotocol addon uninstall",
             )
             return self.async_show_progress(
@@ -850,8 +828,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.start_task:
             flasher_manager = get_flasher_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
-                self._async_start_addon(flasher_manager, wait_until_done=True),
-                "SiLabs Flasher addon run",
+                self._resume_flow_when_done(
+                    flasher_manager.async_start_addon_sync(wait_until_done=True)
+                )
             )
             return self.async_show_progress(
                 step_id="start_flasher_addon",
@@ -883,7 +862,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Finish flashing and update the config entry."""
         flasher_manager = get_flasher_addon_manager(self.hass)
-        await self._async_uninstall_addon(flasher_manager, continue_flow=False)
+        await flasher_manager.async_uninstall_addon_sync()
 
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
