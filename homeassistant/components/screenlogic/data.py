@@ -154,47 +154,95 @@ def realize_path_template(
     return tuple(realized_path)
 
 
+def expand_device_groups(
+    gateway: ScreenLogicGateway, device: str, device_groups: dict
+) -> None:
+    """Expand device groups to all available data indexes."""
+    indexed_values = device_groups.pop("*")
+    for index in gateway.get_data(device):
+        device_groups[index] = indexed_values
+
+
+def cleanup_excluded_entity(
+    coordinator: ScreenlogicDataUpdateCoordinator,
+    platform_domain: str,
+    entity_key: str,
+):
+    """Remove excluded entity if it exists."""
+    assert coordinator.config_entry
+    entity_registry = er.async_get(coordinator.hass)
+    unique_id = f"{coordinator.config_entry.unique_id}_{entity_key}"
+    if entity_id := entity_registry.async_get_entity_id(
+        platform_domain, SL_DOMAIN, unique_id
+    ):
+        _LOGGER.debug(
+            "Removing existing entity '%s' per data inclusion rule", entity_id
+        )
+        entity_registry.async_remove(entity_id)
+
+
+def check_inclusion_rules(
+    gateway: ScreenLogicGateway,
+    device: str,
+    data_path: tuple[str | int, ...],
+    value_params: SupportedValueParameters,
+) -> bool:
+    """Check against any inclusion rules."""
+    if (
+        inclusion_rule := value_params.get(EntityParameter.INCLUDED)
+        or DEVICE_INCLUSION_RULES.get(device)
+    ) is not None:
+        assert isinstance(inclusion_rule, ScreenLogicRule)
+        if not inclusion_rule.test(gateway, data_path):
+            return False
+    return True
+
+
+def check_enabled_rules(
+    gateway: ScreenLogicGateway,
+    data_path: tuple[str | int, ...],
+    value_params: SupportedValueParameters,
+) -> bool:
+    """Check against any enabled rules."""
+    if (enabled_rule := value_params.get(EntityParameter.ENABLED)) is not None:
+        assert isinstance(enabled_rule, ScreenLogicRule)
+        return enabled_rule.test(gateway, data_path)
+    return True
+
+
+def check_device_subscription(
+    device: str,
+    value_params: SupportedValueParameters,
+) -> int | None:
+    """Check for a ScreenLogic update message code to subscribe to."""
+    sub_code = value_params.get(
+        EntityParameter.SUBSCRIPTION_CODE
+    ) or DEVICE_SUBSCRIPTION.get(device)
+    assert sub_code is None or isinstance(sub_code, int)
+    return sub_code
+
+
 def process_supported_values(
     coordinator: ScreenlogicDataUpdateCoordinator,
     platform_domain: str,
     supported_devices: SupportedDeviceDescriptions,
 ):
     """Process template data."""
-    entity_registry = er.async_get(coordinator.hass)
-
-    def cleanup_excluded_entity(entity_key: str):
-        """Remove entity if it exists."""
-        assert coordinator.config_entry
-        unique_id = f"{coordinator.config_entry.unique_id}_{entity_key}"
-        if entity_id := entity_registry.async_get_entity_id(
-            platform_domain, SL_DOMAIN, unique_id
-        ):
-            _LOGGER.debug(
-                "Removing existing entity '%s' per data inclusion rule", entity_id
-            )
-            entity_registry.async_remove(entity_id)
-
     gateway = coordinator.gateway
 
     for device, device_groups in supported_devices.items():
         if "*" in device_groups:
-            indexed_values = device_groups.pop("*")
-            for index in gateway.get_data(device):
-                device_groups[index] = indexed_values
+            expand_device_groups(gateway, device, device_groups)
+
         for group, group_values in device_groups.items():
             for value_key, value_params in group_values.items():
                 data_path = (device, group, value_key)
 
                 entity_key = generate_unique_id(device, group, value_key)
 
-                if (
-                    inclusion_rule := value_params.get(EntityParameter.INCLUDED)
-                    or DEVICE_INCLUSION_RULES.get(device)
-                ) is not None:
-                    assert isinstance(inclusion_rule, ScreenLogicRule)
-                    if not inclusion_rule.test(gateway, data_path):
-                        cleanup_excluded_entity(entity_key)
-                        continue
+                if not check_inclusion_rules(gateway, device, data_path, value_params):
+                    cleanup_excluded_entity(coordinator, platform_domain, entity_key)
+                    continue
 
                 try:
                     value_data = gateway.get_data(*data_path, strict=True)
@@ -202,17 +250,9 @@ def process_supported_values(
                     _LOGGER.debug("Failed to find %s", data_path)
                     continue
 
-                sub_code = value_params.get(
-                    EntityParameter.SUBSCRIPTION_CODE
-                ) or DEVICE_SUBSCRIPTION.get(device)
-                assert sub_code is None or isinstance(sub_code, int)
+                sub_code = check_device_subscription(device, value_params)
 
-                enabled = True
-                if (
-                    enabled_rule := value_params.get(EntityParameter.ENABLED)
-                ) is not None:
-                    assert isinstance(enabled_rule, ScreenLogicRule)
-                    enabled = enabled_rule.test(gateway, data_path)
+                enabled = check_enabled_rules(gateway, data_path, value_params)
 
                 base_kwargs = {
                     "data_path": data_path,
