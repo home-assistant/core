@@ -258,7 +258,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             ZhaMultiPANMigrationHelper,
         )
 
-        # If we install the add-on we should uninstall it on entry remove.
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
