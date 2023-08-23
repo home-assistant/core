@@ -681,7 +681,6 @@ def ensure_auth_manager_loaded(auth_mgr):
 class MockModule:
     """Representation of a fake module."""
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         domain=None,
@@ -756,7 +755,6 @@ class MockPlatform:
     __name__ = "homeassistant.components.light.bla"
     __file__ = "homeassistant/components/blah/light"
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         setup_platform=None,

@@ -348,7 +348,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         """
 
     @callback
-    def async_create_entry(  # pylint: disable=arguments-differ
+    def async_create_entry(
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
@@ -409,7 +409,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         return _async_step
 
     @callback
-    def async_create_entry(  # pylint: disable=arguments-differ
+    def async_create_entry(
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
