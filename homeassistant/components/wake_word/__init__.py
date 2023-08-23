@@ -7,7 +7,7 @@ import logging
 from typing import final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -71,6 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WakeWordDetectionEntity(RestoreEntity):
     """Represent a single wake word provider."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_should_poll = False
     __last_detected: str | None = None
 

@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -236,3 +237,10 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == timestamp
+
+
+async def test_entity_attributes(
+    hass: HomeAssistant, mock_provider_entity: MockProviderEntity
+) -> None:
+    """Test that the provider entity attributes match expectations."""
+    assert mock_provider_entity.entity_category == EntityCategory.DIAGNOSTIC
