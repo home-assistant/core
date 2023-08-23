@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import datetime
 import logging
 
-from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
+from pyyardian import (
+    AsyncYardianClient,
+    NetworkException,
+    NotAuthorizedException,
+    YardianDeviceState,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,14 +23,6 @@ from .const import DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
-
-
-@dataclass
-class YardianDeviceState:
-    """Data retrieved from a Yardian device."""
-
-    zones: list[list]
-    active_zones: set[int]
 
 
 class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
@@ -45,13 +41,13 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             name=entry.title,
             update_method=self._async_update_data,
             update_interval=SCAN_INTERVAL,
+            always_update=False,
         )
 
         self.controller = controller
         self.yid = entry.data["yid"]
         self._name = entry.title
         self._model = entry.data["model"]
-        self._amount_of_zones = entry.data["zones"]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -67,9 +63,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         """Fetch data from Yardian device."""
         try:
             async with asyncio.timeout(10):
-                zones = await self.controller.fetch_zone_info(self._amount_of_zones)
-                active_zones = await self.controller.fetch_active_zones()
-                return YardianDeviceState(zones=zones, active_zones=active_zones)
+                return await self.controller.fetch_device_state()
 
         except asyncio.TimeoutError as e:
             raise UpdateFailed("Communication with Device was time out") from e
