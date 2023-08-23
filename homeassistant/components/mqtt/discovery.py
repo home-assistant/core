@@ -110,24 +110,24 @@ def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> 
 
 
 @callback
-def async_log_integration_discovery_info(
+def async_log_discovery_origin_info(
     message: str, discovery_payload: MQTTDiscoveryPayload
 ) -> None:
-    """Log information about the entity."""
+    """Log information about the discovery and origin."""
     if CONF_ORIGIN not in discovery_payload:
         _LOGGER.info(message)
         return
-    integration_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
+    origin_info: MqttOriginInfo = discovery_payload[CONF_ORIGIN]
     sw_version_log = ""
-    if sw_version := integration_info.get("sw_version"):
+    if sw_version := origin_info.get("sw_version"):
         sw_version_log = f", version: {sw_version}"
     support_url_log = ""
-    if support_url := integration_info.get("support_url"):
+    if support_url := origin_info.get("support_url"):
         support_url_log = f", support URL: {support_url}"
     _LOGGER.info(
         "%s from external application %s%s%s",
         message,
-        integration_info["name"],
+        origin_info["name"],
         sw_version_log,
         support_url_log,
     )
@@ -189,12 +189,12 @@ async def async_start(  # noqa: C901
                 device[key] = device.pop(abbreviated_key)
 
         if CONF_ORIGIN in discovery_payload:
-            integration_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
+            origin_info: dict[str, Any] = discovery_payload[CONF_ORIGIN]
             try:
-                for key in list(integration_info):
+                for key in list(origin_info):
                     abbreviated_key = key
                     key = ORIGIN_ABBREVIATIONS.get(key, key)
-                    integration_info[key] = integration_info.pop(abbreviated_key)
+                    origin_info[key] = origin_info.pop(abbreviated_key)
                 MQTT_ORIGIN_INFO_SCHEMA(discovery_payload[CONF_ORIGIN])
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.warning(
@@ -302,14 +302,14 @@ async def async_start(  # noqa: C901
         if discovery_hash in mqtt_data.discovery_already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
-            async_log_integration_discovery_info(message, payload)
+            async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
             )
         elif payload:
             # Add component
             message = f"Found new component: {component} {discovery_id}"
-            async_log_integration_discovery_info(message, payload)
+            async_log_discovery_origin_info(message, payload)
             mqtt_data.discovery_already_discovered.add(discovery_hash)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
