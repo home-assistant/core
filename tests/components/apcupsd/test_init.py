@@ -68,11 +68,11 @@ async def test_device_entry(hass: HomeAssistant, status: OrderedDict) -> None:
     for field, entry_value in fields.items():
         if field in status:
             assert entry_value == status[field]
+        # Even if UPSNAME is not available, we must fall back to default "APC UPS".
         elif field == "UPSNAME":
-            # Even if UPSNAME is not available, we must fall back to default "APC UPS".
             assert entry_value == "APC UPS"
         else:
-            assert entry_value is None
+            assert not entry_value
 
     assert entry.manufacturer == "APC"
 

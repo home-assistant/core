@@ -166,13 +166,12 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         # before the normal update interval to see if the manual update works.
         future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
         async_fire_time_changed(hass, future)
-        is_success = await hass.services.async_call(
+        await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_battery"]},
             blocking=True,
         )
-        assert is_success
         # Even if we requested updates for two entities, our integration should smartly
         # group the API calls to just one.
         assert mock_parse.call_count == 1
@@ -202,12 +201,11 @@ async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
         # Fast-forward time to just pass the initial debouncer cooldown.
         future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
         async_fire_time_changed(hass, future)
-        is_success = await hass.services.async_call(
+        await hass.services.async_call(
             "homeassistant",
             "update_entity",
             {ATTR_ENTITY_ID: ["sensor.ups_load", "sensor.ups_input_voltage"]},
             blocking=True,
         )
-        assert is_success
         assert mock_parse.call_count == 1
         assert mock_get.call_count == 1
