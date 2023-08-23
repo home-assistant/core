@@ -9,6 +9,7 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'last_step': None,
+    'preview': None,
     'step_id': 'confirm',
     'type': <FlowResultType.FORM: 'form'>,
   })
@@ -136,6 +137,7 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'last_step': None,
+    'preview': None,
     'step_id': 'user',
     'type': <FlowResultType.FORM: 'form'>,
   })
@@ -150,6 +152,7 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'last_step': None,
+    'preview': None,
     'step_id': 'confirm',
     'type': <FlowResultType.FORM: 'form'>,
   })
@@ -198,6 +201,7 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'last_step': None,
+    'preview': None,
     'step_id': 'user',
     'type': <FlowResultType.FORM: 'form'>,
   })
@@ -212,6 +216,7 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'last_step': None,
+    'preview': None,
     'step_id': 'confirm',
     'type': <FlowResultType.FORM: 'form'>,
   })

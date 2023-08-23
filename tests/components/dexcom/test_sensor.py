@@ -19,13 +19,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
     """Test we get sensor data."""
     await init_integration(hass)
 
-    test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == str(GLUCOSE_READING.value)
-    test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
 
 
@@ -37,16 +33,12 @@ async def test_sensors_unknown(hass: HomeAssistant) -> None:
         "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
         return_value=None,
     ):
-        await async_update_entity(hass, "sensor.dexcom_test_username_glucose_value")
-        await async_update_entity(hass, "sensor.dexcom_test_username_glucose_trend")
+        await async_update_entity(hass, "sensor.test_username_glucose_value")
+        await async_update_entity(hass, "sensor.test_username_glucose_trend")
 
-    test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == STATE_UNKNOWN
-    test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == STATE_UNKNOWN
 
 
@@ -58,16 +50,12 @@ async def test_sensors_update_failed(hass: HomeAssistant) -> None:
         "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
         side_effect=SessionError,
     ):
-        await async_update_entity(hass, "sensor.dexcom_test_username_glucose_value")
-        await async_update_entity(hass, "sensor.dexcom_test_username_glucose_trend")
+        await async_update_entity(hass, "sensor.test_username_glucose_value")
+        await async_update_entity(hass, "sensor.test_username_glucose_trend")
 
-    test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == STATE_UNAVAILABLE
-    test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == STATE_UNAVAILABLE
 
 
@@ -75,13 +63,9 @@ async def test_sensors_options_changed(hass: HomeAssistant) -> None:
     """Test we handle sensor unavailable."""
     entry = await init_integration(hass)
 
-    test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == str(GLUCOSE_READING.value)
-    test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
 
     with patch(
@@ -99,11 +83,7 @@ async def test_sensors_options_changed(hass: HomeAssistant) -> None:
 
     assert entry.options == {CONF_UNIT_OF_MEASUREMENT: MMOL_L}
 
-    test_username_glucose_value = hass.states.get(
-        "sensor.dexcom_test_username_glucose_value"
-    )
+    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == str(GLUCOSE_READING.mmol_l)
-    test_username_glucose_trend = hass.states.get(
-        "sensor.dexcom_test_username_glucose_trend"
-    )
+    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description

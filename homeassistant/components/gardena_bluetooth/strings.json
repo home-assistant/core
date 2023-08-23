@@ -43,8 +43,8 @@
       "rain_pause": {
         "name": "Rain pause"
       },
-      "season_pause": {
-        "name": "Season pause"
+      "seasonal_adjust": {
+        "name": "Seasonal adjust"
       }
     },
     "sensor": {
