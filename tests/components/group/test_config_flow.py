@@ -449,13 +449,129 @@ async def test_options_flow_hides_members(
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
+async def test_config_flow_binary_sensor_preview(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["binary_sensor.input_one", "binary_sensor.input_two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "binary_sensor"},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "binary_sensor"
+    assert result["errors"] is None
+    assert result["preview"] == "group_binary_sensor"
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/binary_sensor/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                "name": "My binary sensor group",
+                "entities": input_entities,
+                "all": True,
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "My binary sensor group"},
+        "state": "unavailable",
+    }
+
+    hass.states.async_set("binary_sensor.input_one", "on")
+    hass.states.async_set("binary_sensor.input_two", "off")
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {
+            "entity_id": ["binary_sensor.input_one", "binary_sensor.input_two"],
+            "friendly_name": "My binary sensor group",
+        },
+        "state": "off",
+    }
+
+
+async def test_option_flow_binary_sensor_preview(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the option flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["binary_sensor.input_one", "binary_sensor.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "all": True,
+            "entities": input_entities,
+            "group_type": "binary_sensor",
+            "hide_members": False,
+            "name": "My group",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group_binary_sensor"
+
+    hass.states.async_set("binary_sensor.input_one", "on")
+    hass.states.async_set("binary_sensor.input_two", "off")
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/binary_sensor/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "entities": input_entities,
+                "all": False,
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {
+            "entity_id": input_entities,
+            "friendly_name": "My group",
+        },
+        "state": "on",
+    }
+
+
 async def test_config_flow_sensor_preview(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
 
-    input_sensors = ["sensor.input_one", "sensor.input_two"]
+    input_entities = ["sensor.input_one", "sensor.input_two"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -479,7 +595,7 @@ async def test_config_flow_sensor_preview(
             "flow_type": "config_flow",
             "user_input": {
                 "name": "My sensor group",
-                "entities": input_sensors,
+                "entities": input_entities,
                 "type": "max",
             },
         }
@@ -503,7 +619,7 @@ async def test_config_flow_sensor_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {
-            "entity_id": ["sensor.input_one", "sensor.input_two"],
+            "entity_id": input_entities,
             "friendly_name": "My sensor group",
             "icon": "mdi:calculator",
             "max_entity_id": "sensor.input_two",
@@ -518,12 +634,14 @@ async def test_option_flow_sensor_preview(
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
 
+    input_entities = ["sensor.input_one", "sensor.input_two"]
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            "entities": ["sensor.input_one", "sensor.input_two"],
+            "entities": input_entities,
             "group_type": "sensor",
             "hide_members": False,
             "name": "My sensor group",
@@ -534,8 +652,6 @@ async def test_option_flow_sensor_preview(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    input_sensors = ["sensor.input_one", "sensor.input_two"]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
@@ -551,7 +667,7 @@ async def test_option_flow_sensor_preview(
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
             "user_input": {
-                "entities": input_sensors,
+                "entities": input_entities,
                 "type": "min",
             },
         }
@@ -563,7 +679,7 @@ async def test_option_flow_sensor_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {
-            "entity_id": ["sensor.input_one", "sensor.input_two"],
+            "entity_id": input_entities,
             "friendly_name": "My sensor group",
             "icon": "mdi:calculator",
             "min_entity_id": "sensor.input_one",
@@ -578,12 +694,14 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     """Test the option flow preview where the config entry is removed."""
     client = await hass_ws_client(hass)
 
+    input_entities = ["sensor.input_one", "sensor.input_two"]
+
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            "entities": ["sensor.input_one", "sensor.input_two"],
+            "entities": input_entities,
             "group_type": "sensor",
             "hide_members": False,
             "name": "My sensor group",
@@ -594,8 +712,6 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    input_sensors = ["sensor.input_one", "sensor.input_two"]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
@@ -610,7 +726,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
             "user_input": {
-                "entities": input_sensors,
+                "entities": input_entities,
                 "type": "min",
             },
         }
