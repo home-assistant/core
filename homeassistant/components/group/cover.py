@@ -41,11 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import attribute_equal, reduce_attribute
@@ -112,7 +108,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a CoverGroup entity."""
-        self._entities = entities
+        self._entity_ids = entities
         self._covers: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
@@ -129,20 +125,10 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_unique_id = unique_id
 
     @callback
-    def _update_supported_features_event(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
-        self.async_set_context(event.context)
-        self.async_update_supported_features(
-            event.data["entity_id"], event.data["new_state"]
-        )
-
-    @callback
     def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
-        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -150,8 +136,6 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             for values in self._tilts.values():
                 values.discard(entity_id)
-            if update_state:
-                self.async_defer_or_update_ha_state()
             return
 
         features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -181,25 +165,6 @@ class CoverGroup(GroupEntity, CoverEntity):
             self._tilts[KEY_POSITION].add(entity_id)
         else:
             self._tilts[KEY_POSITION].discard(entity_id)
-
-        if update_state:
-            self.async_defer_or_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register listeners."""
-        for entity_id in self._entities:
-            if (new_state := self.hass.states.get(entity_id)) is None:
-                continue
-            self.async_update_supported_features(
-                entity_id, new_state, update_state=False
-            )
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entities, self._update_supported_features_event
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the covers up."""
@@ -278,7 +243,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         states = [
             state.state
-            for entity_id in self._entities
+            for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
         ]
 
@@ -292,7 +257,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_is_closed = True
         self._attr_is_closing = False
         self._attr_is_opening = False
-        for entity_id in self._entities:
+        for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue
             if state.state == STATE_OPEN:
@@ -347,7 +312,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_supported_features = supported_features
 
         if not self._attr_assumed_state:
-            for entity_id in self._entities:
+            for entity_id in self._entity_ids:
                 if (state := self.hass.states.get(entity_id)) is None:
                     continue
                 if state and state.attributes.get(ATTR_ASSUMED_STATE):
