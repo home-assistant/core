@@ -262,7 +262,7 @@ async def async_setup_entry(  # noqa: C901
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
             f"Unexpected device found at {ip_address}; expected {entry.unique_id}, "
-            "found {controller.mac}"
+            f"found {controller.mac}"
         )
 
     async def async_update(api_category: str) -> dict:
