@@ -605,8 +605,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
-        | extra_attributes[0]
-        | extra_attributes[1],
+        | extra_attributes,
         "group_type": domain,
         "state": group_state,
     }
