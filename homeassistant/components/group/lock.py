@@ -31,11 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 
@@ -113,25 +109,6 @@ class LockGroup(GroupEntity, LockEntity):
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(
-            event: EventType[EventStateChangedData],
-        ) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Forward the lock command to all locks in the group."""

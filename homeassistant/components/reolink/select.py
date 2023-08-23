@@ -45,10 +45,9 @@ class ReolinkSelectEntityDescription(
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
-        name="Floodlight mode",
+        translation_key="floodlight_mode",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
-        translation_key="floodlight_mode",
         get_options=lambda api, ch: api.whiteled_mode_list(ch),
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
@@ -56,10 +55,9 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
-        name="Day night mode",
+        translation_key="day_night_mode",
         icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,
-        translation_key="day_night_mode",
         get_options=[mode.name for mode in DayNightEnum],
         supported=lambda api, ch: api.supported(ch, "dayNight"),
         value=lambda api, ch: DayNightEnum(api.daynight_state(ch)).name,
@@ -67,7 +65,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="ptz_preset",
-        name="PTZ preset",
+        translation_key="ptz_preset",
         icon="mdi:pan",
         get_options=lambda api, ch: list(api.ptz_presets(ch)),
         supported=lambda api, ch: api.supported(ch, "ptz_presets"),
@@ -75,9 +73,8 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_quick_reply_message",
-        name="Auto quick reply message",
-        icon="mdi:message-reply-text-outline",
         translation_key="auto_quick_reply_message",
+        icon="mdi:message-reply-text-outline",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
@@ -87,9 +84,8 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_track_method",
-        name="Auto track method",
-        icon="mdi:target-account",
         translation_key="auto_track_method",
+        icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in TrackMethodEnum],
         supported=lambda api, ch: api.supported(ch, "auto_track_method"),
@@ -98,9 +94,8 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="status_led",
-        name="Status LED",
-        icon="mdi:lightning-bolt-circle",
         translation_key="status_led",
+        icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
         get_options=[state.name for state in StatusLedEnum],
         supported=lambda api, ch: api.supported(ch, "doorbell_led"),

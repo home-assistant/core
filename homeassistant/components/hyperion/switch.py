@@ -46,7 +46,6 @@ from .const import (
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
-    NAME_SUFFIX_HYPERION_COMPONENT_SWITCH,
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_COMPONENT_SWITCH_BASE,
 )
@@ -74,13 +73,17 @@ def _component_to_unique_id(server_id: str, component: str, instance_num: int) -
     )
 
 
-def _component_to_switch_name(component: str, instance_name: str) -> str:
-    """Convert a component to a switch name."""
-    return (
-        f"{instance_name} "
-        f"{NAME_SUFFIX_HYPERION_COMPONENT_SWITCH} "
-        f"{KEY_COMPONENTID_TO_NAME.get(component, component.capitalize())}"
-    )
+def _component_to_translation_key(component: str) -> str:
+    return {
+        KEY_COMPONENTID_ALL: "all",
+        KEY_COMPONENTID_SMOOTHING: "smoothing",
+        KEY_COMPONENTID_BLACKBORDER: "blackbar_detection",
+        KEY_COMPONENTID_FORWARDER: "forwarder",
+        KEY_COMPONENTID_BOBLIGHTSERVER: "boblight_server",
+        KEY_COMPONENTID_GRABBER: "platform_capture",
+        KEY_COMPONENTID_LEDDEVICE: "led_device",
+        KEY_COMPONENTID_V4L: "usb_capture",
+    }[component]
 
 
 async def async_setup_entry(
@@ -129,6 +132,7 @@ class HyperionComponentSwitch(SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -143,7 +147,7 @@ class HyperionComponentSwitch(SwitchEntity):
             server_id, component_name, instance_num
         )
         self._device_id = get_hyperion_device_id(server_id, instance_num)
-        self._name = _component_to_switch_name(component_name, instance_name)
+        self._attr_translation_key = _component_to_translation_key(component_name)
         self._instance_name = instance_name
         self._component_name = component_name
         self._client = hyperion_client
@@ -161,11 +165,6 @@ class HyperionComponentSwitch(SwitchEntity):
     def unique_id(self) -> str:
         """Return a unique id for this instance."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._name
 
     @property
     def is_on(self) -> bool:

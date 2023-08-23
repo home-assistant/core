@@ -4,6 +4,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from python_opensky import OpenSkyError
+from python_opensky.exceptions import OpenSkyUnauthenticatedError
 
 from homeassistant.components.opensky.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -43,6 +44,22 @@ async def test_load_entry_failure(
     with patch(
         "python_opensky.OpenSky.get_states",
         side_effect=OpenSkyError(),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_load_entry_authentication_failure(
+    hass: HomeAssistant,
+    config_entry_authenticated: MockConfigEntry,
+) -> None:
+    """Test auth failure while loading."""
+    config_entry_authenticated.add_to_hass(hass)
+    with patch(
+        "python_opensky.OpenSky.authenticate",
+        side_effect=OpenSkyUnauthenticatedError(),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()

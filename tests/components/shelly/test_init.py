@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -80,6 +84,22 @@ async def test_device_connection_error(
     )
     monkeypatch.setattr(
         mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    entry = await init_integration(hass, gen)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_mac_mismatch_error(
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
+    """Test device MAC address mismatch error."""
+    monkeypatch.setattr(
+        mock_block_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
     )
 
     entry = await init_integration(hass, gen)
@@ -175,7 +195,7 @@ async def test_sleeping_rpc_device_online_new_firmware(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload(
@@ -198,7 +218,7 @@ async def test_entry_unload(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
@@ -226,7 +246,7 @@ async def test_entry_unload_not_connected(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
+        entity_id = "switch.test_name_test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON
@@ -252,7 +272,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
+        entity_id = "switch.test_name_test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON

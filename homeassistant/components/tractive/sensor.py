@@ -1,6 +1,7 @@
 """Support for Tractive sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,15 +20,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import Trackables, TractiveClient
 from .const import (
+    ATTR_ACTIVITY_LABEL,
     ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
+    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
@@ -53,10 +57,13 @@ class TractiveSensorEntityDescription(
     """Class describing Tractive sensor entities."""
 
     hardware_sensor: bool = False
+    value_fn: Callable[[StateType], StateType] = lambda state: state
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
     """Tractive sensor."""
+
+    entity_description: TractiveSensorEntityDescription
 
     def __init__(
         self,
@@ -82,7 +89,9 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     @callback
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        self._attr_native_value = self.entity_description.value_fn(
+            event[self.entity_description.key]
+        )
 
         super().handle_status_update(event)
 
@@ -158,6 +167,30 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
         state_class=SensorStateClass.TOTAL,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_SLEEP_LABEL,
+        translation_key="sleep",
+        icon="mdi:sleep",
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "ok",
+            "good",
+        ],
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_ACTIVITY_LABEL,
+        translation_key="activity",
+        icon="mdi:run",
+        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
+        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "ok",
+            "good",
+        ],
     ),
 )
 
