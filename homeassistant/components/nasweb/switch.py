@@ -28,9 +28,6 @@ async def async_setup_entry(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform."""
-    # if not isinstance(config, ConfigEntry):
-    #     raise ConfigEntryError("Config is not instance of ConfigEntry")
-    # config_entry: ConfigEntry = config
     coordinator = hass.data[DOMAIN][config.entry_id]
     nasweb_outputs = coordinator.data[KEY_OUTPUTS]
     entities: list[Output] = []
