@@ -13,10 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, OUTPUT_TRANSLATION_KEY
-from .coordinator import NASwebCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +39,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Output(CoordinatorEntity, SwitchEntity):
+class Output(SwitchEntity):
     """Entity representing NASweb Output."""
 
     def __init__(
-        self, coordinator: NASwebCoordinator, nasweb_output: NASwebOutput
+        self, coordinator: DataUpdateCoordinator, nasweb_output: NASwebOutput
     ) -> None:
         """Initialize Output."""
-        super().__init__(coordinator)
-        self.coordinator: NASwebCoordinator
+        self.coordinator = coordinator
         self._output = nasweb_output
         self._attr_is_on = self._output.state
         self._attr_available = self._output.available
@@ -56,9 +54,16 @@ class Output(CoordinatorEntity, SwitchEntity):
         self._attr_has_entity_name = True
         self._attr_should_poll = False
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
-        new_id = coordinator.webio_api.get_serial_number()
-        if new_id is not None:
-            self._attr_unique_id = f"{DOMAIN}.{new_id}.output.{self._output.index}"
+        self._attr_unique_id = (
+            f"{DOMAIN}.{self._output.webio_serial}.output.{self._output.index}"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Add coordinator update listener when entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_coordinator_update, None)
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -70,11 +75,8 @@ class Output(CoordinatorEntity, SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return DeviceInfo linking this Output with NASweb device."""
-        device_serial = self.coordinator.webio_api.get_serial_number()
-        if not device_serial:
-            return None
         return DeviceInfo(
-            identifiers={(DOMAIN, device_serial)},
+            identifiers={(DOMAIN, self._output.webio_serial)},
         )
 
     @property
