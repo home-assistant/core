@@ -66,6 +66,7 @@
       "abort": {
         "addon_info_failed": "Failed to get {addon_name} add-on info.",
         "addon_install_failed": "Failed to install the {addon_name} add-on.",
+        "addon_already_running": "Failed to start the {addon_name} add-on because it is already running.",
         "addon_set_config_failed": "Failed to set {addon_name} configuration.",
         "addon_start_failed": "Failed to start the {addon_name} add-on.",
         "not_hassio": "The hardware options can only be configured on HassOS installations.",

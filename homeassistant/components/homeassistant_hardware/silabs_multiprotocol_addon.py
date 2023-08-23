@@ -700,7 +700,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
         # If the addon is already installed and running, fail
         return self.async_abort(
-            reason="addon_install_failed",
+            reason="addon_already_running",
             description_placeholders={"addon_name": flasher_manager.addon_name},
         )
 
