@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import Literal
 
-import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast as IPMAForecast
 from pyipma.location import Location
@@ -26,7 +25,6 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
-    CONF_NAME,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -38,7 +36,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DATA_API,
     DATA_LOCATION,
     DOMAIN,
@@ -57,13 +55,14 @@ async def async_setup_entry(
     """Add a weather entity from a config_entry."""
     api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
     location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
-    async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
+    async_add_entities([IPMAWeather(api, location, config_entry)], True)
 
 
 class IPMAWeather(WeatherEntity, IPMADevice):
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_name = None
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
@@ -71,13 +70,13 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, location: Location, api: IPMA_API, config) -> None:
+    def __init__(
+        self, api: IPMA_API, location: Location, config_entry: ConfigEntry
+    ) -> None:
         """Initialise the platform with a data instance and station name."""
-        IPMADevice.__init__(self, location)
-        self._api = api
-        self._attr_name = config.get(CONF_NAME, location.name)
-        self._mode = config.get(CONF_MODE)
-        self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
+        IPMADevice.__init__(self, api, location)
+        self._mode = config_entry.data.get(CONF_MODE)
+        self._period = 1 if config_entry.data.get(CONF_MODE) == "hourly" else 24
         self._observation = None
         self._daily_forecast: list[IPMAForecast] | None = None
         self._hourly_forecast: list[IPMAForecast] | None = None
@@ -91,7 +90,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update Condition and Forecast."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             new_observation = await self._location.observation(self._api)
 
             if new_observation:
@@ -136,10 +135,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         if identifier == 1 and not is_up(self.hass, forecast_dt):
             identifier = -identifier
 
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if identifier in v),
-            None,
-        )
+        return CONDITION_MAP.get(identifier)
 
     @property
     def condition(self):
@@ -225,7 +221,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     ) -> None:
         """Try to update weather forecast."""
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 
     async def async_forecast_daily(self) -> list[Forecast]:

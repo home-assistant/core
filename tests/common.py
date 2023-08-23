@@ -5,7 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -179,7 +179,7 @@ def get_test_home_assistant():
 
 async def async_test_home_assistant(event_loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
-    hass = HomeAssistant()
+    hass = HomeAssistant(get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -231,7 +231,6 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
     hass.config.location_name = "test home"
-    hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
@@ -256,6 +255,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     # Load the registries
     entity.async_setup(hass)
+    loader.async_setup(hass)
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None
@@ -384,7 +384,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(timezone.utc)
+        utc_datetime = datetime.now(UTC)
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -406,7 +406,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(timezone.utc)
+        utc_datetime = datetime.now(UTC)
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -681,7 +681,6 @@ def ensure_auth_manager_loaded(auth_mgr):
 class MockModule:
     """Representation of a fake module."""
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         domain=None,
@@ -756,7 +755,6 @@ class MockPlatform:
     __name__ = "homeassistant.components.light.bla"
     __file__ = "homeassistant/components/blah/light"
 
-    # pylint: disable=invalid-name
     def __init__(
         self,
         setup_platform=None,
@@ -1339,16 +1337,10 @@ def mock_integration(
     integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
-    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
-    if integration_cache is None:
-        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
-        loader._async_mount_config_dir(hass)
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     integration_cache[module.DOMAIN] = integration
 
-    module_cache = hass.data.get(loader.DATA_COMPONENTS)
-    if module_cache is None:
-        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
-        loader._async_mount_config_dir(hass)
+    module_cache = hass.data[loader.DATA_COMPONENTS]
     module_cache[module.DOMAIN] = module
 
     return integration
@@ -1374,15 +1366,8 @@ def mock_platform(
     platform_path is in form hue.config_flow.
     """
     domain = platform_path.split(".")[0]
-    integration_cache = hass.data.get(loader.DATA_INTEGRATIONS)
-    if integration_cache is None:
-        integration_cache = hass.data[loader.DATA_INTEGRATIONS] = {}
-        loader._async_mount_config_dir(hass)
-
-    module_cache = hass.data.get(loader.DATA_COMPONENTS)
-    if module_cache is None:
-        module_cache = hass.data[loader.DATA_COMPONENTS] = {}
-        loader._async_mount_config_dir(hass)
+    integration_cache = hass.data[loader.DATA_INTEGRATIONS]
+    module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))

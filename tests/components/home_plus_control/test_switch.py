@@ -143,7 +143,7 @@ async def test_plant_topology_reduction_change(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -205,7 +205,7 @@ async def test_plant_topology_increase_change(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -267,7 +267,7 @@ async def test_module_status_unavailable(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -338,7 +338,7 @@ async def test_module_status_available(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -442,7 +442,7 @@ async def test_update_with_api_error(
         side_effect=HomePlusControlApiError,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1

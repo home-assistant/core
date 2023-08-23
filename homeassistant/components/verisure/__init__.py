@@ -83,21 +83,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
-        config_entry_default_code = entry.options.get(CONF_LOCK_DEFAULT_CODE)
-        entity_reg = er.async_get(hass)
-        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
-        for entity in entries:
-            if entity.entity_id.startswith("lock"):
-                entity_reg.async_update_entity_options(
-                    entity.entity_id,
-                    LOCK_DOMAIN,
-                    {CONF_DEFAULT_CODE: config_entry_default_code},
-                )
-        new_options = entry.options.copy()
-        del new_options[CONF_LOCK_DEFAULT_CODE]
+        if config_entry_default_code := entry.options.get(CONF_LOCK_DEFAULT_CODE):
+            entity_reg = er.async_get(hass)
+            entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+            for entity in entries:
+                if entity.entity_id.startswith("lock"):
+                    entity_reg.async_update_entity_options(
+                        entity.entity_id,
+                        LOCK_DOMAIN,
+                        {CONF_DEFAULT_CODE: config_entry_default_code},
+                    )
+            new_options = entry.options.copy()
+            del new_options[CONF_LOCK_DEFAULT_CODE]
+
+            hass.config_entries.async_update_entry(entry, options=new_options)
 
         entry.version = 2
-        hass.config_entries.async_update_entry(entry, options=new_options)
 
     LOGGER.info("Migration to version %s successful", entry.version)
 
