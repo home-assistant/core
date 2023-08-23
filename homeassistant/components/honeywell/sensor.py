@@ -71,7 +71,6 @@ SENSOR_TYPES: tuple[HoneywellSensorEntityDescription, ...] = (
     ),
     HoneywellSensorEntityDescription(
         key=CURRENT_TEMPERATURE_STATUS_KEY,
-        translation_key=CURRENT_TEMPERATURE_STATUS_KEY,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.current_temperature,
