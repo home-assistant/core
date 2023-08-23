@@ -107,7 +107,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
@@ -278,10 +277,10 @@ class MatrixBot:
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
-        rooms = {
-            asyncio.create_task(self._join_room(room_id))
+        rooms = [
+            self.hass.async_create_task(self._join_room(room_id))
             for room_id in self._listening_rooms
-        }
+        ]
         await asyncio.wait(rooms)
 
     async def _get_auth_tokens(self) -> JsonObjectType:
@@ -358,12 +357,15 @@ class MatrixBot:
 
     async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
         """Upload an image, then send it to all target_rooms."""
-        if not self.hass.config.is_allowed_path(image_path):
+        _is_allowed_path = await self.hass.async_add_executor_job(
+            self.hass.config.is_allowed_path, image_path
+        )
+        if not _is_allowed_path:
             _LOGGER.error("Path not allowed: %s", image_path)
             return
 
         # Get required image metadata.
-        image = Image.open(image_path)
+        image = await self.hass.async_add_executor_job(Image.open, image_path)
         (width, height) = image.size
         mime_type = mimetypes.guess_type(image_path)[0]
         file_stat = await aiofiles.os.stat(image_path)
@@ -379,9 +381,14 @@ class MatrixBot:
         if isinstance(response, UploadError):
             _LOGGER.error("Unable to upload image to the homeserver: %s", response)
             return
-
-        assert isinstance(response, UploadResponse)
-        _LOGGER.debug("Successfully uploaded image to the homeserver")
+        if isinstance(response, UploadResponse):
+            _LOGGER.debug("Successfully uploaded image to the homeserver")
+        else:
+            _LOGGER.error(
+                "Unknown response received when uploading image to homeserver: %s",
+                response,
+            )
+            return
 
         content = {
             "body": os.path.basename(image_path),
@@ -408,20 +415,26 @@ class MatrixBot:
         content = {"msgtype": "m.text", "body": message}
         if data is not None and data.get(ATTR_FORMAT) == FORMAT_HTML:
             content |= {"format": "org.matrix.custom.html", "formatted_body": message}
+
+        response_tasks = []
         for target_room in target_rooms:
-            response: Response = await self._client.room_send(
-                room_id=target_room,
-                message_type="m.room.message",
-                content=content,
+            _task = self.hass.async_create_task(
+                self._client.room_send(
+                    room_id=target_room,
+                    message_type="m.room.message",
+                    content=content,
+                )
             )
+            response_tasks.append(_task)
+        for _response in asyncio.as_completed(response_tasks):
+            response: Response = await _response
             if isinstance(response, ErrorResponse):
                 _LOGGER.error(
-                    "Unable to deliver message to room '%s': %s",
-                    target_room,
+                    "Unable to deliver message to room: %s",
                     response,
                 )
             else:
-                _LOGGER.debug("Message delivered to room '%s'", target_room)
+                _LOGGER.debug("Message delivered to room: '%s'", response)
 
         if data is not None and len(target_rooms) > 0:
             for image_path in data.get(ATTR_IMAGES, []):
@@ -429,7 +442,7 @@ class MatrixBot:
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
-        return await self._send_message(
+        await self._send_message(
             service.data[ATTR_MESSAGE],
             service.data[ATTR_TARGET],
             service.data.get(ATTR_DATA),

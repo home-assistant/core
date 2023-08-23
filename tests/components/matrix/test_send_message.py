@@ -26,9 +26,6 @@ async def test_send_message(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
     )
 
-    for room_id in TEST_JOINABLE_ROOMS:
-        assert f"Message delivered to room '{room_id}'" in caplog.messages
-
     # Send an HTML message without an attached image.
     data = {
         ATTR_MESSAGE: "Test message",
@@ -38,9 +35,6 @@ async def test_send_message(
     await hass.services.async_call(
         MATRIX_DOMAIN, SERVICE_SEND_MESSAGE, data, blocking=True
     )
-
-    for room_id in TEST_JOINABLE_ROOMS:
-        assert f"Message delivered to room '{room_id}'" in caplog.messages
 
     # Send a message with an attached image.
     data[ATTR_DATA] = {ATTR_IMAGES: [image_path.name]}
@@ -66,6 +60,6 @@ async def test_unsendable_message(
     )
 
     assert (
-        f"Unable to deliver message to room '{TEST_BAD_ROOM}': ErrorResponse: Cannot send a message in this room."
+        "Unable to deliver message to room: ErrorResponse: Cannot send a message in this room."
         in caplog.messages
     )
