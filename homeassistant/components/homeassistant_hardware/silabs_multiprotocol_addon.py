@@ -88,13 +88,10 @@ class SyncAddonManager(AddonManager):
 
                 await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
 
-    async def async_start_addon_sync(self, *, wait_until_done: bool = False) -> None:
+    async def async_start_addon_sync(self) -> None:
         """Start an add-on."""
         await self.async_schedule_start_addon()
         await self.async_wait_until_addon_state(AddonState.RUNNING)
-
-        if wait_until_done:
-            await self.async_wait_until_addon_state(AddonState.NOT_RUNNING)
 
     async def async_install_addon_sync(self) -> None:
         """Install an add-on."""
@@ -827,10 +824,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
         if not self.start_task:
             flasher_manager = get_flasher_addon_manager(self.hass)
-            self.start_task = self.hass.async_create_task(
-                self._resume_flow_when_done(
-                    flasher_manager.async_start_addon_sync(wait_until_done=True)
+
+            async def start_and_wait_until_done() -> None:
+                await flasher_manager.async_start_addon_sync()
+                # Now that the addon is running, wait for it to finish
+                await flasher_manager.async_wait_until_addon_state(
+                    AddonState.NOT_RUNNING
                 )
+
+            self.start_task = self.hass.async_create_task(
+                self._resume_flow_when_done(start_and_wait_until_done())
             )
             return self.async_show_progress(
                 step_id="start_flasher_addon",
