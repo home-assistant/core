@@ -440,9 +440,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Add-on installation failed."""
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_install_failed",
-            description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+            description_placeholders={"addon_name": multipan_manager.addon_name},
         )
 
     async def async_step_configure_addon(
@@ -543,9 +544,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Add-on start failed."""
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_start_failed",
-            description_placeholders={"addon_name": "Silicon Labs Multiprotocol"},
+            description_placeholders={"addon_name": multipan_manager.addon_name},
         )
 
     async def async_step_finish_addon_setup(
@@ -855,9 +857,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Flasher add-on start failed."""
+        flasher_manager = get_flasher_addon_manager(self.hass)
         return self.async_abort(
             reason="addon_start_failed",
-            description_placeholders={"addon_name": "Silicon Labs Flasher"},
+            description_placeholders={"addon_name": flasher_manager.addon_name},
         )
 
     async def async_step_flashing_complete(
