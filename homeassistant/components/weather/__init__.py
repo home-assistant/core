@@ -1279,34 +1279,31 @@ class CoordinatorWeatherEntity(
         if not (coordinator := self.forecast_coordinators[forecast_type]):
             return
         self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
-            partial(self._forecast_update_callback, forecast_type)
+            partial(self._handle_forecast_update, forecast_type)
         )
 
     @callback
-    def _daily_update_callback(self) -> None:
-        """Update daily forecast data."""
-        raise NotImplementedError
+    def _handle_daily_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the daily forecast coordinator."""
 
     @callback
-    def _hourly_update_callback(self) -> None:
-        """Update hourly forecast data."""
-        raise NotImplementedError
+    def _handle_hourly_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the hourly forecast coordinator."""
 
     @callback
-    def _twice_daily_update_callback(self) -> None:
-        """Update twice daily forecast data."""
-        raise NotImplementedError
+    def _handle_twice_daily_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the twice daily forecast coordinator."""
 
     @final
     @callback
-    def _forecast_update_callback(
+    def _handle_forecast_update(
         self, forecast_type: Literal["daily", "hourly", "twice_daily"]
     ) -> None:
         """Update forecast data."""
         coordinator = self.forecast_coordinators[forecast_type]
         assert coordinator
         assert coordinator.config_entry is not None
-        getattr(self, f"_{forecast_type}_update_callback")()
+        getattr(self, f"_handle_{forecast_type}_forecast_coordinator_update")()
         coordinator.config_entry.async_create_task(
             self.hass, self.async_update_listeners((forecast_type,))
         )

@@ -158,36 +158,40 @@ class NWSWeather(CoordinatorWeatherEntity):
         """Set up a listener and load data."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator_forecast_legacy.async_add_listener(self._update_callback)
+            self.coordinator_forecast_legacy.async_add_listener(
+                self._handle_legacy_forecast_coordinator_update
+            )
         )
-        self._update_callback()
+        # Load initial data from coordinators
+        self._handle_coordinator_update()
+        self._handle_hourly_forecast_coordinator_update()
+        self._handle_twice_daily_forecast_coordinator_update()
+        self._handle_legacy_forecast_coordinator_update()
 
     @callback
-    def _update_callback(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Load data from integration."""
         self.observation = self.nws.observation
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_hourly_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the hourly forecast coordinator."""
         self._forecast_hourly = self.nws.forecast_hourly
+
+    @callback
+    def _handle_twice_daily_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the twice daily forecast coordinator."""
         self._forecast_twice_daily = self.nws.forecast
+
+    @callback
+    def _handle_legacy_forecast_coordinator_update(self) -> None:
+        """Handle updated data from the legacy forecast coordinator."""
         if self.mode == DAYNIGHT:
             self._forecast_legacy = self.nws.forecast
         else:
             self._forecast_legacy = self.nws.forecast_hourly
-
         self.async_write_ha_state()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("hourly", "twice_daily"))
-        )
-
-    @callback
-    def _hourly_update_callback(self) -> None:
-        """Update hourly forecast data."""
-        self._forecast_hourly = self.nws.forecast_hourly
-
-    @callback
-    def _twice_daily_update_callback(self) -> None:
-        """Update twice daily forecast data."""
-        self._forecast_twice_daily = self.nws.forecast
 
     @property
     def name(self) -> str:
