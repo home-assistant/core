@@ -37,28 +37,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="last_activity_time",
-        name="Last Activity",
+        translation_key="last_activity",
         icon="mdi:history",
     ),
     SensorEntityDescription(
         key="recording",
-        name="Recording Mode",
+        translation_key="recording_mode",
         icon="mdi:eye",
     ),
     SensorEntityDescription(
         key="signal_strength_category",
-        name="WiFi Signal Category",
+        translation_key="wifi_signal_category",
         icon="mdi:wifi",
     ),
     SensorEntityDescription(
         key="signal_strength_percentage",
-        name="WiFi Signal Strength",
+        translation_key="wifi_signal_strength",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:wifi",
     ),
     SensorEntityDescription(
         key="streaming",
-        name="Streaming Mode",
+        translation_key="streaming_mode",
         icon="mdi:camera",
     ),
 )
@@ -97,13 +97,13 @@ class LogiSensor(SensorEntity):
     """A sensor implementation for a Logi Circle camera."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, camera, time_zone, description: SensorEntityDescription) -> None:
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera
         self._attr_unique_id = f"{camera.mac_address}-{description.key}"
-        self._attr_name = f"{camera.name} {description.name}"
         self._activity: dict[Any, Any] = {}
         self._tz = time_zone
 

@@ -4,13 +4,13 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.2.2
+AEMET-OpenData==0.3.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.15
+AIOSomecomfort==0.0.16
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -368,7 +368,7 @@ amberelectric==1.0.4
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.13
+androidtvremote2==0.0.14
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
@@ -475,7 +475,7 @@ brottsplatskartan==0.0.1
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.0.0
+bthome-ble==3.1.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -1229,7 +1229,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.6.0
+pyenphase==1.8.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1292,7 +1292,7 @@ pyinsteon==1.4.3
 pyipma==3.0.6
 
 # homeassistant.components.ipp
-pyipp==0.14.3
+pyipp==0.14.4
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
@@ -1340,7 +1340,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.4
+pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -2028,7 +2028,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.80.0
+zeroconf==0.82.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
