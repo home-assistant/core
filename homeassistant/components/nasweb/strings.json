@@ -25,7 +25,7 @@
   "entity": {
     "switch": {
       "switch_output": {
-        "name": "Output"
+        "name": "Relay Switch"
       }
     }
   }
