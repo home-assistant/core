@@ -203,7 +203,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.8.2
+aiobafi6==0.9.0
 
 # homeassistant.components.aws
 aiobotocore==2.6.0
