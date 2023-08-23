@@ -69,11 +69,11 @@ async def test_connected_state(
     mock_read_char_raw[Sensor.battery_level.uuid] = Sensor.battery_level.encode(45)
 
     await setup_entry(hass, mock_entry, [Platform.SENSOR])
-    assert hass.states.get("number.mock_title_sensor_battery_level") == snapshot
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot
 
     mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
         True
     )
 
     await scan_step()
-    assert hass.states.get("number.mock_title_sensor_battery_level") == snapshot
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot

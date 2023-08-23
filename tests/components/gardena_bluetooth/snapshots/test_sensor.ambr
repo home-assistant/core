@@ -1,9 +1,33 @@
 # serializer version: 1
 # name: test_connected_state
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Sensor battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_sensor_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
 # ---
 # name: test_connected_state.1
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Title Sensor battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_sensor_battery',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
 # ---
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-sensor.mock_title_valve_closing]
   StateSnapshot({
