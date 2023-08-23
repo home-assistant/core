@@ -40,6 +40,9 @@
           "idle": "[%key:common::state::idle%]",
           "stopped": "Stopped"
         }
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     }
   }
