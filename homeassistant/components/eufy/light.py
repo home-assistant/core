@@ -134,7 +134,6 @@ class EufyHomeLight(LightEntity):
         """Turn the specified light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
-        # pylint: disable-next=invalid-name
         hs = kwargs.get(ATTR_HS_COLOR)
 
         if brightness is not None:
