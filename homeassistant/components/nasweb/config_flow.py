@@ -78,7 +78,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"title": name}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NASweb."""
 
     VERSION = 1
