@@ -38,6 +38,7 @@ async def test_exclude_attributes(
         hass.states.async_entity_ids(),
     )
     assert len(states) == 1
+    assert states.get("camera.test_location")
     for entity_states in states.values():
         for state in entity_states:
             assert "location" not in state.attributes

@@ -6,12 +6,13 @@ from typing import Any
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTR_DESCRIPTION, ATTR_TYPE, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
 
@@ -66,21 +67,18 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return camera picture."""
-
-        if image := self.coordinator.data.image:
-            return image
-        return None
+        return self.coordinator.data.image
 
     @property
     def is_on(self) -> bool:
         """Return camera on."""
-        return bool(self.coordinator.data.data.active is True)
+        return self.coordinator.data.data.active is True
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         return {
-            "description": self.coordinator.data.data.description,
-            "location": self.coordinator.data.data.location,
-            "type": self.coordinator.data.data.camera_type,
+            ATTR_DESCRIPTION: self.coordinator.data.data.description,
+            ATTR_LOCATION: self.coordinator.data.data.location,
+            ATTR_TYPE: self.coordinator.data.data.camera_type,
         }
