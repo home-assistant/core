@@ -127,6 +127,9 @@ async def async_setup_entry(
 class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], SensorEntity):
     """Class to hold the prices of electricity as a sensor."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: ElecPricesDataUpdateCoordinator,
@@ -139,13 +142,12 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         self.entity_description = description
         self._attr_attribution = coordinator.api.attribution
         self._attr_unique_id = unique_id
-        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             configuration_url="https://api.esios.ree.es",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="REE",
-            name="ESIOS API",
+            name=name,
         )
 
     async def async_added_to_hass(self) -> None:
