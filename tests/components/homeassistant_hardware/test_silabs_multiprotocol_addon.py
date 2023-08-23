@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.hassio import AddonError, AddonState, HassIO
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
 
 from tests.common import (
@@ -1643,3 +1644,88 @@ async def test_active_plaforms(
 
     await hass.async_block_till_done()
     assert await multipan_manager.async_active_platforms() == active_platforms
+
+
+async def test_check_multi_pan_addon_no_hassio(hass: HomeAssistant) -> None:
+    """Test `check_multi_pan_addon` without hassio."""
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        return_value=False,
+    ), patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
+        autospec=True,
+    ) as mock_get_addon_manager:
+        await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
+        mock_get_addon_manager.assert_not_called()
+
+
+async def test_check_multi_pan_addon_info_error(
+    hass: HomeAssistant, addon_store_info
+) -> None:
+    """Test `check_multi_pan_addon` where the addon info cannot be read."""
+
+    addon_store_info.side_effect = HassioAPIError("Boom")
+
+    with pytest.raises(HomeAssistantError):
+        await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
+
+
+async def test_check_multi_pan_addon_bad_state(hass: HomeAssistant) -> None:
+    """Test `check_multi_pan_addon` where the addon is in an unexpected state."""
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_multiprotocol_addon_manager",
+        return_value=Mock(
+            spec_set=silabs_multiprotocol_addon.MultiprotocolAddonManager
+        ),
+    ) as mock_get_addon_manager:
+        manager = mock_get_addon_manager.return_value
+        manager.async_get_addon_info.return_value = AddonInfo(
+            available=True,
+            hostname="core_silabs_multiprotocol",
+            options={},
+            state=AddonState.UPDATING,
+            update_available=False,
+            version="1.0.0",
+        )
+
+        with pytest.raises(HomeAssistantError):
+            await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
+
+        manager.async_start_addon.assert_not_called()
+
+
+async def test_check_multi_pan_addon_auto_start(
+    hass: HomeAssistant, addon_info, addon_store_info, start_addon
+) -> None:
+    """Test `check_multi_pan_addon` auto starting the addon."""
+
+    addon_info.return_value["state"] = "not_running"
+    addon_store_info.return_value = {
+        "installed": True,
+        "available": True,
+        "state": "not_running",
+    }
+
+    # An error is raised even if we auto-start
+    with pytest.raises(HomeAssistantError):
+        await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
+
+    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+
+
+async def test_check_multi_pan_addon(
+    hass: HomeAssistant, addon_info, addon_store_info, start_addon
+) -> None:
+    """Test `check_multi_pan_addon`."""
+
+    addon_info.return_value["state"] = "started"
+    addon_store_info.return_value = {
+        "installed": True,
+        "available": True,
+        "state": "running",
+    }
+
+    await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
+    start_addon.assert_not_called()
