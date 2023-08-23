@@ -29,23 +29,23 @@ async def async_setup_entry(
     """Set up switch platform."""
     coordinator = hass.data[DOMAIN][config.entry_id]
     nasweb_outputs = coordinator.data[KEY_OUTPUTS]
-    entities: list[Output] = []
+    entities: list[RelaySwitch] = []
     for out in nasweb_outputs:
         if not isinstance(out, NASwebOutput):
-            _LOGGER.error("Cannot create Output entity without NASwebOutput")
+            _LOGGER.error("Cannot create RelaySwitch entity without NASwebOutput")
             continue
-        new_output = Output(coordinator, out)
+        new_output = RelaySwitch(coordinator, out)
         entities.append(new_output)
     async_add_entities(entities)
 
 
-class Output(SwitchEntity):
+class RelaySwitch(SwitchEntity):
     """Entity representing NASweb Output."""
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, nasweb_output: NASwebOutput
     ) -> None:
-        """Initialize Output."""
+        """Initialize RelaySwitch."""
         self.coordinator = coordinator
         self._output = nasweb_output
         self._attr_is_on = self._output.state
@@ -55,7 +55,7 @@ class Output(SwitchEntity):
         self._attr_should_poll = False
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._output.webio_serial}.output.{self._output.index}"
+            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
         )
 
     async def async_added_to_hass(self) -> None:
@@ -74,21 +74,21 @@ class Output(SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        """Return DeviceInfo linking this Output with NASweb device."""
+        """Return DeviceInfo linking this RelaySwitch with NASweb device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._output.webio_serial)},
         )
 
     @property
     def name(self) -> str:
-        """Return name of output."""
+        """Return name of RelaySwitch."""
         translated_name = super().name
         return f"{translated_name} {self._output.index:2d}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn On Output."""
+        """Turn On RelaySwitch."""
         await self._output.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn Off Output."""
+        """Turn Off RelaySwitch."""
         await self._output.turn_off()
