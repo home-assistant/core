@@ -216,6 +216,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
+    if device.unique_id and device.unique_id != entry.unique_id:
+        # If the id of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {device.host}; "
+            "expected {entry.unique_id}, found {device.unique_id}"
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Wait to install the reload listener until everything was successfully initialized
