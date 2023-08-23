@@ -122,5 +122,5 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
 
         mock_firmware_update_check.assert_called_once()
 
-        update = hass.states.get("update.qsw_m408_4c_firmware_update")
+        update = hass.states.get("update.qsw_m408_4c_firmware")
         assert update.state == STATE_UNAVAILABLE
