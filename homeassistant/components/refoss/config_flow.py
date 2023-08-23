@@ -27,6 +27,6 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry is not None:
             self._abort_if_unique_id_configured(updates=data, reload_on_update=True)
             await self.hass.config_entries.async_reload(entry.entry_id)
+            return
 
-        else:
-            return self.async_create_entry(title="Refoss", data=data)
+        return self.async_create_entry(title="Refoss", data=data)

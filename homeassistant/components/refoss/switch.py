@@ -89,5 +89,5 @@ class SwitchEntityWrapper(RefossDevice, SwitchEntity):
 
         await self.device.async_turn_off(self._channel_id)
 
-    async def async_toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs: Any) -> None:
         await self.device.async_toggle(channel=self._channel_id)

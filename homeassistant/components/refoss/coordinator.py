@@ -1,6 +1,7 @@
 """Coordinators for the Refoss integration."""
-from typing import TypeVar, List, Optional, Iterable
+from typing import TypeVar, Dict, Optional, TypeGuard
 import async_timeout
+from collections.abc import Iterable
 import threading
 import asyncio
 from asyncio import AbstractEventLoop
@@ -8,7 +9,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from refoss_ha.socket_util import pushStateDataList
 from refoss_ha.http_device import HttpDeviceInfo
@@ -32,13 +33,13 @@ _ABILITY_MATRIX = {
 class RefossCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry: ConfigEntry,
         update_interval: timedelta,
         loop: Optional[AbstractEventLoop] = None,
     ):
         self._entry = config_entry
-        self._devices_by_internal_id = {}
+        self._devices_by_internal_id: Dict[str, BaseDevice] = {}
         self._setup_done = False
         self.socket = SocketUtil()
         self._loop = asyncio.get_event_loop() if loop is None else loop
@@ -67,18 +68,18 @@ class RefossCoordinator(DataUpdateCoordinator):
         await self.async_device_discovery(cached_http_device_list=devicelist)
 
         self._setup_done = True
-        LOGGER.info("initial_setup ok")
+        LOGGER.info("Initial_setup ok")
 
     async def _async_fetch_data(self):
         async with async_timeout.timeout(10):
             devices = self.socket.async_socket_find_devices()
             return {device.uuid: device for device in devices}
 
-    def find_devices(self, device_uuids: Optional[Iterable[str]] = None) -> List[T]:
+    def find_devices(self, device_uuids: Optional[Iterable[str]] = None) -> list[T]:
         res = self._devices_by_internal_id.values()
 
         if device_uuids is not None:
-            res = filter(lambda d: d.uuid in device_uuids, res)
+            res = filter(lambda d: TypeGuard[bool](d.uuid in device_uuids), res)
 
         return list(res)
 
@@ -122,23 +123,22 @@ class RefossCoordinator(DataUpdateCoordinator):
         else:
             self._devices_by_internal_id[device.uuid] = device
 
-    def lookup_base_by_uuid(self, device_uuid: str) -> None:
+    def lookup_base_by_uuid(self, device_uuid: str) -> BaseDevice:
         res = [
             d for d in self._devices_by_internal_id.values() if d.uuid == device_uuid
         ]
         if len(res) > 1:
             LOGGER.warning(f"Multiple devices found for device_uuid {device_uuid}")
             return None
-        elif len(res) == 1:
+        if len(res) == 1:
             return res[0]
-        else:
-            return None
+        return None
 
     async def async_device_discovery(
         self,
-        device_uuid: str = None,
-        cached_http_device_list: List[HttpDeviceInfo] = None,
-    ) -> List[BaseDevice]:
+        device_uuid: Optional[str] = None,
+        cached_http_device_list: list[HttpDeviceInfo] = None,
+    ) -> list[BaseDevice]:
         if cached_http_device_list is None:
             http_devices = self.socket.async_socket_find_devices()
         else:
@@ -153,14 +153,13 @@ class RefossCoordinator(DataUpdateCoordinator):
                 exists_device = self.lookup_base_by_uuid(device.uuid)
                 if exists_device.inner_ip == device.inner_ip:
                     continue
-                else:
-                    device_registry = dr.async_get(self.hass)
-                    device_entry = device_registry.async_get_device(
-                        identifiers={(DOMAIN, device.uuid)}
-                    )
-                    if device_entry is not None:
-                        device_registry.async_remove_device(device_entry.id)
-                        self._devices_by_internal_id.pop(device.uuid)
+                device_registry = dr.async_get(self.hass)
+                device_entry = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device.uuid)}
+                )
+                if device_entry is not None:
+                    device_registry.async_remove_device(device_entry.id)
+                    self._devices_by_internal_id.pop(device.uuid)
 
             dev = await self._async_enroll_new_http_dev(device)
 
@@ -206,7 +205,7 @@ class RefossCoordinator(DataUpdateCoordinator):
                     LOGGER.warning("HandlePushState, %s", e)
 
 
-_dynamic_types = {}
+_dynamic_types: Dict[str, type] = {}
 
 
 def build_device_from_abilities(
@@ -273,7 +272,7 @@ def _build_cached_type(
         elif cls is not None:
             mixin_classes.add(cls)
 
-    mixin_classes = list(mixin_classes)
-    mixin_classes.append(base_class)
+    # mixin_classes = list(mixin_classes)
+    mixin_classes.add(base_class)
     m = type(type_string, tuple(mixin_classes), {"_abilities_spec": device_abilities})
     return m

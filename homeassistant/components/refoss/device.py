@@ -1,6 +1,7 @@
 """Entity for Refoss."""
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from typing import Optional, List
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -21,7 +22,7 @@ class RefossDevice(Entity):
         coordinator: RefossCoordinator,
         platform: str,
         supplementary_classifiers: Optional[List[str]] = None,
-    ):
+    ) -> None:
         self.device = device
         self._model = device.device_type
         self._api_url = device.inner_ip

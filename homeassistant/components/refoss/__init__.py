@@ -1,7 +1,7 @@
 """Refoss devices platform loader"""
 from __future__ import annotations
 
-from typing import Collection
+from collections.abc import Collection
 from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await refoss_coordinator.initial_setup()
     except Exception as e:
-        LOGGER.warning("initial_setup failed: %s", e)
+        LOGGER.warning("Initial_setup failed: %s", e)
         return False
 
     hass.data[DOMAIN]["ADDED_ENTITIES_IDS"] = set()
@@ -74,13 +74,12 @@ def _check_new_discovered_device(
                 f"Add new device: device_type:{dev.device_type},ip: {dev.inner_ip}"
             )
             return True
-        else:
-            known_device = known_devices[dev.uuid]
-            if known_device.inner_ip != dev.inner_ip:
-                LOGGER.info(
-                    f"device_type:{known_device.device_type}, update device, ip: {known_device.inner_ip} => {dev.inner_ip}"
-                )
-                return True
+        known_device = known_devices[dev.uuid]
+        if known_device.inner_ip != dev.inner_ip:
+            LOGGER.info(
+                f"device_type:{known_device.device_type}, update device, ip: {known_device.inner_ip} => {dev.inner_ip}"
+            )
+            return True
     return False
 
 
