@@ -26,6 +26,7 @@ from homeassistant.components.zha.core.const import (
     EZSP_OVERWRITE_EUI64,
     RadioType,
 )
+from homeassistant.components.zha.radio_manager import ProbeResult
 from homeassistant.config_entries import (
     SOURCE_SSDP,
     SOURCE_USB,
@@ -114,7 +115,10 @@ def backup(make_backup):
     return make_backup()
 
 
-def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
+def mock_detect_radio_type(
+    radio_type: RadioType = RadioType.ezsp,
+    ret: ProbeResult = ProbeResult.RADIO_TYPE_DETECTED,
+):
     """Mock `detect_radio_type` that just sets the appropriate attributes."""
 
     async def detect(self):
@@ -489,8 +493,11 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
     }
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
-async def test_discovery_via_usb_no_radio(probe_mock, hass: HomeAssistant) -> None:
+@patch(
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+    AsyncMock(return_value=ProbeResult.PROBING_FAILED),
+)
+async def test_discovery_via_usb_no_radio(hass: HomeAssistant) -> None:
     """Test usb flow -- no radio detected."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/null",
@@ -759,7 +766,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
-    mock_detect_radio_type(ret=False),
+    AsyncMock(return_value=ProbeResult.PROBING_FAILED),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
@@ -851,6 +858,7 @@ async def test_detect_radio_type_success(
 
     handler = config_flow.ZhaConfigFlowHandler()
     handler._radio_mgr.device_path = "/dev/null"
+    handler.hass = hass
 
     await handler._radio_mgr.detect_radio_type()
 
@@ -879,6 +887,8 @@ async def test_detect_radio_type_success_with_settings(
 
     handler = config_flow.ZhaConfigFlowHandler()
     handler._radio_mgr.device_path = "/dev/null"
+    handler.hass = hass
+
     await handler._radio_mgr.detect_radio_type()
 
     assert handler._radio_mgr.radio_type == RadioType.ezsp

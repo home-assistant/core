@@ -1,6 +1,7 @@
 """ZHA repairs for common environmental and device problems."""
 from __future__ import annotations
 
+import contextlib
 import enum
 
 from universal_silabs_flasher.const import ApplicationType
@@ -73,7 +74,9 @@ def detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
 async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
     """Probe the running firmware on a Silabs device."""
     flasher = Flasher(device=device)
-    await flasher.probe_app_type()
+
+    with contextlib.suppress(OSError):
+        await flasher.probe_app_type()
 
     return flasher.app_type
 
