@@ -101,15 +101,15 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
 
     @property
     def device_info(self) -> DeviceInfo | None:
-        """Return the DeviceInfo of this APC UPS for the sensors, if serial number is available."""
-        if self.ups_serial_no is None:
+        """Return the DeviceInfo of this APC UPS, if serial number is available."""
+        if not self.ups_serial_no:
             return None
 
         return DeviceInfo(
             identifiers={(DOMAIN, self.ups_serial_no)},
             model=self.ups_model,
             manufacturer="APC",
-            name=self.name if self.name is not None else "APC UPS",
+            name=self.ups_name if self.ups_name else "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
             sw_version=self.data.get("VERSION"),
         )
