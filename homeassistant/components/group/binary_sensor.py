@@ -100,7 +100,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         name: str,
         device_class: BinarySensorDeviceClass | None,
         entity_ids: list[str],
-        mode: str | None,
+        mode: bool | None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
