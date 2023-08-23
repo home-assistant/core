@@ -1,7 +1,7 @@
 """Summary data from Nextcoud."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -11,10 +11,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfInformation,
     UnitOfTime,
-    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,7 +23,6 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
-
 
 SENSORS: Final[dict[str, SensorEntityDescription]] = {
     "activeUsers last1hour": SensorEntityDescription(
@@ -498,5 +497,5 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
             getattr(self.entity_description, "device_class", None)
             == SensorDeviceClass.TIMESTAMP
         ):
-            return datetime.fromtimestamp(cast(int, val), tz=timezone.utc)
+            return datetime.fromtimestamp(cast(int, val), tz=UTC)
         return val

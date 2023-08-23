@@ -1,5 +1,6 @@
 """Summary binary data from Nextcoud."""
 from __future__ import annotations
+
 from typing import Final
 
 from homeassistant.components.binary_sensor import (
@@ -14,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
-
 
 BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
     "jit enabled": BinarySensorEntityDescription(
