@@ -1729,3 +1729,66 @@ async def test_check_multi_pan_addon(
 
     await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
     start_addon.assert_not_called()
+
+
+async def test_multi_pan_addon_using_device_no_hassio(hass: HomeAssistant) -> None:
+    """Test `multi_pan_addon_using_device` without hassio."""
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
+        return_value=False,
+    ):
+        assert (
+            await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+                hass, "/dev/ttyAMA1"
+            )
+            is False
+        )
+
+
+async def test_multi_pan_addon_using_device_not_running(
+    hass: HomeAssistant, addon_info, addon_store_info
+) -> None:
+    """Test `multi_pan_addon_using_device` when the addon isn't running."""
+
+    addon_info.return_value["state"] = "not_running"
+    addon_store_info.return_value = {
+        "installed": True,
+        "available": True,
+        "state": "not_running",
+    }
+
+    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+        hass, "/dev/ttyAMA1"
+    ) is False
+
+
+@pytest.mark.parametrize(
+    ("options_device", "expected_result"),
+    [("/dev/ttyAMA2", False), ("/dev/ttyAMA1", True)],
+)
+async def test_multi_pan_addon_using_device(
+    hass: HomeAssistant,
+    addon_info,
+    addon_store_info,
+    options_device: str,
+    expected_result: bool,
+) -> None:
+    """Test `multi_pan_addon_using_device` when the addon isn't running."""
+
+    addon_info.return_value["state"] = "started"
+    addon_info.return_value["options"] = {
+        "autoflash_firmware": True,
+        "device": options_device,
+        "baudrate": "115200",
+        "flow_control": True,
+    }
+    addon_store_info.return_value = {
+        "installed": True,
+        "available": True,
+        "state": "running",
+    }
+
+    await silabs_multiprotocol_addon.multi_pan_addon_using_device(
+        hass, "/dev/ttyAMA1"
+    ) is expected_result
