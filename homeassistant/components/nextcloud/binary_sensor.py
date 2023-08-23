@@ -17,6 +17,16 @@ from .entity import NextcloudEntity
 
 
 BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
+    "jit enabled": BinarySensorEntityDescription(
+        key="jit enabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "jit on": BinarySensorEntityDescription(
+        key="jit on",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     "system debug": BinarySensorEntityDescription(
         key="system debug", entity_category=EntityCategory.DIAGNOSTIC
     ),
