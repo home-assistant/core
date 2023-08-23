@@ -218,7 +218,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     found_unique_id = device.unique_id
-    if found_unique_id and found_unique_id != entry.unique_id:
+    expected_unique_id = entry.unique_id
+    if expected_unique_id and found_unique_id and found_unique_id != expected_unique_id:
         # If the id of the device does not match the unique_id
         # of the config entry, it likely means the DHCP lease has expired
         # and the device has been assigned a new IP address. We need to
@@ -226,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
             f"Unexpected device found at {device.host}; "
-            f"expected {entry.unique_id}, found {found_unique_id}"
+            f"expected {expected_unique_id}, found {found_unique_id}"
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
