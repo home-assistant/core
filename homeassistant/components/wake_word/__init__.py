@@ -72,15 +72,15 @@ class WakeWordDetectionEntity(RestoreEntity):
     """Represent a single wake word provider."""
 
     _attr_should_poll = False
-    __last_processed: str | None = None
+    __last_detected: str | None = None
 
     @property
     @final
     def state(self) -> str | None:
         """Return the state of the entity."""
-        if self.__last_processed is None:
+        if self.__last_detected is None:
             return None
-        return self.__last_processed
+        return self.__last_detected
 
     @property
     @abstractmethod
@@ -103,9 +103,13 @@ class WakeWordDetectionEntity(RestoreEntity):
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
         """
-        self.__last_processed = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self._async_process_audio_stream(stream)
+        result = await self._async_process_audio_stream(stream)
+        if result is not None:
+            # Update last detected only when there is a detection
+            self.__last_detected = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
+
+        return result
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
@@ -116,4 +120,4 @@ class WakeWordDetectionEntity(RestoreEntity):
             and state.state is not None
             and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
-            self.__last_processed = state.state
+            self.__last_detected = state.state
