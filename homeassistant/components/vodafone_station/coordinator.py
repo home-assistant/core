@@ -106,7 +106,6 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         host: str,
-        ssl: bool,
         username: str,
         password: str,
         config_entry_unique_id: str | None,
@@ -114,7 +113,7 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         """Initialize the scanner."""
 
         self._host = host
-        self.api = VodafoneStationApi(host, ssl, username, password)
+        self.api = VodafoneStationApi(host, username, password)
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry_unique_id

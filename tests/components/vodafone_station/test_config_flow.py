@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.vodafone_station.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,7 +41,6 @@ async def test_user(hass: HomeAssistant) -> None:
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_USERNAME] == "fake_username"
         assert result["data"][CONF_PASSWORD] == "fake_password"
-        assert result["data"][CONF_SSL] is True
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 

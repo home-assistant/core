@@ -1,13 +1,7 @@
 """Vodafone Station integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SSL,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -21,7 +15,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = VodafoneStationRouter(
         hass,
         entry.data[CONF_HOST],
-        entry.data[CONF_SSL],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         entry.unique_id,

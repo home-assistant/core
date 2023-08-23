@@ -9,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant import core, exceptions
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import _LOGGER, DEFAULT_HOST, DEFAULT_SSL, DEFAULT_USERNAME, DOMAIN
+from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -23,7 +23,6 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
             vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         }
     )
 
@@ -36,9 +35,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = VodafoneStationApi(
-        data[CONF_HOST], data[CONF_SSL], data[CONF_USERNAME], data[CONF_PASSWORD]
-    )
+    api = VodafoneStationApi(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
 
     try:
         await api.login()
@@ -68,9 +65,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=user_form_schema(user_input)
             )
 
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_SSL: user_input[CONF_SSL]}
-        )
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
 
