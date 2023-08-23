@@ -7,7 +7,6 @@ from async_timeout import timeout
 from hko import HKO, HKOError
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
@@ -43,6 +42,7 @@ from .const import (
     API_VALUE,
     API_WEATHER_FORECAST,
     DOMAIN,
+    ICON_CONDITION_MAP,
     WEATHER_INFO_AT_TIMES_AT_FIRST,
     WEATHER_INFO_CLOUD,
     WEATHER_INFO_FINE,
@@ -97,6 +97,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         }
 
     def _convert_current(self, data):
+        """Return temperature and humidity in the appropriate format."""
         current = {
             API_HUMIDITY: data[API_HUMIDITY][API_DATA][0][API_VALUE],
             API_TEMPERATURE: next(
@@ -111,6 +112,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         return current
 
     def _convert_forecast(self, data):
+        """Return daily forecast in the appropriate format."""
         date = data[API_FORECAST_DATE]
         forecast = {
             ATTR_FORECAST_CONDITION: self._convert_icon_condition(
@@ -122,54 +124,15 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         }
         return forecast
 
-    def _convert_icon_condition(self, icon, info):
-        if icon == 50:
-            return ATTR_CONDITION_SUNNY
-        if icon == 51:
-            return ATTR_CONDITION_PARTLYCLOUDY
-        if icon == 52:
-            return ATTR_CONDITION_PARTLYCLOUDY
-        if icon == 53:
-            return ATTR_CONDITION_PARTLYCLOUDY
-        if icon == 54:
-            return ATTR_CONDITION_PARTLYCLOUDY
-        if icon == 60:
-            return ATTR_CONDITION_CLOUDY
-        if icon == 61:
-            return ATTR_CONDITION_CLOUDY
-        if icon == 62:
-            return ATTR_CONDITION_RAINY
-        if icon == 63:
-            return ATTR_CONDITION_RAINY
-        if icon == 64:
-            return ATTR_CONDITION_POURING
-        if icon == 65:
-            return ATTR_CONDITION_LIGHTNING_RAINY
-        if icon == 70:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 71:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 72:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 73:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 74:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 75:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 76:
-            return ATTR_CONDITION_PARTLYCLOUDY
-        if icon == 77:
-            return ATTR_CONDITION_CLEAR_NIGHT
-        if icon == 80:
-            return ATTR_CONDITION_WINDY
-        if icon == 83:
-            return ATTR_CONDITION_FOG
-        if icon == 84:
-            return ATTR_CONDITION_FOG
+    def _convert_icon_condition(self, icon_code, info):
+        """Return the condition corresponding to an icon code."""
+        for condition, codes in ICON_CONDITION_MAP.items():
+            if icon_code in codes:
+                return condition
         return self._convert_info_condition(info)
 
     def _convert_info_condition(self, info):
+        """Return the condition corresponding to the weather info."""
         info = info.lower()
         if WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_HAIL
