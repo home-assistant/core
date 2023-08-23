@@ -14,10 +14,14 @@ from homeassistant.components.homeassistant_yellow import (
     hardware as yellow_hardware,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .core.const import DOMAIN
+
+
+class AlreadyRunningEZSP(Exception):
+    """The device is already running EZSP firmware."""
 
 
 class HardwareType(enum.StrEnum):
@@ -74,22 +78,22 @@ async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
     return flasher.app_type
 
 
-async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> None:
+async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> bool:
     """Create a repair issue if the wrong type of SiLabs firmware is detected."""
     # Only consider actual serial ports
     if device.startswith("socket://"):
-        return
+        return False
 
     app_type = await probe_silabs_firmware_type(device)
 
     if app_type is None:
         # Failed to probe, we can't tell if the wrong firmware is installed
-        return
+        return False
 
     if app_type == ApplicationType.EZSP:
         # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
         # reconnect, it should work
-        raise ConfigEntryNotReady()
+        raise AlreadyRunningEZSP()
 
     hardware_type = detect_radio_hardware(hass, device)
     ir.async_create_issue(
@@ -106,6 +110,8 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> Non
         ),
         translation_placeholders={"firmware_type": app_type.name},
     )
+
+    return True
 
 
 def async_delete_blocking_issues(hass: HomeAssistant) -> None:

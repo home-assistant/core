@@ -5,6 +5,7 @@ import asyncio
 import contextlib
 from contextlib import suppress
 import copy
+import enum
 import logging
 import os
 from typing import Any
@@ -19,6 +20,7 @@ from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
+from . import repairs
 from .core.const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
@@ -71,6 +73,14 @@ HARDWARE_MIGRATION_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ProbeResult(enum.StrEnum):
+    """Radio firmware probing result."""
+
+    RADIO_TYPE_DETECTED = "radio_type_detected"
+    WRONG_FIRMWARE_INSTALLED = "wrong_firmware_installed"
+    PROBING_FAILED = "probing_failed"
 
 
 def _allow_overwrite_ezsp_ieee(
@@ -167,8 +177,10 @@ class ZhaRadioManager:
 
         return RadioType[radio_type]
 
-    async def detect_radio_type(self) -> bool:
+    async def detect_radio_type(self) -> ProbeResult:
         """Probe all radio types on the current port."""
+        assert self.device_path is not None
+
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
@@ -187,9 +199,14 @@ class ZhaRadioManager:
             self.radio_type = radio
             self.device_settings = dev_config
 
-            return True
+            repairs.async_delete_blocking_issues(self.hass)
+            return ProbeResult.RADIO_TYPE_DETECTED
 
-        return False
+        with suppress(repairs.AlreadyRunningEZSP):
+            if await repairs.warn_on_wrong_silabs_firmware(self.hass, self.device_path):
+                return ProbeResult.WRONG_FIRMWARE_INSTALLED
+
+        return ProbeResult.PROBING_FAILED
 
     async def async_load_network_settings(
         self, *, create_backup: bool = False

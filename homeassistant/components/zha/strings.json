@@ -75,7 +75,8 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a zha device",
-      "usb_probe_failed": "Failed to probe the usb device"
+      "usb_probe_failed": "Failed to probe the usb device",
+      "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this."
     }
   },
   "options": {
@@ -168,7 +169,8 @@
     "abort": {
       "single_instance_allowed": "[%key:component::zha::config::abort::single_instance_allowed%]",
       "not_zha_device": "[%key:component::zha::config::abort::not_zha_device%]",
-      "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]"
+      "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]",
+      "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]"
     }
   },
   "config_panel": {
