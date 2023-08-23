@@ -1229,7 +1229,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.6.0
+pyenphase==1.8.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
