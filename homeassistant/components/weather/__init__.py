@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 import logging
-from typing import Any, Final, Literal, Required, TypedDict, final
+from typing import Any, Final, Literal, Required, TypedDict, TypeVar, final
 
 import voluptuous as vol
 
@@ -37,6 +37,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -116,6 +120,10 @@ SCAN_INTERVAL = timedelta(seconds=30)
 ROUNDING_PRECISION = 2
 
 SERVICE_GET_FORECAST: Final = "get_forecast"
+
+_DataUpdateCoordinatorT = TypeVar(
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+)
 
 # mypy: disallow-any-generics
 
@@ -227,7 +235,7 @@ class WeatherEntity(Entity, PostInit):
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
-    _attr_condition: str | None
+    _attr_condition: str | None = None
     # _attr_forecast is deprecated, implement async_forecast_daily,
     # async_forecast_hourly or async_forecast_twice daily instead
     _attr_forecast: list[Forecast] | None = None
@@ -1071,6 +1079,22 @@ class WeatherEntity(Entity, PostInit):
             ) and custom_unit_visibility in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]:
                 self._weather_option_visibility_unit = custom_unit_visibility
 
+    @callback
+    def _async_subscription_started(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """Start subscription to forecast_type."""
+        return None
+
+    @callback
+    def _async_subscription_ended(
+        self,
+        forecast_type: Literal["daily", "hourly", "twice_daily"],
+    ) -> None:
+        """End subscription to forecast_type."""
+        return None
+
     @final
     @callback
     def async_subscribe_forecast(
@@ -1082,11 +1106,16 @@ class WeatherEntity(Entity, PostInit):
 
         Called by websocket API.
         """
+        subscription_started = not self._forecast_listeners[forecast_type]
         self._forecast_listeners[forecast_type].append(forecast_listener)
+        if subscription_started:
+            self._async_subscription_started(forecast_type)
 
         @callback
         def unsubscribe() -> None:
             self._forecast_listeners[forecast_type].remove(forecast_listener)
+            if not self._forecast_listeners[forecast_type]:
+                self._async_subscription_ended(forecast_type)
 
         return unsubscribe
 
@@ -1155,3 +1184,18 @@ async def async_get_forecast_service(
     return {
         "forecast": converted_forecast_list,
     }
+
+
+class CoordinatorWeatherEntity(
+    CoordinatorEntity[_DataUpdateCoordinatorT], WeatherEntity
+):
+    """A class for weather entities using a single DataUpdateCoordinator."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        assert self.coordinator.config_entry
+        self.coordinator.config_entry.async_create_task(
+            self.hass, self.async_update_listeners(None)
+        )

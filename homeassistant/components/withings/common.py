@@ -438,22 +438,16 @@ class DataManager:
     async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
-        now = dt_util.utcnow()
+        now = dt_util.now()
         yesterday = now - datetime.timedelta(days=1)
-        yesterday_noon = datetime.datetime(
-            yesterday.year,
-            yesterday.month,
-            yesterday.day,
-            12,
-            0,
-            0,
-            0,
-            datetime.UTC,
+        yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
+            hours=12
         )
+        yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
             return self._api.sleep_get_summary(
-                lastupdate=yesterday_noon,
+                lastupdate=yesterday_noon_utc,
                 data_fields=[
                     GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
                     GetSleepSummaryField.DEEP_SLEEP_DURATION,

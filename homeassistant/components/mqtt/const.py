@@ -28,6 +28,7 @@ CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
 CONF_PAYLOAD_RESET = "payload_reset"
+CONF_SUPPORTED_FEATURES = "supported_features"
 
 CONF_ACTION_TEMPLATE = "action_template"
 CONF_ACTION_TOPIC = "action_topic"

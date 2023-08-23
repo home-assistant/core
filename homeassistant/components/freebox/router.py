@@ -18,9 +18,8 @@ from freebox_api.exceptions import HttpRequestError, NotOpenError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -72,6 +71,7 @@ class FreeboxRouter:
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
@@ -160,14 +160,21 @@ class FreeboxRouter:
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
-        # None at first request
+        if not self.supports_raid:
+            return
+
         try:
             fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
         except HttpRequestError:
-            _LOGGER.warning("Unable to enumerate raid disks")
-        else:
-            for fbx_raid in fbx_raids:
-                self.raids[fbx_raid["id"]] = fbx_raid
+            self.supports_raid = False
+            _LOGGER.info(
+                "Router %s API does not support RAID",
+                self.name,
+            )
+            return
+
+        for fbx_raid in fbx_raids:
+            self.raids[fbx_raid["id"]] = fbx_raid
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""

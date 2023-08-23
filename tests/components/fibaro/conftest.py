@@ -6,9 +6,11 @@ from pyfibaro.fibaro_scene import SceneModel
 import pytest
 
 from homeassistant.components.fibaro import DOMAIN, FIBARO_CONTROLLER, FIBARO_DEVICES
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -39,13 +41,8 @@ async def setup_platform(
 ) -> ConfigEntry:
     """Set up the fibaro platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    config_entry = ConfigEntry(
-        1,
-        DOMAIN,
-        "Test",
-        {},
-        SOURCE_USER,
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, title="Test")
+    config_entry.add_to_hass(hass)
 
     controller_mock = Mock()
     controller_mock.hub_serial = "HC2-111111"
