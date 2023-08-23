@@ -88,9 +88,7 @@ async def test_check_and_move_time(ek_api: AsyncMock) -> None:
         value = _check_and_move_time(hop, "4:00 PM")
         assert str(value) == "2023-06-22 16:00:00+12:00"
 
-    test_time = dt_util.now(TIMEZONE).replace(
-        hour=10, minute=0, second=0, day=21, month=6, year=2023
-    )
+    test_time = test_time.replace(hour=10)
 
     with freeze_time(test_time):
         value = _check_and_move_time(hop, "4:00 PM")
