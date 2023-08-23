@@ -1,6 +1,7 @@
 """Provides the NZBGet DataUpdateCoordinator."""
 import asyncio
 from collections.abc import Mapping
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -45,9 +46,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads = set[tuple]()
 
         super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=5)
         )
 
     def _check_completed_downloads(self, history):
