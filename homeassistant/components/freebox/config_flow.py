@@ -74,10 +74,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=self._data[CONF_HOST],
-                data={
-                    CONF_HOST: self._data[CONF_HOST],
-                    CONF_PORT: self._data[CONF_PORT],
-                },
+                data=self._data,
             )
 
         except AuthorizationError as error:
