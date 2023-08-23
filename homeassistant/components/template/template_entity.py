@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (  # noqa: F401 pylint: disable=unused-import
+from homeassistant.helpers.template_entity import (  # noqa: F401
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TemplateEntity,
     make_template_entity_base_schema,
