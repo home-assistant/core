@@ -139,11 +139,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         await zha_gateway.async_initialize()
     except Exception:  # pylint: disable=broad-except
-        radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
-        device = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-
-        if radio_type == RadioType.ezsp and not device.startswith("socket://"):
-            await repairs.warn_on_wrong_silabs_firmware(hass, device)
+        if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+            await repairs.warn_on_wrong_silabs_firmware(
+                hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+            )
 
         raise
 

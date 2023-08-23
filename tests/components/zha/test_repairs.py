@@ -15,6 +15,7 @@ from homeassistant.components.zha.repairs import (
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     HardwareType,
     detect_radio_hardware,
+    warn_on_wrong_silabs_firmware,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -205,3 +206,13 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     )
     assert issue is None
+
+
+async def test_no_warn_on_socket(hass: HomeAssistant):
+    """Test that no warning is issued when the device is a socket."""
+    with patch(
+        "homeassistant.components.zha.repairs.probe_silabs_firmware_type", autospec=True
+    ) as mock_probe:
+        await warn_on_wrong_silabs_firmware(hass, device="socket://1.2.3.4:5678")
+
+    mock_probe.assert_not_called()

@@ -76,6 +76,10 @@ async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
 
 async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> None:
     """Create a repair issue if the wrong type of SiLabs firmware is detected."""
+    # Only consider actual serial ports
+    if device.startswith("socket://"):
+        return
+
     app_type = await probe_silabs_firmware_type(device)
 
     if app_type is None:
