@@ -182,11 +182,9 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
     async def async_turn_on(self):
         """Turn on (close) the dry contact."""
         if await self.entity_description.turn_on_fn(self.envoy, self.relay_id):
-            self.data.dry_contact_status[self.relay_id].status = DryContactStatus.CLOSED
             self.async_write_ha_state()
 
     async def async_turn_off(self):
         """Turn off (open) the dry contact."""
         if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
-            self.data.dry_contact_status[self.relay_id].status = DryContactStatus.OPEN
             self.async_write_ha_state()
