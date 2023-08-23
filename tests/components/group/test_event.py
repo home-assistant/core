@@ -101,7 +101,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # State should be double_press, because remote coming online is not an event
     state = hass.states.get("event.remote_control")
     assert state is not None
     assert state.state
