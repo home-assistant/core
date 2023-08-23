@@ -50,6 +50,7 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     """Representation of a Risco cloud zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_name = None
 
     def __init__(
         self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
@@ -67,6 +68,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation of a Risco local zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_name = None
 
     def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
