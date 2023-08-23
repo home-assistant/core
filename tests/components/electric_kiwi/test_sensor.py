@@ -81,9 +81,7 @@ async def test_check_and_move_time(ek_api: AsyncMock) -> None:
     """Test correct time is returned for the hop time depending on time of day."""
     hop = await ek_api(Mock()).get_hop()
 
-    test_time = dt_util.now(TIMEZONE).replace(
-        hour=18, minute=0, second=0, day=21, month=6, year=2023
-    )
+    test_time = datetime(2023,6,21,18,0,0, tzinfo=TIMEZONE)
     dt_util.set_default_time_zone(TIMEZONE)
 
     with freeze_time(test_time):
