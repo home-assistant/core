@@ -13,7 +13,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     MultiprotocolAddonManager,
-    get_addon_manager,
+    get_multiprotocol_addon_manager,
     is_multiprotocol_url,
     multi_pan_addon_using_device,
 )
@@ -124,8 +124,10 @@ async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
         # The OTBR is not sharing the radio, no restriction
         return None
 
-    addon_manager: MultiprotocolAddonManager = await get_addon_manager(hass)
-    return addon_manager.async_get_channel()
+    multipan_manager: MultiprotocolAddonManager = await get_multiprotocol_addon_manager(
+        hass
+    )
+    return multipan_manager.async_get_channel()
 
 
 async def _warn_on_channel_collision(
