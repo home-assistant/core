@@ -200,7 +200,7 @@ async def test_setup_faulty_country(
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is None
 
-    assert "There is no country" in caplog.text
+    assert "Selected country ZZ is not valid" in caplog.text
 
 
 async def test_setup_faulty_province(
@@ -215,7 +215,7 @@ async def test_setup_faulty_province(
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is None
 
-    assert "There is no subdivision" in caplog.text
+    assert "Selected province ZZ for country DE is not valid" in caplog.text
 
 
 async def test_setup_incorrect_add_remove(

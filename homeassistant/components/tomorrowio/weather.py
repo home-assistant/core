@@ -17,8 +17,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
     Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
@@ -93,7 +93,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, forecast_type: str)
     return f"{config_entry_unique_id}_{forecast_type}"
 
 
-class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
+class TomorrowioWeatherEntity(TomorrowioEntity, CoordinatorWeatherEntity):
     """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
 
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
@@ -121,15 +121,6 @@ class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         self._attr_name = f"{config_entry.data[CONF_NAME]} - {forecast_type.title()}"
         self._attr_unique_id = _calculate_unique_id(
             config_entry.unique_id, forecast_type
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
         )
 
     def _forecast_dict(
