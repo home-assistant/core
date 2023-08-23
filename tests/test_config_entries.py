@@ -3962,9 +3962,8 @@ async def test_preview_supported(
             """Mock Reauth."""
             return self.async_show_form(step_id="next", preview="test")
 
-        @callback
         @staticmethod
-        def async_setup_preview(hass: HomeAssistant) -> None:
+        async def async_setup_preview(hass: HomeAssistant) -> None:
             """Set up preview."""
             preview_calls.append(None)
 
