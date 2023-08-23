@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from numbers import Number
-from typing import cast
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,80 +10,274 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfInformation,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BOOLEN_VALUES, DOMAIN
+from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
-DESC_B_IN_GB = SensorEntityDescription(
-    key="bytes in gigabyte",
-    device_class=SensorDeviceClass.DATA_SIZE,
-    native_unit_of_measurement=UnitOfInformation.BYTES,
-    suggested_display_precision=2,
-    suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
-)
-DESC_B_IN_MB = SensorEntityDescription(
-    key="bytes in megabyte",
-    device_class=SensorDeviceClass.DATA_SIZE,
-    native_unit_of_measurement=UnitOfInformation.BYTES,
-    suggested_display_precision=1,
-    suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
-)
-DESC_KB_IN_GB = SensorEntityDescription(
-    key="kilobytes in gigabyte",
-    device_class=SensorDeviceClass.DATA_SIZE,
-    icon="mdi:memory",
-    native_unit_of_measurement=UnitOfInformation.KILOBYTES,
-    suggested_display_precision=2,
-    suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
-)
-DESC_S = SensorEntityDescription(
-    key="seconds",
-    device_class=SensorDeviceClass.DURATION,
-    native_unit_of_measurement=UnitOfTime.SECONDS,
-)
-DESC_TS = SensorEntityDescription(
-    key="timestamp",
-    device_class=SensorDeviceClass.TIMESTAMP,
-)
-DESC_LOAD = SensorEntityDescription(
-    key="cpuload",
-    native_unit_of_measurement="",
-    suggested_display_precision=3,
-)
-DESC_NUMERIC = SensorEntityDescription(
-    key="numeric",
-    native_unit_of_measurement="",
-)
 
-SENSORS: dict[str, SensorEntityDescription] = {
-    "cache mem_size": DESC_B_IN_MB,
-    "cache start_time": DESC_TS,
-    "database size": DESC_B_IN_MB,
-    "interned_strings_usage buffer_size": DESC_B_IN_MB,
-    "interned_strings_usage free_memory": DESC_B_IN_MB,
-    "interned_strings_usage used_memory": DESC_B_IN_MB,
-    "jit buffer_free": DESC_B_IN_MB,
-    "jit buffer_size": DESC_B_IN_MB,
-    "opcache_statistics start_time": DESC_TS,
-    "server php opcache memory_usage free_memory": DESC_B_IN_MB,
-    "server php opcache memory_usage used_memory": DESC_B_IN_MB,
-    "server php opcache memory_usage wasted_memory": DESC_B_IN_MB,
-    "server php max_execution_time": DESC_S,
-    "server php memory_limit": DESC_B_IN_MB,
-    "server php upload_max_filesize": DESC_B_IN_MB,
-    "sma avail_mem": DESC_B_IN_MB,
-    "sma seg_size": DESC_B_IN_MB,
-    "system cpuload": DESC_LOAD,
-    "system freespace": DESC_B_IN_GB,
-    "system mem_free": DESC_KB_IN_GB,
-    "system mem_total": DESC_KB_IN_GB,
-    "system swap_total": DESC_KB_IN_GB,
-    "system swap_free": DESC_KB_IN_GB,
+SENSORS: Final[dict[str, SensorEntityDescription]] = {
+    "activeUsers last1hour": SensorEntityDescription(
+        key="activeUsers last1hour",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "activeUsers last24hours": SensorEntityDescription(
+        key="activeUsers last24hours",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "activeUsers last5minutes": SensorEntityDescription(
+        key="activeUsers last5minutes",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "cache mem_size": SensorEntityDescription(
+        key="cache mem_size",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "cache start_time": SensorEntityDescription(
+        key="cache start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "database size": SensorEntityDescription(
+        key="database size",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "database type": SensorEntityDescription(
+        key="database type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "database version": SensorEntityDescription(
+        key="database version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "interned_strings_usage buffer_size": SensorEntityDescription(
+        key="interned_strings_usage buffer_size",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "interned_strings_usage free_memory": SensorEntityDescription(
+        key="interned_strings_usage free_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "interned_strings_usage used_memory": SensorEntityDescription(
+        key="interned_strings_usage used_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "jit buffer_free": SensorEntityDescription(
+        key="jit buffer_free",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "jit buffer_size": SensorEntityDescription(
+        key="jit buffer_size",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "opcache_statistics start_time": SensorEntityDescription(
+        key="opcache_statistics start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "server php opcache memory_usage free_memory": SensorEntityDescription(
+        key="server php opcache memory_usage free_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "server php opcache memory_usage used_memory": SensorEntityDescription(
+        key="server php opcache memory_usage used_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "server php opcache memory_usage wasted_memory": SensorEntityDescription(
+        key="server php opcache memory_usage wasted_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "server php max_execution_time": SensorEntityDescription(
+        key="server php max_execution_time",
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    "server php memory_limit": SensorEntityDescription(
+        key="server php memory_limit",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "server php upload_max_filesize": SensorEntityDescription(
+        key="server php upload_max_filesize",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "server php version": SensorEntityDescription(
+        key="server php version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "server webserver": SensorEntityDescription(
+        key="server webserver",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "sma avail_mem": SensorEntityDescription(
+        key="sma avail_mem",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "sma seg_size": SensorEntityDescription(
+        key="sma seg_size",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "shares num_fed_shares_sent": SensorEntityDescription(
+        key="shares num_fed_shares_sent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_fed_shares_received": SensorEntityDescription(
+        key="shares num_fed_shares_received",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares": SensorEntityDescription(
+        key="shares num_shares",
+    ),
+    "shares num_shares_groups": SensorEntityDescription(
+        key="shares num_shares_groups",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares_link": SensorEntityDescription(
+        key="shares num_shares_link",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares_link_no_password": SensorEntityDescription(
+        key="shares num_shares_link_no_password",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares_mail": SensorEntityDescription(
+        key="shares num_shares_mail",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares_room": SensorEntityDescription(
+        key="shares num_shares_room",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "shares num_shares_user": SensorEntityDescription(
+        key="server num_shares_user",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "storage num_files": SensorEntityDescription(
+        key="storage num_files",
+    ),
+    "storage num_storages": SensorEntityDescription(
+        key="storage num_storages",
+    ),
+    "storage num_storages_home": SensorEntityDescription(
+        key="storage num_storages_home",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "storage num_storages_local": SensorEntityDescription(
+        key="storage num_storages_local",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "storage num_storages_other": SensorEntityDescription(
+        key="storage num_storages_other",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "storage num_users": SensorEntityDescription(
+        key="storage num_users",
+    ),
+    "system cpuload": SensorEntityDescription(
+        key="system cpuload",
+        native_unit_of_measurement="",
+        suggested_display_precision=3,
+    ),
+    "system freespace": SensorEntityDescription(
+        key="system freespace",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+    ),
+    "system mem_free": SensorEntityDescription(
+        key="system mem_free",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+    ),
+    "system mem_total": SensorEntityDescription(
+        key="system mem_total",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+    ),
+    "system swap_total": SensorEntityDescription(
+        key="system swap_total",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+    ),
+    "system swap_free": SensorEntityDescription(
+        key="system swap_free",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+    ),
 }
 
 
@@ -95,20 +288,9 @@ async def async_setup_entry(
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            NextcloudSensor(
-                coordinator,
-                name,
-                entry,
-                SENSORS.get(
-                    name,
-                    DESC_NUMERIC
-                    if isinstance(coordinator.data[name], Number)
-                    else None,
-                ),
-            )
+            NextcloudSensor(coordinator, name, entry, SENSORS[name])
             for name in coordinator.data
-            if not isinstance(coordinator.data[name], bool)
-            and coordinator.data[name] not in BOOLEN_VALUES
+            if name in SENSORS
         ]
     )
 

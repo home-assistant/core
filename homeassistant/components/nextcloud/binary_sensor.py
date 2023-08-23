@@ -1,14 +1,35 @@
 """Summary binary data from Nextcoud."""
 from __future__ import annotations
+from typing import Final
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BOOLEAN_TRUE_VALUES, BOOLEN_VALUES, DOMAIN
+from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
+
+
+BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
+    "system debug": BinarySensorEntityDescription(
+        key="system debug", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+    "system enable_avatars": BinarySensorEntityDescription(
+        key="system enable_avatars", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+    "system enable_previews": BinarySensorEntityDescription(
+        key="system enable_previews", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+    "system filelocking.enabled": BinarySensorEntityDescription(
+        key="system filelocking.enabled", entity_category=EntityCategory.DIAGNOSTIC
+    ),
+}
 
 
 async def async_setup_entry(
@@ -18,10 +39,9 @@ async def async_setup_entry(
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            NextcloudBinarySensor(coordinator, name, entry, None)
+            NextcloudBinarySensor(coordinator, name, entry, BINARY_SENSORS[name])
             for name in coordinator.data
-            if isinstance(coordinator.data[name], bool)
-            or coordinator.data[name] in BOOLEN_VALUES
+            if name in BINARY_SENSORS
         ]
     )
 
@@ -33,4 +53,4 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         val = self.coordinator.data.get(self.item)
-        return val is True or val in BOOLEAN_TRUE_VALUES
+        return val is True or val == "yes"
