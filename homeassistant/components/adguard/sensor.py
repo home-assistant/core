@@ -8,7 +8,11 @@ from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -43,6 +47,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:magnify",
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: adguard.stats.dns_queries(),
+        state_class=SensorStateClass.TOTAL,
     ),
     AdGuardHomeEntityDescription(
         key="blocked_filtering",
@@ -50,6 +55,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:magnify-close",
         native_unit_of_measurement="queries",
         value_fn=lambda adguard: adguard.stats.blocked_filtering(),
+        state_class=SensorStateClass.TOTAL,
     ),
     AdGuardHomeEntityDescription(
         key="blocked_percentage",
@@ -57,6 +63,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:magnify-close",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda adguard: adguard.stats.blocked_percentage(),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AdGuardHomeEntityDescription(
         key="blocked_parental",
@@ -64,6 +71,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:human-male-girl",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_parental(),
+        state_class=SensorStateClass.TOTAL,
     ),
     AdGuardHomeEntityDescription(
         key="blocked_safebrowsing",
@@ -71,6 +79,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:shield-half-full",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_safebrowsing(),
+        state_class=SensorStateClass.TOTAL,
     ),
     AdGuardHomeEntityDescription(
         key="enforced_safesearch",
@@ -78,6 +87,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:shield-search",
         native_unit_of_measurement="requests",
         value_fn=lambda adguard: adguard.stats.replaced_safesearch(),
+        state_class=SensorStateClass.TOTAL,
     ),
     AdGuardHomeEntityDescription(
         key="average_speed",
@@ -85,6 +95,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         icon="mdi:speedometer",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=lambda adguard: adguard.stats.avg_processing_time(),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AdGuardHomeEntityDescription(
         key="rules_count",
@@ -93,6 +104,7 @@ SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (
         native_unit_of_measurement="rules",
         value_fn=lambda adguard: adguard.filtering.rules_count(allowlist=False),
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
