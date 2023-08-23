@@ -106,7 +106,7 @@ def config_flow_handler(
 def options_flow_poll_addon_state():
     """Fixture for patching options flow addon state polling."""
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.OptionsFlowHandler._async_wait_until_addon_state"
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.SyncAddonManager.async_wait_until_addon_state"
     ):
         yield
 
@@ -163,7 +163,7 @@ def get_suggested(schema, key):
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon(
+async def test_uninstall_addon_sync(
     hass: HomeAssistant,
     addon_store_info,
     addon_info,
@@ -173,22 +173,6 @@ async def test_uninstall_addon(
     """Test the synchronous addon uninstall helper."""
     mock_integration(hass, MockModule("hassio"))
 
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=TEST_DOMAIN,
-        options={},
-        title="Test HW",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
-        side_effect=Mock(return_value=True),
-    ):
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    flow = hass.config_entries.options._progress[result["flow_id"]]
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
         hass
     )
@@ -201,7 +185,7 @@ async def test_uninstall_addon(
     multipan_manager.async_get_addon_info.side_effect = [
         Mock(state=AddonState.NOT_INSTALLED)
     ]
-    await flow._async_uninstall_addon(multipan_manager)
+    await multipan_manager.async_uninstall_addon_sync()
     multipan_manager.async_uninstall_addon.assert_not_called()
 
     # Next, try uninstalling the addon but in a complex case where the API fails first
@@ -214,7 +198,7 @@ async def test_uninstall_addon(
         # And finally it is uninstalled
         Mock(state=AddonState.NOT_INSTALLED),
     ]
-    await flow._async_uninstall_addon(multipan_manager)
+    await multipan_manager.async_uninstall_addon_sync()
     multipan_manager.async_uninstall_addon.assert_called_once()
 
 
@@ -864,7 +848,7 @@ async def test_option_flow_flasher_already_running_failure(
         result["flow_id"], {silabs_multiprotocol_addon.CONF_DISABLE_MULTI_PAN: True}
     )
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "addon_install_failed"
+    assert result["reason"] == "addon_already_running"
 
 
 async def test_option_flow_addon_installed_same_device_flasher_already_installed(
