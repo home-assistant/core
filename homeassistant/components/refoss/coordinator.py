@@ -58,10 +58,7 @@ class RefossCoordinator(DataUpdateCoordinator):
         # Listening for socket messages
         self.socket.startReveiveMsg()
 
-        print("Waiting for start")
         asyncio.create_task(self.HandlePushState())
-
-        print("Waiting for create_task")
 
         devicelist = self.socket.async_socket_find_devices()
         self.async_set_updated_data({device.uuid: device for device in devicelist})
