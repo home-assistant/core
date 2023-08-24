@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             config_entry.title,
         )
         return False
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     refoss_coordinator = RefossCoordinator(
         hass=hass,
         config_entry=config_entry,
@@ -39,9 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.warning("Initial_setup failed: %s", e)
         return False
 
-    hass.data[DOMAIN]["ADDED_ENTITIES_IDS"] = set()
-
-    hass.data[DOMAIN][DEVICE_LIST_COORDINATOR] = refoss_coordinator
+    hass.data[DOMAIN] = {
+        DEVICE_LIST_COORDINATOR: refoss_coordinator,
+        "ADDED_ENTITIES_IDS": set(),
+    }
 
     for platform in PLATFORMS:
         hass.async_create_task(

@@ -2,7 +2,6 @@
 from typing import TypeVar, Dict, Optional, TypeGuard
 import async_timeout
 from collections.abc import Iterable
-import threading
 import asyncio
 from asyncio import AbstractEventLoop
 from datetime import timedelta
@@ -19,7 +18,7 @@ from refoss_ha.enums import Namespace
 from refoss_ha.controller.toggle import ToggleXMix
 from refoss_ha.controller.system import SystemAllMixin
 from refoss_ha.const import LOGGER, PUSH, DOMAIN
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 T = TypeVar("T", bound=BaseDevice)
 
@@ -59,8 +58,10 @@ class RefossCoordinator(DataUpdateCoordinator):
         # Listening for socket messages
         self.socket.startReveiveMsg()
 
-        t = threading.Thread(target=self.HandlePushState, args=(self.socket.event,))
-        t.start()
+        print("Waiting for start")
+        asyncio.create_task(self.HandlePushState())
+
+        print("Waiting for create_task")
 
         devicelist = self.socket.async_socket_find_devices()
         self.async_set_updated_data({device.uuid: device for device in devicelist})
@@ -168,15 +169,13 @@ class RefossCoordinator(DataUpdateCoordinator):
 
         return res
 
-    def HandlePushState(self, event: threading.Event):
+    async def HandlePushState(self):
         while True:
-            if event.is_set():
-                break
             if len(pushStateDataList) == 0:
+                await asyncio.sleep(3)
                 continue
 
             data = pushStateDataList.pop(0)
-
             if data is not None:
                 try:
                     header = data.get("header", {})
@@ -272,7 +271,7 @@ def _build_cached_type(
         elif cls is not None:
             mixin_classes.add(cls)
 
-    # mixin_classes = list(mixin_classes)
-    mixin_classes.add(base_class)
-    m = type(type_string, tuple(mixin_classes), {"_abilities_spec": device_abilities})
+    classes_list = list(mixin_classes)
+    classes_list.append(base_class)
+    m = type(type_string, tuple(classes_list), {"_abilities_spec": device_abilities})
     return m
