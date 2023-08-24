@@ -38,7 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
+from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (

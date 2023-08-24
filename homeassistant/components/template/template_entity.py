@@ -34,7 +34,7 @@ from homeassistant.helpers.template import (
     TemplateStateFromEntityId,
     result_as_boolean,
 )
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
