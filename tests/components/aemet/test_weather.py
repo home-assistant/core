@@ -11,7 +11,6 @@ from homeassistant.components.aemet.weather_update_coordinator import (
     WEATHER_UPDATE_INTERVAL,
 )
 from homeassistant.components.weather import (
-    ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SNOWY,
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
@@ -58,21 +57,21 @@ async def test_aemet_weather(
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 24.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
+    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 122.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 12.2
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 3.2
     forecast = state.attributes.get(ATTR_FORECAST)[0]
-    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_SNOWY
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
-    assert forecast.get(ATTR_FORECAST_TEMP) == 4
-    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 0
+    assert forecast.get(ATTR_FORECAST_TEMP) == 2.0
+    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -1.0
     assert (
         forecast.get(ATTR_FORECAST_TIME)
-        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        == dt_util.parse_datetime("2021-01-09 00:00:00+01:00").isoformat()
     )
-    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
+    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 90.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 0.0
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
@@ -102,21 +101,21 @@ async def test_aemet_weather_legacy(
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4  # 100440.0 Pa -> hPa
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 24.0
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15.0  # 4.17 m/s -> km/h
+    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 122.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 12.2
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 3.2
     forecast = state.attributes.get(ATTR_FORECAST)[0]
-    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_SNOWY
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
-    assert forecast.get(ATTR_FORECAST_TEMP) == 4
-    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 0
+    assert forecast.get(ATTR_FORECAST_TEMP) == 2
+    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -1
     assert (
         forecast.get(ATTR_FORECAST_TIME)
-        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        == dt_util.parse_datetime("2021-01-09 00:00:00+01:00").isoformat()
     )
-    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20.0  # 5.56 m/s -> km/h
+    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 90.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 0.0
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None

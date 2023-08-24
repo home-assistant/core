@@ -19,7 +19,7 @@ async def test_aemet_forecast_create_sensors(
     """Test creation of forecast sensors."""
 
     hass.config.set_time_zone("UTC")
-    freezer.move_to("2021-01-09 12:00:00+00:00")
+    freezer.move_to("2021-01-10 12:00:00+00:00")
     await async_init_integration(hass)
 
     state = hass.states.get("sensor.aemet_daily_forecast_condition")
@@ -36,7 +36,7 @@ async def test_aemet_forecast_create_sensors(
 
     state = hass.states.get("sensor.aemet_daily_forecast_time")
     assert (
-        state.state == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        state.state == dt_util.parse_datetime("2021-01-09T23:00:00+00:00").isoformat()
     )
 
     state = hass.states.get("sensor.aemet_daily_forecast_wind_bearing")
@@ -93,13 +93,13 @@ async def test_aemet_weather_create_sensors(
     assert state.state == "1004.4"
 
     state = hass.states.get("sensor.aemet_rain")
-    assert state.state == "1.8"
+    assert state.state == "7.0"
 
     state = hass.states.get("sensor.aemet_rain_probability")
     assert state.state == "100"
 
     state = hass.states.get("sensor.aemet_snow")
-    assert state.state == "1.8"
+    assert state.state == "1.2"
 
     state = hass.states.get("sensor.aemet_snow_probability")
     assert state.state == "100"
@@ -132,10 +132,10 @@ async def test_aemet_weather_create_sensors(
     assert state.state == "2021-01-09T11:47:45+00:00"
 
     state = hass.states.get("sensor.aemet_wind_bearing")
-    assert state.state == "90.0"
+    assert state.state == "122.0"
 
     state = hass.states.get("sensor.aemet_wind_max_speed")
-    assert state.state == "24"
+    assert state.state == "12.2"
 
     state = hass.states.get("sensor.aemet_wind_speed")
-    assert state.state == "15"
+    assert state.state == "3.2"
