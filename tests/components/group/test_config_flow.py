@@ -490,11 +490,11 @@ async def test_config_flow_preview(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == domain
     assert result["errors"] is None
-    assert result["preview"] == f"group_{domain}"
+    assert result["preview"] == "group"
 
     await client.send_json_auto_id(
         {
-            "type": f"group/{domain}/start_preview",
+            "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
             "user_input": {"name": "My group", "entities": input_entities}
@@ -508,6 +508,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My group"} | extra_attributes[0],
+        "group_type": domain,
         "state": "unavailable",
     }
 
@@ -522,8 +523,10 @@ async def test_config_flow_preview(
         }
         | extra_attributes[0]
         | extra_attributes[1],
+        "group_type": domain,
         "state": group_state,
     }
+    assert len(hass.states.async_all()) == 2
 
 
 @pytest.mark.parametrize(
@@ -582,14 +585,14 @@ async def test_option_flow_preview(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == f"group_{domain}"
+    assert result["preview"] == "group"
 
     hass.states.async_set(input_entities[0], input_states[0])
     hass.states.async_set(input_entities[1], input_states[1])
 
     await client.send_json_auto_id(
         {
-            "type": f"group/{domain}/start_preview",
+            "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
             "user_input": {"entities": input_entities} | extra_user_input,
@@ -603,8 +606,10 @@ async def test_option_flow_preview(
     assert msg["event"] == {
         "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
         | extra_attributes,
+        "group_type": domain,
         "state": group_state,
     }
+    assert len(hass.states.async_all()) == 3
 
 
 async def test_option_flow_sensor_preview_config_entry_removed(
@@ -635,13 +640,13 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == "group_sensor"
+    assert result["preview"] == "group"
 
     await hass.config_entries.async_remove(config_entry.entry_id)
 
     await client.send_json_auto_id(
         {
-            "type": "group/sensor/start_preview",
+            "type": "group/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "options_flow",
             "user_input": {

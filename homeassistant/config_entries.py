@@ -1864,7 +1864,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         await _load_integration(self.hass, entry.domain, {})
         if entry.domain not in self._preview:
             self._preview.add(entry.domain)
-            flow.async_setup_preview(self.hass)
+            await flow.async_setup_preview(self.hass)
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):
