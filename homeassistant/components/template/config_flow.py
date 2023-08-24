@@ -1,14 +1,16 @@
 """Config flow for the Template integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -53,8 +55,7 @@ from .const import DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
 
-if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine, Mapping
+NONE_SENTINEL = "none"
 
 
 def generate_schema(domain: str) -> dict[vol.Marker, Any]:
@@ -63,7 +64,9 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
 
     if domain == Platform.SENSOR:
         schema = {
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            vol.Optional(
+                CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
                         "none",
@@ -103,10 +106,12 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
                     custom_value=True,
                 ),
             ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            vol.Optional(
+                CONF_DEVICE_CLASS, default=NONE_SENTINEL
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        "none",
+                        NONE_SENTINEL,
                         *sorted(
                             [
                                 cls.value
@@ -117,12 +122,17 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
                         ),
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="device_class",
+                    translation_key="sensor_device_class",
                 ),
             ),
-            vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+            vol.Optional(
+                CONF_STATE_CLASS, default=NONE_SENTINEL
+            ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=["none", *sorted([cls.value for cls in SensorStateClass])],
+                    options=[
+                        NONE_SENTINEL,
+                        *sorted([cls.value for cls in SensorStateClass]),
+                    ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="state_class",
                 ),
@@ -156,6 +166,15 @@ async def choose_options_step(options: dict[str, Any]) -> str:
     return cast(str, options["template_type"])
 
 
+def _strip_sentinel(options: dict[str, Any]) -> None:
+    """Convert sentinel to None."""
+    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
+        if key not in options:
+            continue
+        if options[key] == NONE_SENTINEL:
+            options.pop(key)
+
+
 def set_template_type(
     template_type: str,
 ) -> Callable[
@@ -169,7 +188,8 @@ def set_template_type(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        return {"template_type": template_type, **user_input}
+        _strip_sentinel(user_input)
+        return {"template_type": template_type} | user_input
 
     return _set_template_type
 
@@ -246,6 +266,24 @@ def ws_start_preview(
                 validator(user_input[key.schema])
             except vol.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
+
+        unit = user_input.get(CONF_UNIT_OF_MEASUREMENT)
+        if unit == NONE_SENTINEL:
+            unit = None
+        if (
+            (device_class := user_input.get(CONF_DEVICE_CLASS))
+            and device_class != NONE_SENTINEL
+            and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+            and unit not in units
+        ):
+            units_string = [
+                str(unit) if unit else "no unit of measurement" for unit in units
+            ]
+            errors[CONF_UNIT_OF_MEASUREMENT] = (
+                f"'{unit}' is not a valid unit for device class '{device_class}'; "
+                f"expected one of {', '.join(units_string)}"
+            )
+
         return errors
 
     if msg["flow_type"] == "config_flow":
@@ -298,6 +336,7 @@ def ws_start_preview(
         )
         return
 
+    _strip_sentinel(msg["user_input"])
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
     preview_entity.hass = hass
 

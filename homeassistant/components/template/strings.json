@@ -32,7 +32,7 @@
     }
   },
   "selector": {
-    "device_class": {
+    "sensor_device_class": {
       "options": {
         "apparent_power": "Apparent power",
         "aqi": "Air quality index",
