@@ -137,6 +137,7 @@ async def light_switch_options_schema(
 GROUP_TYPES = [
     "binary_sensor",
     "cover",
+    "event",
     "fan",
     "light",
     "lock",
@@ -178,6 +179,10 @@ CONFIG_FLOW = {
         basic_group_config_schema("cover"),
         validate_user_input=set_group_type("cover"),
     ),
+    "event": SchemaFlowFormStep(
+        basic_group_config_schema("event"),
+        validate_user_input=set_group_type("event"),
+    ),
     "fan": SchemaFlowFormStep(
         basic_group_config_schema("fan"),
         validate_user_input=set_group_type("fan"),
@@ -213,6 +218,7 @@ OPTIONS_FLOW = {
         preview="group",
     ),
     "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
+    "event": SchemaFlowFormStep(partial(basic_group_options_schema, "event")),
     "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
     "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
     "lock": SchemaFlowFormStep(partial(basic_group_options_schema, "lock")),
