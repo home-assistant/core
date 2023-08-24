@@ -46,7 +46,7 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
@@ -267,7 +267,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 return ATTR_CONDITION_SUNNY
             return ATTR_CONDITION_CLEAR_NIGHT
 
-        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+        return CONDITION_MAP.get(weather_code)
 
 
 class LegacyWeather:

@@ -158,7 +158,10 @@ def main():
     )
     arguments = parser.parse_args()
 
-    if arguments.commit and subprocess.run(["git", "diff", "--quiet"]).returncode == 1:
+    if (
+        arguments.commit
+        and subprocess.run(["git", "diff", "--quiet"], check=False).returncode == 1
+    ):
         print("Cannot use --commit because git is dirty.")
         return
 
@@ -174,7 +177,7 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"])
+    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"], check=True)
 
 
 def test_bump_version():

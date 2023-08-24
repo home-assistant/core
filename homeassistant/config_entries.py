@@ -1814,6 +1814,14 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
+    def _async_get_config_entry(self, config_entry_id: str) -> ConfigEntry:
+        """Return config entry or raise if not found."""
+        entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if entry is None:
+            raise UnknownEntry(config_entry_id)
+
+        return entry
+
     async def async_create_flow(
         self,
         handler_key: str,
@@ -1825,10 +1833,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
-        entry = self.hass.config_entries.async_get_entry(handler_key)
-        if entry is None:
-            raise UnknownEntry(handler_key)
-
+        entry = self._async_get_config_entry(handler_key)
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
         return handler.async_get_options_flow(entry)
 
@@ -1852,6 +1857,14 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
         result["result"] = True
         return result
+
+    async def _async_setup_preview(self, flow: data_entry_flow.FlowHandler) -> None:
+        """Set up preview for an option flow handler."""
+        entry = self._async_get_config_entry(flow.handler)
+        await _load_integration(self.hass, entry.domain, {})
+        if entry.domain not in self._preview:
+            self._preview.add(entry.domain)
+            await flow.async_setup_preview(self.hass)
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):
@@ -2016,15 +2029,9 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     return hasattr(component, "async_remove_config_entry_device")
 
 
-async def _async_get_flow_handler(
+async def _load_integration(
     hass: HomeAssistant, domain: str, hass_config: ConfigType
-) -> type[ConfigFlow]:
-    """Get a flow handler for specified domain."""
-
-    # First check if there is a handler registered for the domain
-    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
-        return handler
-
+) -> None:
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound as err:
@@ -2043,6 +2050,18 @@ async def _async_get_flow_handler(
             err,
         )
         raise data_entry_flow.UnknownHandler
+
+
+async def _async_get_flow_handler(
+    hass: HomeAssistant, domain: str, hass_config: ConfigType
+) -> type[ConfigFlow]:
+    """Get a flow handler for specified domain."""
+
+    # First check if there is a handler registered for the domain
+    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+        return handler
+
+    await _load_integration(hass, domain, hass_config)
 
     if handler := HANDLERS.get(domain):
         return handler

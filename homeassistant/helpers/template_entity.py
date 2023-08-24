@@ -454,27 +454,6 @@ class TemplateEntity(Entity):
         )
 
 
-class TemplateSensor(TemplateEntity, SensorEntity):
-    """Representation of a Template Sensor."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        config: dict[str, Any],
-        fallback_name: str | None,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            hass, config=config, fallback_name=fallback_name, unique_id=unique_id
-        )
-
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_state_class = config.get(CONF_STATE_CLASS)
-
-
 class TriggerBaseEntity(Entity):
     """Template Base entity based on trigger data."""
 
@@ -486,7 +465,7 @@ class TriggerBaseEntity(Entity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
@@ -623,7 +602,7 @@ class ManualTriggerEntity(TriggerBaseEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         TriggerBaseEntity.__init__(self, hass, config)
@@ -655,13 +634,13 @@ class ManualTriggerEntity(TriggerBaseEntity):
         self._render_templates(variables)
 
 
-class ManualTriggerSensorEntity(ManualTriggerEntity):
+class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
     """Template entity based on manual trigger data for sensor."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: dict,
+        config: ConfigType,
     ) -> None:
         """Initialize the sensor entity."""
         ManualTriggerEntity.__init__(self, hass, config)

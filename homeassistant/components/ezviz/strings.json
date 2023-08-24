@@ -223,11 +223,6 @@
         "name": "Follow movement"
       }
     },
-    "update": {
-      "firmware": {
-        "name": "[%key:component::update::entity_component::firmware::name%]"
-      }
-    },
     "siren": {
       "siren": {
         "name": "[%key:component::siren::title%]"
