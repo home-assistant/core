@@ -221,7 +221,7 @@ class NestCamera(Camera):
     ) -> bytes | None:
         """Return bytes of camera image."""
         # Use the thumbnail from RTSP stream, or a placeholder if stream is
-        # not supported (e.g. WebRTC)
+        # not supported (e.g. WebRTC) as a fallback when 'use_stream_for_stills' if False
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod
