@@ -12,7 +12,7 @@ bleak-retry-connector==3.1.1
 bleak==0.20.2
 bluetooth-adapters==0.16.0
 bluetooth-auto-recovery==1.2.1
-bluetooth-data-tools==1.8.0
+bluetooth-data-tools==1.9.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.3

@@ -17,7 +17,7 @@
   "requirements": [
     "async_interrupt==1.1.1",
     "aioesphomeapi==16.0.1",
-    "bluetooth-data-tools==1.8.0",
+    "bluetooth-data-tools==1.9.0",
     "esphome-dashboard-api==1.2.3"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
