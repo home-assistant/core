@@ -35,10 +35,10 @@ class HardwareType(enum.StrEnum):
 
 DISABLE_MULTIPAN_URL = {
     HardwareType.YELLOW: (
-        "https://yellow.home-assistant.io/guides/disable-multiprotocol/"
+        "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
     ),
     HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/"
+        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
     ),
     HardwareType.OTHER: None,
 }
