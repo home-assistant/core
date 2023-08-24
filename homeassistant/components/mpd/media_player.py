@@ -469,14 +469,13 @@ class MpdDevice(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute. Emulated with set_volume_level."""
-        async with self.connection():
-            if "volume" in self._status:
-                if mute:
-                    self._muted_volume = self.volume_level
-                    await self.async_set_volume_level(0)
-                elif self._muted_volume is not None:
-                    await self.async_set_volume_level(self._muted_volume)
-                self._muted = mute
+        if "volume" in self._status:
+            if mute:
+                self._muted_volume = self.volume_level
+                await self.async_set_volume_level(0)
+            elif self._muted_volume is not None:
+                await self.async_set_volume_level(self._muted_volume)
+            self._muted = mute
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
