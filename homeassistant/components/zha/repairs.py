@@ -106,7 +106,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         is_fixable=False,
         is_persistent=False,
         learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
-        severity=ir.IssueSeverity.CRITICAL,
+        severity=ir.IssueSeverity.ERROR,
         translation_key=(
             ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
             + ("_nabucasa" if hardware_type != HardwareType.OTHER else "_other")
