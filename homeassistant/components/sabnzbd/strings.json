@@ -26,7 +26,7 @@
         "name": "Queue"
       },
       "left": {
-        "name": "Left"
+        "name": "Left to download"
       },
       "total_disk_space": {
         "name": "Total disk space"
