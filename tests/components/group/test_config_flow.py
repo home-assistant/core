@@ -466,17 +466,34 @@ async def test_options_flow_hides_members(
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
+COVER_ATTRS = [{"supported_features": 0}, {}]
+EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
+FAN_ATTRS = [{"supported_features": 0}, {"assumed_state": True}]
+LIGHT_ATTRS = [
+    {
+        "icon": "mdi:lightbulb-group",
+        "supported_color_modes": ["onoff"],
+        "supported_features": 0,
+    },
+    {"color_mode": "onoff"},
+]
+LOCK_ATTRS = [{"supported_features": 1}, {}]
+MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
+SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+
+
 @pytest.mark.parametrize(
     ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
-        (
-            "sensor",
-            {"type": "max"},
-            ["10", "20"],
-            "20.0",
-            [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}],
-        ),
+        ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
+        ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
+        ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
+        ("light", {}, ["on", "off"], "on", LIGHT_ATTRS),
+        ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
+        ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
+        ("switch", {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
 async def test_config_flow_preview(
@@ -553,15 +570,22 @@ async def test_config_flow_preview(
         "extra_attributes",
     ),
     [
-        ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", {}),
+        ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
+        ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
+        ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
+        ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),
+        ("light", {}, {}, ["on", "off"], "on", LIGHT_ATTRS),
+        ("lock", {}, {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("media_player", {}, {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         (
             "sensor",
             {"type": "min"},
             {"type": "max"},
             ["10", "20"],
             "20.0",
-            {"icon": "mdi:calculator", "max_entity_id": "sensor.input_two"},
+            SENSOR_ATTRS,
         ),
+        ("switch", {}, {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
 async def test_option_flow_preview(
@@ -575,8 +599,6 @@ async def test_option_flow_preview(
     extra_attributes: dict[str, Any],
 ) -> None:
     """Test the option flow preview."""
-    client = await hass_ws_client(hass)
-
     input_entities = [f"{domain}.input_one", f"{domain}.input_two"]
 
     # Setup the config entry
@@ -595,6 +617,8 @@ async def test_option_flow_preview(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
@@ -619,7 +643,8 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
-        | extra_attributes,
+        | extra_attributes[0]
+        | extra_attributes[1],
         "state": group_state,
     }
     assert len(hass.states.async_all()) == 3
