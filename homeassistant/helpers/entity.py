@@ -756,30 +756,9 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
-            # Polling returned after the entity has already been removed
-            return
-
-        hass = self.hass
-        entity_id = self.entity_id
+    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+        """Calculate state string and attribute mapping."""
         entry = self.registry_entry
-
-        if entry and entry.disabled_by:
-            if not self._disabled_reported:
-                self._disabled_reported = True
-                _LOGGER.warning(
-                    (
-                        "Entity %s is incorrectly being triggered for updates while it"
-                        " is disabled. This is a bug in the %s integration"
-                    ),
-                    entity_id,
-                    self.platform.platform_name,
-                )
-            return
-
-        start = timer()
 
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
@@ -818,6 +797,33 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
+        return (state, attr)
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if self._platform_state == EntityPlatformState.REMOVED:
+            # Polling returned after the entity has already been removed
+            return
+
+        hass = self.hass
+        entity_id = self.entity_id
+
+        if (entry := self.registry_entry) and entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
+                    entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
+        start = timer()
+        state, attr = self._async_generate_attributes()
         end = timer()
 
         if end - start > 0.4 and not self._slow_reported:
