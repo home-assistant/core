@@ -296,7 +296,6 @@ async def test_auth_sending_unknown_type_disconnects(
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_REQUIRED
 
-        # pylint: disable-next=protected-access
         await ws._writer._send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close

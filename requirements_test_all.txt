@@ -454,7 +454,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.8.0
+bluetooth-data-tools==1.9.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -586,7 +586,7 @@ emulated-roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==0.4.1
+energyzero==0.5.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -747,7 +747,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.69.0
+hass-nabucasa==0.70.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
