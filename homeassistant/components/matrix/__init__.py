@@ -355,6 +355,41 @@ class MatrixBot:
 
         await self._store_auth_token(self._client.access_token)
 
+    async def _handle_room_send(
+        self, target_room: RoomID, message_type: str, content: dict
+    ) -> None:
+        """Wrap _client.room_send and handle ErrorResponses."""
+        response: Response = await self._client.room_send(
+            room_id=target_room,
+            message_type=message_type,
+            content=content,
+        )
+        if isinstance(response, ErrorResponse):
+            _LOGGER.error(
+                "Unable to deliver message to room '%s': %s",
+                target_room,
+                response,
+            )
+        else:
+            _LOGGER.debug("Message delivered to room '%s'", target_room)
+
+    async def _handle_multi_room_send(
+        self, target_rooms: list[RoomID], message_type: str, content: dict
+    ) -> None:
+        """Wrap _handle_room_send for multiple target_rooms."""
+        _tasks = []
+        for target_room in target_rooms:
+            _tasks.append(
+                self.hass.async_create_task(
+                    self._handle_room_send(
+                        target_room=target_room,
+                        message_type=message_type,
+                        content=content,
+                    )
+                )
+            )
+        await asyncio.wait(_tasks)
+
     async def _send_image(self, image_path: str, target_rooms: list[RoomID]) -> None:
         """Upload an image, then send it to all target_rooms."""
         _is_allowed_path = await self.hass.async_add_executor_job(
@@ -402,11 +437,9 @@ class MatrixBot:
             "url": response.content_uri,
         }
 
-        for room in target_rooms:
-            await self._client.room_send(
-                room_id=room, message_type="m.room.message", content=content
-            )
-            _LOGGER.debug("Image '%s' sent to room '%s'", image_path, room)
+        await self._handle_multi_room_send(
+            target_rooms=target_rooms, message_type="m.room.message", content=content
+        )
 
     async def _send_message(
         self, message: str, target_rooms: list[RoomID], data: dict | None
@@ -416,29 +449,20 @@ class MatrixBot:
         if data is not None and data.get(ATTR_FORMAT) == FORMAT_HTML:
             content |= {"format": "org.matrix.custom.html", "formatted_body": message}
 
-        response_tasks = []
-        for target_room in target_rooms:
-            _task = self.hass.async_create_task(
-                self._client.room_send(
-                    room_id=target_room,
-                    message_type="m.room.message",
-                    content=content,
-                )
-            )
-            response_tasks.append(_task)
-        for _response in asyncio.as_completed(response_tasks):
-            response: Response = await _response
-            if isinstance(response, ErrorResponse):
-                _LOGGER.error(
-                    "Unable to deliver message to room: %s",
-                    response,
-                )
-            else:
-                _LOGGER.debug("Message delivered to room: '%s'", response)
+        await self._handle_multi_room_send(
+            target_rooms=target_rooms, message_type="m.room.message", content=content
+        )
 
-        if data is not None and len(target_rooms) > 0:
-            for image_path in data.get(ATTR_IMAGES, []):
-                await self._send_image(image_path, target_rooms)
+        if (
+            data is not None
+            and (image_paths := data.get(ATTR_IMAGES, []))
+            and len(target_rooms) > 0
+        ):
+            image_tasks = [
+                self.hass.async_create_task(self._send_image(image_path, target_rooms))
+                for image_path in image_paths
+            ]
+            await asyncio.wait(image_tasks)
 
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
