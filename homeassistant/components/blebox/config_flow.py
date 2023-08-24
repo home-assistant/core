@@ -5,16 +5,22 @@ import logging
 from typing import Any
 
 from blebox_uniapi.box import Box
-from blebox_uniapi.error import Error, UnsupportedBoxResponse, UnsupportedBoxVersion
+from blebox_uniapi.error import (
+    Error,
+    UnauthorizedRequest,
+    UnsupportedBoxResponse,
+    UnsupportedBoxVersion,
+)
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import get_maybe_authenticated_session
 from .const import (
     ADDRESS_ALREADY_CONFIGURED,
     CANNOT_CONNECT,
@@ -25,6 +31,7 @@ from .const import (
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
+from .helpers import get_non_empty_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +53,8 @@ def create_schema(previous_input=None):
         {
             vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_PORT, default=port): int,
+            vol.Optional(CONF_USERNAME, default=""): str,
+            vol.Optional(CONF_PASSWORD, default=""): str,
         }
     )
 
@@ -153,6 +162,9 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         addr = host_port(user_input)
 
+        username = get_non_empty_key(user_input, "username")
+        password = get_non_empty_key(user_input, "password")
+
         for entry in self._async_current_entries():
             if addr == host_port(entry.data):
                 host, port = addr
@@ -160,14 +172,28 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     reason=ADDRESS_ALREADY_CONFIGURED,
                     description_placeholders={"address": f"{host}:{port}"},
                 )
-        websession = async_get_clientsession(hass)
-        api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
+
+        websession = get_maybe_authenticated_session(hass, password, username)
+
+        api_host = ApiHost(
+            *addr,
+            DEFAULT_SETUP_TIMEOUT,
+            websession,
+            hass.loop,
+            _LOGGER,
+            username=username,
+            password=password,
+        )
         try:
             product = await Box.async_from_host(api_host)
 
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(
                 "user", ex, schema, *addr, UNSUPPORTED_VERSION, _LOGGER.debug
+            )
+        except UnauthorizedRequest as ex:
+            return self.handle_step_exception(
+                "user", ex, schema, *addr, UNKNOWN, _LOGGER.error
             )
 
         except Error as ex:
