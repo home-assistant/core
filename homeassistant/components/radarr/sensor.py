@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Generic
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
@@ -76,7 +76,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     ),
     "movie": RadarrSensorEntityDescription[int](
         key="movies",
-        name="Movies",
+        translation_key="movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
         entity_registry_enabled_default=False,
@@ -84,11 +84,11 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     ),
     "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",
-        name="Start time",
+        translation_key="start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data, _: data.startTime.replace(tzinfo=timezone.utc),
+        value_fn=lambda data, _: data.startTime.replace(tzinfo=UTC),
     ),
 }
 

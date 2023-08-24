@@ -52,6 +52,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     _attr_supported_features = CameraEntityFeature.STREAM
     _attr_brand = "Tuya"
+    _attr_name = None
 
     def __init__(
         self,

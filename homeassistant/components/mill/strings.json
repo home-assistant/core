@@ -26,5 +26,29 @@
         "description": "Local IP address of the device."
       }
     }
+  },
+  "services": {
+    "set_room_temperature": {
+      "name": "Set room temperature",
+      "description": "Sets Mill room temperatures.",
+      "fields": {
+        "room_name": {
+          "name": "Room name",
+          "description": "Name of room to change."
+        },
+        "away_temp": {
+          "name": "Away temperature",
+          "description": "Away temp."
+        },
+        "comfort_temp": {
+          "name": "Comfort temperature",
+          "description": "Comfort temp."
+        },
+        "sleep_temp": {
+          "name": "Sleep temperature",
+          "description": "Sleep temp."
+        }
+      }
+    }
   }
 }

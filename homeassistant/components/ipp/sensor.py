@@ -6,15 +6,16 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from pyipp import Marker, Printer
+
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
@@ -39,7 +40,7 @@ from .entity import IPPEntity
 class IPPSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Any], StateType | datetime]
+    value_fn: Callable[[Printer], StateType | datetime]
 
 
 @dataclass
@@ -48,12 +49,25 @@ class IPPSensorEntityDescription(
 ):
     """Describes IPP sensor entity."""
 
-    attributes_fn: Callable[[Any], dict[Any, StateType]] = lambda _: {}
+    attributes_fn: Callable[[Printer], dict[Any, StateType]] = lambda _: {}
+
+
+def _get_marker_attributes_fn(
+    marker_index: int, attributes_fn: Callable[[Marker], dict[Any, StateType]]
+) -> Callable[[Printer], dict[Any, StateType]]:
+    return lambda printer: attributes_fn(printer.markers[marker_index])
+
+
+def _get_marker_value_fn(
+    marker_index: int, value_fn: Callable[[Marker], StateType | datetime]
+) -> Callable[[Printer], StateType | datetime]:
+    return lambda printer: value_fn(printer.markers[marker_index])
 
 
 PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="printer",
+        name=None,
         translation_key="printer",
         icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
@@ -65,26 +79,17 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
             ATTR_STATE_MESSAGE: printer.state.message,
             ATTR_STATE_REASON: printer.state.reasons,
             ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
+            ATTR_URI_SUPPORTED: ",".join(printer.info.printer_uri_supported),
         },
         value_fn=lambda printer: printer.state.printer_state,
     ),
     IPPSensorEntityDescription(
         key="uptime",
-        name="Uptime",
+        translation_key="uptime",
         icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        attributes_fn=lambda printer: {
-            ATTR_INFO: printer.info.printer_info,
-            ATTR_SERIAL: printer.info.serial,
-            ATTR_LOCATION: printer.info.location,
-            ATTR_STATE_MESSAGE: printer.state.message,
-            ATTR_STATE_REASON: printer.state.reasons,
-            ATTR_COMMAND_SET: printer.info.command_set,
-            ATTR_URI_SUPPORTED: printer.info.printer_uri_supported,
-        },
         value_fn=lambda printer: (utcnow() - timedelta(seconds=printer.info.uptime)),
     ),
 )
@@ -97,41 +102,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    # config flow sets this to either UUID, serial number or None
-    if (unique_id := entry.unique_id) is None:
-        unique_id = entry.entry_id
-
-    sensors: list[SensorEntity] = []
-
-    sensors.extend(
-        [
-            IPPSensor(
-                unique_id,
-                coordinator,
-                description,
-            )
-            for description in PRINTER_SENSORS
-        ]
-    )
+    sensors: list[SensorEntity] = [
+        IPPSensor(
+            coordinator,
+            description,
+        )
+        for description in PRINTER_SENSORS
+    ]
 
     for index, marker in enumerate(coordinator.data.markers):
         sensors.append(
-            IPPMarkerSensor(
-                index,
-                unique_id,
+            IPPSensor(
                 coordinator,
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
                     icon="mdi:water",
                     native_unit_of_measurement=PERCENTAGE,
-                    attributes_fn=lambda marker: {
-                        ATTR_MARKER_HIGH_LEVEL: marker.high_level,
-                        ATTR_MARKER_LOW_LEVEL: marker.low_level,
-                        ATTR_MARKER_TYPE: marker.marker_type,
-                    },
-                    value_fn=lambda marker: marker.level,
+                    attributes_fn=_get_marker_attributes_fn(
+                        index,
+                        lambda marker: {
+                            ATTR_MARKER_HIGH_LEVEL: marker.high_level,
+                            ATTR_MARKER_LOW_LEVEL: marker.low_level,
+                            ATTR_MARKER_TYPE: marker.marker_type,
+                        },
+                    ),
+                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
                 ),
             )
         )
@@ -144,24 +140,6 @@ class IPPSensor(IPPEntity, SensorEntity):
 
     entity_description: IPPSensorEntityDescription
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        device_id: str,
-        coordinator: IPPDataUpdateCoordinator,
-        description: IPPSensorEntityDescription,
-    ) -> None:
-        """Initialize IPP sensor."""
-        self.entity_description = description
-
-        super().__init__(
-            device_id,
-            coordinator,
-        )
-
-        self._attr_unique_id = f"{device_id}_{description.key}"
-
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
@@ -171,51 +149,3 @@ class IPPSensor(IPPEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-
-class IPPMarkerSensor(IPPEntity, RestoreSensor):
-    """Defines an IPP marker sensor."""
-
-    entity_description: IPPSensorEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        marker_index: int,
-        device_id: str,
-        coordinator: IPPDataUpdateCoordinator,
-        description: IPPSensorEntityDescription,
-    ) -> None:
-        """Initialize IPP marker sensor."""
-        self.entity_description = description
-        self.marker_index = marker_index
-
-        super().__init__(
-            device_id,
-            coordinator,
-        )
-
-        self._attr_unique_id = f"{device_id}_{description.key}"
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        if self.coordinator.data is None:
-            if (
-                last_sensor_data := await self.async_get_last_sensor_data()
-            ) is not None:
-                self._attr_native_value = last_sensor_data.native_value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.coordinator.data is not None:
-            self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator.data.markers[self.marker_index]
-            )
-            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self.coordinator.data.markers[self.marker_index]
-            )
-            self.async_write_ha_state()

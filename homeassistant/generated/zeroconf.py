@@ -449,6 +449,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "loqed",
+            "name": "loqed*",
+        },
+        {
             "domain": "nam",
             "name": "nam-*",
         },
@@ -677,6 +681,12 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [

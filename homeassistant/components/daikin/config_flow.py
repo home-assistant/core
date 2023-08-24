@@ -4,7 +4,6 @@ import logging
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from async_timeout import timeout
 from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
@@ -70,7 +69,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            async with timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
                     async_get_clientsession(self.hass),

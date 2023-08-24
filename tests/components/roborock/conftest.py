@@ -20,11 +20,17 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture() -> None:
     """Skip calls to the API."""
-    with patch("homeassistant.components.roborock.RoborockMqttClient.connect"), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.send_command"
+    with patch(
+        "homeassistant.components.roborock.RoborockMqttClient.async_connect"
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient._send_command"
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
+    ), patch(
+        "roborock.api.AttributeCache.async_value"
+    ), patch(
+        "roborock.api.AttributeCache.value"
     ):
         yield
 
@@ -61,6 +67,10 @@ async def setup_entry(
         return_value=PROP,
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ):
         assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()

@@ -6,7 +6,6 @@ from collections import defaultdict
 import logging
 from typing import Any
 
-import async_timeout
 from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
@@ -31,6 +30,7 @@ from homeassistant.components.spotify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -127,10 +127,10 @@ async def async_setup_entry(
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
     )
-    await forked_daapd_updater.async_init()
     hass.data[DOMAIN][config_entry.entry_id][
         HASS_DATA_UPDATER_KEY
     ] = forked_daapd_updater
+    await forked_daapd_updater.async_init()
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -666,7 +666,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._pause_requested = True
         await self.async_media_pause()
         try:
-            async with async_timeout.timeout(CALLBACK_TIMEOUT):
+            async with asyncio.timeout(CALLBACK_TIMEOUT):
                 await self._paused_event.wait()  # wait for paused
         except asyncio.TimeoutError:
             self._pause_requested = False
@@ -761,7 +761,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         await sleep_future
         await self.api.add_to_queue(uris=media_id, playback="start", clear=True)
         try:
-            async with async_timeout.timeout(TTS_TIMEOUT):
+            async with asyncio.timeout(TTS_TIMEOUT):
                 await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
         except asyncio.TimeoutError:
@@ -914,7 +914,8 @@ class ForkedDaapdUpdater:
 
     async def async_init(self):
         """Perform async portion of class initialization."""
-        server_config = await self._api.get_request("config")
+        if not (server_config := await self._api.get_request("config")):
+            raise PlatformNotReady
         if websocket_port := server_config.get("websocket_port"):
             self.websocket_handler = asyncio.create_task(
                 self._api.start_websocket_handler(

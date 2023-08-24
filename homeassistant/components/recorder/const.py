@@ -1,10 +1,9 @@
 """Recorder constants."""
 
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
+
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
-from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-import
-    JSON_DUMP,
-)
+from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"

@@ -41,7 +41,7 @@
   "iot_class": "local_push",
   "loggers": ["pyunifiprotect", "unifi_discovery"],
   "quality_scale": "platinum",
-  "requirements": ["pyunifiprotect==4.10.2", "unifi-discovery==1.1.7"],
+  "requirements": ["pyunifiprotect==4.10.6", "unifi-discovery==1.1.7"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",

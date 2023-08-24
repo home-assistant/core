@@ -94,7 +94,7 @@ def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
     device_id = get_device_id(node.client.driver, node)
-    return dev_reg.async_get_device({device_id})
+    return dev_reg.async_get_device(identifiers={device_id})
 
 
 async def test_no_driver(
@@ -276,14 +276,16 @@ async def test_subscribe_node_status(
     msg = await ws_client.receive_json()
     assert msg["success"]
 
-    node.data["ready"] = True
+    new_node_data = deepcopy(multisensor_6_state)
+    new_node_data["ready"] = True
+
     event = Event(
         "ready",
         {
             "source": "node",
             "event": "ready",
             "nodeId": node.node_id,
-            "nodeState": node.data,
+            "nodeState": new_node_data,
         },
     )
     node.receive_event(event)
@@ -462,7 +464,7 @@ async def test_node_comments(
     ws_client = await hass_ws_client(hass)
 
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({(DOMAIN, "3245146787-35")})
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, "3245146787-35")})
     assert device
 
     await ws_client.send_json(
@@ -1715,7 +1717,7 @@ async def test_remove_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_exclusion",
-        "strategy": 0,
+        "options": {"strategy": 0},
     }
 
     # Test FailedZWaveCommand is caught

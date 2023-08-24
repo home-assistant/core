@@ -5,14 +5,13 @@ import abc
 from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Required, TypedDict
 
-from typing_extensions import Required
 import voluptuous as vol
 
-from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.frame import report
@@ -96,6 +95,7 @@ class FlowResult(TypedDict, total=False):
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
     options: Mapping[str, Any]
+    preview: str | None
     progress_action: str
     reason: str
     required: bool
@@ -136,6 +136,7 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._preview: set[str] = set()
         self._progress: dict[str, FlowHandler] = {}
         self._handler_progress_index: dict[str, set[str]] = {}
         self._init_data_process_index: dict[type, set[str]] = {}
@@ -164,16 +165,19 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_has_matching_flow(
-        self, handler: str, context: dict[str, Any], data: Any
+        self, handler: str, match_context: dict[str, Any], data: Any
     ) -> bool:
         """Check if an existing matching flow is in progress.
 
         A flow with the same handler, context, and data.
+
+        If match_context is passed, only return flows with a context that is a
+        superset of match_context.
         """
         return any(
             flow
-            for flow in self._async_progress_by_handler(handler)
-            if flow.context["source"] == context["source"] and flow.init_data == data
+            for flow in self._async_progress_by_handler(handler, match_context)
+            if flow.init_data == data
         )
 
     @callback
@@ -192,11 +196,19 @@ class FlowManager(abc.ABC):
 
     @callback
     def async_progress_by_handler(
-        self, handler: str, include_uninitialized: bool = False
+        self,
+        handler: str,
+        include_uninitialized: bool = False,
+        match_context: dict[str, Any] | None = None,
     ) -> list[FlowResult]:
-        """Return the flows in progress by handler as a partial FlowResult."""
+        """Return the flows in progress by handler as a partial FlowResult.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
         return _async_flow_handler_to_flow_result(
-            self._async_progress_by_handler(handler), include_uninitialized
+            self._async_progress_by_handler(handler, match_context),
+            include_uninitialized,
         )
 
     @callback
@@ -217,11 +229,26 @@ class FlowManager(abc.ABC):
         )
 
     @callback
-    def _async_progress_by_handler(self, handler: str) -> list[FlowHandler]:
-        """Return the flows in progress by handler."""
+    def _async_progress_by_handler(
+        self, handler: str, match_context: dict[str, Any] | None
+    ) -> list[FlowHandler]:
+        """Return the flows in progress by handler.
+
+        If match_context is specified, only return flows with a context that
+        is a superset of match_context.
+        """
+        match_context_items = match_context.items() if match_context else None
         return [
-            self._progress[flow_id]
+            progress
             for flow_id in self._handler_progress_index.get(handler, {})
+            if (progress := self._progress[flow_id])
+            and (
+                not match_context_items
+                or (
+                    (context := progress.context)
+                    and match_context_items <= context.items()
+                )
+            )
         ]
 
     async def async_init(
@@ -370,6 +397,10 @@ class FlowManager(abc.ABC):
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
 
+        # Setup the flow handler's preview if needed
+        if result.get("preview") is not None:
+            await self._async_setup_preview(flow)
+
         if not isinstance(result["type"], FlowResultType):
             result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
             report(
@@ -403,6 +434,12 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    async def _async_setup_preview(self, flow: FlowHandler) -> None:
+        """Set up preview for a flow handler."""
+        if flow.handler not in self._preview:
+            self._preview.add(flow.handler)
+            flow.async_setup_preview(self.hass)
 
 
 class FlowHandler:
@@ -479,6 +516,7 @@ class FlowHandler:
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
+        preview: str | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
         return FlowResult(
@@ -490,6 +528,7 @@ class FlowHandler:
             errors=errors,
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
+            preview=preview,  # Display preview component in frontend
         )
 
     @callback
@@ -609,6 +648,11 @@ class FlowHandler:
     @callback
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
+
+    @callback
+    @staticmethod
+    def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview."""
 
 
 @callback

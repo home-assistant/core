@@ -193,7 +193,7 @@ async def websocket_resolve_media(
 ) -> None:
     """Resolve media."""
     try:
-        media = await async_resolve_media(hass, msg["media_content_id"])
+        media = await async_resolve_media(hass, msg["media_content_id"], None)
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
         return

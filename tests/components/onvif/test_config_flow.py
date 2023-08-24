@@ -1,4 +1,5 @@
 """Test ONVIF config flow."""
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -103,6 +104,7 @@ def setup_mock_discovery(
 
 async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
+    logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -172,6 +174,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(
     hass: HomeAssistant,
 ) -> None:
     """Test that config flow discovery ignores configured devices."""
+    logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
     await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -241,6 +244,7 @@ async def test_flow_discovered_no_device(hass: HomeAssistant) -> None:
 
 async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> None:
     """Test that config flow discovery ignores setup devices."""
+    logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
     await setup_onvif_integration(hass)
     await setup_onvif_integration(
         hass,
@@ -298,6 +302,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> 
 
 async def test_flow_manual_entry(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
+    logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

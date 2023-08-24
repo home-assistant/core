@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-import async_timeout
 import attr
 import numpy as np
 
@@ -332,7 +331,7 @@ class StreamOutput:
     async def part_recv(self, timeout: float | None = None) -> bool:
         """Wait for an event signalling the latest part segment."""
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await self._part_event.wait()
         except asyncio.TimeoutError:
             return False

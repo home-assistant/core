@@ -1,11 +1,11 @@
 """Support for OVO Energy."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import async_timeout
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
@@ -13,8 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -48,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             try:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],
@@ -98,6 +97,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class OVOEnergyEntity(CoordinatorEntity[DataUpdateCoordinator[OVODailyUsage]]):
     """Defines a base OVO Energy entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

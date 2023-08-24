@@ -218,6 +218,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_name = None
 
     def __init__(
         self,
@@ -244,7 +245,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self.zone_type = zone_type
 
         self._attr_unique_id = f"{zone_type} {zone_id} {tado.home_id}"
-        self._attr_name = zone_name
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_translation_key = DOMAIN

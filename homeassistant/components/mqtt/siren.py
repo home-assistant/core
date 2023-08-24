@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import copy
 import functools
 import logging
 from typing import Any, cast
@@ -80,7 +79,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_OFF): cv.string,
@@ -139,8 +138,10 @@ async def _async_setup_entity(
 class MqttSiren(MqttEntity, SirenEntity):
     """Representation of a siren that can be controlled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
+    _extra_attributes: dict[str, Any]
 
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType] | None
@@ -158,6 +159,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT siren."""
+        self._extra_attributes: dict[str, Any] = {}
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -174,21 +176,21 @@ class MqttSiren(MqttEntity, SirenEntity):
         state_off: str | None = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
-        self._attr_extra_state_attributes = {}
+        self._extra_attributes = {}
 
         _supported_features = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             _supported_features |= SirenEntityFeature.DURATION
-            self._attr_extra_state_attributes[ATTR_DURATION] = None
+            self._extra_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
             _supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
-            self._attr_extra_state_attributes[ATTR_TONE] = None
+            self._extra_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
             _supported_features |= SirenEntityFeature.VOLUME_SET
-            self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
+            self._extra_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
@@ -305,14 +307,19 @@ class MqttSiren(MqttEntity, SirenEntity):
         return self._optimistic
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        mqtt_attributes = super().extra_state_attributes
-        attributes = (
-            copy.deepcopy(mqtt_attributes) if mqtt_attributes is not None else {}
+        extra_attributes = (
+            self._attr_extra_state_attributes
+            if hasattr(self, "_attr_extra_state_attributes")
+            else {}
         )
-        attributes.update(self._attr_extra_state_attributes)
-        return attributes
+        if extra_attributes:
+            return (
+                dict({*self._extra_attributes.items(), *extra_attributes.items()})
+                or None
+            )
+        return self._extra_attributes or None
 
     async def _async_publish(
         self,
@@ -376,6 +383,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         """Update the extra siren state attributes."""
         for attribute, support in SUPPORTED_ATTRIBUTES.items():
             if self._attr_supported_features & support and attribute in data:
-                self._attr_extra_state_attributes[attribute] = data[
+                self._extra_attributes[attribute] = data[
                     attribute  # type: ignore[literal-required]
                 ]

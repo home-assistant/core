@@ -1,8 +1,8 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
@@ -21,7 +21,10 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CLOUDS,
     ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_FORECAST_HUMIDITY,
     ATTR_API_FORECAST_PRECIPITATION,
     ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_API_FORECAST_PRESSURE,
@@ -41,8 +44,9 @@ from .const import (
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_GUST,
     ATTR_API_WIND_SPEED,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
@@ -76,7 +80,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update the data."""
         data = {}
-        async with async_timeout.timeout(20):
+        async with asyncio.timeout(20):
             try:
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
@@ -130,6 +134,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
             ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
+            ATTR_API_WIND_GUST: current_weather.wind().get("gust"),
             ATTR_API_WIND_SPEED: current_weather.wind().get("speed"),
             ATTR_API_CLOUDS: current_weather.clouds,
             ATTR_API_RAIN: self._get_rain(current_weather.rain),
@@ -174,7 +179,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
-            ATTR_API_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_CLOUDS: entry.clouds,
+            ATTR_API_FORECAST_FEELS_LIKE_TEMPERATURE: entry.temperature("celsius").get(
+                "feels_like_day"
+            ),
+            ATTR_API_FORECAST_HUMIDITY: entry.humidity,
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -258,7 +267,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 return ATTR_CONDITION_SUNNY
             return ATTR_CONDITION_CLEAR_NIGHT
 
-        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+        return CONDITION_MAP.get(weather_code)
 
 
 class LegacyWeather:
