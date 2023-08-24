@@ -324,7 +324,6 @@ class SQLSensor(ManualTriggerSensorEntity):
         if not yaml:
             self._attr_name = None
             self._attr_has_entity_name = True
-        if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
