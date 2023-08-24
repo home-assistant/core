@@ -1,6 +1,5 @@
 """Test the Minecraft Server config flow."""
 
-import asyncio
 from unittest.mock import patch
 
 import aiodns
@@ -16,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 class QueryMock:
@@ -71,9 +70,6 @@ USER_INPUT_PORT_TOO_LARGE = {
     CONF_NAME: DEFAULT_NAME,
     CONF_HOST: "mc.dummyserver.com:65536",
 }
-
-SRV_RECORDS = asyncio.Future()
-SRV_RECORDS.set_result([QueryMock()])
 
 
 async def test_show_config_form(hass: HomeAssistant) -> None:
@@ -173,7 +169,7 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
     """Test config entry in case of a successful connection with a SRV record."""
     with patch(
         "aiodns.DNSResolver.query",
-        return_value=SRV_RECORDS,
+        return_value=mock_coro([QueryMock()]),
     ), patch(
         "mcstatus.server.JavaServer.async_status",
         return_value=JavaStatusResponse(

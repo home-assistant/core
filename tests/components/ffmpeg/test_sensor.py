@@ -30,21 +30,23 @@ class TestFFmpegNoiseSetup:
         assert self.hass.data["ffmpeg"].binary == "ffmpeg"
         assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
 
-    @patch("haffmpeg.sensor.SensorNoise.open_sensor", return_value=mock_coro())
-    def test_setup_component_start(self, mock_start):
+    async def test_setup_component_start(self):
         """Set up ffmpeg component."""
-        with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+        with patch(
+            "haffmpeg.sensor.SensorNoise.open_sensor", return_value=mock_coro()
+        ) as mock_start:
+            with assert_setup_component(1, "binary_sensor"):
+                setup_component(self.hass, "binary_sensor", self.config)
+            self.hass.block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
+            assert self.hass.data["ffmpeg"].binary == "ffmpeg"
+            assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
 
-        self.hass.start()
-        assert mock_start.called
+            self.hass.start()
+            assert mock_start.called
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
-        assert entity.state == "unavailable"
+            entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
+            assert entity.state == "unavailable"
 
     @patch("haffmpeg.sensor.SensorNoise")
     def test_setup_component_start_callback(self, mock_ffmpeg):
@@ -92,21 +94,23 @@ class TestFFmpegMotionSetup:
         assert self.hass.data["ffmpeg"].binary == "ffmpeg"
         assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
 
-    @patch("haffmpeg.sensor.SensorMotion.open_sensor", return_value=mock_coro())
-    def test_setup_component_start(self, mock_start):
+    async def test_setup_component_start(self):
         """Set up ffmpeg component."""
-        with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+        with patch(
+            "haffmpeg.sensor.SensorMotion.open_sensor", return_value=mock_coro()
+        ) as mock_start:
+            with assert_setup_component(1, "binary_sensor"):
+                setup_component(self.hass, "binary_sensor", self.config)
+            self.hass.block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
+            assert self.hass.data["ffmpeg"].binary == "ffmpeg"
+            assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
 
-        self.hass.start()
-        assert mock_start.called
+            self.hass.start()
+            assert mock_start.called
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
-        assert entity.state == "unavailable"
+            entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
+            assert entity.state == "unavailable"
 
     @patch("haffmpeg.sensor.SensorMotion")
     def test_setup_component_start_callback(self, mock_ffmpeg):
