@@ -337,8 +337,7 @@ def ws_start_preview(
         """Forward config entry state events to websocket."""
         connection.send_message(
             websocket_api.event_message(
-                msg["id"],
-                {"attributes": attributes, "group_type": group_type, "state": state},
+                msg["id"], {"attributes": attributes, "state": state}
             )
         )
 

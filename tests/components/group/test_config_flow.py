@@ -508,7 +508,6 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My group"} | extra_attributes[0],
-        "group_type": domain,
         "state": "unavailable",
     }
 
@@ -523,7 +522,6 @@ async def test_config_flow_preview(
         }
         | extra_attributes[0]
         | extra_attributes[1],
-        "group_type": domain,
         "state": group_state,
     }
     assert len(hass.states.async_all()) == 2
@@ -606,7 +604,6 @@ async def test_option_flow_preview(
     assert msg["event"] == {
         "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
         | extra_attributes,
-        "group_type": domain,
         "state": group_state,
     }
     assert len(hass.states.async_all()) == 3
