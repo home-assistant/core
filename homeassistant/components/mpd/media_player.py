@@ -94,7 +94,7 @@ class MpdDevice(MediaPlayerEntity):
         self._name = name
         self.password = password
 
-        self._status = None
+        self._status = {}
         self._currentsong = None
         self._playlists = None
         self._currentplaylist = None
@@ -153,7 +153,7 @@ class MpdDevice(MediaPlayerEntity):
                     log_level, "Error connecting to '%s': %s", self.server, error
                 )
                 self._is_available = False
-                self._status = None
+                self._status = {}
                 # Also yield on failure. Handling mpd.ConnectionErrors caused by
                 # attempting to control a disconnected client is the
                 # responsibility of the caller.
@@ -197,13 +197,13 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Return the media state."""
-        if self._status is None:
+        if not self._status:
             return MediaPlayerState.OFF
-        if self._status["state"] == "play":
+        if self._status.get("state") == "play":
             return MediaPlayerState.PLAYING
-        if self._status["state"] == "pause":
+        if self._status.get("state") == "pause":
             return MediaPlayerState.PAUSED
-        if self._status["state"] == "stop":
+        if self._status.get("state") == "stop":
             return MediaPlayerState.OFF
 
         return MediaPlayerState.OFF
@@ -374,7 +374,7 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self._status is None:
+        if not self._status:
             return MediaPlayerEntityFeature(0)
 
         supported = SUPPORT_MPD
@@ -442,7 +442,7 @@ class MpdDevice(MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Service to send the MPD the command for play/pause."""
         async with self.connection():
-            if self._status["state"] == "pause":
+            if self._status.get("state") == "pause":
                 await self._client.pause(0)
             else:
                 await self._client.play()
@@ -509,8 +509,8 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def repeat(self) -> RepeatMode:
         """Return current repeat mode."""
-        if self._status["repeat"] == "1":
-            if self._status["single"] == "1":
+        if self._status.get("repeat") == "1":
+            if self._status.get("single") == "1":
                 return RepeatMode.ONE
             return RepeatMode.ALL
         return RepeatMode.OFF
@@ -531,7 +531,7 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
-        return bool(int(self._status["random"]))
+        return bool(int(self._status.get("random")))
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
