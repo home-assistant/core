@@ -454,27 +454,6 @@ class TemplateEntity(Entity):
         )
 
 
-class TemplateSensor(TemplateEntity, SensorEntity):
-    """Representation of a Template Sensor."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        config: dict[str, Any],
-        fallback_name: str | None,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            hass, config=config, fallback_name=fallback_name, unique_id=unique_id
-        )
-
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_state_class = config.get(CONF_STATE_CLASS)
-
-
 class TriggerBaseEntity(Entity):
     """Template Base entity based on trigger data."""
 
