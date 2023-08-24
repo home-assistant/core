@@ -104,7 +104,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
         is_fixable=False,
-        is_persistent=False,
+        is_persistent=True,
         learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
         severity=ir.IssueSeverity.ERROR,
         translation_key=(
