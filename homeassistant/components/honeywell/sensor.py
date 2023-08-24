@@ -21,13 +21,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import HoneywellData
-from .const import (
-    CURRENT_HUMIDITY_STATUS_KEY,
-    CURRENT_TEMPERATURE_STATUS_KEY,
-    DOMAIN,
-    OUTDOOR_HUMIDITY_STATUS_KEY,
-    OUTDOOR_TEMPERATURE_STATUS_KEY,
-)
+from .const import DOMAIN
+
+OUTDOOR_TEMPERATURE_STATUS_KEY = "outdoor_temperature"
+OUTDOOR_HUMIDITY_STATUS_KEY = "outdoor_humidity"
+CURRENT_TEMPERATURE_STATUS_KEY = "current_temperature"
+CURRENT_HUMIDITY_STATUS_KEY = "current_humidity"
 
 
 def _get_temperature_sensor_unit(device: Device) -> str:
