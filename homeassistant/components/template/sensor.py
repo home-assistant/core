@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -195,6 +196,26 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    validated_config = SENSOR_SCHEMA(config_entry.options)
+    async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
+
+
+@callback
+def async_create_preview_sensor(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> SensorTemplate:
+    """Create a preview sensor."""
+    validated_config = SENSOR_SCHEMA(config | {CONF_NAME: name})
+    entity = SensorTemplate(hass, validated_config, None)
+    return entity
+
+
 class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
@@ -217,13 +238,14 @@ class SensorTemplate(TemplateEntity, SensorEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
 
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_state(self, result):
