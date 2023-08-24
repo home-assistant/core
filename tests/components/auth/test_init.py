@@ -566,8 +566,8 @@ async def test_ws_delete_all_refresh_tokens(
     assert result, result["success"] is not raise_error
     if raise_error:
         assert result["error"] == {
-            "code": "token_removing_failed",
-            "message": "Failed to remove all tokens",
+            "code": "token_removing_error",
+            "message": "During removal, an error was raised.",
         }
 
     for token in tokens:

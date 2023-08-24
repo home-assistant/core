@@ -614,7 +614,7 @@ async def websocket_delete_all_refresh_tokens(
     """Handle delete all refresh tokens request."""
 
     async def remove_safely(token: RefreshToken) -> bool:
-        # For safety as a revoke_callback could raise an error
+        # For safety, a revoke_callback could raise an error.
         try:
             await hass.auth.async_remove_refresh_token(token)
             return True
@@ -637,7 +637,7 @@ async def websocket_delete_all_refresh_tokens(
 
     if remove_failed:
         connection.send_error(
-            msg["id"], "token_removing_failed", "Failed to remove all tokens"
+            msg["id"], "token_removing_error", "During removal, an error was raised."
         )
     else:
         connection.send_result(msg["id"], {})
