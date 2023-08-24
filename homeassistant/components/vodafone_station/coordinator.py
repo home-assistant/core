@@ -18,77 +18,51 @@ from .const import _LOGGER, DOMAIN
 class VodafoneStationDeviceInfo:
     """Representation of a device connected to the Vodafone Station."""
 
-    def __init__(self, dev_info: VodafoneStationDevice) -> None:
-        """Initialize device info."""
-        self._connected = False
-        self._connection_type: str | None = None
-        self._ip_address: str | None = None
-        self._last_activity: datetime | None = None
-        self._mac = dev_info.mac
-        self._name = dev_info.name
-        self._wifi: str | None = None
-
-    def update(
+    def __init__(
         self,
         dev_info: VodafoneStationDevice,
+        coordinator: DataUpdateCoordinator,
         consider_home: float = DEFAULT_CONSIDER_HOME.total_seconds(),
     ) -> None:
-        """Update device info."""
-        utc_point_in_time = dt_util.utcnow()
+        """Initialize device info."""
+        self._dev_info = dev_info
+        self._consider_home = consider_home
+        self._coordinator = coordinator
+        self._utc_point_in_time = dt_util.utcnow()
 
-        if self._last_activity:
+        self.connection_type: str = self._dev_info.connection_type
+        self.hostname = self._dev_info.name or self._dev_info.mac.replace(":", "_")
+        self.ip_address: str = self._dev_info.ip_address
+        self.mac_address = self._dev_info.mac
+        self.wifi: str = self._dev_info.wifi
+
+        self.last_activity: datetime | None = self._last_activity_status_update()
+        self.is_connected = self._connected_status_update()
+
+    def _last_activity_status_update(self) -> datetime | None:
+        """Update last_activity status."""
+
+        if self._dev_info.connected:
+            return self._utc_point_in_time
+
+        if self._coordinator.data:
+            return self._coordinator.data.devices[self._dev_info.mac].last_activity
+
+        return None
+
+    def _connected_status_update(self) -> bool:
+        """Update connected status."""
+
+        if self._dev_info.connected:
+            return True
+
+        consider_home_evaluated = False
+        if self.last_activity:
             consider_home_evaluated = (
-                utc_point_in_time - self._last_activity
-            ).total_seconds() < consider_home
-        else:
-            consider_home_evaluated = dev_info.connected
+                self._utc_point_in_time - self.last_activity
+            ).total_seconds() < self._consider_home
 
-        if not self._name:
-            self._name = dev_info.name or self._mac.replace(":", "_")
-
-        self._connected = dev_info.connected or consider_home_evaluated
-
-        if dev_info.connected:
-            self._last_activity = utc_point_in_time
-
-        self._connection_type = dev_info.connection_type
-        self._ip_address = dev_info.ip_address
-        self._wifi = dev_info.wifi
-
-    @property
-    def connection_type(self) -> str:
-        """Return connected status."""
-        return self._connection_type or ""
-
-    @property
-    def is_connected(self) -> bool:
-        """Return connected status."""
-        return self._connected
-
-    @property
-    def mac_address(self) -> str:
-        """Get MAC address."""
-        return self._mac
-
-    @property
-    def hostname(self) -> str | None:
-        """Get Name."""
-        return self._name
-
-    @property
-    def ip_address(self) -> str | None:
-        """Get IP address."""
-        return self._ip_address
-
-    @property
-    def last_activity(self) -> datetime | None:
-        """Return device last activity."""
-        return self._last_activity
-
-    @property
-    def wifi(self) -> str | None:
-        """Return device WIFi connection."""
-        return self._wifi
+        return consider_home_evaluated
 
 
 @dataclass
@@ -143,9 +117,7 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         list_devices = await self.api.get_all_devices()
         dev_info: VodafoneStationDevice
         for dev_info in list_devices.values():
-            dev = VodafoneStationDeviceInfo(dev_info)
-            dev.update(dev_info)
-            data.devices[dev_info.mac] = dev
+            data.devices[dev_info.mac] = VodafoneStationDeviceInfo(dev_info, self)
         data.sensors = await self.api.get_user_data()
 
         await self.api.logout()

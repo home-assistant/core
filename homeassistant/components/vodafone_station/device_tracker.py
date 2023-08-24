@@ -68,9 +68,9 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
         """Initialize a Vodafone Station device."""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._device_mac = device._mac
-        self._attr_unique_id = device._mac
-        self._attr_name = device._name or DEFAULT_DEVICE_NAME
+        self._device_mac = device.mac_address
+        self._attr_unique_id = device.mac_address
+        self._attr_name = device.hostname or DEFAULT_DEVICE_NAME
 
     @property
     def _device_info(self) -> VodafoneStationDeviceInfo:
