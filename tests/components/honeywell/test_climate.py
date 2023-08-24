@@ -1048,7 +1048,7 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
-    device.refresh.side_effect = [aiosomecomfort.UnauthorizedError,None]
+    device.refresh.side_effect = [aiosomecomfort.UnauthorizedError, None]
     client.login.side_effect = None
     async_fire_time_changed(
         hass,
