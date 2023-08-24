@@ -1599,9 +1599,13 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity has a valid value."""
     state_obj = _get_state(hass, entity_id)
 
-    return state_obj is not None and (
-        state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    )
+    if state_obj is not None:
+        _collect_state(hass, entity_id)
+
+    return state_obj is not None and state_obj.state not in [
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ]
 
 
 def now(hass: HomeAssistant) -> datetime:

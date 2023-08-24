@@ -1813,6 +1813,9 @@ def test_has_value(hass: HomeAssistant) -> None:
     hass.states.async_set("test.value1", 1)
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
 
+    info = render_to_info(hass, "{{ 'test.value1' | has_value }}")
+    assert_result_info(info, True, ["test.value1"])
+
     tpl = template.Template(
         """
 {{ has_value("test.value1") }}
