@@ -99,6 +99,16 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
+class MqttOriginInfo(TypedDict, total=False):
+    """Integration info of discovered entity."""
+
+    name: str
+    manufacturer: str
+    sw_version: str
+    hw_version: str
+    support_url: str
+
+
 class MqttCommandTemplate:
     """Class for rendering MQTT payload with command templates."""
 
