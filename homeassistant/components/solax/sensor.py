@@ -54,6 +54,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="total_energy",
     ),
     (Units.V, False): SensorEntityDescription(
         key=f"{Units.V}_{False}",
@@ -159,6 +160,7 @@ class Inverter(SensorEntity):
     """Class for a sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -173,7 +175,6 @@ class Inverter(SensorEntity):
     ):
         """Initialize an inverter sensor."""
         self._attr_unique_id = uid
-        self._attr_name = f"{manufacturer} {serial} {key}"
         self._attr_native_unit_of_measurement = unit
         self._attr_state_class = state_class
         self._attr_device_class = device_class
