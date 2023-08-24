@@ -32,7 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         device_id=device_id,
     )
-    await coordinator.async_config_entry_first_refresh()
+
+    await coordinator.async_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
