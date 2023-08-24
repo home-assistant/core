@@ -15,7 +15,6 @@ from .const import (
     API_AP_FIRMWAREVERSION,
     API_AP_MAC,
     API_AP_MODEL,
-    API_AP_SERIALNUMBER,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_VERSION,
     COORDINATOR,
@@ -53,11 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registry = dr.async_get(hass)
     aps = await ruckus.api.get_aps()
     for access_point in aps:
-        _LOGGER.debug("AP [%s] %s", access_point[API_AP_SERIALNUMBER], entry.entry_id)
+        _LOGGER.debug("AP [%s] %s", access_point[API_AP_MAC], entry.entry_id)
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
-            identifiers={(DOMAIN, access_point[API_AP_SERIALNUMBER])},
+            identifiers={(DOMAIN, access_point[API_AP_MAC])},
             manufacturer=MANUFACTURER,
             name=access_point[API_AP_DEVNAME],
             model=access_point[API_AP_MODEL],

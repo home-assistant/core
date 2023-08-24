@@ -1,6 +1,5 @@
 """Config flow for Ruckus Unleashed integration."""
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from aioruckus import AjaxSession, SystemStat
@@ -12,8 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    API_SYS_IDENTITY,
-    API_SYS_IDENTITY_NAME,
+    API_MESH_NAME,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_SERIAL,
     API_SYS_UNLEASHEDNETWORK,
@@ -22,8 +20,6 @@ from .const import (
     KEY_SYS_SERIAL,
     KEY_SYS_TITLE,
 )
-
-_LOGGER = logging.getLogger(__package__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -46,17 +42,16 @@ async def validate_input(hass: core.HomeAssistant, data):
         ) as ruckus:
             system_info = await ruckus.api.get_system_info(
                 SystemStat.SYSINFO,
-                SystemStat.IDENTITY,
                 SystemStat.UNLEASHED_NETWORK,
             )
-            zd_name = system_info[API_SYS_IDENTITY][API_SYS_IDENTITY_NAME]
+            mesh_name = (await ruckus.api.get_mesh_info())[API_MESH_NAME]
             zd_serial = (
                 system_info[API_SYS_UNLEASHEDNETWORK][API_SYS_UNLEASHEDNETWORK_TOKEN]
                 if API_SYS_UNLEASHEDNETWORK in system_info
                 else system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
             )
             return {
-                KEY_SYS_TITLE: zd_name,
+                KEY_SYS_TITLE: mesh_name,
                 KEY_SYS_SERIAL: zd_serial,
             }
     except AuthenticationError as autherr:

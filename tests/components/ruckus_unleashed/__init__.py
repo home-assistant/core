@@ -71,7 +71,7 @@ TEST_CLIENT = {
     API_CLIENT_AP_MAC: DEFAULT_AP_INFO[0][API_AP_MAC],
 }
 
-DEFAULT_TITLE = DEFAULT_SYSTEM_INFO[API_SYS_IDENTITY][API_SYS_IDENTITY_NAME]
+DEFAULT_TITLE = DEFAULT_MESH_INFO[API_MESH_NAME]
 DEFAULT_UNIQUEID = (
     DEFAULT_SYSTEM_INFO[API_SYS_UNLEASHEDNETWORK][API_SYS_UNLEASHEDNETWORK_TOKEN]
     if API_SYS_UNLEASHEDNETWORK in DEFAULT_SYSTEM_INFO
@@ -117,11 +117,13 @@ class RuckusAjaxApiPatchContext:
         self,
         login_mock: AsyncMock = None,
         system_info: dict | None = None,
+        mesh_info: dict | None = None,
         active_clients: list[dict] | AsyncMock | None = None,
     ) -> None:
         """Initialize Ruckus Mock Context Manager."""
         self.login_mock = login_mock
         self.system_info = system_info
+        self.mesh_info = mesh_info
         self.active_clients = active_clients
         self.patchers = []
 
@@ -143,6 +145,17 @@ class RuckusAjaxApiPatchContext:
                     return_value=DEFAULT_SYSTEM_INFO
                     if self.system_info is None
                     else self.system_info
+                ),
+            )
+        )
+        self.patchers.append(
+            patch.object(
+                RuckusAjaxApi,
+                "get_mesh_info",
+                new=AsyncMock(
+                    return_value=DEFAULT_MESH_INFO
+                    if self.mesh_info is None
+                    else self.mesh_info
                 ),
             )
         )
