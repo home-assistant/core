@@ -1,10 +1,9 @@
 """Support for Vodafone Station."""
-import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypedDict
+from typing import Any
 
-import aiohttp
-from aiovodafone.api import VodafoneStationApi, VodafoneStationDevice
+from aiovodafone import VodafoneStationApi, VodafoneStationDevice, exceptions
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.core import HomeAssistant
@@ -19,14 +18,14 @@ from .const import _LOGGER, DOMAIN
 class VodafoneStationDeviceInfo:
     """Representation of a device connected to the Vodafone Station."""
 
-    def __init__(self, mac: str, name: str | None = None) -> None:
+    def __init__(self, dev_info: VodafoneStationDevice) -> None:
         """Initialize device info."""
         self._connected = False
         self._connection_type: str | None = None
         self._ip_address: str | None = None
         self._last_activity: datetime | None = None
-        self._mac = mac
-        self._name = name
+        self._mac = dev_info.mac
+        self._name = dev_info.name
         self._wifi: str | None = None
 
     def update(
@@ -92,7 +91,8 @@ class VodafoneStationDeviceInfo:
         return self._wifi
 
 
-class UpdateCoordinatorDataType(TypedDict):
+@dataclass
+class UpdateCoordinatorDataType:
     """Update coordinator data type."""
 
     devices: dict[str, VodafoneStationDeviceInfo]
@@ -130,24 +130,23 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
         try:
             logged = await self.api.login()
-        except (asyncio.exceptions.TimeoutError, aiohttp.ClientConnectorError) as err:
+        except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        except exceptions.CannotAuthenticate as err:
+            raise ConfigEntryAuthFailed from err
 
         if not logged:
             raise ConfigEntryAuthFailed
 
-        data: UpdateCoordinatorDataType = {
-            "devices": {},
-            "sensors": {},
-        }
+        data = UpdateCoordinatorDataType({}, {})
         list_devices = await self.api.get_all_devices()
         dev_info: VodafoneStationDevice
-        for _, dev_info in list_devices.items():
-            dev = VodafoneStationDeviceInfo(dev_info.mac, dev_info.name)
+        for dev_info in list_devices.values():
+            dev = VodafoneStationDeviceInfo(dev_info)
             dev.update(dev_info)
-            data["devices"][dev_info.mac] = dev
-        data["sensors"] = await self.api.get_user_data()
+            data.devices[dev_info.mac] = dev
+        data.sensors = await self.api.get_user_data()
 
         await self.api.logout()
 

@@ -26,19 +26,21 @@ async def async_setup_entry(
     tracked: set = set()
 
     @callback
-    def update_router() -> None:
+    def async_update_router() -> None:
         """Update the values of the router."""
-        add_entities(coordinator, async_add_entities, tracked)
+        async_add_new_tracked_entities(coordinator, async_add_entities, tracked)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, coordinator.signal_device_new, update_router)
+        async_dispatcher_connect(
+            hass, coordinator.signal_device_new, async_update_router
+        )
     )
 
-    update_router()
+    async_update_router()
 
 
 @callback
-def add_entities(
+def async_add_new_tracked_entities(
     coordinator: VodafoneStationRouter,
     async_add_entities: AddEntitiesCallback,
     tracked: set[str],
@@ -47,7 +49,7 @@ def add_entities(
     new_tracked = []
 
     _LOGGER.debug("Adding device trackers entities")
-    for mac, device in coordinator.data["devices"].items():
+    for mac, device in coordinator.data.devices.items():
         if mac in tracked:
             continue
         _LOGGER.debug("New device tracker: %s", device.hostname)
@@ -73,7 +75,7 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     @property
     def _device_info(self) -> VodafoneStationDeviceInfo:
         """Return fresh data for the device."""
-        return self.coordinator.data["devices"][self._device_mac]
+        return self.coordinator.data.devices[self._device_mac]
 
     @property
     def is_connected(self) -> bool:
@@ -122,12 +124,3 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
             "last_time_reachable"
         ] = self._device_info.last_activity
         return super().extra_state_attributes
-
-    async def async_process_update(self) -> None:
-        """Update device."""
-        raise NotImplementedError()
-
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        await self.async_process_update()
-        self.async_write_ha_state()
