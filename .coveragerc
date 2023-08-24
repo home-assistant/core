@@ -1521,6 +1521,9 @@ omit =
     homeassistant/components/yamaha_musiccast/select.py
     homeassistant/components/yamaha_musiccast/switch.py
     homeassistant/components/yandex_transport/sensor.py
+    homeassistant/components/yardian/__init__.py
+    homeassistant/components/yardian/coordinator.py
+    homeassistant/components/yardian/switch.py
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
     homeassistant/components/yolink/__init__.py
