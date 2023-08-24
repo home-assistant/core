@@ -111,6 +111,7 @@ ABBREVIATIONS = {
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
     "name": "name",
+    "o": "origin",
     "obj_id": "object_id",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
@@ -274,4 +275,10 @@ DEVICE_ABBREVIATIONS = {
     "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
+}
+
+ORIGIN_ABBREVIATIONS = {
+    "name": "name",
+    "sw": "sw_version",
+    "url": "support_url",
 }

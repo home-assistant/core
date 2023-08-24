@@ -747,7 +747,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.69.0
+hass-nabucasa==0.70.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
@@ -1608,6 +1608,7 @@ pytraccar==1.0.0
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
 
+# homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1680,7 +1681,7 @@ renault-api==0.2.0
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.7
+reolink-aio==0.7.8
 
 # homeassistant.components.rflink
 rflink==0.0.65
