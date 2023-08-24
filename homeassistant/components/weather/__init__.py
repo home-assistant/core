@@ -1392,7 +1392,14 @@ class SingleCoordinatorWeatherEntity(
         TimestampDataUpdateCoordinator[None],
     ],
 ):
-    """A class for weather entities using a single DataUpdateCoordinators."""
+    """A class for weather entities using a single DataUpdateCoordinators.
+
+    This class is added as a convenience because:
+    - Deriving from CoordinatorWeatherEntity requires specifying all type parameters
+    until we upgrade to Python 3.12 which supports defaults
+    - Mypy bug https://github.com/python/mypy/issues/9424 prevents us from making the
+    forecast cooordinator type vars optional
+    """
 
     def __init__(
         self,
