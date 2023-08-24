@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import time
 
 import pytest
@@ -42,8 +42,7 @@ def test_set_default_time_zone() -> None:
 def test_utcnow() -> None:
     """Test the UTC now method."""
     assert abs(
-        dt_util.utcnow().replace(tzinfo=None)
-        - datetime.now(timezone.utc).replace(tzinfo=None)
+        dt_util.utcnow().replace(tzinfo=None) - datetime.now(UTC).replace(tzinfo=None)
     ) < timedelta(seconds=1)
 
 
@@ -53,13 +52,13 @@ def test_now() -> None:
 
     assert abs(
         dt_util.as_utc(dt_util.now()).replace(tzinfo=None)
-        - datetime.now(timezone.utc).replace(tzinfo=None)
+        - datetime.now(UTC).replace(tzinfo=None)
     ) < timedelta(seconds=1)
 
 
 def test_as_utc_with_naive_object() -> None:
     """Test the now method."""
-    utcnow = datetime.now(timezone.utc).replace(tzinfo=None)
+    utcnow = datetime.now(UTC).replace(tzinfo=None)
 
     assert utcnow == dt_util.as_utc(utcnow).replace(tzinfo=None)
 
@@ -85,7 +84,7 @@ def test_as_local_with_naive_object() -> None:
     """Test local time with native object."""
     now = dt_util.now()
     assert abs(
-        now - dt_util.as_local(datetime.now(timezone.utc).replace(tzinfo=None))
+        now - dt_util.as_local(datetime.now(UTC).replace(tzinfo=None))
     ) < timedelta(seconds=1)
 
 
