@@ -689,7 +689,7 @@ class StatisticsSensor(SensorEntity):
         if len(self.states) > 0:
             sin_sum = sum(math.sin(math.radians(x)) for x in self.states)
             cos_sum = sum(math.cos(math.radians(x)) for x in self.states)
-            return math.degrees(math.atan2(sin_sum, cos_sum))
+            return (math.degrees(math.atan2(sin_sum, cos_sum)) + 360) % 360
         return None
 
     def _stat_median(self) -> StateType:
