@@ -368,7 +368,7 @@ amberelectric==1.0.4
 androidtv[async]==0.0.70
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.0.13
+androidtvremote2==0.0.14
 
 # homeassistant.components.anova
 anova-wifi==0.10.0
@@ -1037,7 +1037,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.29
+opower==0.0.31
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1340,7 +1340,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.2
+pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -1400,7 +1400,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.4.2
 
 # homeassistant.components.octoprint
-pyoctoprintapi==0.1.11
+pyoctoprintapi==0.1.12
 
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
@@ -1674,7 +1674,7 @@ renault-api==0.1.13
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.7
+reolink-aio==0.7.8
 
 # homeassistant.components.rflink
 rflink==0.0.65
