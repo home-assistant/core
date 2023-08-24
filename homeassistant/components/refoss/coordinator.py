@@ -1,27 +1,28 @@
 """Coordinators for the Refoss integration."""
-from typing import TypeVar, Dict, Optional, TypeGuard
-import async_timeout
-from collections.abc import Iterable
+
+from __future__ import annotations
+
 import asyncio
 from asyncio import AbstractEventLoop
+from collections.abc import Iterable
 from datetime import timedelta
+from typing import Optional, TypeVar
+
+import async_timeout
+from refoss_ha.const import DOMAIN, LOGGER, PUSH
+from refoss_ha.controller.device import BaseDevice
+from refoss_ha.controller.system import SystemAllMixin
+from refoss_ha.controller.toggle import ToggleXMix
+from refoss_ha.enums import Namespace
+from refoss_ha.http_device import HttpDeviceInfo
+from refoss_ha.socket_util import SocketUtil, pushStateDataList
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.core import HomeAssistant
-
-from refoss_ha.socket_util import pushStateDataList
-from refoss_ha.http_device import HttpDeviceInfo
-from refoss_ha.controller.device import BaseDevice
-from refoss_ha.socket_util import SocketUtil
-from refoss_ha.enums import Namespace
-from refoss_ha.controller.toggle import ToggleXMix
-from refoss_ha.controller.system import SystemAllMixin
-from refoss_ha.const import LOGGER, PUSH, DOMAIN
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 T = TypeVar("T", bound=BaseDevice)
-
 
 _ABILITY_MATRIX = {
     Namespace.CONTROL_TOGGLEX.value: ToggleXMix,
@@ -30,15 +31,18 @@ _ABILITY_MATRIX = {
 
 
 class RefossCoordinator(DataUpdateCoordinator):
+    """RefossCoordinator ."""
+
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         update_interval: timedelta,
         loop: Optional[AbstractEventLoop] = None,
-    ):
+    ) -> None:
+        """__init__ ."""
         self._entry = config_entry
-        self._devices_by_internal_id: Dict[str, BaseDevice] = {}
+        self._devices_by_internal_id: dict[str, BaseDevice] = {}
         self._setup_done = False
         self.socket = SocketUtil()
         self._loop = asyncio.get_event_loop() if loop is None else loop
@@ -52,13 +56,15 @@ class RefossCoordinator(DataUpdateCoordinator):
         )
 
     async def initial_setup(self):
+        """initial_setup ."""
         if self._setup_done:
             raise ValueError("This coordinator was already set up")
 
         # Listening for socket messages
         self.socket.startReveiveMsg()
 
-        asyncio.create_task(self.HandlePushState())
+        task = asyncio.create_task(self.HandlePushState())
+        task.done()
 
         devicelist = self.socket.async_socket_find_devices()
         self.async_set_updated_data({device.uuid: device for device in devicelist})
@@ -69,42 +75,35 @@ class RefossCoordinator(DataUpdateCoordinator):
         LOGGER.info("Initial_setup ok")
 
     async def _async_fetch_data(self):
+        """_async_fetch_data ."""
         async with async_timeout.timeout(10):
             devices = self.socket.async_socket_find_devices()
             return {device.uuid: device for device in devices}
 
     def find_devices(self, device_uuids: Optional[Iterable[str]] = None) -> list[T]:
+        """find_devices ."""
         res = self._devices_by_internal_id.values()
-
+        list_res = list(res)
         if device_uuids is not None:
-            res = filter(lambda d: TypeGuard[bool](d.uuid in device_uuids), res)
+            list_res = [d for d in list_res if d.uuid in device_uuids]
 
-        return list(res)
+        return list_res
 
     async def _async_enroll_new_http_dev(
         self, device_info: HttpDeviceInfo
     ) -> Optional[BaseDevice]:
+        """_async_enroll_new_http_dev ."""
         device = None
-        abilities = None
 
-        try:
-            res = await device_info.async_execute_cmd(
-                device_uuid=device_info.uuid,
-                method="GET",
-                namespace=Namespace.SYSTEM_ABILITY,
-                payload={},
-            )
+        res = await device_info.async_execute_cmd(
+            device_uuid=device_info.uuid,
+            method="GET",
+            namespace=Namespace.SYSTEM_ABILITY,
+            payload={},
+        )
 
-            abilities = res.get("payload", {}).get("ability")
+        abilities = res.get("payload", {}).get("ability", None)
 
-        except Exception as e:
-            LOGGER.warning(
-                f"Device %s (%s) is online, but timeout occurred "
-                f"when fetching its abilities. Reason: %s",
-                str(device_info.dev_name),
-                str(device_info.uuid),
-                e,
-            )
         if abilities is not None:
             device = build_device_from_abilities(
                 http_device_info=device_info, device_abilities=abilities
@@ -116,12 +115,13 @@ class RefossCoordinator(DataUpdateCoordinator):
         return device
 
     def enroll_device(self, device: BaseDevice):
+        """enroll_device ."""
         if device.uuid in self._devices_by_internal_id:
             return
-        else:
-            self._devices_by_internal_id[device.uuid] = device
+        self._devices_by_internal_id[device.uuid] = device
 
     def lookup_base_by_uuid(self, device_uuid: str) -> BaseDevice:
+        """lookup_base_by_uuid."""
         res = [
             d for d in self._devices_by_internal_id.values() if d.uuid == device_uuid
         ]
@@ -135,8 +135,9 @@ class RefossCoordinator(DataUpdateCoordinator):
     async def async_device_discovery(
         self,
         device_uuid: Optional[str] = None,
-        cached_http_device_list: list[HttpDeviceInfo] = None,
+        cached_http_device_list: Optional[HttpDeviceInfo] = None,
     ) -> list[BaseDevice]:
+        """async_device_discovery."""
         if cached_http_device_list is None:
             http_devices = self.socket.async_socket_find_devices()
         else:
@@ -167,6 +168,7 @@ class RefossCoordinator(DataUpdateCoordinator):
         return res
 
     async def HandlePushState(self):
+        """HandlePushState."""
         while True:
             if len(pushStateDataList) == 0:
                 await asyncio.sleep(3)
@@ -174,39 +176,37 @@ class RefossCoordinator(DataUpdateCoordinator):
 
             data = pushStateDataList.pop(0)
             if data is not None:
-                try:
-                    header = data.get("header", {})
-                    namespace = header.get("namespace")
-                    uuid = header.get("uuid")
-                    method = header.get("method")
-                    payload = data.get("payload")
-                    if namespace is None or uuid is None or payload is None:
-                        continue
+                header = data.get("header", {})
+                namespace = header.get("namespace")
+                uuid = header.get("uuid")
+                method = header.get("method")
+                payload = data.get("payload")
+                if namespace is None or uuid is None or payload is None:
+                    continue
 
-                    if method != PUSH:
-                        continue
+                if method != PUSH:
+                    continue
 
-                    baseDevice: BaseDevice = self.lookup_base_by_uuid(uuid)
+                baseDevice: BaseDevice = self.lookup_base_by_uuid(uuid)
 
-                    if baseDevice is None:
-                        continue
+                if baseDevice is None:
+                    continue
 
-                    asyncio.run_coroutine_threadsafe(
-                        baseDevice.async_handle_push_notification(
-                            namespace=namespace, data=payload, uuid=uuid
-                        ),
-                        loop=self._loop,
-                    )
-                except Exception as e:
-                    LOGGER.warning("HandlePushState, %s", e)
+                asyncio.run_coroutine_threadsafe(
+                    baseDevice.async_handle_push_notification(
+                        namespace=namespace, data=payload, uuid=uuid
+                    ),
+                    loop=self._loop,
+                )
 
 
-_dynamic_types: Dict[str, type] = {}
+_dynamic_types: dict[str, type] = {}
 
 
 def build_device_from_abilities(
     http_device_info: HttpDeviceInfo, device_abilities: dict
 ) -> BaseDevice:
+    """build_device_from_abilities."""
     cached_type = _lookup_cached_type(
         http_device_info.device_type,
         http_device_info.hdware_version,
@@ -252,7 +252,7 @@ def _build_cached_type(
 ) -> type:
     mixin_classes = set()
 
-    for key, val in device_abilities.items():
+    for key, _value in device_abilities.items():
         clsx = None
         cls = _ABILITY_MATRIX.get(key)
 

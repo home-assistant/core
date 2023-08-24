@@ -1,16 +1,13 @@
 """Tests for the Refoss config flow."""
-
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import CONF_MAC
-from tests.common import MockConfigEntry
-
+from refoss_ha.const import DOMAIN
 from refoss_ha.util import get_mac_address
-from refoss_ha.const import (
-    DOMAIN,
-)
+
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_configured(hass: HomeAssistant):

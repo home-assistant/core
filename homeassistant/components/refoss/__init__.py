@@ -1,23 +1,27 @@
-"""Refoss devices platform loader"""
+"""Refoss devices platform loader."""
 from __future__ import annotations
 
 from collections.abc import Collection
 from datetime import timedelta
+
+from refoss_ha.const import (
+    DEVICE_LIST_COORDINATOR,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+    SOCKET_DISCOVER_UPDATE_INTERVAL,
+)
+from refoss_ha.http_device import HttpDeviceInfo
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from refoss_ha.http_device import HttpDeviceInfo
-from refoss_ha.const import (
-    DOMAIN,
-    LOGGER,
-    DEVICE_LIST_COORDINATOR,
-    SOCKET_DISCOVER_UPDATE_INTERVAL,
-    PLATFORMS,
-)
+
 from .coordinator import RefossCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Async setup hass config entry."""
     if not config_entry.data.get(CONF_MAC):
         LOGGER.warning(
             (
@@ -35,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     try:
         await refoss_coordinator.initial_setup()
-    except Exception as e:
+    except ValueError as e:
         LOGGER.warning("Initial_setup failed: %s", e)
         return False
 
@@ -85,6 +89,7 @@ def _check_new_discovered_device(
 
 
 async def async_unload_entry(hass, entry):
+    """Async unload hass config entry."""
     refoss_coordinator: RefossCoordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
     for platform in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(entry, platform)
