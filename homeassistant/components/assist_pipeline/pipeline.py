@@ -402,13 +402,10 @@ class PipelineRun:
 
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
-        debug_recording_dir = self.hass.data.get(DATA_CONFIG, {}).get(
+        if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
             "debug_recording_dir"
-        )
-        if debug_recording_dir is not None:
+        ):
             self.debug_recording_dir = Path(debug_recording_dir) / self.id
-            _LOGGER.debug("Saving pipeline audio to %s", self.debug_recording_dir)
-            self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -422,6 +419,11 @@ class PipelineRun:
 
     def start(self) -> None:
         """Emit run start event."""
+        if self.debug_recording_dir is not None:
+            # Create directory where wake/stt audio will be saved
+            _LOGGER.debug("Saving pipeline audio to %s", self.debug_recording_dir)
+            self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
+
         data = {
             "pipeline": self.pipeline.id,
             "language": self.language,

@@ -427,3 +427,60 @@ async def test_pipeline_save_audio(
         with wave.open(str(stt_file), "rb") as stt_wav:
             stt_data = stt_wav.readframes(stt_wav.getnframes())
             assert stt_data == b"queued audiopart1_part2_"
+
+
+async def test_pipeline_cleanup_saved_audio_on_timeout(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_supporting_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that saved audio is cleaned up automatically on a wake word detection timeout."""
+
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        # Enable audio recording to temporary directory
+        temp_dir = Path(temp_dir_str)
+        assert await async_setup_component(
+            hass,
+            "assist_pipeline",
+            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+        )
+
+        def event_callback(event: assist_pipeline.PipelineEvent):
+            if event.type == "run-start":
+                # Verify that saved audio directory was created
+                run_dirs = list(temp_dir.iterdir())
+                assert len(run_dirs) == 1
+
+        async def audio_data():
+            yield b"not used"
+
+        # Force a timeout during wake word detection
+        with patch.object(
+            mock_wake_word_provider_entity,
+            "async_process_audio_stream",
+            side_effect=assist_pipeline.error.WakeWordTimeoutError(
+                code="timeout", message="timeout"
+            ),
+        ):
+            await assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=event_callback,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_data(),
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                end_stage=assist_pipeline.PipelineStage.STT,
+            )
+
+        # Directory should have been cleaned up
+        run_dirs = list(temp_dir.iterdir())
+        assert len(run_dirs) == 0
