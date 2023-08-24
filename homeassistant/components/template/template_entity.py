@@ -263,7 +263,9 @@ class TemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
-        self._preview_callback: Callable[[str, dict[str, Any]], None] | None = None
+        self._preview_callback: Callable[
+            [str | None, dict[str, Any] | None, str | None], None
+        ] | None = None
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -420,7 +422,7 @@ class TemplateEntity(Entity):
             self.async_write_ha_state()
             return
 
-        self._preview_callback(*self._async_generate_attributes())
+        self._preview_callback(*self._async_generate_attributes(), None)
 
     @callback
     def _async_template_startup(self, *_: Any) -> None:
@@ -484,13 +486,18 @@ class TemplateEntity(Entity):
     @callback
     def async_start_preview(
         self,
-        preview_callback: Callable[[str, Mapping[str, Any]], None],
+        preview_callback: Callable[
+            [str | None, Mapping[str, Any] | None, str | None], None
+        ],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
-        self._async_template_startup()
+        try:
+            self._async_template_startup()
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            preview_callback(None, None, str(err))
         return self._call_on_remove_callbacks
 
     async def async_added_to_hass(self) -> None:

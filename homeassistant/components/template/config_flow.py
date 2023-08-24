@@ -266,8 +266,20 @@ def ws_start_preview(
         errors = _validate(schema, msg["user_input"])
 
     @callback
-    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
+    def async_preview_updated(
+        state: str | None,
+        attributes: Mapping[str, Any] | None,
+        error: str | None,
+    ) -> None:
         """Forward config entry state events to websocket."""
+        if error is not None:
+            connection.send_message(
+                websocket_api.event_message(
+                    msg["id"],
+                    {"error": error},
+                )
+            )
+            return
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
@@ -290,14 +302,6 @@ def ws_start_preview(
     preview_entity.hass = hass
 
     connection.send_result(msg["id"])
-    try:
-        connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
-            async_preview_updated
-        )
-    except Exception as err:  # pylint: disable=broad-exception-caught
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                {"error": str(err)},
-            )
-        )
+    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+        async_preview_updated
+    )
