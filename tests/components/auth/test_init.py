@@ -519,6 +519,62 @@ async def test_ws_delete_refresh_token(
     assert refresh_token is None
 
 
+@pytest.mark.parametrize("raise_error", [False, True])
+async def test_ws_delete_all_refresh_tokens(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    raise_error: bool,
+) -> None:
+    """Test deleting all refresh tokens."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    # one token already exists
+    await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
+    )
+
+    if raise_error:
+
+        def cb():
+            raise RuntimeError("I'm bad")
+
+        hass.auth.async_register_revoke_token_callback(token.id, cb)
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    # get all tokens
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
+    result = await ws_client.receive_json()
+    assert result["success"], result
+
+    tokens = result["result"]
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "auth/delete_all_refresh_tokens",
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result, result["success"] is not raise_error
+    if raise_error:
+        assert result["error"] == {
+            "code": "token_removing_failed",
+            "message": "Failed to remove all tokens",
+        }
+
+    for token in tokens:
+        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
+        assert refresh_token is None
+
+
 async def test_ws_sign_path(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:

@@ -124,6 +124,7 @@ as part of a config flow.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -138,6 +139,7 @@ from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
+    RefreshToken,
     User,
 )
 from homeassistant.components import websocket_api
@@ -188,6 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
     websocket_api.async_register_command(hass, websocket_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
@@ -596,6 +599,50 @@ async def websocket_delete_refresh_token(
     await hass.auth.async_remove_refresh_token(refresh_token)
 
     connection.send_result(msg["id"], {})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_all_refresh_tokens",
+    }
+)
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_delete_all_refresh_tokens(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle delete all refresh tokens request."""
+
+    async def remove_safely(token: RefreshToken) -> bool:
+        # For safety as a revoke_callback could raise an error
+        try:
+            await hass.auth.async_remove_refresh_token(token)
+            return True
+        except Exception:  # pylint: disable=broad-except
+            return False
+
+    tasks = []
+    current_refresh_token: RefreshToken
+    for token in connection.user.refresh_tokens.values():
+        if token.id == connection.refresh_token_id:
+            current_refresh_token = token
+            continue  # Will be remove after sending the result
+        tasks.append(hass.async_create_task(remove_safely(token)))
+
+    remove_failed = False
+    if tasks:
+        for result in await asyncio.gather(*tasks):
+            if not result:
+                remove_failed = True
+
+    if remove_failed:
+        connection.send_error(
+            msg["id"], "token_removing_failed", "Failed to remove all tokens"
+        )
+    else:
+        connection.send_result(msg["id"], {})
+
+    hass.async_create_task(remove_safely(current_refresh_token))
 
 
 @websocket_api.websocket_command(
