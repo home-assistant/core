@@ -9,15 +9,16 @@ from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -59,7 +60,7 @@ async def validate_input(auth: Auth) -> None:
         raise Require2FA
 
 
-async def _send_blink_2fa_pin(hass: core.HomeAssistant, auth: Auth, pin: str):
+async def _send_blink_2fa_pin(hass: HomeAssistant, auth: Auth, pin: str) -> bool:
     """Send 2FA pin to blink servers."""
     blink = Blink(session=async_get_clientsession(hass))
     blink.auth = auth
@@ -68,35 +69,35 @@ async def _send_blink_2fa_pin(hass: core.HomeAssistant, auth: Auth, pin: str):
     return await auth.send_auth_key(blink, pin)
 
 
-class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
     VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the blink flow."""
-        self.auth = None
+        self.auth: Auth | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
         if user_input is not None:
-            data[CONF_USERNAME] = user_input["username"]
-            data[CONF_PASSWORD] = user_input["password"]
-
             self.auth = Auth(
-                data, no_prompt=True, session=async_get_clientsession(self.hass)
+                {**user_input, "device_id": DEVICE_ID},
+                no_prompt=True,
+                session=async_get_clientsession(self.hass),
             )
-            await self.async_set_unique_id(data[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
 
             try:
                 await validate_input(self.auth)
@@ -109,22 +110,24 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-        data_schema = {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-        }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
         )
 
-    async def async_step_2fa(self, user_input=None) -> FlowResult:
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
-            pin = user_input.get(CONF_PIN)
+            pin: str = str(user_input.get(CONF_PIN))
             try:
                 valid_token = await _send_blink_2fa_pin(self.hass, self.auth, pin)
             except BlinkSetupError:
@@ -141,7 +144,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="2fa",
             data_schema=vol.Schema(
-                {vol.Optional("pin"): vol.All(str, vol.Length(min=1))}
+                {vol.Optional(CONF_PIN): vol.All(str, vol.Length(min=1))}
             ),
             errors=errors,
         )
@@ -151,14 +154,15 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(dict(entry_data))
 
     @callback
-    def _async_finish_flow(self):
+    def _async_finish_flow(self) -> FlowResult:
         """Finish with setup."""
+        assert self.auth
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
 
-class Require2FA(exceptions.HomeAssistantError):
+class Require2FA(HomeAssistantError):
     """Error to indicate we require 2FA."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
