@@ -3379,11 +3379,11 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),  # ensure options or data match
     ],
 )
 async def test__async_abort_entries_match(
@@ -3460,11 +3460,11 @@ async def test__async_abort_entries_match(
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),  # ensure options or data match
     ],
 )
 async def test__async_abort_entries_match_options_flow(
