@@ -192,9 +192,7 @@ class SmhiWeather(WeatherEntity):
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
-        await self.async_update(  # pylint: disable=unexpected-keyword-arg
-            no_throttle=True
-        )
+        await self.async_update(no_throttle=True)
 
     @property
     def forecast(self) -> list[Forecast] | None:

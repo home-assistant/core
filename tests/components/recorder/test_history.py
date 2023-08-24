@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-
-# pylint: disable=invalid-name
 from copy import copy
 from datetime import datetime, timedelta
 import json

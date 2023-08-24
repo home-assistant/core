@@ -725,8 +725,6 @@ omit =
     homeassistant/components/meteoclimatic/__init__.py
     homeassistant/components/meteoclimatic/sensor.py
     homeassistant/components/meteoclimatic/weather.py
-    homeassistant/components/metoffice/sensor.py
-    homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py

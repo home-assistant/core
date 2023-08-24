@@ -343,7 +343,6 @@ class ESPHomeManager:
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )
-        self.entry_data.async_set_assist_pipeline_state(True)
 
         return port
 
@@ -355,51 +354,93 @@ class ESPHomeManager:
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
+        unique_id = entry.unique_id
         entry_data = self.entry_data
         reconnect_logic = self.reconnect_logic
+        assert reconnect_logic is not None, "Reconnect logic must be set"
         hass = self.hass
         cli = self.cli
+        stored_device_name = entry.data.get(CONF_DEVICE_NAME)
+        unique_id_is_mac_address = unique_id and ":" in unique_id
         try:
             device_info = await cli.device_info()
+        except APIConnectionError as err:
+            _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
+            # Re-connection logic will trigger after this
+            await cli.disconnect()
+            return
 
-            # Migrate config entry to new unique ID if necessary
-            # This was changed in 2023.1
-            if entry.unique_id != format_mac(device_info.mac_address):
-                hass.config_entries.async_update_entry(
-                    entry, unique_id=format_mac(device_info.mac_address)
+        device_mac = format_mac(device_info.mac_address)
+        mac_address_matches = unique_id == device_mac
+        #
+        # Migrate config entry to new unique ID if the current
+        # unique id is not a mac address.
+        #
+        # This was changed in 2023.1
+        if not mac_address_matches and not unique_id_is_mac_address:
+            hass.config_entries.async_update_entry(entry, unique_id=device_mac)
+
+        if not mac_address_matches and unique_id_is_mac_address:
+            # If the unique id is a mac address
+            # and does not match we have the wrong device and we need
+            # to abort the connection. This can happen if the DHCP
+            # server changes the IP address of the device and we end up
+            # connecting to the wrong device.
+            _LOGGER.error(
+                "Unexpected device found at %s; "
+                "expected `%s` with mac address `%s`, "
+                "found `%s` with mac address `%s`",
+                self.host,
+                stored_device_name,
+                unique_id,
+                device_info.name,
+                device_mac,
+            )
+            await cli.disconnect()
+            await reconnect_logic.stop()
+            # We don't want to reconnect to the wrong device
+            # so we stop the reconnect logic and disconnect
+            # the client. When discovery finds the new IP address
+            # for the device, the config entry will be updated
+            # and we will connect to the correct device when
+            # the config entry gets reloaded by the discovery
+            # flow.
+            return
+
+        # Make sure we have the correct device name stored
+        # so we can map the device to ESPHome Dashboard config
+        # If we got here, we know the mac address matches or we
+        # did a migration to the mac address so we can update
+        # the device name.
+        if stored_device_name != device_info.name:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
+            )
+
+        entry_data.device_info = device_info
+        assert cli.api_version is not None
+        entry_data.api_version = cli.api_version
+        entry_data.available = True
+        # Reset expected disconnect flag on successful reconnect
+        # as it will be flipped to False on unexpected disconnect.
+        #
+        # We use this to determine if a deep sleep device should
+        # be marked as unavailable or not.
+        entry_data.expected_disconnect = True
+        if device_info.name:
+            reconnect_logic.name = device_info.name
+
+        if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
+            entry_data.disconnect_callbacks.append(
+                await async_connect_scanner(
+                    hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
                 )
+            )
 
-            # Make sure we have the correct device name stored
-            # so we can map the device to ESPHome Dashboard config
-            if entry.data.get(CONF_DEVICE_NAME) != device_info.name:
-                hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
-                )
+        self.device_id = _async_setup_device_registry(hass, entry, entry_data)
+        entry_data.async_update_device_state(hass)
 
-            entry_data.device_info = device_info
-            assert cli.api_version is not None
-            entry_data.api_version = cli.api_version
-            entry_data.available = True
-            # Reset expected disconnect flag on successful reconnect
-            # as it will be flipped to False on unexpected disconnect.
-            #
-            # We use this to determine if a deep sleep device should
-            # be marked as unavailable or not.
-            entry_data.expected_disconnect = True
-            if entry_data.device_info.name:
-                assert reconnect_logic is not None, "Reconnect logic must be set"
-                reconnect_logic.name = entry_data.device_info.name
-
-            if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
-                entry_data.disconnect_callbacks.append(
-                    await async_connect_scanner(
-                        hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
-                    )
-                )
-
-            self.device_id = _async_setup_device_registry(hass, entry, entry_data)
-            entry_data.async_update_device_state(hass)
-
+        try:
             entity_infos, services = await cli.list_entities_services()
             await entry_data.async_update_static_infos(hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)

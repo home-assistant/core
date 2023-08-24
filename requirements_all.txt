@@ -2,13 +2,13 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.2.2
+AEMET-OpenData==0.3.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.15
+AIOSomecomfort==0.0.16
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -203,7 +203,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.8.2
+aiobafi6==0.9.0
 
 # homeassistant.components.aws
 aiobotocore==2.6.0
@@ -543,7 +543,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.8.0
+bluetooth-data-tools==1.9.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -571,7 +571,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.0.0
+bthome-ble==3.1.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -730,7 +730,7 @@ emulated-roku==0.2.1
 energyflip-client==0.2.2
 
 # homeassistant.components.energyzero
-energyzero==0.4.1
+energyzero==0.5.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -1665,7 +1665,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.6.0
+pyenphase==1.8.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1812,7 +1812,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.5.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.4.4
+pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.18.1
@@ -2758,7 +2758,7 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.80.0
+zeroconf==0.82.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
