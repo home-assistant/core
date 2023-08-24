@@ -1608,6 +1608,7 @@ pytraccar==1.0.0
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
 
+# homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
