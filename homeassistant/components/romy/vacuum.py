@@ -41,7 +41,6 @@ SUPPORT_ROMY_ROBOT = (
     VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.STATE
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
