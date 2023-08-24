@@ -1010,8 +1010,8 @@ async def test_async_update_errors(
 
     await init_integration(hass, config_entry)
 
-    device.refresh.side_effect = aiosomecomfort.SomeComfortError
-    client.login.side_effect = aiosomecomfort.SomeComfortError
+    device.refresh.side_effect = aiosomecomfort.UnauthorizedError
+    client.login.side_effect = aiosomecomfort.AuthError
     entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
     assert state.state == "off"
@@ -1037,6 +1037,28 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    device.refresh.side_effect = aiosomecomfort.UnexpectedResponse
+    client.login.side_effect = None
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    device.refresh.side_effect = [aiosomecomfort.UnauthorizedError,None]
+    client.login.side_effect = None
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
     # "reload integration" test
     device.refresh.side_effect = aiosomecomfort.SomeComfortError
     client.login.side_effect = aiosomecomfort.AuthError
@@ -1046,9 +1068,8 @@ async def test_async_update_errors(
     )
     await hass.async_block_till_done()
 
-    entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
-    assert state.state == "unavailable"
+    assert state.state == "off"
 
     device.refresh.side_effect = ClientConnectionError
     async_fire_time_changed(
@@ -1057,7 +1078,6 @@ async def test_async_update_errors(
     )
     await hass.async_block_till_done()
 
-    entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 
