@@ -8,31 +8,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Old legacy setup. Now initialize the import."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            FASTDOTCOM_DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={},
-        )
-    )
 
 
 async def async_setup_entry(
