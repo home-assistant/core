@@ -1,7 +1,7 @@
 """The tests for the Scrape sensor platform."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -247,7 +247,7 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
         assert state.state == "Current Version: 2021.12.10"
 
         mocker.payload = "test_scrape_sensor_no_data"
-        async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
