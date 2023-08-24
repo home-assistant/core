@@ -59,9 +59,6 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if not self.available:
-            return
-
         await self.coordinator.controller.start_irrigation(
             self._zone_id,
             kwargs.get("duration", DEFAULT_WATERING_DURATION),
