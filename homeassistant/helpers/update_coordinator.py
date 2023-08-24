@@ -81,6 +81,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
         self.always_update = always_update
+        self._next_refresh: float | None = None
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -214,20 +215,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than 500ms
-        #
-        # We do not align everything to happen at microsecond 0
-        # since it increases the risk of a thundering herd
-        # when multiple coordinators are scheduled to update at the same time.
-        #
-        # https://github.com/home-assistant/core/issues/82231
-        self._unsub_refresh = event.async_track_point_in_utc_time(
+        # We use event.async_call_at because DataUpdateCoordinator does
+        # not guarantee an exact update interval
+        if self._next_refresh is None:
+            self._next_refresh = self.hass.loop.time()
+        self._next_refresh += self.update_interval.total_seconds()
+        self._unsub_refresh = event.async_call_at(
             self.hass,
             self._job,
-            utcnow().replace(microsecond=self._microsecond) + self.update_interval,
+            self._next_refresh,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -266,6 +262,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
+        self._next_refresh = None
         await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901

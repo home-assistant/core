@@ -1436,6 +1436,37 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 
 @callback
 @bind_hass
+def async_call_at(
+    hass: HomeAssistant,
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    loop_time: float,
+) -> CALLBACK_TYPE:
+    """Add a listener that is called at <loop_time>."""
+
+    @callback
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
+
+    job = (
+        action
+        if isinstance(action, HassJob)
+        else HassJob(action, f"call_at {loop_time}")
+    )
+    cancel_callback = hass.loop.call_at(loop_time, run_action, job)
+
+    @callback
+    def unsub_call_later_listener() -> None:
+        """Cancel the call_later."""
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_call_later_listener
+
+
+@callback
+@bind_hass
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
