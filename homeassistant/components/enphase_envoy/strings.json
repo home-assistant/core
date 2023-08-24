@@ -29,14 +29,16 @@
       "dc_switch": {
         "name": "DC switch"
       },
-      "operating": {
-        "name": "Operating"
-      },
       "grid_status": {
         "name": "Grid status"
+      }
+    },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
       },
-      "relay": {
-        "name": "Relay status"
+      "restore_battery_level": {
+        "name": "Restore battery level"
       }
     },
     "select": {

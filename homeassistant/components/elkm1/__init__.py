@@ -8,7 +8,6 @@ import re
 from types import MappingProxyType
 from typing import Any, cast
 
-import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
@@ -382,7 +381,7 @@ async def async_wait_for_elk_to_sync(
     ):
         _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)

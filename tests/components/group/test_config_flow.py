@@ -1,4 +1,5 @@
 """Test the Switch config flow."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +11,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -446,3 +448,213 @@ async def test_options_flow_hides_members(
 
     assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+
+
+@pytest.mark.parametrize(
+    ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
+    [
+        ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
+        (
+            "sensor",
+            {"type": "max"},
+            ["10", "20"],
+            "20.0",
+            [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}],
+        ),
+    ],
+)
+async def test_config_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    extra_user_input: dict[str, Any],
+    input_states: list[str],
+    group_state: str,
+    extra_attributes: list[dict[str, Any]],
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = [f"{domain}.input_one", f"{domain}.input_two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": domain},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == domain
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My group", "entities": input_entities}
+            | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "My group"} | extra_attributes[0],
+        "group_type": domain,
+        "state": "unavailable",
+    }
+
+    hass.states.async_set(input_entities[0], input_states[0])
+    hass.states.async_set(input_entities[1], input_states[1])
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {
+            "entity_id": input_entities,
+            "friendly_name": "My group",
+        }
+        | extra_attributes[0]
+        | extra_attributes[1],
+        "group_type": domain,
+        "state": group_state,
+    }
+    assert len(hass.states.async_all()) == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "extra_config_flow_data",
+        "extra_user_input",
+        "input_states",
+        "group_state",
+        "extra_attributes",
+    ),
+    [
+        ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", {}),
+        (
+            "sensor",
+            {"type": "min"},
+            {"type": "max"},
+            ["10", "20"],
+            "20.0",
+            {"icon": "mdi:calculator", "max_entity_id": "sensor.input_two"},
+        ),
+    ],
+)
+async def test_option_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    extra_config_flow_data: dict[str, Any],
+    extra_user_input: dict[str, Any],
+    input_states: list[str],
+    group_state: str,
+    extra_attributes: dict[str, Any],
+) -> None:
+    """Test the option flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = [f"{domain}.input_one", f"{domain}.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": input_entities,
+            "group_type": domain,
+            "hide_members": False,
+            "name": "My group",
+        }
+        | extra_config_flow_data,
+        title="My group",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    hass.states.async_set(input_entities[0], input_states[0])
+    hass.states.async_set(input_entities[1], input_states[1])
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {"entities": input_entities} | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
+        | extra_attributes,
+        "group_type": domain,
+        "state": group_state,
+    }
+    assert len(hass.states.async_all()) == 3
+
+
+async def test_option_flow_sensor_preview_config_entry_removed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the option flow preview where the config entry is removed."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["sensor.input_one", "sensor.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": input_entities,
+            "group_type": "sensor",
+            "hide_members": False,
+            "name": "My sensor group",
+            "type": "min",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "entities": input_entities,
+                "type": "min",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}

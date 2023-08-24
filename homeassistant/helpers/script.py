@@ -13,7 +13,6 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict, TypeVar, cast
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -574,7 +573,7 @@ class _ScriptRun:
         self._changed()
         trace_set_result(delay=delay, done=False)
         try:
-            async with async_timeout.timeout(delay):
+            async with asyncio.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
             trace_set_result(delay=delay, done=True)
@@ -602,9 +601,10 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["completed"] = True
@@ -621,7 +621,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
@@ -971,9 +971,10 @@ class _ScriptRun:
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
@@ -1000,7 +1001,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
