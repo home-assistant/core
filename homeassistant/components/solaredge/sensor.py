@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -302,6 +303,8 @@ class SolarEdgeSensorEntity(
 ):
     """Abstract class for a solaredge sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: SolarEdgeSensorEntityDescription
 
     def __init__(
@@ -312,11 +315,11 @@ class SolarEdgeSensorEntity(
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data_service.coordinator)
-        self.platform_name = platform_name
         self.entity_description = description
         self.data_service = data_service
-
-        self._attr_name = f"{platform_name} ({description.name})"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data_service.site_id)}, name=platform_name
+        )
 
     @property
     def unique_id(self) -> str | None:
