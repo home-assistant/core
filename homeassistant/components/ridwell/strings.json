@@ -28,7 +28,7 @@
   "entity": {
     "sensor": {
       "next_pickup": {
-        "name": "Next Ridwell pickup"
+        "name": "Next pickup"
       }
     },
     "switch": {
