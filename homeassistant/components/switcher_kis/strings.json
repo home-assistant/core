@@ -10,6 +10,22 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
+  "entity": {
+    "button": {
+      "assume_on": {
+        "name": "Assume on"
+      },
+      "assume_off": {
+        "name": "Assume off"
+      },
+      "vertical_swing_on": {
+        "name": "Vertical swing on"
+      },
+      "vertical_swing_off": {
+        "name": "Vertical swing off"
+      }
+    }
+  },
   "services": {
     "set_auto_off": {
       "name": "Set auto off",

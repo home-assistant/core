@@ -97,6 +97,8 @@ class SwitcherSensorEntity(
 ):
     """Representation of a Switcher sensor entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
@@ -108,7 +110,6 @@ class SwitcherSensorEntity(
         self.attribute = attribute
 
         # Entity class attributes
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_icon = description.icon
         self._attr_native_unit_of_measurement = description.unit
         self._attr_device_class = description.device_class
