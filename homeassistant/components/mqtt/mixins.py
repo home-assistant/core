@@ -1144,11 +1144,8 @@ class MqttEntity(
                 )
             elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
                 self._attr_name = None
-                self._issue_key = (
-                    "entity_name_is_device_name_discovery"
-                    if self._discovery
-                    else "entity_name_is_device_name_yaml"
-                )
+                if not self._discovery:
+                    self._issue_key = "entity_name_is_device_name_yaml"
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
@@ -1162,11 +1159,8 @@ class MqttEntity(
                 if device_name[:1].isupper():
                     # Ensure a capital if the device name first char is a capital
                     new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
-                self._issue_key = (
-                    "entity_name_startswith_device_name_discovery"
-                    if self._discovery
-                    else "entity_name_startswith_device_name_yaml"
-                )
+                if not self._discovery:
+                    self._issue_key = "entity_name_startswith_device_name_yaml"
                 _LOGGER.warning(
                     "MQTT entity name starts with the device name in your config %s, "
                     "this is not expected. Please correct your configuration. "
