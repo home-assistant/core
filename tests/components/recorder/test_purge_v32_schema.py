@@ -1,6 +1,5 @@
 """Test data purging."""
 
-# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import json
 import sqlite3

@@ -104,6 +104,7 @@ homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
+homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
@@ -182,6 +183,7 @@ homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
+homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -194,6 +196,7 @@ homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
+homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*

@@ -552,8 +552,8 @@ async def stop_hass(
 
     created = []
 
-    def mock_hass():
-        hass_inst = orig_hass()
+    def mock_hass(*args):
+        hass_inst = orig_hass(*args)
         created.append(hass_inst)
         return hass_inst
 

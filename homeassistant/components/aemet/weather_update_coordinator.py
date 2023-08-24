@@ -1,6 +1,7 @@
 """Weather data coordinator for the AEMET OpenData service."""
 from __future__ import annotations
 
+from asyncio import timeout
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -41,7 +42,6 @@ from aemet_opendata.helpers import (
     get_forecast_hour_value,
     get_forecast_interval_value,
 )
-import async_timeout
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -139,20 +139,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        async with async_timeout.timeout(120):
+        async with timeout(120):
             weather_response = await self._get_aemet_weather()
         data = self._convert_weather_response(weather_response)
         return data
 
     async def _get_aemet_weather(self):
         """Poll weather data from AEMET OpenData."""
-        weather = await self.hass.async_add_executor_job(self._get_weather_and_forecast)
+        weather = await self._get_weather_and_forecast()
         return weather
 
-    def _get_weather_station(self):
+    async def _get_weather_station(self):
         if not self._station:
             self._station = (
-                self._aemet.get_conventional_observation_station_by_coordinates(
+                await self._aemet.get_conventional_observation_station_by_coordinates(
                     self._latitude, self._longitude
                 )
             )
@@ -171,9 +171,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
         return self._station
 
-    def _get_weather_town(self):
+    async def _get_weather_town(self):
         if not self._town:
-            self._town = self._aemet.get_town_by_coordinates(
+            self._town = await self._aemet.get_town_by_coordinates(
                 self._latitude, self._longitude
             )
             if self._town:
@@ -192,18 +192,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             raise TownNotFound
         return self._town
 
-    def _get_weather_and_forecast(self):
+    async def _get_weather_and_forecast(self):
         """Get weather and forecast data from AEMET OpenData."""
 
-        self._get_weather_town()
+        await self._get_weather_town()
 
-        daily = self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
+        daily = await self._aemet.get_specific_forecast_town_daily(
+            self._town[AEMET_ATTR_ID]
+        )
         if not daily:
             _LOGGER.error(
                 'Error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
             )
 
-        hourly = self._aemet.get_specific_forecast_town_hourly(
+        hourly = await self._aemet.get_specific_forecast_town_hourly(
             self._town[AEMET_ATTR_ID]
         )
         if not hourly:
@@ -212,8 +214,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
 
         station = None
-        if self._station_updates and self._get_weather_station():
-            station = self._aemet.get_conventional_observation_station_data(
+        if self._station_updates and await self._get_weather_station():
+            station = await self._aemet.get_conventional_observation_station_data(
                 self._station[AEMET_ATTR_IDEMA]
             )
             if not station:

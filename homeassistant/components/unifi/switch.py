@@ -17,6 +17,7 @@ from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
@@ -30,6 +31,7 @@ from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
+from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
@@ -75,11 +77,29 @@ def async_dpi_group_is_on_fn(
 
 
 @callback
-def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_dpi_group_device_info_fn(
+    controller: UniFiController, obj_id: str
+) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
+    )
+
+
+@callback
+def async_port_forward_device_info_fn(
+    controller: UniFiController, obj_id: str
+) -> DeviceInfo:
+    """Create device registry entry for port forward."""
+    unique_id = controller.config_entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, unique_id)},
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi Network",
         name="UniFi Network",
@@ -134,6 +154,14 @@ async def async_poe_port_control_fn(
     on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
     state = on_state if target else "off"
     await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
+
+
+async def async_port_forward_control_fn(
+    api: aiounifi.Controller, obj_id: str, target: bool
+) -> None:
+    """Control port forward state."""
+    port_forward = api.port_forwarding[obj_id]
+    await api.request(PortForwardEnableRequest.create(port_forward, target))
 
 
 async def async_wlan_control_fn(
@@ -222,6 +250,26 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         supported_fn=async_outlet_supports_switching_fn,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
     ),
+    UnifiSwitchEntityDescription[PortForwarding, PortForward](
+        key="Port forward control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        icon="mdi:upload-network",
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.port_forwarding,
+        available_fn=lambda controller, obj_id: controller.available,
+        control_fn=async_port_forward_control_fn,
+        device_info_fn=async_port_forward_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, port_forward: port_forward.enabled,
+        name_fn=lambda port_forward: f"{port_forward.name}",
+        object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
+        should_poll=False,
+        supported_fn=lambda controller, obj_id: True,
+        unique_id_fn=lambda controller, obj_id: f"port_forward-{obj_id}",
+    ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
         device_class=SwitchDeviceClass.OUTLET,
@@ -274,7 +322,7 @@ async def async_setup_entry(
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    if controller.site_role != "admin":
+    if not controller.is_admin:
         return
 
     for mac in controller.option_block_clients:

@@ -164,9 +164,7 @@ class BasicClusterHandler(ClusterHandler):
         """Initialize Basic cluster handler."""
         super().__init__(cluster, endpoint)
         if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["trigger_indicator"] = True
         elif (
             self.cluster.endpoint.manufacturer == "TexasInstruments"
@@ -373,7 +371,7 @@ class OnOffClusterHandler(ClusterHandler):
         except KeyError:
             return
 
-        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()  # pylint: disable=invalid-name
+        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
         self.ZCL_INIT_ATTRS["backlight_mode"] = True
         self.ZCL_INIT_ATTRS["power_on_state"] = True
 

@@ -19,6 +19,10 @@ on:
         description: "Skip pytest"
         default: false
         type: boolean
+      skip-coverage:
+        description: "Skip coverage"
+        default: false
+        type: boolean
       pylint-only:
         description: "Only run pylint"
         default: false
@@ -79,6 +83,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
+      skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
@@ -127,6 +132,7 @@ jobs:
           test_group_count=10
           tests="[]"
           tests_glob=""
+          skip_coverage=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
@@ -176,6 +182,12 @@ jobs:
             test_full_suite="true"
           fi
 
+          if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
+            || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
+          then
+            skip_coverage="true"
+          fi
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
@@ -195,6 +207,8 @@ jobs:
           echo "tests=${tests}" >> $GITHUB_OUTPUT
           echo "tests_glob: ${tests_glob}"
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
+          echo "skip_coverage: ${skip_coverage}"
+          echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
   pre-commit:
     name: Prepare pre-commit base
@@ -735,10 +749,17 @@ jobs:
         if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
         id: pytest-full
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant")
+            cov_params+=(--cov-report=xml)
+          fi
 
           python3 -X dev -m pytest \
             -qq \
@@ -748,8 +769,7 @@ jobs:
             --dist=loadfile \
             --test-group-count ${{ needs.info.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
-            --cov="homeassistant" \
-            --cov-report=xml \
+            ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
             tests \
@@ -759,6 +779,8 @@ jobs:
         timeout-minutes: 10
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
@@ -769,13 +791,18 @@ jobs:
             exit 1
           fi
 
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n auto \
-            --cov="homeassistant.components.${{ matrix.group }}" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
@@ -789,6 +816,7 @@ jobs:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
@@ -877,19 +905,25 @@ jobs:
         timeout-minutes: 20
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
           mariadb=$(echo "${{ matrix.mariadb-group }}" | sed "s/:/-/g")
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.recorder")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
 
           python3 -X dev -m pytest \
             -qq \
             --timeout=20 \
             -n 1 \
-            --cov="homeassistant.components.recorder" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=10 \
             -p no:sugar \
@@ -906,6 +940,7 @@ jobs:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
@@ -994,19 +1029,25 @@ jobs:
         timeout-minutes: 20
         id: pytest-partial
         shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
         run: |
           . venv/bin/activate
           python --version
           set -o pipefail
           postgresql=$(echo "${{ matrix.postgresql-group }}" | sed "s/:/-/g")
+          cov_params=()
+          if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
+            cov_params+=(--cov="homeassistant.components.recorder")
+            cov_params+=(--cov-report=xml)
+            cov_params+=(--cov-report=term-missing)
+          fi
 
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n 1 \
-            --cov="homeassistant.components.recorder" \
-            --cov-report=xml \
-            --cov-report=term-missing \
+            ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=10 \
@@ -1024,6 +1065,7 @@ jobs:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
+        if: needs.info.outputs.skip_coverage != 'true'
         uses: actions/upload-artifact@v3.1.0
         with:
           name: coverage-${{ matrix.python-version }}-postgresql
@@ -1034,6 +1076,7 @@ jobs:
 
   coverage:
     name: Upload test coverage to Codecov
+    if: needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
