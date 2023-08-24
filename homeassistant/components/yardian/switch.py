@@ -32,12 +32,13 @@ async def async_setup_entry(
 class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     """Representation of a Yardian switch."""
 
+    _attr_icon = "mdi:water"
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: YardianUpdateCoordinator, zone_id) -> None:
         """Initialize a Yardian Switch Device."""
         super().__init__(coordinator)
         self._zone_id = zone_id
-        self._attr_icon = "mdi:water"
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
         self._attr_device_info = coordinator.device_info
 
