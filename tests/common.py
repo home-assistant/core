@@ -963,16 +963,6 @@ def patch_yaml_files(files_dict, endswith=True):
     return patch.object(yaml_loader, "open", mock_open_f, create=True)
 
 
-def mock_coro(return_value=None, exception=None):
-    """Return a coro that returns a value or raise an exception."""
-    fut = asyncio.Future()
-    if exception is not None:
-        fut.set_exception(exception)
-    else:
-        fut.set_result(return_value)
-    return fut
-
-
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.
