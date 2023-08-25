@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import init_integration, set_connection_switch
 
 
 async def test_cover_available(
@@ -30,15 +30,14 @@ async def test_cover_available(
     """Test cover available property."""
     entity_id = "cover.test"
     await init_integration(hass)
+    await set_connection_switch(hass, True)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
-    mock_desk_api.is_connected = False
-    mock_desk_api.trigger_update_callback(None)
-
+    await set_connection_switch(hass, False)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -65,6 +64,8 @@ async def test_cover_services(
     """Test cover services."""
     entity_id = "cover.test"
     await init_integration(hass)
+    await set_connection_switch(hass, True)
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN

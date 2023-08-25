@@ -1,12 +1,14 @@
 """Tests for the IKEA Idasen Desk integration."""
-
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.idasen_desk.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import CONF_ADDRESS, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+
+CONNECTION_SWITCH_ENTITY_ID = "switch.test_connection"
 
 IDASEN_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="Desk 1234",
@@ -49,3 +51,14 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return entry
+
+
+async def set_connection_switch(hass: HomeAssistant, on: bool):
+    """Change the state of the connection switch."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON if on else SERVICE_TURN_OFF,
+        {"entity_id": CONNECTION_SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()

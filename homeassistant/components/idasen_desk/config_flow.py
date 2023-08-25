@@ -61,9 +61,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            desk = Desk(None)
+            desk = Desk(None, monitor_height=False)
             try:
-                await desk.connect(discovery_info.device, monitor_height=False)
+                await desk.connect(discovery_info.device, auto_reconnect=False)
             except TimeoutError as err:
                 _LOGGER.exception("TimeoutError", exc_info=err)
                 errors["base"] = "cannot_connect"
