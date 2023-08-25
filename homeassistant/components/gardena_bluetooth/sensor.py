@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from gardena_bluetooth.const import Battery, Valve
+from gardena_bluetooth.const import Battery, Sensor, Valve
 from gardena_bluetooth.parse import Characteristic
 
 from homeassistant.components.sensor import (
@@ -32,6 +32,15 @@ class GardenaBluetoothSensorEntityDescription(SensorEntityDescription):
     """Description of entity."""
 
     char: Characteristic = field(default_factory=lambda: Characteristic(""))
+    connected_state: Characteristic | None = None
+
+    @property
+    def context(self) -> set[str]:
+        """Context needed for update coordinator."""
+        data = {self.char.uuid}
+        if self.connected_state:
+            data.add(self.connected_state.uuid)
+        return data
 
 
 DESCRIPTIONS = (
@@ -51,6 +60,40 @@ DESCRIPTIONS = (
         native_unit_of_measurement=PERCENTAGE,
         char=Battery.battery_level,
     ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Sensor.battery_level.uuid,
+        translation_key="sensor_battery_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        char=Sensor.battery_level,
+        connected_state=Sensor.connected_state,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Sensor.value.uuid,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        char=Sensor.value,
+        connected_state=Sensor.connected_state,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Sensor.type.uuid,
+        translation_key="sensor_type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Sensor.type,
+        connected_state=Sensor.connected_state,
+    ),
+    GardenaBluetoothSensorEntityDescription(
+        key=Sensor.measurement_timestamp.uuid,
+        translation_key="sensor_measurement_timestamp",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        char=Sensor.measurement_timestamp,
+        connected_state=Sensor.connected_state,
+    ),
 )
 
 
@@ -60,7 +103,7 @@ async def async_setup_entry(
     """Set up Gardena Bluetooth sensor based on a config entry."""
     coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[GardenaBluetoothEntity] = [
-        GardenaBluetoothSensor(coordinator, description)
+        GardenaBluetoothSensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
         if description.key in coordinator.characteristics
     ]
@@ -81,6 +124,12 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
                 tzinfo=dt_util.get_time_zone(self.hass.config.time_zone)
             )
         self._attr_native_value = value
+
+        if char := self.entity_description.connected_state:
+            self._attr_available = bool(self.coordinator.get_cached(char))
+        else:
+            self._attr_available = True
+
         super()._handle_coordinator_update()
 
 
@@ -106,7 +155,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
             super()._handle_coordinator_update()
             return
 
-        time = datetime.now(timezone.utc) + timedelta(seconds=value)
+        time = datetime.now(UTC) + timedelta(seconds=value)
         if not self._attr_native_value:
             self._attr_native_value = time
             super()._handle_coordinator_update()

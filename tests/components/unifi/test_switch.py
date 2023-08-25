@@ -1518,3 +1518,90 @@ async def test_wlan_switches(
     mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
+
+
+async def test_port_forwarding_switches(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Test control of UniFi port forwarding."""
+    _data = {
+        "_id": "5a32aa4ee4b0412345678911",
+        "dst_port": "12345",
+        "enabled": True,
+        "fwd_port": "23456",
+        "fwd": "10.0.0.2",
+        "name": "plex",
+        "pfwd_interface": "wan",
+        "proto": "tcp_udp",
+        "site_id": "5a32aa4ee4b0412345678910",
+        "src": "any",
+    }
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, port_forward_response=[_data.copy()]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get("switch.unifi_network_plex")
+    assert ent_reg_entry.unique_id == "port_forward-5a32aa4ee4b0412345678911"
+    assert ent_reg_entry.entity_category is EntityCategory.CONFIG
+
+    # Validate state object
+    switch_1 = hass.states.get("switch.unifi_network_plex")
+    assert switch_1 is not None
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.SWITCH
+
+    # Update state object
+    data = _data.copy()
+    data["enabled"] = False
+    mock_unifi_websocket(message=MessageKey.PORT_FORWARD_UPDATED, data=data)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
+
+    # Disable port forward
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}"
+        + f"/rest/portforward/{data['_id']}",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_plex"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    data = _data.copy()
+    data["enabled"] = False
+    assert aioclient_mock.mock_calls[0][2] == data
+
+    # Enable port forward
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.unifi_network_plex"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == _data
+
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
+
+    # Remove entity on deleted message
+    mock_unifi_websocket(message=MessageKey.PORT_FORWARD_DELETED, data=_data)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0

@@ -1112,13 +1112,13 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
 
-        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
+        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True
 
         for member in group.members:
             # Ensure we do not send group commands that violate the minimum transition
             # time of any members.
             if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
-                self._DEFAULT_MIN_TRANSITION_TIME = (  # pylint: disable=invalid-name
+                self._DEFAULT_MIN_TRANSITION_TIME = (
                     MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
                 )
 

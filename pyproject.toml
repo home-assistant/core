@@ -120,18 +120,6 @@ fail-on = [
 
 [tool.pylint.BASIC]
 class-const-naming-style = "any"
-good-names = [
-    "_",
-    "ev",
-    "ex",
-    "fp",
-    "i",
-    "id",
-    "j",
-    "k",
-    "Run",
-    "ip",
-]
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
@@ -481,9 +469,6 @@ filterwarnings = [
     "ignore:ssl.PROTOCOL_TLSv1_2 is deprecated:DeprecationWarning:pylutron_caseta.smartbridge",
     # https://github.com/Danielhiversen/pyMillLocal/pull/8 - >=0.3.0
     "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:mill_local",
-    # https://github.com/home-assistant/core/pull/98619 - update botocore to >=1.31.17
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:botocore.utils",
-    "ignore:'urllib3.contrib.pyopenssl' module is deprecated and will be removed in a future release of urllib3 2.x:DeprecationWarning:botocore.httpsession",
 
     # -- not helpful
     # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
@@ -521,8 +506,6 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-target-version = "py310"
-
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
@@ -532,6 +515,8 @@ select = [
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
+    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
     "G", # flake8-logging-format

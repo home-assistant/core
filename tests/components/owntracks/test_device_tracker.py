@@ -279,7 +279,7 @@ BAD_MESSAGE = {"_type": "unsupported", "tst": 1}
 BAD_JSON_PREFIX = "--$this is bad json#--"
 BAD_JSON_SUFFIX = "** and it ends here ^^"
 
-# pylint: disable=invalid-name, len-as-condition
+# pylint: disable=len-as-condition
 
 
 @pytest.fixture
@@ -310,8 +310,6 @@ def context(hass, setup_comp):
     """Set up the mocked context."""
     orig_context = owntracks.OwnTracksContext
     context = None
-
-    # pylint: disable=no-value-for-parameter
 
     def store_context(*args):
         """Store the context."""
@@ -1503,7 +1501,7 @@ async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -
 async def test_encrypted_payload_libsodium(hass: HomeAssistant, setup_comp) -> None:
     """Test sending encrypted message payload."""
     try:
-        import nacl  # noqa: F401 pylint: disable=unused-import
+        import nacl  # noqa: F401
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return

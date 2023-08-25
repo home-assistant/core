@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Final
 
-import bluetooth  # pylint: disable=import-error
+import bluetooth
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 

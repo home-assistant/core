@@ -6,8 +6,8 @@ from homeassistant.components.solaredge.const import (
     DEFAULT_NAME,
     DOMAIN,
     OVERVIEW_UPDATE_DELAY,
-    SENSOR_TYPES,
 )
+from homeassistant.components.solaredge.sensor import SENSOR_TYPES
 from homeassistant.const import CONF_API_KEY, CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util

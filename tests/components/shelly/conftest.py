@@ -131,6 +131,16 @@ MOCK_BLOCKS = [
         description="emeter_0",
         type="emeter",
     ),
+    Mock(
+        sensor_ids={"valve": "closed"},
+        valve="closed",
+        channel="0",
+        description="valve_0",
+        type="valve",
+        set_state=AsyncMock(
+            side_effect=lambda go: {"state": "opening" if go == "open" else "closing"}
+        ),
+    ),
 ]
 
 MOCK_CONFIG = {
@@ -251,6 +261,11 @@ async def mock_block_device():
                 {}, BlockUpdateType.COAP_PERIODIC
             )
 
+        def update_reply():
+            block_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, BlockUpdateType.COAP_REPLY
+            )
+
         device = Mock(
             spec=BlockDevice,
             blocks=MOCK_BLOCKS,
@@ -265,6 +280,9 @@ async def mock_block_device():
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
         block_device_mock.return_value.mock_update = Mock(side_effect=update)
+        block_device_mock.return_value.mock_update_reply = Mock(
+            side_effect=update_reply
+        )
 
         yield block_device_mock.return_value
 
