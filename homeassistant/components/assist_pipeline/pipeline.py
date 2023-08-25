@@ -515,7 +515,7 @@ class PipelineRun:
         try:
             # Detect wake word(s)
             result = await self.wake_word_provider.async_process_audio_stream(
-                _wake_word_audio_stream(
+                self._wake_word_audio_stream(
                     audio_stream=stream,
                     stt_audio_buffer=stt_audio_buffer,
                     wake_word_vad=wake_word_vad,
@@ -564,6 +564,39 @@ class PipelineRun:
         )
 
         return result
+
+    async def _wake_word_audio_stream(
+        self,
+        audio_stream: AsyncIterable[bytes],
+        stt_audio_buffer: RingBuffer | None,
+        wake_word_vad: VoiceActivityTimeout | None,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+    ) -> AsyncIterable[tuple[bytes, int]]:
+        """Yield audio chunks with timestamps (milliseconds since start of stream).
+
+        Adds audio to a ring buffer that will be forwarded to speech-to-text after
+        detection. Times out if VAD detects enough silence.
+        """
+        ms_per_sample = sample_rate // 1000
+        timestamp_ms = 0
+        async for chunk in audio_stream:
+            if self.debug_recording_queue is not None:
+                self.debug_recording_queue.put_nowait(chunk)
+
+            yield chunk, timestamp_ms
+            timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
+
+            # Wake-word-detection occurs *after* the wake word was actually
+            # spoken. Keeping audio right before detection allows the voice
+            # command to be spoken immediately after the wake word.
+            if stt_audio_buffer is not None:
+                stt_audio_buffer.put(chunk)
+
+            if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
+                raise WakeWordTimeoutError(
+                    code="wake-word-timeout", message="Wake word was not detected"
+                )
 
     async def prepare_speech_to_text(self, metadata: stt.SpeechMetadata) -> None:
         """Prepare speech-to-text."""
@@ -671,6 +704,9 @@ class PipelineRun:
         sent_vad_start = False
         timestamp_ms = 0
         async for chunk in audio_stream:
+            if self.debug_recording_queue is not None:
+                self.debug_recording_queue.put_nowait(chunk)
+
             if stt_vad is not None:
                 if not stt_vad.process(chunk):
                     # Silence detected at the end of voice command
@@ -1105,36 +1141,6 @@ class PipelineInput:
 
         if prepare_tasks:
             await asyncio.gather(*prepare_tasks)
-
-
-async def _wake_word_audio_stream(
-    audio_stream: AsyncIterable[bytes],
-    stt_audio_buffer: RingBuffer | None,
-    wake_word_vad: VoiceActivityTimeout | None,
-    sample_rate: int = 16000,
-    sample_width: int = 2,
-) -> AsyncIterable[tuple[bytes, int]]:
-    """Yield audio chunks with timestamps (milliseconds since start of stream).
-
-    Adds audio to a ring buffer that will be forwarded to speech-to-text after
-    detection. Times out if VAD detects enough silence.
-    """
-    ms_per_sample = sample_rate // 1000
-    timestamp_ms = 0
-    async for chunk in audio_stream:
-        yield chunk, timestamp_ms
-        timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
-
-        # Wake-word-detection occurs *after* the wake word was actually
-        # spoken. Keeping audio right before detection allows the voice
-        # command to be spoken immediately after the wake word.
-        if stt_audio_buffer is not None:
-            stt_audio_buffer.put(chunk)
-
-        if (wake_word_vad is not None) and (not wake_word_vad.process(chunk)):
-            raise WakeWordTimeoutError(
-                code="wake-word-timeout", message="Wake word was not detected"
-            )
 
 
 class PipelinePreferred(CollectionError):
