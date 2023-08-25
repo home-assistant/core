@@ -70,7 +70,7 @@ async def test_update_intervals(
     tomorrowio_config_entry_update.reset_mock()
 
     # On the update interval, we get a new update
-    freezer.tick(timedelta(minutes=2, seconds=1))
+    freezer.tick(timedelta(minutes=2))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(tomorrowio_config_entry_update.call_args_list) == 1
