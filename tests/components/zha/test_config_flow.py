@@ -1917,3 +1917,44 @@ async def test_config_flow_port_multiprotocol_port_name(hass: HomeAssistant) -> 
         result["data_schema"].schema["path"].container[0]
         == "socket://core-silabs-multiprotocol:9999 - Multiprotocol add-on - Nabu Casa"
     )
+
+
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
+    """Test auto-probing failing because the wrong firmware is installed."""
+
+    with patch(
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+        return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: "choose_serial_port"},
+            data={
+                CONF_DEVICE_PATH: (
+                    "/dev/ttyUSB1234 - Some serial port, s/n: 1234 - Virtual serial port"
+                )
+            },
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_firmware_installed"
+
+
+async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
+    """Test auto-probing failing because the wrong firmware is installed."""
+
+    with patch(
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
+        return_value=ProbeResult.WRONG_FIRMWARE_INSTALLED,
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: "confirm"},
+            data={},
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_firmware_installed"

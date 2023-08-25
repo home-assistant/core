@@ -189,14 +189,14 @@ class BaseZhaFlow(FlowHandler):
             self._radio_mgr.device_path = port.device
 
             probe_result = await self._radio_mgr.detect_radio_type()
-            if probe_result == ProbeResult.PROBING_FAILED:
-                # Did not autodetect anything, proceed to manual selection
-                return await self.async_step_manual_pick_radio_type()
             if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
                 return self.async_abort(
                     reason="wrong_firmware_installed",
                     description_placeholders={"repair_url": REPAIR_MY_URL},
                 )
+            if probe_result == ProbeResult.PROBING_FAILED:
+                # Did not autodetect anything, proceed to manual selection
+                return await self.async_step_manual_pick_radio_type()
 
             self._title = (
                 f"{port.description}{', s/n: ' + port.serial_number if port.serial_number else ''}"
