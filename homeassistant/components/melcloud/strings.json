@@ -54,22 +54,22 @@
   "entity": {
     "sensor": {
       "room_temperature": {
-        "name": "Room Temperature"
+        "name": "Room temperature"
       },
       "daily_energy": {
-        "name": "Daily Energy Consumed"
+        "name": "Daily energy consumed"
       },
       "outside_temperature": {
-        "name": "Outside Temperature"
+        "name": "Outside temperature"
       },
       "tank_temperature": {
-        "name": "Tank Temperature"
+        "name": "Tank temperature"
       },
       "flow_temperature": {
-        "name": "Flow Temperature"
+        "name": "Flow temperature"
       },
       "return_temperature": {
-        "name": "Flow Return Temperature"
+        "name": "Flow return temperature"
       }
     }
   }
