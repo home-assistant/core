@@ -107,7 +107,7 @@ class VoiceCommandSegmenter:
     """Seconds left before resetting start/stop time counters."""
 
     _vad: webrtcvad.Vad = None
-    _sample_buffer: AudioBuffer = field(init=False)
+    _leftover_chunk_buffer: AudioBuffer = field(init=False)
     _bytes_per_chunk: int = field(init=False)
     _seconds_per_chunk: float = field(init=False)
 
@@ -116,12 +116,14 @@ class VoiceCommandSegmenter:
         self._vad = webrtcvad.Vad(self.vad_mode)
         self._bytes_per_chunk = self.vad_samples_per_chunk * _SAMPLE_WIDTH
         self._seconds_per_chunk = self.vad_samples_per_chunk / _SAMPLE_RATE
-        self._sample_buffer = AudioBuffer(self.vad_samples_per_chunk * _SAMPLE_WIDTH)
+        self._leftover_chunk_buffer = AudioBuffer(
+            self.vad_samples_per_chunk * _SAMPLE_WIDTH
+        )
         self.reset()
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._sample_buffer.length = 0
+        self._leftover_chunk_buffer.length = 0
         self._speech_seconds_left = self.speech_seconds
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
@@ -133,7 +135,9 @@ class VoiceCommandSegmenter:
 
         Returns False when command is done.
         """
-        for chunk in chunk_samples(samples, self._bytes_per_chunk, self._sample_buffer):
+        for chunk in chunk_samples(
+            samples, self._bytes_per_chunk, self._leftover_chunk_buffer
+        ):
             if not self._process_chunk(chunk):
                 self.reset()
                 return False
@@ -143,7 +147,7 @@ class VoiceCommandSegmenter:
     @property
     def audio_buffer(self) -> bytes:
         """Get partial chunk in the audio buffer."""
-        return bytes(self._sample_buffer)
+        return bytes(self._leftover_chunk_buffer)
 
     def _process_chunk(self, chunk: bytes) -> bool:
         """Process a single chunk of 16-bit 16Khz mono audio.
@@ -205,7 +209,7 @@ class VoiceActivityTimeout:
     """Seconds left before resetting start/stop time counters."""
 
     _vad: webrtcvad.Vad = None
-    _sample_buffer: AudioBuffer = field(init=False)
+    _leftover_chunk_buffer: AudioBuffer = field(init=False)
     _bytes_per_chunk: int = field(init=False)
     _seconds_per_chunk: float = field(init=False)
 
@@ -214,12 +218,14 @@ class VoiceActivityTimeout:
         self._vad = webrtcvad.Vad(self.vad_mode)
         self._bytes_per_chunk = self.vad_samples_per_chunk * _SAMPLE_WIDTH
         self._seconds_per_chunk = self.vad_samples_per_chunk / _SAMPLE_RATE
-        self._sample_buffer = AudioBuffer(self.vad_samples_per_chunk * _SAMPLE_WIDTH)
+        self._leftover_chunk_buffer = AudioBuffer(
+            self.vad_samples_per_chunk * _SAMPLE_WIDTH
+        )
         self.reset()
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._sample_buffer.length = 0
+        self._leftover_chunk_buffer.length = 0
         self._silence_seconds_left = self.silence_seconds
         self._reset_seconds_left = self.reset_seconds
 
@@ -228,7 +234,9 @@ class VoiceActivityTimeout:
 
         Returns False when timeout is reached.
         """
-        for chunk in chunk_samples(samples, self._bytes_per_chunk, self._sample_buffer):
+        for chunk in chunk_samples(
+            samples, self._bytes_per_chunk, self._leftover_chunk_buffer
+        ):
             if not self._process_chunk(chunk):
                 return False
 
@@ -263,30 +271,44 @@ class VoiceActivityTimeout:
 def chunk_samples(
     samples: bytes,
     bytes_per_chunk: int,
-    sample_buffer: AudioBuffer,
+    leftover_chunk_buffer: AudioBuffer,
 ) -> Iterable[bytes]:
-    """Yield fixed-sized chunks from samples, keeping leftover bytes in a buffer."""
+    """Yield fixed-sized chunks from samples, keeping leftover bytes from previous calls."""
+
+    if (len(leftover_chunk_buffer) + len(samples)) < bytes_per_chunk:
+        # Extend leftover chunk, but not enough samples to complete it
+        leftover_chunk_buffer[len(leftover_chunk_buffer) :] = samples
+        leftover_chunk_buffer.length += len(samples)
+        return
+
     samples_offset = 0
-    num_chunks_in_samples = len(samples) // bytes_per_chunk
-    num_bytes_left = len(samples) % bytes_per_chunk
+    num_bytes_left = len(leftover_chunk_buffer) + (len(samples) % bytes_per_chunk)
 
-    if len(sample_buffer) > 0:
-        # Add to partial chunk in buffer
-        bytes_to_copy = min(num_bytes_left, bytes_per_chunk - len(sample_buffer))
-        sample_buffer[len(sample_buffer) :] = samples[:bytes_to_copy]
-        sample_buffer.length += bytes_to_copy
+    if len(leftover_chunk_buffer) > 0:
+        # Add to leftover chunk in buffer
+        bytes_to_copy = min(len(samples), bytes_per_chunk - len(leftover_chunk_buffer))
+        leftover_chunk_buffer[len(leftover_chunk_buffer) :] = samples[:bytes_to_copy]
+        leftover_chunk_buffer.length += bytes_to_copy
         samples_offset = bytes_to_copy
-        num_bytes_left -= bytes_to_copy
 
-    if len(sample_buffer) == bytes_per_chunk:
+    if len(leftover_chunk_buffer) == bytes_per_chunk:
         # Process full chunk in buffer
-        yield bytes(sample_buffer)
-        sample_buffer.length = 0
+        yield bytes(leftover_chunk_buffer)
+        leftover_chunk_buffer.length = 0
 
+    # Recompute leftover chunk size
+    num_bytes_left = len(leftover_chunk_buffer) + (
+        (len(samples) - samples_offset) % bytes_per_chunk
+    )
     if num_bytes_left > 0:
         # Keep bytes at the end of samples for next chunk
-        sample_buffer[:num_bytes_left] = samples[len(samples) - num_bytes_left :]
-        sample_buffer.length = num_bytes_left
+        leftover_chunk_buffer[:num_bytes_left] = samples[
+            len(samples) - num_bytes_left :
+        ]
+        leftover_chunk_buffer.length = num_bytes_left
+
+    # Using samples_offset to exclude bytes already copied
+    num_chunks_in_samples = (len(samples) - samples_offset) // bytes_per_chunk
 
     # Process samples in chunks.
     for chunk_idx in range(num_chunks_in_samples):

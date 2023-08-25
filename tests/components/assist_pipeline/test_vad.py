@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
     VoiceCommandSegmenter,
+    chunk_samples,
 )
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -109,3 +110,31 @@ def test_audio_buffer_errors() -> None:
 
     with pytest.raises(ValueError):
         audio_buffer.length = -2
+
+
+def test_partial_chunk() -> None:
+    """Test that chunk_samples returns when given a partial chunk."""
+    bytes_per_chunk = 5
+    samples = bytes([1, 2, 3])
+    leftover_chunk_buffer = AudioBuffer(bytes_per_chunk)
+    chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
+
+    assert len(chunks) == 0
+    assert bytes(leftover_chunk_buffer) == samples
+
+
+def test_chunk_samples_leftover() -> None:
+    """Test that chunk_samples property keeps left over bytes across calls."""
+    bytes_per_chunk = 5
+    samples = bytes([1, 2, 3, 4, 5, 6])
+    leftover_chunk_buffer = AudioBuffer(bytes_per_chunk)
+    chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
+
+    assert len(chunks) == 1
+    assert bytes(leftover_chunk_buffer) == bytes([6])
+
+    # Add some more to the chunk
+    chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
+
+    assert len(chunks) == 1
+    assert bytes(leftover_chunk_buffer) == bytes([5, 6])
