@@ -53,10 +53,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Epson projector from a config entry."""
     projector: Projector = hass.data[DOMAIN][config_entry.entry_id]
-    assert config_entry.unique_id
     projector_entity = EpsonProjectorMediaPlayer(
         projector=projector,
-        unique_id=config_entry.unique_id,
+        unique_id=config_entry.unique_id or config_entry.entry_id,
         entry=config_entry,
     )
     async_add_entities([projector_entity], True)
@@ -98,7 +97,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Epson",
             model="Epson",
-            via_device=(DOMAIN, unique_id),
         )
 
     async def set_unique_id(self) -> bool:
