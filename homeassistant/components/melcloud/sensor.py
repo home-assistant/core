@@ -50,7 +50,6 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     ),
     MelcloudSensorEntityDescription(
         key="energy",
-        translation_key="energy",
         icon="mdi:factory",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,

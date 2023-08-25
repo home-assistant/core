@@ -99,6 +99,7 @@ class MelCloudClimate(ClimateEntity):
     """Base climate device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
@@ -124,7 +125,6 @@ class AtaDeviceClimate(MelCloudClimate):
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.SWING_MODE
     )
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
@@ -298,7 +298,6 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     _attr_max_temp = 30
     _attr_min_temp = 10
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_has_entity_name = True
 
     def __init__(
         self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone

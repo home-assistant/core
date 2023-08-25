@@ -56,9 +56,6 @@
       "room_temperature": {
         "name": "Room Temperature"
       },
-      "energy": {
-        "name": "Energy"
-      },
       "daily_energy": {
         "name": "Daily Energy Consumed"
       },
