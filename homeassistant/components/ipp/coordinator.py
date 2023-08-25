@@ -33,6 +33,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
     ) -> None:
         """Initialize global IPP data updater."""
         self.device_id = device_id
+        self.initialized = False
         self.ipp = IPP(
             host=host,
             port=port,

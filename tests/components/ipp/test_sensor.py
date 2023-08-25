@@ -1,25 +1,103 @@
 """Tests for the IPP sensor platform."""
 from unittest.mock import AsyncMock
 
-from pyipp import IPPParseError
+from freezegun.api import FrozenDateTimeFactory
+from pyipp import IPPConnectionError
 import pytest
 
 from homeassistant.components.ipp.const import (
     ATTR_MARKER_HIGH_LEVEL,
     ATTR_MARKER_LOW_LEVEL,
     ATTR_MARKER_TYPE,
+    DOMAIN,
 )
-from homeassistant.components.sensor import ATTR_OPTIONS
+from homeassistant.components.ipp.coordinator import SCAN_INTERVAL
+from homeassistant.components.sensor import ATTR_OPTIONS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
+from . import register_entity
+
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
+
+
+def _mock_restore_cache(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry: MockConfigEntry,
+):
+    """Mock entities that would exist in registry after successful printer config entry setup."""
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+    )
+
+    printer_entity_id = register_entity(
+        hass,
+        entity_registry,
+        SENSOR_DOMAIN,
+        "test_ha_1000_series",
+        "printer",
+        entry,
+    )
+
+    marker_entity_id = register_entity(
+        hass,
+        entity_registry,
+        SENSOR_DOMAIN,
+        "test_ha_1000_series_black_ink",
+        "marker_0",
+        entry,
+    )
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    printer_entity_id,
+                    "idle",
+                    {
+                        ATTR_ICON: "mdi:printer",
+                    },
+                ),
+                {
+                    "native_value": "idle",
+                    "native_unit_of_measurement": None,
+                },
+            ),
+            (
+                State(
+                    marker_entity_id,
+                    "24",
+                    {
+                        ATTR_ICON: "mdi:water",
+                        ATTR_MARKER_HIGH_LEVEL: 100,
+                        ATTR_MARKER_LOW_LEVEL: 10,
+                        ATTR_MARKER_TYPE: "ink",
+                    },
+                ),
+                {
+                    "native_value": 24,
+                    "native_unit_of_measurement": PERCENTAGE,
+                },
+            ),
+        ),
+    )
+
+    return (printer_entity_id, marker_entity_id)
 
 
 @pytest.mark.freeze_time("2019-11-11 09:10:32+00:00")
@@ -117,69 +195,70 @@ async def test_missing_entry_unique_id(
     assert entity.unique_id == f"{mock_config_entry.entry_id}_printer"
 
 
-@pytest.mark.parametrize(
-    (
-        "entity_id",
-        "restored_state",
-        "restored_native_value",
-        "initial_state",
-        "initial_attributes",
-    ),
-    (
-        (
-            "sensor.test_ha_1000_series_black_ink",
-            "43",
-            43,
-            "43",
-            [
-                ATTR_ICON,
-                ATTR_MARKER_HIGH_LEVEL,
-                ATTR_MARKER_LOW_LEVEL,
-                ATTR_MARKER_TYPE,
-            ],
-        ),
-    ),
-)
-async def test_restore_marker_state(
+async def test_restore_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ipp: AsyncMock,
-    entity_id: str,
-    restored_state: str,
-    restored_native_value: str,
-    initial_state: str,
-    initial_attributes: list,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor restore state."""
-    restored_attributes = {
-        ATTR_ICON: "mdi:water",
-        ATTR_MARKER_HIGH_LEVEL: 100,
-        ATTR_MARKER_LOW_LEVEL: 10,
-        ATTR_MARKER_TYPE: "ink",
-    }
+    """Test sensor restore state when device is unavailable."""
+    mock_config_entry.add_to_hass(hass)
 
-    fake_state = State(
-        entity_id,
-        restored_state,
-        restored_attributes,
+    (printer_entity_id, marker_entity_id) = _mock_restore_cache(
+        hass, device_registry, entity_registry, mock_config_entry
     )
 
-    fake_extra_data = {
-        "native_value": restored_native_value,
-        "native_unit_of_measurement": PERCENTAGE,
-    }
-
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-    mock_config_entry.add_to_hass(hass)
-    mock_ipp.printer.side_effect = IPPParseError
-
+    mock_ipp.printer.side_effect = IPPConnectionError
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(entity_id))
-    assert state.state == initial_state
-    for attr in restored_attributes.items():
-        if attr in initial_attributes:
-            assert state.attributes[attr] == restored_attributes[attr]
-        else:
-            assert attr not in state.attributes
+    printer_state = hass.states.get(printer_entity_id)
+    assert printer_state
+    assert printer_state.state == STATE_UNAVAILABLE
+
+    marker_state = hass.states.get(marker_entity_id)
+    assert marker_state
+    assert marker_state.state == "24"
+
+
+async def test_restore_sensors_recovered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensor restore state when device was unavailable but has since recovered."""
+    mock_config_entry.add_to_hass(hass)
+
+    (printer_entity_id, marker_entity_id) = _mock_restore_cache(
+        hass, device_registry, entity_registry, mock_config_entry
+    )
+
+    mock_ipp.printer.side_effect = IPPConnectionError
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    printer_state = hass.states.get(printer_entity_id)
+    assert printer_state
+    assert printer_state.state == STATE_UNAVAILABLE
+
+    marker_state = hass.states.get(marker_entity_id)
+    assert marker_state
+    assert marker_state.state == "24"
+
+    mock_ipp.printer.side_effect = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    printer_state = hass.states.get(printer_entity_id)
+    assert printer_state
+    assert printer_state.state == "idle"
+
+    marker_state = hass.states.get(marker_entity_id)
+    assert marker_state
+    assert marker_state.state == "58"
