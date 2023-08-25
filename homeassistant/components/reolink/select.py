@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from reolink_aio.api import (
