@@ -23,11 +23,7 @@ from homeassistant.components.generic.const import (
 from homeassistant.components.stream.const import CONF_RTSP_TRANSPORT
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
