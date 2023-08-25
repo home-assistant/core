@@ -60,7 +60,7 @@ class WallboxSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_CHARGING_POWER_KEY: WallboxSensorEntityDescription(
         key=CHARGER_CHARGING_POWER_KEY,
-        name="Charging Power",
+        translation_key=CHARGER_CHARGING_POWER_KEY,
         precision=2,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
@@ -68,7 +68,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_MAX_AVAILABLE_POWER_KEY: WallboxSensorEntityDescription(
         key=CHARGER_MAX_AVAILABLE_POWER_KEY,
-        name="Max Available Power",
+        translation_key=CHARGER_MAX_AVAILABLE_POWER_KEY,
         precision=0,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -76,15 +76,15 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_CHARGING_SPEED_KEY: WallboxSensorEntityDescription(
         key=CHARGER_CHARGING_SPEED_KEY,
+        translation_key=CHARGER_CHARGING_SPEED_KEY,
         icon="mdi:speedometer",
-        name="Charging Speed",
         precision=0,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_ADDED_RANGE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_RANGE_KEY,
+        translation_key=CHARGER_ADDED_RANGE_KEY,
         icon="mdi:map-marker-distance",
-        name="Added Range",
         precision=0,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
@@ -92,7 +92,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_ENERGY_KEY,
-        name="Added Energy",
+        translation_key=CHARGER_ADDED_ENERGY_KEY,
         precision=2,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -100,7 +100,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_ADDED_DISCHARGED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
-        name="Discharged Energy",
+        translation_key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
         precision=2,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -108,44 +108,45 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     ),
     CHARGER_COST_KEY: WallboxSensorEntityDescription(
         key=CHARGER_COST_KEY,
+        translation_key=CHARGER_COST_KEY,
         icon="mdi:ev-station",
         name="Cost",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     CHARGER_STATE_OF_CHARGE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_STATE_OF_CHARGE_KEY,
-        name="State of Charge",
+        translation_key=CHARGER_STATE_OF_CHARGE_KEY,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_CURRENT_MODE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_CURRENT_MODE_KEY,
+        translation_key=CHARGER_CURRENT_MODE_KEY,
         icon="mdi:ev-station",
-        name="Current Mode",
     ),
     CHARGER_DEPOT_PRICE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_DEPOT_PRICE_KEY,
+        translation_key=CHARGER_DEPOT_PRICE_KEY,
         icon="mdi:ev-station",
-        name="Depot Price",
         precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_ENERGY_PRICE_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ENERGY_PRICE_KEY,
+        translation_key=CHARGER_ENERGY_PRICE_KEY,
         icon="mdi:ev-station",
-        name="Energy Price",
         precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CHARGER_STATUS_DESCRIPTION_KEY: WallboxSensorEntityDescription(
         key=CHARGER_STATUS_DESCRIPTION_KEY,
+        translation_key=CHARGER_STATUS_DESCRIPTION_KEY,
         icon="mdi:ev-station",
-        name="Status Description",
     ),
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxSensorEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
-        name="Max. Charging Current",
+        translation_key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -161,7 +162,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            WallboxSensor(coordinator, entry, description)
+            WallboxSensor(coordinator, description)
             for ent in coordinator.data
             if (description := SENSOR_TYPES.get(ent))
         ]
@@ -176,13 +177,11 @@ class WallboxSensor(WallboxEntity, SensorEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
         description: WallboxSensorEntityDescription,
     ) -> None:
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
     @property

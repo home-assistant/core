@@ -25,5 +25,63 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "number": {
+      "maximum_charging_current": {
+        "name": "Maximum charging current"
+      }
+    },
+    "sensor": {
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "max_available_power": {
+        "name": "Max available power"
+      },
+      "charging_speed": {
+        "name": "Charging speed"
+      },
+      "added_range": {
+        "name": "Added range"
+      },
+      "added_energy": {
+        "name": "Added energy"
+      },
+      "added_discharged_energy": {
+        "name": "Discharged energy"
+      },
+      "cost": {
+        "name": "Cost"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "current_mode": {
+        "name": "Current mode"
+      },
+      "depot_price": {
+        "name": "Depot price"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "status_description": {
+        "name": "Status description"
+      },
+      "max_charging_current": {
+        "name": "Max charging current"
+      }
+    },
+    "switch": {
+      "pause_charging": {
+        "name": "Pause charging"
+      }
+    }
   }
 }

@@ -246,6 +246,8 @@ class InvalidAuth(HomeAssistantError):
 class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
     """Defines a base Wallbox entity."""
 
+    _attr_has_entity_name = True
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Wallbox device."""

@@ -33,7 +33,7 @@ class WallboxNumberEntityDescription(NumberEntityDescription):
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
-        name="Max. Charging Current",
+        translation_key="maximum_charging_current",
     ),
 }
 
@@ -77,7 +77,6 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
         self._is_bidirectional = (
             coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:3]
