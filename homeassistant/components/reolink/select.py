@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ReolinkData
 from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -135,6 +138,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         """Initialize Reolink select entity."""
         super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        self._log_error = True
 
         self._attr_unique_id = (
             f"{self._host.unique_id}_{channel}_{entity_description.key}"
@@ -151,7 +155,16 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         if self.entity_description.value is None:
             return None
 
-        return self.entity_description.value(self._host.api, self._channel)
+        try:
+            option = self.entity_description.value(self._host.api, self._channel)
+        except ValueError:
+            if self._log_error:
+                _LOGGER.exception("Reolink '%s' has a unknown value", self.name)
+                self._log_error = False
+            return None
+
+        self._log_error = True
+        return option
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
