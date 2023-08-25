@@ -26,7 +26,10 @@ async def async_setup_entry(
 
     def entity_adder_callback():
         """entity_adder_callback."""
-        coordinator: RefossCoordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
+        entry_id = config_entry.entry_id
+        coordinator: RefossCoordinator = hass.data[DOMAIN][entry_id][
+            DEVICE_LIST_COORDINATOR
+        ]
 
         devicelist = coordinator.find_devices()
 
@@ -40,10 +43,14 @@ async def async_setup_entry(
                     continue
 
                 for channel in device.channels:
-                    w = SwitchEntityWrapper(
-                        device=device, channel=channel, coordinator=coordinator
-                    )
-                    if w.unique_id not in hass.data[DOMAIN]["ADDED_ENTITIES_IDS"]:
+                    w = SwitchEntityWrapper(device=device, channel=channel)
+                    if (
+                        w.unique_id
+                        not in hass.data[DOMAIN][entry_id]["ADDED_ENTITIES_IDS"]
+                    ):
+                        hass.data[DOMAIN][entry_id]["ADDED_ENTITIES_IDS"].add(
+                            w.unique_id
+                        )
                         new_entities.append(w)
         except Exception as e:
             LOGGER.warning(f"setup switch fail,err:{e}")
@@ -51,8 +58,6 @@ async def async_setup_entry(
 
         async_add_entities(new_entities, True)
 
-    coordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
-    coordinator.async_add_listener(entity_adder_callback)
     entity_adder_callback()
 
 
@@ -65,13 +70,9 @@ class SwitchEntityWrapper(RefossDevice, SwitchEntity):
 
     device: SwitchDevice
 
-    def __init__(
-        self, device: SwitchDevice, channel, coordinator: RefossCoordinator
-    ) -> None:
+    def __init__(self, device: SwitchDevice, channel: int) -> None:
         """Construct."""
-        super().__init__(
-            device=device, channel=channel, coordinator=coordinator, platform=HA_SWITCH
-        )
+        super().__init__(device=device, channel=channel, platform=HA_SWITCH)
 
     @property
     def available(self) -> bool:

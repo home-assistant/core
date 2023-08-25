@@ -12,8 +12,6 @@ from refoss_ha.util import calculate_id
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .coordinator import RefossCoordinator
-
 
 class RefossDevice(Entity):
     """RefossDevice."""
@@ -22,7 +20,6 @@ class RefossDevice(Entity):
         self,
         device: BaseDevice,
         channel: int,
-        coordinator: RefossCoordinator,
         platform: str,
         supplementary_classifiers: Optional[list[str]] = None,
     ) -> None:
@@ -32,8 +29,6 @@ class RefossDevice(Entity):
         self._api_url = device.inner_ip
         self._device_id = device.uuid
         self._channel_id = channel
-
-        self._coordinator = coordinator
         self._last_http_state = None
         base_name = f"{device.dev_name} ({device.device_type})"
         if supplementary_classifiers is not None:
@@ -105,11 +100,9 @@ class RefossDevice(Entity):
         self.device.register_push_notification_handler_coroutine(
             self._async_push_notification_received
         )
-        self.hass.data[DOMAIN]["ADDED_ENTITIES_IDS"].add(self.unique_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """async_will_remove_from_hass."""
         self.device.unregister_push_notification_handler_coroutine(
             self._async_push_notification_received
         )
-        self.hass.data[DOMAIN]["ADDED_ENTITIES_IDS"].remove(self.unique_id)

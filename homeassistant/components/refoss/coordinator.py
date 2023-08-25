@@ -6,6 +6,7 @@ import asyncio
 from asyncio import AbstractEventLoop
 from collections.abc import Iterable
 from datetime import timedelta
+from functools import lru_cache
 from typing import Optional, TypeVar
 
 import async_timeout
@@ -203,6 +204,16 @@ class RefossCoordinator(DataUpdateCoordinator):
 _dynamic_types: dict[str, type] = {}
 
 
+@lru_cache(maxsize=512)
+def _lookup_cached_type(
+    device_type: str, hardware_version: str, firmware_version: str
+) -> Optional[type]:
+    lookup_string = _caclulate_device_type_name(
+        device_type, hardware_version, firmware_version
+    ).strip(":")
+    return _dynamic_types.get(lookup_string)
+
+
 def build_device_from_abilities(
     http_device_info: HttpDeviceInfo, device_abilities: dict
 ) -> BaseDevice:
@@ -236,15 +247,6 @@ def _caclulate_device_type_name(
     device_type: str, hardware_version: str, firmware_version: str
 ) -> str:
     return f"{device_type}:{hardware_version}:{firmware_version}"
-
-
-def _lookup_cached_type(
-    device_type: str, hardware_version: str, firmware_version: str
-) -> Optional[type]:
-    lookup_string = _caclulate_device_type_name(
-        device_type, hardware_version, firmware_version
-    ).strip(":")
-    return _dynamic_types.get(lookup_string)
 
 
 def _build_cached_type(

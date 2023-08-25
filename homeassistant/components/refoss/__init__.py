@@ -43,27 +43,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.warning("Initial_setup failed: %s", e)
         return False
 
-    hass.data[DOMAIN] = {
+    hass.data[DOMAIN][config_entry.entry_id] = {
         DEVICE_LIST_COORDINATOR: refoss_coordinator,
         "ADDED_ENTITIES_IDS": set(),
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    def _poll_discovered_device(*args, **kwargs):
+    def _poll_discovered_device():
         discovered_devices = refoss_coordinator.data
-
         known_devices = refoss_coordinator.find_devices()
 
         if _check_new_discovered_device(known_devices, discovered_devices.values()):
-            hass.create_task(
-                refoss_coordinator.async_device_discovery(
-                    cached_http_device_list=discovered_devices.values()
-                )
-            )
+            hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     refoss_coordinator.async_add_listener(_poll_discovered_device)
     return True
@@ -75,13 +67,13 @@ def _check_new_discovered_device(
     known_devices = {dev.uuid: dev for dev in known}
     for dev in discovered:
         if dev.uuid not in known_devices:
-            LOGGER.info(
+            LOGGER.debug(
                 f"Add new device: device_type:{dev.device_type},ip: {dev.inner_ip}"
             )
             return True
         known_device = known_devices[dev.uuid]
         if known_device.inner_ip != dev.inner_ip:
-            LOGGER.info(
+            LOGGER.debug(
                 f"device_type:{known_device.device_type}, update device, ip: {known_device.inner_ip} => {dev.inner_ip}"
             )
             return True
@@ -90,11 +82,11 @@ def _check_new_discovered_device(
 
 async def async_unload_entry(hass, entry):
     """Async unload hass config entry."""
-    refoss_coordinator: RefossCoordinator = hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    refoss_coordinator: RefossCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DEVICE_LIST_COORDINATOR
+    ]
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     refoss_coordinator.socket.stopReveiveMsg()
-    del hass.data[DOMAIN][DEVICE_LIST_COORDINATOR]
-    hass.data[DOMAIN].clear()
+    del hass.data[DOMAIN][entry.entry_id]
     return True
