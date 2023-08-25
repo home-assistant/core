@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MelCloudDevice
@@ -204,9 +205,16 @@ class AtwZoneSensor(MelDeviceSensor):
         self._zone = zone
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"{self._zone.name} {super().name}"
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        api = self._api.device
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{api.mac}-{api.serial}-{self._zone.zone_index}")},
+            connections={(CONNECTION_NETWORK_MAC, api.mac)},
+            manufacturer="Mitsubishi Electric",
+            model="ATW zone device",
+            name=f"{self._zone.name} {self._api.name}",
+        )
 
     @property
     def native_value(self) -> float | None:
