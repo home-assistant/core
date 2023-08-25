@@ -60,5 +60,32 @@
         }
       }
     }
+  },
+  "entity": {
+    "cover": {
+      "top": {
+        "name": "Top"
+      },
+      "bottom": {
+        "name": "Bottom"
+      },
+      "combined": {
+        "name": "Combined"
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "top_battery": {
+        "name": "Top battery"
+      },
+      "bottom_battery": {
+        "name": "Bottom battery"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      }
+    }
   }
 }
