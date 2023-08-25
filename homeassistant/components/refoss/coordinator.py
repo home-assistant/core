@@ -46,6 +46,7 @@ class RefossCoordinator(DataUpdateCoordinator):
         self._devices_by_internal_id: dict[str, BaseDevice] = {}
         self._setup_done = False
         self.socket = SocketUtil()
+        self.tasks: list[asyncio.Task] = []
         self._loop = asyncio.get_event_loop() if loop is None else loop
 
         super().__init__(
@@ -65,6 +66,7 @@ class RefossCoordinator(DataUpdateCoordinator):
         self.socket.startReveiveMsg()
 
         task = asyncio.create_task(self.HandlePushState())
+        self.tasks.append(task)
         task.done()
 
         devicelist = self.socket.async_socket_find_devices()
@@ -102,6 +104,8 @@ class RefossCoordinator(DataUpdateCoordinator):
             namespace=Namespace.SYSTEM_ABILITY,
             payload={},
         )
+        if res is None:
+            return device
 
         abilities = res.get("payload", {}).get("ability", None)
 
