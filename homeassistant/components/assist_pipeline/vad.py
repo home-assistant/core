@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Final
+from typing import Final
 
 import webrtcvad
 
@@ -60,13 +60,18 @@ class AudioBuffer:
         """Get the number of bytes currently in the buffer."""
         return self._length
 
-    def __setitem__(self, item: Any, value: Any) -> Any:
-        """Set a slice of the buffer."""
-        self._buffer[item] = value
-
     def __bytes__(self) -> bytes:
         """Convert written portion of buffer to bytes."""
         return bytes(self._buffer[: self._length])
+
+    def append(self, data: bytes) -> None:
+        """Append bytes to the buffer, increasing the internal length."""
+        data_len = len(data)
+        if (self._length + data_len) > len(self._buffer):
+            raise ValueError("Length cannot be greater than buffer size")
+
+        self._buffer[self._length : self._length + data_len] = data
+        self._length += data_len
 
 
 @dataclass
@@ -273,22 +278,20 @@ def chunk_samples(
     bytes_per_chunk: int,
     leftover_chunk_buffer: AudioBuffer,
 ) -> Iterable[bytes]:
-    """Yield fixed-sized chunks from samples, keeping leftover bytes from previous calls."""
+    """Yield fixed-sized chunks from samples, keeping leftover bytes from previous call(s)."""
 
     if (len(leftover_chunk_buffer) + len(samples)) < bytes_per_chunk:
         # Extend leftover chunk, but not enough samples to complete it
-        leftover_chunk_buffer[len(leftover_chunk_buffer) :] = samples
-        leftover_chunk_buffer.length += len(samples)
+        leftover_chunk_buffer.append(samples)
         return
 
     samples_offset = 0
     num_bytes_left = len(leftover_chunk_buffer) + (len(samples) % bytes_per_chunk)
 
     if len(leftover_chunk_buffer) > 0:
-        # Add to leftover chunk in buffer
+        # Add to leftover chunk from previous call(s).
         bytes_to_copy = min(len(samples), bytes_per_chunk - len(leftover_chunk_buffer))
-        leftover_chunk_buffer[len(leftover_chunk_buffer) :] = samples[:bytes_to_copy]
-        leftover_chunk_buffer.length += bytes_to_copy
+        leftover_chunk_buffer.append(samples[:bytes_to_copy])
         samples_offset = bytes_to_copy
 
     if len(leftover_chunk_buffer) == bytes_per_chunk:
@@ -302,10 +305,7 @@ def chunk_samples(
     )
     if num_bytes_left > 0:
         # Keep bytes at the end of samples for next chunk
-        leftover_chunk_buffer[:num_bytes_left] = samples[
-            len(samples) - num_bytes_left :
-        ]
-        leftover_chunk_buffer.length = num_bytes_left
+        leftover_chunk_buffer.append(samples[len(samples) - num_bytes_left :])
 
     # Using samples_offset to exclude bytes already copied
     num_chunks_in_samples = (len(samples) - samples_offset) // bytes_per_chunk
