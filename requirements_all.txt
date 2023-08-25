@@ -2622,6 +2622,9 @@ url-normalize==1.4.3
 # homeassistant.components.uvc
 uvcclient==0.11.0
 
+# homeassistant.components.v2c
+v2ctrydan==0.2.1
+
 # homeassistant.components.vallox
 vallox-websocket-api==3.3.0
 

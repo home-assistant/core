@@ -497,6 +497,7 @@ FLOWS = {
         "upnp",
         "uptime",
         "uptimerobot",
+        "v2c",
         "vallox",
         "velbus",
         "venstar",

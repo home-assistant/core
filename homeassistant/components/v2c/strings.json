@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "group": "Group",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Enter your Trydan device information.",
+        "title": "Set up the V2C Trydan"
+      }
+    }
+  }
+}

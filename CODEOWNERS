@@ -1346,6 +1346,7 @@ build.json @home-assistant/supervisor
 /tests/components/usgs_earthquakes_feed/ @exxamalte
 /homeassistant/components/utility_meter/ @dgomes
 /tests/components/utility_meter/ @dgomes
+/homeassistant/components/v2c/ @V2Charge @jesusllorens79
 /homeassistant/components/vacuum/ @home-assistant/core
 /tests/components/vacuum/ @home-assistant/core
 /homeassistant/components/vallox/ @andre-richter @slovdahl @viiru-
