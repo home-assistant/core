@@ -435,64 +435,6 @@ async def test_pipeline_save_audio(
             assert stt_data == b"queued audiopart1_part2_"
 
 
-async def test_pipeline_cleanup_saved_audio_on_timeout(
-    hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
-    mock_wake_word_provider_entity: MockWakeWordEntity,
-    init_supporting_components,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that saved audio is cleaned up automatically on a wake word detection timeout."""
-
-    with tempfile.TemporaryDirectory() as temp_dir_str:
-        # Enable audio recording to temporary directory
-        temp_dir = Path(temp_dir_str)
-        assert await async_setup_component(
-            hass,
-            "assist_pipeline",
-            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
-        )
-
-        def event_callback(event: assist_pipeline.PipelineEvent):
-            if event.type == "run-start":
-                # Verify that saved audio directory was created
-                pipeline_dirs = list(temp_dir.iterdir())
-                assert len(pipeline_dirs) == 1
-
-        async def audio_data():
-            yield b"not used"
-
-        # Force a timeout during wake word detection
-        with patch.object(
-            mock_wake_word_provider_entity,
-            "async_process_audio_stream",
-            side_effect=assist_pipeline.error.WakeWordTimeoutError(
-                code="timeout", message="timeout"
-            ),
-        ):
-            await assist_pipeline.async_pipeline_from_audio_stream(
-                hass,
-                context=Context(),
-                event_callback=event_callback,
-                stt_metadata=stt.SpeechMetadata(
-                    language="",
-                    format=stt.AudioFormats.WAV,
-                    codec=stt.AudioCodecs.PCM,
-                    bit_rate=stt.AudioBitRates.BITRATE_16,
-                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                    channel=stt.AudioChannels.CHANNEL_MONO,
-                ),
-                stt_stream=audio_data(),
-                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-                end_stage=assist_pipeline.PipelineStage.STT,
-            )
-
-        # Directory should have been cleaned up
-        pipeline_dirs = list(temp_dir.iterdir())
-        run_dirs = list(pipeline_dirs[0].iterdir())
-        assert len(run_dirs) == 0
-
-
 async def test_pipeline_saved_audio_with_device_id(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,
@@ -513,7 +455,7 @@ async def test_pipeline_saved_audio_with_device_id(
         )
 
         def event_callback(event: assist_pipeline.PipelineEvent):
-            if event.type == "run-start":
+            if event.type == "run-end":
                 # Verify that saved audio directory is named after device id
                 device_dirs = list(temp_dir.iterdir())
                 assert device_dirs[0].name == device_id
