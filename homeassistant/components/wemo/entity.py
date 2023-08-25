@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     """Common methods for Wemo entities."""
 
+    _attr_has_entity_name = True
     # Most pyWeMo devices are associated with a single Home Assistant entity. When
     # that is not the case, unique_id_suffix can be used to provide names and unique
     # ids for additional Home Assistant entities.

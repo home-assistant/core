@@ -7,10 +7,6 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.wemo.binary_sensor import (
-    InsightBinarySensor,
-    MakerBinarySensor,
-)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
@@ -79,7 +75,7 @@ class TestMaker(EntityTestHelpers):
     @pytest.fixture
     def wemo_entity_suffix(self):
         """Select the MakerBinarySensor entity."""
-        return MakerBinarySensor._name_suffix.lower()
+        return "sensor"
 
     async def test_registry_state_callback(
         self, hass, pywemo_registry, pywemo_device, wemo_entity
@@ -109,7 +105,7 @@ class TestInsight(EntityTestHelpers):
     @pytest.fixture
     def wemo_entity_suffix(self):
         """Select the InsightBinarySensor entity."""
-        return InsightBinarySensor._name_suffix.lower()
+        return "device"
 
     async def test_registry_state_callback(
         self, hass, pywemo_registry, pywemo_device, wemo_entity
