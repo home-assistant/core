@@ -1,16 +1,13 @@
 """The test for the statistics sensor platform."""
 from __future__ import annotations
 
-import cmath
 from collections.abc import Sequence
 from datetime import datetime, timedelta
-import random
 import statistics
 from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
-import numpy as np
 import pytest
 
 from homeassistant import config as hass_config
@@ -1220,61 +1217,40 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
 
 async def test_state_characteristic_mean_circular(hass: HomeAssistant) -> None:
-    """Test the mean_circular state characteristic using a different method."""
-    now = dt_util.utcnow()
-    current_time = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+    """Test the mean_circular state characteristic using angle data."""
+    values_angular = [0, 10, 90.5, 180, 269.5, 350]
 
-    def circular_mean(angles):
-        a = np.deg2rad(angles)
-        angles_complex = np.frompyfunc(cmath.exp, 1, 1)(a * 1j)
-        mean = cmath.phase(angles_complex.sum()) % (2 * np.pi)
-        return round(np.rad2deg(mean), 2)
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_sensor_mean_circular",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean_circular",
+                    "sampling_size": 6,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
 
-    angles_10 = [random.vonmisesvariate(0, 5) for _ in range(10)]
-
-    characteristic = {
-        "value_10": circular_mean(angles_10),
-        "unit": "°",
-    }
-
-    sensor_config = {
-        "platform": "statistics",
-        "name": "test_sensor_mean_circular",
-        "entity_id": "sensor.test_monitored",
-        "state_characteristic": "mean_circular",
-        "max_age": {"minutes": 9},
-    }
-
-    with freeze_time(current_time) as freezer:
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {"sensor": [sensor_config]},
+    for angle in values_angular:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(angle),
+            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-        for _i, angle in enumerate(angles_10):
-            current_time += timedelta(minutes=1)
-            freezer.move_to(current_time)
-            async_fire_time_changed(hass, current_time)
-            hass.states.async_set(
-                "sensor.test_monitored",
-                str(angle),
-                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
-            )
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.test_sensor_mean_circular")
-        assert (
-            state is not None
-        ), "no state object for characteristic 'sensor/mean_circular' (buffer filled)"
-        assert state.state == str(characteristic["value_10"]), (
-            "value mismatch for characteristic 'sensor/mean_circular' (buffer filled) - "
-            f"assert {state.state} == {str(characteristic['value_10'])}"
-        )
-        assert (
-            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == characteristic["unit"]
-        ), "unit mismatch for characteristic 'mean_circular'"
+    state = hass.states.get("sensor.test_sensor_mean_circular")
+    assert state is not None
+    assert state.state == "0.0", (
+        "value mismatch for characteristic 'sensor/mean_circular' - "
+        f"assert {state.state} == 0.0"
+    )
 
 
 async def test_invalid_state_characteristic(hass: HomeAssistant) -> None:
