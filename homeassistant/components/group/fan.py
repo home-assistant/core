@@ -96,6 +96,16 @@ async def async_setup_entry(
     async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
+@callback
+def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+    """Create a preview sensor."""
+    return FanGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
