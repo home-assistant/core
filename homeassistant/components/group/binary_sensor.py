@@ -1,6 +1,8 @@
 """Platform allowing several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -82,6 +84,20 @@ async def async_setup_entry(
                 config_entry.entry_id, config_entry.title, None, entities, mode
             )
         ]
+    )
+
+
+@callback
+def async_create_preview_binary_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> BinarySensorGroup:
+    """Create a preview sensor."""
+    return BinarySensorGroup(
+        None,
+        name,
+        None,
+        validated_config[CONF_ENTITIES],
+        validated_config[CONF_ALL],
     )
 
 
