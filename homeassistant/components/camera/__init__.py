@@ -952,7 +952,7 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
+    async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
         image = (
             await _async_get_stream_image(camera, wait_for_next_keyframe=True)
             if camera.use_stream_for_stills
