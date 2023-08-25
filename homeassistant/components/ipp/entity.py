@@ -30,8 +30,8 @@ def async_restore_sensor_entities(
     """Restore sensor entities."""
     entities = []
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    entity_registry = er_async_get(hass)
+    entries = async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     domain = sensor_class.__module__.split(".")[-1]
 
     for entry in entries:
@@ -44,10 +44,8 @@ def async_restore_sensor_entities(
         if description := sensors.get(attribute):
             entities.append(sensor_class(coordinator, description))
 
-    if not entities:
-        return
-
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):

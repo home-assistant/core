@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = IPPDataUpdateCoordinator(
         hass,
+        entry,
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         base_path=entry.data[CONF_BASE_PATH],
@@ -49,15 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if coordinator.last_update_success:
         coordinator.initialized = True
-        device_entry = dev_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device_id)},
-            manufacturer=coordinator.data.info.manufacturer,
-            model=coordinator.data.info.model,
-            name=coordinator.data.info.name,
-            sw_version=coordinator.data.info.version,
-            configuration_url=coordinator.data.info.more_info,
-        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
