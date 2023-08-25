@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
 from homeassistant.components.zha.core.const import DOMAIN, RadioType
+from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -57,10 +58,13 @@ def backup():
     return backup
 
 
-def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
+def mock_detect_radio_type(
+    radio_type: RadioType = RadioType.ezsp,
+    ret: ProbeResult = ProbeResult.RADIO_TYPE_DETECTED,
+):
     """Mock `detect_radio_type` that just sets the appropriate attributes."""
 
-    async def detect(self):
+    async def detect(self) -> ProbeResult:
         self.radio_type = radio_type
         self.device_settings = radio_type.controller.SCHEMA_DEVICE(
             {CONF_DEVICE_PATH: self.device_path}
@@ -370,3 +374,58 @@ async def test_migrate_non_matching_port(
         "radio_type": "ezsp",
     }
     assert config_entry.title == "Test"
+
+
+@pytest.fixture(name="radio_manager")
+def zha_radio_manager(hass: HomeAssistant) -> ZhaRadioManager:
+    """Fixture for an instance of `ZhaRadioManager`."""
+    radio_manager = ZhaRadioManager()
+    radio_manager.hass = hass
+    radio_manager.device_path = "/dev/ttyZigbee"
+    return radio_manager
+
+
+async def test_detect_radio_type_success(radio_manager: ZhaRadioManager) -> None:
+    """Test radio type detection, success."""
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.probe", return_value=False
+    ), patch(
+        # Intentionally probe only the second radio type
+        "zigpy_znp.zigbee.application.ControllerApplication.probe",
+        return_value=True,
+    ):
+        assert (
+            await radio_manager.detect_radio_type() == ProbeResult.RADIO_TYPE_DETECTED
+        )
+        assert radio_manager.radio_type == RadioType.znp
+
+
+async def test_detect_radio_type_failure_wrong_firmware(
+    radio_manager: ZhaRadioManager,
+) -> None:
+    """Test radio type detection, wrong firmware."""
+    with patch(
+        "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
+    ), patch(
+        "homeassistant.components.zha.radio_manager.repairs.warn_on_wrong_silabs_firmware",
+        return_value=True,
+    ):
+        assert (
+            await radio_manager.detect_radio_type()
+            == ProbeResult.WRONG_FIRMWARE_INSTALLED
+        )
+        assert radio_manager.radio_type is None
+
+
+async def test_detect_radio_type_failure_no_detect(
+    radio_manager: ZhaRadioManager,
+) -> None:
+    """Test radio type detection, no firmware detected."""
+    with patch(
+        "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
+    ), patch(
+        "homeassistant.components.zha.radio_manager.repairs.warn_on_wrong_silabs_firmware",
+        return_value=False,
+    ):
+        assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED
+        assert radio_manager.radio_type is None
