@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from motionblinds import DEVICE_TYPES_WIFI, MotionGateway
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
 from homeassistant.helpers import device_registry as dr
@@ -37,7 +37,11 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
         self._blind = blind
         self._api_lock = coordinator.api_lock
 
-        if blind.device_type in DEVICE_TYPES_WIFI:
+        if blind.device_type in DEVICE_TYPES_GATEWAY:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, blind.mac)},
+            )
+        elif blind.device_type in DEVICE_TYPES_WIFI:
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
                 identifiers={(DOMAIN, blind.mac)},
