@@ -21,11 +21,11 @@ async def test_wallbox_sensor_class(
 
     state = hass.states.get(MOCK_SENSOR_CHARGING_POWER_ID)
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
-    assert state.name == "WallboxName Charging power"
+    assert state.name == "Wallbox WallboxName Charging power"
 
     state = hass.states.get(MOCK_SENSOR_CHARGING_SPEED_ID)
     assert state.attributes[CONF_ICON] == "mdi:speedometer"
-    assert state.name == "WallboxName Charging speed"
+    assert state.name == "Wallbox WallboxName Charging speed"
 
     # Test round with precision '0' works
     state = hass.states.get(MOCK_SENSOR_MAX_AVAILABLE_POWER)

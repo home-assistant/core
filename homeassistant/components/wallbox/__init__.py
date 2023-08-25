@@ -258,7 +258,7 @@ class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
                     self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
                 )
             },
-            name=self.coordinator.data[CHARGER_NAME_KEY],
+            name=f"Wallbox {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
             model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
             sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
