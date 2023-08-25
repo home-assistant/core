@@ -101,6 +101,9 @@ class SrpEntity(SensorEntity):
 
     _attr_attribution = "Powered by SRP Energy"
     _attr_icon = "mdi:flash"
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_should_poll = False
 
     def __init__(self, coordinator) -> None:
@@ -108,8 +111,6 @@ class SrpEntity(SensorEntity):
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
-        self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-        self._state = None
 
     @property
     def name(self) -> str:
@@ -122,32 +123,15 @@ class SrpEntity(SensorEntity):
         return self.coordinator.data
 
     @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
-
-    @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the device class."""
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self) -> SensorStateClass:
-        """Return the state class."""
-        return SensorStateClass.TOTAL_INCREASING
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
-        if self.coordinator.data:
-            self._state = self.coordinator.data
 
     async def async_update(self) -> None:
         """Update the entity.
