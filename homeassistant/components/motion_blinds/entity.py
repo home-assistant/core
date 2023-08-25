@@ -67,8 +67,9 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
         if self.coordinator.data is None:
             return False
 
-        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:  # type: ignore[index]
-            return False
+        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]  # type: ignore[index]
+        if not gateway_available or self._blind.device_type in DEVICE_TYPES_GATEWAY:
+            return gateway_available
 
         return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]  # type: ignore[index]
 
