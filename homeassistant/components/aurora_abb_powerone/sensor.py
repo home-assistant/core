@@ -81,7 +81,7 @@ async def async_setup_entry(
 
 
 class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEntity):
-    """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
+    """Representation of a Sensor on an Aurora ABB PowerOne Solar inverter."""
 
     _attr_has_entity_name = True
 
