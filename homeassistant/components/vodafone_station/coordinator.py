@@ -113,16 +113,17 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         if not logged:
             raise ConfigEntryAuthFailed
 
-        data = UpdateCoordinatorDataType({}, {})
+        data_devices = {}
+        data_sensors = {}
         list_devices = await self.api.get_all_devices()
         dev_info: VodafoneStationDevice
         for dev_info in list_devices.values():
-            data.devices[dev_info.mac] = VodafoneStationDeviceInfo(dev_info, self)
-        data.sensors = await self.api.get_user_data()
+            data_devices[dev_info.mac] = VodafoneStationDeviceInfo(dev_info, self)
+        data_sensors = await self.api.get_user_data()
 
         await self.api.logout()
 
-        return data
+        return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     async def async_send_signal_device_update(self, new_device: bool) -> None:
         """Signal device data updated."""
