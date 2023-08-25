@@ -1,6 +1,6 @@
 """Test zha siren."""
 from datetime import timedelta
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
@@ -27,7 +27,7 @@ import homeassistant.util.dt as dt_util
 from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -87,7 +87,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn on from HA
     with patch(
         "zigpy.device.Device.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,
@@ -119,7 +119,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn off from HA
     with patch(
         "zigpy.device.Device.request",
-        return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),
+        side_effect=AsyncMock(return_value=[0x01, zcl_f.Status.SUCCESS]),
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,
@@ -151,7 +151,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn on from HA
     with patch(
         "zigpy.device.Device.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,

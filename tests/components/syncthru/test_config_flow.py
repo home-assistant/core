@@ -1,6 +1,6 @@
 """Tests for syncthru config flow."""
 import re
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysyncthru import SyncThruAPINotSupported
 
@@ -11,7 +11,7 @@ from homeassistant.components.syncthru.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
@@ -90,7 +90,7 @@ async def test_syncthru_not_supported(hass: HomeAssistant) -> None:
 
 async def test_unknown_state(hass: HomeAssistant) -> None:
     """Test we show user form on unsupported device."""
-    with patch.object(SyncThru, "update", return_value=mock_coro()), patch.object(
+    with patch.object(SyncThru, "update", side_effect=AsyncMock()), patch.object(
         SyncThru, "is_unknown_state", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(

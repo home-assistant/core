@@ -23,7 +23,6 @@ from .common import (
     MockModule,
     MockPlatform,
     get_test_config_dir,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -110,7 +109,7 @@ async def test_core_failure_loads_safe_mode(
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
-        return_value=mock_coro(False),
+        side_effect=AsyncMock(return_value=False),
     ):
         await bootstrap.async_from_config_dict({"group": {}}, hass)
 

@@ -1,5 +1,5 @@
 """The test for ZHA device automation actions."""
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import async_get_device_automations, async_mock_service, mock_coro
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -274,7 +274,7 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
     ):
         assert await async_setup_component(
             hass,

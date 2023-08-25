@@ -1,5 +1,5 @@
 """Test auth of websocket API."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from aiohttp import WSMsgType
@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
 from tests.typing import ClientSessionGenerator
 
 
@@ -72,7 +71,7 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client) -> None:
     """Test authenticating."""
     with patch(
         "homeassistant.components.websocket_api.auth.process_wrong_login",
-        return_value=mock_coro(),
+        side_effect=AsyncMock(),
     ) as mock_process_wrong_login:
         await no_auth_websocket_client.send_json(
             {"type": TYPE_AUTH, "api_password": "wrong"}

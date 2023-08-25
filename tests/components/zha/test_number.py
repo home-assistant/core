@@ -1,5 +1,5 @@
 """Test ZHA analog output."""
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from zigpy.exceptions import ZigbeeException
@@ -22,8 +22,6 @@ from .common import (
     update_attribute_cache,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -153,7 +151,9 @@ async def test_number(
     # change value from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        side_effect=AsyncMock(
+            return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]
+        ),
     ):
         # set value via UI
         await hass.services.async_call(
