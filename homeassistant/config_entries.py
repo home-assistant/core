@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from copy import deepcopy
@@ -1465,14 +1464,12 @@ def _async_abort_entries_match(
     if match_dict is None:
         match_dict = {}  # Match any entry
     for entry in other_entries:
-        if all(
-            item
-            in ChainMap(
-                entry.options,  # type: ignore[arg-type]
-                entry.data,  # type: ignore[arg-type]
-            ).items()
-            for item in match_dict.items()
-        ):
+        options_items = entry.options.items()
+        data_items = entry.data.items()
+        for kv in match_dict.items():
+            if kv not in options_items and kv not in data_items:
+                break
+        else:
             raise data_entry_flow.AbortFlow("already_configured")
 
 
@@ -1864,7 +1861,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         await _load_integration(self.hass, entry.domain, {})
         if entry.domain not in self._preview:
             self._preview.add(entry.domain)
-            flow.async_setup_preview(self.hass)
+            await flow.async_setup_preview(self.hass)
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):

@@ -8,7 +8,7 @@ AEMET-OpenData==0.3.0
 AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.16
+AIOSomecomfort==0.0.17
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -635,7 +635,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.93.0
+dbus-fast==1.94.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -1027,7 +1027,7 @@ ibeacon-ble==1.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.local_calendar
-ical==4.5.4
+ical==5.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2248,6 +2248,9 @@ pyws66i==1.1
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
 
+# homeassistant.components.yardian
+pyyardian==1.1.0
+
 # homeassistant.components.qrcode
 pyzbar==0.1.7
 
@@ -2288,7 +2291,7 @@ renault-api==0.2.0
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.7
+reolink-aio==0.7.8
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2399,7 +2402,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2023.05.0
+simplisafe-python==2023.08.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.3
