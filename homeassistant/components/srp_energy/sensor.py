@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up the SRP Energy Usage sensor."""
     coordinator: SRPEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([SrpEntity(coordinator)])
+    async_add_entities([SrpEntity(coordinator, entry)])
 
 
 class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity):
@@ -34,9 +34,12 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    def __init__(self, coordinator: SRPEnergyDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: SRPEnergyDataUpdateCoordinator, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
         self._name = SENSOR_NAME
 
     @property
