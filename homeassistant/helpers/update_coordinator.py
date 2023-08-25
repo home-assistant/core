@@ -176,6 +176,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Unschedule any pending refresh since there is no longer any listeners."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
+        self._next_refresh = None
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
@@ -210,8 +211,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         # We use event.async_call_at because DataUpdateCoordinator does
         # not guarantee an exact update interval
-        if self._next_refresh is None:
-            self._next_refresh = self.hass.loop.time()
+        now = self.hass.loop.time()
+        if self._next_refresh is None or self._next_refresh <= now:
+            self._next_refresh = now
         self._next_refresh += self.update_interval.total_seconds()
         self._unsub_refresh = event.async_call_at(
             self.hass,
@@ -395,6 +397,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Manually update data, notify listeners and reset refresh interval."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
+        self._next_refresh = None
 
         self.data = data
         self.last_update_success = True
