@@ -202,19 +202,17 @@ class AtwZoneSensor(MelDeviceSensor):
         if zone.zone_index != 1:
             description.key = f"{description.key}-zone-{zone.zone_index}"
         super().__init__(api, description)
-        self._zone = zone
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        api = self._api.device
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"{api.mac}-{api.serial}-{self._zone.zone_index}")},
-            connections={(CONNECTION_NETWORK_MAC, api.mac)},
+        dev = self._api.device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
+            connections={(CONNECTION_NETWORK_MAC, dev.mac)},
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
-            name=f"{self._zone.name} {self._api.name}",
+            name=f"{zone.name} {self._api.name}",
+            via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
+        self._zone = zone
 
     @property
     def native_value(self) -> float | None:
