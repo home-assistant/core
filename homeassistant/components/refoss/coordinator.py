@@ -18,7 +18,6 @@ from refoss_ha.enums import Namespace
 from refoss_ha.http_device import HttpDeviceInfo
 from refoss_ha.socket_util import SocketUtil, pushStateDataList
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -37,12 +36,10 @@ class RefossCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         update_interval: timedelta,
         loop: Optional[AbstractEventLoop] = None,
     ) -> None:
         """__init__ ."""
-        self._entry = config_entry
         self._devices_by_internal_id: dict[str, BaseDevice] = {}
         self._setup_done = False
         self.socket = SocketUtil()

@@ -32,9 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         return False
     hass.data.setdefault(DOMAIN, {})
+
     refoss_coordinator = RefossCoordinator(
         hass=hass,
-        config_entry=config_entry,
         update_interval=timedelta(seconds=SOCKET_DISCOVER_UPDATE_INTERVAL),
     )
     try:
@@ -56,7 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         known_devices = refoss_coordinator.find_devices()
 
         if _check_new_discovered_device(known_devices, discovered_devices.values()):
-            hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+            )
 
     refoss_coordinator.async_add_listener(_poll_discovered_device)
     return True
@@ -87,8 +89,8 @@ async def async_unload_entry(hass, entry):
         DEVICE_LIST_COORDINATOR
     ]
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    refoss_coordinator.socket.stopReveiveMsg()
     for task in refoss_coordinator.tasks:
         task.cancel()
-    refoss_coordinator.socket.stopReveiveMsg()
     del hass.data[DOMAIN][entry.entry_id]
     return True
