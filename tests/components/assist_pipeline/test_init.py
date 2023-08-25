@@ -2,15 +2,16 @@
 from dataclasses import asdict
 import itertools as it
 from pathlib import Path
-import shutil
+import tempfile
 from unittest.mock import ANY, patch
 import wave
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import assist_pipeline, conversation, stt
+from homeassistant.components import assist_pipeline, stt
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockSttProvider, MockSttProviderEntity, MockWakeWordEntity
 
@@ -362,87 +363,67 @@ async def test_pipeline_save_audio(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
-    init_components,
+    init_supporting_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creating a pipeline from an audio stream with wake word."""
+    """Test saving audio during a pipeline run."""
 
-    pipeline = assist_pipeline.Pipeline(
-        conversation_engine=conversation.HOME_ASSISTANT_AGENT,
-        conversation_language=hass.config.language,
-        language=hass.config.language,
-        name="test",
-        stt_engine=mock_stt_provider.name,
-        stt_language=mock_stt_provider.supported_languages[0],
-        tts_engine=None,
-        tts_language=None,
-        tts_voice=None,
-        #
-        save_audio=True,
-    )
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        # Enable audio recording to temporary directory
+        temp_dir = Path(temp_dir_str)
+        assert await async_setup_component(
+            hass,
+            "assist_pipeline",
+            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+        )
 
-    audio_dir = Path(hass.config.path("media")) / "assist_pipeline"
+        events: list[assist_pipeline.PipelineEvent] = []
 
-    # Remove any existing audio
-    if audio_dir.is_dir():
-        shutil.rmtree(audio_dir)
+        # Pad out to an even number of bytes since these "samples" will be saved
+        # as 16-bit values.
+        async def audio_data():
+            yield b"wake word_"
+            # queued audio
+            yield b"part1_"
+            yield b"part2_"
+            yield b""
 
-    try:
-        with patch(
-            "homeassistant.components.assist_pipeline.async_get_pipeline",
-            return_value=pipeline,
-        ):
-            events: list[assist_pipeline.PipelineEvent] = []
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            end_stage=assist_pipeline.PipelineStage.STT,
+        )
 
-            # Pad out to an even number of bytes since these "samples" will be
-            # saved as 16-bit values.
-            async def audio_data():
-                yield b"wake word_"
-                # queued audio
-                yield b"part1_"
-                yield b"part2_"
-                yield b""
+        run_dirs = list(temp_dir.iterdir())
 
-            await assist_pipeline.async_pipeline_from_audio_stream(
-                hass,
-                context=Context(),
-                event_callback=events.append,
-                stt_metadata=stt.SpeechMetadata(
-                    language="",
-                    format=stt.AudioFormats.WAV,
-                    codec=stt.AudioCodecs.PCM,
-                    bit_rate=stt.AudioBitRates.BITRATE_16,
-                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                    channel=stt.AudioChannels.CHANNEL_MONO,
-                ),
-                stt_stream=audio_data(),
-                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-                end_stage=assist_pipeline.PipelineStage.STT,
-            )
+        # Only one pipeline run
+        assert len(run_dirs) == 1
+        assert run_dirs[0].is_dir()
 
-            run_dirs = list(audio_dir.iterdir())
+        # Wake and stt files
+        run_files = list(run_dirs[0].iterdir())
+        assert len(run_files) == 2
+        wake_file = run_files[0] if "wake" in run_files[0].name else run_files[1]
+        stt_file = run_files[0] if "stt" in run_files[0].name else run_files[1]
+        assert wake_file != stt_file
 
-            # Only one pipeline run
-            assert len(run_dirs) == 1
-            assert run_dirs[0].is_dir()
+        # Verify wake file
+        with wave.open(str(wake_file), "rb") as wake_wav:
+            wake_data = wake_wav.readframes(wake_wav.getnframes())
+            assert wake_data == b"wake word_"
 
-            # Wake and stt files
-            run_files = list(run_dirs[0].iterdir())
-            assert len(run_files) == 2
-            wake_file = run_files[0] if "wake" in run_files[0].name else run_files[1]
-            stt_file = run_files[0] if "stt" in run_files[0].name else run_files[1]
-            assert wake_file != stt_file
-
-            # Verify wake file
-            with wave.open(str(wake_file), "rb") as wake_wav:
-                wake_data = wake_wav.readframes(wake_wav.getnframes())
-                assert wake_data == b"wake word_"
-
-            # Verify stt file
-            with wave.open(str(stt_file), "rb") as stt_wav:
-                stt_data = stt_wav.readframes(stt_wav.getnframes())
-                assert stt_data == b"queued audiopart1_part2_"
-    finally:
-        # Clean up saved audio
-        if audio_dir.is_dir():
-            shutil.rmtree(audio_dir)
+        # Verify stt file
+        with wave.open(str(stt_file), "rb") as stt_wav:
+            stt_data = stt_wav.readframes(stt_wav.getnframes())
+            assert stt_data == b"queued audiopart1_part2_"

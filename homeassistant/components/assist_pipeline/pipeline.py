@@ -41,7 +41,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 from .error import (
     IntentRecognitionError,
     PipelineError,
@@ -292,7 +292,6 @@ class Pipeline:
     tts_engine: str | None
     tts_language: str | None
     tts_voice: str | None
-    save_audio: bool = False
 
     id: str = field(default_factory=ulid_util.ulid)
 
@@ -381,7 +380,7 @@ class PipelineRun:
     wake_word_engine: str = field(init=False)
     wake_word_provider: wake_word.WakeWordDetectionEntity = field(init=False)
 
-    save_audio_dir: Path | None = None
+    debug_recording_dir: Path | None = None
     """Directory to save wake word and speech-to-text audio."""
 
     def __post_init__(self) -> None:
@@ -401,12 +400,15 @@ class PipelineRun:
             )
         pipeline_data.pipeline_runs[self.pipeline.id][self.id] = PipelineRunDebug()
 
-        if self.pipeline.save_audio:
-            self.save_audio_dir = (
-                Path(self.hass.config.path("media")) / "assist_pipeline" / self.id
-            )
-            _LOGGER.debug("Saving pipeline audio to %s", self.save_audio_dir)
-            self.save_audio_dir.mkdir(parents=True, exist_ok=True)
+        # Directory to save audio for each pipeline run.
+        # Configured in YAML for assist_pipeline.
+        debug_recording_dir = self.hass.data.get(DATA_CONFIG, {}).get(
+            "debug_recording_dir"
+        )
+        if debug_recording_dir is not None:
+            self.debug_recording_dir = Path(debug_recording_dir) / self.id
+            _LOGGER.debug("Saving pipeline audio to %s", self.debug_recording_dir)
+            self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -524,9 +526,9 @@ class PipelineRun:
             _LOGGER.debug("Timeout during wake word detection")
 
             # Clean up saved audio
-            if self.save_audio_dir is not None:
-                shutil.rmtree(self.save_audio_dir)
-                self.save_audio_dir = None
+            if self.debug_recording_dir is not None:
+                shutil.rmtree(self.debug_recording_dir)
+                self.debug_recording_dir = None
 
             raise
         except Exception as src_error:

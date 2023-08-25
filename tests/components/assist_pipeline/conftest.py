@@ -301,7 +301,6 @@ async def init_supporting_components(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
-    # assert await async_setup_component(hass, wake_word.DOMAIN, {"wake_word": {}})
     assert await async_setup_component(hass, "media_source", {})
 
     config_entry = MockConfigEntry(domain="test")
