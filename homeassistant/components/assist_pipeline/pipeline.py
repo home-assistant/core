@@ -381,7 +381,10 @@ class PipelineRun:
     wake_word_provider: wake_word.WakeWordDetectionEntity = field(init=False)
 
     debug_recording_dir: Path | None = None
-    """Directory to save wake word and speech-to-text audio."""
+    """Parent directory to save wake word and speech-to-text audio."""
+
+    debug_recording_dir_for_run: Path | None = None
+    """Run-specific directory to save wake word and speech-to-text audio."""
 
     def __post_init__(self) -> None:
         """Set language for pipeline."""
@@ -405,7 +408,7 @@ class PipelineRun:
         if debug_recording_dir := self.hass.data[DATA_CONFIG].get(
             "debug_recording_dir"
         ):
-            self.debug_recording_dir = Path(debug_recording_dir) / self.id
+            self.debug_recording_dir = Path(debug_recording_dir)
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -417,15 +420,27 @@ class PipelineRun:
             return
         pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
 
-    async def start(self) -> None:
+    async def start(self, device_id: str | None) -> None:
         """Emit run start event."""
         if self.debug_recording_dir is not None:
             # Create directory where wake/stt audio will be saved
-            _LOGGER.debug("Saving pipeline audio to %s", self.debug_recording_dir)
+            if device_id is None:
+                # <debug_recording_dir>/<pipeline.name>/<run.id>
+                self.debug_recording_dir_for_run = (
+                    self.debug_recording_dir / self.pipeline.name / self.id
+                )
+            else:
+                # <debug_recording_dir>/<device_id>/<pipeline.name>/<run.id>
+                self.debug_recording_dir_for_run = (
+                    self.debug_recording_dir / device_id / self.pipeline.name / self.id
+                )
+            _LOGGER.debug(
+                "Saving pipeline audio to %s", self.debug_recording_dir_for_run
+            )
 
             def mkdir() -> None:
-                assert self.debug_recording_dir is not None
-                self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
+                assert self.debug_recording_dir_for_run is not None
+                self.debug_recording_dir_for_run.mkdir(parents=True, exist_ok=True)
 
             await self.hass.async_add_executor_job(mkdir)
 
@@ -533,14 +548,14 @@ class PipelineRun:
             _LOGGER.debug("Timeout during wake word detection")
 
             # Clean up saved audio
-            if self.debug_recording_dir is not None:
+            if self.debug_recording_dir_for_run is not None:
 
                 def rmtree() -> None:
-                    assert self.debug_recording_dir is not None
-                    shutil.rmtree(self.debug_recording_dir)
+                    assert self.debug_recording_dir_for_run is not None
+                    shutil.rmtree(self.debug_recording_dir_for_run)
 
                 await self.hass.async_add_executor_job(rmtree)
-                self.debug_recording_dir = None
+                self.debug_recording_dir_for_run = None
 
             raise
         except Exception as src_error:
@@ -887,7 +902,7 @@ class PipelineInput:
 
     async def execute(self) -> None:
         """Run pipeline."""
-        await self.run.start()
+        await self.run.start(device_id=self.device_id)
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[bytes] = []
 

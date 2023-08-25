@@ -367,7 +367,6 @@ async def test_pipeline_save_audio(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test saving audio during a pipeline run."""
-
     with tempfile.TemporaryDirectory() as temp_dir_str:
         # Enable audio recording to temporary directory
         temp_dir = Path(temp_dir_str)
@@ -377,6 +376,7 @@ async def test_pipeline_save_audio(
             {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
         )
 
+        pipeline = assist_pipeline.async_get_pipeline(hass)
         events: list[assist_pipeline.PipelineEvent] = []
 
         # Pad out to an even number of bytes since these "samples" will be saved
@@ -401,18 +401,24 @@ async def test_pipeline_save_audio(
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_data(),
+            pipeline_id=pipeline.id,
             start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
             end_stage=assist_pipeline.PipelineStage.STT,
         )
 
-        run_dirs = list(temp_dir.iterdir())
+        pipeline_dirs = list(temp_dir.iterdir())
 
         # Only one pipeline run
-        assert len(run_dirs) == 1
-        assert run_dirs[0].is_dir()
+        # <debug_recording_dir>/<pipeline.name>/<run.id>
+        assert len(pipeline_dirs) == 1
+        assert pipeline_dirs[0].is_dir()
+        assert pipeline_dirs[0].name == pipeline.name
 
         # Wake and stt files
+        run_dirs = list(pipeline_dirs[0].iterdir())
+        assert run_dirs[0].is_dir()
         run_files = list(run_dirs[0].iterdir())
+
         assert len(run_files) == 2
         wake_file = run_files[0] if "wake" in run_files[0].name else run_files[1]
         stt_file = run_files[0] if "stt" in run_files[0].name else run_files[1]
@@ -450,8 +456,8 @@ async def test_pipeline_cleanup_saved_audio_on_timeout(
         def event_callback(event: assist_pipeline.PipelineEvent):
             if event.type == "run-start":
                 # Verify that saved audio directory was created
-                run_dirs = list(temp_dir.iterdir())
-                assert len(run_dirs) == 1
+                pipeline_dirs = list(temp_dir.iterdir())
+                assert len(pipeline_dirs) == 1
 
         async def audio_data():
             yield b"not used"
@@ -482,5 +488,61 @@ async def test_pipeline_cleanup_saved_audio_on_timeout(
             )
 
         # Directory should have been cleaned up
-        run_dirs = list(temp_dir.iterdir())
+        pipeline_dirs = list(temp_dir.iterdir())
+        run_dirs = list(pipeline_dirs[0].iterdir())
         assert len(run_dirs) == 0
+
+
+async def test_pipeline_saved_audio_with_device_id(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_supporting_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that saved audio directory uses device id."""
+    device_id = "test-device-id"
+
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        # Enable audio recording to temporary directory
+        temp_dir = Path(temp_dir_str)
+        assert await async_setup_component(
+            hass,
+            "assist_pipeline",
+            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+        )
+
+        def event_callback(event: assist_pipeline.PipelineEvent):
+            if event.type == "run-start":
+                # Verify that saved audio directory is named after device id
+                device_dirs = list(temp_dir.iterdir())
+                assert device_dirs[0].name == device_id
+
+        async def audio_data():
+            yield b"not used"
+
+        # Force a timeout during wake word detection
+        with patch.object(
+            mock_wake_word_provider_entity,
+            "async_process_audio_stream",
+            side_effect=assist_pipeline.error.WakeWordTimeoutError(
+                code="timeout", message="timeout"
+            ),
+        ):
+            await assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=event_callback,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_data(),
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                device_id=device_id,
+            )
