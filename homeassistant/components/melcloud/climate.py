@@ -104,15 +104,11 @@ class MelCloudClimate(ClimateEntity):
         """Initialize the climate."""
         self.api = device
         self._base_device = self.api.device
+        self._attr_device_info = self.api.device_info
 
     async def async_update(self) -> None:
         """Update state from MELCloud."""
         await self.api.async_update()
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self.api.device_info
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -128,13 +124,14 @@ class AtaDeviceClimate(MelCloudClimate):
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.SWING_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
         """Initialize the climate."""
         super().__init__(device)
         self._device = ata_device
 
-        self._attr_name = device.name
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
 
     @property
@@ -301,6 +298,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     _attr_max_temp = 30
     _attr_min_temp = 10
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_has_entity_name = True
 
     def __init__(
         self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone
@@ -310,7 +308,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._device = atw_device
         self._zone = atw_zone
 
-        self._attr_name = f"{device.name} {self._zone.name}"
+        self._attr_name = self._zone.name
         self._attr_unique_id = f"{self.api.device.serial}-{atw_zone.zone_index}"
 
     @property

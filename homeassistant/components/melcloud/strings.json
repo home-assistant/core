@@ -50,5 +50,30 @@
       "title": "The MELCloud YAML configuration import failed",
       "description": "Configuring MELCloud using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
     }
+  },
+  "entity": {
+    "sensor": {
+      "room_temperature": {
+        "name": "Room Temperature"
+      },
+      "energy": {
+        "name": "Energy"
+      },
+      "daily_energy": {
+        "name": "Daily Energy Consumed"
+      },
+      "outside_temperature": {
+        "name": "Outside Temperature"
+      },
+      "tank_temperature": {
+        "name": "Tank Temperature"
+      },
+      "flow_temperature": {
+        "name": "Flow Temperature"
+      },
+      "return_temperature": {
+        "name": "Flow Return Temperature"
+      }
+    }
   }
 }
