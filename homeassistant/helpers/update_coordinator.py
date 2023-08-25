@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 import logging
+from random import randint
 from time import monotonic
 from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
@@ -88,6 +89,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
         self.data: _DataT = None  # type: ignore[assignment]
+
+        # Pick a random microsecond to stagger the refreshes
+        # and avoid a thundering herd.
+        self._microsecond = (
+            randint(event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX)
+            / 10**6
+        )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         job_name = "DataUpdateCoordinator"
@@ -213,7 +221,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # not guarantee an exact update interval
         now = self.hass.loop.time()
         if self._next_refresh is None or self._next_refresh <= now:
-            self._next_refresh = now
+            self._next_refresh = now + self._microsecond
         self._next_refresh += self.update_interval.total_seconds()
         self._unsub_refresh = event.async_call_at(
             self.hass,
