@@ -1,5 +1,6 @@
 """Test ZHA repairs."""
 from collections.abc import Callable
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -15,6 +16,7 @@ from homeassistant.components.zha.repairs import (
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     HardwareType,
     detect_radio_hardware,
+    probe_silabs_firmware_type,
     warn_on_wrong_silabs_firmware,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -208,7 +210,7 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     assert issue is None
 
 
-async def test_no_warn_on_socket(hass: HomeAssistant):
+async def test_no_warn_on_socket(hass: HomeAssistant) -> None:
     """Test that no warning is issued when the device is a socket."""
     with patch(
         "homeassistant.components.zha.repairs.probe_silabs_firmware_type", autospec=True
@@ -216,3 +218,14 @@ async def test_no_warn_on_socket(hass: HomeAssistant):
         await warn_on_wrong_silabs_firmware(hass, device="socket://1.2.3.4:5678")
 
     mock_probe.assert_not_called()
+
+
+async def test_probe_failure_exception_handling(caplog) -> None:
+    """Test that probe failures are handled gracefully."""
+    with patch(
+        "homeassistant.components.zha.repairs.Flasher.probe_app_type",
+        side_effect=RuntimeError(),
+    ), caplog.at_level(logging.DEBUG):
+        await probe_silabs_firmware_type("/dev/ttyZigbee")
+
+    assert "Failed to probe application type" in caplog.text

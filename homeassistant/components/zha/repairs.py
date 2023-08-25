@@ -1,8 +1,8 @@
 """ZHA repairs for common environmental and device problems."""
 from __future__ import annotations
 
-import contextlib
 import enum
+import logging
 
 from universal_silabs_flasher.const import ApplicationType
 from universal_silabs_flasher.flasher import Flasher
@@ -19,6 +19,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .core.const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AlreadyRunningEZSP(Exception):
@@ -75,8 +77,10 @@ async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
     """Probe the running firmware on a Silabs device."""
     flasher = Flasher(device=device)
 
-    with contextlib.suppress(OSError):
+    try:
         await flasher.probe_app_type()
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
 
     return flasher.app_type
 
