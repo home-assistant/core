@@ -56,7 +56,6 @@ async def async_setup_entry(
     assert config_entry.unique_id
     projector_entity = EpsonProjectorMediaPlayer(
         projector=projector,
-        name=config_entry.title,
         unique_id=config_entry.unique_id,
         entry=config_entry,
     )
@@ -86,7 +85,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     )
 
     def __init__(
-        self, projector: Projector, name: str, unique_id: str, entry: ConfigEntry
+        self, projector: Projector, unique_id: str, entry: ConfigEntry
     ) -> None:
         """Initialize entity to control Epson projector."""
         self._projector = projector
@@ -99,7 +98,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Epson",
             model="Epson",
-            name=name,
             via_device=(DOMAIN, unique_id),
         )
 
