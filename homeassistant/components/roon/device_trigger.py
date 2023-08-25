@@ -50,7 +50,6 @@ async def async_get_triggers(
     for entry in er.async_entries_for_device(registry, device_id):
         # I needed to change this from entry.domain - because the domain was 'media_player'
         # Does this mean something else is being set wrongly in the roon integration?
-
         if entry.platform != DOMAIN:
             continue
 
@@ -79,7 +78,7 @@ async def async_attach_trigger(
             event_trigger.CONF_PLATFORM: "event",
             event_trigger.CONF_EVENT_TYPE: ROON_EVENT,
             event_trigger.CONF_EVENT_DATA: {
-                CONF_ENTITY_ID: config["entity_id"],
+                CONF_ENTITY_ID: config[CONF_ENTITY_ID],
                 CONF_TYPE: config[CONF_TYPE],
             },
         }

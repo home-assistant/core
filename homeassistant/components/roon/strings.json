@@ -36,8 +36,18 @@
   },
   "device_automation": {
     "trigger_type": {
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "volume_up": "{entity_name} turn volume up",
+      "volume_down": "{entity_name} turn volume down"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure general device settings",
+        "data": {
+          "roon_volume_controls": "Enable volume control hook"
+        }
+      }
     }
   }
 }
