@@ -77,6 +77,7 @@ class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_name = None
 
     def __init__(self, coordinator: DeviceCoordinator, light: BridgeLight) -> None:
         """Initialize the WeMo light."""
@@ -84,11 +85,6 @@ class WemoLight(WemoEntity, LightEntity):
         self.light = light
         self._unique_id = self.light.uniqueID
         self._model_name = type(self.light).__name__
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return self.light.name
 
     @property
     def available(self) -> bool:
@@ -108,7 +104,7 @@ class WemoLight(WemoEntity, LightEntity):
             identifiers={(WEMO_DOMAIN, self._unique_id)},
             manufacturer="Belkin",
             model=self._model_name,
-            name=self.name,
+            name=self.light.name,
         )
 
     @property

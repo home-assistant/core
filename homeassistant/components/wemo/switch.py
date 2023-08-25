@@ -49,6 +49,7 @@ async def async_setup_entry(
 class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     """Representation of a WeMo switch."""
 
+    _attr_name = None
     # All wemo devices used with WemoSwitch are subclasses of Switch.
     wemo: Switch
 

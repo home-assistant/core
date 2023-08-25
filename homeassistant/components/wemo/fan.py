@@ -72,6 +72,7 @@ async def async_setup_entry(
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED
     wemo: Humidifier
     _last_fan_on_mode: FanMode

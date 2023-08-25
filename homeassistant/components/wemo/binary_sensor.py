@@ -38,7 +38,8 @@ class WemoBinarySensor(WemoBinaryStateEntity, BinarySensorEntity):
 class MakerBinarySensor(WemoEntity, BinarySensorEntity):
     """Maker device's sensor port."""
 
-    _name_suffix = "Sensor"
+    _attr_translation_key = "sensor"
+    _unique_id_suffix = "sensor"
     wemo: Maker
 
     @property
@@ -50,7 +51,8 @@ class MakerBinarySensor(WemoEntity, BinarySensorEntity):
 class InsightBinarySensor(WemoBinarySensor):
     """Sensor representing the device connected to the Insight Switch."""
 
-    _name_suffix = "Device"
+    _attr_translation_key = "device"
+    _unique_id_suffix = "device"
     wemo: Insight
 
     @property

@@ -19,9 +19,8 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     """Common methods for Wemo entities."""
 
     # Most pyWeMo devices are associated with a single Home Assistant entity. When
-    # that is not the case, name_suffix & unique_id_suffix can be used to provide
-    # names and unique ids for additional Home Assistant entities.
-    _name_suffix: str | None = None
+    # that is not the case, unique_id_suffix can be used to provide names and unique
+    # ids for additional Home Assistant entities.
     _unique_id_suffix: str | None = None
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
@@ -31,23 +30,8 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         self._device_info = coordinator.device_info
 
     @property
-    def name_suffix(self) -> str | None:
-        """Suffix to append to the WeMo device name."""
-        return self._name_suffix
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        wemo_name: str = self.wemo.name
-        if suffix := self.name_suffix:
-            return f"{wemo_name} {suffix}"
-        return wemo_name
-
-    @property
     def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
-        if self._unique_id_suffix is None and self.name_suffix is not None:
-            return self.name_suffix.lower()
         return self._unique_id_suffix
 
     @property

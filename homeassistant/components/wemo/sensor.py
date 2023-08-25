@@ -26,16 +26,12 @@ from .wemo_device import DeviceCoordinator
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
-    # AttributeSensor does not support UNDEFINED,
-    # restrict the type to str | None.
-    name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None
 
 
 ATTRIBUTE_SENSORS = (
     AttributeSensorDescription(
-        name="Current Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -44,7 +40,7 @@ ATTRIBUTE_SENSORS = (
         state_conversion=lambda state: round(cast(float, state), 2),
     ),
     AttributeSensorDescription(
-        name="Today Energy",
+        translation_key="today_energy",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -84,11 +80,6 @@ class AttributeSensor(WemoEntity, SensorEntity):
         """Init AttributeSensor."""
         super().__init__(coordinator)
         self.entity_description = description
-
-    @property
-    def name_suffix(self) -> str | None:
-        """Return the name of the entity."""
-        return self.entity_description.name
 
     @property
     def unique_id_suffix(self) -> str | None:

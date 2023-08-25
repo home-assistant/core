@@ -29,6 +29,21 @@
       "long_press": "Wemo button was pressed for 2 seconds"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "sensor": {
+        "name": "Sensor"
+      },
+      "device": {
+        "name": "Device"
+      }
+    },
+    "sensor": {
+      "today_energy": {
+        "name": "Today energy"
+      }
+    }
+  },
   "services": {
     "set_humidity": {
       "name": "Set humidity",
