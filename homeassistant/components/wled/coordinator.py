@@ -31,7 +31,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         entry: ConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
-        self.keep_master_light = entry.options.get(
+        self.keep_main_light = entry.options.get(
             CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
@@ -45,9 +45,9 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
 
     @property
-    def has_master_light(self) -> bool:
+    def has_main_light(self) -> bool:
         """Return if the coordinated device has an master light."""
-        return self.keep_master_light or (
+        return self.keep_main_light or (
             self.data is not None and len(self.data.state.segments) > 1
         )
 
