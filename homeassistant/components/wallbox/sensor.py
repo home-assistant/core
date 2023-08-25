@@ -110,7 +110,6 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         key=CHARGER_COST_KEY,
         translation_key=CHARGER_COST_KEY,
         icon="mdi:ev-station",
-        name="Cost",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     CHARGER_STATE_OF_CHARGE_KEY: WallboxSensorEntityDescription(
