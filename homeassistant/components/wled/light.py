@@ -52,7 +52,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_icon = "mdi:led-strip-variant"
-    _attr_name = "Master"
+    _attr_translation_key = "master"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 

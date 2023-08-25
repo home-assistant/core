@@ -32,13 +32,68 @@
     }
   },
   "entity": {
+    "light": {
+      "master": {
+        "name": "Master"
+      }
+    },
     "select": {
       "live_override": {
+        "name": "Live override",
         "state": {
           "0": "[%key:common::state::off%]",
           "1": "[%key:common::state::on%]",
           "2": "Until device restarts"
         }
+      },
+      "preset": {
+        "name": "Preset"
+      },
+      "playlist": {
+        "name": "Playlist"
+      }
+    },
+    "sensor": {
+      "estimated_current": {
+        "name": "Estimated current"
+      },
+      "info_leds_count": {
+        "name": "LED count"
+      },
+      "info_leds_max_power": {
+        "name": "Max current"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "free_heap": {
+        "name": "Free memory"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "wifi_channel": {
+        "name": "Wi-Fi channel"
+      },
+      "wifi_bssid": {
+        "name": "Wi-Fi BSSID"
+      },
+      "ip": {
+        "name": "IP"
+      }
+    },
+    "switch": {
+      "nightlight": {
+        "name": "Nightlight"
+      },
+      "sync_send": {
+        "name": "Sync send"
+      },
+      "sync_receive": {
+        "name": "Sync receive"
       }
     }
   },
