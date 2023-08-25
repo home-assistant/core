@@ -9,7 +9,6 @@ from aioairzone.const import (
     AZD_BATTERY_LOW,
     AZD_ERRORS,
     AZD_FLOOR_DEMAND,
-    AZD_NAME,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
     AZD_ZONES,
@@ -45,7 +44,6 @@ SYSTEM_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ..
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=AZD_PROBLEMS,
-        name="Problem",
     ),
 )
 
@@ -53,17 +51,16 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_AIR_DEMAND,
-        name="Air Demand",
+        translation_key="air_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.BATTERY,
         key=AZD_BATTERY_LOW,
-        name="Battery Low",
     ),
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_FLOOR_DEMAND,
-        name="Floor Demand",
+        translation_key="floor_demand",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
@@ -72,7 +69,6 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         key=AZD_PROBLEMS,
-        name="Problem",
     ),
 )
 
@@ -149,7 +145,6 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, system_data)
-        self._attr_name = f"System {system_id} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{system_id}_{description.key}"
         self.entity_description = description
         self._async_update_attrs()
@@ -169,7 +164,6 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]} {description.name}"
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )
