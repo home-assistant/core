@@ -100,12 +100,12 @@ class MelCloudClimate(ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
         self.api = device
         self._base_device = self.api.device
-        self._attr_device_info = self.api.device_info
 
     async def async_update(self) -> None:
         """Update state from MELCloud."""
@@ -125,7 +125,6 @@ class AtaDeviceClimate(MelCloudClimate):
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.SWING_MODE
     )
-    _attr_name = None
 
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
         """Initialize the climate."""
@@ -133,6 +132,7 @@ class AtaDeviceClimate(MelCloudClimate):
         self._device = ata_device
 
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
+        self._attr_device_info = self.api.device_info
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -307,8 +307,8 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._device = atw_device
         self._zone = atw_zone
 
-        self._attr_name = self._zone.name
         self._attr_unique_id = f"{self.api.device.serial}-{atw_zone.zone_index}"
+        self._attr_device_info = self.api.zone_device_info(atw_zone)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

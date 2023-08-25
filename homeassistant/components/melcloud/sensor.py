@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MelCloudDevice
@@ -203,15 +202,7 @@ class AtwZoneSensor(MelDeviceSensor):
             description.key = f"{description.key}-zone-{zone.zone_index}"
         super().__init__(api, description)
 
-        dev = api.device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
-            connections={(CONNECTION_NETWORK_MAC, dev.mac)},
-            manufacturer="Mitsubishi Electric",
-            model="ATW zone device",
-            name=f"{api.name} {zone.name}",
-            via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
-        )
+        self._attr_device_info = api.zone_device_info(zone)
         self._zone = zone
 
     @property

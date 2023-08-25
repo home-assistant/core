@@ -8,6 +8,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from pymelcloud import Device, get_devices
+from pymelcloud.atw_device import Zone
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -137,6 +138,18 @@ class MelCloudDevice:
             manufacturer="Mitsubishi Electric",
             model=model,
             name=self.name,
+        )
+
+    def zone_device_info(self, zone: Zone) -> DeviceInfo:
+        """Return a zone device description for device registry."""
+        dev = self.device
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, dev.mac)},
+            identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
+            manufacturer="Mitsubishi Electric",
+            model="ATW zone device",
+            name=f"{self.name} {zone.name}",
+            via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
     @property
