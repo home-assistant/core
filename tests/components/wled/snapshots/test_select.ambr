@@ -310,7 +310,7 @@
     'original_name': 'Playlist',
     'platform': 'wled',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'playlist',
     'unique_id': 'aabbccddee11_playlist',
     'unit_of_measurement': None,
   })
@@ -393,7 +393,7 @@
     'original_name': 'Preset',
     'platform': 'wled',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'preset',
     'unique_id': 'aabbccddee11_preset',
     'unit_of_measurement': None,
   })
