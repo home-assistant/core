@@ -98,19 +98,15 @@ class AuroraSensor(CoordinatorEntity[AuroraAbbDataUpdateCoordinator], SensorEnti
         self._attr_unique_id = (
             f"{data[ATTR_SERIAL_NUMBER]}_{self.entity_description.key}"
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._data[ATTR_SERIAL_NUMBER])},
+            manufacturer=MANUFACTURER,
+            model=self._data[ATTR_MODEL],
+            name=self._data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
+            sw_version=self._data[ATTR_FIRMWARE],
+        )
 
     @property
     def native_value(self) -> StateType:
         """Get the value of the sensor from previously collected data."""
         return self.coordinator.data.get(self.entity_description.key)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self._data[ATTR_SERIAL_NUMBER])},
-            "manufacturer": MANUFACTURER,
-            "model": self._data[ATTR_MODEL],
-            "name": self._data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
-            "sw_version": self._data[ATTR_FIRMWARE],
-        }
