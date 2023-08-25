@@ -9,11 +9,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SRPEnergyDataUpdateCoordinator
-from .const import DEFAULT_NAME, DOMAIN, SENSOR_NAME
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -29,10 +30,11 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
     """Implementation of a Srp Energy Usage sensor."""
 
     _attr_attribution = "Powered by SRP Energy"
-    _attr_icon = "mdi:flash"
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_has_entity_name = True
+    _attr_translation_key = "total_usage"
 
     def __init__(
         self, coordinator: SRPEnergyDataUpdateCoordinator, config_entry: ConfigEntry
@@ -40,12 +42,11 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
-        self._name = SENSOR_NAME
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{DEFAULT_NAME} {self._name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name="SRP Energy",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> float:
