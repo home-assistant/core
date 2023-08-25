@@ -10,8 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SERIAL_NUMBER
-from .coordinator import RainbirdData, RainbirdUpdateCoordinator
+from .coordinator import RainbirdData
 
 PLATFORMS = [
     Platform.SWITCH,
@@ -41,16 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model_info = await controller.get_model_and_version()
     except RainbirdApiException as err:
         raise ConfigEntryNotReady from err
-    coordinator = RainbirdUpdateCoordinator(
-        hass,
-        name=entry.title,
-        controller=controller,
-        serial_number=entry.data[CONF_SERIAL_NUMBER],
-        model_info=model_info,
-    )
-    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    data = RainbirdData(hass, entry, controller, model_info)
+    await data.coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = data
 

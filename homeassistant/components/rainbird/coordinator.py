@@ -10,7 +10,6 @@ import logging
 from typing import TypeVar
 
 import async_timeout
-
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -159,6 +158,7 @@ class RainbirdData:
     hass: HomeAssistant
     entry: ConfigEntry
     controller: AsyncRainbirdController
+    model_info: ModelAndVersion
 
     @cached_property
     def coordinator(self) -> RainbirdUpdateCoordinator:
@@ -168,6 +168,7 @@ class RainbirdData:
             name=self.entry.title,
             controller=self.controller,
             serial_number=self.entry.data[CONF_SERIAL_NUMBER],
+            model_info=self.model_info,
         )
 
     @cached_property

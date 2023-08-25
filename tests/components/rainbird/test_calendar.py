@@ -66,10 +66,7 @@ def mock_schedule_responses(responses: list[AiohttpClientMockResponse]) -> list[
     """Mock response to return the irrigation schedule."""
     # Example schedule from TM2
     responses.extend(
-        [
-            mock_response(api_response)
-            for api_response in [MODEL_VERSION_RESPONSE] + SCHEDULE_RESPONSES
-        ]
+        [mock_response(api_response) for api_response in SCHEDULE_RESPONSES]
     )
 
 
