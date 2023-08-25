@@ -191,7 +191,7 @@ class MockWakeWordEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         async for chunk, timestamp in stream:
-            if chunk == b"wake word":
+            if chunk.startswith(b"wake word"):
                 return wake_word.DetectionResult(
                     ww_id=self.supported_wake_words[0].ww_id,
                     timestamp=timestamp,
