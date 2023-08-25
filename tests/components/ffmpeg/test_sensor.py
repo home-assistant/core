@@ -1,134 +1,129 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.setup import setup_component
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant, mock_coro
+from tests.common import assert_setup_component
+
+CONFIG_NOISE = {
+    "binary_sensor": {"platform": "ffmpeg_noise", "input": "testinputvideo"}
+}
+CONFIG_MOTION = {
+    "binary_sensor": {"platform": "ffmpeg_motion", "input": "testinputvideo"}
+}
 
 
 class TestFFmpegNoiseSetup:
     """Test class for ffmpeg."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-        self.config = {
-            "binary_sensor": {"platform": "ffmpeg_noise", "input": "testinputvideo"}
-        }
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_component(self):
+    @staticmethod
+    async def test_setup_component(hass: HomeAssistant) -> None:
         """Set up ffmpeg component."""
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+            await async_setup_component(hass, "binary_sensor", CONFIG_NOISE)
+        await hass.async_block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_noise") is not None
 
-    async def test_setup_component_start(self):
+    @staticmethod
+    @patch("haffmpeg.sensor.SensorNoise.open_sensor", side_effect=AsyncMock())
+    async def test_setup_component_start(mock_start, hass: HomeAssistant):
         """Set up ffmpeg component."""
-        with patch(
-            "haffmpeg.sensor.SensorNoise.open_sensor", return_value=mock_coro()
-        ) as mock_start:
-            with assert_setup_component(1, "binary_sensor"):
-                setup_component(self.hass, "binary_sensor", self.config)
-            self.hass.block_till_done()
+        with assert_setup_component(1, "binary_sensor"):
+            await async_setup_component(hass, "binary_sensor", CONFIG_NOISE)
+        await hass.async_block_till_done()
 
-            assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-            assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_noise") is not None
 
-            self.hass.start()
-            assert mock_start.called
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert mock_start.called
 
-            entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
-            assert entity.state == "unavailable"
+        entity = hass.states.get("binary_sensor.ffmpeg_noise")
+        assert entity.state == "unavailable"
 
+    @staticmethod
     @patch("haffmpeg.sensor.SensorNoise")
-    def test_setup_component_start_callback(self, mock_ffmpeg):
+    async def test_setup_component_start_callback(mock_ffmpeg, hass: HomeAssistant):
         """Set up ffmpeg component."""
+        mock_ffmpeg().open_sensor.side_effect = AsyncMock()
+        mock_ffmpeg().close = AsyncMock()
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+            await async_setup_component(hass, "binary_sensor", CONFIG_NOISE)
+        await hass.async_block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_noise") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_noise") is not None
 
-        self.hass.start()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
+        entity = hass.states.get("binary_sensor.ffmpeg_noise")
         assert entity.state == "off"
 
-        self.hass.add_job(mock_ffmpeg.call_args[0][1], True)
-        self.hass.block_till_done()
+        hass.async_add_job(mock_ffmpeg.call_args[0][1], True)
+        await hass.async_block_till_done()
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
+        entity = hass.states.get("binary_sensor.ffmpeg_noise")
         assert entity.state == "on"
 
 
 class TestFFmpegMotionSetup:
     """Test class for ffmpeg."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-        self.config = {
-            "binary_sensor": {"platform": "ffmpeg_motion", "input": "testinputvideo"}
-        }
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_component(self):
+    @staticmethod
+    async def test_setup_component(hass: HomeAssistant) -> None:
         """Set up ffmpeg component."""
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+            await async_setup_component(hass, "binary_sensor", CONFIG_MOTION)
+        await hass.async_block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_motion") is not None
 
-    async def test_setup_component_start(self):
+    @staticmethod
+    @patch("haffmpeg.sensor.SensorMotion.open_sensor", side_effect=AsyncMock())
+    async def test_setup_component_start(mock_start, hass: HomeAssistant):
         """Set up ffmpeg component."""
-        with patch(
-            "haffmpeg.sensor.SensorMotion.open_sensor", return_value=mock_coro()
-        ) as mock_start:
-            with assert_setup_component(1, "binary_sensor"):
-                setup_component(self.hass, "binary_sensor", self.config)
-            self.hass.block_till_done()
+        with assert_setup_component(1, "binary_sensor"):
+            await async_setup_component(hass, "binary_sensor", CONFIG_MOTION)
+        await hass.async_block_till_done()
 
-            assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-            assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_motion") is not None
 
-            self.hass.start()
-            assert mock_start.called
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert mock_start.called
 
-            entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
-            assert entity.state == "unavailable"
+        entity = hass.states.get("binary_sensor.ffmpeg_motion")
+        assert entity.state == "unavailable"
 
+    @staticmethod
     @patch("haffmpeg.sensor.SensorMotion")
-    def test_setup_component_start_callback(self, mock_ffmpeg):
+    async def test_setup_component_start_callback(mock_ffmpeg, hass: HomeAssistant):
         """Set up ffmpeg component."""
+        mock_ffmpeg().open_sensor.side_effect = AsyncMock()
+        mock_ffmpeg().close = AsyncMock()
         with assert_setup_component(1, "binary_sensor"):
-            setup_component(self.hass, "binary_sensor", self.config)
-        self.hass.block_till_done()
+            await async_setup_component(hass, "binary_sensor", CONFIG_MOTION)
+        await hass.async_block_till_done()
 
-        assert self.hass.data["ffmpeg"].binary == "ffmpeg"
-        assert self.hass.states.get("binary_sensor.ffmpeg_motion") is not None
+        assert hass.data["ffmpeg"].binary == "ffmpeg"
+        assert hass.states.get("binary_sensor.ffmpeg_motion") is not None
 
-        self.hass.start()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
+        entity = hass.states.get("binary_sensor.ffmpeg_motion")
         assert entity.state == "off"
 
-        self.hass.add_job(mock_ffmpeg.call_args[0][1], True)
-        self.hass.block_till_done()
+        hass.async_add_job(mock_ffmpeg.call_args[0][1], True)
+        await hass.async_block_till_done()
 
-        entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
+        entity = hass.states.get("binary_sensor.ffmpeg_motion")
         assert entity.state == "on"
