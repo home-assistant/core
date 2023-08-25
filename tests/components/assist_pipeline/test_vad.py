@@ -2,8 +2,6 @@
 import itertools as it
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
     VoiceCommandSegmenter,
@@ -101,17 +99,6 @@ def test_audio_buffer() -> None:
             assert mock_process.call_args_list[1][0][0] == two_chunks[bytes_per_chunk:]
 
 
-def test_audio_buffer_errors() -> None:
-    """Test audio buffer errors."""
-    audio_buffer = AudioBuffer(1)
-
-    with pytest.raises(ValueError):
-        audio_buffer.length = 2
-
-    with pytest.raises(ValueError):
-        audio_buffer.length = -2
-
-
 def test_partial_chunk() -> None:
     """Test that chunk_samples returns when given a partial chunk."""
     bytes_per_chunk = 5
@@ -120,7 +107,7 @@ def test_partial_chunk() -> None:
     chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
 
     assert len(chunks) == 0
-    assert bytes(leftover_chunk_buffer) == samples
+    assert leftover_chunk_buffer.bytes() == samples
 
 
 def test_chunk_samples_leftover() -> None:
@@ -131,10 +118,10 @@ def test_chunk_samples_leftover() -> None:
     chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
 
     assert len(chunks) == 1
-    assert bytes(leftover_chunk_buffer) == bytes([6])
+    assert leftover_chunk_buffer.bytes() == bytes([6])
 
     # Add some more to the chunk
     chunks = list(chunk_samples(samples, bytes_per_chunk, leftover_chunk_buffer))
 
     assert len(chunks) == 1
-    assert bytes(leftover_chunk_buffer) == bytes([5, 6])
+    assert leftover_chunk_buffer.bytes() == bytes([5, 6])

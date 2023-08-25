@@ -45,24 +45,9 @@ class AudioBuffer:
         """Get number of bytes currently in the buffer."""
         return self._length
 
-    @length.setter
-    def length(self, value: int) -> None:
-        """Set the number of bytes in the buffer."""
-        if value > len(self._buffer):
-            raise ValueError("Length cannot be greater than buffer size")
-
-        if value < 0:
-            raise ValueError("Length cannot be negative")
-
-        self._length = value
-
-    def __len__(self) -> int:
-        """Get the number of bytes currently in the buffer."""
-        return self._length
-
-    def __bytes__(self) -> bytes:
-        """Convert written portion of buffer to bytes."""
-        return bytes(self._buffer[: self._length])
+    def clear(self) -> None:
+        """Clear the buffer."""
+        self._length = 0
 
     def append(self, data: bytes) -> None:
         """Append bytes to the buffer, increasing the internal length."""
@@ -72,6 +57,18 @@ class AudioBuffer:
 
         self._buffer[self._length : self._length + data_len] = data
         self._length += data_len
+
+    def bytes(self) -> bytes:
+        """Convert written portion of buffer to bytes."""
+        return bytes(self._buffer[: self._length])
+
+    def __len__(self) -> int:
+        """Get the number of bytes currently in the buffer."""
+        return self._length
+
+    def __bool__(self) -> bool:
+        """Return True if there are bytes in the buffer."""
+        return self._length > 0
 
 
 @dataclass
@@ -128,7 +125,7 @@ class VoiceCommandSegmenter:
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._leftover_chunk_buffer.length = 0
+        self._leftover_chunk_buffer.clear()
         self._speech_seconds_left = self.speech_seconds
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
@@ -152,7 +149,7 @@ class VoiceCommandSegmenter:
     @property
     def audio_buffer(self) -> bytes:
         """Get partial chunk in the audio buffer."""
-        return bytes(self._leftover_chunk_buffer)
+        return self._leftover_chunk_buffer.bytes()
 
     def _process_chunk(self, chunk: bytes) -> bool:
         """Process a single chunk of 16-bit 16Khz mono audio.
@@ -230,7 +227,7 @@ class VoiceActivityTimeout:
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._leftover_chunk_buffer.length = 0
+        self._leftover_chunk_buffer.clear()
         self._silence_seconds_left = self.silence_seconds
         self._reset_seconds_left = self.reset_seconds
 
@@ -285,35 +282,23 @@ def chunk_samples(
         leftover_chunk_buffer.append(samples)
         return
 
-    samples_offset = 0
-    num_bytes_left = len(leftover_chunk_buffer) + (len(samples) % bytes_per_chunk)
+    next_chunk_idx = 0
 
-    if len(leftover_chunk_buffer) > 0:
+    if leftover_chunk_buffer:
         # Add to leftover chunk from previous call(s).
-        bytes_to_copy = min(len(samples), bytes_per_chunk - len(leftover_chunk_buffer))
+        bytes_to_copy = bytes_per_chunk - len(leftover_chunk_buffer)
         leftover_chunk_buffer.append(samples[:bytes_to_copy])
-        samples_offset = bytes_to_copy
+        next_chunk_idx = bytes_to_copy
 
-    if len(leftover_chunk_buffer) == bytes_per_chunk:
         # Process full chunk in buffer
-        yield bytes(leftover_chunk_buffer)
-        leftover_chunk_buffer.length = 0
+        yield leftover_chunk_buffer.bytes()
+        leftover_chunk_buffer.clear()
 
-    # Recompute leftover chunk size
-    num_bytes_left = len(leftover_chunk_buffer) + (
-        (len(samples) - samples_offset) % bytes_per_chunk
-    )
-    if num_bytes_left > 0:
-        # Keep bytes at the end of samples for next chunk
-        leftover_chunk_buffer.append(samples[len(samples) - num_bytes_left :])
+    while next_chunk_idx < len(samples) - bytes_per_chunk + 1:
+        # Process full chunk
+        yield samples[next_chunk_idx : next_chunk_idx + bytes_per_chunk]
+        next_chunk_idx += bytes_per_chunk
 
-    # Using samples_offset to exclude bytes already copied
-    num_chunks_in_samples = (len(samples) - samples_offset) // bytes_per_chunk
-
-    # Process samples in chunks.
-    for chunk_idx in range(num_chunks_in_samples):
-        chunk_offset = samples_offset + (chunk_idx * bytes_per_chunk)
-        chunk = samples[chunk_offset : chunk_offset + bytes_per_chunk]
-        yield chunk
-
-    return True
+    # Capture leftover chunks
+    if rest_samples := samples[next_chunk_idx:]:
+        leftover_chunk_buffer.append(rest_samples)
