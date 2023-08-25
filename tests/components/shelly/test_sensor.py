@@ -1,4 +1,6 @@
 """Tests for Shelly sensor platform."""
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import (
@@ -89,7 +91,7 @@ async def test_power_factory_without_unit_migration(
 
 
 async def test_block_rest_sensor(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block REST sensor."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "rssi")
@@ -98,7 +100,7 @@ async def test_block_rest_sensor(
     assert hass.states.get(entity_id).state == "-64"
 
     monkeypatch.setitem(mock_block_device.status["wifi_sta"], "rssi", -71)
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == "-71"
 
@@ -304,7 +306,7 @@ async def test_rpc_sensor_error(
 
 
 async def test_rpc_polling_sensor(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
 ) -> None:
     """Test RPC polling sensor."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -313,7 +315,7 @@ async def test_rpc_polling_sensor(
     assert hass.states.get(entity_id).state == "-63"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "wifi", "rssi", "-70")
-    await mock_polling_rpc_update(hass)
+    await mock_polling_rpc_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == "-70"
 
