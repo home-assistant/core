@@ -7,7 +7,7 @@ from typing import Any
 from aiovodafone import VodafoneStationApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
-from homeassistant import core, exceptions
+from homeassistant import core
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
@@ -39,10 +39,6 @@ async def validate_input(
 
     try:
         await api.login()
-    except aiovodafone_exceptions.CannotConnect as err:
-        raise CannotConnect from err
-    except aiovodafone_exceptions.CannotAuthenticate as err:
-        raise InvalidAuth from err
     finally:
         await api.logout()
         await api.close()
@@ -71,9 +67,9 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except aiovodafone_exceptions.CannotConnect:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -102,9 +98,9 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, {**self.entry.data, **user_input})
-            except CannotConnect:
+            except aiovodafone_exceptions.CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except aiovodafone_exceptions.CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -128,11 +124,3 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
