@@ -417,12 +417,17 @@ class PipelineRun:
             return
         pipeline_data.pipeline_runs[self.pipeline.id][self.id].events.append(event)
 
-    def start(self) -> None:
+    async def start(self) -> None:
         """Emit run start event."""
         if self.debug_recording_dir is not None:
             # Create directory where wake/stt audio will be saved
             _LOGGER.debug("Saving pipeline audio to %s", self.debug_recording_dir)
-            self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
+
+            def mkdir() -> None:
+                assert self.debug_recording_dir is not None
+                self.debug_recording_dir.mkdir(parents=True, exist_ok=True)
+
+            await self.hass.async_add_executor_job(mkdir)
 
         data = {
             "pipeline": self.pipeline.id,
@@ -529,7 +534,12 @@ class PipelineRun:
 
             # Clean up saved audio
             if self.debug_recording_dir is not None:
-                shutil.rmtree(self.debug_recording_dir)
+
+                def rmtree() -> None:
+                    assert self.debug_recording_dir is not None
+                    shutil.rmtree(self.debug_recording_dir)
+
+                await self.hass.async_add_executor_job(rmtree)
                 self.debug_recording_dir = None
 
             raise
@@ -877,7 +887,7 @@ class PipelineInput:
 
     async def execute(self) -> None:
         """Run pipeline."""
-        self.run.start()
+        await self.run.start()
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[bytes] = []
 
