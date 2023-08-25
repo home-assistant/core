@@ -110,6 +110,19 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_light(
+    name: str, validated_config: dict[str, Any]
+) -> LightGroup:
+    """Create a preview sensor."""
+    return LightGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_ALL, False),
+    )
+
+
 FORWARDED_ATTRIBUTES = frozenset(
     {
         ATTR_BRIGHTNESS,

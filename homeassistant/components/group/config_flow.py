@@ -24,7 +24,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from . import DOMAIN, GroupEntity
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+from .cover import async_create_preview_cover
+from .event import async_create_preview_event
+from .fan import async_create_preview_fan
+from .light import async_create_preview_light
+from .lock import async_create_preview_lock
+from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .sensor import async_create_preview_sensor
+from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
     "min",
@@ -122,7 +129,7 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 
 
 async def light_switch_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler
+    domain: str, handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
@@ -177,26 +184,32 @@ CONFIG_FLOW = {
     ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
+        preview="group",
         validate_user_input=set_group_type("cover"),
     ),
     "event": SchemaFlowFormStep(
         basic_group_config_schema("event"),
+        preview="group",
         validate_user_input=set_group_type("event"),
     ),
     "fan": SchemaFlowFormStep(
         basic_group_config_schema("fan"),
+        preview="group",
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
         basic_group_config_schema("light"),
+        preview="group",
         validate_user_input=set_group_type("light"),
     ),
     "lock": SchemaFlowFormStep(
         basic_group_config_schema("lock"),
+        preview="group",
         validate_user_input=set_group_type("lock"),
     ),
     "media_player": SchemaFlowFormStep(
         basic_group_config_schema("media_player"),
+        preview="group",
         validate_user_input=set_group_type("media_player"),
     ),
     "sensor": SchemaFlowFormStep(
@@ -206,6 +219,7 @@ CONFIG_FLOW = {
     ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
+        preview="group",
         validate_user_input=set_group_type("switch"),
     ),
 }
@@ -217,11 +231,26 @@ OPTIONS_FLOW = {
         binary_sensor_options_schema,
         preview="group",
     ),
-    "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
-    "event": SchemaFlowFormStep(partial(basic_group_options_schema, "event")),
-    "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
-    "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
-    "lock": SchemaFlowFormStep(partial(basic_group_options_schema, "lock")),
+    "cover": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "cover"),
+        preview="group",
+    ),
+    "event": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "event"),
+        preview="group",
+    ),
+    "fan": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "fan"),
+        preview="group",
+    ),
+    "light": SchemaFlowFormStep(
+        partial(light_switch_options_schema, "light"),
+        preview="group",
+    ),
+    "lock": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "lock"),
+        preview="group",
+    ),
     "media_player": SchemaFlowFormStep(
         partial(basic_group_options_schema, "media_player"),
         preview="group",
@@ -230,17 +259,27 @@ OPTIONS_FLOW = {
         partial(sensor_options_schema, "sensor"),
         preview="group",
     ),
-    "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
+    "switch": SchemaFlowFormStep(
+        partial(light_switch_options_schema, "switch"),
+        preview="group",
+    ),
 }
 
 PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
 
 CREATE_PREVIEW_ENTITY: dict[
     str,
-    Callable[[str, dict[str, Any]], GroupEntity],
+    Callable[[str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
+    "cover": async_create_preview_cover,
+    "event": async_create_preview_event,
+    "fan": async_create_preview_fan,
+    "light": async_create_preview_light,
+    "lock": async_create_preview_lock,
+    "media_player": async_create_preview_media_player,
     "sensor": async_create_preview_sensor,
+    "switch": async_create_preview_switch,
 }
 
 
@@ -343,8 +382,7 @@ def ws_start_preview(
         """Forward config entry state events to websocket."""
         connection.send_message(
             websocket_api.event_message(
-                msg["id"],
-                {"attributes": attributes, "group_type": group_type, "state": state},
+                msg["id"], {"attributes": attributes, "state": state}
             )
         )
 
