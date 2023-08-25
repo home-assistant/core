@@ -203,13 +203,13 @@ class AtwZoneSensor(MelDeviceSensor):
             description.key = f"{description.key}-zone-{zone.zone_index}"
         super().__init__(api, description)
 
-        dev = self._api.device
+        dev = api.device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
             connections={(CONNECTION_NETWORK_MAC, dev.mac)},
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
-            name=f"{zone.name} {self._api.name}",
+            name=f"{zone.name} {api.name}",
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
         self._zone = zone
