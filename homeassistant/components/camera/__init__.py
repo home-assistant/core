@@ -246,8 +246,8 @@ async def async_get_still_stream(
         await response.write(
             bytes(
                 "--frameboundary\r\n"
-                "Content-Type: {}\r\n"
-                "Content-Length: {}\r\n\r\n".format(content_type, len(img_bytes)),
+                f"Content-Type: {content_type}\r\n"
+                f"Content-Length: {len(img_bytes)}\r\n\r\n",
                 "utf-8",
             )
             + img_bytes

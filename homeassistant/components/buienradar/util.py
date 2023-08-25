@@ -109,7 +109,7 @@ class BrData:
             return result
         finally:
             if resp is not None:
-                await resp.release()
+                resp.release()
 
     async def _async_update(self):
         """Update the data from buienradar."""

@@ -419,6 +419,29 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.async_update_listeners()
 
 
+class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator which keeps track of the last successful update."""
+
+    last_update_success_time: datetime | None = None
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        await super()._async_refresh(
+            log_failures,
+            raise_on_auth_failed,
+            scheduled,
+            raise_on_entry_error,
+        )
+        if self.last_update_success:
+            self.last_update_success_time = utcnow()
+
+
 class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
     """Base class for all Coordinator entities."""
 

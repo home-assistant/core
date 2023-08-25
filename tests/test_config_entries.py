@@ -1178,6 +1178,27 @@ async def test_entry_options_abort(
     )
 
 
+async def test_entry_options_unknown_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can abort options flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    class TestFlow:
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+    with pytest.raises(config_entries.UnknownEntry):
+        await manager.options.async_create_flow(
+            "blah", context={"source": "test"}, data=None
+        )
+
+
 async def test_entry_setup_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -3358,11 +3379,13 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match(
@@ -3439,11 +3462,13 @@ async def test__async_abort_entries_match(
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match_options_flow(
@@ -3919,3 +3944,74 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
     assert results == ["on_unload", "background", "normal"]
+
+
+async def test_preview_supported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test preview support."""
+
+    preview_calls = []
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_test1(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="next")
+
+        async def async_step_test2(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="next", preview="test")
+
+        @staticmethod
+        async def async_setup_preview(hass: HomeAssistant) -> None:
+            """Set up preview."""
+            preview_calls.append(None)
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    assert len(preview_calls) == 0
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+        result = await manager.flow.async_init("test", context={"source": "test1"})
+
+        assert len(preview_calls) == 0
+        assert result["preview"] is None
+
+        result = await manager.flow.async_init("test", context={"source": "test2"})
+
+        assert len(preview_calls) == 1
+        assert result["preview"] == "test"
+
+
+async def test_preview_not_supported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test preview support."""
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_user(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="user_confirm")
+
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch.dict(
+        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+    ):
+        result = await manager.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["preview"] is None
