@@ -1,6 +1,6 @@
 """Test the Minecraft Server config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiodns
 from mcstatus.status_response import JavaStatusResponse
@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 class QueryMock:
@@ -169,7 +169,7 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
     """Test config entry in case of a successful connection with a SRV record."""
     with patch(
         "aiodns.DNSResolver.query",
-        return_value=mock_coro([QueryMock()]),
+        side_effect=AsyncMock(return_value=[QueryMock()]),
     ), patch(
         "mcstatus.server.JavaServer.async_status",
         return_value=JavaStatusResponse(
