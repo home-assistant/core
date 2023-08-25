@@ -79,8 +79,8 @@
       }
     },
     "switch": {
-      "pause_charging": {
-        "name": "Pause charging"
+      "pause_resume": {
+        "name": "Pause/resume"
       }
     }
   }

@@ -21,7 +21,7 @@ from .const import (
 SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     CHARGER_PAUSE_RESUME_KEY: SwitchEntityDescription(
         key=CHARGER_PAUSE_RESUME_KEY,
-        name="pause_charging",
+        name="pause_resume",
     ),
 }
 
