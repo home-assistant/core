@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
@@ -37,10 +38,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template_entity import (
-    TEMPLATE_SENSOR_BASE_SCHEMA,
-    TemplateSensor,
-)
+from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -51,6 +49,7 @@ from .const import (
 )
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
@@ -196,7 +195,7 @@ async def async_setup_platform(
     )
 
 
-class SensorTemplate(TemplateSensor):
+class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     _attr_should_poll = False
@@ -209,6 +208,9 @@ class SensorTemplate(TemplateSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
