@@ -209,7 +209,7 @@ class AtwZoneSensor(MelDeviceSensor):
             connections={(CONNECTION_NETWORK_MAC, dev.mac)},
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
-            name=f"{zone.name} {api.name}",
+            name=f"{api.name} {zone.name}",
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
         self._zone = zone
