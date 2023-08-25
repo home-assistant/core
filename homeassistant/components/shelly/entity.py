@@ -11,8 +11,8 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -200,18 +200,13 @@ def async_setup_rpc_attribute_entities(
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{coordinator.mac}-{key}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
-            else:
-                if description.use_polling_coordinator:
-                    if not sleep_period:
-                        entities.append(
-                            sensor_class(
-                                polling_coordinator, key, sensor_id, description
-                            )
-                        )
-                else:
+            elif description.use_polling_coordinator:
+                if not sleep_period:
                     entities.append(
-                        sensor_class(coordinator, key, sensor_id, description)
+                        sensor_class(polling_coordinator, key, sensor_id, description)
                     )
+            else:
+                entities.append(sensor_class(coordinator, key, sensor_id, description))
     if not entities:
         return
 
@@ -275,6 +270,10 @@ def async_setup_entry_rest(
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
@@ -295,6 +294,10 @@ class RpcEntityRequiredKeysMixin:
 class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     """Class to describe a RPC entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
@@ -307,12 +310,18 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
 
+    # BlockEntity does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable[[dict, Any], Any] | None = None
     extra_state_attributes: Callable[[dict], dict | None] | None = None
 
 
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
@@ -324,11 +333,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
-
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
@@ -357,6 +361,8 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -367,11 +373,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         }
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
-
-    @property
-    def available(self) -> bool:
-        """Available."""
-        return self.coordinator.last_update_success
 
     @property
     def status(self) -> dict:
@@ -465,6 +466,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Class to load info from REST."""
 
     entity_description: RestEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bmw_connected_drive",
   "iot_class": "cloud_polling",
   "loggers": ["bimmer_connected"],
-  "requirements": ["bimmer-connected==0.13.6"]
+  "requirements": ["bimmer-connected==0.13.9"]
 }

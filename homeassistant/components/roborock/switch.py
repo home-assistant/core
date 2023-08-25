@@ -1,10 +1,14 @@
 """Support for Roborock switch."""
+from __future__ import annotations
+
+import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
-from roborock.roborock_typing import RoborockCommand
+from roborock.api import AttributeCache
+from roborock.command_cache import CacheableAttribute
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -25,11 +29,11 @@ class RoborockSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
     # Gets the status of the switch
-    get_value: Callable[[RoborockEntity], Coroutine[Any, Any, dict]]
-    # Evaluate the result of get_value to determine a bool
-    evaluate_value: Callable[[dict], bool]
+    cache_key: CacheableAttribute
     # Sets the status of the switch
-    set_command: Callable[[RoborockEntity, bool], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, bool], Coroutine[Any, Any, dict]]
+    # Attribute from cache
+    attribute: str
 
 
 @dataclass
@@ -41,26 +45,63 @@ class RoborockSwitchDescription(
 
 SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
     RoborockSwitchDescription(
-        set_command=lambda entity, value: entity.send(
-            RoborockCommand.SET_CHILD_LOCK_STATUS, {"lock_status": 1 if value else 0}
+        cache_key=CacheableAttribute.child_lock_status,
+        update_value=lambda cache, value: cache.update_value(
+            {"lock_status": 1 if value else 0}
         ),
-        get_value=lambda data: data.send(RoborockCommand.GET_CHILD_LOCK_STATUS),
-        evaluate_value=lambda data: data["lock_status"] == 1,
+        attribute="lock_status",
         key="child_lock",
         translation_key="child_lock",
         icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
-        set_command=lambda entity, value: entity.send(
-            RoborockCommand.SET_FLOW_LED_STATUS, {"status": 1 if value else 0}
+        cache_key=CacheableAttribute.flow_led_status,
+        update_value=lambda cache, value: cache.update_value(
+            {"status": 1 if value else 0}
         ),
-        get_value=lambda data: data.send(RoborockCommand.GET_FLOW_LED_STATUS),
-        evaluate_value=lambda data: data["status"] == 1,
+        attribute="status",
         key="status_indicator",
         translation_key="status_indicator",
         icon="mdi:alarm-light-outline",
         entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockSwitchDescription(
+        cache_key=CacheableAttribute.dnd_timer,
+        update_value=lambda cache, value: cache.update_value(
+            [
+                cache.value.get("start_hour"),
+                cache.value.get("start_minute"),
+                cache.value.get("end_hour"),
+                cache.value.get("end_minute"),
+            ]
+        )
+        if value
+        else cache.close_value(),
+        attribute="enabled",
+        key="dnd_switch",
+        translation_key="dnd_switch",
+        icon="mdi:bell-cancel",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockSwitchDescription(
+        cache_key=CacheableAttribute.valley_electricity_timer,
+        update_value=lambda cache, value: cache.update_value(
+            [
+                cache.value.get("start_hour"),
+                cache.value.get("start_minute"),
+                cache.value.get("end_hour"),
+                cache.value.get("end_minute"),
+            ]
+        )
+        if value
+        else cache.close_value(),
+        attribute="enabled",
+        key="off_peak_switch",
+        translation_key="off_peak_switch",
+        icon="mdi:power-plug",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -71,26 +112,41 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    async_add_entities(
-        (
-            RoborockSwitchEntity(
-                f"{description.key}_{slugify(device_id)}",
-                coordinator,
-                description,
-            )
-            for device_id, coordinator in coordinators.items()
-            for description in SWITCH_DESCRIPTIONS
+    possible_entities: list[
+        tuple[RoborockDataUpdateCoordinator, RoborockSwitchDescription]
+    ] = [
+        (coordinator, description)
+        for coordinator in coordinators.values()
+        for description in SWITCH_DESCRIPTIONS
+    ]
+    # We need to check if this function is supported by the device.
+    results = await asyncio.gather(
+        *(
+            coordinator.api.cache.get(description.cache_key).async_value()
+            for coordinator, description in possible_entities
         ),
-        True,
+        return_exceptions=True,
     )
+    valid_entities: list[RoborockSwitch] = []
+    for (coordinator, description), result in zip(possible_entities, results):
+        if result is None or isinstance(result, Exception):
+            _LOGGER.debug("Not adding entity because of %s", result)
+        else:
+            valid_entities.append(
+                RoborockSwitch(
+                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    coordinator,
+                    description,
+                )
+            )
+    async_add_entities(valid_entities)
 
 
-class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
-    """A class to let you turn functionality on Roborock devices on and off."""
+class RoborockSwitch(RoborockEntity, SwitchEntity):
+    """A class to let you turn functionality on Roborock devices on and off that does need a coordinator."""
 
     entity_description: RoborockSwitchDescription
 
@@ -100,20 +156,28 @@ class RoborockSwitchEntity(RoborockEntity, SwitchEntity):
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockSwitchDescription,
     ) -> None:
-        """Create a switch entity."""
+        """Initialize the entity."""
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator.device_info, coordinator.api)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self.entity_description.set_command(self, False)
+        await self.entity_description.update_value(
+            self.get_cache(self.entity_description.cache_key), False
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self.entity_description.set_command(self, True)
+        await self.entity_description.update_value(
+            self.get_cache(self.entity_description.cache_key), True
+        )
 
-    async def async_update(self) -> None:
-        """Update switch."""
-        self._attr_is_on = self.entity_description.evaluate_value(
-            await self.entity_description.get_value(self)
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if entity is on."""
+        return (
+            self.get_cache(self.entity_description.cache_key).value.get(
+                self.entity_description.attribute
+            )
+            == 1
         )

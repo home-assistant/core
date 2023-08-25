@@ -78,7 +78,7 @@ class DemoMailbox(Mailbox):
         """Return a list of the current messages."""
         return sorted(
             self._messages.values(),
-            key=lambda item: item["info"]["origtime"],  # type: ignore[no-any-return]
+            key=lambda item: item["info"]["origtime"],
             reverse=True,
         )
 

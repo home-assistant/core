@@ -4,10 +4,8 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
-import sys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
@@ -148,7 +146,10 @@ class Sensor(ZhaEntity, SensorEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes:
+        if (
+            cls.SENSOR_ATTR in cluster_handler.cluster.unsupported_attributes
+            or cls.SENSOR_ATTR not in cluster_handler.cluster.attributes_by_name
+        ):
             return None
 
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
@@ -227,7 +228,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> int | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -275,8 +276,14 @@ class ElectricalMeasurement(Sensor):
             attrs["measurement_type"] = self._cluster_handler.measurement_type
 
         max_attr_name = f"{self.SENSOR_ATTR}_max"
-        if (max_v := self._cluster_handler.cluster.get(max_attr_name)) is not None:
-            attrs[max_attr_name] = str(self.formatter(max_v))
+
+        try:
+            max_v = self._cluster_handler.cluster.get(max_attr_name)
+        except KeyError:
+            pass
+        else:
+            if max_v is not None:
+                attrs[max_attr_name] = str(self.formatter(max_v))
 
         return attrs
 
@@ -477,7 +484,7 @@ class SmartEnergyMetering(Sensor):
         if self._cluster_handler.device_type is not None:
             attrs["device_type"] = self._cluster_handler.device_type
         if (status := self._cluster_handler.status) is not None:
-            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+            if isinstance(status, enum.IntFlag):
                 attrs["status"] = str(
                     status.name if status.name is not None else status.value
                 )
@@ -722,7 +729,9 @@ class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
     SENSOR_ATTR = "measured_value"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+    _attr_device_class: SensorDeviceClass = (
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
+    )
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "VOC level"
     _decimals = 0
@@ -736,6 +745,7 @@ class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
 
     SENSOR_ATTR = "measured_value"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_name: str = "Particulate matter"
     _decimals = 0
@@ -957,6 +967,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Device run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -969,6 +980,7 @@ class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     _attr_icon = "mdi:timer"
     _attr_name: str = "Filter run time"
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 class AqaraFeedingSource(types.enum8):

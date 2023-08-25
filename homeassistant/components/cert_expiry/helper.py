@@ -1,4 +1,5 @@
 """Helper functions for the Cert Expiry platform."""
+from functools import cache
 import socket
 import ssl
 
@@ -14,12 +15,18 @@ from .errors import (
 )
 
 
+@cache
+def _get_default_ssl_context():
+    """Return the default SSL context."""
+    return ssl.create_default_context()
+
+
 def get_cert(
     host: str,
     port: int,
 ):
     """Get the certificate for the host and port combination."""
-    ctx = ssl.create_default_context()
+    ctx = _get_default_ssl_context()
     address = (host, port)
     with socket.create_connection(address, timeout=TIMEOUT) as sock, ctx.wrap_socket(
         sock, server_hostname=address[0]

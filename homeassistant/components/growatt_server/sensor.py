@@ -11,7 +11,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -138,6 +138,8 @@ async def async_setup_entry(
 class GrowattInverter(SensorEntity):
     """Representation of a Growatt Sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: GrowattSensorEntityDescription
 
     def __init__(
@@ -147,7 +149,6 @@ class GrowattInverter(SensorEntity):
         self.probe = probe
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = unique_id
         self._attr_icon = "mdi:solar-power"
 

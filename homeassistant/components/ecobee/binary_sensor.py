@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -35,18 +35,15 @@ async def async_setup_entry(
 class EcobeeBinarySensor(BinarySensorEntity):
     """Representation of an Ecobee sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+    _attr_has_entity_name = True
+
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self._name = f"{sensor_name} Occupancy"
-        self.sensor_name = sensor_name
+        self.sensor_name = sensor_name.rstrip()
         self.index = sensor_index
         self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the Ecobee sensor."""
-        return self._name.rstrip()
 
     @property
     def unique_id(self):
@@ -100,11 +97,6 @@ class EcobeeBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return the status of the sensor."""
         return self._state == "true"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.OCCUPANCY
 
     async def async_update(self) -> None:
         """Get the latest state of the sensor."""

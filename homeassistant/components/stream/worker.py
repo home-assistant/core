@@ -8,13 +8,13 @@ import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import attr
 import av
-from typing_extensions import Self
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import redact_credentials
 from .const import (
@@ -141,7 +141,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,

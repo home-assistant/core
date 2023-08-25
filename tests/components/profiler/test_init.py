@@ -224,6 +224,8 @@ async def test_log_scheduled(
 
     assert hass.services.has_service(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED)
 
+    hass.loop.call_later(0.1, lambda: None)
+
     await hass.services.async_call(
         DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED, {}, blocking=True
     )

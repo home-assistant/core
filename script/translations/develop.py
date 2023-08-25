@@ -92,6 +92,7 @@ def substitute_reference(value, flattened_translations):
 
 def run_single(translations, flattened_translations, integration):
     """Run the script for a single integration."""
+    print(f"Generating translations for {integration}")
 
     if integration not in translations["component"]:
         print("Integration has no strings.json")
@@ -113,8 +114,6 @@ def run_single(translations, flattened_translations, integration):
     )
 
     download.write_integration_translations()
-
-    print(f"Generating translations for {integration}")
 
 
 def run():

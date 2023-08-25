@@ -305,6 +305,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: pixels_per_segment_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
+    await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_with(pixels_per_segment=100)
     bulb.async_set_device_config.reset_mock()
 
@@ -322,6 +323,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: music_pixels_per_segment_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
+    await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_with(music_pixels_per_segment=100)
     bulb.async_set_device_config.reset_mock()
 
@@ -339,6 +341,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: segments_entity_id, ATTR_VALUE: 5},
         blocking=True,
     )
+    await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_with(segments=5)
     bulb.async_set_device_config.reset_mock()
 
@@ -356,6 +359,7 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: music_segments_entity_id, ATTR_VALUE: 5},
         blocking=True,
     )
+    await hass.async_block_till_done()
     bulb.async_set_device_config.assert_called_with(music_segments=5)
     bulb.async_set_device_config.reset_mock()
 

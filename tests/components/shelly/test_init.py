@@ -3,7 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -17,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_MAC, init_integration
+from . import MOCK_MAC, init_integration, mutate_rpc_device_status
 
 from tests.common import MockConfigEntry
 
@@ -80,6 +84,22 @@ async def test_device_connection_error(
     )
     monkeypatch.setattr(
         mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    entry = await init_integration(hass, gen)
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_mac_mismatch_error(
+    hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
+) -> None:
+    """Test device MAC address mismatch error."""
+    monkeypatch.setattr(
+        mock_block_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
     )
 
     entry = await init_integration(hass, gen)
@@ -155,11 +175,27 @@ async def test_sleeping_rpc_device_online(
     assert entry.data["sleep_period"] == device_sleep
 
 
+async def test_sleeping_rpc_device_online_new_firmware(
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    entry = await init_integration(hass, 2, sleep_period=None)
+    assert "will resume when device is online" in caplog.text
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
+    mock_rpc_device.mock_update()
+    assert "online, resuming setup" in caplog.text
+    assert entry.data["sleep_period"] == 1500
+
+
 @pytest.mark.parametrize(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload(
@@ -182,7 +218,7 @@ async def test_entry_unload(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
@@ -210,7 +246,7 @@ async def test_entry_unload_not_connected(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
+        entity_id = "switch.test_name_test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON
@@ -236,7 +272,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
+        entity_id = "switch.test_name_test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
         assert hass.states.get(entity_id).state is STATE_ON

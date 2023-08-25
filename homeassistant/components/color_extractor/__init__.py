@@ -3,10 +3,9 @@ import asyncio
 import io
 import logging
 
-from PIL import UnidentifiedImageError
 import aiohttp
-import async_timeout
 from colorthief import ColorThief
+from PIL import UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -82,7 +81,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         except UnidentifiedImageError as ex:
             _LOGGER.error(
                 "Bad image from %s '%s' provided, are you sure it's an image? %s",
-                image_type,  # pylint: disable=used-before-assignment
+                image_type,
                 image_reference,
                 ex,
             )
@@ -120,7 +119,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await session.get(url)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:

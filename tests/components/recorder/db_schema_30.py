@@ -9,7 +9,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, TypedDict, cast, overload
+from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -34,7 +34,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
-from typing_extensions import Self
 
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.const import (
@@ -56,7 +55,6 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 30

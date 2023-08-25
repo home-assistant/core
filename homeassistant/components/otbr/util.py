@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
@@ -26,6 +27,8 @@ from .const import DOMAIN
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+_LOGGER = logging.getLogger(__name__)
 
 INFO_URL_SKY_CONNECT = (
     "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
@@ -69,6 +72,25 @@ class OTBRData:
     entry_id: str
 
     @_handle_otbr_error
+    async def factory_reset(self) -> None:
+        """Reset the router."""
+        try:
+            await self.api.factory_reset()
+        except python_otbr_api.FactoryResetNotSupportedError:
+            _LOGGER.warning(
+                "OTBR does not support factory reset, attempting to delete dataset"
+            )
+            await self.delete_active_dataset()
+
+    @_handle_otbr_error
+    async def get_border_agent_id(self) -> bytes | None:
+        """Get the border agent ID or None if not supported by the router."""
+        try:
+            return await self.api.get_border_agent_id()
+        except python_otbr_api.GetBorderAgentIdNotSupportedError:
+            return None
+
+    @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
         """Enable or disable the router."""
         return await self.api.set_enabled(enabled)
@@ -94,6 +116,11 @@ class OTBRData:
     ) -> None:
         """Create an active operational dataset."""
         return await self.api.create_active_dataset(dataset)
+
+    @_handle_otbr_error
+    async def delete_active_dataset(self) -> None:
+        """Delete the active operational dataset."""
+        return await self.api.delete_active_dataset()
 
     @_handle_otbr_error
     async def set_active_dataset_tlvs(self, dataset: bytes) -> None:

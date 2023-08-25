@@ -36,7 +36,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color, dt as dt_util
 
@@ -229,7 +229,9 @@ async def async_setup_entry(
                 if not hasattr(target_device, method["method"]):
                     continue
                 await getattr(target_device, method["method"])(**params)
-                update_tasks.append(target_device.async_update_ha_state(True))
+                update_tasks.append(
+                    asyncio.create_task(target_device.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
@@ -447,14 +449,11 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                (
-                    "Setting brightness and color temperature: "
-                    "%s %s%%, %s mireds, %s%% cct"
-                ),
+                "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
                 brightness,
-                percent_brightness,  # pylint: disable=used-before-assignment
+                percent_brightness,
                 color_temp,
-                percent_color_temp,  # pylint: disable=used-before-assignment
+                percent_color_temp,
             )
 
             result = await self._try_command(
@@ -830,8 +829,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             _LOGGER.debug(
                 "Setting brightness and color: %s %s%%, %s",
                 brightness,
-                percent_brightness,  # pylint: disable=used-before-assignment
-                rgb,  # pylint: disable=used-before-assignment
+                percent_brightness,
+                rgb,
             )
 
             result = await self._try_command(
@@ -854,7 +853,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 brightness,
                 percent_brightness,
                 color_temp,
-                percent_color_temp,  # pylint: disable=used-before-assignment
+                percent_color_temp,
             )
 
             result = await self._try_command(

@@ -9,7 +9,6 @@ import os
 from typing import Any, TypedDict, cast
 
 import RFXtrx as rfxtrxmod
-from async_timeout import timeout
 import serial
 import serial.tools.list_ports
 import voluptuous as vol
@@ -374,7 +373,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish cleanup
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 
@@ -409,7 +408,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         # Wait for entities to finish renaming
         with suppress(asyncio.TimeoutError):
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
 

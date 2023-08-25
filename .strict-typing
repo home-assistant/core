@@ -53,6 +53,7 @@ homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
+homeassistant.components.alexa.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
@@ -103,16 +104,19 @@ homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
 homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
+homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
+homeassistant.components.electric_kiwi.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
 homeassistant.components.esphome.*
+homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
@@ -172,12 +176,14 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
+homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
+homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -190,6 +196,7 @@ homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
+homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*
@@ -243,6 +250,7 @@ homeassistant.components.overkiz.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
+homeassistant.components.ping.*
 homeassistant.components.powerwall.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
@@ -275,7 +283,6 @@ homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.scrape.*
 homeassistant.components.select.*
-homeassistant.components.senseme.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
@@ -293,6 +300,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
 homeassistant.components.ssdp.*
+homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
@@ -308,6 +316,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.text.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
@@ -317,6 +326,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*

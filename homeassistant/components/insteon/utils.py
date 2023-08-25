@@ -115,8 +115,8 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
     """Register Insteon device events."""
 
     @callback
-    def async_fire_group_on_off_event(
-        name: str, address: Address, group: int, button: str
+    def async_fire_insteon_event(
+        name: str, address: Address, group: int, button: str | None = None
     ):
         # Firing an event when a button is pressed.
         if button and button[-2] == "_":
@@ -140,12 +140,15 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
+    if str(device.address).startswith("X10"):
+        return
+
     for name_or_group, event in device.events.items():
         if isinstance(name_or_group, int):
             for _, event in device.events[name_or_group].items():
-                _register_event(event, async_fire_group_on_off_event)
+                _register_event(event, async_fire_insteon_event)
         else:
-            _register_event(event, async_fire_group_on_off_event)
+            _register_event(event, async_fire_insteon_event)
 
 
 def register_new_device_callback(hass):
@@ -166,8 +169,9 @@ def register_new_device_callback(hass):
         await device.async_status()
         platforms = get_device_platforms(device)
         for platform in platforms:
+            groups = get_device_platform_groups(device, platform)
             signal = f"{SIGNAL_ADD_ENTITIES}_{platform}"
-            dispatcher_send(hass, signal, {"address": device.address})
+            dispatcher_send(hass, signal, {"address": device.address, "groups": groups})
         add_insteon_events(hass, device)
 
     devices.subscribe(async_new_insteon_device, force_strong_ref=True)

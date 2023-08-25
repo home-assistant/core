@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylast import LastFMNetwork, User, WSError
+from pylast import LastFMNetwork, PyLastError, User, WSError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -128,11 +128,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             main_user, _ = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
+            friends_response = await self.hass.async_add_executor_job(
+                main_user.get_friends
+            )
             friends = [
                 SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                for friend in main_user.get_friends()
+                for friend in friends_response
             ]
-        except WSError:
+        except PyLastError:
             friends = []
         return self.async_show_form(
             step_id="friends",
@@ -197,11 +200,14 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     self.options[CONF_API_KEY],
                     self.options[CONF_MAIN_USER],
                 )
+                friends_response = await self.hass.async_add_executor_job(
+                    main_user.get_friends
+                )
                 friends = [
                     SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                    for friend in main_user.get_friends()
+                    for friend in friends_response
                 ]
-            except WSError:
+            except PyLastError:
                 friends = []
         else:
             friends = []

@@ -30,9 +30,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
@@ -73,7 +73,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml_cover",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",
@@ -222,7 +222,14 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
             if payload:
                 self._state = int(payload)
             self._process_manual_data(payload)
-            await self.async_update_ha_state(True)
+            self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._update_entity_state(dt_util.now())
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

@@ -103,11 +103,7 @@ QUERY_STATISTICS_SHORT_TERM = (
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     func.min(StatisticsShortTerm.min),
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     func.max(StatisticsShortTerm.max),
 )
 
@@ -417,8 +413,6 @@ def compile_missing_statistics(instance: Recorder) -> bool:
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         # Find the newest statistics run, if any
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
             start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
 
@@ -1078,17 +1072,11 @@ def _get_max_mean_min_statistic_in_sub_period(
     # Calculate max, mean, min
     columns = select()
     if "max" in types:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
         columns = columns.add_columns(func.avg(table.mean))
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.count(table.mean))
     if "min" in types:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-        # pylint: disable-next=not-callable
         columns = columns.add_columns(func.min(table.min))
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
         columns, start_time, end_time, table, metadata_id
@@ -1831,8 +1819,6 @@ def _latest_short_term_statistics_stmt(
                 most_recent_statistic_row := (
                     select(
                         StatisticsShortTerm.metadata_id,
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                        # pylint: disable-next=not-callable
                         func.max(StatisticsShortTerm.start_ts).label("start_max"),
                     )
                     .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
@@ -1895,8 +1881,6 @@ def _generate_statistics_at_time_stmt(
         (
             most_recent_statistic_ids := (
                 select(
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(table.start_ts).label("max_start_ts"),
                     table.metadata_id.label("max_metadata_id"),
                 )
@@ -2400,7 +2384,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
             with session_scope(session=instance.get_session()) as session:
                 session.connection().execute(
                     text(
-                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"
+                        f"update {table} set start = NULL, created = NULL, last_reset = NULL;"  # noqa: S608
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -2410,7 +2394,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL where start is not NULL LIMIT 100000;"  # noqa: S608
                         )
                     )
                     .rowcount
@@ -2425,7 +2409,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     session.connection()
                     .execute(
                         text(
-                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # nosec
+                            f"UPDATE {table} set start=NULL, created=NULL, last_reset=NULL "  # noqa: S608
                             f"where id in (select id from {table} where start is not NULL LIMIT 100000)"
                         )
                     )

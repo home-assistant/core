@@ -28,5 +28,18 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "disk_space": {
+        "name": "Disk space"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "wanted": {
+        "name": "Wanted"
+      }
+    }
   }
 }

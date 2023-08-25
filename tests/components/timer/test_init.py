@@ -265,6 +265,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             assert len(results) == expected_events
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_start_service(hass: HomeAssistant) -> None:
     """Test the start/stop service."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
@@ -880,6 +881,7 @@ async def test_restore_idle(hass: HomeAssistant) -> None:
     assert entity.extra_state_attributes[ATTR_RESTORE]
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_restore_paused(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is paused."""
     utc_now = utcnow()
@@ -917,6 +919,7 @@ async def test_restore_paused(hass: HomeAssistant) -> None:
     assert entity.extra_state_attributes[ATTR_RESTORE]
 
 
+@pytest.mark.freeze_time("2023-06-05 17:47:50")
 async def test_restore_active_resume(hass: HomeAssistant) -> None:
     """Test entity restore logic when timer is active and end time is after startup."""
     events = async_capture_events(hass, EVENT_TIMER_RESTARTED)
