@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
@@ -57,6 +57,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
+from homeassistant.util import dt as dt_util
 
 DOMAIN = "ssdp"
 SSDP_SCANNER = "scanner"
@@ -64,6 +65,8 @@ UPNP_SERVER = "server"
 UPNP_SERVER_MIN_PORT = 40000
 UPNP_SERVER_MAX_PORT = 40100
 SCAN_INTERVAL = timedelta(minutes=2)
+SCAN_INTERVAL_SECONDS = SCAN_INTERVAL.total_seconds()
+SCAN_STALE_SECONDS = SCAN_INTERVAL_SECONDS / 2
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -354,24 +357,30 @@ class Scanner:
             return_exceptions=True,
         )
 
-    async def async_scan(self, *_: Any) -> None:
+    async def async_scan(self, now: datetime) -> None:
         """Scan for new entries using ssdp listeners."""
-        await self.async_scan_multicast()
-        await self.async_scan_broadcast()
-
-    async def async_scan_multicast(self, *_: Any) -> None:
-        """Scan for new entries using multicase target."""
-        for ssdp_listener in self._ssdp_listeners:
-            await ssdp_listener.async_search()
-
-    async def async_scan_broadcast(self, *_: Any) -> None:
-        """Scan for new entries using broadcast target."""
-        # Some sonos devices only seem to respond if we send to the broadcast
-        # address. This matches pysonos' behavior
-        # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+        now_timestamp = now.timestamp()
         for listener in self._ssdp_listeners:
-            if is_ipv4_address(listener.source):
-                await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+            last_discovery_seconds_ago = (
+                last_discovery := listener.last_discovery_timestamp
+            ) and now_timestamp - last_discovery.timestamp()
+            if (
+                not last_discovery_seconds_ago
+                or last_discovery_seconds_ago > SCAN_STALE_SECONDS
+            ):
+                await listener.async_search()
+                # Some sonos devices only seem to respond if we send to the broadcast
+                # address. This matches pysonos' behavior
+                # https://github.com/amelchio/pysonos/blob/d4329b4abb657d106394ae69357805269708c996/pysonos/discovery.py#L120
+                if is_ipv4_address(listener.source):
+                    await listener.async_search((str(IPV4_BROADCAST), SSDP_PORT))
+                continue
+            # If there was a recent scan from another Home Assistant instance,
+            # or another SSDP scanner, skip this scan so we don't spam the network.
+            _LOGGER.debug(
+                "Skipping SSDP scan, last scan was %s seconds ago",
+                last_discovery_seconds_ago,
+            )
 
     async def async_start(self) -> None:
         """Start the scanners."""
@@ -387,7 +396,7 @@ class Scanner:
         )
 
         # Trigger the initial-scan.
-        await self.async_scan()
+        await self.async_scan(dt_util.utcnow())
 
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""

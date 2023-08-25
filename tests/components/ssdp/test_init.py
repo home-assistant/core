@@ -1,7 +1,7 @@
 """Test the SSDP integration."""
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp import udn_from_headers
@@ -789,13 +789,56 @@ async def test_ipv4_does_additional_search_for_sonos(
     await hass.async_block_till_done()
 
     assert ssdp_listener.async_search.call_count == 6
-    assert ssdp_listener.async_search.call_args[0] == (
-        (
+    assert (
+        call(
             "255.255.255.255",
             1900,
         ),
-    )
-    assert ssdp_listener.async_search.call_args[1] == {}
+    ) in ssdp_listener.async_search.call_args_list
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={
+        "mock-domain": [
+            {
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+            }
+        ]
+    },
+)
+@patch(
+    "homeassistant.components.ssdp.network.async_get_adapters",
+    return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+)
+async def test_scan_skips_if_another_host_scanned_recently(
+    mock_get_adapters, mock_get_ssdp, hass: HomeAssistant
+) -> None:
+    """Test we skip scanning if another host did recently.
+
+    This is to avoid flooding the network with SSDP packets
+    when there is more than one Home Assistant instance running
+    or when there are other SSDP scanners on the network.
+    """
+    ssdp_listener = await init_ssdp_component(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+
+    assert ssdp_listener.async_search.call_count == 6
+    last_discovery_time = datetime.now() + timedelta(seconds=110)
+    ssdp_listener._advertisement_listener = Mock(last_discovery=last_discovery_time)
+    ssdp_listener._search_listener = Mock(last_discovery=last_discovery_time)
+
+    assert ssdp_listener.last_discovery_timestamp == last_discovery_time
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
+    await hass.async_block_till_done()
+    # Our patched listener should skip the search
+    # but the unpatched one should still do it
+    assert ssdp_listener.async_search.call_count == 7
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
