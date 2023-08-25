@@ -90,7 +90,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # when it was already checked during setup.
         self.data: _DataT = None  # type: ignore[assignment]
 
-        # Pick a random microsecond to stagger the refreshes
+        # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
         # and avoid a thundering herd.
         self._microsecond = (
             randint(event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX)
@@ -218,10 +218,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
 
         # We use event.async_call_at because DataUpdateCoordinator does
-        # not guarantee an exact update interval
+        # not need an exact update interval.
         now = self.hass.loop.time()
         if self._next_refresh is None or self._next_refresh <= now:
-            self._next_refresh = now + self._microsecond
+            self._next_refresh = int(now) + self._microsecond
         self._next_refresh += self.update_interval.total_seconds()
         self._unsub_refresh = event.async_call_at(
             self.hass,
