@@ -1,5 +1,5 @@
 """Tests for the iOS init file."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -28,7 +28,7 @@ async def test_creating_entry_sets_up_sensor(hass: HomeAssistant) -> None:
     """Test setting up iOS loads the sensor component."""
     with patch(
         "homeassistant.components.ios.sensor.async_setup_entry",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ) as mock_setup:
         assert await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -40,7 +40,7 @@ async def test_configuring_ios_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.ios.async_setup_entry",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, ios.DOMAIN, {"ios": {"push": {}}})
         await hass.async_block_till_done()
@@ -52,7 +52,7 @@ async def test_not_configuring_ios_not_creates_entry(hass: HomeAssistant) -> Non
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.ios.async_setup_entry",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, ios.DOMAIN, {"foo": "bar"})
         await hass.async_block_till_done()

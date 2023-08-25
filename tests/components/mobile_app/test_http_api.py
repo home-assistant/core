@@ -2,7 +2,7 @@
 from binascii import unhexlify
 from http import HTTPStatus
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -28,7 +28,6 @@ async def test_registration(
     with patch(
         "homeassistant.components.person.async_add_user_device_tracker",
         spec=True,
-        side_effect=AsyncMock(),
     ) as add_user_dev_track:
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT

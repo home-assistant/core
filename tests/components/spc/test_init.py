@@ -1,5 +1,5 @@
 """Tests for Vanderbilt SPC component."""
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.spc import DATA_API
@@ -13,7 +13,7 @@ async def test_valid_device_config(hass: HomeAssistant, monkeypatch) -> None:
 
     with patch(
         "homeassistant.components.spc.SpcWebGateway.async_load_parameters",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ):
         assert await async_setup_component(hass, "spc", config) is True
 
@@ -24,7 +24,7 @@ async def test_invalid_device_config(hass: HomeAssistant, monkeypatch) -> None:
 
     with patch(
         "homeassistant.components.spc.SpcWebGateway.async_load_parameters",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ):
         assert await async_setup_component(hass, "spc", config) is False
 
@@ -51,7 +51,7 @@ async def test_update_alarm_device(hass: HomeAssistant) -> None:
         mock_areas.return_value = {"1": area_mock}
         with patch(
             "homeassistant.components.spc.SpcWebGateway.async_load_parameters",
-            side_effect=AsyncMock(return_value=True),
+            return_value=True,
         ):
             assert await async_setup_component(hass, "spc", config) is True
 

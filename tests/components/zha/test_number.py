@@ -1,5 +1,5 @@
 """Test ZHA analog output."""
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 from zigpy.exceptions import ZigbeeException
@@ -151,9 +151,7 @@ async def test_number(
     # change value from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        side_effect=AsyncMock(
-            return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]
-        ),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # set value via UI
         await hass.services.async_call(

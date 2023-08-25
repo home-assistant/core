@@ -1,6 +1,6 @@
 """The tests for the Owntracks device tracker."""
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -1303,7 +1303,7 @@ async def test_not_implemented_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
-        side_effect=AsyncMock(return_value=False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
@@ -1314,7 +1314,7 @@ async def test_unsupported_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
-        side_effect=AsyncMock(return_value=False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1393,7 +1393,7 @@ def config_context(hass, setup_comp):
     """Set up the mocked context."""
     patch_load = patch(
         "homeassistant.components.device_tracker.async_load_config",
-        side_effect=AsyncMock(return_value=[]),
+        return_value=[],
     )
     patch_load.start()
 

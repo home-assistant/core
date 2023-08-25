@@ -1,5 +1,5 @@
 """Tests for Mill init."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components import mill
 from homeassistant.config_entries import ConfigEntryState
@@ -111,7 +111,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     with patch.object(
         hass.config_entries,
         "async_forward_entry_unload",
-        side_effect=AsyncMock(return_value=True),
+        return_value=True,
     ) as unload_entry, patch(
         "mill.Mill.fetch_heater_and_sensor_data", return_value={}
     ), patch(

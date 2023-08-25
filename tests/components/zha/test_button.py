@@ -1,5 +1,5 @@
 """Test ZHA button."""
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import call, patch
 
 from freezegun import freeze_time
 import pytest
@@ -149,7 +149,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -189,7 +189,7 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,

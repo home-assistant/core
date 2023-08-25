@@ -1,5 +1,5 @@
 """The test for ZHA device automation actions."""
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -274,7 +274,7 @@ async def test_action(hass: HomeAssistant, device_ias, device_inovelli) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         assert await async_setup_component(
             hass,

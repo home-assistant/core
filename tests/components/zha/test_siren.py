@@ -1,6 +1,6 @@
 """Test zha siren."""
 from datetime import timedelta
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import ANY, call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
@@ -87,7 +87,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn on from HA
     with patch(
         "zigpy.device.Device.request",
-        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,
@@ -119,7 +119,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn off from HA
     with patch(
         "zigpy.device.Device.request",
-        side_effect=AsyncMock(return_value=[0x01, zcl_f.Status.SUCCESS]),
+        return_value=[0x01, zcl_f.Status.SUCCESS],
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,
@@ -151,7 +151,7 @@ async def test_siren(hass: HomeAssistant, siren) -> None:
     # turn on from HA
     with patch(
         "zigpy.device.Device.request",
-        side_effect=AsyncMock(return_value=[0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ), patch(
         "zigpy.zcl.Cluster.request",
         side_effect=zigpy.zcl.Cluster.request,

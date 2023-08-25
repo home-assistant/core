@@ -1,6 +1,6 @@
 """Tests for the init."""
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,6 @@ async def test_setup_views_if_not_onboarded(hass: HomeAssistant) -> None:
     """Test if onboarding is not done, we setup views."""
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
-        side_effect=AsyncMock(),
     ) as mock_setup:
         assert await async_setup_component(hass, "onboarding", {})
 

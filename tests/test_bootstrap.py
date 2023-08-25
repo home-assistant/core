@@ -109,7 +109,7 @@ async def test_core_failure_loads_safe_mode(
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
-        side_effect=AsyncMock(return_value=False),
+        return_value=False,
     ):
         await bootstrap.async_from_config_dict({"group": {}}, hass)
 

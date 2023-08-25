@@ -1,6 +1,6 @@
 """The tests for the Home Assistant SpaceAPI component."""
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -81,9 +81,7 @@ SENSOR_OUTPUT = {
 @pytest.fixture
 def mock_client(hass, hass_client):
     """Start the Home Assistant HTTP component."""
-    with patch(
-        "homeassistant.components.spaceapi", side_effect=AsyncMock(return_value=True)
-    ):
+    with patch("homeassistant.components.spaceapi", return_value=True):
         hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))
 
     hass.states.async_set(
