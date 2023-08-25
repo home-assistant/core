@@ -144,7 +144,6 @@ class MelCloudDevice:
         """Return a zone device description for device registry."""
         dev = self.device
         return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, dev.mac)},
             identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
