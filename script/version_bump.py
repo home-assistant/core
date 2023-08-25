@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
 import argparse
-from datetime import datetime
 import re
 import subprocess
 
 from packaging.version import Version
 
 from homeassistant import const
+from homeassistant.util import dt as dt_util
 
 
 def _bump_release(release, bump_type):
@@ -86,10 +86,7 @@ def bump_version(version, bump_type):
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        to_change["dev"] = (
-            "dev",
-            datetime.utcnow().date().isoformat().replace("-", ""),
-        )
+        to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
 
     else:
         assert False, f"Unsupported type: {bump_type}"
@@ -206,7 +203,7 @@ def test_bump_version():
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
 
-    today = datetime.utcnow().date().isoformat().replace("-", "")
+    today = dt_util.utcnow().strftime("%Y%m%d")
     assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
         f"0.56.0.dev{today}"
     )

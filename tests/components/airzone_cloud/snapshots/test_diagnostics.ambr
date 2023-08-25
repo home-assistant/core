@@ -139,12 +139,17 @@
       'systems': dict({
         'system1': dict({
           'available': True,
+          'errors': list([
+            dict({
+              '_id': 'error-id',
+            }),
+          ]),
           'id': 'system1',
           'installation': 'installation1',
           'is-connected': True,
           'mode': None,
           'name': 'System 1',
-          'problems': False,
+          'problems': True,
           'system': 1,
           'web-server': 'webserver1',
           'ws-connected': True,

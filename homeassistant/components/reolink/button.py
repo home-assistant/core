@@ -58,7 +58,7 @@ class ReolinkHostButtonEntityDescription(
 BUTTON_ENTITIES = (
     ReolinkButtonEntityDescription(
         key="ptz_stop",
-        name="PTZ stop",
+        translation_key="ptz_stop",
         icon="mdi:pan",
         enabled_default=lambda api, ch: api.supported(ch, "pan_tilt"),
         supported=lambda api, ch: api.supported(ch, "pan_tilt")
@@ -67,35 +67,35 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="ptz_left",
-        name="PTZ left",
+        translation_key="ptz_left",
         icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.left.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_right",
-        name="PTZ right",
+        translation_key="ptz_right",
         icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "pan"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.right.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_up",
-        name="PTZ up",
+        translation_key="ptz_up",
         icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.up.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_down",
-        name="PTZ down",
+        translation_key="ptz_down",
         icon="mdi:pan",
         supported=lambda api, ch: api.supported(ch, "tilt"),
         method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.down.value),
     ),
     ReolinkButtonEntityDescription(
         key="ptz_zoom_in",
-        name="PTZ zoom in",
+        translation_key="ptz_zoom_in",
         icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),
@@ -103,7 +103,7 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="ptz_zoom_out",
-        name="PTZ zoom out",
+        translation_key="ptz_zoom_out",
         icon="mdi:magnify",
         entity_registry_enabled_default=False,
         supported=lambda api, ch: api.supported(ch, "zoom_basic"),
@@ -111,7 +111,7 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="ptz_calibrate",
-        name="PTZ calibrate",
+        translation_key="ptz_calibrate",
         icon="mdi:pan",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_callibrate"),
@@ -119,14 +119,14 @@ BUTTON_ENTITIES = (
     ),
     ReolinkButtonEntityDescription(
         key="guard_go_to",
-        name="Guard go to",
+        translation_key="guard_go_to",
         icon="mdi:crosshairs-gps",
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         method=lambda api, ch: api.set_ptz_guard(ch, command=GuardEnum.goto.value),
     ),
     ReolinkButtonEntityDescription(
         key="guard_set",
-        name="Guard set current position",
+        translation_key="guard_set",
         icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),

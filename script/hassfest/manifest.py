@@ -254,12 +254,8 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(
-            "issue_tracker"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],

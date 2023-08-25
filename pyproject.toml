@@ -120,18 +120,6 @@ fail-on = [
 
 [tool.pylint.BASIC]
 class-const-naming-style = "any"
-good-names = [
-    "_",
-    "ev",
-    "ex",
-    "fp",
-    "i",
-    "id",
-    "j",
-    "k",
-    "Run",
-    "ip",
-]
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
@@ -527,6 +515,8 @@ select = [
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
+    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
     "G", # flake8-logging-format
