@@ -88,9 +88,9 @@ async def async_unload_entry(hass, entry):
     refoss_coordinator: RefossCoordinator = hass.data[DOMAIN][entry.entry_id][
         DEVICE_LIST_COORDINATOR
     ]
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    refoss_coordinator.socket.stopReveiveMsg()
-    for task in refoss_coordinator.tasks:
-        task.cancel()
-    del hass.data[DOMAIN][entry.entry_id]
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        refoss_coordinator.socket.stopReveiveMsg()
+        for task in refoss_coordinator.tasks:
+            task.cancel()
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
