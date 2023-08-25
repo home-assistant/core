@@ -47,10 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         DEVICE_LIST_COORDINATOR: refoss_coordinator,
         "ADDED_ENTITIES_IDS": set(),
     }
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     def _poll_discovered_device():
         # Poll discovered devices.
@@ -58,12 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         known_devices = refoss_coordinator.find_devices()
 
         if _check_new_discovered_device(known_devices, discovered_devices.values()):
-            for platform in PLATFORMS:
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(
-                        config_entry, platform
-                    )
-                )
+            hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     refoss_coordinator.async_add_listener(_poll_discovered_device)
     return True
