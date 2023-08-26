@@ -36,7 +36,7 @@ SERIAL_NUMBER = 0x12635436566
 # Get serial number Command 0x85. Serial is 0x12635436566
 SERIAL_RESPONSE = "850000012635436566"
 # Model and version command 0x82
-MODEL_AND_VERSION_RESPONSE = "820006090C"
+MODEL_AND_VERSION_RESPONSE = "820005090C"  # ESP-TM2
 # Get available stations command 0x83
 AVAILABLE_STATIONS_RESPONSE = "83017F000000"  # Mask for 7 zones
 EMPTY_STATIONS_RESPONSE = "830000000000"
@@ -176,8 +176,15 @@ def mock_rain_delay_response() -> str:
     return RAIN_DELAY_OFF
 
 
+@pytest.fixture(name="model_and_version_response")
+def mock_model_and_version_response() -> str:
+    """Mock response to return rain delay state."""
+    return MODEL_AND_VERSION_RESPONSE
+
+
 @pytest.fixture(name="api_responses")
 def mock_api_responses(
+    model_and_version_response: str,
     stations_response: str,
     zone_state_response: str,
     rain_response: str,
@@ -188,7 +195,7 @@ def mock_api_responses(
     These are returned in the order they are requested by the update coordinator.
     """
     return [
-        MODEL_AND_VERSION_RESPONSE,
+        model_and_version_response,
         stations_response,
         zone_state_response,
         rain_response,

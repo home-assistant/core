@@ -27,9 +27,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry for a Rain Bird irrigation calendar."""
     data = hass.data[DOMAIN][config_entry.entry_id]
-    await data.coordinator.controller.get_model_and_version()
-    # if not model.model_info.max_programs:
-    #    return
+    if not data.model_info.model_info.max_programs:
+        return
 
     async_add_entities(
         [

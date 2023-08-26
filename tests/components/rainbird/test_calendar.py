@@ -15,14 +15,13 @@ import pytest
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup, mock_response
+from .conftest import ComponentSetup, mock_response, mock_response_error
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 TEST_ENTITY = "calendar.rain_bird_controller"
 GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
-MODEL_VERSION_RESPONSE = "820005090C"
 SCHEDULE_RESPONSES = [
     # Current controller status
     "A0000000000000",
@@ -48,6 +47,31 @@ SCHEDULE_RESPONSES = [
     "A0008A000000000000000000000000",
 ]
 
+EMPTY_SCHEDULE_RESPONSES = [
+    # Current controller status
+    "A0000000000000",
+    # Per-program information (ignored)
+    "A00010000000000000",
+    "A00011000000000000",
+    "A00012000000000000",
+    # Start times for each program (off)
+    "A00060FFFFFFFFFFFFFFFF",
+    "A00061FFFFFFFFFFFFFFFF",
+    "A00062FFFFFFFFFFFFFFFF",
+    # Run times for each zone
+    "A00080000000000000000000000000",
+    "A00081000000000000000000000000",
+    "A00082000000000000000000000000",
+    "A00083000000000000000000000000",
+    "A00084000000000000000000000000",
+    "A00085000000000000000000000000",
+    "A00086000000000000000000000000",
+    "A00087000000000000000000000000",
+    "A00088000000000000000000000000",
+    "A00089000000000000000000000000",
+    "A0008A000000000000000000000000",
+]
+
 
 @pytest.fixture
 def platforms() -> list[str]:
@@ -62,11 +86,18 @@ def set_time_zone(hass: HomeAssistant):
 
 
 @pytest.fixture(autouse=True)
-def mock_schedule_responses(responses: list[AiohttpClientMockResponse]) -> list[str]:
-    """Mock response to return the irrigation schedule."""
-    # Example schedule from TM2
+def mock_schedule_responses() -> list[str]:
+    """Fixture containing fake irrigation schedule."""
+    return SCHEDULE_RESPONSES
+
+
+@pytest.fixture(autouse=True)
+def mock_insert_schedule_response(
+    mock_schedule_responses: list[str], responses: list[AiohttpClientMockResponse]
+) -> None:
+    """Fixture to insert device responses for the irrigation schedule."""
     responses.extend(
-        [mock_response(api_response) for api_response in SCHEDULE_RESPONSES]
+        [mock_response(api_response) for api_response in mock_schedule_responses]
     )
 
 
@@ -164,3 +195,78 @@ async def test_event_state(
         "icon": "mdi:sprinkler",
     }
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("model_and_version_response", "has_entity"),
+    [
+        ("820005090C", True),
+        ("820006090C", False),
+    ],
+    ids=("ESP-TM2", "ST8x-WiFi"),
+)
+async def test_calendar_not_supported_by_device(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    has_entity: bool,
+) -> None:
+    """Test calendar upcoming event state."""
+
+    assert await setup_integration()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert (state is not None) == has_entity
+
+
+@pytest.mark.parametrize(
+    "mock_insert_schedule_response", [([None])]  # Disable success responses
+)
+async def test_no_schedule(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    get_events: GetEventsFn,
+    responses: list[AiohttpClientMockResponse],
+    hass_client: Callable[..., Awaitable[ClientSession]],
+) -> None:
+    """Test calendar error when fetching the calendar."""
+    responses.extend([mock_response_error(HTTPStatus.BAD_GATEWAY)])  # Arbitrary error
+
+    assert await setup_integration()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == "unavailable"
+    assert state.attributes == {
+        "friendly_name": "Rain Bird Controller",
+        "icon": "mdi:sprinkler",
+    }
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}?start=2023-08-01&end=2023-08-02"
+    )
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@pytest.mark.freeze_time("2023-01-21 09:32:00")
+@pytest.mark.parametrize(
+    "mock_schedule_responses",
+    [(EMPTY_SCHEDULE_RESPONSES)],
+)
+async def test_program_schedule_disabled(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    get_events: GetEventsFn,
+) -> None:
+    """Test calendar when the program is disabled with no upcoming events."""
+
+    assert await setup_integration()
+
+    events = await get_events("2023-01-20T00:00:00Z", "2023-02-05T00:00:00Z")
+    assert events == []
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == "off"
+    assert state.attributes == {
+        "friendly_name": "Rain Bird Controller",
+        "icon": "mdi:sprinkler",
+    }
