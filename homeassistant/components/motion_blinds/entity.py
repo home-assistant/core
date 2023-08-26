@@ -8,10 +8,7 @@ from motionblinds.motion_blinds import MotionBlind
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DataUpdateCoordinatorMotionBlinds
 from .const import ATTR_AVAILABLE, DOMAIN, KEY_GATEWAY, MANUFACTURER
@@ -67,11 +64,11 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         if self.coordinator.data is None:
             return False
 
-        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]  # type: ignore[index]
+        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]
         if not gateway_available or self._blind.device_type in DEVICE_TYPES_GATEWAY:
             return gateway_available
 
-        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]  # type: ignore[index]
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to multicast pushes and register signal handler."""
