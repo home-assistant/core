@@ -491,6 +491,7 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 
