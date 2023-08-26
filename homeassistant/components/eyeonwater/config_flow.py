@@ -12,7 +12,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
-from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
+from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 CONF_EOW_HOSTNAME_COM = "eyeonwater.com"
 CONF_EOW_HOSTNAME_CA = "eyeonwater.ca"
