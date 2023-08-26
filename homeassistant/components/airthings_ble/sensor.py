@@ -166,7 +166,6 @@ class AirthingsSensor(
             name += f" ({identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
-        self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
             connections={
                 (
@@ -175,10 +174,10 @@ class AirthingsSensor(
                 )
             },
             name=name,
-            manufacturer=airthings_device.manufacturer,
+            manufacturer=airthings_device.manufacturer,  # type: ignore[attr-defined]
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model,
+            model=airthings_device.model,  # type: ignore[attr-defined]
         )
 
     @property
