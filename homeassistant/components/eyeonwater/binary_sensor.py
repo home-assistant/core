@@ -1,4 +1,6 @@
 """Support for EyeOnWater binary sensors."""
+from pyonwater import Meter
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,7 +15,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
-from pyonwater import Meter
 
 FLAG_SENSORS = [
     BinarySensorEntityDescription(
