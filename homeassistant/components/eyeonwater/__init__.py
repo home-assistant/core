@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -17,7 +19,6 @@ from .const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
-from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.addHandler(logging.StreamHandler())
