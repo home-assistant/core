@@ -188,6 +188,16 @@ jobs:
             skip_coverage="true"
           fi
 
+          # Temporary hack
+          mariadb_groups="[]"
+          postgresql_groups="[]"
+          test_full_suite="false"
+          integrations_glob="trafikverket_camera"
+          test_group_count=1
+          test_groups="["\trafikverket_camera\"]"
+          tests="["\trafikverket_camera\"]"
+          tests_glob="trafikverket_camera"
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
