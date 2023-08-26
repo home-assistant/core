@@ -168,9 +168,14 @@ async def _async_get_image(
     """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with asyncio.timeout(timeout):
-            if image_bytes := await camera.async_camera_image(
-                width=width, height=height
-            ):
+            image_bytes = (
+                await _async_get_stream_image(
+                    camera, width=width, height=height, wait_for_next_keyframe=False
+                )
+                if camera.use_stream_for_stills
+                else await camera.async_camera_image(width=width, height=height)
+            )
+            if image_bytes:
                 content_type = camera.content_type
                 image = Image(content_type, image_bytes)
                 if (
@@ -203,6 +208,21 @@ async def async_get_image(
     """
     camera = _get_camera_from_entity_id(hass, entity_id)
     return await _async_get_image(camera, timeout, width, height)
+
+
+async def _async_get_stream_image(
+    camera: Camera,
+    width: int | None = None,
+    height: int | None = None,
+    wait_for_next_keyframe: bool = False,
+) -> bytes | None:
+    if not camera.stream and camera.supported_features & SUPPORT_STREAM:
+        camera.stream = await camera.async_create_stream()
+    if camera.stream:
+        return await camera.stream.async_get_image(
+            width=width, height=height, wait_for_next_keyframe=wait_for_next_keyframe
+        )
+    return None
 
 
 @bind_hass
@@ -360,6 +380,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     async def preload_stream(_event: Event) -> None:
+        """Load stream prefs and start stream if preload_stream is True."""
         for camera in list(component.entities):
             stream_prefs = await prefs.get_dynamic_stream_settings(camera.entity_id)
             if not stream_prefs.preload_stream:
@@ -458,6 +479,11 @@ class Camera(Entity):
         if self._attr_entity_picture is not None:
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return False
 
     @property
     def supported_features(self) -> CameraEntityFeature:
@@ -926,7 +952,12 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    image = await camera.async_camera_image()
+    async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+        image = (
+            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+            if camera.use_stream_for_stills
+            else await camera.async_camera_image()
+        )
 
     if image is None:
         return

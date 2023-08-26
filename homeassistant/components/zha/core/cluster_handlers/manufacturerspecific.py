@@ -92,7 +92,7 @@ class TuyaClusterHandler(ClusterHandler):
             "_TZE200_k6jhsr0q",
             "_TZE200_9mahtqtg",
         ):
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
                 "power_on_state": True,
             }
@@ -109,7 +109,7 @@ class OppleRemote(ClusterHandler):
         """Initialize Opple cluster handler."""
         super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "detection_interval": True,
                 "motion_sensitivity": True,
                 "trigger_indicator": True,

@@ -228,7 +228,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> int | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
