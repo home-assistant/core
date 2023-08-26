@@ -32,7 +32,15 @@ async def _async_process_single_integration_platform_component(
     integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
+    _LOGGER.warning(
+        "_async_process_single_integration_platform_component component %s",
+        component_name,
+    )
     if component_name in integration_platform.seen_components:
+        _LOGGER.warning(
+            "_async_process_single_integration_platform_component component %s seen",
+            component_name,
+        )
         return
     integration_platform.seen_components.add(component_name)
 
@@ -111,6 +119,7 @@ async def async_process_integration_platforms(
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None]],
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
+    _LOGGER.warning("X async_process_integration_platforms: %s", platform_name)
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
         hass.data[DATA_INTEGRATION_PLATFORMS] = []
 
