@@ -475,12 +475,7 @@ async def test_get_unifi_controller_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Check that get_unifi_controller can handle controller being unavailable."""
-    with patch(
-        "aiounifi.interfaces.connectivity.Connectivity.check_unifi_os",
-        return_value=True,
-    ), patch(
-        "aiounifi.interfaces.connectivity.Connectivity.login", side_effect=side_effect
-    ), pytest.raises(
+    with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
         raised_exception
     ):
         await get_unifi_controller(hass, ENTRY_CONFIG)
