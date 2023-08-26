@@ -17,7 +17,7 @@ from .const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
-from .eow import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
+from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.addHandler(logging.StreamHandler())
