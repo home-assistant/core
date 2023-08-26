@@ -85,11 +85,13 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, aiohttp_unused_port
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
-        hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}}
+        hass,
+        http.DOMAIN,
+        {http.DOMAIN: {http.CONF_SERVER_PORT: unused_tcp_port_factory()}},
     )
 
     await hass.async_start()
@@ -443,11 +445,11 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, aiohttp_unused_port
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
 ) -> None:
     """Test that we store last working config."""
     config = {
-        http.CONF_SERVER_PORT: aiohttp_unused_port(),
+        http.CONF_SERVER_PORT: unused_tcp_port_factory(),
         "use_x_forwarded_for": True,
         "trusted_proxies": ["192.168.1.100"],
     }

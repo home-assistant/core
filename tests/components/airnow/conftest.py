@@ -17,6 +17,7 @@ def config_entry_fixture(hass, config, options):
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=2,
+        entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id=f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}",
         data=config,
         options=options,

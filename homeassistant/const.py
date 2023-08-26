@@ -39,6 +39,7 @@ class Platform(StrEnum):
     HUMIDIFIER = "humidifier"
     IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
+    LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
     MAILBOX = "mailbox"
@@ -57,6 +58,7 @@ class Platform(StrEnum):
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
+    WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 

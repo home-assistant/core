@@ -149,8 +149,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.code, ex.message)
-        if ex.code in (
+        _LOGGER.debug("API error: %s (%s)", ex.status, ex.message)
+        if ex.status in (
             HTTPStatus.BAD_REQUEST,
             HTTPStatus.UNAUTHORIZED,
             HTTPStatus.FORBIDDEN,

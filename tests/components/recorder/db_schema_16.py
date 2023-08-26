@@ -23,8 +23,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -40,7 +39,6 @@ from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 16

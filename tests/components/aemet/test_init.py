@@ -1,15 +1,13 @@
 """Define tests for the AEMET OpenData init."""
 from unittest.mock import patch
 
-import requests_mock
-
 from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .util import aemet_requests_mock
+from .util import mock_api_call
 
 from tests.common import MockConfigEntry
 
@@ -27,9 +25,10 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
     with patch("homeassistant.util.dt.now", return_value=now), patch(
         "homeassistant.util.dt.utcnow", return_value=now
-    ), requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
-
+    ), patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         config_entry = MockConfigEntry(
             domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG
         )

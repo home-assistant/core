@@ -29,9 +29,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures(
-    "mock_setup_entry", "reolink_connect", "reolink_ONVIF_wait"
-)
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "reolink_connect")
 
 
 async def test_config_flow_manual_success(hass: HomeAssistant) -> None:

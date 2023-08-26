@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import ChainMap
 from collections.abc import Callable, Coroutine, Generator, Iterable, Mapping
 from contextvars import ContextVar
 from copy import deepcopy
@@ -964,10 +963,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         Handler key is the domain of the component that we want to set up.
         """
-        await _load_integration(self.hass, handler_key, self._hass_config)
-        if (handler := HANDLERS.get(handler_key)) is None:
-            raise data_entry_flow.UnknownHandler
-
+        handler = await _async_get_flow_handler(
+            self.hass, handler_key, self._hass_config
+        )
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
@@ -1466,14 +1464,12 @@ def _async_abort_entries_match(
     if match_dict is None:
         match_dict = {}  # Match any entry
     for entry in other_entries:
-        if all(
-            item
-            in ChainMap(
-                entry.options,  # type: ignore[arg-type]
-                entry.data,  # type: ignore[arg-type]
-            ).items()
-            for item in match_dict.items()
-        ):
+        options_items = entry.options.items()
+        data_items = entry.data.items()
+        for kv in match_dict.items():
+            if kv not in options_items and kv not in data_items:
+                break
+        else:
             raise data_entry_flow.AbortFlow("already_configured")
 
 
@@ -1815,6 +1811,14 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
+    def _async_get_config_entry(self, config_entry_id: str) -> ConfigEntry:
+        """Return config entry or raise if not found."""
+        entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if entry is None:
+            raise UnknownEntry(config_entry_id)
+
+        return entry
+
     async def async_create_flow(
         self,
         handler_key: str,
@@ -1826,16 +1830,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
-        entry = self.hass.config_entries.async_get_entry(handler_key)
-        if entry is None:
-            raise UnknownEntry(handler_key)
-
-        await _load_integration(self.hass, entry.domain, {})
-
-        if entry.domain not in HANDLERS:
-            raise data_entry_flow.UnknownHandler
-
-        return HANDLERS[entry.domain].async_get_options_flow(entry)
+        entry = self._async_get_config_entry(handler_key)
+        handler = await _async_get_flow_handler(self.hass, entry.domain, {})
+        return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -1857,6 +1854,14 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
         result["result"] = True
         return result
+
+    async def _async_setup_preview(self, flow: data_entry_flow.FlowHandler) -> None:
+        """Set up preview for an option flow handler."""
+        entry = self._async_get_config_entry(flow.handler)
+        await _load_integration(self.hass, entry.domain, {})
+        if entry.domain not in self._preview:
+            self._preview.add(entry.domain)
+            await flow.async_setup_preview(self.hass)
 
 
 class OptionsFlow(data_entry_flow.FlowHandler):
@@ -2042,3 +2047,20 @@ async def _load_integration(
             err,
         )
         raise data_entry_flow.UnknownHandler
+
+
+async def _async_get_flow_handler(
+    hass: HomeAssistant, domain: str, hass_config: ConfigType
+) -> type[ConfigFlow]:
+    """Get a flow handler for specified domain."""
+
+    # First check if there is a handler registered for the domain
+    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+        return handler
+
+    await _load_integration(hass, domain, hass_config)
+
+    if handler := HANDLERS.get(domain):
+        return handler
+
+    raise data_entry_flow.UnknownHandler
