@@ -27,7 +27,7 @@ from homeassistant.const import (
     URL_API_TEMPLATE,
 )
 import homeassistant.core as ha
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, valid_entity_id
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.json import json_dumps
@@ -192,11 +192,30 @@ class APIStatesView(HomeAssistantView):
     def get(self, request):
         """Get current states."""
         user = request["hass_user"]
+
+        entity_ids_str = request.query.get("filter_entity_id")
+        entity_ids = (
+            entity_ids_str.strip().lower().split(",")
+            if entity_ids_str is not None
+            else []
+        )
+
+        for entity_id in entity_ids:
+            if not valid_entity_id(entity_id):
+                return self.json_message(
+                    "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
+                )
+
+        states = (
+            map(request.app["hass"].states.get, entity_ids)
+            if entity_ids
+            else request.app["hass"].states.async_all()
+        )
         entity_perm = user.permissions.check_entity
         states = [
             state
-            for state in request.app["hass"].states.async_all()
-            if entity_perm(state.entity_id, "read")
+            for state in states
+            if state is not None and entity_perm(state.entity_id, "read")
         ]
         return self.json(states)
 
