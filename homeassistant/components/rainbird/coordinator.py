@@ -26,8 +26,7 @@ from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
-# changes, so we refresh it less often. However, the calendar entity state refreshes more
-# frequently to check for the start of an event.
+# changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
 _LOGGER = logging.getLogger(__name__)
