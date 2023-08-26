@@ -30,9 +30,9 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "new_value", "old_value"),
+    ("entity_id", "new_value", "old_value", "remote_service"),
     [
-        ("number.i4_edrive40_target_soc", "80", "100"),
+        ("number.i4_edrive40_target_soc", "80", "100", "charging-settings"),
     ],
 )
 async def test_service_call_success(
@@ -40,6 +40,7 @@ async def test_service_call_success(
     entity_id: str,
     new_value: str,
     old_value: str,
+    remote_service: str,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test successful number change."""
@@ -57,7 +58,7 @@ async def test_service_call_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    check_remote_service_call(bmw_fixture)
+    check_remote_service_call(bmw_fixture, remote_service)
     assert hass.states.get(entity_id).state == new_value
 
 

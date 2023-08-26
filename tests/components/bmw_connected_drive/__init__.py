@@ -1,6 +1,7 @@
 """Tests for the for the BMW Connected Drive integration."""
 
 
+from bimmer_connected.const import REMOTE_SERVICE_BASE_URL, VEHICLE_CHARGING_BASE_URL
 import respx
 
 from homeassistant import config_entries
@@ -52,13 +53,48 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     return mock_config_entry
 
 
-def check_remote_service_call(router: respx.MockRouter):
+def check_remote_service_call(
+    router: respx.MockRouter,
+    remote_service: str = None,
+    remote_service_params: dict = None,
+    remote_service_payload: dict = None,
+):
     """Check if the last call was a successful remote service call."""
-    last_event_status_call = next(
-        iter(
-            reversed(
-                [c for c in router.calls if c.request.url.path.endswith("eventStatus")]
+
+    # Check if remote service call was made correctly
+    if remote_service:
+        # Get remote service call
+        first_remote_service_call: respx.models.Call = next(
+            iter(
+                [
+                    c
+                    for c in router.calls
+                    if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+                    or c.request.url.path.startswith(
+                        VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
+                    )
+                ]
             )
+        )
+        assert (
+            first_remote_service_call.request.url.path.endswith(remote_service) is True
+        )
+        assert first_remote_service_call.has_response is True
+        assert first_remote_service_call.response.is_success is True
+
+        # test params.
+        # we don't test payload as this creates a lot of noise in the tests
+        # and is end-to-end tested with the HA states
+        if remote_service_params:
+            assert (
+                dict(first_remote_service_call.request.url.params.items())
+                == remote_service_params
+            )
+
+    # Now check final result
+    last_event_status_call = next(
+        reversed(
+            [c for c in router.calls if c.request.url.path.endswith("eventStatus")]
         )
     )
 

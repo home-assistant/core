@@ -30,11 +30,21 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "new_value", "old_value"),
+    ("entity_id", "new_value", "old_value", "remote_service"),
     [
-        ("select.i3_rex_charging_mode", "IMMEDIATE_CHARGING", "DELAYED_CHARGING"),
-        ("select.i4_edrive40_ac_charging_limit", "12", "16"),
-        ("select.i4_edrive40_charging_mode", "DELAYED_CHARGING", "IMMEDIATE_CHARGING"),
+        (
+            "select.i3_rex_charging_mode",
+            "IMMEDIATE_CHARGING",
+            "DELAYED_CHARGING",
+            "charging-profile",
+        ),
+        ("select.i4_edrive40_ac_charging_limit", "12", "16", "charging-settings"),
+        (
+            "select.i4_edrive40_charging_mode",
+            "DELAYED_CHARGING",
+            "IMMEDIATE_CHARGING",
+            "charging-profile",
+        ),
     ],
 )
 async def test_service_call_success(
@@ -42,6 +52,7 @@ async def test_service_call_success(
     entity_id: str,
     new_value: str,
     old_value: str,
+    remote_service: str,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test successful input change."""
@@ -59,7 +70,7 @@ async def test_service_call_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    check_remote_service_call(bmw_fixture)
+    check_remote_service_call(bmw_fixture, remote_service)
     assert hass.states.get(entity_id).state == new_value
 
 

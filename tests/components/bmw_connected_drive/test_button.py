@@ -30,15 +30,16 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id"),
+    ("entity_id", "remote_service"),
     [
-        ("button.i4_edrive40_flash_lights"),
-        ("button.i4_edrive40_sound_horn"),
+        ("button.i4_edrive40_flash_lights", "light-flash"),
+        ("button.i4_edrive40_sound_horn", "horn-blow"),
     ],
 )
 async def test_service_call_success(
     hass: HomeAssistant,
     entity_id: str,
+    remote_service: str,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test successful button press."""
@@ -53,7 +54,7 @@ async def test_service_call_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    check_remote_service_call(bmw_fixture)
+    check_remote_service_call(bmw_fixture, remote_service)
 
 
 async def test_service_call_fail(
@@ -87,25 +88,38 @@ async def test_service_call_fail(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "state_entity_id", "new_value", "old_value"),
+    (
+        "entity_id",
+        "state_entity_id",
+        "new_value",
+        "old_value",
+        "remote_service",
+        "remote_service_params",
+    ),
     [
         (
             "button.i4_edrive40_activate_air_conditioning",
             "switch.i4_edrive40_climate",
             "on",
             "off",
+            "climate-now",
+            {"action": "START"},
         ),
         (
             "button.i4_edrive40_deactivate_air_conditioning",
             "switch.i4_edrive40_climate",
             "off",
             "on",
+            "climate-now",
+            {"action": "STOP"},
         ),
         (
             "button.i4_edrive40_find_vehicle",
             "device_tracker.i4_edrive40",
             "not_home",
             "home",
+            "vehicle-finder",
+            {},
         ),
     ],
 )
@@ -115,6 +129,8 @@ async def test_service_call_success_state_change(
     state_entity_id: str,
     new_value: str,
     old_value: str,
+    remote_service: str,
+    remote_service_params: dict,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test successful button press with state change."""
@@ -131,7 +147,7 @@ async def test_service_call_success_state_change(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    check_remote_service_call(bmw_fixture)
+    check_remote_service_call(bmw_fixture, remote_service, remote_service_params)
     assert hass.states.get(state_entity_id).state == new_value
 
 

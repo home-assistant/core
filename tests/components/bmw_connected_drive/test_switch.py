@@ -30,12 +30,12 @@ async def test_entity_state_attrs(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "new_value", "old_value"),
+    ("entity_id", "new_value", "old_value", "remote_service", "remote_service_params"),
     [
-        ("switch.i4_edrive40_climate", "on", "off"),
-        ("switch.i4_edrive40_climate", "off", "on"),
-        ("switch.iX_xdrive50_charging", "on", "off"),
-        ("switch.iX_xdrive50_charging", "off", "on"),
+        ("switch.i4_edrive40_climate", "on", "off", "climate-now", {"action": "START"}),
+        ("switch.i4_edrive40_climate", "off", "on", "climate-now", {"action": "STOP"}),
+        ("switch.iX_xdrive50_charging", "on", "off", "start-charging", {}),
+        ("switch.iX_xdrive50_charging", "off", "on", "stop-charging", {}),
     ],
 )
 async def test_service_call_success(
@@ -43,6 +43,8 @@ async def test_service_call_success(
     entity_id: str,
     new_value: str,
     old_value: str,
+    remote_service: str,
+    remote_service_params: dict,
     bmw_fixture: respx.Router,
 ) -> None:
     """Test successful switch change."""
@@ -59,7 +61,7 @@ async def test_service_call_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    check_remote_service_call(bmw_fixture)
+    check_remote_service_call(bmw_fixture, remote_service, remote_service_params)
     assert hass.states.get(entity_id).state == new_value
 
 
