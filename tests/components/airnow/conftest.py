@@ -40,7 +40,7 @@ def config_fixture(hass):
 def options_fixture(hass):
     """Define a config options data fixture."""
     return {
-        CONF_RADIUS: 75,
+        CONF_RADIUS: 150,
     }
 
 

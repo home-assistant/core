@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, config, setup_airnow) -> None:
+async def test_form(hass: HomeAssistant, config, options, setup_airnow) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -23,6 +23,7 @@ async def test_form(hass: HomeAssistant, config, setup_airnow) -> None:
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["data"] == config
+    assert result2["options"] == options
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=InvalidKeyError)])
@@ -116,7 +117,7 @@ async def test_config_migration_v2(hass: HomeAssistant, setup_airnow) -> None:
     assert config_entry.options.get(CONF_RADIUS) == 25
 
 
-async def test_options_flow(hass: HomeAssistant, config, setup_airnow) -> None:
+async def test_options_flow(hass: HomeAssistant, setup_airnow) -> None:
     """Test that the options flow works."""
     config_entry = MockConfigEntry(
         version=2,
