@@ -1892,6 +1892,9 @@ pyoctoprintapi==0.1.12
 # homeassistant.components.ombi
 pyombi==0.1.10
 
+# homeassistant.components.eyeonwater
+pyonwater==0.2.4
+
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
 
