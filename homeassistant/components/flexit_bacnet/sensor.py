@@ -67,13 +67,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Electric heater power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key="electric_heater_nominal_power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        name="Electric heater nominal power",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 )
 
 
