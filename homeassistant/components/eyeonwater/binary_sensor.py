@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN
-from .eow import Meter
+from pyonwater import Meter
 
 FLAG_SENSORS = [
     BinarySensorEntityDescription(
