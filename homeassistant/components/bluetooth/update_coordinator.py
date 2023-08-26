@@ -12,14 +12,8 @@ from .api import (
     async_register_callback,
     async_track_unavailable,
 )
-from .match import (
-    BluetoothCallbackMatcher,
-)
-from .models import (
-    BluetoothChange,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
-)
+from .match import BluetoothCallbackMatcher
+from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -45,6 +39,7 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.mode = mode
         self._last_unavailable_time = 0.0
         self._last_name = address
+        self._available = async_address_present(hass, address, connectable)
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
@@ -91,7 +86,17 @@ class BasePassiveBluetoothCoordinator(ABC):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return async_address_present(self.hass, self.address, self.connectable)
+        return self._available
+
+    @callback
+    def _async_handle_bluetooth_event_internal(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a bluetooth event."""
+        self._available = True
+        self._async_handle_bluetooth_event(service_info, change)
 
     @callback
     def _async_start(self) -> None:
@@ -99,7 +104,7 @@ class BasePassiveBluetoothCoordinator(ABC):
         self._on_stop.append(
             async_register_callback(
                 self.hass,
-                self._async_handle_bluetooth_event,
+                self._async_handle_bluetooth_event_internal,
                 BluetoothCallbackMatcher(
                     address=self.address, connectable=self.connectable
                 ),
@@ -129,3 +134,4 @@ class BasePassiveBluetoothCoordinator(ABC):
         """Handle the device going unavailable."""
         self._last_unavailable_time = service_info.time
         self._last_name = service_info.name
+        self._available = False

@@ -24,11 +24,11 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -72,6 +72,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:flash",
     ),
     # C=1: Active power +
+    # D=7: Current value
+    # E=0: Total
+    SensorEntityDescription(
+        key="1-0:1.7.0*255",
+        translation_key="positive_active_instantaneous_power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    # C=1: Active energy +
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
@@ -100,7 +109,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="1-0:1.17.0*255",
         translation_key="last_signed_positive_active_energy_total",
     ),
-    # C=2: Active power -
+    # C=2: Active energy -
     # D=8: Time integral 1
     # E=0: Total
     SensorEntityDescription(
