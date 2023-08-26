@@ -395,9 +395,7 @@ async def test_reconnect_mechanism(
     await setup_unifi_integration(hass, aioclient_mock)
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        f"https://{DEFAULT_HOST}:1234/api/login", status=HTTPStatus.BAD_GATEWAY
-    )
+    aioclient_mock.get(f"https://{DEFAULT_HOST}:1234/", status=HTTPStatus.BAD_GATEWAY)
 
     mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
@@ -448,9 +446,7 @@ async def test_reconnect_mechanism_exceptions(
 
 async def test_get_unifi_controller(hass: HomeAssistant) -> None:
     """Successful call."""
-    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login", return_value=True
-    ):
+    with patch("aiounifi.Controller.login", return_value=True):
         assert await get_unifi_controller(hass, ENTRY_CONFIG)
 
 
@@ -458,9 +454,7 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
     """Successful call with verify ssl set to false."""
     controller_data = dict(ENTRY_CONFIG)
     controller_data[CONF_VERIFY_SSL] = False
-    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login", return_value=True
-    ):
+    with patch("aiounifi.Controller.login", return_value=True):
         assert await get_unifi_controller(hass, controller_data)
 
 
@@ -481,7 +475,7 @@ async def test_get_unifi_controller_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
     """Check that get_unifi_controller can handle controller being unavailable."""
-    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login", side_effect=side_effect
-    ), pytest.raises(raised_exception):
+    with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
+        raised_exception
+    ):
         await get_unifi_controller(hass, ENTRY_CONFIG)

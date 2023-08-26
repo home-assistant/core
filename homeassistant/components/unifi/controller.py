@@ -10,6 +10,7 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.models.configuration import Configuration
 from aiounifi.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
@@ -409,18 +410,19 @@ async def get_unifi_controller(
         )
 
     controller = aiounifi.Controller(
-        host=config[CONF_HOST],
-        username=config[CONF_USERNAME],
-        password=config[CONF_PASSWORD],
-        port=config[CONF_PORT],
-        site=config[CONF_SITE_ID],
-        websession=session,
-        ssl_context=ssl_context,
+        Configuration(
+            session,
+            host=config[CONF_HOST],
+            username=config[CONF_USERNAME],
+            password=config[CONF_PASSWORD],
+            port=config[CONF_PORT],
+            site=config[CONF_SITE_ID],
+            ssl_context=ssl_context,
+        )
     )
 
     try:
         async with asyncio.timeout(10):
-            await controller.check_unifi_os()
             await controller.login()
         return controller
 
