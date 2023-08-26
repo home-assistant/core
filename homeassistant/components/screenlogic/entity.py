@@ -16,6 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import ScreenLogicDataPath
 from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class ScreenLogicEntityRequiredKeyMixin:
     """Mixin for required ScreenLogic entity key."""
 
-    data_path: tuple[str | int, ...]
+    data_path: ScreenLogicDataPath
 
 
 @dataclass

@@ -15,6 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.util import slugify
 
+ScreenLogicDataPath = tuple[str | int, ...]
+
 DOMAIN = "screenlogic"
 DEFAULT_SCAN_INTERVAL = 30
 MIN_SCAN_INTERVAL = 10
@@ -48,7 +50,7 @@ SL_UNIT_TO_HA_UNIT = {
 
 
 def generate_unique_id(
-    device: str | None, group: int | str | None, data_key: str
+    device: str | int, group: str | int | None, data_key: str | int
 ) -> str:
     """Generate new unique_id for a screenlogic entity from specified parameters."""
     if data_key in SHARED_VALUES and device is not None:
@@ -57,4 +59,4 @@ def generate_unique_id(
             if group is not None and (isinstance(group, int) or group.isdigit())
             else f"{device}_{data_key}"
         )
-    return data_key
+    return str(data_key)

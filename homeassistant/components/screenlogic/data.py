@@ -1,33 +1,21 @@
 """Data constants for the ScreenLogic integration."""
-from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import Any
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.data import ATTR, DEVICE, VALUE
 from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
-from homeassistant.const import EntityCategory
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN as SL_DOMAIN, SL_UNIT_TO_HA_UNIT, generate_unique_id
+from .const import DOMAIN as SL_DOMAIN, SL_UNIT_TO_HA_UNIT, ScreenLogicDataPath
 from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class EntityParameter(StrEnum):
-    """Parameters for sensor mapping."""
-
-    ENABLED = "enabled"  # ScreenLogicRule
-    ENTITY_CATEGORY = "entity_category"  # EntityCategory
-    INCLUDED = "included"  # ScreenLogicRule
-    SET_VALUE = "set_value"  # tuple
-    SUBSCRIPTION_CODE = "sub_code"  # int
-    VALUE_MODIFICATION = "value_mod"  # Callable
 
 
 class PathPart(StrEnum):
@@ -39,33 +27,34 @@ class PathPart(StrEnum):
     VALUE = "!sensor"
 
 
-class ScreenLogicRule(ABC):
-    """Base class for checking rules against a ScreenlogicGateway."""
+ScreenLogicDataPathTemplate = tuple[PathPart | str | int, ...]
 
-    def __init__(self, test: Callable[..., bool]) -> None:
+
+class ScreenLogicRule:
+    """Represents a base default passing rule."""
+
+    def __init__(
+        self, test: Callable[..., bool] = lambda gateway, data_path: True
+    ) -> None:
         """Initialize a ScreenLogic rule."""
         self._test = test
 
-    @abstractmethod
-    def test(
-        self, gateway: ScreenLogicGateway, data_path: tuple[str | int, ...]
-    ) -> bool:
-        """Abstract method to check the rule."""
+    def test(self, gateway: ScreenLogicGateway, data_path: ScreenLogicDataPath) -> bool:
+        """Method to check the rule."""
+        return self._test(gateway, data_path)
 
 
 class ScreenLogicDataRule(ScreenLogicRule):
     """Represents a data rule."""
 
     def __init__(
-        self, test: Callable[..., bool], test_path_template: tuple[str | int, ...]
+        self, test: Callable[..., bool], test_path_template: tuple[PathPart, ...]
     ) -> None:
         """Initialize a ScreenLogic data rule."""
         self._test_path_template = test_path_template
         super().__init__(test)
 
-    def test(
-        self, gateway: ScreenLogicGateway, data_path: tuple[str | int, ...]
-    ) -> bool:
+    def test(self, gateway: ScreenLogicGateway, data_path: ScreenLogicDataPath) -> bool:
         """Check the rule against the gateway's data."""
         test_path = realize_path_template(self._test_path_template, data_path)
         return self._test(gateway.get_data(*test_path))
@@ -74,35 +63,25 @@ class ScreenLogicDataRule(ScreenLogicRule):
 class ScreenLogicEquipmentRule(ScreenLogicRule):
     """Represents an equipment flag rule."""
 
-    def test(
-        self, gateway: ScreenLogicGateway, data_path: tuple[str | int, ...]
-    ) -> bool:
+    def test(self, gateway: ScreenLogicGateway, data_path: ScreenLogicDataPath) -> bool:
         """Check the rule against the gateway's equipment flags."""
         return self._test(gateway.equipment_flags)
 
 
-SupportedValueParameters = dict[
-    EntityParameter,
-    Callable | EntityCategory | int | ScreenLogicRule | tuple,
-]
+@dataclass
+class SupportedValueParameters:
+    """Base supported values for ScreenLogic Entities."""
 
-SupportedValueDescriptions = dict[str, SupportedValueParameters | dict]
+    enabled: ScreenLogicRule = ScreenLogicRule()
+    included: ScreenLogicRule = ScreenLogicRule()
+    subscription_code: int | None = None
+
+
+SupportedValueDescriptions = dict[str, SupportedValueParameters]
 
 SupportedGroupDescriptions = dict[int | str, SupportedValueDescriptions]
 
 SupportedDeviceDescriptions = dict[str, SupportedGroupDescriptions]
-
-
-@dataclass
-class BaseScreenLogicEntityData:
-    """Generic representation of a ScreenLogic entity."""
-
-    data_path: tuple[str | int, ...]
-    enabled: bool
-    entity_key: str
-    subscription_code: int | None
-    value_data: dict
-    value_parameters: dict
 
 
 DEVICE_INCLUSION_RULES = {
@@ -124,14 +103,16 @@ DEVICE_SUBSCRIPTION = {
 }
 
 
+# not run-time
 def get_ha_unit(entity_data: dict) -> StrEnum | str | None:
     """Return a Home Assistant unit of measurement from a UNIT."""
     sl_unit = entity_data.get(ATTR.UNIT)
     return SL_UNIT_TO_HA_UNIT.get(sl_unit, sl_unit)
 
 
+# partial run-time
 def realize_path_template(
-    template_path: tuple[str | int, ...], data_path: tuple[str | int, ...]
+    template_path: ScreenLogicDataPathTemplate, data_path: ScreenLogicDataPath
 ) -> tuple[str | int, ...]:
     """Make data path from template and current."""
     if not data_path or len(data_path) < 3:
@@ -139,7 +120,7 @@ def realize_path_template(
             f"Missing or invalid required parameter: 'data_path' for template path '{template_path}'"
         )
     device, group, data_key = data_path
-    realized_path = []
+    realized_path: list[str | int] = []
     for part in template_path:
         match part:
             case PathPart.DEVICE:
@@ -154,20 +135,11 @@ def realize_path_template(
     return tuple(realized_path)
 
 
-def expand_device_groups(
-    gateway: ScreenLogicGateway, device: str, device_groups: dict
-) -> None:
-    """Expand device groups to all available data indexes."""
-    indexed_values = device_groups.pop("*")
-    for index in gateway.get_data(device):
-        device_groups[index] = indexed_values
-
-
 def cleanup_excluded_entity(
     coordinator: ScreenlogicDataUpdateCoordinator,
     platform_domain: str,
     entity_key: str,
-):
+) -> None:
     """Remove excluded entity if it exists."""
     assert coordinator.config_entry
     entity_registry = er.async_get(coordinator.hass)
@@ -181,92 +153,31 @@ def cleanup_excluded_entity(
         entity_registry.async_remove(entity_id)
 
 
-def check_inclusion_rules(
-    gateway: ScreenLogicGateway,
-    device: str,
-    data_path: tuple[str | int, ...],
-    value_params: SupportedValueParameters,
-) -> bool:
-    """Check against any inclusion rules."""
-    if (
-        inclusion_rule := value_params.get(EntityParameter.INCLUDED)
-        or DEVICE_INCLUSION_RULES.get(device)
-    ) is not None:
-        assert isinstance(inclusion_rule, ScreenLogicRule)
-        if not inclusion_rule.test(gateway, data_path):
-            return False
-    return True
-
-
-def check_enabled_rules(
-    gateway: ScreenLogicGateway,
-    data_path: tuple[str | int, ...],
-    value_params: SupportedValueParameters,
-) -> bool:
-    """Check against any enabled rules."""
-    if (enabled_rule := value_params.get(EntityParameter.ENABLED)) is not None:
-        assert isinstance(enabled_rule, ScreenLogicRule)
-        return enabled_rule.test(gateway, data_path)
-    return True
-
-
-def check_device_subscription(
-    device: str,
-    value_params: SupportedValueParameters,
-) -> int | None:
-    """Check for a ScreenLogic update message code to subscribe to."""
-    sub_code = value_params.get(
-        EntityParameter.SUBSCRIPTION_CODE
-    ) or DEVICE_SUBSCRIPTION.get(device)
-    assert sub_code is None or isinstance(sub_code, int)
-    return sub_code
-
-
-def process_supported_values(
-    coordinator: ScreenlogicDataUpdateCoordinator,
-    platform_domain: str,
+def preprocess_supported_values(
     supported_devices: SupportedDeviceDescriptions,
-):
-    """Process template data."""
-    gateway = coordinator.gateway
-
+) -> list[tuple[ScreenLogicDataPath, Any]]:
+    """Expand config dict into list of ScreenLogicDataPaths and settings."""
+    processed: list[tuple[ScreenLogicDataPath, Any]] = []
     for device, device_groups in supported_devices.items():
-        if "*" in device_groups:
-            expand_device_groups(gateway, device, device_groups)
-
         for group, group_values in device_groups.items():
             for value_key, value_params in group_values.items():
-                data_path = (device, group, value_key)
+                value_data_path = (device, group, value_key)
+                processed.append((value_data_path, value_params))
+    return processed
 
-                entity_key = generate_unique_id(device, group, value_key)
 
-                if not check_inclusion_rules(gateway, device, data_path, value_params):
-                    cleanup_excluded_entity(coordinator, platform_domain, entity_key)
-                    continue
-
-                try:
-                    value_data = gateway.get_data(*data_path, strict=True)
-                except KeyError:
-                    _LOGGER.debug("Failed to find %s", data_path)
-                    continue
-
-                sub_code = check_device_subscription(device, value_params)
-
-                enabled = check_enabled_rules(gateway, data_path, value_params)
-
-                base_kwargs = {
-                    "data_path": data_path,
-                    "key": entity_key,
-                    "entity_category": value_params.get(
-                        EntityParameter.ENTITY_CATEGORY, EntityCategory.DIAGNOSTIC
-                    ),
-                    "entity_registry_enabled_default": enabled,
-                    "name": value_data.get(ATTR.NAME),
-                }
-
-                yield base_kwargs, BaseScreenLogicEntityData(
-                    data_path, enabled, entity_key, sub_code, value_data, value_params
-                )
+def iterate_expand_group_wildcard(
+    gateway: ScreenLogicGateway,
+    preprocessed_data: list[tuple[ScreenLogicDataPath, Any]],
+) -> Generator[tuple[ScreenLogicDataPath, Any], None, None]:
+    """Iterate and expand any group wildcards to all available entries in gateway."""
+    for data_path, value_params in preprocessed_data:
+        device, group, value_key = data_path
+        if group == "*":
+            for index in gateway.get_data(device):
+                yield ((device, index, value_key), value_params)
+        else:
+            yield (data_path, value_params)
 
 
 ENTITY_MIGRATIONS = {

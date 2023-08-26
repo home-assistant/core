@@ -17,19 +17,23 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
+from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath, generate_unique_id
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import (
-    EntityParameter,
+    DEVICE_INCLUSION_RULES,
+    DEVICE_SUBSCRIPTION,
     PathPart,
     ScreenLogicDataRule,
     ScreenLogicEquipmentRule,
-    SupportedDeviceDescriptions,
+    SupportedValueParameters,
+    cleanup_excluded_entity,
     get_ha_unit,
-    process_supported_values,
+    iterate_expand_group_wildcard,
+    preprocess_supported_values,
 )
 from .entity import (
     ScreenlogicEntity,
@@ -41,96 +45,104 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
-SUPPORTED_DATA: SupportedDeviceDescriptions = {
-    DEVICE.CONTROLLER: {
-        GROUP.SENSOR: {
-            VALUE.AIR_TEMPERATURE: {
-                EntityParameter.ENTITY_CATEGORY: None,
-            },
-            VALUE.ORP: {
-                EntityParameter.INCLUDED: ScreenLogicEquipmentRule(
-                    lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
-                ),
-            },
-            VALUE.PH: {
-                EntityParameter.INCLUDED: ScreenLogicEquipmentRule(
-                    lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
-                ),
-            },
-        },
-    },
-    DEVICE.PUMP: {
-        "*": {
-            VALUE.WATTS_NOW: {},
-            VALUE.GPM_NOW: {
-                EntityParameter.ENABLED: ScreenLogicDataRule(
-                    lambda pump_data: pump_data[VALUE.TYPE] != PUMP_TYPE.INTELLIFLO_VS,
-                    (PathPart.DEVICE, PathPart.INDEX),
-                ),
-            },
-            VALUE.RPM_NOW: {
-                EntityParameter.ENABLED: ScreenLogicDataRule(
-                    lambda pump_data: pump_data[VALUE.TYPE] != PUMP_TYPE.INTELLIFLO_VF,
-                    (PathPart.DEVICE, PathPart.INDEX),
-                ),
-            },
-        },
-    },
-    DEVICE.INTELLICHEM: {
-        GROUP.SENSOR: {
-            VALUE.ORP_NOW: {},
-            VALUE.ORP_SUPPLY_LEVEL: {
-                EntityParameter.VALUE_MODIFICATION: lambda val: val - 1
-            },
-            VALUE.PH_NOW: {},
-            VALUE.PH_PROBE_WATER_TEMP: {},
-            VALUE.PH_SUPPLY_LEVEL: {
-                EntityParameter.VALUE_MODIFICATION: lambda val: val - 1
-            },
-            VALUE.SATURATION: {},
-        },
-        GROUP.CONFIGURATION: {
-            VALUE.CALCIUM_HARNESS: {},
-            VALUE.CYA: {},
-            VALUE.ORP_SETPOINT: {},
-            VALUE.PH_SETPOINT: {},
-            VALUE.SALT_TDS_PPM: {
-                EntityParameter.INCLUDED: ScreenLogicEquipmentRule(
-                    lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
-                    and EQUIPMENT_FLAG.CHLORINATOR not in flags,
-                ),
-            },
-            VALUE.TOTAL_ALKALINITY: {},
-        },
-        GROUP.DOSE_STATUS: {
-            VALUE.ORP_DOSING_STATE: {
-                EntityParameter.VALUE_MODIFICATION: lambda val: DOSE_STATE(val).title,
-            },
-            VALUE.ORP_LAST_DOSE_TIME: {},
-            VALUE.ORP_LAST_DOSE_VOLUME: {},
-            VALUE.PH_DOSING_STATE: {
-                EntityParameter.VALUE_MODIFICATION: lambda val: DOSE_STATE(val).title,
-            },
-            VALUE.PH_LAST_DOSE_TIME: {},
-            VALUE.PH_LAST_DOSE_VOLUME: {},
-        },
-    },
-    DEVICE.SCG: {
-        GROUP.SENSOR: {
-            VALUE.SALT_PPM: {},
-        },
-        GROUP.CONFIGURATION: {
-            VALUE.SUPER_CHLOR_TIMER: {},
-        },
-    },
-}
+@dataclass
+class SupportedSensorValueParameters(SupportedValueParameters):
+    """Supported predefined data for a ScreenLogic sensor entity."""
 
-SL_SENSOR_VALUE_CONVERSION = {
-    VALUE.ORP_SUPPLY_LEVEL: lambda val: val - 1,
-    VALUE.PH_SUPPLY_LEVEL: lambda val: val - 1,
-    VALUE.ORP_DOSING_STATE: lambda val: DOSE_STATE(val).title,
-    VALUE.PH_DOSING_STATE: lambda val: DOSE_STATE(val).title,
-}
+    device_class: SensorDeviceClass | None = None
+    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
+    value_modification: Callable[[int], int | str] | None = lambda val: val
+
+
+SUPPORTED_DATA: list[
+    tuple[ScreenLogicDataPath, SupportedValueParameters]
+] = preprocess_supported_values(
+    {
+        DEVICE.CONTROLLER: {
+            GROUP.SENSOR: {
+                VALUE.AIR_TEMPERATURE: SupportedSensorValueParameters(
+                    device_class=SensorDeviceClass.TEMPERATURE, entity_category=None
+                ),
+                VALUE.ORP: SupportedSensorValueParameters(
+                    included=ScreenLogicEquipmentRule(
+                        lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
+                    )
+                ),
+                VALUE.PH: SupportedSensorValueParameters(
+                    included=ScreenLogicEquipmentRule(
+                        lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
+                    )
+                ),
+            },
+        },
+        DEVICE.PUMP: {
+            "*": {
+                VALUE.WATTS_NOW: SupportedSensorValueParameters(),
+                VALUE.GPM_NOW: SupportedSensorValueParameters(
+                    enabled=ScreenLogicDataRule(
+                        lambda pump_data: pump_data[VALUE.TYPE]
+                        != PUMP_TYPE.INTELLIFLO_VS,
+                        (PathPart.DEVICE, PathPart.INDEX),
+                    )
+                ),
+                VALUE.RPM_NOW: SupportedSensorValueParameters(
+                    enabled=ScreenLogicDataRule(
+                        lambda pump_data: pump_data[VALUE.TYPE]
+                        != PUMP_TYPE.INTELLIFLO_VF,
+                        (PathPart.DEVICE, PathPart.INDEX),
+                    )
+                ),
+            },
+        },
+        DEVICE.INTELLICHEM: {
+            GROUP.SENSOR: {
+                VALUE.ORP_NOW: SupportedSensorValueParameters(),
+                VALUE.ORP_SUPPLY_LEVEL: SupportedSensorValueParameters(
+                    value_modification=lambda val: val - 1
+                ),
+                VALUE.PH_NOW: SupportedSensorValueParameters(),
+                VALUE.PH_PROBE_WATER_TEMP: SupportedSensorValueParameters(),
+                VALUE.PH_SUPPLY_LEVEL: SupportedSensorValueParameters(
+                    value_modification=lambda val: val - 1
+                ),
+                VALUE.SATURATION: SupportedSensorValueParameters(),
+            },
+            GROUP.CONFIGURATION: {
+                VALUE.CALCIUM_HARNESS: SupportedSensorValueParameters(),
+                VALUE.CYA: SupportedSensorValueParameters(),
+                VALUE.ORP_SETPOINT: SupportedSensorValueParameters(),
+                VALUE.PH_SETPOINT: SupportedSensorValueParameters(),
+                VALUE.SALT_TDS_PPM: SupportedSensorValueParameters(
+                    included=ScreenLogicEquipmentRule(
+                        lambda flags: EQUIPMENT_FLAG.INTELLICHEM in flags
+                        and EQUIPMENT_FLAG.CHLORINATOR not in flags,
+                    )
+                ),
+                VALUE.TOTAL_ALKALINITY: SupportedSensorValueParameters(),
+            },
+            GROUP.DOSE_STATUS: {
+                VALUE.ORP_DOSING_STATE: SupportedSensorValueParameters(
+                    value_modification=lambda val: DOSE_STATE(val).title,
+                ),
+                VALUE.ORP_LAST_DOSE_TIME: SupportedSensorValueParameters(),
+                VALUE.ORP_LAST_DOSE_VOLUME: SupportedSensorValueParameters(),
+                VALUE.PH_DOSING_STATE: SupportedSensorValueParameters(
+                    value_modification=lambda val: DOSE_STATE(val).title,
+                ),
+                VALUE.PH_LAST_DOSE_TIME: SupportedSensorValueParameters(),
+                VALUE.PH_LAST_DOSE_VOLUME: SupportedSensorValueParameters(),
+            },
+        },
+        DEVICE.SCG: {
+            GROUP.SENSOR: {
+                VALUE.SALT_PPM: SupportedSensorValueParameters(),
+            },
+            GROUP.CONFIGURATION: {
+                VALUE.SUPER_CHLOR_TIMER: SupportedSensorValueParameters(),
+            },
+        },
+    }
+)
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
     DEVICE_TYPE.DURATION: SensorDeviceClass.DURATION,
@@ -157,29 +169,58 @@ async def async_setup_entry(
     coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
         config_entry.entry_id
     ]
-
-    for base_kwargs, base_data in process_supported_values(
-        coordinator, DOMAIN, SUPPORTED_DATA
+    gateway = coordinator.gateway
+    data_path: ScreenLogicDataPath
+    value_params: SupportedSensorValueParameters
+    for data_path, value_params in iterate_expand_group_wildcard(
+        gateway, SUPPORTED_DATA
     ):
-        base_kwargs["device_class"] = SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
-            base_data.value_data.get(ATTR.DEVICE_TYPE)
-        )
-        base_kwargs["native_unit_of_measurement"] = get_ha_unit(base_data.value_data)
-        base_kwargs["options"] = base_data.value_data.get(ATTR.ENUM_OPTIONS)
-        base_kwargs["state_class"] = SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
-            base_data.value_data.get(ATTR.STATE_TYPE)
-        )
-        base_kwargs["value_mod"] = base_data.value_parameters.get(
-            EntityParameter.VALUE_MODIFICATION
-        )
+        entity_key = generate_unique_id(*data_path)
 
-        if base_data.subscription_code:
+        device = data_path[0]
+
+        if not (DEVICE_INCLUSION_RULES.get(device) or value_params.included).test(
+            gateway, data_path
+        ):
+            cleanup_excluded_entity(coordinator, DOMAIN, entity_key)
+            continue
+
+        try:
+            value_data = gateway.get_data(*data_path, strict=True)
+        except KeyError:
+            _LOGGER.debug("Failed to find %s", data_path)
+            continue
+
+        entity_kwargs = {
+            "data_path": data_path,  #
+            "key": entity_key,  #
+            "entity_category": value_params.entity_category,
+            "entity_registry_enabled_default": value_params.enabled.test(
+                gateway, data_path
+            ),
+            "name": value_data.get(ATTR.NAME),
+            "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
+                value_data.get(ATTR.DEVICE_TYPE)
+            ),
+            "native_unit_of_measurement": get_ha_unit(value_data),
+            "options": value_data.get(ATTR.ENUM_OPTIONS),
+            "state_class": SL_STATE_TYPE_TO_HA_STATE_CLASS.get(
+                value_data.get(ATTR.STATE_TYPE)
+            ),
+            "value_mod": value_params.value_modification,
+        }
+
+        if (
+            sub_code := (
+                value_params.subscription_code or DEVICE_SUBSCRIPTION.get(device)
+            )
+        ) is not None:
             entities.append(
                 ScreenLogicPushSensor(
                     coordinator,
                     ScreenLogicPushSensorDescription(
-                        subscription_code=base_data.subscription_code,
-                        **base_kwargs,
+                        subscription_code=sub_code,
+                        **entity_kwargs,
                     ),
                 )
             )
@@ -188,7 +229,7 @@ async def async_setup_entry(
                 ScreenLogicSensor(
                     coordinator,
                     ScreenLogicSensorDescription(
-                        **base_kwargs,
+                        **entity_kwargs,
                     ),
                 )
             )

@@ -7,6 +7,7 @@ from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 
 from homeassistant.components.number import (
     DOMAIN,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
@@ -15,13 +16,16 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
+from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath, generate_unique_id
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import (
-    EntityParameter,
-    SupportedDeviceDescriptions,
+    DEVICE_INCLUSION_RULES,
+    PathPart,
+    SupportedValueParameters,
+    cleanup_excluded_entity,
     get_ha_unit,
-    process_supported_values,
+    iterate_expand_group_wildcard,
+    preprocess_supported_values,
     realize_path_template,
 )
 from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
@@ -29,6 +33,22 @@ from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+
+@dataclass
+class SupportedNumberValueParametersMixin:
+    """Mixin for supported predefined data for a ScreenLogic number entity."""
+
+    set_value_config: tuple[str, tuple[tuple[PathPart | str | int, ...], ...]]
+    device_class: NumberDeviceClass | None = None
+    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
+
+
+@dataclass
+class SupportedNumberValueParameters(
+    SupportedValueParameters, SupportedNumberValueParametersMixin
+):
+    """Supported predefined data for a ScreenLogic number entity."""
 
 
 SET_SCG_CONFIG_FUNC_DATA = (
@@ -40,20 +60,24 @@ SET_SCG_CONFIG_FUNC_DATA = (
 )
 
 
-SUPPORTED_DATA: SupportedDeviceDescriptions = {
-    DEVICE.SCG: {
-        GROUP.CONFIGURATION: {
-            VALUE.POOL_SETPOINT: {
-                EntityParameter.ENTITY_CATEGORY: EntityCategory.CONFIG,
-                EntityParameter.SET_VALUE: SET_SCG_CONFIG_FUNC_DATA,
-            },
-            VALUE.SPA_SETPOINT: {
-                EntityParameter.ENTITY_CATEGORY: EntityCategory.CONFIG,
-                EntityParameter.SET_VALUE: SET_SCG_CONFIG_FUNC_DATA,
-            },
+SUPPORTED_DATA: list[
+    tuple[ScreenLogicDataPath, SupportedValueParameters]
+] = preprocess_supported_values(
+    {
+        DEVICE.SCG: {
+            GROUP.CONFIGURATION: {
+                VALUE.POOL_SETPOINT: SupportedNumberValueParameters(
+                    entity_category=EntityCategory.CONFIG,
+                    set_value_config=SET_SCG_CONFIG_FUNC_DATA,
+                ),
+                VALUE.SPA_SETPOINT: SupportedNumberValueParameters(
+                    entity_category=EntityCategory.CONFIG,
+                    set_value_config=SET_SCG_CONFIG_FUNC_DATA,
+                ),
+            }
         }
     }
-}
+)
 
 
 async def async_setup_entry(
@@ -67,34 +91,55 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
-
-    for base_kwargs, base_data in process_supported_values(
-        coordinator, DOMAIN, SUPPORTED_DATA
+    data_path: ScreenLogicDataPath
+    value_params: SupportedNumberValueParameters
+    for data_path, value_params in iterate_expand_group_wildcard(
+        gateway, SUPPORTED_DATA
     ):
-        if set_value_data := base_data.value_parameters.get(EntityParameter.SET_VALUE):
-            set_value_str, set_value_params = set_value_data
-            set_value_func = getattr(gateway, set_value_str)
-        base_kwargs["native_unit_of_measurement"] = get_ha_unit(base_data.value_data)
-        base_kwargs["native_max_value"] = base_data.value_data.get(ATTR.MAX_SETPOINT)
-        base_kwargs["native_min_value"] = base_data.value_data.get(ATTR.MIN_SETPOINT)
-        base_kwargs["native_step"] = base_data.value_data.get(ATTR.STEP)
-        base_kwargs["set_value"] = set_value_func
-        base_kwargs["set_value_params"] = set_value_params
+        entity_key = generate_unique_id(*data_path)
+
+        device = data_path[0]
+
+        if not (DEVICE_INCLUSION_RULES.get(device) or value_params.included).test(
+            gateway, data_path
+        ):
+            cleanup_excluded_entity(coordinator, DOMAIN, entity_key)
+            continue
+
+        try:
+            value_data = gateway.get_data(*data_path, strict=True)
+        except KeyError:
+            _LOGGER.debug("Failed to find %s", data_path)
+            continue
+
+        set_value_str, set_value_params = value_params.set_value_config
+        set_value_func = getattr(gateway, set_value_str)
+
+        entity_kwargs = {
+            "data_path": data_path,  #
+            "key": entity_key,  #
+            "entity_category": value_params.entity_category,
+            "entity_registry_enabled_default": value_params.enabled.test(
+                gateway, data_path
+            ),
+            "name": value_data.get(ATTR.NAME),
+            "device_class": value_params.device_class,
+            "native_unit_of_measurement": get_ha_unit(value_data),
+            "native_max_value": value_data.get(ATTR.MAX_SETPOINT),
+            "native_min_value": value_data.get(ATTR.MIN_SETPOINT),
+            "native_step": value_data.get(ATTR.STEP),
+            "set_value": set_value_func,
+            "set_value_params": set_value_params,
+        }
 
         entities.append(
             ScreenLogicNumber(
                 coordinator,
-                ScreenLogicNumberDescription(**base_kwargs),
+                ScreenLogicNumberDescription(**entity_kwargs),
             )
         )
 
     async_add_entities(entities)
-
-
-SUPPORTED_SCG_NUMBERS = (
-    VALUE.POOL_SETPOINT,
-    VALUE.SPA_SETPOINT,
-)
 
 
 @dataclass

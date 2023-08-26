@@ -128,7 +128,9 @@ async def _async_migrate_entries(
                     new_key,
                 )
                 continue
-            assert device != "pump" or (device == "pump" and source_index)
+            assert device is not None and (
+                device != "pump" or (device == "pump" and source_index is not None)
+            )
             new_unique_id = (
                 f"{source_mac}_{generate_unique_id(device, source_index, new_key)}"
             )
