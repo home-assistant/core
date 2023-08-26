@@ -98,27 +98,19 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         self._ac_number = ac_number
         self._airtouch = coordinator.airtouch
         self._info = info
-        self._unit = self._airtouch.GetAcs()[self._ac_number]
+        self._unit = self._airtouch.GetAcs()[ac_number]
+        self._attr_unique_id = f"ac_{ac_number}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"ac_{ac_number}")},
+            name=f"AC {ac_number}",
+            manufacturer="Airtouch",
+            model="Airtouch 4",
+        )
 
     @callback
     def _handle_coordinator_update(self):
         self._unit = self._airtouch.GetAcs()[self._ac_number]
         return super()._handle_coordinator_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"AC {self._ac_number}",
-            manufacturer="Airtouch",
-            model="Airtouch 4",
-        )
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return f"ac_{self._ac_number}"
 
     @property
     def current_temperature(self):
@@ -208,29 +200,21 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator)
         self._group_number = group_number
+        self._attr_unique_id = group_number
         self._airtouch = coordinator.airtouch
         self._info = info
         self._unit = self._airtouch.GetGroupByGroupNumber(self._group_number)
-
-    @callback
-    def _handle_coordinator_update(self):
-        self._unit = self._airtouch.GetGroupByGroupNumber(self._group_number)
-        return super()._handle_coordinator_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, group_number)},
             manufacturer="Airtouch",
             model="Airtouch 4",
             name=self._unit.GroupName,
         )
 
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._group_number
+    @callback
+    def _handle_coordinator_update(self):
+        self._unit = self._airtouch.GetGroupByGroupNumber(self._group_number)
+        return super()._handle_coordinator_update()
 
     @property
     def min_temp(self):
