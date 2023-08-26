@@ -90,8 +90,9 @@ class RainBirdCalendarEntity(
             raise HomeAssistantError(
                 "Unable to get events: No data from controller yet"
             )
-        cursor = schedule.timeline_tz(dt_util.DEFAULT_TIME_ZONE).overlapping(
-            dt_util.as_local(start_date), dt_util.as_local(end_date)
+        cursor = schedule.timeline_tz(start_date.tzinfo).overlapping(
+            start_date,
+            end_date,
         )
         return [
             CalendarEvent(
