@@ -72,22 +72,18 @@ class NestCamera(Camera):
         self._stream: RtspStream | None = None
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
-        self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._attr_is_streaming = False
+        self._attr_supported_features = CameraEntityFeature(0)
+        self._rtsp_live_stream_trait: CameraLiveStreamTrait | None = None
+        if CameraLiveStreamTrait.NAME in self._device.traits:
+            self._attr_is_streaming = True
+            self._attr_supported_features |= CameraEntityFeature.STREAM
+            trait = cast(
+                CameraLiveStreamTrait, self._device.traits[CameraLiveStreamTrait.NAME]
+            )
+            if StreamingProtocol.RTSP in trait.supported_protocols:
+                self._rtsp_live_stream_trait = trait
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
-        self._rtsp_live_stream_trait = self._get_rtsp_live_stream_trait()
-
-    def _get_rtsp_live_stream_trait(self) -> CameraLiveStreamTrait | None:
-        """Check for stream prerequisites and return a CameraLiveStreamTrait or None."""
-        if not (self.supported_features & CameraEntityFeature.STREAM):
-            return None
-        if CameraLiveStreamTrait.NAME not in self._device.traits:
-            return None
-        trait = cast(
-            CameraLiveStreamTrait, self._device.traits[CameraLiveStreamTrait.NAME]
-        )
-        if StreamingProtocol.RTSP not in trait.supported_protocols:
-            return None
-        return trait
 
     @property
     def use_stream_for_stills(self) -> bool:
@@ -114,14 +110,6 @@ class NestCamera(Camera):
     def model(self) -> str | None:
         """Return the camera model."""
         return self._device_info.device_model
-
-    @property
-    def supported_features(self) -> CameraEntityFeature:
-        """Flag supported features."""
-        supported_features = CameraEntityFeature(0)
-        if CameraLiveStreamTrait.NAME in self._device.traits:
-            supported_features |= CameraEntityFeature.STREAM
-        return supported_features
 
     @property
     def frontend_stream_type(self) -> StreamType | None:
