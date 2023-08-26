@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from aiovodafone import VodafoneStationDevice
+
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -11,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DEFAULT_DEVICE_NAME, DOMAIN
+from .const import _LOGGER, DOMAIN
 from .coordinator import VodafoneStationDeviceInfo, VodafoneStationRouter
 
 
@@ -49,11 +51,11 @@ def async_add_new_tracked_entities(
     new_tracked = []
 
     _LOGGER.debug("Adding device trackers entities")
-    for mac, device in coordinator.data.devices.items():
+    for mac, device_info in coordinator.data.devices.items():
         if mac in tracked:
             continue
-        _LOGGER.debug("New device tracker: %s", device.hostname)
-        new_tracked.append(VodafoneStationTracker(coordinator, device))
+        _LOGGER.debug("New device tracker: %s", device_info.device.name)
+        new_tracked.append(VodafoneStationTracker(coordinator, device_info))
         tracked.add(mac)
 
     async_add_entities(new_tracked)
@@ -63,14 +65,16 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     """Representation of a Vodafone Station device."""
 
     def __init__(
-        self, coordinator: VodafoneStationRouter, device: VodafoneStationDeviceInfo
+        self, coordinator: VodafoneStationRouter, device_info: VodafoneStationDeviceInfo
     ) -> None:
         """Initialize a Vodafone Station device."""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._device_mac = device.mac_address
-        self._attr_unique_id = device.mac_address
-        self._attr_name = device.hostname or DEFAULT_DEVICE_NAME
+        device = device_info.device
+        mac = device.mac
+        self._device_mac = mac
+        self._attr_unique_id = mac
+        self._attr_name = device.name or mac.replace(":", "_")
 
     @property
     def _device_info(self) -> VodafoneStationDeviceInfo:
@@ -78,9 +82,14 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
         return self.coordinator.data.devices[self._device_mac]
 
     @property
+    def _device(self) -> VodafoneStationDevice:
+        """Return fresh data for the device."""
+        return self.coordinator.data.devices[self._device_mac].device
+
+    @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return self._device_info.is_connected
+        return self._device.connected
 
     @property
     def source_type(self) -> SourceType:
@@ -95,32 +104,24 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     @property
     def icon(self) -> str:
         """Return device icon."""
-        return (
-            "mdi:lan-connect"
-            if self._device_info.is_connected
-            else "mdi:lan-disconnect"
-        )
+        return "mdi:lan-connect" if self._device.connected else "mdi:lan-disconnect"
 
     @property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return self._device_info.ip_address
+        return self._device.ip_address
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
-        return self._device_info.mac_address
+        return self._device_mac
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes of the device."""
-        self._attr_extra_state_attributes = {}
-        self._attr_extra_state_attributes[
-            "connection_type"
-        ] = self._device_info.connection_type
-        if "Wifi" in self._device_info.connection_type:
-            self._attr_extra_state_attributes["wifi_band"] = self._device_info.wifi
-        self._attr_extra_state_attributes[
-            "last_time_reachable"
-        ] = self._device_info.last_activity
-        return super().extra_state_attributes
+        connection_type = self._device.connection_type
+        attrs: dict[str, Any] = {"connection_type": connection_type}
+        if "Wifi" in connection_type:
+            attrs["wifi_band"] = self._device.wifi
+        attrs["last_time_reachable"] = self._device_info.update_time
+        return attrs

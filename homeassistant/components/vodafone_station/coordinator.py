@@ -14,58 +14,18 @@ from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER, DOMAIN
 
+CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
+
+@dataclass(slots=True)
 class VodafoneStationDeviceInfo:
     """Representation of a device connected to the Vodafone Station."""
 
-    def __init__(
-        self,
-        dev_info: VodafoneStationDevice,
-        coordinator: DataUpdateCoordinator,
-        consider_home: float = DEFAULT_CONSIDER_HOME.total_seconds(),
-    ) -> None:
-        """Initialize device info."""
-        self._dev_info = dev_info
-        self._consider_home = consider_home
-        self._coordinator = coordinator
-        self._utc_point_in_time = dt_util.utcnow()
-
-        self.connection_type: str = self._dev_info.connection_type
-        self.hostname = self._dev_info.name or self._dev_info.mac.replace(":", "_")
-        self.ip_address: str = self._dev_info.ip_address
-        self.mac_address = self._dev_info.mac
-        self.wifi: str = self._dev_info.wifi
-
-        self.last_activity: datetime | None = self._last_activity_status_update()
-        self.is_connected = self._connected_status_update()
-
-    def _last_activity_status_update(self) -> datetime | None:
-        """Update last_activity status."""
-
-        if self._dev_info.connected:
-            return self._utc_point_in_time
-
-        if self._coordinator.data:
-            return self._coordinator.data.devices[self._dev_info.mac].last_activity
-
-        return None
-
-    def _connected_status_update(self) -> bool:
-        """Update connected status."""
-
-        if self._dev_info.connected:
-            return True
-
-        consider_home_evaluated = False
-        if self.last_activity:
-            consider_home_evaluated = (
-                self._utc_point_in_time - self.last_activity
-            ).total_seconds() < self._consider_home
-
-        return consider_home_evaluated
+    device: VodafoneStationDevice
+    update_time: datetime | None
 
 
-@dataclass
+@dataclass(slots=True)
 class UpdateCoordinatorDataType:
     """Update coordinator data type."""
 
@@ -73,7 +33,7 @@ class UpdateCoordinatorDataType:
     sensors: dict[str, Any]
 
 
-class VodafoneStationRouter(DataUpdateCoordinator):
+class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
     def __init__(
@@ -99,6 +59,32 @@ class VodafoneStationRouter(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
+    def _device_evaluate_status(
+        self, device: VodafoneStationDevice
+    ) -> tuple[datetime | None, bool]:
+        """Evaluate status consider home and last activity."""
+
+        utc_point_in_time = dt_util.utcnow()
+
+        if device.connected:
+            return utc_point_in_time, True
+
+        if (
+            self.data
+            and self.data.devices
+            and (stored_device := self.data.devices.get(device.mac))
+        ):
+            consider_home_evaluated = False
+            update_time = stored_device.update_time
+            if update_time:
+                consider_home_evaluated = (
+                    utc_point_in_time - update_time
+                ).total_seconds() < CONSIDER_HOME_SECONDS
+
+            return update_time, consider_home_evaluated
+
+        return None, False
+
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
@@ -118,7 +104,10 @@ class VodafoneStationRouter(DataUpdateCoordinator):
         list_devices = await self.api.get_all_devices()
         dev_info: VodafoneStationDevice
         for dev_info in list_devices.values():
-            data_devices[dev_info.mac] = VodafoneStationDeviceInfo(dev_info, self)
+            update_time, dev_info.connected = self._device_evaluate_status(dev_info)
+            data_devices[dev_info.mac] = VodafoneStationDeviceInfo(
+                dev_info, update_time
+            )
         data_sensors = await self.api.get_user_data()
 
         await self.api.logout()
