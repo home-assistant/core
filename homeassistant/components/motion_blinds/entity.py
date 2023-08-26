@@ -20,7 +20,7 @@ from .gateway import device_name
 _T = TypeVar("_T")
 
 
-class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
+class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
     """Representation of a Motion Blind entity."""
 
     _attr_has_entity_name = True

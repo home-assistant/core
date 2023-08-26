@@ -55,7 +55,6 @@ async def async_setup_entry(
 class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
     """Representation of a Motion Battery Sensor."""
 
-    _attr_translation_key = "battery"
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
@@ -108,7 +107,6 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
 class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
     """Representation of a Motion Signal Strength Sensor."""
 
-    _attr_translation_key = "signal_strength"
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_registry_enabled_default = False
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
