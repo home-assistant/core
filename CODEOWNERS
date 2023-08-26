@@ -367,7 +367,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/evil_genius_labs/ @balloob
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
-/homeassistant/components/eyeonwater/ @disforw @kdeyev
+/homeassistant/components/eyeonwater/ @disforw
 /homeassistant/components/ezviz/ @RenierM26 @baqs
 /tests/components/ezviz/ @RenierM26 @baqs
 /homeassistant/components/faa_delays/ @ntilley905
