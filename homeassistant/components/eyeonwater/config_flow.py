@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
+from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -12,7 +13,6 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
-from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 CONF_EOW_HOSTNAME_COM = "eyeonwater.com"
 CONF_EOW_HOSTNAME_CA = "eyeonwater.ca"
@@ -32,14 +32,10 @@ def create_account_from_config(
 ) -> Account:
     """Create account login from config."""
     CountryCode = hass.config.country
-    if CountryCode == "US":
-        eow_hostname = CONF_EOW_HOSTNAME_COM
-    elif CountryCode == "CA":
+    if CountryCode == "CA":
         eow_hostname = CONF_EOW_HOSTNAME_CA
     else:
-        raise CannotConnect(
-            f"Unsupported country ({CountryCode}) setup in HomeAssistant."
-        )
+        eow_hostname = CONF_EOW_HOSTNAME_COM
 
     metric_measurement_system = hass.config.units is METRIC_SYSTEM
     username = data[CONF_USERNAME]
