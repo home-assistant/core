@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
