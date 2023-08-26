@@ -24,9 +24,7 @@ async def test_entity_state_attrs(
     assert await setup_mocked_integration(hass)
 
     # Get all switch entities
-    assert (
-        sorted(hass.states.async_all("switch"), key=lambda s: s.entity_id) == snapshot
-    )
+    assert hass.states.async_all("switch") == snapshot
 
 
 @pytest.mark.parametrize(

@@ -4,14 +4,14 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i4 eDrive40 Climate',
+        'friendly_name': 'iX xDrive50 Climate',
         'icon': 'mdi:fan',
       }),
       'context': <ANY>,
-      'entity_id': 'switch.i4_edrive40_climate',
+      'entity_id': 'switch.ix_xdrive50_climate',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'on',
+      'state': 'off',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -28,14 +28,14 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Climate',
+        'friendly_name': 'i4 eDrive40 Climate',
         'icon': 'mdi:fan',
       }),
       'context': <ANY>,
-      'entity_id': 'switch.ix_xdrive50_climate',
+      'entity_id': 'switch.i4_edrive40_climate',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'off',
+      'state': 'on',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

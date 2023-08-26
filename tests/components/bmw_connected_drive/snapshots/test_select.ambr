@@ -4,7 +4,35 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'i3 (+ REX) Charging Mode',
+        'friendly_name': 'iX xDrive50 AC Charging Limit',
+        'icon': 'mdi:current-ac',
+        'options': list([
+          '6',
+          '7',
+          '8',
+          '9',
+          '10',
+          '11',
+          '12',
+          '13',
+          '14',
+          '15',
+          '16',
+          '20',
+          '32',
+        ]),
+        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'select.ix_xdrive50_ac_charging_limit',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': '16',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'attribution': 'Data provided by MyBMW',
+        'friendly_name': 'iX xDrive50 Charging Mode',
         'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
@@ -12,10 +40,10 @@
         ]),
       }),
       'context': <ANY>,
-      'entity_id': 'select.i3_rex_charging_mode',
+      'entity_id': 'select.ix_xdrive50_charging_mode',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'DELAYED_CHARGING',
+      'state': 'IMMEDIATE_CHARGING',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -64,35 +92,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 AC Charging Limit',
-        'icon': 'mdi:current-ac',
-        'options': list([
-          '6',
-          '7',
-          '8',
-          '9',
-          '10',
-          '11',
-          '12',
-          '13',
-          '14',
-          '15',
-          '16',
-          '20',
-          '32',
-        ]),
-        'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-      'context': <ANY>,
-      'entity_id': 'select.ix_xdrive50_ac_charging_limit',
-      'last_changed': <ANY>,
-      'last_updated': <ANY>,
-      'state': '16',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'attribution': 'Data provided by MyBMW',
-        'friendly_name': 'iX xDrive50 Charging Mode',
+        'friendly_name': 'i3 (+ REX) Charging Mode',
         'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
@@ -100,10 +100,10 @@
         ]),
       }),
       'context': <ANY>,
-      'entity_id': 'select.ix_xdrive50_charging_mode',
+      'entity_id': 'select.i3_rex_charging_mode',
       'last_changed': <ANY>,
       'last_updated': <ANY>,
-      'state': 'IMMEDIATE_CHARGING',
+      'state': 'DELAYED_CHARGING',
     }),
   ])
 # ---
