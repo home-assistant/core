@@ -21,19 +21,19 @@
         'api_key': '**REDACTED**',
         'latitude': '**REDACTED**',
         'longitude': '**REDACTED**',
-        'radius': 75,
       }),
       'disabled_by': None,
       'domain': 'airnow',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'options': dict({
+        'radius': 75,
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---
