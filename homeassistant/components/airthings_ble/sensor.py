@@ -174,10 +174,10 @@ class AirthingsSensor(
                 )
             },
             name=name,
-            manufacturer=airthings_device.manufacturer,  # type: ignore[attr-defined]
+            manufacturer=airthings_device.manufacturer,
             hw_version=airthings_device.hw_version,
             sw_version=airthings_device.sw_version,
-            model=airthings_device.model,  # type: ignore[attr-defined]
+            model=airthings_device.model,
         )
 
     @property
