@@ -39,17 +39,16 @@ TDV_ENTITY_ID = "cover.remootio"
 
 _LOGGER = logging.getLogger(__name__)
 
-remootio_client_state_change_listeners: list[Listener[StateChange]] = []
-remootio_client_event_listeners: list[Listener[Event]] = []
-remootio_client: Mock = None
-
 
 @patch("homeassistant.components.remootio.create_client")
 async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the opening of the Remootio controlled device."""
-    global remootio_client
+    state_change_listeners: list[Listener[StateChange]] = []
+    event_listeners: list[Listener[Event]] = []
+    remootio_client: Mock = _initialize_remootio_client(
+        state_change_listeners, event_listeners
+    )
 
-    remootio_client = _initialize_remootio_client()
     type(remootio_client).state = PropertyMock(return_value=State.CLOSED)
 
     remootio_create_client.return_value = remootio_client
@@ -93,9 +92,12 @@ async def test_open_when_closed(remootio_create_client: Mock, hass: HomeAssistan
 @patch("homeassistant.components.remootio.create_client")
 async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the opening of the Remootio controlled device when it is open. In this case no state change should be occur."""
-    global remootio_client
+    state_change_listeners: list[Listener[StateChange]] = []
+    event_listeners: list[Listener[Event]] = []
+    remootio_client: Mock = _initialize_remootio_client(
+        state_change_listeners, event_listeners
+    )
 
-    remootio_client = _initialize_remootio_client()
     type(remootio_client).state = PropertyMock(return_value=State.OPEN)
 
     remootio_create_client.return_value = remootio_client
@@ -137,9 +139,12 @@ async def test_open_when_open(remootio_create_client: Mock, hass: HomeAssistant)
 @patch("homeassistant.components.remootio.create_client")
 async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the closing of the Remootio controlled device."""
-    global remootio_client
+    state_change_listeners: list[Listener[StateChange]] = []
+    event_listeners: list[Listener[Event]] = []
+    remootio_client: Mock = _initialize_remootio_client(
+        state_change_listeners, event_listeners
+    )
 
-    remootio_client = _initialize_remootio_client()
     type(remootio_client).state = PropertyMock(return_value=State.OPEN)
 
     remootio_create_client.return_value = remootio_client
@@ -183,9 +188,12 @@ async def test_close_when_open(remootio_create_client: Mock, hass: HomeAssistant
 @patch("homeassistant.components.remootio.create_client")
 async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the closing the Remootio controlled device when it is closed. In this case no state change should be occur."""
-    global remootio_client
+    state_change_listeners: list[Listener[StateChange]] = []
+    event_listeners: list[Listener[Event]] = []
+    remootio_client: Mock = _initialize_remootio_client(
+        state_change_listeners, event_listeners
+    )
 
-    remootio_client = _initialize_remootio_client()
     type(remootio_client).state = PropertyMock(return_value=State.CLOSED)
 
     remootio_create_client.return_value = remootio_client
@@ -227,9 +235,12 @@ async def test_close_when_closed(remootio_create_client: Mock, hass: HomeAssista
 @patch("homeassistant.components.remootio.create_client")
 async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant):
     """Tests the handling of the LEFT_OPEN event fired by Remootio if the controlled device has been left open."""
-    global remootio_client
+    state_change_listeners: list[Listener[StateChange]] = []
+    event_listeners: list[Listener[Event]] = []
+    remootio_client: Mock = _initialize_remootio_client(
+        state_change_listeners, event_listeners
+    )
 
-    remootio_client = _initialize_remootio_client()
     type(remootio_client).state = PropertyMock(return_value=State.OPEN)
 
     remootio_create_client.return_value = remootio_client
@@ -385,16 +396,20 @@ async def _remootio_client_trigger_event(event: Event):
     await _remootio_client_invoke_event_listeners(event)
 
 
-def _initialize_remootio_client() -> Mock:
+def _initialize_remootio_client(
+    state_change_listeners: list[Listener[StateChange]],
+    event_listeners: list[Listener[Event]],
+) -> Mock:
+    result: Mock = MagicMock(RemootioClient)
+    type(result).state = PropertyMock(return_value=State.UNKNOWN)
+
     async def add_state_change_listener(state_change_listener: Listener[StateChange]):
         _LOGGER.debug("add_state_change_listener invoked.")
-        global remootio_client_state_change_listeners
-        remootio_client_state_change_listeners.append(state_change_listener)
+        state_change_listeners.append(state_change_listener)
 
     async def add_event_listener(event_listener: Listener[Event]):
         _LOGGER.debug("add_event_listener invoked.")
-        global remootio_client_event_listeners
-        remootio_client_event_listeners.append(event_listener)
+        event_listeners.append(event_listener)
 
     async def trigger_state_update():
         _LOGGER.debug("trigger_state_update invoked.")
@@ -402,9 +417,7 @@ def _initialize_remootio_client() -> Mock:
 
     async def trigger_open():
         _LOGGER.debug("trigger_open invoked.")
-        global remootio_client
-
-        if remootio_client.state == State.CLOSED:
+        if result.state == State.CLOSED:
             await _remootio_client_change_state(State.OPENING)
 
         await _remootio_client_change_state(State.OPEN)
@@ -412,18 +425,11 @@ def _initialize_remootio_client() -> Mock:
     async def trigger_close():
         _LOGGER.debug("trigger_close invoked.")
 
-        if remootio_client.state == State.OPEN:
+        if result.state == State.OPEN:
             await _remootio_client_change_state(State.CLOSING)
 
         await _remootio_client_change_state(State.CLOSED)
 
-    global remootio_client_state_change_listeners, remootio_client_event_listeners
-
-    remootio_client_state_change_listeners = []
-    remootio_client_event_listeners = []
-
-    result: Mock = MagicMock(RemootioClient)
-    type(result).state = PropertyMock(return_value=State.UNKNOWN)
     result.trigger_state_update = AsyncMock(side_effect=trigger_state_update)
     result.trigger_open = AsyncMock(side_effect=trigger_open)
     result.trigger_close = AsyncMock(side_effect=trigger_close)
