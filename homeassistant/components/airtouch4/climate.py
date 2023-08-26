@@ -203,7 +203,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         self._attr_unique_id = group_number
         self._airtouch = coordinator.airtouch
         self._info = info
-        self._unit = self._airtouch.GetGroupByGroupNumber(self._group_number)
+        self._unit = self._airtouch.GetGroupByGroupNumber(group_number)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, group_number)},
             manufacturer="Airtouch",
