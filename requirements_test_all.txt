@@ -4,13 +4,13 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.3.0
+AEMET-OpenData==0.4.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.16
+AIOSomecomfort==0.0.17
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -515,7 +515,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.93.0
+dbus-fast==1.94.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -747,7 +747,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.69.0
+hass-nabucasa==0.70.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
@@ -801,7 +801,7 @@ iaqualink==0.5.0
 ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
-ical==4.5.4
+ical==5.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1608,6 +1608,7 @@ pytraccar==1.0.0
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
 
+# homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1680,7 +1681,7 @@ renault-api==0.2.0
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.7
+reolink-aio==0.7.8
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1755,7 +1756,7 @@ simplehound==0.3
 simplepush==2.1.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==2023.05.0
+simplisafe-python==2023.08.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1940,7 +1941,7 @@ voip-utils==0.1.0
 volvooncall==0.10.3
 
 # homeassistant.components.verisure
-vsure==2.6.4
+vsure==2.6.6
 
 # homeassistant.components.vulcan
 vulcan-api==2.3.0

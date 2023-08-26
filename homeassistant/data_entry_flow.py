@@ -439,7 +439,7 @@ class FlowManager(abc.ABC):
         """Set up preview for a flow handler."""
         if flow.handler not in self._preview:
             self._preview.add(flow.handler)
-            flow.async_setup_preview(self.hass)
+            await flow.async_setup_preview(self.hass)
 
 
 class FlowHandler:
@@ -649,9 +649,8 @@ class FlowHandler:
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
 
-    @callback
     @staticmethod
-    def async_setup_preview(hass: HomeAssistant) -> None:
+    async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
 
