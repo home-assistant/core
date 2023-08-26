@@ -23,6 +23,7 @@ class VodafoneStationDeviceInfo:
 
     device: VodafoneStationDevice
     update_time: datetime | None
+    home: bool
 
 
 @dataclass(slots=True)
@@ -59,29 +60,34 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             update_interval=timedelta(seconds=30),
         )
 
-    def _device_evaluate_status(
-        self, device: VodafoneStationDevice
+    def _calculate_update_time_and_consider_home(
+        self, device: VodafoneStationDevice, utc_point_in_time: datetime
     ) -> tuple[datetime | None, bool]:
-        """Evaluate status consider home and last activity."""
+        """Return update time and consider home.
 
-        utc_point_in_time = dt_util.utcnow()
+        If the device is connected, return the current time and True.
 
+        If the device is not connected, return the last update time and
+        whether the device was considered home at that time.
+
+        If the device is not connected and there is no last update time,
+        return None and False.
+        """
         if device.connected:
             return utc_point_in_time, True
 
         if (
-            self.data
-            and self.data.devices
-            and (stored_device := self.data.devices.get(device.mac))
+            (data := self.data)
+            and (stored_device := data.devices.get(device.mac))
+            and (update_time := stored_device.update_time)
         ):
-            consider_home_evaluated = False
-            update_time = stored_device.update_time
-            if update_time:
-                consider_home_evaluated = (
-                    utc_point_in_time - update_time
-                ).total_seconds() < CONSIDER_HOME_SECONDS
-
-            return update_time, consider_home_evaluated
+            return (
+                update_time,
+                (
+                    (utc_point_in_time - update_time).total_seconds()
+                    < CONSIDER_HOME_SECONDS
+                ),
+            )
 
         return None, False
 
@@ -99,19 +105,18 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         if not logged:
             raise ConfigEntryAuthFailed
 
-        data_devices = {}
-        data_sensors = {}
-        list_devices = await self.api.get_all_devices()
-        dev_info: VodafoneStationDevice
-        for dev_info in list_devices.values():
-            update_time, dev_info.connected = self._device_evaluate_status(dev_info)
-            data_devices[dev_info.mac] = VodafoneStationDeviceInfo(
-                dev_info, update_time
+        utc_point_in_time = dt_util.utcnow()
+        data_devices = {
+            dev_info.mac: VodafoneStationDeviceInfo(
+                dev_info,
+                *self._calculate_update_time_and_consider_home(
+                    dev_info, utc_point_in_time
+                ),
             )
+            for dev_info in (await self.api.get_all_devices()).values()
+        }
         data_sensors = await self.api.get_user_data()
-
         await self.api.logout()
-
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     async def async_send_signal_device_update(self, new_device: bool) -> None:

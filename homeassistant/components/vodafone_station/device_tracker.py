@@ -89,7 +89,7 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return self._device.connected
+        return self._device_info.home
 
     @property
     def source_type(self) -> SourceType:
