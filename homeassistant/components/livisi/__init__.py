@@ -16,7 +16,12 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from .const import DOMAIN
 from .coordinator import LivisiDataUpdateCoordinator
 
-PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SWITCH,
+    Platform.EVENT,
+]
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,9 +38,11 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=coordinator.serial_number,
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Livisi",
+        model=f"SHC {coordinator.controller_type}",
+        sw_version=coordinator.os_version,
         name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",
     )
 

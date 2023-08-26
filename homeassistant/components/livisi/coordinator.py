@@ -48,6 +48,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.devices: set[str] = set()
         self.rooms: dict[str, Any] = {}
         self.serial_number: str = ""
+        self.os_version: str = ""
         self.controller_type: str = ""
         self.is_avatar: bool = False
         self.port: int = 0
@@ -86,6 +87,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             self.is_avatar = False
         self.controller_type = controller_type
         self.serial_number = controller_data["serialNumber"]
+        self.os_version = controller_data["osVersion"]
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""
@@ -110,18 +112,26 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
-        self._async_dispatcher_send(
-            LIVISI_STATE_CHANGE, event_data.source, event_data.onState
-        )
-        self._async_dispatcher_send(
-            LIVISI_STATE_CHANGE, event_data.source, event_data.vrccData
-        )
-        self._async_dispatcher_send(
-            LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
-        )
-        self._async_dispatcher_send(
-            LIVISI_STATE_CHANGE, event_data.source, event_data.isOpen
-        )
+        if event_data.onState is not None:
+            self._async_dispatcher_send(
+                LIVISI_STATE_CHANGE, event_data.source, event_data.onState
+            )
+        elif event_data.vrccData is not None:
+            self._async_dispatcher_send(
+                LIVISI_STATE_CHANGE, event_data.source, event_data.vrccData
+            )
+        elif event_data.isReachable is not None:
+            self._async_dispatcher_send(
+                LIVISI_REACHABILITY_CHANGE, event_data.source, event_data.isReachable
+            )
+        elif event_data.isOpen is not None:
+            self._async_dispatcher_send(
+                LIVISI_STATE_CHANGE, event_data.source, event_data.isOpen
+            )
+        else:
+            self._async_dispatcher_send(
+                LIVISI_STATE_CHANGE, event_data.source, event_data.properties
+            )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
