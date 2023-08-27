@@ -16,28 +16,28 @@ from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
-BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
-    "system_debug": BinarySensorEntityDescription(
+BINARY_SENSORS: Final[list[BinarySensorEntityDescription]] = [
+    BinarySensorEntityDescription(
         key="system_debug",
         translation_key="nextcloud_system_debug",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "system_enable_avatars": BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="system_enable_avatars",
         translation_key="nextcloud_system_enable_avatars",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "system_enable_previews": BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="system_enable_previews",
         translation_key="nextcloud_system_enable_previews",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "system_filelocking.enabled": BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="system_filelocking.enabled",
         translation_key="nextcloud_system_filelocking_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -47,9 +47,9 @@ async def async_setup_entry(
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            NextcloudBinarySensor(coordinator, name, entry, BINARY_SENSORS[name])
-            for name in coordinator.data
-            if name in BINARY_SENSORS
+            NextcloudBinarySensor(coordinator, entry, sensor)
+            for sensor in BINARY_SENSORS
+            if sensor.key in coordinator.data
         ]
     )
 
@@ -60,5 +60,5 @@ class NextcloudBinarySensor(NextcloudEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        val = self.coordinator.data.get(self.item)
+        val = self.coordinator.data.get(self.entity_description.key)
         return val is True or val == "yes"
