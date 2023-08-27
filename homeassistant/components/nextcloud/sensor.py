@@ -590,8 +590,6 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
         val = self.coordinator.data.get(self.item)
-        if self.item == "system cpuload":
-            return val[0] if isinstance(val, list) else None
         if (
             getattr(self.entity_description, "device_class", None)
             == SensorDeviceClass.TIMESTAMP
