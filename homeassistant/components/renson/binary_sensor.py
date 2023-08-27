@@ -133,4 +133,4 @@ class RensonBinarySensor(RensonEntity, BinarySensorEntity):
 
         self._attr_is_on = self.api.parse_value(value, DataType.BOOLEAN)
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
