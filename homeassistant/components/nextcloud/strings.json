@@ -64,7 +64,7 @@
         "name": "Free space"
       },
       "nextcloud_system_cpuload_1": {
-        "name": "CPU Load last 1 minute"
+        "name": "CPU Load last minute"
       },
       "nextcloud_system_cpuload_15": {
         "name": "CPU Load last 15 minutes"
