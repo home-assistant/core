@@ -9,6 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    CONF_ENABLE_VOLUME_HOOKS,
     CONF_ROON_ID,
     ROON_APPINFO,
     ROON_EVENT,
@@ -30,12 +31,17 @@ class RoonServer:
         self.hass = hass
         self.roonapi = None
         self.roon_id = None
+        self.volume_hook = False
         self.all_player_ids = set()
         self.all_playlists = []
         self.offline_devices = set()
         self._exit = False
         self._roon_name_by_id = {}
         self._id_by_roon_name = {}
+
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(self.update_listener)
+        )
 
     async def async_setup(self, tries=0):
         """Set up a roon server based on config parameters."""
@@ -59,6 +65,11 @@ class RoonServer:
             return RoonApi(ROON_APPINFO, token, host, port, blocking_init=True)
 
         core_id = self.config_entry.data.get(CONF_ROON_ID)
+
+        self.volume_hook = self.config_entry.options.get(
+            CONF_ENABLE_VOLUME_HOOKS, False
+        )
+        _LOGGER.error("Volume_hook=%s", self.volume_hook)
 
         self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
 
@@ -87,6 +98,14 @@ class RoonServer:
         self.stop_roon()
         return True
 
+    async def update_listener(self, hass, config_entry):
+        """Handle options update."""
+        self.volume_hook = self.config_entry.options.get(
+            CONF_ENABLE_VOLUME_HOOKS, False
+        )
+        _LOGGER.error("%s", self.config_entry.options)
+        _LOGGER.error("UPDATE LISTENER volume_hook=%s", self.volume_hook)
+
     @property
     def zones(self):
         """Return list of zones."""
@@ -97,8 +116,11 @@ class RoonServer:
         self._roon_name_by_id[entity_id] = roon_name
         self._id_by_roon_name[roon_name] = entity_id
 
-    def add_player_volume_control(self, entity_id, roon_name):
+    def add_player_volume_hook(self, entity_id, roon_name):
         """Register a volume controller for this player in roon."""
+        if not self.volume_hook:
+            return
+
         self.roonapi.register_volume_control(
             entity_id,
             roon_name,
