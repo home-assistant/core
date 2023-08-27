@@ -16,7 +16,10 @@ GATEWAY_DISCOVERY_IMPORT_PATH = "homeassistant.components.screenlogic.coordinato
 
 
 def num_key_string_to_int(data: dict) -> None:
-    """Convert all string number dict keys to integer. This needed for screenlogicpy's data dict format."""
+    """Convert all string number dict keys to integer.
+
+    This needed for screenlogicpy's data dict format.
+    """
     rpl = []
     for key, value in data.items():
         if isinstance(value, dict):

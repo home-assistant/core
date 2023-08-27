@@ -108,7 +108,11 @@ def get_ha_unit(entity_data: dict) -> StrEnum | str | None:
 def realize_path_template(
     template_path: ScreenLogicDataPathTemplate, data_path: ScreenLogicDataPath
 ) -> ScreenLogicDataPath:
-    """Construct new ScreenLogicDataPath from an existing data_path using template_path to pattern-match."""
+    """Create a new data path using a template and an existing data path.
+
+    Construct new ScreenLogicDataPath from data_path using
+    template_path to specify values from data_path.
+    """
     if not data_path or len(data_path) < 3:
         raise KeyError(
             f"Missing or invalid required parameter: 'data_path' for template path '{template_path}'"
