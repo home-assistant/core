@@ -10,7 +10,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 leaf = True
                 result.update(self._get_data_points(value, key_path, leaf))
             else:
-                result[f"{DOMAIN}_{key_path}{key}"] = value
+                result[f"{key_path}{key}"] = value
                 leaf = False
         return result
 
