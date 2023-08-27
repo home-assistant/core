@@ -18,18 +18,16 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: NextcloudDataUpdateCoordinator,
-        item: str,
         entry: ConfigEntry,
-        desc: EntityDescription,
+        description: EntityDescription,
     ) -> None:
         """Initialize the Nextcloud sensor."""
         super().__init__(coordinator)
-        self.item = item
-        self._attr_unique_id = f"{coordinator.url}#{item}"
+        self._attr_unique_id = f"{coordinator.url}#{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.url,
             identifiers={(DOMAIN, entry.entry_id)},
             name=urlparse(coordinator.url).netloc,
             sw_version=coordinator.data.get("system_version"),
         )
-        self.entity_description = desc
+        self.entity_description = description
