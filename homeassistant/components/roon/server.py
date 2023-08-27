@@ -100,11 +100,18 @@ class RoonServer:
 
     async def update_listener(self, hass, config_entry):
         """Handle options update."""
-        self.volume_hook = self.config_entry.options.get(
-            CONF_ENABLE_VOLUME_HOOKS, False
-        )
-        _LOGGER.error("%s", self.config_entry.options)
-        _LOGGER.error("UPDATE LISTENER volume_hook=%s", self.volume_hook)
+        volume_hook = self.config_entry.options.get(CONF_ENABLE_VOLUME_HOOKS, False)
+
+        if self.volume_hook == volume_hook:
+            return
+
+        self.volume_hook = volume_hook
+
+        if self.volume_hook:
+            _LOGGER.error("Enable hook %s", self.volume_hook)
+
+        else:
+            _LOGGER.error("Disable hook %s", self.volume_hook)
 
     @property
     def zones(self):
