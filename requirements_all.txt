@@ -706,7 +706,7 @@ easyenergy==0.3.0
 ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
-ecoaliface==0.4.0
+ecoaliface==0.6.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
