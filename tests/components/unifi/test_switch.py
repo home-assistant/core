@@ -1345,6 +1345,9 @@ async def test_poe_port_switches(
     ent_reg.async_update_entity(
         entity_id="switch.mock_name_port_1_poe", disabled_by=None
     )
+    ent_reg.async_update_entity(
+        entity_id="switch.mock_name_port_2_poe", disabled_by=None
+    )
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -1378,6 +1381,7 @@ async def test_poe_port_switches(
         {"entity_id": "switch.mock_name_port_1_poe"},
         blocking=True,
     )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][2] == {
@@ -1391,10 +1395,20 @@ async def test_poe_port_switches(
         {"entity_id": "switch.mock_name_port_1_poe"},
         blocking=True,
     )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.mock_name_port_2_poe"},
+        blocking=True,
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[1][2] == {
-        "port_overrides": [{"poe_mode": "auto", "port_idx": 1, "portconf_id": "1a1"}]
+        "port_overrides": [
+            {"poe_mode": "auto", "port_idx": 1, "portconf_id": "1a1"},
+            {"poe_mode": "off", "port_idx": 2, "portconf_id": "1a2"},
+        ]
     }
 
     # Availability signalling

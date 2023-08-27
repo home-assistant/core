@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 import ssl
 from types import MappingProxyType
@@ -322,7 +321,7 @@ class UniFiController:
 
     @callback
     def async_queue_poe_port_command(
-        self, device_id: str, port_id: int, mode: str
+        self, device_id: str, port_idx: int, poe_mode: str
     ) -> None:
         """Queue commands to execute them together per device."""
         if self._cancel_poe_command:
@@ -330,17 +329,15 @@ class UniFiController:
             self._cancel_poe_command = None
 
         device_queue = self.poe_command_queue.setdefault(device_id, {})
-        device_queue[port_id] = mode
+        device_queue[port_idx] = poe_mode
 
         async def async_execute_poe_port_command(now: datetime) -> None:
             """Execute previously queued commands."""
-            device_commands = deepcopy(self.poe_command_queue)
+            queue = self.poe_command_queue.copy()
             self.poe_command_queue.clear()
-            for device_id in device_commands:
+            for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
-                commands = [
-                    (idx, mode) for idx, mode in device_commands[device_id].items()
-                ]
+                commands = [(idx, mode) for idx, mode in device_commands.items()]
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )
@@ -348,8 +345,7 @@ class UniFiController:
         self._cancel_poe_command = async_track_point_in_utc_time(
             self.hass,
             async_execute_poe_port_command,
-            dt_util.utcnow(),
-            # dt_util.utcnow() + timedelta(seconds=5),
+            dt_util.utcnow() + timedelta(seconds=5),
         )
 
     async def async_update_device_registry(self) -> None:
