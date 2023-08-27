@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
@@ -28,7 +28,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -213,12 +217,14 @@ class TransmissionClient:
         self.hass = hass
         self.config_entry = config_entry
         self.tm_api: transmission_rpc.Client = None
-        self._tm_data: TransmissionData = None  # type: ignore[assignment]
+        self._tm_data: TransmissionData | None = None
         self.unsub_timer: Callable[[], None] | None = None
 
     @property
     def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
+        if self._tm_data is None:
+            raise HomeAssistantError("data not initialized")
         return self._tm_data
 
     async def async_setup(self) -> None:
@@ -331,12 +337,12 @@ class TransmissionClient:
                 self.config_entry, options=options
             )
 
-    def set_scan_interval(self, scan_interval) -> None:
+    def set_scan_interval(self, scan_interval: float) -> None:
         """Update scan interval."""
 
-        def refresh(event_time):
+        def refresh(event_time: datetime):
             """Get the latest data from Transmission."""
-            self._tm_data.update()
+            self.api.update()
 
         if self.unsub_timer is not None:
             self.unsub_timer()
