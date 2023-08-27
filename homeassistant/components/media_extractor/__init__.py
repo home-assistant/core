@@ -102,7 +102,10 @@ class MediaExtractor:
         ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
 
         try:
-            all_media = ydl.extract_info(self.get_media_url(), process=False)
+            if ('http' in self.get_media_url()):
+                all_media = ydl.extract_info(self.get_media_url(), process=False)
+            else:
+                all_media = ydl.extract_info("ytsearch: "+self.get_media_url(), process=False)
         except DownloadError as err:
             # This exception will be logged by youtube-dl itself
             raise MEDownloadException() from err
@@ -128,9 +131,12 @@ class MediaExtractor:
                 raise MEQueryException() from err
 
             if "formats" in requested_stream:
-                best_stream = requested_stream["formats"][
-                    len(requested_stream["formats"]) - 1
-                ]
+                widthmax = 0
+                for formats in requested_stream["formats"]:
+                    if ("width" in formats and formats["width"] is not None and widthmax<int(str(formats["width"])) and "vcodec" in formats and "none" not in formats["vcodec"] and "acodec" in formats and "none" not in formats["acodec"] and "video_ext" in formats and formats["video_ext"] == "mp4" and "url" in formats and "manifest.googlevideo.com" not in formats["url"]):
+                        best_stream = formats
+                        widthmax=int(formats["width"])
+                
                 return best_stream["url"]
             return requested_stream["url"]
 
