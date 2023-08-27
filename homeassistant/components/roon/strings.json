@@ -45,7 +45,7 @@
       "init": {
         "description": "Configure general device settings",
         "data": {
-          "roon_volume_controls": "Enable volume control hook"
+          "roon_volume_hooks": "Enable volume control hook"
         }
       }
     }
