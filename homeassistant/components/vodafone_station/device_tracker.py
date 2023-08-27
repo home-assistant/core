@@ -1,9 +1,6 @@
 """Support for Vodafone Station routers."""
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 from aiovodafone import VodafoneStationDevice
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
@@ -115,13 +112,3 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._device_mac
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return additional attributes of the device."""
-        connection_type = self._device.connection_type
-        attrs: dict[str, Any] = {"connection_type": connection_type}
-        if "Wifi" in connection_type:
-            attrs["wifi_band"] = self._device.wifi
-        attrs["last_time_reachable"] = self._device_info.update_time
-        return attrs
