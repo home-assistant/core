@@ -1,6 +1,7 @@
 """Support for the Transmission BitTorrent client API."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
@@ -159,7 +160,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-async def get_api(hass, entry):
+async def get_api(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> transmission_rpc.Client:
     """Get Transmission client."""
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
@@ -205,13 +208,13 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
 class TransmissionClient:
     """Transmission Client Object."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
         self.tm_api: transmission_rpc.Client = None
-        self._tm_data: TransmissionData = None
-        self.unsub_timer = None
+        self._tm_data: TransmissionData = None  # type: ignore[assignment]
+        self.unsub_timer: Callable[[], None] | None = None
 
     @property
     def api(self) -> TransmissionData:
@@ -222,7 +225,7 @@ class TransmissionClient:
         """Set up the Transmission client."""
 
         try:
-            self.tm_api = await get_api(self.hass, self.config_entry.data)
+            self.tm_api = await get_api(self.hass, dict(self.config_entry.data))
         except CannotConnect as error:
             raise ConfigEntryNotReady from error
         except (AuthenticationError, UnknownError) as error:
@@ -328,7 +331,7 @@ class TransmissionClient:
                 self.config_entry, options=options
             )
 
-    def set_scan_interval(self, scan_interval):
+    def set_scan_interval(self, scan_interval) -> None:
         """Update scan interval."""
 
         def refresh(event_time):
