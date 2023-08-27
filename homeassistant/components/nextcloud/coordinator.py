@@ -54,6 +54,11 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     key_path += f"{key}_"
                 leaf = True
                 result.update(self._get_data_points(value, key_path, leaf))
+            elif key == "cpuload" and isinstance(value, list):
+                result[f"{key_path}{key}_1"] = value[0]
+                result[f"{key_path}{key}_5"] = value[1]
+                result[f"{key_path}{key}_15"] = value[2]
+                leaf = False
             else:
                 result[f"{key_path}{key}"] = value
                 leaf = False
