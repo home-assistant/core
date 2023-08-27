@@ -36,10 +36,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time,
-    async_track_time_interval,
-)
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -331,7 +328,7 @@ class UniFiController:
         device_queue = self.poe_command_queue.setdefault(device_id, {})
         device_queue[port_idx] = poe_mode
 
-        async def async_execute_poe_port_command(now: datetime) -> None:
+        async def async_execute_command(now: datetime) -> None:
             """Execute previously queued commands."""
             queue = self.poe_command_queue.copy()
             self.poe_command_queue.clear()
@@ -342,11 +339,7 @@ class UniFiController:
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )
 
-        self._cancel_poe_command = async_track_point_in_utc_time(
-            self.hass,
-            async_execute_poe_port_command,
-            dt_util.utcnow() + timedelta(seconds=5),
-        )
+        self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
