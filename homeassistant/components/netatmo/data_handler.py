@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import aiohttp
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -11,6 +10,7 @@ import logging
 from time import time
 from typing import Any
 
+import aiohttp
 import pyatmo
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
