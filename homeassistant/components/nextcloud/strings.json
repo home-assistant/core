@@ -268,7 +268,7 @@
         "name": "Updates available"
       },
       "system_cpuload_1": {
-        "name": "CPU Load last 1 minutes"
+        "name": "CPU Load last 1 minute"
       },
       "system_cpuload_15": {
         "name": "CPU Load last 15 minutes"
