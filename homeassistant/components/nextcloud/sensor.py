@@ -479,6 +479,12 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
     ),
+    "system_theme": SensorEntityDescription(
+        key="system_theme",
+    ),
+    "system_version": SensorEntityDescription(
+        key="system_version",
+    ),
 }
 
 
