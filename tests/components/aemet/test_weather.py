@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.const import ATTRIBUTION, DOMAIN
@@ -36,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from .util import aemet_requests_mock, async_init_integration
+from .util import async_init_integration, mock_api_call
 
 from tests.typing import WebSocketGenerator
 
@@ -191,8 +190,10 @@ async def test_forecast_subscription(
 
     assert forecast1 == snapshot
 
-    with requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
         await hass.async_block_till_done()
         msg = await client.receive_json()

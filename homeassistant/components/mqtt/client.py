@@ -361,7 +361,7 @@ class EnsureJobAfterCooldown:
         except asyncio.CancelledError:
             pass
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error cleaning up task", exc_info=True)
+            _LOGGER.exception("Error cleaning up task")
 
 
 class MQTT:

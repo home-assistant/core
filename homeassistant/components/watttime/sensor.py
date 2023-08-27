@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -77,13 +78,14 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-
-        self._attr_name = (
-            f"{description.name} ({entry.data[CONF_BALANCING_AUTHORITY_ABBREV]})"
-        )
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._entry = entry
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.data[CONF_BALANCING_AUTHORITY_ABBREV],
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
