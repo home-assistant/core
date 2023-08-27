@@ -28,4 +28,4 @@ class AnovaDescriptionEntity(AnovaEntity):
         """Initialize the entity and declare unique id based on description key."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator._device_unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.device_unique_id}_{description.key}"
