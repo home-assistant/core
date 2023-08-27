@@ -27,95 +27,95 @@ from .entity import NextcloudEntity
 UNIT_OF_LOAD: Final[str] = "load"
 
 SENSORS: Final[dict[str, SensorEntityDescription]] = {
-    "activeUsers last1hour": SensorEntityDescription(
-        key="activeUsers last1hour",
+    "activeUsers_last1hour": SensorEntityDescription(
+        key="activeUsers_last1hour",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:account-multiple",
     ),
-    "activeUsers last24hours": SensorEntityDescription(
-        key="activeUsers last24hours",
+    "activeUsers_last24hours": SensorEntityDescription(
+        key="activeUsers_last24hours",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:account-multiple",
     ),
-    "activeUsers last5minutes": SensorEntityDescription(
-        key="activeUsers last5minutes",
+    "activeUsers_last5minutes": SensorEntityDescription(
+        key="activeUsers_last5minutes",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:account-multiple",
     ),
-    "cache expunges": SensorEntityDescription(
-        key="cache expunges",
+    "cache_expunges": SensorEntityDescription(
+        key="cache_expunges",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache mem_size": SensorEntityDescription(
-        key="cache mem_size",
+    "cache_mem_size": SensorEntityDescription(
+        key="cache_mem_size",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "cache memory_type": SensorEntityDescription(
-        key="cache memory_type",
+    "cache_memory_type": SensorEntityDescription(
+        key="cache_memory_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_entries": SensorEntityDescription(
-        key="cache num_entries",
+    "cache_num_entries": SensorEntityDescription(
+        key="cache_num_entries",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_hits": SensorEntityDescription(
-        key="cache num_hits",
+    "cache_num_hits": SensorEntityDescription(
+        key="cache_num_hits",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_inserts": SensorEntityDescription(
-        key="cache num_inserts",
+    "cache_num_inserts": SensorEntityDescription(
+        key="cache_num_inserts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_misses": SensorEntityDescription(
-        key="cache num_misses",
+    "cache_num_misses": SensorEntityDescription(
+        key="cache_num_misses",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_slots": SensorEntityDescription(
-        key="cache num_slots",
+    "cache_num_slots": SensorEntityDescription(
+        key="cache_num_slots",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache start_time": SensorEntityDescription(
-        key="cache start_time",
+    "cache_start_time": SensorEntityDescription(
+        key="cache_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache ttl": SensorEntityDescription(
-        key="cache ttl",
+    "cache_ttl": SensorEntityDescription(
+        key="cache_ttl",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "database size": SensorEntityDescription(
-        key="database size",
+    "database_size": SensorEntityDescription(
+        key="database_size",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:database",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "database type": SensorEntityDescription(
-        key="database type",
+    "database_type": SensorEntityDescription(
+        key="database_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:database",
     ),
-    "database version": SensorEntityDescription(
-        key="database version",
+    "database_version": SensorEntityDescription(
+        key="database_version",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:database",
     ),
-    "interned_strings_usage buffer_size": SensorEntityDescription(
-        key="interned_strings_usage buffer_size",
+    "interned_strings_usage_buffer_size": SensorEntityDescription(
+        key="interned_strings_usage_buffer_size",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -123,8 +123,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "interned_strings_usage free_memory": SensorEntityDescription(
-        key="interned_strings_usage free_memory",
+    "interned_strings_usage_free_memory": SensorEntityDescription(
+        key="interned_strings_usage_free_memory",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -132,13 +132,13 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "interned_strings_usage number_of_strings": SensorEntityDescription(
-        key="interned_strings_usage number_of_strings",
+    "interned_strings_usage_number_of_strings": SensorEntityDescription(
+        key="interned_strings_usage_number_of_strings",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "interned_strings_usage used_memory": SensorEntityDescription(
-        key="interned_strings_usage used_memory",
+    "interned_strings_usage_used_memory": SensorEntityDescription(
+        key="interned_strings_usage_used_memory",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -146,8 +146,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "jit buffer_free": SensorEntityDescription(
-        key="jit buffer_free",
+    "jit_buffer_free": SensorEntityDescription(
+        key="jit_buffer_free",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -155,8 +155,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "jit buffer_size": SensorEntityDescription(
-        key="jit buffer_size",
+    "jit_buffer_size": SensorEntityDescription(
+        key="jit_buffer_size",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -164,101 +164,101 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "jit kind": SensorEntityDescription(
-        key="jit kind",
+    "jit_kind": SensorEntityDescription(
+        key="jit_kind",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "jit opt_flags": SensorEntityDescription(
-        key="jit opt_flags",
+    "jit_opt_flags": SensorEntityDescription(
+        key="jit_opt_flags",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "jit opt_level": SensorEntityDescription(
-        key="jit opt_level",
+    "jit_opt_level": SensorEntityDescription(
+        key="jit_opt_level",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics blacklist_miss_ratio": SensorEntityDescription(
-        key="opcache_statistics blacklist_miss_ratio",
+    "opcache_statistics_blacklist_miss_ratio": SensorEntityDescription(
+        key="opcache_statistics_blacklist_miss_ratio",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    "opcache_statistics blacklist_misses": SensorEntityDescription(
-        key="opcache_statistics blacklist_misses",
+    "opcache_statistics_blacklist_misses": SensorEntityDescription(
+        key="opcache_statistics_blacklist_misses",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics hash_restarts": SensorEntityDescription(
-        key="opcache_statistics hash_restarts",
+    "opcache_statistics_hash_restarts": SensorEntityDescription(
+        key="opcache_statistics_hash_restarts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics hits": SensorEntityDescription(
-        key="opcache_statistics hits",
+    "opcache_statistics_hits": SensorEntityDescription(
+        key="opcache_statistics_hits",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics last_restart_time": SensorEntityDescription(
-        key="opcache_statistics last_restart_time",
+    "opcache_statistics_last_restart_time": SensorEntityDescription(
+        key="opcache_statistics_last_restart_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics manual_restarts": SensorEntityDescription(
-        key="opcache_statistics manual_restarts",
+    "opcache_statistics_manual_restarts": SensorEntityDescription(
+        key="opcache_statistics_manual_restarts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics max_cached_keys": SensorEntityDescription(
-        key="opcache_statistics max_cached_keys",
+    "opcache_statistics_max_cached_keys": SensorEntityDescription(
+        key="opcache_statistics_max_cached_keys",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics misses": SensorEntityDescription(
-        key="opcache_statistics misses",
+    "opcache_statistics_misses": SensorEntityDescription(
+        key="opcache_statistics_misses",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics num_cached_keys": SensorEntityDescription(
-        key="opcache_statistics num_cached_keys",
+    "opcache_statistics_num_cached_keys": SensorEntityDescription(
+        key="opcache_statistics_num_cached_keys",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics num_cached_scripts": SensorEntityDescription(
-        key="opcache_statistics num_cached_scripts",
+    "opcache_statistics_num_cached_scripts": SensorEntityDescription(
+        key="opcache_statistics_num_cached_scripts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics oom_restarts": SensorEntityDescription(
-        key="opcache_statistics oom_restarts",
+    "opcache_statistics_oom_restarts": SensorEntityDescription(
+        key="opcache_statistics_oom_restarts",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "opcache_statistics opcache_hit_rate": SensorEntityDescription(
-        key="opcache_statistics opcache_hit_rate",
+    "opcache_statistics_opcache_hit_rate": SensorEntityDescription(
+        key="opcache_statistics_opcache_hit_rate",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
     ),
-    "opcache_statistics start_time": SensorEntityDescription(
-        key="opcache_statistics start_time",
+    "opcache_statistics_start_time": SensorEntityDescription(
+        key="opcache_statistics_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "server php opcache memory_usage current_wasted_percentage": SensorEntityDescription(
-        key="server php opcache memory_usage current_wasted_percentage",
+    "server_php_opcache_memory_usage_current_wasted_percentage": SensorEntityDescription(
+        key="server_php_opcache_memory_usage_current_wasted_percentage",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:language-php",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
     ),
-    "server php opcache memory_usage free_memory": SensorEntityDescription(
-        key="server php opcache memory_usage free_memory",
+    "server_php_opcache_memory_usage_free_memory": SensorEntityDescription(
+        key="server_php_opcache_memory_usage_free_memory",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -267,8 +267,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "server php opcache memory_usage used_memory": SensorEntityDescription(
-        key="server php opcache memory_usage used_memory",
+    "server_php_opcache_memory_usage_used_memory": SensorEntityDescription(
+        key="server_php_opcache_memory_usage_used_memory",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -277,8 +277,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "server php opcache memory_usage wasted_memory": SensorEntityDescription(
-        key="server php opcache memory_usage wasted_memory",
+    "server_php_opcache_memory_usage_wasted_memory": SensorEntityDescription(
+        key="server_php_opcache_memory_usage_wasted_memory",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -287,15 +287,15 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "server php max_execution_time": SensorEntityDescription(
-        key="server php max_execution_time",
+    "server_php_max_execution_time": SensorEntityDescription(
+        key="server_php_max_execution_time",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
         icon="mdi:language-php",
         native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
-    "server php memory_limit": SensorEntityDescription(
-        key="server php memory_limit",
+    "server_php_memory_limit": SensorEntityDescription(
+        key="server_php_memory_limit",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.CONFIG,
         icon="mdi:language-php",
@@ -303,8 +303,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "server php upload_max_filesize": SensorEntityDescription(
-        key="server php upload_max_filesize",
+    "server_php_upload_max_filesize": SensorEntityDescription(
+        key="server_php_upload_max_filesize",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.CONFIG,
         icon="mdi:language-php",
@@ -312,52 +312,52 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "server php version": SensorEntityDescription(
-        key="server php version",
+    "server_php_version": SensorEntityDescription(
+        key="server_php_version",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:language-php",
     ),
-    "server webserver": SensorEntityDescription(
-        key="server webserver",
+    "server_webserver": SensorEntityDescription(
+        key="server_webserver",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_fed_shares_sent": SensorEntityDescription(
-        key="shares num_fed_shares_sent",
+    "shares_num_fed_shares_sent": SensorEntityDescription(
+        key="shares_num_fed_shares_sent",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_fed_shares_received": SensorEntityDescription(
-        key="shares num_fed_shares_received",
+    "shares_num_fed_shares_received": SensorEntityDescription(
+        key="shares_num_fed_shares_received",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares": SensorEntityDescription(
-        key="shares num_shares",
+    "shares_num_shares": SensorEntityDescription(
+        key="shares_num_shares",
     ),
-    "shares num_shares_groups": SensorEntityDescription(
-        key="shares num_shares_groups",
+    "shares_num_shares_groups": SensorEntityDescription(
+        key="shares_num_shares_groups",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares_link": SensorEntityDescription(
-        key="shares num_shares_link",
+    "shares_num_shares_link": SensorEntityDescription(
+        key="shares_num_shares_link",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares_link_no_password": SensorEntityDescription(
-        key="shares num_shares_link_no_password",
+    "shares_num_shares_link_no_password": SensorEntityDescription(
+        key="shares_num_shares_link_no_password",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares_mail": SensorEntityDescription(
-        key="shares num_shares_mail",
+    "shares_num_shares_mail": SensorEntityDescription(
+        key="shares_num_shares_mail",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares_room": SensorEntityDescription(
-        key="shares num_shares_room",
+    "shares_num_shares_room": SensorEntityDescription(
+        key="shares_num_shares_room",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "shares num_shares_user": SensorEntityDescription(
-        key="server num_shares_user",
+    "shares_num_shares_user": SensorEntityDescription(
+        key="server_num_shares_user",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "sma avail_mem": SensorEntityDescription(
-        key="sma avail_mem",
+    "sma_avail_mem": SensorEntityDescription(
+        key="sma_avail_mem",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -365,13 +365,13 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "sma num_seg": SensorEntityDescription(
-        key="sma num_seg",
+    "sma_num_seg": SensorEntityDescription(
+        key="sma_num_seg",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "sma seg_size": SensorEntityDescription(
-        key="sma seg_size",
+    "sma_seg_size": SensorEntityDescription(
+        key="sma_seg_size",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -379,100 +379,100 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
     ),
-    "storage num_files": SensorEntityDescription(
-        key="storage num_files",
+    "storage_num_files": SensorEntityDescription(
+        key="storage_num_files",
     ),
-    "storage num_storages": SensorEntityDescription(
-        key="storage num_storages",
+    "storage_num_storages": SensorEntityDescription(
+        key="storage_num_storages",
     ),
-    "storage num_storages_home": SensorEntityDescription(
-        key="storage num_storages_home",
+    "storage_num_storages_home": SensorEntityDescription(
+        key="storage_num_storages_home",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "storage num_storages_local": SensorEntityDescription(
-        key="storage num_storages_local",
+    "storage_num_storages_local": SensorEntityDescription(
+        key="storage_num_storages_local",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "storage num_storages_other": SensorEntityDescription(
-        key="storage num_storages_other",
+    "storage_num_storages_other": SensorEntityDescription(
+        key="storage_num_storages_other",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "storage num_users": SensorEntityDescription(
-        key="storage num_users",
+    "storage_num_users": SensorEntityDescription(
+        key="storage_num_users",
     ),
-    "system apps num_installed": SensorEntityDescription(
-        key="system apps num_installed",
+    "system_apps_num_installed": SensorEntityDescription(
+        key="system_apps_num_installed",
     ),
-    "system apps num_updates_available": SensorEntityDescription(
-        key="system apps num_updates_available", icon="mdi:update"
+    "system_apps_num_updates_available": SensorEntityDescription(
+        key="system_apps_num_updates_available", icon="mdi:update"
     ),
-    "system cpuload_1": SensorEntityDescription(
-        key="system cpuload_1",
+    "system_cpuload_1": SensorEntityDescription(
+        key="system_cpuload_1",
         native_unit_of_measurement=UNIT_OF_LOAD,
         icon="mdi:chip",
         suggested_display_precision=2,
     ),
-    "system cpuload_5": SensorEntityDescription(
-        key="system cpuload_5",
+    "system_cpuload_5": SensorEntityDescription(
+        key="system_cpuload_5",
         native_unit_of_measurement=UNIT_OF_LOAD,
         icon="mdi:chip",
         suggested_display_precision=2,
     ),
-    "system cpuload_15": SensorEntityDescription(
-        key="system cpuload_15",
+    "system_cpuload_15": SensorEntityDescription(
+        key="system_cpuload_15",
         native_unit_of_measurement=UNIT_OF_LOAD,
         icon="mdi:chip",
         suggested_display_precision=2,
     ),
-    "system freespace": SensorEntityDescription(
-        key="system freespace",
+    "system_freespace": SensorEntityDescription(
+        key="system_freespace",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:harddisk",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
     ),
-    "system mem_free": SensorEntityDescription(
-        key="system mem_free",
+    "system_mem_free": SensorEntityDescription(
+        key="system_mem_free",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
     ),
-    "system mem_total": SensorEntityDescription(
-        key="system mem_total",
+    "system_mem_total": SensorEntityDescription(
+        key="system_mem_total",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
     ),
-    "system memcache.distributed": SensorEntityDescription(
-        key="system memcache.distributed",
+    "system_memcache.distributed": SensorEntityDescription(
+        key="system_memcache.distributed",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "system memcache.local": SensorEntityDescription(
-        key="system memcache.local",
+    "system_memcache.local": SensorEntityDescription(
+        key="system_memcache.local",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "system memcache.locking": SensorEntityDescription(
-        key="system memcache.locking",
+    "system_memcache.locking": SensorEntityDescription(
+        key="system_memcache.locking",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "system swap_total": SensorEntityDescription(
-        key="system swap_total",
+    "system_swap_total": SensorEntityDescription(
+        key="system_swap_total",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
     ),
-    "system swap_free": SensorEntityDescription(
-        key="system swap_free",
+    "system_swap_free": SensorEntityDescription(
+        key="system_swap_free",
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,

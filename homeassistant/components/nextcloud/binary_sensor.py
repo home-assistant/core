@@ -17,27 +17,27 @@ from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
 BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
-    "jit enabled": BinarySensorEntityDescription(
-        key="jit enabled",
+    "jit_enabled": BinarySensorEntityDescription(
+        key="jit_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "jit on": BinarySensorEntityDescription(
-        key="jit on",
+    "jit_on": BinarySensorEntityDescription(
+        key="jit_on",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "system debug": BinarySensorEntityDescription(
-        key="system debug", entity_category=EntityCategory.DIAGNOSTIC
+    "system_debug": BinarySensorEntityDescription(
+        key="system_debug", entity_category=EntityCategory.DIAGNOSTIC
     ),
-    "system enable_avatars": BinarySensorEntityDescription(
-        key="system enable_avatars", entity_category=EntityCategory.DIAGNOSTIC
+    "system_enable_avatars": BinarySensorEntityDescription(
+        key="system_enable_avatars", entity_category=EntityCategory.DIAGNOSTIC
     ),
-    "system enable_previews": BinarySensorEntityDescription(
-        key="system enable_previews", entity_category=EntityCategory.DIAGNOSTIC
+    "system_enable_previews": BinarySensorEntityDescription(
+        key="system_enable_previews", entity_category=EntityCategory.DIAGNOSTIC
     ),
-    "system filelocking.enabled": BinarySensorEntityDescription(
-        key="system filelocking.enabled", entity_category=EntityCategory.DIAGNOSTIC
+    "system_filelocking.enabled": BinarySensorEntityDescription(
+        key="system_filelocking.enabled", entity_category=EntityCategory.DIAGNOSTIC
     ),
 }
 
