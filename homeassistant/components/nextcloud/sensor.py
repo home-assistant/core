@@ -24,6 +24,8 @@ from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
+UNIT_OF_LOAD: Final[str] = "load"
+
 SENSORS: Final[dict[str, SensorEntityDescription]] = {
     "activeUsers last1hour": SensorEntityDescription(
         key="activeUsers last1hour",
@@ -407,10 +409,23 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
     "system apps num_updates_available": SensorEntityDescription(
         key="system apps num_updates_available", icon="mdi:update"
     ),
-    "system cpuload": SensorEntityDescription(
-        key="system cpuload",
-        native_unit_of_measurement="",
-        suggested_display_precision=3,
+    "system cpuload_1": SensorEntityDescription(
+        key="system cpuload_1",
+        native_unit_of_measurement=UNIT_OF_LOAD,
+        icon="mdi:chip",
+        suggested_display_precision=2,
+    ),
+    "system cpuload_5": SensorEntityDescription(
+        key="system cpuload_5",
+        native_unit_of_measurement=UNIT_OF_LOAD,
+        icon="mdi:chip",
+        suggested_display_precision=2,
+    ),
+    "system cpuload_15": SensorEntityDescription(
+        key="system cpuload_15",
+        native_unit_of_measurement=UNIT_OF_LOAD,
+        icon="mdi:chip",
+        suggested_display_precision=2,
     ),
     "system freespace": SensorEntityDescription(
         key="system freespace",
