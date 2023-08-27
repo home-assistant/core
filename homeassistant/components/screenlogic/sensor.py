@@ -21,7 +21,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath, generate_unique_id
+from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .data import (
     DEVICE_INCLUSION_RULES,
@@ -30,7 +30,6 @@ from .data import (
     ScreenLogicDataRule,
     ScreenLogicEquipmentRule,
     SupportedValueParameters,
-    cleanup_excluded_entity,
     get_ha_unit,
     iterate_expand_group_wildcard,
     preprocess_supported_values,
@@ -41,6 +40,7 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .util import cleanup_excluded_entity, generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

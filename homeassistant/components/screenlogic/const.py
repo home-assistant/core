@@ -1,6 +1,5 @@
 """Constants for the ScreenLogic integration."""
 from screenlogicpy.const.common import UNIT
-from screenlogicpy.const.data import SHARED_VALUES
 from screenlogicpy.device_const.circuit import FUNCTION
 from screenlogicpy.device_const.system import COLOR_MODE
 
@@ -47,16 +46,3 @@ SL_UNIT_TO_HA_UNIT = {
     UNIT.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
     UNIT.PERCENT: PERCENTAGE,
 }
-
-
-def generate_unique_id(
-    device: str | int, group: str | int | None, data_key: str | int
-) -> str:
-    """Generate new unique_id for a screenlogic entity from specified parameters."""
-    if data_key in SHARED_VALUES and device is not None:
-        return (
-            f"{device}_{group}_{data_key}"
-            if group is not None and (isinstance(group, int) or group.isdigit())
-            else f"{device}_{data_key}"
-        )
-    return str(data_key)

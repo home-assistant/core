@@ -12,10 +12,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
-from .const import DOMAIN, generate_unique_id
+from .const import DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator, async_get_connect_info
 from .data import ENTITY_MIGRATIONS
 from .services import async_load_screenlogic_services, async_unload_screenlogic_services
+from .util import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
