@@ -48,7 +48,7 @@ requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
 typing-extensions>=4.7.0,<5.0
-ulid-transform==0.8.0
+ulid-transform==0.8.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
