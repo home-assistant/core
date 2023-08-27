@@ -629,7 +629,7 @@ flux-led==1.0.2
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==0.4.0
+fnv-hash-fast==0.4.1
 
 # homeassistant.components.foobot
 foobot-async==1.0.0
