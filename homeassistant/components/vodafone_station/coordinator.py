@@ -8,7 +8,6 @@ from aiovodafone import VodafoneStationApi, VodafoneStationDevice, exceptions
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -119,18 +118,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         await self.api.logout()
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
-    async def async_send_signal_device_update(self, new_device: bool) -> None:
-        """Signal device data updated."""
-        async_dispatcher_send(self.hass, self.signal_device_update)
-        if new_device:
-            async_dispatcher_send(self.hass, self.signal_device_new)
-
     @property
     def signal_device_new(self) -> str:
         """Event specific per Vodafone Station entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._id}"
-
-    @property
-    def signal_device_update(self) -> str:
-        """Event specific per Vodafone Station entry to signal updates in devices."""
-        return f"{DOMAIN}-device-update-{self._id}"
