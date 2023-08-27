@@ -29,7 +29,11 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -157,14 +161,6 @@ class UniFiController:
         """Return the host of this controller."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
-
-    @property
-    def mac(self) -> str | None:
-        """Return the mac address of this controller."""
-        for client in self.api.clients.values():
-            if self.host == client.ip:
-                return client.mac
-        return None
 
     @callback
     def register_platform_add_entities(
@@ -341,19 +337,30 @@ class UniFiController:
 
         self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
 
-    async def async_update_device_registry(self) -> None:
+    @property
+    def device_info(self) -> DeviceInfo:
+        """UniFi controller device info."""
+        assert self.config_entry.unique_id is not None
+
+        version: str | None = None
+        if sysinfo := next(iter(self.api.system_information.values()), None):
+            version = sysinfo.version
+
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(UNIFI_DOMAIN, self.config_entry.unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Network Application",
+            name="UniFi Network",
+            sw_version=version,
+        )
+
+    @callback
+    def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
-        if self.mac is None:
-            return
-
         device_registry = dr.async_get(self.hass)
-
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
-            default_manufacturer=ATTR_MANUFACTURER,
-            default_model="UniFi Network",
-            default_name="UniFi Network",
+        return device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id, **self.device_info
         )
 
     @staticmethod
