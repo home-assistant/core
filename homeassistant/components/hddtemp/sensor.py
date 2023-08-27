@@ -96,10 +96,15 @@ class HddTempSensor(SensorEntity):
 
         if self.hddtemp.data and self.disk in self.hddtemp.data:
             self._details = self.hddtemp.data[self.disk].split("|")
-            self._attr_native_value = self._details[2]
-            if self._details is not None and self._details[3] == "F":
+            if self._details[3] == "F":
+                self._attr_native_value = self._details[2]
                 self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            elif self._details[3] == "C":
+                self._attr_native_value = self._details[2]
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
             else:
+                # Temp not available due to drive sleeping, disk or sensor error
+                self._attr_native_value = None
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         else:
             self._attr_native_value = None
