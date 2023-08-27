@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import aiohttp
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -208,6 +209,10 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
 
         except asyncio.TimeoutError as err:
+            _LOGGER.debug(err)
+            return
+
+        except aiohttp.ClientConnectorError as err:
             _LOGGER.debug(err)
             return
 
