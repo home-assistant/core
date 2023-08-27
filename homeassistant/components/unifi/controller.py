@@ -11,6 +11,7 @@ from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.configuration import Configuration
+from aiounifi.models.device import DeviceSetPoePortModeRequest
 from aiounifi.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +36,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -98,6 +99,9 @@ class UniFiController:
 
         self.entities: dict[str, str] = {}
         self.known_objects: set[tuple[str, str]] = set()
+
+        self.poe_command_queue: dict[str, dict[int, str]] = {}
+        self._cancel_poe_command: CALLBACK_TYPE | None = None
 
     def load_config_entry_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
@@ -312,6 +316,31 @@ class UniFiController:
         for unique_id in unique_ids_to_remove:
             del self._heartbeat_time[unique_id]
 
+    @callback
+    def async_queue_poe_port_command(
+        self, device_id: str, port_idx: int, poe_mode: str
+    ) -> None:
+        """Queue commands to execute them together per device."""
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
+
+        device_queue = self.poe_command_queue.setdefault(device_id, {})
+        device_queue[port_idx] = poe_mode
+
+        async def async_execute_command(now: datetime) -> None:
+            """Execute previously queued commands."""
+            queue = self.poe_command_queue.copy()
+            self.poe_command_queue.clear()
+            for device_id, device_commands in queue.items():
+                device = self.api.devices[device_id]
+                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                await self.api.request(
+                    DeviceSetPoePortModeRequest.create(device, targets=commands)
+                )
+
+        self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
+
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         if self.mac is None:
@@ -389,6 +418,10 @@ class UniFiController:
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
+
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
 
         return True
 
