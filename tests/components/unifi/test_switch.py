@@ -1378,6 +1378,7 @@ async def test_poe_port_switches(
         {"entity_id": "switch.mock_name_port_1_poe"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][2] == {
         "port_overrides": [{"poe_mode": "off", "port_idx": 1, "portconf_id": "1a1"}]
@@ -1390,6 +1391,7 @@ async def test_poe_port_switches(
         {"entity_id": "switch.mock_name_port_1_poe"},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[1][2] == {
         "port_overrides": [{"poe_mode": "auto", "port_idx": 1, "portconf_id": "1a1"}]
