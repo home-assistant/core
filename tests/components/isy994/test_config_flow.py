@@ -17,6 +17,14 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IGNORE, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from . import (
+    MOCK_CONFIG_RESPONSE,
+    MOCK_DEVICE_NAME,
+    MOCK_MAC,
+    MOCK_POLISY_MAC,
+    MOCK_UUID,
+)
+
 from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
@@ -42,30 +50,6 @@ MOCK_IOX_USER_INPUT = {
     CONF_PASSWORD: MOCK_PASSWORD,
     CONF_TLS_VER: MOCK_TLS_VERSION,
 }
-
-MOCK_DEVICE_NAME = "Name of the device"
-MOCK_UUID = "ce:fb:72:31:b7:b9"
-MOCK_MAC = "cefb7231b7b9"
-MOCK_POLISY_MAC = "000db9123456"
-
-MOCK_CONFIG_RESPONSE = """<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <app_full_version>5.0.16C</app_full_version>
-    <platform>ISY-C-994</platform>
-    <root>
-        <id>ce:fb:72:31:b7:b9</id>
-        <name>Name of the device</name>
-    </root>
-    <features>
-        <feature>
-            <id>21040</id>
-            <desc>Networking Module</desc>
-            <isInstalled>true</isInstalled>
-            <isAvailable>true</isAvailable>
-        </feature>
-    </features>
-</configuration>
-"""
 
 INTEGRATION = "homeassistant.components.isy994"
 PATCH_CONNECTION = f"{INTEGRATION}.config_flow.Connection.test_connection"
