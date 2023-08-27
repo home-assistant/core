@@ -2,7 +2,7 @@
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,11 +27,9 @@ class NextcloudEntity(CoordinatorEntity[NextcloudDataUpdateCoordinator]):
         self.item = item
         self._attr_unique_id = f"{coordinator.url}#{item}"
         self._attr_device_info = DeviceInfo(
-            configuration_url=coordinator.url + "/settings/admin/serverinfo",
-            entry_type=DeviceEntryType.SERVICE,
+            configuration_url=coordinator.url,
             identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Nextcloud",
             name=urlparse(coordinator.url).netloc,
-            sw_version=coordinator.data.get("system version"),
+            sw_version=coordinator.data.get("system_version"),
         )
         self.entity_description = desc
