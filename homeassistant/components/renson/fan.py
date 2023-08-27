@@ -67,7 +67,7 @@ class RensonFan(RensonEntity, FanEntity):
 
         self.current_speed = SPEED_MAPPING[level]
 
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @property
     def percentage(self) -> int | None:
