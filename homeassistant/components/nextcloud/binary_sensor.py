@@ -17,18 +17,6 @@ from .coordinator import NextcloudDataUpdateCoordinator
 from .entity import NextcloudEntity
 
 BINARY_SENSORS: Final[dict[str, BinarySensorEntityDescription]] = {
-    "jit_enabled": BinarySensorEntityDescription(
-        key="jit_enabled",
-        translation_key="nextcloud_jit_enabled",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "jit_on": BinarySensorEntityDescription(
-        key="jit_on",
-        translation_key="nextcloud_jit_on",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
     "system_debug": BinarySensorEntityDescription(
         key="system_debug",
         translation_key="nextcloud_system_debug",
