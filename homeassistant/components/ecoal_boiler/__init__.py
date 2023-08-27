@@ -36,9 +36,8 @@ AVAILABLE_PUMPS = {
     "domestic_hot_water_pump": "Domestic hot water pump",
 }
 
-# Available temp sensor ids with assigned HA names
-# Available as sensors
-AVAILABLE_SENSORS = {
+# Available temp sensors
+TEMP_SENSORS = {
     "outdoor_temp": "Outdoor temperature",
     "indoor_temp": "Indoor temperature",
     "indoor2_temp": "Indoor temperature 2",
@@ -50,6 +49,15 @@ AVAILABLE_SENSORS = {
     "fuel_feeder_temp": "Fuel feeder temperature",
     "exhaust_temp": "Exhaust temperature",
 }
+
+
+# Available percentage sensors
+PERCENTAGE_SENSORS = {
+    "fuel_left_percentage": "How many percent of fuel is left",
+}
+
+# Available sensor ids with assigned HA names
+AVAILABLE_SENSORS = TEMP_SENSORS | PERCENTAGE_SENSORS
 
 SWITCH_SCHEMA = vol.Schema(
     {
