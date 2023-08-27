@@ -156,3 +156,27 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"]["base"] == error
+
+        # Should be recoverable after hits error
+        with patch(
+            "aiovodafone.api.VodafoneStationApi.get_all_devices",
+            return_value={
+                "wifi_user": "on|laptop|device-1|xx:xx:xx:xx:xx:xx|192.168.100.1||2.4G",
+                "ethernet": "laptop|device-2|yy:yy:yy:yy:yy:yy|192.168.100.2|;",
+            },
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    CONF_PASSWORD: "fake_password",
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "fake_host"
+        assert result2["data"] == {
+            CONF_HOST: "fake_host",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_pwd",
+        }
