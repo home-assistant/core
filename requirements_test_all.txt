@@ -397,7 +397,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.34.1
+async-upnp-client==0.35.0
 
 # homeassistant.components.esphome
 async_interrupt==1.1.1
