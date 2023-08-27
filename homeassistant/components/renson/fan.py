@@ -45,6 +45,21 @@ SPEED_MAPPING = {
 SPEED_RANGE: tuple[float, float] = (1, 4)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Renson fan platform."""
+
+    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
+    coordinator: RensonCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].coordinator
+
+    async_add_entities([RensonFan(api, coordinator)])
+
+
 class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
@@ -108,18 +123,3 @@ class RensonFan(RensonEntity, FanEntity):
             cmd = CMD_MAPPING[speed]
 
         await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Renson fan platform."""
-
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
-
-    async_add_entities([RensonFan(api, coordinator)])
