@@ -63,14 +63,8 @@
       "nextcloud_system_freespace": {
         "name": "Free space"
       },
-      "nextcloud_system_cpuload_1": {
-        "name": "CPU Load last 1 minute"
-      },
-      "nextcloud_system_cpuload_15": {
-        "name": "CPU Load last 15 minutes"
-      },
-      "nextcloud_system_cpuload_5": {
-        "name": "CPU Load last 5 minutes"
+      "nextcloud_system_cpuload": {
+        "name": "CPU Load"
       },
       "nextcloud_system_mem_total": {
         "name": "Total memory"
