@@ -31,148 +31,280 @@
   },
   "entity": {
     "binary_sensor": {
-      "nextcloud_system_enable_avatars": {
+      "jit_enabled": {
+        "name": "JIT enabled"
+      },
+      "jit_on": {
+        "name": "JIT active"
+      },
+      "system_debug": {
+        "name": "Debug enabled"
+      },
+      "system_enable_avatars": {
         "name": "Avatars enabled"
       },
-      "nextcloud_system_enable_previews": {
+      "system_enable_previews": {
         "name": "Previews enabled"
       },
-      "nextcloud_system_filelocking_enabled": {
+      "system_filelocking_enabled": {
         "name": "Filelocking enabled"
-      },
-      "nextcloud_system_debug": {
-        "name": "Debug enabled"
       }
     },
     "sensor": {
-      "nextcloud_system_version": {
-        "name": "System version"
-      },
-      "nextcloud_system_theme": {
-        "name": "System theme"
-      },
-      "nextcloud_system_memcache_local": {
-        "name": "System memcache local"
-      },
-      "nextcloud_system_memcache_distributed": {
-        "name": "System memcache distributed"
-      },
-      "nextcloud_system_memcache_locking": {
-        "name": "System memcache locking"
-      },
-      "nextcloud_system_freespace": {
-        "name": "Free space"
-      },
-      "nextcloud_system_cpuload": {
-        "name": "CPU Load"
-      },
-      "nextcloud_system_mem_total": {
-        "name": "Total memory"
-      },
-      "nextcloud_system_mem_free": {
-        "name": "Free memory"
-      },
-      "nextcloud_system_swap_total": {
-        "name": "Total swap memory"
-      },
-      "nextcloud_system_swap_free": {
-        "name": "Free swap memory"
-      },
-      "nextcloud_system_apps_num_installed": {
-        "name": "Apps installed"
-      },
-      "nextcloud_system_apps_num_updates_available": {
-        "name": "Updates available"
-      },
-      "nextcloud_system_apps_app_updates_calendar": {
-        "name": "Calendar updates"
-      },
-      "nextcloud_system_apps_app_updates_contacts": {
-        "name": "Contact updates"
-      },
-      "nextcloud_system_apps_app_updates_tasks": {
-        "name": "Task updates"
-      },
-      "nextcloud_system_apps_app_updates_twofactor_totp": {
-        "name": "Two factor authentication updates"
-      },
-      "nextcloud_storage_num_users": {
-        "name": "Amount of user"
-      },
-      "nextcloud_storage_num_files": {
-        "name": "Amount of files"
-      },
-      "nextcloud_storage_num_storages": {
-        "name": "Amount of storages"
-      },
-      "nextcloud_storage_num_storages_local": {
-        "name": "Amount of local storages"
-      },
-      "nextcloud_storage_num_storages_home": {
-        "name": "Amount of storages at home"
-      },
-      "nextcloud_storage_num_storages_other": {
-        "name": "Amount of other storages"
-      },
-      "nextcloud_shares_num_shares": {
-        "name": "Amount of shares"
-      },
-      "nextcloud_shares_num_shares_user": {
-        "name": "Amount of user shares"
-      },
-      "nextcloud_shares_num_shares_groups": {
-        "name": "Amount of group shares"
-      },
-      "nextcloud_shares_num_shares_link": {
-        "name": "Amount of link shares"
-      },
-      "nextcloud_shares_num_shares_mail": {
-        "name": "Amount of mail shares"
-      },
-      "nextcloud_shares_num_shares_room": {
-        "name": "Amount of room shares"
-      },
-      "nextcloud_shares_num_shares_link_no_password": {
-        "name": "Amount of passwordless link shares"
-      },
-      "nextcloud_shares_num_fed_shares_sent": {
-        "name": "Amount of shares sent"
-      },
-      "nextcloud_shares_num_fed_shares_received": {
-        "name": "Amount of shares received"
-      },
-      "nextcloud_shares_permissions_3_1": {
-        "name": "Permissions 3.1"
-      },
-      "nextcloud_server_webserver": {
-        "name": "Webserver"
-      },
-      "nextcloud_server_php_version": {
-        "name": "PHP version"
-      },
-      "nextcloud_server_php_memory_limit": {
-        "name": "PHP memory limit"
-      },
-      "nextcloud_server_php_max_execution_time": {
-        "name": "PHP max execution time"
-      },
-      "nextcloud_server_php_upload_max_filesize": {
-        "name": "PHP upload maximum filesize"
-      },
-      "nextcloud_database_type": {
-        "name": "Database type"
-      },
-      "nextcloud_database_version": {
-        "name": "Database version"
-      },
-      "nextcloud_activeusers_last5minutes": {
-        "name": "Amount of active users last 5 minutes"
-      },
-      "nextcloud_activeusers_last1hour": {
+      "activeusers_last1hour": {
         "name": "Amount of active users last hour"
       },
-      "nextcloud_activeusers_last24hours": {
+      "activeusers_last24hours": {
         "name": "Amount of active users last day"
+      },
+      "activeusers_last5minutes": {
+        "name": "Amount of active users last 5 minutes"
+      },
+      "cache_expunges": {
+        "name": "Cache expunges"
+      },
+      "cache_mem_size": {
+        "name": "Cache memory size"
+      },
+      "cache_memory_type": {
+        "name": "Cache memory"
+      },
+      "cache_num_entries": {
+        "name": "Cache number of entires"
+      },
+      "cache_num_hits": {
+        "name": "Cache number of hits"
+      },
+      "cache_num_inserts": {
+        "name": "Cache number of inserts"
+      },
+      "cache_num_misses": {
+        "name": "Cache number of misses"
+      },
+      "cache_num_slots": {
+        "name": "Cache number of slots"
+      },
+      "cache_start_time": {
+        "name": "Cache start time"
+      },
+      "cache_ttl": {
+        "name": "Cache ttl"
+      },
+      "database_size": {
+        "name": "Databse size"
+      },
+      "database_type": {
+        "name": "Database type"
+      },
+      "database_version": {
+        "name": "Database version"
+      },
+      "interned_strings_usage_buffer_size": {
+        "name": "Interned buffer size"
+      },
+      "interned_strings_usage_free_memory": {
+        "name": "Interned free memory"
+      },
+      "interned_strings_usage_number_of_strings": {
+        "name": "Interned number of strings"
+      },
+      "interned_strings_usage_used_memory": {
+        "name": "Interned used memory"
+      },
+      "jit_buffer_free": {
+        "name": "JIT buffer free"
+      },
+      "jit_buffer_size": {
+        "name": "JIT buffer size"
+      },
+      "jit_kind": {
+        "name": "JIT kind"
+      },
+      "jit_opt_flags": {
+        "name": "JIT opt flags"
+      },
+      "jit_opt_level": {
+        "name": "JIT opt level"
+      },
+      "opcache_statistics_blacklist_miss_ratio": {
+        "name": "Opcache blacklist miss ratio"
+      },
+      "opcache_statistics_blacklist_misses": {
+        "name": "Opcache blacklist misses"
+      },
+      "opcache_statistics_hash_restarts": {
+        "name": "Opcache hash restarts"
+      },
+      "opcache_statistics_hits": {
+        "name": "Opcache hits"
+      },
+      "opcache_statistics_last_restart_time": {
+        "name": "Opcache last restart time"
+      },
+      "opcache_statistics_manual_restarts": {
+        "name": "Opcache manual restarts"
+      },
+      "opcache_statistics_max_cached_keys": {
+        "name": "Opcache max cached keys"
+      },
+      "opcache_statistics_misses": {
+        "name": "Opcache misses"
+      },
+      "opcache_statistics_num_cached_keys": {
+        "name": "Opcache cached keys"
+      },
+      "opcache_statistics_num_cached_scripts": {
+        "name": "Opcache cached scripts"
+      },
+      "opcache_statistics_oom_restarts": {
+        "name": "Opcache out of memory restarts"
+      },
+      "opcache_statistics_opcache_hit_rate": {
+        "name": "Opcache hit rate"
+      },
+      "opcache_statistics_start_time": {
+        "name": "Opcache start time"
+      },
+      "server_php_max_execution_time": {
+        "name": "PHP max execution time"
+      },
+      "server_php_memory_limit": {
+        "name": "PHP memory limit"
+      },
+      "server_php_opcache_memory_usage_current_wasted_percentage": {
+        "name": "Opcache current wasted percentage"
+      },
+      "server_php_opcache_memory_usage_free_memory": {
+        "name": "Opcache free memory"
+      },
+      "server_php_opcache_memory_usage_used_memory": {
+        "name": "Opcache used memory"
+      },
+      "server_php_opcache_memory_usage_wasted_memory": {
+        "name": "Opcache wasted memory"
+      },
+      "server_php_upload_max_filesize": {
+        "name": "PHP upload maximum filesize"
+      },
+      "server_php_version": {
+        "name": "PHP version"
+      },
+      "server_webserver": {
+        "name": "Webserver"
+      },
+      "shares_num_fed_shares_received": {
+        "name": "Amount of shares received"
+      },
+      "shares_num_fed_shares_sent": {
+        "name": "Amount of shares sent"
+      },
+      "shares_num_shares": {
+        "name": "Amount of shares"
+      },
+      "shares_num_shares_groups": {
+        "name": "Amount of group shares"
+      },
+      "shares_num_shares_link": {
+        "name": "Amount of link shares"
+      },
+      "shares_num_shares_link_no_password": {
+        "name": "Amount of passwordless link shares"
+      },
+      "shares_num_shares_mail": {
+        "name": "Amount of mail shares"
+      },
+      "shares_num_shares_room": {
+        "name": "Amount of room shares"
+      },
+      "shares_num_shares_user": {
+        "name": "Amount of user shares"
+      },
+      "shares_permissions_3_1": {
+        "name": "Permissions 3.1"
+      },
+      "sma_avail_mem": {
+        "name": "SMA available memory"
+      },
+      "sma_num_seg": {
+        "name": "SMA number of segments"
+      },
+      "sma_seg_size": {
+        "name": "SMA segment size"
+      },
+      "storage_num_files": {
+        "name": "Amount of files"
+      },
+      "storage_num_storages": {
+        "name": "Amount of storages"
+      },
+      "storage_num_storages_home": {
+        "name": "Amount of storages at home"
+      },
+      "storage_num_storages_local": {
+        "name": "Amount of local storages"
+      },
+      "storage_num_storages_other": {
+        "name": "Amount of other storages"
+      },
+      "storage_num_users": {
+        "name": "Amount of user"
+      },
+      "system_apps_app_updates_calendar": {
+        "name": "Calendar updates"
+      },
+      "system_apps_app_updates_contacts": {
+        "name": "Contact updates"
+      },
+      "system_apps_app_updates_tasks": {
+        "name": "Task updates"
+      },
+      "system_apps_app_updates_twofactor_totp": {
+        "name": "Two factor authentication updates"
+      },
+      "system_apps_num_installed": {
+        "name": "Apps installed"
+      },
+      "system_apps_num_updates_available": {
+        "name": "Updates available"
+      },
+      "system_cpuload_1": {
+        "name": "CPU Load last 1 minutes"
+      },
+      "system_cpuload_15": {
+        "name": "CPU Load last 15 minutes"
+      },
+      "system_cpuload_5": {
+        "name": "CPU Load last 5 minutes"
+      },
+      "system_freespace": {
+        "name": "Free space"
+      },
+      "system_mem_free": {
+        "name": "Free memory"
+      },
+      "system_mem_total": {
+        "name": "Total memory"
+      },
+      "system_memcache_distributed": {
+        "name": "System memcache distributed"
+      },
+      "system_memcache_local": {
+        "name": "System memcache local"
+      },
+      "system_memcache_locking": {
+        "name": "System memcache locking"
+      },
+      "system_swap_free": {
+        "name": "Free swap memory"
+      },
+      "system_swap_total": {
+        "name": "Total swap memory"
+      },
+      "system_theme": {
+        "name": "System theme"
+      },
+      "system_version": {
+        "name": "System version"
       }
     }
   }
