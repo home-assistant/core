@@ -35,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
-    "home-assistant-bluetooth==1.10.2",
+    "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
