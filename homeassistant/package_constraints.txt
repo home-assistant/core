@@ -3,7 +3,7 @@ aiohttp-cors==0.7.0
 aiohttp==3.8.5
 astral==2.2
 async-timeout==4.0.3
-async-upnp-client==0.34.1
+async-upnp-client==0.35.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==22.9.0
