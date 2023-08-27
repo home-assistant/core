@@ -397,7 +397,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.34.1
+async-upnp-client==0.35.0
 
 # homeassistant.components.esphome
 async_interrupt==1.1.1
@@ -515,7 +515,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.94.0
+dbus-fast==1.94.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -1539,7 +1539,7 @@ pytautulli==23.1.1
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.14
+python-bsblan==0.5.11
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
@@ -2029,7 +2029,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.83.0
+zeroconf==0.83.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
