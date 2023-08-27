@@ -61,6 +61,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=user_form_schema(user_input)
             )
 
+        # Use host because no serial number or mac is available to use for a unique id
         self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
         errors = {}
