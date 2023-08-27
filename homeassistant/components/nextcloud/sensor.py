@@ -171,10 +171,26 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         translation_key="nextcloud_system_apps_num_updates_available",
         icon="mdi:update",
     ),
-    "system_cpuload": SensorEntityDescription(
-        key="system_cpuload",
-        translation_key="nextcloud_system_cpuload",
+    "system_cpuload_1": SensorEntityDescription(
+        key="system_cpuload_1",
+        translation_key="nextcloud_system_cpuload_1",
+        native_unit_of_measurement=UNIT_OF_LOAD,
         icon="mdi:chip",
+        suggested_display_precision=2,
+    ),
+    "system_cpuload_5": SensorEntityDescription(
+        key="system_cpuload_5",
+        translation_key="nextcloud_system_cpuload_5",
+        native_unit_of_measurement=UNIT_OF_LOAD,
+        icon="mdi:chip",
+        suggested_display_precision=2,
+    ),
+    "system_cpuload_15": SensorEntityDescription(
+        key="system_cpuload_15",
+        translation_key="nextcloud_system_cpuload_15",
+        native_unit_of_measurement=UNIT_OF_LOAD,
+        icon="mdi:chip",
+        suggested_display_precision=2,
     ),
     "system_freespace": SensorEntityDescription(
         key="system_freespace",
