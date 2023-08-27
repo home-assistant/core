@@ -49,8 +49,6 @@ build.json @home-assistant/supervisor
 /tests/components/airthings/ @danielhiversen
 /homeassistant/components/airthings_ble/ @vincegio
 /tests/components/airthings_ble/ @vincegio
-/homeassistant/components/airtouch4/ @LonePurpleWolf
-/tests/components/airtouch4/ @LonePurpleWolf
 /homeassistant/components/airvisual/ @bachya
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airvisual_pro/ @bachya
