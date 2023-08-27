@@ -14,6 +14,8 @@ logger:
   logs:
     homeassistant.components.cloud: debug
     homeassistant.components.bluetooth: debug
+    custom_components.kindhome_solarbeaker: debug
+    custom_components.detailed_hello_world_push: debug
 
 hello_state:
 
@@ -21,5 +23,4 @@ hello_state:
 sensor:
   - platform: example_sensor
 
-kindhome_solarbeaker:
-
+    # kindhome_solarbeaker:

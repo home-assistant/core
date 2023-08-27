@@ -1,16 +1,22 @@
-import asyncio
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
-    CoverEntity,
     CoverDeviceClass,
+    CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+from . import log
+from .const import DATA_COOR, DATA_DEVICE, DOMAIN
+from .kindhome_solarbeaker_ble import KindhomeBluetoothDevice, KindhomeSolarBeakerData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,69 +26,113 @@ BLE_MARQUEE_SERVICE_UUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 BLE_ROLL_OUT_CHARACTERISTIC = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 BLE_ROLL_UP_CHARACTERISTIC = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 
-
 _TODO_SOLARBEAKER_NAME = "Kindhome solarbeaker"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setup the Bluetooth Solar Marquee platform."""
-    async_add_entities([KindhomeSolarbeaker(_TODO_SOLARBEAKER_NAME)])
+async def async_setup_entry(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the brunt platform."""
+    device: KindhomeBluetoothDevice = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
+    coordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ][DATA_COOR]
+
+    log(_LOGGER, "async_setup_entry", device)
 
 
-class KindhomeSolarbeaker(CoverEntity):
-    def __init__(self, name):
-        self._name = name
+    log(_LOGGER, "async_setup_entry", coordinator.data)
+
+    async_add_entities(
+        [KindhomeSolarbeakerEntity(coordinator, device)]
+    )
+
+
+class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[KindhomeSolarBeakerData]], CoverEntity):
+    supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    should_poll = False
+    device_class = CoverDeviceClass.SHADE
+
+    def __init__(self, coordinator: DataUpdateCoordinator[KindhomeSolarBeakerData], device: KindhomeBluetoothDevice):
+        self.device: KindhomeBluetoothDevice = device
+        self.coordinator = coordinator
         self._is_open = None
+        self._attr_unique_id = f"kindhome_solarbeaker_{self.device.address}"
 
-    # TODO is this class ok?
-    @property
-    def device_class(self):
-        return CoverDeviceClass.SHADE
-
-    @property
-    def supported_features(self):
-        return (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+        self._is_opening = False
+        self._is_closing = False
+        self._is_closed = False
+        self._is_open = False
 
     @property
     def name(self):
-        """Return the name of the marquee."""
-        return self._name
+        return self.device.get_device_name()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {
+            "identifiers": {(DOMAIN, self._attr_unique_id)},
+            "name": self.name,
+        }
+
+    @property
+    def available(self) -> bool:
+        return self.device.available()
 
     @property
     def is_opening(self):
-        """Return if the marquee is opening or not."""
-        return False  # Implement Bluetooth communication to get the actual state
+        return self._is_opening
 
     @property
     def is_closing(self):
-        """Return if the marquee is closing or not."""
-        return False  # Implement Bluetooth communication to get the actual state
+        return self._is_closing
 
     @property
     def is_closed(self):
-        """Return if the marquee is closed."""
-        return not self._is_open
+        return not self._is_closed
+
+    @property
+    def is_open(self):
+        return not self._is_closed
 
     async def async_open_cover(self, **kwargs):
-        """Open the marquee."""
-        # Implement Bluetooth communication to extend the marquee
-        # Update self._is_open accordingly
-        self._is_open = True
-        self.async_write_ha_state()
+        log(_LOGGER, "async_open_cover", "opening cover")
+        self._is_opening = True
+        await self.device.move_forward()
 
     async def async_close_cover(self, **kwargs):
         """Close the marquee."""
-        # Implement Bluetooth communication to retract the marquee
-        # Update self._is_open accordingly
-        self._is_open = False
-        self.async_write_ha_state()
+        log(_LOGGER, "async_close_cover", "closing the cover")
+        self._is_closing = True
+        await self.device.move_backward()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
+        log(_LOGGER, "async_stop_cover", "stopping the cover")
+        await self.device.stop()
 
-    async def async_update(self):
-        """Fetch the latest state."""
-        # Implement Bluetooth communication to get the latest state
-        # Update self._is_open accordingly
+
+    # If I want to fetch by polling
+    async def request_coordinator_refresh(self) -> None:
+        FAST_INTERVAL = 20
+        self.coordinator.update_interval = FAST_INTERVAL
+        await self.coordinator.async_request_refresh()
+
+
+    # If Im gonna be fetching by pushing
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+        # Importantly for a push integration, the module that will be getting updates
+        # needs to notify HA of changes. The dummy device has a registercallback
+        # method, so to this we add the 'self.async_write_ha_state' method, to be
+        # called where ever there are changes.
+        # The call back registration is done once this entity is registered with HA
+        # (rather than in the __init__)
+        self.device.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity being removed from hass."""
+        # The opposite of async_added_to_hass. Remove any registered call backs here.
+        self.device.remove_callback(self.async_write_ha_state)

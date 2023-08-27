@@ -11,16 +11,27 @@ from .const import DOMAIN
 # eg <cover.py> and <sensor.py>
 PLATFORMS: list[str] = ["cover", "sensor"]
 
+import logging
+
+_LOGGER = logging.getLogger(__name__)
+
+def log(f, m):
+    _LOGGER.debug(f"MATI {f}: {m}")
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hello World from a config entry."""
     # Store an instance of the "connecting" class that does the work of speaking
     # with your actual devices.
+
+    log("async_setup_entry", entry.entry_id)
+    log("async_setup_entry", entry.data)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub.Hub(hass, entry.data["host"])
 
     # This creates each HA object for each platform your device requires.
     # It's done by calling the `async_setup_entry` function in each platform module.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
