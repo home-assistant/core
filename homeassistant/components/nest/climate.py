@@ -106,7 +106,7 @@ class ThermostatEntity(ClimateEntity):
         self._device = device
         self._device_info = NestDeviceInfo(device)
         # The API "name" field is a unique device identifier.
-        self._attr_unique_id = self._device.name
+        self._attr_unique_id = device.name
         self._attr_device_info = self._device_info.device_info
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
