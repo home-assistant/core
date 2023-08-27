@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
     ATTR_IDENTIFIERS,
+    ATTR_NAME,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PARAMS,
@@ -244,8 +245,10 @@ def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
     if wemo.model_name == "DLI emulated Belkin Socket":
+        unique_id = wemo.serial_number[:-1]
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
-        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
+        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, unique_id)}
+        _dev_info[ATTR_NAME] = f"Digital Loggers {unique_id}"
     return _dev_info
 
 
