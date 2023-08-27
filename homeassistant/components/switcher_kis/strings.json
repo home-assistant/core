@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Enter your token here\nDue to security reason, some devices require a token to operate,\nthe token can be acquired from this link: https://switcher.co.il/GetKey/\nNote: minimum firmware version required for the token is 2.31",
+        "description": "Enter your token here\nFor security reasons, some devices require a token to operate,\nthe token can be acquired from this link: https://switcher.co.il/GetKey/\nExample of Token: zvVvd7JxtN7CgvkD1Psujw==\nNote: minimum firmware version required for the token is 2.31",
         "data": {
           "token": "[%key:common::config_flow::data::access_token%]"
         }
