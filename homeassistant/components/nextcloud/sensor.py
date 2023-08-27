@@ -181,7 +181,6 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
     ),
     "opcache_statistics blacklist_miss_ratio": SensorEntityDescription(
         key="opcache_statistics blacklist_miss_ratio",
-        device_class=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
@@ -239,7 +238,6 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
     ),
     "opcache_statistics opcache_hit_rate": SensorEntityDescription(
         key="opcache_statistics opcache_hit_rate",
-        device_class=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
@@ -253,7 +251,6 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
     ),
     "server php opcache memory_usage current_wasted_percentage": SensorEntityDescription(
         key="server php opcache memory_usage current_wasted_percentage",
-        device_class=None,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:language-php",
