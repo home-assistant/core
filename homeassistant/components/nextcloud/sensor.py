@@ -80,8 +80,8 @@ SENSORS: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    "cache num_solts": SensorEntityDescription(
-        key="cache num_solts",
+    "cache num_slots": SensorEntityDescription(
+        key="cache num_slots",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
