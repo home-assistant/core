@@ -31,6 +31,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "nextcloud_jit_enabled": {
+        "name": "JIT enabled"
+      },
+      "nextcloud_jit_on": {
+        "name": "JIT active"
+      },
+      "nextcloud_system_debug": {
+        "name": "Debug enabled"
+      },
       "nextcloud_system_enable_avatars": {
         "name": "Avatars enabled"
       },
@@ -39,56 +48,206 @@
       },
       "nextcloud_system_filelocking_enabled": {
         "name": "Filelocking enabled"
-      },
-      "nextcloud_system_debug": {
-        "name": "Debug enabled"
       }
     },
     "sensor": {
-      "nextcloud_system_version": {
-        "name": "System version"
+      "nextcloud_activeusers_last1hour": {
+        "name": "Amount of active users last hour"
       },
-      "nextcloud_system_theme": {
-        "name": "System theme"
+      "nextcloud_activeusers_last24hours": {
+        "name": "Amount of active users last day"
       },
-      "nextcloud_system_memcache_local": {
-        "name": "System memcache local"
+      "nextcloud_activeusers_last5minutes": {
+        "name": "Amount of active users last 5 minutes"
       },
-      "nextcloud_system_memcache_distributed": {
-        "name": "System memcache distributed"
+      "nextcloud_cache_expunges": {
+        "name": "Cache expunges"
       },
-      "nextcloud_system_memcache_locking": {
-        "name": "System memcache locking"
+      "nextcloud_cache_mem_size": {
+        "name": "Cache memory size"
       },
-      "nextcloud_system_freespace": {
-        "name": "Free space"
+      "nextcloud_cache_memory_type": {
+        "name": "Cache memory"
       },
-      "nextcloud_system_cpuload_1": {
-        "name": "CPU Load last minute"
+      "nextcloud_cache_num_entries": {
+        "name": "Cache number of entires"
       },
-      "nextcloud_system_cpuload_15": {
-        "name": "CPU Load last 15 minutes"
+      "nextcloud_cache_num_hits": {
+        "name": "Cache number of hits"
       },
-      "nextcloud_system_cpuload_5": {
-        "name": "CPU Load last 5 minutes"
+      "nextcloud_cache_num_inserts": {
+        "name": "Cache number of inserts"
       },
-      "nextcloud_system_mem_total": {
-        "name": "Total memory"
+      "nextcloud_cache_num_misses": {
+        "name": "Cache number of misses"
       },
-      "nextcloud_system_mem_free": {
-        "name": "Free memory"
+      "nextcloud_cache_num_slots": {
+        "name": "Cache number of slots"
       },
-      "nextcloud_system_swap_total": {
-        "name": "Total swap memory"
+      "nextcloud_cache_start_time": {
+        "name": "Cache start time"
       },
-      "nextcloud_system_swap_free": {
-        "name": "Free swap memory"
+      "nextcloud_cache_ttl": {
+        "name": "Cache ttl"
       },
-      "nextcloud_system_apps_num_installed": {
-        "name": "Apps installed"
+      "nextcloud_database_size": {
+        "name": "Databse size"
       },
-      "nextcloud_system_apps_num_updates_available": {
-        "name": "Updates available"
+      "nextcloud_database_type": {
+        "name": "Database type"
+      },
+      "nextcloud_database_version": {
+        "name": "Database version"
+      },
+      "nextcloud_interned_strings_usage_buffer_size": {
+        "name": "Interned buffer size"
+      },
+      "nextcloud_interned_strings_usage_free_memory": {
+        "name": "Interned free memory"
+      },
+      "nextcloud_interned_strings_usage_number_of_strings": {
+        "name": "Interned number of strings"
+      },
+      "nextcloud_interned_strings_usage_used_memory": {
+        "name": "Interned used memory"
+      },
+      "nextcloud_jit_buffer_free": {
+        "name": "JIT buffer free"
+      },
+      "nextcloud_jit_buffer_size": {
+        "name": "JIT buffer size"
+      },
+      "nextcloud_jit_kind": {
+        "name": "JIT kind"
+      },
+      "nextcloud_jit_opt_flags": {
+        "name": "JIT opt flags"
+      },
+      "nextcloud_jit_opt_level": {
+        "name": "JIT opt level"
+      },
+      "nextcloud_opcache_statistics_blacklist_miss_ratio": {
+        "name": "Opcache blacklist miss ratio"
+      },
+      "nextcloud_opcache_statistics_blacklist_misses": {
+        "name": "Opcache blacklist misses"
+      },
+      "nextcloud_opcache_statistics_hash_restarts": {
+        "name": "Opcache hash restarts"
+      },
+      "nextcloud_opcache_statistics_hits": {
+        "name": "Opcache hits"
+      },
+      "nextcloud_opcache_statistics_last_restart_time": {
+        "name": "Opcache last restart time"
+      },
+      "nextcloud_opcache_statistics_manual_restarts": {
+        "name": "Opcache manual restarts"
+      },
+      "nextcloud_opcache_statistics_max_cached_keys": {
+        "name": "Opcache max cached keys"
+      },
+      "nextcloud_opcache_statistics_misses": {
+        "name": "Opcache misses"
+      },
+      "nextcloud_opcache_statistics_num_cached_keys": {
+        "name": "Opcache cached keys"
+      },
+      "nextcloud_opcache_statistics_num_cached_scripts": {
+        "name": "Opcache cached scripts"
+      },
+      "nextcloud_opcache_statistics_oom_restarts": {
+        "name": "Opcache out of memory restarts"
+      },
+      "nextcloud_opcache_statistics_opcache_hit_rate": {
+        "name": "Opcache hit rate"
+      },
+      "nextcloud_opcache_statistics_start_time": {
+        "name": "Opcache start time"
+      },
+      "nextcloud_server_php_max_execution_time": {
+        "name": "PHP max execution time"
+      },
+      "nextcloud_server_php_memory_limit": {
+        "name": "PHP memory limit"
+      },
+      "nextcloud_server_php_opcache_memory_usage_current_wasted_percentage": {
+        "name": "Opcache current wasted percentage"
+      },
+      "nextcloud_server_php_opcache_memory_usage_free_memory": {
+        "name": "Opcache free memory"
+      },
+      "nextcloud_server_php_opcache_memory_usage_used_memory": {
+        "name": "Opcache used memory"
+      },
+      "nextcloud_server_php_opcache_memory_usage_wasted_memory": {
+        "name": "Opcache wasted memory"
+      },
+      "nextcloud_server_php_upload_max_filesize": {
+        "name": "PHP upload maximum filesize"
+      },
+      "nextcloud_server_php_version": {
+        "name": "PHP version"
+      },
+      "nextcloud_server_webserver": {
+        "name": "Webserver"
+      },
+      "nextcloud_shares_num_fed_shares_received": {
+        "name": "Amount of shares received"
+      },
+      "nextcloud_shares_num_fed_shares_sent": {
+        "name": "Amount of shares sent"
+      },
+      "nextcloud_shares_num_shares": {
+        "name": "Amount of shares"
+      },
+      "nextcloud_shares_num_shares_groups": {
+        "name": "Amount of group shares"
+      },
+      "nextcloud_shares_num_shares_link": {
+        "name": "Amount of link shares"
+      },
+      "nextcloud_shares_num_shares_link_no_password": {
+        "name": "Amount of passwordless link shares"
+      },
+      "nextcloud_shares_num_shares_mail": {
+        "name": "Amount of mail shares"
+      },
+      "nextcloud_shares_num_shares_room": {
+        "name": "Amount of room shares"
+      },
+      "nextcloud_shares_num_shares_user": {
+        "name": "Amount of user shares"
+      },
+      "nextcloud_shares_permissions_3_1": {
+        "name": "Permissions 3.1"
+      },
+      "nextcloud_sma_avail_mem": {
+        "name": "SMA available memory"
+      },
+      "nextcloud_sma_num_seg": {
+        "name": "SMA number of segments"
+      },
+      "nextcloud_sma_seg_size": {
+        "name": "SMA segment size"
+      },
+      "nextcloud_storage_num_files": {
+        "name": "Amount of files"
+      },
+      "nextcloud_storage_num_storages": {
+        "name": "Amount of storages"
+      },
+      "nextcloud_storage_num_storages_home": {
+        "name": "Amount of storages at home"
+      },
+      "nextcloud_storage_num_storages_local": {
+        "name": "Amount of local storages"
+      },
+      "nextcloud_storage_num_storages_other": {
+        "name": "Amount of other storages"
+      },
+      "nextcloud_storage_num_users": {
+        "name": "Amount of user"
       },
       "nextcloud_system_apps_app_updates_calendar": {
         "name": "Calendar updates"
@@ -102,83 +261,50 @@
       "nextcloud_system_apps_app_updates_twofactor_totp": {
         "name": "Two factor authentication updates"
       },
-      "nextcloud_storage_num_users": {
-        "name": "Amount of user"
+      "nextcloud_system_apps_num_installed": {
+        "name": "Apps installed"
       },
-      "nextcloud_storage_num_files": {
-        "name": "Amount of files"
+      "nextcloud_system_apps_num_updates_available": {
+        "name": "Updates available"
       },
-      "nextcloud_storage_num_storages": {
-        "name": "Amount of storages"
+      "nextcloud_system_cpuload_1": {
+        "name": "CPU Load last 1 minute"
       },
-      "nextcloud_storage_num_storages_local": {
-        "name": "Amount of local storages"
+      "nextcloud_system_cpuload_15": {
+        "name": "CPU Load last 15 minutes"
       },
-      "nextcloud_storage_num_storages_home": {
-        "name": "Amount of storages at home"
+      "nextcloud_system_cpuload_5": {
+        "name": "CPU Load last 5 minutes"
       },
-      "nextcloud_storage_num_storages_other": {
-        "name": "Amount of other storages"
+      "nextcloud_system_freespace": {
+        "name": "Free space"
       },
-      "nextcloud_shares_num_shares": {
-        "name": "Amount of shares"
+      "nextcloud_system_mem_free": {
+        "name": "Free memory"
       },
-      "nextcloud_shares_num_shares_user": {
-        "name": "Amount of user shares"
+      "nextcloud_system_mem_total": {
+        "name": "Total memory"
       },
-      "nextcloud_shares_num_shares_groups": {
-        "name": "Amount of group shares"
+      "nextcloud_system_memcache_distributed": {
+        "name": "System memcache distributed"
       },
-      "nextcloud_shares_num_shares_link": {
-        "name": "Amount of link shares"
+      "nextcloud_system_memcache_local": {
+        "name": "System memcache local"
       },
-      "nextcloud_shares_num_shares_mail": {
-        "name": "Amount of mail shares"
+      "nextcloud_system_memcache_locking": {
+        "name": "System memcache locking"
       },
-      "nextcloud_shares_num_shares_room": {
-        "name": "Amount of room shares"
+      "nextcloud_system_swap_free": {
+        "name": "Free swap memory"
       },
-      "nextcloud_shares_num_shares_link_no_password": {
-        "name": "Amount of passwordless link shares"
+      "nextcloud_system_swap_total": {
+        "name": "Total swap memory"
       },
-      "nextcloud_shares_num_fed_shares_sent": {
-        "name": "Amount of shares sent"
+      "nextcloud_system_theme": {
+        "name": "System theme"
       },
-      "nextcloud_shares_num_fed_shares_received": {
-        "name": "Amount of shares received"
-      },
-      "nextcloud_shares_permissions_3_1": {
-        "name": "Permissions 3.1"
-      },
-      "nextcloud_server_webserver": {
-        "name": "Webserver"
-      },
-      "nextcloud_server_php_version": {
-        "name": "PHP version"
-      },
-      "nextcloud_server_php_memory_limit": {
-        "name": "PHP memory limit"
-      },
-      "nextcloud_server_php_max_execution_time": {
-        "name": "PHP max execution time"
-      },
-      "nextcloud_server_php_upload_max_filesize": {
-        "name": "PHP upload maximum filesize"
-      },
-      "nextcloud_database_type": {
-        "name": "Database type"
-      },
-      "nextcloud_database_version": {
-        "name": "Database version"
-      },
-      "nextcloud_activeusers_last5minutes": {
-        "name": "Amount of active users last 5 minutes"
-      },
-      "nextcloud_activeusers_last1hour": {
-        "name": "Amount of active users last hour"
-      },
-      "nextcloud_activeusers_last24hours": {
-        "name": "Amount of active users last day"
+      "nextcloud_system_version": {
+        "name": "System version"
       }
     }
   }
