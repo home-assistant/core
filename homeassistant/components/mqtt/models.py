@@ -99,6 +99,16 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
+class MqttOriginInfo(TypedDict, total=False):
+    """Integration info of discovered entity."""
+
+    name: str
+    manufacturer: str
+    sw_version: str
+    hw_version: str
+    support_url: str
+
+
 class MqttCommandTemplate:
     """Class for rendering MQTT payload with command templates."""
 
@@ -237,7 +247,7 @@ class MqttValueTemplate:
                         payload, variables=values
                     )
                 )
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: '%s'",
                     type(ex).__name__,
@@ -264,7 +274,7 @@ class MqttValueTemplate:
                     payload, default, variables=values
                 )
             )
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.error(
                 "%s: %s rendering template for entity '%s', template: "
                 "'%s', default value: %s and payload: %s",
@@ -294,13 +304,12 @@ class EntityTopicState:
             try:
                 entity.async_write_ha_state()
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Exception raised when updating state of %s, topic: "
                     "'%s' with payload: %s",
                     entity.entity_id,
                     msg.topic,
                     msg.payload,
-                    exc_info=True,
                 )
 
     @callback

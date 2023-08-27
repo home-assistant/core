@@ -108,7 +108,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
+CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -847,8 +847,7 @@ class HomeAssistant:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
-                # pylint: disable-next=unidiomatic-typecheck
-                and type(job := args[0]) is HassJob
+                and type(job := args[0]) is HassJob  # noqa: E721
                 and job.cancel_on_shutdown
             ):
                 handle.cancel()

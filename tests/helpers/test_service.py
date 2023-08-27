@@ -11,7 +11,7 @@ import voluptuous as vol
 # To prevent circular import when running just this file
 from homeassistant import exceptions
 from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401, pylint: disable=unused-import
+import homeassistant.components  # noqa: F401
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,

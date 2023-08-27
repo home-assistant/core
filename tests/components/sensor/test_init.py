@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -177,7 +177,7 @@ async def test_datetime_conversion(
     enable_custom_integrations: None,
 ) -> None:
     """Test conversion of datetime."""
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -233,7 +233,7 @@ async def test_a_sensor_with_a_non_numeric_device_class(
     A non numeric sensor with a valid device class should never be
     handled as numeric because it has a device class.
     """
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -334,7 +334,7 @@ RESTORE_DATA = {
         "native_unit_of_measurement": None,
         "native_value": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
+            "isoformat": datetime(2020, 2, 8, 15, tzinfo=UTC).isoformat(),
         },
     },
     "Decimal": {
@@ -375,7 +375,7 @@ RESTORE_DATA = {
         ),
         (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             dict,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -433,7 +433,7 @@ async def test_restore_sensor_save_state(
         (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE, "°F"),
         (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -1861,13 +1861,17 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value",
+    ("native_value", "problem"),
     [
-        "",
-        "abc",
-        "13.7.1",
-        datetime(2012, 11, 10, 7, 35, 1),
-        date(2012, 11, 10),
+        ("", "non-numeric"),
+        ("abc", "non-numeric"),
+        ("13.7.1", "non-numeric"),
+        (datetime(2012, 11, 10, 7, 35, 1), "non-numeric"),
+        (date(2012, 11, 10), "non-numeric"),
+        ("inf", "non-finite"),
+        (float("inf"), "non-finite"),
+        ("nan", "non-finite"),
+        (float("nan"), "non-finite"),
     ],
 )
 async def test_non_numeric_validation_error(
@@ -1875,6 +1879,7 @@ async def test_non_numeric_validation_error(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
+    problem: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1899,7 +1904,7 @@ async def test_non_numeric_validation_error(
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: '{native_value}'"
+        f"however, it has the {problem} value: '{native_value}'"
     ) in caplog.text
 
 

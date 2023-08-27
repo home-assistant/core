@@ -10,6 +10,7 @@ from aioairzone.const import (
     AZD_AVAILABLE,
     AZD_FIRMWARE,
     AZD_FULL_NAME,
+    AZD_HOT_WATER,
     AZD_ID,
     AZD_MAC,
     AZD_MODEL,
@@ -79,6 +80,31 @@ class AirzoneSystemEntity(AirzoneEntity):
             if key in system:
                 value = system[key]
         return value
+
+
+class AirzoneHotWaterEntity(AirzoneEntity):
+    """Define an Airzone Hot Water entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
+            manufacturer=MANUFACTURER,
+            model="DHW",
+            name=self.get_airzone_value(AZD_NAME),
+            via_device=(DOMAIN, f"{entry.entry_id}_ws"),
+        )
+        self._attr_unique_id = entry.unique_id or entry.entry_id
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return DHW value by key."""
+        return self.coordinator.data[AZD_HOT_WATER].get(key)
 
 
 class AirzoneWebServerEntity(AirzoneEntity):
