@@ -11,7 +11,7 @@ bcrypt==4.0.1
 certifi>=2021.5.30
 ciso8601==2.3.0
 httpx==0.24.1
-home-assistant-bluetooth==1.10.2
+home-assistant-bluetooth==1.10.3
 ifaddr==0.2.0
 Jinja2==3.1.2
 lru-dict==1.2.0
