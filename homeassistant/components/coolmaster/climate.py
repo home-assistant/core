@@ -59,11 +59,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator, unit_id, info)
         self._hvac_modes = supported_modes
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._unit_id
+        self._attr_unique_id = unit_id
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
