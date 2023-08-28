@@ -24,6 +24,14 @@
       "vertical_swing_off": {
         "name": "Vertical swing off"
       }
+    },
+    "sensor": {
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "auto_shutdown": {
+        "name": "Auto shutdown"
+      }
     }
   },
   "services": {

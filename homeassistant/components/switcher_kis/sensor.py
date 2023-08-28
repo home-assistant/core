@@ -25,14 +25,12 @@ from .const import SIGNAL_DEVICE_ADD
 POWER_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="power_consumption",
-        name="Power Consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="electric_current",
-        name="Electric Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -40,11 +38,13 @@ POWER_SENSORS: list[SensorEntityDescription] = [
 ]
 TIME_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        key="remaining_time", name="Remaining Time", icon="mdi:av-timer"
+        key="remaining_time",
+        translation_key="remaining_time",
+        icon="mdi:av-timer",
     ),
     SensorEntityDescription(
         key="auto_off_set",
-        name="Auto Shutdown",
+        translation_key="auto_shutdown",
         icon="mdi:progress-clock",
         entity_registry_enabled_default=False,
     ),

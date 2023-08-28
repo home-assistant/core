@@ -83,13 +83,15 @@ class SwitcherBaseSwitchEntity(
 ):
     """Representation of a Switcher switch entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
