@@ -158,7 +158,7 @@ def valid_addon(value: Any) -> str:
     with suppress(HomeAssistantError):
         hass = async_get_hass()
 
-    if hass and value not in hass.data[DATA_KEY_ADDONS]:
+    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
         raise vol.Invalid("Not a valid add-on slug")
     return value
 

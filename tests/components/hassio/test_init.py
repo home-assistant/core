@@ -100,29 +100,29 @@ def mock_all(aioclient_mock, request, os_info):
                 "version_latest": "1.0.0",
                 "version": "1.0.0",
                 "auto_update": True,
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "installed": True,
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "url": "https://github.com/home-assistant/addons/test",
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "installed": True,
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "url": "https://github.com",
+                    },
+                ],
             },
-            "addons": [
-                {
-                    "name": "test",
-                    "slug": "test",
-                    "installed": True,
-                    "update_available": False,
-                    "version": "1.0.0",
-                    "version_latest": "1.0.0",
-                    "repository": "core",
-                    "url": "https://github.com/home-assistant/addons/test",
-                },
-                {
-                    "name": "test2",
-                    "slug": "test2",
-                    "installed": True,
-                    "update_available": False,
-                    "version": "1.0.0",
-                    "version_latest": "1.0.0",
-                    "repository": "core",
-                    "url": "https://github.com",
-                },
-            ],
         },
     )
     aioclient_mock.get(
@@ -486,13 +486,17 @@ async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
 
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
-    hassio_env,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Call service and check the API calls behind that."""
-    assert await async_setup_component(hass, "hassio", {})
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
+    ):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
 
     aioclient_mock.post("http://127.0.0.1/addons/test/start", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/addons/test/stop", json={"result": "ok"})
@@ -519,14 +523,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 10
+    assert aioclient_mock.call_count == 22
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.call_count == 24
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -541,7 +545,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.call_count == 26
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "homeassistant": True,
@@ -566,7 +570,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -584,7 +588,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.call_count == 29
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -599,7 +603,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
