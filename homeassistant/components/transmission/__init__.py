@@ -227,7 +227,7 @@ class TransmissionClient:
         self.hass = hass
         self.config_entry = config_entry
         self.tm_api = api
-        self._tm_data = TransmissionData(self.hass, self.config_entry, api)
+        self._tm_data = TransmissionData(hass, config_entry, api)
         self.unsub_timer: Callable[[], None] | None = None
 
     @property
