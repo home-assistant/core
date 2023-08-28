@@ -29,11 +29,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
@@ -138,17 +134,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
-    client = TransmissionClient(hass, config_entry)
+    try:
+        api = await get_api(hass, dict(config_entry.data))
+    except CannotConnect as error:
+        raise ConfigEntryNotReady from error
+    except (AuthenticationError, UnknownError) as error:
+        raise ConfigEntryAuthFailed from error
+
+    client = TransmissionClient(hass, config_entry, api)
+    await client.async_setup()
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
-    await client.async_setup()
-
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    client.register_services()
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Transmission Entry from config_entry."""
-    client = hass.data[DOMAIN].pop(config_entry.entry_id)
+    client: TransmissionClient = hass.data[DOMAIN].pop(config_entry.entry_id)
     if client.unsub_timer:
         client.unsub_timer()
 
@@ -213,41 +217,33 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
 class TransmissionClient:
     """Transmission Client Object."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api: transmission_rpc.Client,
+    ) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api: transmission_rpc.Client = None
-        self._tm_data: TransmissionData | None = None
+        self.tm_api = api
+        self._tm_data = TransmissionData(hass, config_entry, api)
         self.unsub_timer: Callable[[], None] | None = None
 
     @property
     def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
-        if self._tm_data is None:
-            raise HomeAssistantError("data not initialized")
         return self._tm_data
 
     async def async_setup(self) -> None:
         """Set up the Transmission client."""
-
-        try:
-            self.tm_api = await get_api(self.hass, dict(self.config_entry.data))
-        except CannotConnect as error:
-            raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError) as error:
-            raise ConfigEntryAuthFailed from error
-
-        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
-
-        await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
-        await self.hass.async_add_executor_job(self._tm_data.update)
+        await self.hass.async_add_executor_job(self.api.init_torrent_list)
+        await self.hass.async_add_executor_job(self.api.update)
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
+    def register_services(self) -> None:
+        """Register integration services."""
 
         def add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
@@ -354,7 +350,7 @@ class TransmissionClient:
     @staticmethod
     async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
-        tm_client = hass.data[DOMAIN][entry.entry_id]
+        tm_client: TransmissionClient = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
         await hass.async_add_executor_job(tm_client.api.update)
 
