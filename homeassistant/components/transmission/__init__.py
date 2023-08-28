@@ -14,6 +14,7 @@ from transmission_rpc.error import (
     TransmissionConnectError,
     TransmissionError,
 )
+from transmission_rpc.session import SessionStats
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -367,7 +368,7 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data: transmission_rpc.Session = None
+        self.data: SessionStats = None
         self.available: bool = True
         self._all_torrents: list[transmission_rpc.Torrent] = []
         self._api: transmission_rpc.Client = api
