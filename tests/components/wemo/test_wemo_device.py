@@ -202,19 +202,19 @@ async def test_dli_multi_wemo(
 ):
     """Verify multiple Digital Loggers devices work correctly."""
 
-    def create_device(counter: int) -> pywemo.Switch:
-        """Create a unique mock DLI device for each counter value."""
-        device = create_autospec(pywemo.Switch, instance=True)
-        device.host = f"{MOCK_HOST}_{counter}"
-        device.port = MOCK_PORT + counter
-        device.name = f"Friendly Name {counter}"
-        device.serial_number = f"{counter}"
-        device.model_name = "DLI emulated Belkin Socket"
-        device.udn = f"uuid:Socket-1_0-{device.serial_number}"
-        device.firmware_version = MOCK_FIRMWARE_VERSION
-        device.get_state.return_value = 0  # Default to Off
-        device.supports_long_press.return_value = False
-        return device
+    def create_switch(counter: int) -> pywemo.Switch:
+        """Create a mock WeMo switch device for each counter value."""
+        switch = create_autospec(pywemo.Switch, instance=True)
+        switch.host = f"{MOCK_HOST}_{counter}"
+        switch.port = MOCK_PORT + counter
+        switch.name = f"Friendly Name {counter}"
+        switch.serial_number = f"{counter}"
+        switch.model_name = "DLI emulated Belkin Socket"
+        switch.udn = f"uuid:Socket-1_0-{switch.serial_number}"
+        switch.firmware_version = MOCK_FIRMWARE_VERSION
+        switch.get_state.return_value = 0  # Default to Off
+        switch.supports_long_press.return_value = False
+        return switch
 
     semaphore = asyncio.Semaphore(value=0)
 
@@ -222,16 +222,16 @@ async def test_dli_multi_wemo(
         await async_wemo_dispatcher_connect(*args)
         semaphore.release()
 
-    pywemo_devices = [
-        # DLI Device 1.
-        create_device(11),
-        create_device(12),
-        # DLI Device 2.
-        create_device(21),
-        create_device(22),
+    pywemo_switches = [
+        # Switches for DLI Device 1.
+        create_switch(11),
+        create_switch(12),
+        # Switches for DLI Device 2.
+        create_switch(21),
+        create_switch(22),
     ]
 
-    with patch("pywemo.discover_devices", return_value=pywemo_devices), patch(
+    with patch("pywemo.discover_devices", return_value=pywemo_switches), patch(
         "homeassistant.components.wemo.switch.async_wemo_dispatcher_connect",
         side_effect=async_connect,
     ):
