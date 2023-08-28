@@ -31,7 +31,7 @@ async def async_get_connect_info(
     if mac in discovered_gateways:
         return discovered_gateways[mac]
 
-    _LOGGER.warning("Gateway rediscovery failed")
+    _LOGGER.debug("Gateway rediscovery failed for %s", entry.title)
     # Static connection defined or fallback from discovery
     return {
         SL_GATEWAY_NAME: name_for_mac(mac),
