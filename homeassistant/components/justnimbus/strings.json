@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "client_id": "Client ID"
+          "client_id": "Client ID",
+          "zip_code": "ZIP code"
         }
       }
     },
@@ -18,41 +19,26 @@
   },
   "entity": {
     "sensor": {
-      "pump_flow": {
-        "name": "Pump flow"
-      },
-      "drink_flow": {
-        "name": "Drink flow"
-      },
       "pump_pressure": {
         "name": "Pump pressure"
       },
-      "pump_starts": {
-        "name": "Pump starts"
+      "pump_type": {
+        "name": "Pump type"
       },
-      "pump_hours": {
-        "name": "Pump hours"
-      },
-      "reservoir_temperature": {
-        "name": "Reservoir temperature"
+      "reservoir_capacity": {
+        "name": "Reservoir capacity"
       },
       "reservoir_content": {
         "name": "Reservoir content"
       },
-      "total_saved": {
-        "name": "Total saved"
+      "reservoir_temperature": {
+        "name": "Reservoir temperature"
       },
-      "total_replenished": {
-        "name": "Total replenished"
-      },
-      "error_code": {
-        "name": "Error code"
-      },
-      "total_use": {
+      "water_used": {
         "name": "Total use"
       },
-      "reservoir_content_max": {
-        "name": "Maximum reservoir content"
+      "water_saved": {
+        "name": "Total saved"
       }
     }
   }

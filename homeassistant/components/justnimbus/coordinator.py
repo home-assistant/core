@@ -7,7 +7,7 @@ import logging
 import justnimbus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID
+from homeassistant.const import CONF_CLIENT_ID, CONF_ZIP_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -27,7 +27,9 @@ class JustNimbusCoordinator(DataUpdateCoordinator[justnimbus.JustNimbusModel]):
             name=DOMAIN,
             update_interval=timedelta(minutes=1),
         )
-        self._client = justnimbus.JustNimbusClient(client_id=entry.data[CONF_CLIENT_ID])
+        self._client = justnimbus.JustNimbusClient(
+            client_id=entry.data[CONF_CLIENT_ID], zip_code=entry.data[CONF_ZIP_CODE]
+        )
 
     async def _async_update_data(self) -> justnimbus.JustNimbusModel:
         """Fetch the latest data from the source."""

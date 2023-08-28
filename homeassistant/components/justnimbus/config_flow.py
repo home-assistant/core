@@ -8,7 +8,7 @@ import justnimbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CLIENT_ID
+from homeassistant.const import CONF_CLIENT_ID, CONF_ZIP_CODE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_ZIP_CODE): cv.string,
     },
 )
 
@@ -39,10 +40,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
+        await self.async_set_unique_id(
+            f"{user_input[CONF_CLIENT_ID]}{user_input[CONF_ZIP_CODE]}"
+        )
         self._abort_if_unique_id_configured()
 
-        client = justnimbus.JustNimbusClient(client_id=user_input[CONF_CLIENT_ID])
+        client = justnimbus.JustNimbusClient(
+            client_id=user_input[CONF_CLIENT_ID], zip_code=user_input[CONF_ZIP_CODE]
+        )
         try:
             await self.hass.async_add_executor_job(client.get_data)
         except justnimbus.InvalidClientID:
