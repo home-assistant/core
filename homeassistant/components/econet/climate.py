@@ -67,18 +67,14 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     def __init__(self, thermostat):
         """Initialize."""
         super().__init__(thermostat)
-        self._running = thermostat.running
-        self._poll = True
-        self.econet_state_to_ha = {}
-        self.ha_state_to_econet = {}
-        self.op_list = []
+        self._attr_hvac_modes = []
         for mode in self._econet.modes:
             if mode not in [
                 ThermostatOperationMode.UNKNOWN,
                 ThermostatOperationMode.EMERGENCY_HEAT,
             ]:
                 ha_mode = ECONET_STATE_TO_HA[mode]
-                self.op_list.append(ha_mode)
+                self._attr_hvac_modes.append(ha_mode)
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -141,14 +137,6 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     def is_aux_heat(self):
         """Return true if aux heater."""
         return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Needs to be one of HVAC_MODE_*.
-        """
-        return self.op_list
 
     @property
     def hvac_mode(self) -> HVACMode:

@@ -56,20 +56,19 @@ async def async_setup_entry(
 
 
 class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
-    """Define a Econet water heater."""
+    """Define an Econet water heater."""
+
+    _attr_should_poll = True  # Override False default from EcoNetEntity
 
     def __init__(self, water_heater):
         """Initialize."""
         super().__init__(water_heater)
         self._running = water_heater.running
-        self._attr_should_poll = True  # Override False default from EcoNetEntity
         self.water_heater = water_heater
-        self.econet_state_to_ha = {}
-        self.ha_state_to_econet = {}
 
     @callback
     def on_update_received(self):
-        """Update was pushed from the ecoent API."""
+        """Update was pushed from the econet API."""
         if self._running != self.water_heater.running:
             # Water heater running state has changed so check usage on next update
             self._attr_should_poll = True
