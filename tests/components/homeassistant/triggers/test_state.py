@@ -696,7 +696,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(
 
 
 async def test_if_fires_on_entity_change_with_for_attribute_change(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
 ) -> None:
     """Test for firing on entity change with for and attribute change."""
     assert await async_setup_component(
@@ -716,22 +716,19 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(
     )
     await hass.async_block_till_done()
 
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = utcnow
-        hass.states.async_set("test.entity", "world")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=4)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        hass.states.async_set(
-            "test.entity", "world", attributes={"mock_attr": "attr_change"}
-        )
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-        mock_utcnow.return_value += timedelta(seconds=4)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 1
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    hass.states.async_set(
+        "test.entity", "world", attributes={"mock_attr": "attr_change"}
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    freezer.tick(timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for_multiple_force_update(
@@ -1103,7 +1100,7 @@ async def test_wait_template_with_trigger(hass: HomeAssistant, calls) -> None:
 
 
 async def test_if_fires_on_entities_change_no_overlap(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
 ) -> None:
     """Test for firing on entities change with no overlap."""
     assert await async_setup_component(
@@ -1126,24 +1123,21 @@ async def test_if_fires_on_entities_change_no_overlap(
     )
     await hass.async_block_till_done()
 
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = utcnow
-        hass.states.async_set("test.entity_1", "world")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=10)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[0].data["some"] == "test.entity_1"
+    hass.states.async_set("test.entity_1", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test.entity_1"
 
-        hass.states.async_set("test.entity_2", "world")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=10)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 2
-        assert calls[1].data["some"] == "test.entity_2"
+    hass.states.async_set("test.entity_2", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "test.entity_2"
 
 
 async def test_if_fires_on_entities_change_overlap(
@@ -1394,7 +1388,7 @@ async def test_invalid_for_template_1(hass: HomeAssistant, calls) -> None:
 
 
 async def test_if_fires_on_entities_change_overlap_for_template(
-    hass: HomeAssistant, calls
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
 ) -> None:
     """Test for firing on entities change with overlap and for template."""
     assert await async_setup_component(
@@ -1420,39 +1414,36 @@ async def test_if_fires_on_entities_change_overlap_for_template(
     )
     await hass.async_block_till_done()
 
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
-        mock_utcnow.return_value = utcnow
-        hass.states.async_set("test.entity_1", "world")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=1)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        hass.states.async_set("test.entity_2", "world")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=1)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        hass.states.async_set("test.entity_2", "hello")
-        await hass.async_block_till_done()
-        mock_utcnow.return_value += timedelta(seconds=1)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        hass.states.async_set("test.entity_2", "world")
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-        mock_utcnow.return_value += timedelta(seconds=3)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 1
-        assert calls[0].data["some"] == "test.entity_1 - 0:00:05"
+    hass.states.async_set("test.entity_1", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set("test.entity_2", "world")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set("test.entity_2", "hello")
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set("test.entity_2", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test.entity_1 - 0:00:05"
 
-        mock_utcnow.return_value += timedelta(seconds=3)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 1
-        mock_utcnow.return_value += timedelta(seconds=5)
-        async_fire_time_changed(hass, mock_utcnow.return_value)
-        await hass.async_block_till_done()
-        assert len(calls) == 2
-        assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "test.entity_2 - 0:00:10"
 
 
 async def test_attribute_if_fires_on_entity_change_with_both_filters(
