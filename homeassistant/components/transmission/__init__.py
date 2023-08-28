@@ -227,13 +227,18 @@ class TransmissionClient:
         self.hass = hass
         self.config_entry = config_entry
         self.tm_api = api
-        self.tm_data = TransmissionData(self.hass, self.config_entry, api)
+        self._tm_data = TransmissionData(self.hass, self.config_entry, api)
         self.unsub_timer: Callable[[], None] | None = None
+
+    @property
+    def api(self) -> TransmissionData:
+        """Return the TransmissionData object."""
+        return self._tm_data
 
     async def async_setup(self) -> None:
         """Set up the Transmission client."""
-        await self.hass.async_add_executor_job(self.tm_data.init_torrent_list)
-        await self.hass.async_add_executor_job(self.tm_data.update)
+        await self.hass.async_add_executor_job(self.api.init_torrent_list)
+        await self.hass.async_add_executor_job(self.api.update)
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
@@ -250,7 +255,7 @@ class TransmissionClient:
                 ("http", "ftp:", "magnet:")
             ) or self.hass.config.is_allowed_path(torrent):
                 tm_client.tm_api.add_torrent(torrent)
-                tm_client.tm_data.update()
+                tm_client.api.update()
             else:
                 _LOGGER.warning(
                     "Could not add torrent: unsupported type or no permission"
@@ -263,7 +268,7 @@ class TransmissionClient:
 
             torrent_id = service.data[CONF_ID]
             tm_client.tm_api.start_torrent(torrent_id)
-            tm_client.tm_data.update()
+            tm_client.api.update()
 
         def stop_torrent(service: ServiceCall) -> None:
             """Stop torrent."""
@@ -272,7 +277,7 @@ class TransmissionClient:
 
             torrent_id = service.data[CONF_ID]
             tm_client.tm_api.stop_torrent(torrent_id)
-            tm_client.tm_data.update()
+            tm_client.api.update()
 
         def remove_torrent(service: ServiceCall) -> None:
             """Remove torrent."""
@@ -282,7 +287,7 @@ class TransmissionClient:
             torrent_id = service.data[CONF_ID]
             delete_data = service.data[ATTR_DELETE_DATA]
             tm_client.tm_api.remove_torrent(torrent_id, delete_data=delete_data)
-            tm_client.tm_data.update()
+            tm_client.api.update()
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
@@ -334,7 +339,7 @@ class TransmissionClient:
 
         def refresh(event_time: datetime) -> None:
             """Get the latest data from Transmission."""
-            self.tm_data.update()
+            self.api.update()
 
         if self.unsub_timer is not None:
             self.unsub_timer()
@@ -347,7 +352,7 @@ class TransmissionClient:
         """Triggered by config entry options updates."""
         tm_client: TransmissionClient = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
-        await hass.async_add_executor_job(tm_client.tm_data.update)
+        await hass.async_add_executor_job(tm_client.api.update)
 
 
 class TransmissionData:
