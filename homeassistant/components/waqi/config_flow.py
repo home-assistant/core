@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_METHOD,
     CONF_NAME,
 )
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
@@ -35,7 +36,6 @@ from .const import CONF_STATION_NUMBER, DOMAIN, ISSUE_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_METHOD = "method"
 CONF_MAP = "map"
 
 
