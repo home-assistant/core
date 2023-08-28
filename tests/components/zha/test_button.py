@@ -35,8 +35,6 @@ from homeassistant.helpers import entity_registry as er
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import mock_coro
-
 
 @pytest.fixture(autouse=True)
 def button_platform_only():
@@ -143,7 +141,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -151,7 +149,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -168,7 +166,7 @@ async def test_button(hass: HomeAssistant, contact_sensor) -> None:
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "2021-11-04T16:37:00+00:00"
-    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.IDENTIFY
 
 
 async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
@@ -191,7 +189,7 @@ async def test_frost_unlock(hass: HomeAssistant, tuya_water_valve) -> None:
 
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
             DOMAIN,

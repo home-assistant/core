@@ -17,11 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -32,7 +28,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="cover",
         info_type=CoverInfo,
         entity_type=EsphomeCover,
         state_type=CoverState,

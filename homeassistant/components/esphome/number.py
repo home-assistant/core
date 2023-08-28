@@ -16,11 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -34,7 +30,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="number",
         info_type=NumberInfo,
         entity_type=EsphomeNumber,
         state_type=NumberState,
@@ -64,7 +59,10 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         self._attr_native_min_value = static_info.min_value
         self._attr_native_max_value = static_info.max_value
         self._attr_native_step = static_info.step
-        self._attr_native_unit_of_measurement = static_info.unit_of_measurement
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
         if mode := static_info.mode:
             self._attr_mode = NUMBER_MODES.from_esphome(mode)
         else:
@@ -75,9 +73,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         state = self._state
-        if math.isnan(state.state):
-            return None
-        if state.missing_state:
+        if state.missing_state or not math.isfinite(state.state):
             return None
         return state.state
 

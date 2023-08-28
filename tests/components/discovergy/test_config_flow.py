@@ -80,7 +80,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pydiscovergy.Discovergy.get_meters",
+        "pydiscovergy.Discovergy.meters",
         side_effect=InvalidLogin,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -101,7 +101,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch("pydiscovergy.Discovergy.get_meters", side_effect=HTTPError):
+    with patch("pydiscovergy.Discovergy.meters", side_effect=HTTPError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -120,7 +120,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch("pydiscovergy.Discovergy.get_meters", side_effect=Exception):
+    with patch("pydiscovergy.Discovergy.meters", side_effect=Exception):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sighthound",
   "iot_class": "cloud_polling",
   "loggers": ["simplehound"],
-  "requirements": ["Pillow==9.5.0", "simplehound==0.3"]
+  "requirements": ["Pillow==10.0.0", "simplehound==0.3"]
 }

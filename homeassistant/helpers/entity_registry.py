@@ -11,13 +11,15 @@ from __future__ import annotations
 
 from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping, ValuesView
+from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+import time
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, TypeVar, cast
 
 import attr
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -26,6 +28,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -61,8 +64,11 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 10
+STORAGE_VERSION_MINOR = 11
 STORAGE_KEY = "core.entity_registry"
+
+CLEANUP_INTERVAL = 3600 * 24
+ORPHANED_ENTITY_KEEP_SECONDS = 3600 * 24 * 30
 
 ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
     # mypy does not understand strenum
@@ -99,6 +105,28 @@ class RegistryEntryHider(StrEnum):
 
     INTEGRATION = "integration"
     USER = "user"
+
+
+class _EventEntityRegistryUpdatedData_CreateRemove(TypedDict):
+    """EventEntityRegistryUpdated data for action type 'create' and 'remove'."""
+
+    action: Literal["create", "remove"]
+    entity_id: str
+
+
+class _EventEntityRegistryUpdatedData_Update(TypedDict):
+    """EventEntityRegistryUpdated data for action type 'update'."""
+
+    action: Literal["update"]
+    entity_id: str
+    changes: dict[str, Any]  # Required with action == "update"
+    old_entity_id: NotRequired[str]
+
+
+EventEntityRegistryUpdatedData = (
+    _EventEntityRegistryUpdatedData_CreateRemove
+    | _EventEntityRegistryUpdatedData_Update
+)
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
@@ -138,7 +166,10 @@ class RegistryEntry:
     entity_category: EntityCategory | None = attr.ib(default=None)
     hidden_by: RegistryEntryHider | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    id: str = attr.ib(
+        default=None,
+        converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
+    )
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(
@@ -297,6 +328,24 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
+@attr.s(slots=True, frozen=True)
+class DeletedRegistryEntry:
+    """Deleted Entity Registry Entry."""
+
+    entity_id: str = attr.ib()
+    unique_id: str = attr.ib()
+    platform: str = attr.ib()
+    config_entry_id: str | None = attr.ib()
+    domain: str = attr.ib(init=False, repr=False)
+    id: str = attr.ib()
+    orphaned_timestamp: float | None = attr.ib()
+
+    @domain.default
+    def _domain_default(self) -> str:
+        """Compute domain value."""
+        return split_entity_id(self.entity_id)[0]
+
+
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
@@ -372,6 +421,10 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             for entity in data["entities"]:
                 entity["aliases"] = []
 
+        if old_major_version == 1 and old_minor_version < 11:
+            # Version 1.11 adds deleted_entities
+            data["deleted_entities"] = data.get("deleted_entities", [])
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -424,6 +477,7 @@ class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
+    deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry]
     entities: EntityRegistryItems
     _entities_data: dict[str, RegistryEntry]
 
@@ -496,6 +550,9 @@ class EntityRegistry:
         - It's not registered
         - It's not known by the entity component adding the entity
         - It's not in the state machine
+
+        Note that an entity_id which belongs to a deleted entity is considered
+        available.
         """
         if known_object_ids is None:
             known_object_ids = {}
@@ -591,8 +648,16 @@ class EntityRegistry:
                 unit_of_measurement=unit_of_measurement,
             )
 
+        entity_registry_id: str | None = None
+        deleted_entity = self.deleted_entities.pop((domain, platform, unique_id), None)
+        if deleted_entity is not None:
+            # Restore id
+            entity_registry_id = deleted_entity.id
+
         entity_id = self.async_generate_entity_id(
-            domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
+            domain,
+            suggested_object_id or f"{platform}_{unique_id}",
+            known_object_ids,
         )
 
         if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
@@ -630,6 +695,7 @@ class EntityRegistry:
             entity_id=entity_id,
             hidden_by=hidden_by,
             has_entity_name=none_if_undefined(has_entity_name) or False,
+            id=entity_registry_id,
             options=initial_options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
@@ -653,7 +719,19 @@ class EntityRegistry:
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.entities.pop(entity_id)
+        entity = self.entities.pop(entity_id)
+        config_entry_id = entity.config_entry_id
+        key = (entity.domain, entity.platform, entity.unique_id)
+        # If the entity does not belong to a config entry, mark it as orphaned
+        orphaned_timestamp = None if config_entry_id else time.time()
+        self.deleted_entities[key] = DeletedRegistryEntry(
+            config_entry_id=config_entry_id,
+            entity_id=entity_id,
+            id=entity.id,
+            orphaned_timestamp=orphaned_timestamp,
+            platform=entity.platform,
+            unique_id=entity.unique_id,
+        )
         self.hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
         )
@@ -954,10 +1032,12 @@ class EntityRegistry:
 
     async def async_load(self) -> None:
         """Load the entity registry."""
-        async_setup_entity_restore(self.hass, self)
+        _async_setup_cleanup(self.hass, self)
+        _async_setup_entity_restore(self.hass, self)
 
         data = await self._store.async_load()
         entities = EntityRegistryItems()
+        deleted_entities: dict[tuple[str, str, str], DeletedRegistryEntry] = {}
 
         if data is not None:
             for entity in data["entities"]:
@@ -996,7 +1076,22 @@ class EntityRegistry:
                     unique_id=entity["unique_id"],
                     unit_of_measurement=entity["unit_of_measurement"],
                 )
+            for entity in data["deleted_entities"]:
+                key = (
+                    split_entity_id(entity["entity_id"])[0],
+                    entity["platform"],
+                    entity["unique_id"],
+                )
+                deleted_entities[key] = DeletedRegistryEntry(
+                    config_entry_id=entity["config_entry_id"],
+                    entity_id=entity["entity_id"],
+                    id=entity["id"],
+                    orphaned_timestamp=entity["orphaned_timestamp"],
+                    platform=entity["platform"],
+                    unique_id=entity["unique_id"],
+                )
 
+        self.deleted_entities = deleted_entities
         self.entities = entities
         self._entities_data = entities.data
 
@@ -1038,18 +1133,54 @@ class EntityRegistry:
             }
             for entry in self.entities.values()
         ]
+        data["deleted_entities"] = [
+            {
+                "config_entry_id": entry.config_entry_id,
+                "entity_id": entry.entity_id,
+                "id": entry.id,
+                "orphaned_timestamp": entry.orphaned_timestamp,
+                "platform": entry.platform,
+                "unique_id": entry.unique_id,
+            }
+            for entry in self.deleted_entities.values()
+        ]
 
         return data
 
     @callback
-    def async_clear_config_entry(self, config_entry: str) -> None:
+    def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
+        now_time = time.time()
         for entity_id in [
             entity_id
             for entity_id, entry in self.entities.items()
-            if config_entry == entry.config_entry_id
+            if config_entry_id == entry.config_entry_id
         ]:
             self.async_remove(entity_id)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if config_entry_id != deleted_entity.config_entry_id:
+                continue
+            # Add a time stamp when the deleted entity became orphaned
+            self.deleted_entities[key] = attr.evolve(
+                deleted_entity, orphaned_timestamp=now_time, config_entry_id=None
+            )
+            self.async_schedule_save()
+
+    @callback
+    def async_purge_expired_orphaned_entities(self) -> None:
+        """Purge expired orphaned entities from the registry.
+
+        We need to purge these periodically to avoid the database
+        growing without bound.
+        """
+        now_time = time.time()
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if (orphaned_timestamp := deleted_entity.orphaned_timestamp) is None:
+                continue
+
+            if orphaned_timestamp + ORPHANED_ENTITY_KEEP_SECONDS < now_time:
+                self.deleted_entities.pop(key)
+                self.async_schedule_save()
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -1136,7 +1267,31 @@ def async_config_entry_disabled_by_changed(
 
 
 @callback
-def async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -> None:
+def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
+    """Clean up device registry when entities removed."""
+    from . import event  # pylint: disable=import-outside-toplevel
+
+    @callback
+    def cleanup(_: datetime) -> None:
+        """Clean up entity registry."""
+        # Periodic purge of orphaned entities to avoid the registry
+        # growing without bounds when there are lots of deleted entities
+        registry.async_purge_expired_orphaned_entities()
+
+    cancel = event.async_track_time_interval(
+        hass, cleanup, timedelta(seconds=CLEANUP_INTERVAL)
+    )
+
+    @callback
+    def _on_homeassistant_stop(event: Event) -> None:
+        """Cancel cleanup."""
+        cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
+
+
+@callback
+def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Set up the entity restore mechanism."""
 
     @callback

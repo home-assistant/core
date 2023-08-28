@@ -54,7 +54,12 @@ class BaseDataUpdateCoordinatorProtocol(Protocol):
 
 
 class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
-    """Class to manage fetching data from single endpoint."""
+    """Class to manage fetching data from single endpoint.
+
+    Setting :attr:`always_update` to ``False`` will cause coordinator to only
+    callback listeners when data has changed. This requires that the data
+    implements ``__eq__`` or uses a python object that already does.
+    """
 
     def __init__(
         self,
@@ -65,6 +70,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        always_update: bool = True,
     ) -> None:
         """Initialize global data updater."""
         self.hass = hass
@@ -74,6 +80,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
+        self.always_update = always_update
+        self._next_refresh: float | None = None
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -82,10 +90,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # when it was already checked during setup.
         self.data: _DataT = None  # type: ignore[assignment]
 
-        # Pick a random microsecond to stagger the refreshes
+        # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
         # and avoid a thundering herd.
-        self._microsecond = randint(
-            event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX
+        self._microsecond = (
+            randint(event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX)
+            / 10**6
         )
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -175,6 +184,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Unschedule any pending refresh since there is no longer any listeners."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
+        self._next_refresh = None
 
     def async_contexts(self) -> Generator[Any, None, None]:
         """Return all registered contexts."""
@@ -207,20 +217,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We _floor_ utcnow to create a schedule on a rounded second,
-        # minimizing the time between the point and the real activation.
-        # That way we obtain a constant update frequency,
-        # as long as the update process takes less than 500ms
-        #
-        # We do not align everything to happen at microsecond 0
-        # since it increases the risk of a thundering herd
-        # when multiple coordinators are scheduled to update at the same time.
-        #
-        # https://github.com/home-assistant/core/issues/82231
-        self._unsub_refresh = event.async_track_point_in_utc_time(
+        # We use event.async_call_at because DataUpdateCoordinator does
+        # not need an exact update interval.
+        now = self.hass.loop.time()
+        if self._next_refresh is None or self._next_refresh <= now:
+            self._next_refresh = int(now) + self._microsecond
+        self._next_refresh += self.update_interval.total_seconds()
+        self._unsub_refresh = event.async_call_at(
             self.hass,
             self._job,
-            utcnow().replace(microsecond=self._microsecond) + self.update_interval,
+            self._next_refresh,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -259,6 +265,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
+        self._next_refresh = None
         await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901
@@ -277,7 +284,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
             start = monotonic()
+
         auth_failed = False
+        previous_update_success = self.last_update_success
+        previous_data = self.data
 
         try:
             self.data = await self._async_update_data()
@@ -371,7 +381,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        self.async_update_listeners()
+        if not self.last_update_success and not previous_update_success:
+            return
+
+        if (
+            self.always_update
+            or self.last_update_success != previous_update_success
+            or previous_data != self.data
+        ):
+            self.async_update_listeners()
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
@@ -387,6 +405,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Manually update data, notify listeners and reset refresh interval."""
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
+        self._next_refresh = None
 
         self.data = data
         self.last_update_success = True
@@ -399,6 +418,29 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._schedule_refresh()
 
         self.async_update_listeners()
+
+
+class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator which keeps track of the last successful update."""
+
+    last_update_success_time: datetime | None = None
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        await super()._async_refresh(
+            log_failures,
+            raise_on_auth_failed,
+            scheduled,
+            raise_on_entry_error,
+        )
+        if self.last_update_success:
+            self.last_update_success_time = utcnow()
 
 
 class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):

@@ -48,7 +48,7 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -66,7 +66,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in basic_action_types
@@ -76,7 +76,7 @@ async def test_get_actions(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in expected_action_types
@@ -110,7 +110,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -125,7 +125,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["lock", "unlock"]
@@ -136,8 +136,10 @@ async def test_get_actions_hidden_auxiliary(
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test for lock actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -148,7 +150,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "lock.entity",
+                        "entity_id": entry.id,
                         "type": "lock",
                     },
                 },
@@ -157,7 +159,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "lock.entity",
+                        "entity_id": entry.id,
                         "type": "unlock",
                     },
                 },
@@ -166,7 +168,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "lock.entity",
+                        "entity_id": entry.id,
                         "type": "open",
                     },
                 },
@@ -196,3 +198,49 @@ async def test_action(hass: HomeAssistant) -> None:
     assert len(lock_calls) == 1
     assert len(unlock_calls) == 1
     assert len(open_calls) == 1
+
+    assert lock_calls[0].domain == DOMAIN
+    assert lock_calls[0].service == "lock"
+    assert lock_calls[0].data == {"entity_id": entry.entity_id}
+    assert unlock_calls[0].domain == DOMAIN
+    assert unlock_calls[0].service == "unlock"
+    assert unlock_calls[0].data == {"entity_id": entry.entity_id}
+    assert open_calls[0].domain == DOMAIN
+    assert open_calls[0].service == "open"
+    assert open_calls[0].data == {"entity_id": entry.entity_id}
+
+
+async def test_action_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test for lock actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_lock"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": entry.id,
+                        "type": "lock",
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    lock_calls = async_mock_service(hass, "lock", "lock")
+
+    hass.bus.async_fire("test_event_lock")
+    await hass.async_block_till_done()
+    assert len(lock_calls) == 1
+
+    assert lock_calls[0].domain == DOMAIN
+    assert lock_calls[0].service == "lock"
+    assert lock_calls[0].data == {"entity_id": entry.entity_id}

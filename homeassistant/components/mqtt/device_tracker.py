@@ -61,7 +61,7 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
@@ -104,6 +104,7 @@ async def _async_setup_entity(
 class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
+    _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _value_template: Callable[..., ReceivePayloadType]
 
@@ -163,6 +164,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 }
             },
         )
+
+    @property
+    def force_update(self) -> bool:
+        """Do not force updates if the state is the same."""
+        return False
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

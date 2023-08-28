@@ -7,6 +7,7 @@ from aioesphomeapi import (
     AlarmControlPanelInfo,
     AlarmControlPanelState,
     APIIntEnum,
+    EntityInfo,
 )
 
 from homeassistant.components.alarm_control_panel import (
@@ -27,13 +28,10 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import (
-    EsphomeEntity,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
@@ -73,7 +71,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="alarm_control_panel",
         info_type=AlarmControlPanelInfo,
         entity_type=EsphomeAlarmControlPanel,
         state_type=AlarmControlPanelEntityState,
@@ -86,14 +83,11 @@ class EsphomeAlarmControlPanel(
 ):
     """An Alarm Control Panel implementation for ESPHome."""
 
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
-
-    @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
         feature = 0
         if self._static_info.supported_features & EspHomeACPFeatures.ARM_HOME:
             feature |= AlarmControlPanelEntityFeature.ARM_HOME
@@ -107,58 +101,56 @@ class EsphomeAlarmControlPanel(
             feature |= AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
         if self._static_info.supported_features & EspHomeACPFeatures.ARM_VACATION:
             feature |= AlarmControlPanelEntityFeature.ARM_VACATION
-        return AlarmControlPanelEntityFeature(feature)
+        self._attr_supported_features = AlarmControlPanelEntityFeature(feature)
+        self._attr_code_format = (
+            CodeFormat.NUMBER if static_info.requires_code else None
+        )
+        self._attr_code_arm_required = bool(static_info.requires_code_to_arm)
 
     @property
-    def code_format(self) -> CodeFormat | None:
-        """Return code format for disarm."""
-        if self._static_info.requires_code:
-            return CodeFormat.NUMBER
-        return None
-
-    @property
-    def code_arm_required(self) -> bool:
-        """Whether the code is required for arm actions."""
-        return bool(self._static_info.requires_code_to_arm)
+    @esphome_state_property
+    def state(self) -> str | None:
+        """Return the state of the device."""
+        return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.DISARM, code
+            self._key, AlarmControlPanelCommand.DISARM, code
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.ARM_HOME, code
+            self._key, AlarmControlPanelCommand.ARM_HOME, code
         )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.ARM_AWAY, code
+            self._key, AlarmControlPanelCommand.ARM_AWAY, code
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.ARM_NIGHT, code
+            self._key, AlarmControlPanelCommand.ARM_NIGHT, code
         )
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
+            self._key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
         )
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.ARM_VACATION, code
+            self._key, AlarmControlPanelCommand.ARM_VACATION, code
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self._client.alarm_control_panel_command(
-            self._static_info.key, AlarmControlPanelCommand.TRIGGER, code
+            self._key, AlarmControlPanelCommand.TRIGGER, code
         )

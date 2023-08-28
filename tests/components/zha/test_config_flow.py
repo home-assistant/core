@@ -74,6 +74,15 @@ def mock_app():
     mock_app = AsyncMock()
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+    mock_app.state.network_info.metadata = {
+        "ezsp": {
+            "can_burn_userdata_custom_eui64": True,
+            "can_rewrite_custom_eui64": False,
+        }
+    }
+    mock_app.add_listener = MagicMock()
+    mock_app.groups = MagicMock()
+    mock_app.devices = MagicMock()
 
     with patch(
         "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)
@@ -1517,6 +1526,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     mock_app.state.node_info = backup.node_info
     mock_app.state.network_info = copy.deepcopy(backup.network_info)
     mock_app.state.network_info.network_key.tx_counter += 10000
+    mock_app.state.network_info.metadata["ezsp"] = {}
 
     # Include the overwrite option, just in case someone uploads a backup with it
     backup.network_info.metadata["ezsp"] = {EZSP_OVERWRITE_EUI64: True}

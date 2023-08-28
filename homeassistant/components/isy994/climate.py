@@ -35,8 +35,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     _LOGGER,
@@ -55,6 +56,7 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass
+from .models import IsyData
 
 
 async def async_setup_entry(
@@ -63,7 +65,7 @@ async def async_setup_entry(
     """Set up the ISY thermostat platform."""
     entities = []
 
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
     for node in isy_data.nodes[Platform.CLIMATE]:
         entities.append(ISYThermostatEntity(node, devices.get(node.primary_node)))
@@ -131,7 +133,10 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
                 if self._node.protocol == PROTO_INSTEON
                 else UOM_HVAC_MODE_GENERIC
             )
-        return UOM_TO_STATES[uom].get(hvac_mode.value, HVACMode.OFF)
+        return (
+            try_parse_enum(HVACMode, UOM_TO_STATES[uom].get(hvac_mode.value))
+            or HVACMode.OFF
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -139,7 +144,9 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         hvac_action = self._node.aux_properties.get(PROP_HEAT_COOL_STATE)
         if not hvac_action:
             return None
-        return UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        return try_parse_enum(
+            HVACAction, UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
+        )
 
     @property
     def current_temperature(self) -> float | None:

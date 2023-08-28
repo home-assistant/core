@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
-import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -63,6 +62,21 @@ class WebSocketAdapter(logging.LoggerAdapter):
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
+    __slots__ = (
+        "_hass",
+        "_request",
+        "_wsock",
+        "_handle_task",
+        "_writer_task",
+        "_closing",
+        "_authenticated",
+        "_logger",
+        "_peak_checker_unsub",
+        "_connection",
+        "_message_queue",
+        "_ready_future",
+    )
+
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self._hass = hass
@@ -80,7 +94,7 @@ class WebSocketHandler:
         # to where messages are queued. This allows the implementation
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
-        self._message_queue: deque[str | Callable[[], str] | None] = deque()
+        self._message_queue: deque[str | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
 
     def __repr__(self) -> str:
@@ -121,12 +135,11 @@ class WebSocketHandler:
                     messages_remaining = len(message_queue)
 
                 # A None message is used to signal the end of the connection
-                if (process := message_queue.popleft()) is None:
+                if (message := message_queue.popleft()) is None:
                     return
 
                 debug_enabled = is_enabled_for(logging_debug)
                 messages_remaining -= 1
-                message = process if isinstance(process, str) else process()
 
                 if (
                     not messages_remaining
@@ -141,9 +154,9 @@ class WebSocketHandler:
                 messages: list[str] = [message]
                 while messages_remaining:
                     # A None message is used to signal the end of the connection
-                    if (process := message_queue.popleft()) is None:
+                    if (message := message_queue.popleft()) is None:
                         return
-                    messages.append(process if isinstance(process, str) else process())
+                    messages.append(message)
                     messages_remaining -= 1
 
                 joined_messages = ",".join(messages)
@@ -169,7 +182,7 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
+    def _send_message(self, message: str | dict[str, Any]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
@@ -201,8 +214,9 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if self._ready_future and not self._ready_future.done():
-            self._ready_future.set_result(None)
+        ready_future = self._ready_future
+        if ready_future and not ready_future.done():
+            ready_future.set_result(None)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -258,7 +272,7 @@ class WebSocketHandler:
         logging_debug = logging.DEBUG
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await wsock.prepare(request)
         except asyncio.TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
@@ -287,7 +301,7 @@ class WebSocketHandler:
 
             # Auth Phase
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     msg = await wsock.receive()
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"

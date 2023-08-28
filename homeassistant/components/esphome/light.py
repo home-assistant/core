@@ -31,11 +31,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
@@ -48,7 +44,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="light",
         info_type=LightInfo,
         entity_type=EsphomeLight,
         state_type=LightState,
@@ -186,7 +181,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if (rgbw_ha := kwargs.get(ATTR_RGBW_COLOR)) is not None:
-            # pylint: disable-next=invalid-name
             *rgb, w = tuple(x / 255 for x in rgbw_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -199,7 +193,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             try_keep_current_mode = False
 
         if (rgbww_ha := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
-            # pylint: disable-next=invalid-name
             *rgb, cw, ww = tuple(x / 255 for x in rgbww_ha)  # type: ignore[assignment]
             color_bri = max(rgb)
             # normalize rgb
@@ -362,12 +355,6 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             round(state.cold_white * 255),
             round(state.warm_white * 255),
         )
-
-    @property
-    @esphome_state_property
-    def color_temp(self) -> int:
-        """Return the CT color value in mireds."""
-        return round(self._state.color_temperature)
 
     @property
     @esphome_state_property

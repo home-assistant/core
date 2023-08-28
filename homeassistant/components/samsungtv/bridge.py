@@ -548,8 +548,7 @@ class SamsungTVWSBridge(
                 return RESULT_AUTH_MISSING
             except (ConnectionFailure, OSError, AsyncioTimeoutError) as err:
                 LOGGER.debug("Failing config: %s, %s error: %s", config, type(err), err)
-        # pylint: disable-next=useless-else-on-loop
-        else:
+        else:  # noqa: PLW0120
             if result:
                 return result
 

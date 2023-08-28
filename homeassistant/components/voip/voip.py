@@ -10,8 +10,13 @@ from pathlib import Path
 import time
 from typing import TYPE_CHECKING
 
-import async_timeout
-from voip_utils import CallInfo, RtpDatagramProtocol, SdpInfo, VoipDatagramProtocol
+from voip_utils import (
+    CallInfo,
+    RtcpState,
+    RtpDatagramProtocol,
+    SdpInfo,
+    VoipDatagramProtocol,
+)
 
 from homeassistant.components import stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -31,13 +36,7 @@ from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid
 
-from .const import (
-    CHANNELS,
-    DOMAIN,
-    RATE,
-    RTP_AUDIO_SETTINGS,
-    WIDTH,
-)
+from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 
 if TYPE_CHECKING:
     from .devices import VoIPDevice, VoIPDevices
@@ -46,7 +45,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def make_protocol(
-    hass: HomeAssistant, devices: VoIPDevices, call_info: CallInfo
+    hass: HomeAssistant,
+    devices: VoIPDevices,
+    call_info: CallInfo,
+    rtcp_state: RtcpState | None = None,
 ) -> VoipDatagramProtocol:
     """Plays a pre-recorded message if pipeline is misconfigured."""
     voip_device = devices.async_get_or_create(call_info)
@@ -70,6 +72,7 @@ def make_protocol(
             hass,
             "problem.pcm",
             opus_payload_type=call_info.opus_payload_type,
+            rtcp_state=rtcp_state,
         )
 
     vad_sensitivity = pipeline_select.get_vad_sensitivity(
@@ -86,6 +89,7 @@ def make_protocol(
         Context(user_id=devices.config_entry.data["user"]),
         opus_payload_type=call_info.opus_payload_type,
         silence_seconds=VadSensitivity.to_seconds(vad_sensitivity),
+        rtcp_state=rtcp_state,
     )
 
 
@@ -101,13 +105,14 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
                 session_name="voip_hass",
                 version=__version__,
             ),
-            valid_protocol_factory=lambda call_info: make_protocol(
-                hass, devices, call_info
+            valid_protocol_factory=lambda call_info, rtcp_state: make_protocol(
+                hass, devices, call_info, rtcp_state
             ),
-            invalid_protocol_factory=lambda call_info: PreRecordMessageProtocol(
+            invalid_protocol_factory=lambda call_info, rtcp_state: PreRecordMessageProtocol(
                 hass,
                 "not_configured.pcm",
                 opus_payload_type=call_info.opus_payload_type,
+                rtcp_state=rtcp_state,
             ),
         )
         self.hass = hass
@@ -147,6 +152,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         tone_delay: float = 0.2,
         tts_extra_timeout: float = 1.0,
         silence_seconds: float = 1.0,
+        rtcp_state: RtcpState | None = None,
     ) -> None:
         """Set up pipeline RTP server."""
         super().__init__(
@@ -154,6 +160,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             width=WIDTH,
             channels=CHANNELS,
             opus_payload_type=opus_payload_type,
+            rtcp_state=rtcp_state,
         )
 
         self.hass = hass
@@ -251,7 +258,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     self._clear_audio_queue()
 
             # Run pipeline with a timeout
-            async with async_timeout.timeout(self.pipeline_timeout):
+            async with asyncio.timeout(self.pipeline_timeout):
                 await async_pipeline_from_audio_stream(
                     self.hass,
                     context=self._context,
@@ -307,7 +314,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         """
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
         while chunk:
@@ -318,7 +325,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                 # Buffer until command starts
                 return True
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
         return False
@@ -335,7 +342,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
         # Timeout if no audio comes in for a while.
         # This means the caller hung up.
-        async with async_timeout.timeout(self.audio_timeout):
+        async with asyncio.timeout(self.audio_timeout):
             chunk = await self._audio_queue.get()
 
         while chunk:
@@ -345,7 +352,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             yield chunk
 
-            async with async_timeout.timeout(self.audio_timeout):
+            async with asyncio.timeout(self.audio_timeout):
                 chunk = await self._audio_queue.get()
 
     def _clear_audio_queue(self) -> None:
@@ -387,7 +394,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             tts_samples = len(audio_bytes) / (WIDTH * CHANNELS)
             tts_seconds = tts_samples / RATE
 
-            async with async_timeout.timeout(tts_seconds + self.tts_extra_timeout):
+            async with asyncio.timeout(tts_seconds + self.tts_extra_timeout):
                 # Assume TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
         except asyncio.TimeoutError as err:
@@ -454,6 +461,7 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
         opus_payload_type: int,
         message_delay: float = 1.0,
         loop_delay: float = 2.0,
+        rtcp_state: RtcpState | None = None,
     ) -> None:
         """Set up RTP server."""
         super().__init__(
@@ -461,6 +469,7 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
             width=WIDTH,
             channels=CHANNELS,
             opus_payload_type=opus_payload_type,
+            rtcp_state=rtcp_state,
         )
         self.hass = hass
         self.file_name = file_name

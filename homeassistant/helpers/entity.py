@@ -12,10 +12,11 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
+from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -33,18 +34,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType
+from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import UNDEFINED, EventType, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -173,25 +174,6 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.unit_of_measurement
 
 
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    configuration_url: str | None
-    connections: set[tuple[str, str]]
-    default_manufacturer: str
-    default_model: str
-    default_name: str
-    entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    name: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    hw_version: str | None
-    via_device: tuple[str, str]
-
-
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
@@ -276,6 +258,9 @@ class Entity(ABC):
     # Entry in the entity registry
     registry_entry: er.RegistryEntry | None = None
 
+    # The device entry for this entity
+    device_entry: dr.DeviceEntry | None = None
+
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
 
@@ -311,10 +296,6 @@ class Entity(ABC):
     _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
-
-    # Translation cache
-    _cached_name_translation_key: str | None = None
-    _cached_device_class_name: str | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -354,7 +335,7 @@ class Entity(ABC):
         if hasattr(self, "_attr_name"):
             return not self._attr_name
 
-        if name_translation_key := self._name_translation_key():
+        if name_translation_key := self._name_translation_key:
             if name_translation_key in self.platform.platform_translations:
                 return False
 
@@ -384,48 +365,59 @@ class Entity(ABC):
             return self.entity_description.has_entity_name
         return False
 
-    def _device_class_name(self) -> str | None:
+    def _device_class_name_helper(
+        self,
+        component_translations: dict[str, Any],
+    ) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        if self._cached_device_class_name is not None:
-            return self._cached_device_class_name
         if not self.has_entity_name:
             return None
         device_class_key = self.device_class or "_"
         platform = self.platform
         name_translation_key = (
-            f"component.{platform.domain}.entity_component." f"{device_class_key}.name"
+            f"component.{platform.domain}.entity_component.{device_class_key}.name"
         )
-        self._cached_device_class_name = platform.component_translations.get(
-            name_translation_key
+        return component_translations.get(name_translation_key)
+
+    @cached_property
+    def _object_id_device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        return self._device_class_name_helper(
+            self.platform.object_id_component_translations
         )
-        return self._cached_device_class_name
+
+    @cached_property
+    def _device_class_name(self) -> str | None:
+        """Return a translated name of the entity based on its device class."""
+        return self._device_class_name_helper(self.platform.component_translations)
 
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class."""
         return False
 
+    @cached_property
     def _name_translation_key(self) -> str | None:
         """Return translation key for entity name."""
-        if self._cached_name_translation_key is not None:
-            return self._cached_name_translation_key
         if self.translation_key is None:
             return None
         platform = self.platform
-        self._cached_name_translation_key = (
+        return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
         )
-        return self._cached_name_translation_key
 
-    @property
-    def name(self) -> str | UndefinedType | None:
+    def _name_internal(
+        self,
+        device_class_name: str | None,
+        platform_translations: dict[str, Any],
+    ) -> str | UndefinedType | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
         if (
             self.has_entity_name
-            and (name_translation_key := self._name_translation_key())
-            and (name := self.platform.platform_translations.get(name_translation_key))
+            and (name_translation_key := self._name_translation_key)
+            and (name := platform_translations.get(name_translation_key))
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
@@ -433,14 +425,41 @@ class Entity(ABC):
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
-                return self._device_class_name()
+                return device_class_name
             return description_name
 
         # The entity has no name set by _attr_name, translation_key or entity_description
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
-            return self._device_class_name()
+            return device_class_name
         return UNDEFINED
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return input for object id."""
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        if self.__class__.name.fget is Entity.name.fget and self.platform:  # type: ignore[attr-defined]
+            name = self._name_internal(
+                self._object_id_device_class_name,
+                self.platform.object_id_platform_translations,
+            )
+        else:
+            name = self.name
+        return None if name is UNDEFINED else name
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if not self.platform:
+            return self._name_internal(None, {})
+        return self._name_internal(
+            self._device_class_name,
+            self.platform.platform_translations,
+        )
 
     @property
     def state(self) -> StateType:
@@ -728,44 +747,18 @@ class Entity(ABC):
         if name is UNDEFINED:
             name = None
 
-        if not self.has_entity_name or not self.registry_entry:
+        if not self.has_entity_name or not (device_entry := self.device_entry):
             return name
 
-        device_registry = dr.async_get(self.hass)
-        if not (device_id := self.registry_entry.device_id) or not (
-            device_entry := device_registry.async_get(device_id)
-        ):
-            return name
-
+        device_name = device_entry.name_by_user or device_entry.name
         if self.use_device_name:
-            return device_entry.name_by_user or device_entry.name
-        return f"{device_entry.name_by_user or device_entry.name} {name}"
+            return device_name
+        return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
-            # Polling returned after the entity has already been removed
-            return
-
-        hass = self.hass
-        entity_id = self.entity_id
+    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+        """Calculate state string and attribute mapping."""
         entry = self.registry_entry
-
-        if entry and entry.disabled_by:
-            if not self._disabled_reported:
-                self._disabled_reported = True
-                _LOGGER.warning(
-                    (
-                        "Entity %s is incorrectly being triggered for updates while it"
-                        " is disabled. This is a bug in the %s integration"
-                    ),
-                    entity_id,
-                    self.platform.platform_name,
-                )
-            return
-
-        start = timer()
 
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
@@ -804,6 +797,33 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
+        return (state, attr)
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if self._platform_state == EntityPlatformState.REMOVED:
+            # Polling returned after the entity has already been removed
+            return
+
+        hass = self.hass
+        entity_id = self.entity_id
+
+        if (entry := self.registry_entry) and entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
+                    entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
+        start = timer()
+        state, attr = self._async_generate_attributes()
         end = timer()
 
         if end - start > 0.4 and not self._slow_reported:
@@ -1064,7 +1084,9 @@ class Entity(ABC):
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(self, event: Event) -> None:
+    async def _async_registry_updated(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry update."""
         data = event.data
         if data["action"] == "remove":
@@ -1080,22 +1102,26 @@ class Entity(ABC):
 
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
-        self.registry_entry = ent_reg.async_get(data["entity_id"])
-        assert self.registry_entry is not None
+        registry_entry = ent_reg.async_get(data["entity_id"])
+        assert registry_entry is not None
+        self.registry_entry = registry_entry
 
-        if self.registry_entry.disabled:
+        if device_id := registry_entry.device_id:
+            self.device_entry = dr.async_get(self.hass).async_get(device_id)
+
+        if registry_entry.disabled:
             await self.async_remove()
             return
 
         assert old is not None
-        if self.registry_entry.entity_id == old.entity_id:
+        if registry_entry.entity_id == old.entity_id:
             self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 
         await self.async_remove(force_remove=True)
 
-        self.entity_id = self.registry_entry.entity_id
+        self.entity_id = registry_entry.entity_id
         await self.platform.async_add_entities([self])
 
     @callback
@@ -1107,7 +1133,9 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
-    def _async_device_registry_updated(self, event: Event) -> None:
+    def _async_device_registry_updated(
+        self, event: EventType[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle device registry update."""
         data = event.data
 
@@ -1117,6 +1145,7 @@ class Entity(ABC):
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
 
     @callback

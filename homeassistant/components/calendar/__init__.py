@@ -20,10 +20,12 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
+    CALLBACK_TYPE,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -34,6 +36,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -60,6 +63,7 @@ from .const import (
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
     EVENT_UID,
+    LIST_EVENT_FIELDS,
     CalendarEntityFeature,
 )
 
@@ -263,8 +267,8 @@ SERVICE_LIST_EVENTS_SCHEMA: Final = vol.All(
     cv.has_at_most_one_key(EVENT_END_DATETIME, EVENT_DURATION),
     cv.make_entity_service_schema(
         {
-            vol.Optional(EVENT_START_DATETIME): datetime.datetime,
-            vol.Optional(EVENT_END_DATETIME): datetime.datetime,
+            vol.Optional(EVENT_START_DATETIME): cv.datetime,
+            vol.Optional(EVENT_END_DATETIME): cv.datetime,
             vol.Optional(EVENT_DURATION): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
@@ -415,6 +419,17 @@ def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def _list_events_dict_factory(
+    obj: Iterable[tuple[str, Any]]
+) -> dict[str, JsonValueType]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    return {
+        name: value
+        for name, value in _event_dict_factory(obj).items()
+        if name in LIST_EVENT_FIELDS and value is not None
+    }
+
+
 def _get_datetime_local(
     dt_or_d: datetime.datetime | datetime.date,
 ) -> datetime.datetime:
@@ -443,7 +458,7 @@ def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.time
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
-            if time[0] == "+" or time[0] == "-":
+            if time[0] in ("+", "-"):
                 time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"
@@ -465,6 +480,8 @@ def is_offset_reached(
 
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
+
+    _alarm_unsubs: list[CALLBACK_TYPE] = []
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -500,6 +517,48 @@ class CalendarEntity(Entity):
             return STATE_ON
 
         return STATE_OFF
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        This sets up listeners to handle state transitions for start or end of
+        the current or upcoming event.
+        """
+        super().async_write_ha_state()
+
+        for unsub in self._alarm_unsubs:
+            unsub()
+
+        now = dt_util.now()
+        event = self.event
+        if event is None or now >= event.end_datetime_local:
+            return
+
+        @callback
+        def update(_: datetime.datetime) -> None:
+            """Run when the active or upcoming event starts or ends."""
+            self._async_write_ha_state()
+
+        if now < event.start_datetime_local:
+            self._alarm_unsubs.append(
+                async_track_point_in_time(
+                    self.hass,
+                    update,
+                    event.start_datetime_local,
+                )
+            )
+        self._alarm_unsubs.append(
+            async_track_point_in_time(self.hass, update, event.end_datetime_local)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+        for unsub in self._alarm_unsubs:
+            unsub()
 
     async def async_get_events(
         self,
@@ -781,10 +840,12 @@ async def async_list_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
-    calendar_event_list = await calendar.async_get_events(calendar.hass, start, end)
-    events: list[JsonValueType] = [
-        dataclasses.asdict(event) for event in calendar_event_list
-    ]
+    calendar_event_list = await calendar.async_get_events(
+        calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
+    )
     return {
-        "events": events,
+        "events": [
+            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            for event in calendar_event_list
+        ]
     }

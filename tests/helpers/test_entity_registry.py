@@ -1,7 +1,9 @@
 """Tests for the Entity Registry."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+import attr
 import pytest
 import voluptuous as vol
 
@@ -15,7 +17,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
@@ -276,8 +278,13 @@ async def test_loading_saving_data(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
+    orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
+    orig_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
+    entity_registry.async_remove(orig_entry3.entity_id)
+    entity_registry.async_remove(orig_entry4.entity_id)
 
     assert len(entity_registry.entities) == 2
+    assert len(entity_registry.deleted_entities) == 2
 
     # Now load written data in new registry
     registry2 = er.EntityRegistry(hass)
@@ -286,11 +293,16 @@ async def test_loading_saving_data(
 
     # Ensure same order
     assert list(entity_registry.entities) == list(registry2.entities)
+    assert list(entity_registry.deleted_entities) == list(registry2.deleted_entities)
     new_entry1 = entity_registry.async_get_or_create("light", "hue", "1234")
     new_entry2 = entity_registry.async_get_or_create("light", "hue", "5678")
+    new_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
+    new_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
+    assert orig_entry3 == new_entry3
+    assert orig_entry4 == new_entry4
 
     assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.capabilities == {"max": 100}
@@ -483,6 +495,42 @@ async def test_removing_config_entry_id(
     assert update_events[0]["entity_id"] == entry.entity_id
     assert update_events[1]["action"] == "remove"
     assert update_events[1]["entity_id"] == entry.entity_id
+
+
+async def test_deleted_entity_removing_config_entry_id(
+    hass, entity_registry: er.EntityRegistry
+):
+    """Test that we update config entry id in registry on deleted entity."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+    assert entry.config_entry_id == "mock-id-1"
+    entity_registry.async_remove(entry.entity_id)
+
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 1
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
+        == "mock-id-1"
+    )
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
+        is None
+    )
+
+    entity_registry.async_clear_config_entry("mock-id-1")
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 1
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
+        is None
+    )
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
+        is not None
+    )
 
 
 async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
@@ -969,6 +1017,7 @@ async def test_remove_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -998,7 +1047,9 @@ async def test_remove_config_entry_from_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device when config entry is removed."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1064,7 +1115,9 @@ async def test_remove_config_entry_from_device_removes_entities_2(
 ) -> None:
     """Test that we don't remove entities with no config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1107,6 +1160,7 @@ async def test_update_device_race(
 ) -> None:
     """Test race when a device is created, updated and removed."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Create device
     device_entry = device_registry.async_get_or_create(
@@ -1283,6 +1337,7 @@ async def test_disabled_entities_excluded_from_entity_list(
 ) -> None:
     """Test that disabled entities are excluded from async_entries_for_device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1537,3 +1592,95 @@ def test_migrate_entity_to_new_platform(
             new_unique_id=new_unique_id,
             new_config_entry_id=new_config_entry.entry_id,
         )
+
+
+async def test_restore_entity(hass, update_events, freezer):
+    """Make sure entity registry id is stable and entity_id is reused if possible."""
+    registry = er.async_get(hass)  # We need the real entity registry for this test
+    config_entry = MockConfigEntry(domain="light")
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry
+    )
+
+    entry1 = registry.async_update_entity(
+        entry1.entity_id, new_entity_id="light.custom_1"
+    )
+
+    registry.async_remove(entry1.entity_id)
+    registry.async_remove(entry2.entity_id)
+    assert len(registry.entities) == 0
+    assert len(registry.deleted_entities) == 2
+
+    # Re-add entities
+    entry1_restored = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2_restored = registry.async_get_or_create("light", "hue", "5678")
+
+    assert len(registry.entities) == 2
+    assert len(registry.deleted_entities) == 0
+    assert entry1 != entry1_restored
+    # entity_id is not restored
+    assert attr.evolve(entry1, entity_id="light.hue_1234") == entry1_restored
+    assert entry2 != entry2_restored
+    # Config entry is not restored
+    assert attr.evolve(entry2, config_entry_id=None) == entry2_restored
+
+    # Remove two of the entities again, then bump time
+    registry.async_remove(entry1_restored.entity_id)
+    registry.async_remove(entry2.entity_id)
+    assert len(registry.entities) == 0
+    assert len(registry.deleted_entities) == 2
+    freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Re-add two entities, expect to get a new id after the purge for entity w/o config entry
+    entry1_restored = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2_restored = registry.async_get_or_create("light", "hue", "5678")
+    assert len(registry.entities) == 2
+    assert len(registry.deleted_entities) == 0
+    assert entry1.id == entry1_restored.id
+    assert entry2.id != entry2_restored.id
+
+    # Remove the first entity, then its config entry, finally bump time
+    registry.async_remove(entry1_restored.entity_id)
+    assert len(registry.entities) == 1
+    assert len(registry.deleted_entities) == 1
+    registry.async_clear_config_entry(config_entry.entry_id)
+    freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Re-add the entity, expect to get a new id after the purge
+    entry1_restored = registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    assert len(registry.entities) == 2
+    assert len(registry.deleted_entities) == 0
+    assert entry1.id != entry1_restored.id
+
+    # Check the events
+    await hass.async_block_till_done()
+    assert len(update_events) == 13
+    assert update_events[0] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[1] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[2]["action"] == "update"
+    assert update_events[3] == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[4] == {"action": "remove", "entity_id": "light.hue_5678"}
+    # Restore entities the 1st time
+    assert update_events[5] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[6] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[7] == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[8] == {"action": "remove", "entity_id": "light.hue_5678"}
+    # Restore entities the 2nd time
+    assert update_events[9] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
+    # Restore entities the 3rd time
+    assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}

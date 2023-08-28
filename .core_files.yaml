@@ -24,11 +24,13 @@ base_platforms: &base_platforms
   - homeassistant/components/datetime/**
   - homeassistant/components/device_tracker/**
   - homeassistant/components/diagnostics/**
+  - homeassistant/components/event/**
   - homeassistant/components/fan/**
   - homeassistant/components/geo_location/**
   - homeassistant/components/humidifier/**
   - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
+  - homeassistant/components/lawn_mower/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
   - homeassistant/components/media_player/**
@@ -85,6 +87,7 @@ components: &components
   - homeassistant/components/lovelace/**
   - homeassistant/components/media_source/**
   - homeassistant/components/mjpeg/**
+  - homeassistant/components/modbus/**
   - homeassistant/components/mqtt/**
   - homeassistant/components/network/**
   - homeassistant/components/onboarding/**

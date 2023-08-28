@@ -1,5 +1,4 @@
 """The tests for the logbook component."""
-# pylint: disable=invalid-name
 import asyncio
 import collections
 from collections.abc import Callable
@@ -2639,7 +2638,7 @@ async def test_get_events_with_device_ids(
 
         @ha.callback
         def async_describe_events(
-            hass: HomeAssistant,
+            hass: HomeAssistant,  # noqa: N805
             async_describe_event: Callable[
                 [str, str, Callable[[Event], dict[str, str]]], None
             ],

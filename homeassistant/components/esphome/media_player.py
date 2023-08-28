@@ -25,11 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -43,7 +39,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="media_player",
         info_type=MediaPlayerInfo,
         entity_type=EsphomeMediaPlayer,
         state_type=MediaPlayerEntityState,

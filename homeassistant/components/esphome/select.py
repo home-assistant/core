@@ -3,7 +3,10 @@ from __future__ import annotations
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
-from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
+from homeassistant.components.assist_pipeline.select import (
+    AssistPipelineSelect,
+    VadSensitivitySelect,
+)
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -29,7 +32,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="select",
         info_type=SelectInfo,
         entity_type=EsphomeSelect,
         state_type=SelectState,
@@ -38,7 +40,12 @@ async def async_setup_entry(
     entry_data = DomainData.get(hass).get_entry_data(entry)
     assert entry_data.device_info is not None
     if entry_data.device_info.voice_assistant_version:
-        async_add_entities([EsphomeAssistPipelineSelect(hass, entry_data)])
+        async_add_entities(
+            [
+                EsphomeAssistPipelineSelect(hass, entry_data),
+                EsphomeVadSensitivitySelect(hass, entry_data),
+            ]
+        )
 
 
 class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
@@ -69,3 +76,12 @@ class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
         """Initialize a pipeline selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
         AssistPipelineSelect.__init__(self, hass, self._device_info.mac_address)
+
+
+class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):
+    """VAD sensitivity selector for VoIP devices."""
+
+    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+        """Initialize a VAD sensitivity selector."""
+        EsphomeAssistEntity.__init__(self, entry_data)
+        VadSensitivitySelect.__init__(self, hass, self._device_info.mac_address)

@@ -13,7 +13,6 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict, TypeVar, cast
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -69,6 +68,7 @@ from homeassistant.core import (
     Event,
     HassJob,
     HomeAssistant,
+    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -352,6 +352,11 @@ class _ConditionFail(_HaltScript):
 class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
+    def __init__(self, message: str, response: Any) -> None:
+        """Initialize a halt exception."""
+        super().__init__(message)
+        self.response = response
+
 
 class _ScriptRun:
     """Manage Script sequence run."""
@@ -396,13 +401,14 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> None:
+    async def async_run(self) -> ServiceResponse:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
             script_stack_cv.set(script_stack)
         script_stack.append(id(self._script))
+        response = None
 
         try:
             self._log("Running %s", self._script.running_description)
@@ -420,11 +426,15 @@ class _ScriptRun:
                 raise
         except _ConditionFail:
             script_execution_set("aborted")
-        except _StopScript:
-            script_execution_set("finished")
+        except _StopScript as err:
+            script_execution_set("finished", err.response)
+            response = err.response
+
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                raise
+                # We already consumed the response, do not pass it on
+                err.response = None
+                raise err
         except Exception:
             script_execution_set("error")
             raise
@@ -432,6 +442,8 @@ class _ScriptRun:
             # Pop the script from the script execution stack
             script_stack.pop()
             self._finish()
+
+        return response
 
     async def _async_step(self, log_exceptions):
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -561,7 +573,7 @@ class _ScriptRun:
         self._changed()
         trace_set_result(delay=delay, done=False)
         try:
-            async with async_timeout.timeout(delay):
+            async with asyncio.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
             trace_set_result(delay=delay, done=True)
@@ -589,9 +601,10 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["completed"] = True
@@ -608,7 +621,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
@@ -662,7 +675,7 @@ class _ScriptRun:
             self._hass, self._action, self._variables
         )
 
-        # Validate response data paraters. This check ignores services that do
+        # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         return_response = response_variable is not None
@@ -958,9 +971,10 @@ class _ScriptRun:
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
@@ -987,7 +1001,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
@@ -1010,13 +1024,24 @@ class _ScriptRun:
     async def _async_stop_step(self):
         """Stop script execution."""
         stop = self._action[CONF_STOP]
-        error = self._action[CONF_ERROR]
+        error = self._action.get(CONF_ERROR, False)
         trace_set_result(stop=stop, error=error)
         if error:
             self._log("Error script sequence: %s", stop)
             raise _AbortScript(stop)
+
         self._log("Stop script sequence: %s", stop)
-        raise _StopScript(stop)
+        if CONF_RESPONSE_VARIABLE in self._action:
+            try:
+                response = self._variables[self._action[CONF_RESPONSE_VARIABLE]]
+            except KeyError as ex:
+                raise _AbortScript(
+                    f"Response variable '{self._action[CONF_RESPONSE_VARIABLE]}' "
+                    "is not defined"
+                ) from ex
+        else:
+            response = None
+        raise _StopScript(stop, response)
 
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
@@ -1455,7 +1480,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> None:
+    ) -> ServiceResponse:
         """Run script."""
         if context is None:
             self._log(
@@ -1466,7 +1491,7 @@ class Script:
         # Prevent spawning new script runs when Home Assistant is shutting down
         if DATA_NEW_SCRIPT_RUNS_NOT_ALLOWED in self._hass.data:
             self._log("Home Assistant is shutting down, starting script blocked")
-            return
+            return None
 
         # Prevent spawning new script runs if not allowed by script mode
         if self.is_running:
@@ -1474,7 +1499,7 @@ class Script:
                 if self._max_exceeded != "SILENT":
                     self._log("Already running", level=LOGSEVERITY[self._max_exceeded])
                 script_execution_set("failed_single")
-                return
+                return None
             if self.script_mode != SCRIPT_MODE_RESTART and self.runs == self.max_runs:
                 if self._max_exceeded != "SILENT":
                     self._log(
@@ -1482,7 +1507,7 @@ class Script:
                         level=LOGSEVERITY[self._max_exceeded],
                     )
                 script_execution_set("failed_max_runs")
-                return
+                return None
 
         # If this is a top level Script then make a copy of the variables in case they
         # are read-only, but more importantly, so as not to leak any variables created
@@ -1503,11 +1528,10 @@ class Script:
                 variables = {}
 
             variables["context"] = context
+        elif self._copy_variables_on_run:
+            variables = cast(dict, copy(run_variables))
         else:
-            if self._copy_variables_on_run:
-                variables = cast(dict, copy(run_variables))
-            else:
-                variables = cast(dict, run_variables)
+            variables = cast(dict, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1519,7 +1543,7 @@ class Script:
         ):
             script_execution_set("disallowed_recursion_detected")
             self._log("Disallowed recursion detected", level=logging.WARNING)
-            return
+            return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
             cls = _ScriptRun
@@ -1543,7 +1567,7 @@ class Script:
         self._changed()
 
         try:
-            await asyncio.shield(run.async_run())
+            return await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
             await run.async_stop()
             self._changed()

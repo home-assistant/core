@@ -52,15 +52,68 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
-        for node in await self.matter_client.get_nodes():
+        for node in self.matter_client.get_nodes():
             self._setup_node(node)
 
         def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
             self._setup_node(node)
 
+        def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
+            """Handle endpoint added event."""
+            node = self.matter_client.get_node(data["node_id"])
+            self._setup_endpoint(node.endpoints[data["endpoint_id"]])
+
+        def endpoint_removed_callback(event: EventType, data: dict[str, int]) -> None:
+            """Handle endpoint removed event."""
+            server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+            try:
+                node = self.matter_client.get_node(data["node_id"])
+            except KeyError:
+                return  # race condition
+            device_registry = dr.async_get(self.hass)
+            endpoint = node.endpoints.get(data["endpoint_id"])
+            if not endpoint:
+                return  # race condition
+            node_device_id = get_device_id(
+                server_info,
+                node.endpoints[data["endpoint_id"]],
+            )
+            identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+            if device := device_registry.async_get_device(identifiers={identifier}):
+                device_registry.async_remove_device(device.id)
+
+        def node_removed_callback(event: EventType, node_id: int) -> None:
+            """Handle node removed event."""
+            try:
+                node = self.matter_client.get_node(node_id)
+            except KeyError:
+                return  # race condition
+            for endpoint_id in node.endpoints:
+                endpoint_removed_callback(
+                    EventType.ENDPOINT_REMOVED,
+                    {"node_id": node_id, "endpoint_id": endpoint_id},
+                )
+
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(node_added_callback, EventType.NODE_ADDED)
+            self.matter_client.subscribe_events(
+                endpoint_added_callback, EventType.ENDPOINT_ADDED
+            )
+        )
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe_events(
+                endpoint_removed_callback, EventType.ENDPOINT_REMOVED
+            )
+        )
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe_events(
+                node_removed_callback, EventType.NODE_REMOVED
+            )
+        )
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe_events(
+                node_added_callback, EventType.NODE_ADDED
+            )
         )
 
     def _setup_node(self, node: MatterNode) -> None:

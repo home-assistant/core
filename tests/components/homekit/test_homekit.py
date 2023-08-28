@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import uuid1
 
@@ -24,6 +25,7 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
+    CONF_ADVERTISE_IP,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT,
@@ -317,6 +319,80 @@ async def test_homekit_setup_ip_address(
         advertised_address=None,
         async_zeroconf_instance=mock_async_zeroconf,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_with_single_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with a single advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345, CONF_ADVERTISE_IP: "1.3.4.4"},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address="1.3.4.4",
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
+        loader=ANY,
+        iid_storage=ANY,
+    )
+
+
+async def test_homekit_with_many_advertise_ips(
+    hass: HomeAssistant,
+    hk_driver,
+    mock_async_zeroconf: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup with many advertise ips."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "mock_name",
+            CONF_PORT: 12345,
+            CONF_ADVERTISE_IP: ["1.3.4.4", "4.3.2.2"],
+        },
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        mock_driver.async_start = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_driver.assert_called_with(
+        hass,
+        entry.entry_id,
+        ANY,
+        entry.title,
+        loop=hass.loop,
+        address=[None],
+        port=ANY,
+        persist_file=ANY,
+        advertised_address=["1.3.4.4", "4.3.2.2"],
+        async_zeroconf_instance=mock_async_zeroconf,
+        zeroconf_server=ANY,
         loader=ANY,
         iid_storage=ANY,
     )
@@ -668,7 +744,7 @@ async def test_homekit_start(
     assert device_registry.async_get(bridge_with_wrong_mac.id) is None
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -684,7 +760,7 @@ async def test_homekit_start(
         await homekit.async_start()
 
     device = device_registry.async_get_device(
-        {(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
+        identifiers={(DOMAIN, entry.entry_id, BRIDGE_SERIAL_NUMBER)}
     )
     assert device
     formatted_mac = dr.format_mac(homekit.driver.state.mac)
@@ -877,7 +953,7 @@ async def test_homekit_unpair(
 
         formatted_mac = dr.format_mac(state.mac)
         hk_bridge_dev = device_registry.async_get_device(
-            {}, {(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)}
         )
 
         await hass.services.async_call(
@@ -943,6 +1019,7 @@ async def test_homekit_unpair_not_homekit_device(
     not_homekit_entry = MockConfigEntry(
         domain="not_homekit", data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
+    not_homekit_entry.add_to_hass(hass)
     entity_id = "light.demo"
     hass.states.async_set("light.demo", "on")
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)

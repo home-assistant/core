@@ -25,11 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import (
-    EsphomeEntity,
-    esphome_state_property,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -41,7 +37,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="sensor",
         info_type=SensorInfo,
         entity_type=EsphomeSensor,
         state_type=SensorState,
@@ -50,7 +45,6 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="text_sensor",
         info_type=TextSensorInfo,
         entity_type=EsphomeTextSensor,
         state_type=TextSensorState,
@@ -78,7 +72,10 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._attr_force_update = static_info.force_update
-        self._attr_native_unit_of_measurement = static_info.unit_of_measurement
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_device_class = try_parse_enum(
             SensorDeviceClass, static_info.device_class
         )
@@ -99,7 +96,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         state = self._state
-        if math.isnan(state.state) or state.missing_state:
+        if state.missing_state or not math.isfinite(state.state):
             return None
         if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state.state)

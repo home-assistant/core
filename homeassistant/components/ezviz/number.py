@@ -47,7 +47,7 @@ class EzvizNumberEntityDescription(
 
 NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
-    name="Detection sensitivity",
+    translation_key="detection_sensibility",
     icon="mdi:eye",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,
@@ -66,21 +66,16 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        [
-            EzvizSensor(coordinator, camera, value, entry.entry_id)
-            for camera in coordinator.data
-            for capibility, value in coordinator.data[camera]["supportExt"].items()
-            if capibility == NUMBER_TYPE.supported_ext
-            if value in NUMBER_TYPE.supported_ext_value
-        ],
-        update_before_add=True,
+        EzvizNumber(coordinator, camera, value, entry.entry_id)
+        for camera in coordinator.data
+        for capibility, value in coordinator.data[camera]["supportExt"].items()
+        if capibility == NUMBER_TYPE.supported_ext
+        if value in NUMBER_TYPE.supported_ext_value
     )
 
 
-class EzvizSensor(EzvizBaseEntity, NumberEntity):
+class EzvizNumber(EzvizBaseEntity, NumberEntity):
     """Representation of a EZVIZ number entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -89,7 +84,7 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         value: str,
         config_entry_id: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the entity."""
         super().__init__(coordinator, serial)
         self.sensitivity_type = 3 if value == "3" else 0
         self._attr_native_max_value = 100 if value == "3" else 6
@@ -97,6 +92,10 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         self.entity_description = NUMBER_TYPE
         self.config_entry_id = config_entry_id
         self.sensor_value: int | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        self.async_schedule_update_ha_state(True)
 
     @property
     def native_value(self) -> float | None:

@@ -17,10 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 MOCK_DEVICE_ID = "some-device-id"
 DATA_MESSAGE = {"message": "service-called"}
@@ -71,7 +68,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "changed_states",
             "metadata": {"secondary": False},
@@ -79,7 +76,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
             "metadata": {"secondary": False},
@@ -87,7 +84,7 @@ async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",
             "metadata": {"secondary": False},

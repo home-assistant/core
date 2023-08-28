@@ -4,12 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import (  # pylint: disable=unused-import
-    Any,
-    Generic,
-    TypeVar,
-    cast,
-)
+from typing import Any, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
@@ -19,17 +14,14 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .domain_data import DomainData
@@ -49,7 +41,6 @@ async def platform_async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     *,
-    component_key: str,
     info_type: type[_InfoT],
     entity_type: type[_EntityT],
     state_type: type[_StateT],
@@ -60,41 +51,35 @@ async def platform_async_setup_entry(
     info and state updates.
     """
     entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
-    entry_data.info[component_key] = {}
-    entry_data.old_info[component_key] = {}
+    entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
         """Update entities of this platform when entities are listed."""
-        old_infos = entry_data.info[component_key]
+        current_infos = entry_data.info[info_type]
         new_infos: dict[int, EntityInfo] = {}
         add_entities: list[_EntityT] = []
+
         for info in infos:
-            if info.key in old_infos:
-                # Update existing entity
-                old_infos.pop(info.key)
-            else:
+            if not current_infos.pop(info.key, None):
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info, state_type)
+                entity = entity_type(entry_data, platform.domain, info, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
 
-        # Remove old entities
-        for info in old_infos.values():
-            entry_data.async_remove_entity(hass, component_key, info.key)
-
-        # First copy the now-old info into the backup object
-        entry_data.old_info[component_key] = entry_data.info[component_key]
-        # Then update the actual info
-        entry_data.info[component_key] = new_infos
-
-        for key, new_info in new_infos.items():
-            async_dispatcher_send(
-                hass,
-                entry_data.signal_component_key_static_info_updated(component_key, key),
-                new_info,
+        # Anything still in current_infos is now gone
+        if current_infos:
+            hass.async_create_task(
+                entry_data.async_remove_entities(current_infos.values())
             )
+
+        # Then update the actual info
+        entry_data.info[info_type] = new_infos
+
+        if new_infos:
+            entry_data.async_update_entity_infos(new_infos.values())
 
         if add_entities:
             # Add entities to Home Assistant
@@ -120,8 +105,8 @@ def esphome_state_property(
         if not self._has_state:
             return None
         val = func(self)
-        if isinstance(val, float) and math.isnan(val):
-            # Home Assistant doesn't use NAN values in state machine
+        if isinstance(val, float) and not math.isfinite(val):
+            # Home Assistant doesn't use NaN or inf values in state machine
             # (not JSON serializable)
             return None
         return val
@@ -154,37 +139,53 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        component_key: str,
+        domain: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
         """Initialize."""
+
         self._entry_data = entry_data
         self._on_entry_data_changed()
-        self._component_key = component_key
         self._key = entity_info.key
         self._state_type = state_type
         self._on_static_info_update(entity_info)
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
-        self._attr_has_entity_name = bool(device_info.friendly_name)
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         self._entry_id = entry_data.entry_id
+        #
+        # If `friendly_name` is set, we use the Friendly naming rules, if
+        # `friendly_name` is not set we make an exception to the naming rules for
+        # backwards compatibility and use the Legacy naming rules.
+        #
+        # Friendly naming
+        # - Friendly name is prepended to entity names
+        # - Device Name is prepended to entity ids
+        # - Entity id is constructed from device name and object id
+        #
+        # Legacy naming
+        # - Device name is not prepended to entity names
+        # - Device name is not prepended to entity ids
+        # - Entity id is constructed from entity name
+        #
+        if not device_info.friendly_name:
+            return
+        self._attr_has_entity_name = True
+        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
         hass = self.hass
-        component_key = self._component_key
         key = self._key
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                f"esphome_{self._entry_id}_remove_{component_key}_{key}",
+            entry_data.async_register_key_static_info_remove_callback(
+                self._static_info,
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -201,10 +202,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_component_key_static_info_updated(component_key, key),
-                self._on_static_info_update,
+            entry_data.async_register_key_static_info_updated_callback(
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
@@ -274,7 +273,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if self._device_info.has_deep_sleep:
             # During deep sleep the ESP will not be connectable (by design)
             # For these cases, show it as available
-            return True
+            return self._entry_data.expected_disconnect
 
         return self._entry_data.available
 

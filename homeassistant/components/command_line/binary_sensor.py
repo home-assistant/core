@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -70,7 +70,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml_binary_sensor",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_platform_yaml",

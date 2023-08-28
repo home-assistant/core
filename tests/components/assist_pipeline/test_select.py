@@ -17,7 +17,7 @@ from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
@@ -26,7 +26,6 @@ from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
 class SelectPlatform(MockPlatform):
     """Fake select platform."""
 
-    # pylint: disable=method-hidden
     async def async_setup_entry(
         self,
         hass: HomeAssistant,
@@ -102,7 +101,7 @@ async def test_select_entity_registering_device(
 ) -> None:
     """Test entity registering as an assist device."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({("test", "test")})
+    device = dev_reg.async_get_device(identifiers={("test", "test")})
     assert device is not None
 
     # Test device is registered
