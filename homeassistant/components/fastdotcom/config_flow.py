@@ -24,7 +24,6 @@ class FastdotcomConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="user")
