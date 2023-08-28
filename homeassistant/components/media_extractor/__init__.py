@@ -1,7 +1,7 @@
 """Decorator service for the media_player.play_media service."""
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 from yt_dlp import YoutubeDL
@@ -83,7 +83,7 @@ class MediaExtractor:
 
     def get_media_url(self) -> str:
         """Return media content url."""
-        return str(self.call_data.get(ATTR_MEDIA_CONTENT_ID))
+        return cast(str, self.call_data[ATTR_MEDIA_CONTENT_ID])
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
