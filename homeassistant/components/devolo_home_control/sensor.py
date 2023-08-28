@@ -173,7 +173,14 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_name = f"{consumption.capitalize()} consumption"
-        self._attr_unique_id = f"{self._attr_unique_id}_{self._sensor_type}"
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity.
+
+        As both sensor types share the same element_uid we need to extend original
+        self._attr_unique_id to be really unique.
+        """
+        return f"{self._attr_unique_id}_{self._sensor_type}"
 
     def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
