@@ -6,7 +6,6 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
