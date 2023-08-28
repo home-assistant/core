@@ -95,11 +95,6 @@ class EcobeeHumidifier(HumidifierEntity):
             self._last_humidifier_on_mode = self.mode
 
     @property
-    def device_class(self):
-        """Return the device class type."""
-        return HumidifierDeviceClass.HUMIDIFIER
-
-    @property
     def is_on(self):
         """Return True if the humidifier is on."""
         return self.mode != MODE_OFF
