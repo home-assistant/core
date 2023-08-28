@@ -30,7 +30,6 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -115,8 +114,7 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
-            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
+        self._cancel_call = async_call_later(self.hass, 1, self.async_update)
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
