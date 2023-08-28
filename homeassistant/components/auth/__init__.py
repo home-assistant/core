@@ -128,6 +128,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from logging import getLogger
 from typing import Any, cast
 import uuid
 
@@ -612,27 +613,26 @@ async def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""
-
-    async def remove_safely(token: RefreshToken) -> bool:
-        # For safety, a revoke_callback could raise an error.
-        try:
-            await hass.auth.async_remove_refresh_token(token)
-            return True
-        except Exception:  # pylint: disable=broad-except
-            return False
-
     tasks = []
     current_refresh_token: RefreshToken
     for token in connection.user.refresh_tokens.values():
         if token.id == connection.refresh_token_id:
+            # Skip the current refresh token as it has revoke_callback, which cancels/closes the connection.
+            # It will be removed after sending the result.
             current_refresh_token = token
-            continue  # Will be remove after sending the result
-        tasks.append(hass.async_create_task(remove_safely(token)))
+            continue
+        tasks.append(
+            hass.async_create_task(hass.auth.async_remove_refresh_token(token))
+        )
 
     remove_failed = False
     if tasks:
-        for result in await asyncio.gather(*tasks):
-            if not result:
+        for result in await asyncio.gather(*tasks, return_exceptions=True):
+            if isinstance(result, Exception):
+                getLogger(__name__).error(
+                    "During refresh token removal, the following error occurred: %s",
+                    result,
+                )
                 remove_failed = True
 
     if remove_failed:
@@ -642,7 +642,7 @@ async def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
-    hass.async_create_task(remove_safely(current_refresh_token))
+    hass.async_create_task(hass.auth.async_remove_refresh_token(current_refresh_token))
 
 
 @websocket_api.websocket_command(
