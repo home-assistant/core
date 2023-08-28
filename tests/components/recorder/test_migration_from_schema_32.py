@@ -1,5 +1,4 @@
 """The tests for the recorder filter matching the EntityFilter component."""
-# pylint: disable=invalid-name
 import importlib
 import sys
 from unittest.mock import patch

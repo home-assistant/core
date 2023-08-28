@@ -26,7 +26,7 @@ class FritzServiceMock(Service):
         self.serviceId = serviceId
 
 
-class FritzConnectionMock:  # pylint: disable=too-few-public-methods
+class FritzConnectionMock:
     """FritzConnection mocking."""
 
     def __init__(self, services):

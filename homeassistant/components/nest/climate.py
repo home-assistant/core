@@ -32,7 +32,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_DEVICE_MANAGER, DOMAIN
@@ -75,6 +74,7 @@ FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
+MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
@@ -105,17 +105,18 @@ class ThermostatEntity(ClimateEntity):
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
         # The API "name" field is a unique device identifier.
-        return self._device.name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return self._device_info.device_info
+        self._attr_unique_id = device.name
+        self._attr_device_info = self._device_info.device_info
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        if mode_trait := device.traits.get(ThermostatModeTrait.NAME):
+            self._attr_hvac_modes = [
+                THERMOSTAT_MODE_MAP[mode]
+                for mode in mode_trait.available_modes
+                if mode in THERMOSTAT_MODE_MAP
+            ]
+        else:
+            self._attr_hvac_modes = []
 
     @property
     def available(self) -> bool:
@@ -128,11 +129,6 @@ class ThermostatEntity(ClimateEntity):
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of temperature measurement for the system."""
-        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -199,24 +195,6 @@ class ThermostatEntity(ClimateEntity):
             if trait.mode in THERMOSTAT_MODE_MAP:
                 hvac_mode = THERMOSTAT_MODE_MAP[trait.mode]
         return hvac_mode
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """List of available operation modes."""
-        supported_modes = []
-        for mode in self._get_device_hvac_modes:
-            if mode in THERMOSTAT_MODE_MAP:
-                supported_modes.append(THERMOSTAT_MODE_MAP[mode])
-        return supported_modes
-
-    @property
-    def _get_device_hvac_modes(self) -> set[str]:
-        """Return the set of SDM API hvac modes supported by the device."""
-        modes = []
-        if ThermostatModeTrait.NAME in self._device.traits:
-            trait = self._device.traits[ThermostatModeTrait.NAME]
-            modes.extend(trait.available_modes)
-        return set(modes)
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -313,6 +291,13 @@ class ThermostatEntity(ClimateEntity):
         try:
             if self.preset_mode == PRESET_ECO or hvac_mode == HVACMode.HEAT_COOL:
                 if low_temp and high_temp:
+                    if high_temp - low_temp < MIN_TEMP_RANGE:
+                        # Ensure there is a minimum gap from the new temp. Pick
+                        # the temp that is not changing as the one to move.
+                        if abs(high_temp - self.target_temperature_high) < 0.01:
+                            high_temp = low_temp + MIN_TEMP_RANGE
+                        else:
+                            low_temp = high_temp - MIN_TEMP_RANGE
                     await trait.set_range(low_temp, high_temp)
             elif hvac_mode == HVACMode.COOL and temp:
                 await trait.set_cool(temp)

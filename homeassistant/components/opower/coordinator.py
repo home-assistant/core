@@ -12,6 +12,7 @@ from opower import (
     InvalidAuth,
     MeterType,
     Opower,
+    ReadResolution,
 )
 
 from homeassistant.components.recorder import get_instance
@@ -177,44 +178,55 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         """Get all cost reads since account activation but at different resolutions depending on age.
 
         - month resolution for all years (since account activation)
-        - day resolution for past 3 years
-        - hour resolution for past 2 months, only for electricity, not gas
+        - day resolution for past 3 years (if account's read resolution supports it)
+        - hour resolution for past 2 months (if account's read resolution supports it)
         """
         cost_reads = []
+
         start = None
-        end = datetime.now() - timedelta(days=3 * 365)
+        end = datetime.now()
+        if account.read_resolution != ReadResolution.BILLING:
+            end -= timedelta(days=3 * 365)
         cost_reads += await self.api.async_get_cost_reads(
             account, AggregateType.BILL, start, end
         )
+        if account.read_resolution == ReadResolution.BILLING:
+            return cost_reads
+
         start = end if not cost_reads else cost_reads[-1].end_time
-        end = (
-            datetime.now() - timedelta(days=2 * 30)
-            if account.meter_type == MeterType.ELEC
-            else datetime.now()
-        )
+        end = datetime.now()
+        if account.read_resolution != ReadResolution.DAY:
+            end -= timedelta(days=2 * 30)
         cost_reads += await self.api.async_get_cost_reads(
             account, AggregateType.DAY, start, end
         )
-        if account.meter_type == MeterType.ELEC:
-            start = end if not cost_reads else cost_reads[-1].end_time
-            end = datetime.now()
-            cost_reads += await self.api.async_get_cost_reads(
-                account, AggregateType.HOUR, start, end
-            )
+        if account.read_resolution == ReadResolution.DAY:
+            return cost_reads
+
+        start = end if not cost_reads else cost_reads[-1].end_time
+        end = datetime.now()
+        cost_reads += await self.api.async_get_cost_reads(
+            account, AggregateType.HOUR, start, end
+        )
         return cost_reads
 
     async def _async_get_recent_cost_reads(
         self, account: Account, last_stat_time: float
     ) -> list[CostRead]:
-        """Get cost reads within the past 30 days to allow corrections in data from utilities.
-
-        Hourly for electricity, daily for gas.
-        """
+        """Get cost reads within the past 30 days to allow corrections in data from utilities."""
+        if account.read_resolution in [
+            ReadResolution.HOUR,
+            ReadResolution.HALF_HOUR,
+            ReadResolution.QUARTER_HOUR,
+        ]:
+            aggregate_type = AggregateType.HOUR
+        elif account.read_resolution == ReadResolution.DAY:
+            aggregate_type = AggregateType.DAY
+        else:
+            aggregate_type = AggregateType.BILL
         return await self.api.async_get_cost_reads(
             account,
-            AggregateType.HOUR
-            if account.meter_type == MeterType.ELEC
-            else AggregateType.DAY,
+            aggregate_type,
             datetime.fromtimestamp(last_stat_time) - timedelta(days=30),
             datetime.now(),
         )

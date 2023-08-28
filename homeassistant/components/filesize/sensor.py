@@ -102,9 +102,7 @@ class FileSizeCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 
         size = statinfo.st_size
-        last_updated = datetime.utcfromtimestamp(statinfo.st_mtime).replace(
-            tzinfo=dt_util.UTC
-        )
+        last_updated = dt_util.utc_from_timestamp(statinfo.st_mtime)
 
         _LOGGER.debug("size %s, last updated %s", size, last_updated)
         data: dict[str, int | float | datetime] = {

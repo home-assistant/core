@@ -8,6 +8,7 @@ import logging
 
 from pyenphase import (
     EnvoyEncharge,
+    EnvoyEnchargeAggregate,
     EnvoyEnchargePower,
     EnvoyEnpower,
     EnvoyInverter,
@@ -288,6 +289,58 @@ ENPOWER_SENSORS = (
 )
 
 
+@dataclass
+class EnvoyEnchargeAggregateRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyEnchargeAggregate], int]
+
+
+@dataclass
+class EnvoyEnchargeAggregateSensorEntityDescription(
+    SensorEntityDescription, EnvoyEnchargeAggregateRequiredKeysMixin
+):
+    """Describes an Envoy Encharge sensor entity."""
+
+
+ENCHARGE_AGGREGATE_SENSORS = (
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda encharge: encharge.state_of_charge,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="reserve_soc",
+        translation_key="reserve_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda encharge: encharge.reserve_state_of_charge,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="available_energy",
+        translation_key="available_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.available_energy,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="reserve_energy",
+        translation_key="reserve_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.backup_reserve,
+    ),
+    EnvoyEnchargeAggregateSensorEntityDescription(
+        key="max_capacity",
+        translation_key="max_capacity",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda encharge: encharge.max_available_capacity,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -297,8 +350,6 @@ async def async_setup_entry(
     coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
-    envoy_serial_num = config_entry.unique_id
-    assert envoy_serial_num is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)
 
     entities: list[Entity] = [
@@ -328,6 +379,11 @@ async def async_setup_entry(
             EnvoyEnchargePowerEntity(coordinator, description, encharge)
             for description in ENCHARGE_POWER_SENSORS
             for encharge in envoy_data.encharge_power
+        )
+    if envoy_data.encharge_aggregate:
+        entities.extend(
+            EnvoyEnchargeAggregateEntity(coordinator, description)
+            for description in ENCHARGE_AGGREGATE_SENSORS
         )
     if envoy_data.enpower:
         entities.extend(
@@ -482,6 +538,19 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
         return self.entity_description.value_fn(encharge_power[self._serial_number])
 
 
+class EnvoyEnchargeAggregateEntity(EnvoySystemSensorEntity):
+    """Envoy Encharge Aggregate sensor entity."""
+
+    entity_description: EnvoyEnchargeAggregateSensorEntityDescription
+
+    @property
+    def native_value(self) -> int:
+        """Return the state of the aggregate sensors."""
+        encharge_aggregate = self.data.encharge_aggregate
+        assert encharge_aggregate is not None
+        return self.entity_description.value_fn(encharge_aggregate)
+
+
 class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
     """Envoy Enpower sensor entity."""
 
@@ -494,16 +563,14 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
     ) -> None:
         """Initialize Enpower entity."""
         super().__init__(coordinator, description)
-        assert coordinator.envoy.data is not None
-        enpower_data = coordinator.envoy.data.enpower
+        enpower_data = self.data.enpower
         assert enpower_data is not None
-        self._serial_number = enpower_data.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_unique_id = f"{enpower_data.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, enpower_data.serial_number)},
             manufacturer="Enphase",
             model="Enpower",
-            name=f"Enpower {self._serial_number}",
+            name=f"Enpower {enpower_data.serial_number}",
             sw_version=str(enpower_data.firmware_version),
             via_device=(DOMAIN, self.envoy_serial_num),
         )
