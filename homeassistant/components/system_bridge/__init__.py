@@ -273,19 +273,19 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     """Defines a base System Bridge entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
         key: str,
-        name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
         self._key = f"{self._hostname}_{key}"
-        self._name = f"{self._hostname} {name}"
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
@@ -297,11 +297,6 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
