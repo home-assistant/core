@@ -100,6 +100,7 @@ SENSORS = [
         key=Measurement.HEIGHT_M.value,
         measurement=Measurement.HEIGHT_M,
         measure_type=MeasureType.HEIGHT,
+        translation_key="height",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,

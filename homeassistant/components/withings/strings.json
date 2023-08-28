@@ -47,6 +47,9 @@
       "bone_mass": {
         "name": "Bone mass"
       },
+      "height": {
+        "name": "Height"
+      },
       "body_temperature": {
         "name": "Body temperature"
       },
