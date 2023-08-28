@@ -158,14 +158,14 @@ def valid_addon(value: Any) -> str:
     with suppress(HomeAssistantError):
         hass = async_get_hass()
 
-    if value not in hass.data[DATA_KEY_ADDONS]:
+    if hass and value not in hass.data[DATA_KEY_ADDONS]:
         raise vol.Invalid("Not a valid add-on slug")
     return value
 
 
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.valid_addon})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
