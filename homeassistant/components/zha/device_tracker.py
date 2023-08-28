@@ -111,7 +111,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._battery_level
 
     @property  # type: ignore[misc]
-    def device_info(  # pylint: disable=overridden-final-method
+    def device_info(
         self,
     ) -> DeviceInfo:
         """Return device info."""
