@@ -99,7 +99,7 @@ class DaikinStreamerSwitch(SwitchEntity):
         """Initialize streamer switch."""
         self._api = api
         self._attr_device_info = api.device_info
-        self._attr_unique_id = f"{self._api.device.mac}-streamer"
+        self._attr_unique_id = f"{api.device.mac}-streamer"
 
     @property
     def is_on(self) -> bool:
