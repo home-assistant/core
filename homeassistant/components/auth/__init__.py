@@ -617,7 +617,8 @@ async def websocket_delete_all_refresh_tokens(
     current_refresh_token: RefreshToken
     for token in connection.user.refresh_tokens.values():
         if token.id == connection.refresh_token_id:
-            # Skip the current refresh token as it has revoke_callback, which cancels/closes the connection.
+            # Skip the current refresh token as it has revoke_callback,
+            # which cancels/closes the connection.
             # It will be removed after sending the result.
             current_refresh_token = token
             continue
