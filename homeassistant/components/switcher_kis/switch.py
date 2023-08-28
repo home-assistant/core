@@ -109,7 +109,7 @@ class SwitcherBaseSwitchEntity(
 
         try:
             async with SwitcherType1Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:

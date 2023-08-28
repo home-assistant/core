@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 DEVICE_MODE_TO_HA = {
@@ -160,7 +160,7 @@ class SwitcherClimateEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id, self.coordinator.config_entry.data.get(CONF_TOKEN)
             ) as swapi:
                 response = await swapi.control_breeze_device(self._remote, **kwargs)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:

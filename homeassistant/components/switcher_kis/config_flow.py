@@ -15,6 +15,10 @@ from .utils import async_discover_devices
 class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Switcher config flow."""
 
+    def __init__(self) -> None:
+        """Initialize flow."""
+        self._token: str | None = None
+
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
     ) -> FlowResult:
@@ -46,6 +50,8 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
+        self._token = user_input[CONF_TOKEN]
+
         self.hass.data.setdefault(DOMAIN, {})
         if DATA_DISCOVERY not in self.hass.data[DOMAIN]:
             self.hass.data[DOMAIN][DATA_DISCOVERY] = self.hass.async_create_task(
@@ -58,8 +64,6 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user-confirmation of the config flow."""
-        if user_input is None:
-            return await self._show_setup_form(user_input)
         discovered_devices = await self.hass.data[DOMAIN][DATA_DISCOVERY]
 
         if len(discovered_devices) == 0:
@@ -69,6 +73,6 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title="Switcher",
             data={
-                CONF_TOKEN: user_input[CONF_TOKEN],
+                CONF_TOKEN: self._token,
             },
         )

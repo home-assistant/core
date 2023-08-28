@@ -24,12 +24,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 
 _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
-API_STOP = "stop"
+API_STOP = "stop_shutter"
 
 
 async def async_setup_entry(
@@ -43,6 +43,10 @@ async def async_setup_entry(
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
+            async_add_entities([SwitcherCoverEntity(coordinator)])
+        if coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+            async_add_entities([SwitcherCoverEntity(coordinator)])
+        if coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
             async_add_entities([SwitcherCoverEntity(coordinator)])
 
     config_entry.async_on_unload(
@@ -97,7 +101,7 @@ class SwitcherCoverEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id, self.coordinator.config_entry.data.get(CONF_TOKEN)
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -111,18 +115,53 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
+    def _get_shutter_index(self, is_first_shutter: bool = True) -> int:
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER:
+            return 1
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+            return 3
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+            if is_first_shutter:
+                return 2
+            else:
+                return 3
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api(API_SET_POSITON, 0)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, 0, index)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api(API_SET_POSITON, 100)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, 100, index)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
+        index = self._get_shutter_index()
+        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], index)
 
-    async def async_stop_cover(self, **_kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._async_call_api(API_STOP)
+        index = self._get_shutter_index()
+        await self._async_call_api(API_STOP, index)
+
+    async def async_close_cover2(self, **kwargs: Any) -> None:
+        """Close cover 2."""
+        index = self._get_shutter_index(False)
+        await self._async_call_api(API_SET_POSITON, 0, index)
+
+    async def async_open_cover2(self, **kwargs: Any) -> None:
+        """Open cover 2."""
+        index = self._get_shutter_index(False)
+        await self._async_call_api(API_SET_POSITON, 100, index)
+
+    async def async_set_cover2_position(self, **kwargs: Any) -> None:
+        """Move the cover 2 to a specific position."""
+        index = self._get_shutter_index(False)
+        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], index)
+
+    async def async_stop_cover2(self, **kwargs: Any) -> None:
+        """Stop the cover 2."""
+        index = self._get_shutter_index(False)
+        await self._async_call_api(API_STOP, index)
