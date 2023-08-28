@@ -106,7 +106,7 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-    vol.Required(CONF_DEVICE_CLASS): SelectSelector(
+    vol.Required(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL]
             + sorted(
@@ -120,14 +120,14 @@ SENSOR_SETUP = {
             translation_key="device_class",
         )
     ),
-    vol.Required(CONF_STATE_CLASS): SelectSelector(
+    vol.Required(CONF_STATE_CLASS, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorStateClass]),
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="state_class",
         )
     ),
-    vol.Required(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+    vol.Required(CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL): SelectSelector(
         SelectSelectorConfig(
             options=[NONE_SENTINEL] + sorted([cls.value for cls in UnitOfTemperature]),
             custom_value=True,

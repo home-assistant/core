@@ -1,5 +1,5 @@
 """The tests for the Template Binary sensor platform."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from unittest.mock import patch
 
@@ -1276,9 +1276,7 @@ async def test_trigger_entity_restore_state_auto_off(
     fake_extra_data = {
         "auto_off_time": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 2, tzinfo=timezone.utc
-            ).isoformat(),
+            "isoformat": datetime(2022, 2, 2, 12, 2, 2, tzinfo=UTC).isoformat(),
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
@@ -1336,9 +1334,7 @@ async def test_trigger_entity_restore_state_auto_off_expired(
     fake_extra_data = {
         "auto_off_time": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(
-                2022, 2, 2, 12, 2, 0, tzinfo=timezone.utc
-            ).isoformat(),
+            "isoformat": datetime(2022, 2, 2, 12, 2, 0, tzinfo=UTC).isoformat(),
         },
     }
     mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
