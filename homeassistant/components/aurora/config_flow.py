@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
@@ -74,23 +74,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                    }
+                ),
                 {
-                    vol.Required(
-                        CONF_LONGITUDE,
-                        default=self.hass.config.longitude,
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=-180, max=180),
-                    ),
-                    vol.Required(
-                        CONF_LATITUDE,
-                        default=self.hass.config.latitude,
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=-90, max=90),
-                    ),
-                }
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_LATITUDE: self.hass.config.latitude,
+                },
             ),
             errors=errors,
         )
