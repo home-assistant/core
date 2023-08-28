@@ -185,8 +185,8 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         self._operated_keypad = None
         self._operated_autorelock = None
         self._operated_time = None
-        self._update_from_data()
         self._attr_unique_id = f"{self._device_id}_lock_operator"
+        self._update_from_data()
 
     @callback
     def _update_from_data(self):
