@@ -227,7 +227,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.6.16
+aiohomekit==3.0.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -306,6 +306,9 @@ aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
 aioridwell==2023.07.0
+
+# homeassistant.components.ruckus_unleashed
+aioruckus==0.31
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1470,9 +1473,6 @@ pyrituals==0.0.6
 # homeassistant.components.thread
 pyroute2==0.7.5
 
-# homeassistant.components.ruckus_unleashed
-pyruckus==0.16
-
 # homeassistant.components.rympro
 pyrympro==0.0.7
 
@@ -2004,6 +2004,7 @@ xknxproject==3.2.0
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
+# homeassistant.components.ruckus_unleashed
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
