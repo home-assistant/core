@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_FLAGS_HEATER = (
     WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    | WaterHeaterEntityFeature.ON_OFF
     | WaterHeaterEntityFeature.OPERATION_MODE
     | WaterHeaterEntityFeature.AWAY_MODE
 )
@@ -103,3 +104,11 @@ class DemoWaterHeater(WaterHeaterEntity):
         """Turn away mode off."""
         self._attr_is_away_mode_on = False
         self.schedule_update_ha_state()
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn on water heater."""
+        self.set_operation_mode("eco")
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn off water heater."""
+        self.set_operation_mode("off")

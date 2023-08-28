@@ -13,5 +13,11 @@
         }
       }
     }
+  },
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Mimics the physical button press on the device."
+    }
   }
 }

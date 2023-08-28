@@ -456,6 +456,7 @@ async def test_options_update(
         options=new_options,
     )
     assert config_entry.options == updated_options
+    await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )
@@ -746,6 +747,8 @@ async def test_apps_update(
                 "homeassistant.components.vizio.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is

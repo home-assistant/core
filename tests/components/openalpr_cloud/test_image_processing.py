@@ -157,7 +157,7 @@ async def test_openalpr_process_image(
     ]
     assert len(event_data) == 1
     assert event_data[0]["plate"] == "H786P0J"
-    assert event_data[0]["confidence"] == float(90.436699)
+    assert event_data[0]["confidence"] == 90.436699
     assert event_data[0]["entity_id"] == "image_processing.test_local"
 
 

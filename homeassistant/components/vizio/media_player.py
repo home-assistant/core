@@ -26,11 +26,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VizioAppsDataUpdateCoordinator
@@ -130,8 +130,6 @@ async def async_setup_entry(
 
 class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
-
-    _attr_name: str
 
     def __init__(
         self,

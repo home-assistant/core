@@ -1,6 +1,7 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
@@ -24,7 +25,7 @@ from . import mock_cloud, mock_cloud_prefs
 
 from tests.components.google_assistant import MockConfig
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
 
@@ -1207,3 +1208,28 @@ async def test_tts_info(
 
     assert response["success"]
     assert response["result"] == {"languages": [["en-US", "male"], ["en-US", "female"]]}
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "data"),
+    [
+        ("/api/cloud/forgot_password", {"email": "fake@example.com"}),
+        ("/api/cloud/google_actions/sync", None),
+        ("/api/cloud/login", {"email": "fake@example.com", "password": "secret"}),
+        ("/api/cloud/logout", None),
+        ("/api/cloud/register", {"email": "fake@example.com", "password": "secret"}),
+        ("/api/cloud/resend_confirm", {"email": "fake@example.com"}),
+    ],
+)
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    endpoint: str,
+    data: dict[str, Any] | None,
+) -> None:
+    """Test cloud APIs endpoints do not work as a normal user."""
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.post(endpoint, json=data)
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED

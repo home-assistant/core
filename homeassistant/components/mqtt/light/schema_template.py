@@ -75,7 +75,6 @@ CONF_GREEN_TEMPLATE = "green_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 COMMAND_TEMPLATES = (CONF_COMMAND_ON_TEMPLATE, CONF_COMMAND_OFF_TEMPLATE)
 VALUE_TEMPLATES = (
@@ -88,7 +87,7 @@ VALUE_TEMPLATES = (
     CONF_STATE_TEMPLATE,
 )
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_TEMPLATE = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -101,7 +100,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
         }
@@ -111,15 +110,7 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -137,6 +128,7 @@ async def async_setup_entity_template(
 class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT Template light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _optimistic: bool

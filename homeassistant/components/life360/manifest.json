@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/life360",
   "iot_class": "cloud_polling",
   "loggers": ["life360"],
-  "requirements": ["life360==5.5.0"]
+  "requirements": ["life360==6.0.0"]
 }

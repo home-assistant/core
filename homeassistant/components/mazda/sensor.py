@@ -135,7 +135,7 @@ def _ev_remaining_range_value(data):
 SENSOR_ENTITIES = [
     MazdaSensorEntityDescription(
         key="fuel_remaining_percentage",
-        name="Fuel remaining percentage",
+        translation_key="fuel_remaining_percentage",
         icon="mdi:gas-station",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,7 +144,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="fuel_distance_remaining",
-        name="Fuel distance remaining",
+        translation_key="fuel_distance_remaining",
         icon="mdi:gas-station",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -154,7 +154,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="odometer",
-        name="Odometer",
+        translation_key="odometer",
         icon="mdi:speedometer",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -164,7 +164,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="front_left_tire_pressure",
-        name="Front left tire pressure",
+        translation_key="front_left_tire_pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
@@ -174,7 +174,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="front_right_tire_pressure",
-        name="Front right tire pressure",
+        translation_key="front_right_tire_pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
@@ -184,7 +184,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="rear_left_tire_pressure",
-        name="Rear left tire pressure",
+        translation_key="rear_left_tire_pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
@@ -194,7 +194,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="rear_right_tire_pressure",
-        name="Rear right tire pressure",
+        translation_key="rear_right_tire_pressure",
         icon="mdi:car-tire-alert",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
@@ -204,7 +204,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="ev_charge_level",
-        name="Charge level",
+        translation_key="ev_charge_level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -213,7 +213,7 @@ SENSOR_ENTITIES = [
     ),
     MazdaSensorEntityDescription(
         key="ev_remaining_range",
-        name="Remaining range",
+        translation_key="ev_remaining_range",
         icon="mdi:ev-station",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,

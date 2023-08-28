@@ -56,6 +56,7 @@ async def test_if_fires_on_telegram(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
 
+    # "id" field added to action to test if `trigger_data` passed correctly in `async_attach_trigger`
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -71,7 +72,8 @@ async def test_if_fires_on_telegram(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "catch_all": ("telegram - {{ trigger.destination }}")
+                            "catch_all": ("telegram - {{ trigger.destination }}"),
+                            "id": (" {{ trigger.id }}"),
                         },
                     },
                 },
@@ -82,11 +84,13 @@ async def test_if_fires_on_telegram(
                         "device_id": device_entry.id,
                         "type": "telegram",
                         "destination": ["1/2/3", "1/2/4"],
+                        "id": "test-id",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "specific": ("telegram - {{ trigger.destination }}")
+                            "specific": ("telegram - {{ trigger.destination }}"),
+                            "id": (" {{ trigger.id }}"),
                         },
                     },
                 },
@@ -96,12 +100,18 @@ async def test_if_fires_on_telegram(
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
     assert len(calls) == 1
-    assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    test_call = calls.pop()
+    assert test_call.data["catch_all"] == "telegram - 0/0/1"
+    assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
     assert len(calls) == 2
-    assert calls.pop().data["specific"] == "telegram - 1/2/4"
-    assert calls.pop().data["catch_all"] == "telegram - 1/2/4"
+    test_call = calls.pop()
+    assert test_call.data["specific"] == "telegram - 1/2/4"
+    assert test_call.data["id"] == "test-id"
+    test_call = calls.pop()
+    assert test_call.data["catch_all"] == "telegram - 1/2/4"
+    assert test_call.data["id"] == 0
 
 
 async def test_remove_device_trigger(
@@ -191,6 +201,7 @@ async def test_get_trigger_capabilities_node_status(
                     "mode": "dropdown",
                     "multiple": True,
                     "options": [],
+                    "sort": False,
                 },
             },
         }

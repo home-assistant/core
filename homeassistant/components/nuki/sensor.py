@@ -29,7 +29,6 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
     """Representation of a Nuki Lock Battery sensor."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "battery"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC

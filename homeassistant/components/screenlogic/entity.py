@@ -9,7 +9,7 @@ from screenlogicpy.const import CODE, DATA as SL_DATA, EQUIPMENT, ON_OFF
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ScreenlogicDataUpdateCoordinator

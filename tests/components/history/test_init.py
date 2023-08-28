@@ -1,10 +1,10 @@
 """The tests the History component."""
-# pylint: disable=invalid-name
 from datetime import timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import patch, sentinel
+from unittest.mock import sentinel
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
@@ -245,29 +245,18 @@ def test_get_significant_states_only(hass_history) -> None:
         points.append(start + timedelta(minutes=i))
 
     states = []
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=start
-    ):
+    with freeze_time(start) as freezer:
         set_state("123", attributes={"attribute": 10.64})
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[0],
-    ):
+        freezer.move_to(points[0])
         # Attributes are different, state not
         states.append(set_state("123", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[1],
-    ):
+        freezer.move_to(points[1])
         # state is different, attributes not
         states.append(set_state("32", attributes={"attribute": 21.42}))
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=points[2],
-    ):
+        freezer.move_to(points[2])
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
 
@@ -335,9 +324,7 @@ def record_states(hass):
     four = three + timedelta(seconds=1)
 
     states = {therm: [], therm2: [], mp: [], mp2: [], mp3: [], script_c: []}
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
-    ):
+    with freeze_time(one) as freezer:
         states[mp].append(
             set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
         )
@@ -351,17 +338,12 @@ def record_states(hass):
             set_state(therm, 20, attributes={"current_temperature": 19.5})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=one + timedelta(microseconds=1),
-    ):
+        freezer.move_to(one + timedelta(microseconds=1))
         states[mp].append(
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
-    ):
+        freezer.move_to(two)
         # This state will be skipped only different in time
         set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
         # This state will be skipped because domain is excluded
@@ -376,9 +358,7 @@ def record_states(hass):
             set_state(therm2, 20, attributes={"current_temperature": 19})
         )
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=three
-    ):
+        freezer.move_to(three)
         states[mp].append(
             set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
         )

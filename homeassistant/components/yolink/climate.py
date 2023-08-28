@@ -61,6 +61,8 @@ async def async_setup_entry(
 class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     """YoLink Climate Entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -69,7 +71,6 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         """Init YoLink Thermostat."""
         super().__init__(config_entry, coordinator)
         self._attr_unique_id = f"{coordinator.device.device_id}_climate"
-        self._attr_name = f"{coordinator.device.device_name} (Thermostat)"
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10

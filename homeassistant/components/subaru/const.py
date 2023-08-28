@@ -37,6 +37,7 @@ API_GEN_3 = "g3"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]

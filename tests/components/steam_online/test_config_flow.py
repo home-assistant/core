@@ -138,7 +138,10 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = create_entry(hass)
-    with patch_interface():
+    with patch_interface(), patch(
+        "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST",
+        return_value=2,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()
@@ -159,7 +162,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 async def test_options_flow_deselect(hass: HomeAssistant) -> None:
     """Test deselecting user."""
     entry = create_entry(hass)
-    with patch_interface():
+    with patch_interface(), patch(
+        "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST",
+        return_value=2,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         result = await hass.config_entries.options.async_init(entry.entry_id)
         await hass.async_block_till_done()

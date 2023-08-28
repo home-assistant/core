@@ -459,9 +459,8 @@ class LightTemplate(TemplateEntity, LightEntity):
                 )
                 self._brightness = None
         except ValueError:
-            _LOGGER.error(
-                "Template must supply an integer brightness from 0-255, or 'None'",
-                exc_info=True,
+            _LOGGER.exception(
+                "Template must supply an integer brightness from 0-255, or 'None'"
             )
             self._brightness = None
 
@@ -559,12 +558,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 )
                 self._temperature = None
         except ValueError:
-            _LOGGER.error(
-                (
-                    "Template must supply an integer temperature within the range for"
-                    " this light, or 'None'"
-                ),
-                exc_info=True,
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
             )
             self._temperature = None
 
@@ -620,12 +616,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 return
             self._max_mireds = int(render)
         except ValueError:
-            _LOGGER.error(
-                (
-                    "Template must supply an integer temperature within the range for"
-                    " this light, or 'None'"
-                ),
-                exc_info=True,
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
             )
             self._max_mireds = None
 
@@ -638,12 +631,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 return
             self._min_mireds = int(render)
         except ValueError:
-            _LOGGER.error(
-                (
-                    "Template must supply an integer temperature within the range for"
-                    " this light, or 'None'"
-                ),
-                exc_info=True,
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
             )
             self._min_mireds = None
 

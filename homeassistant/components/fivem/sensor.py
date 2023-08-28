@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import FiveMEntity, FiveMEntityDescription
 from .const import (
     ATTR_PLAYERS_LIST,
     ATTR_RESOURCES_LIST,
@@ -22,6 +21,7 @@ from .const import (
     UNIT_PLAYERS_ONLINE,
     UNIT_RESOURCES,
 )
+from .entity import FiveMEntity, FiveMEntityDescription
 
 
 @dataclass
@@ -32,20 +32,20 @@ class FiveMSensorEntityDescription(SensorEntityDescription, FiveMEntityDescripti
 SENSORS: tuple[FiveMSensorEntityDescription, ...] = (
     FiveMSensorEntityDescription(
         key=NAME_PLAYERS_MAX,
-        name=NAME_PLAYERS_MAX,
+        translation_key="max_players",
         icon=ICON_PLAYERS_MAX,
         native_unit_of_measurement=UNIT_PLAYERS_MAX,
     ),
     FiveMSensorEntityDescription(
         key=NAME_PLAYERS_ONLINE,
-        name=NAME_PLAYERS_ONLINE,
+        translation_key="online_players",
         icon=ICON_PLAYERS_ONLINE,
         native_unit_of_measurement=UNIT_PLAYERS_ONLINE,
         extra_attrs=[ATTR_PLAYERS_LIST],
     ),
     FiveMSensorEntityDescription(
         key=NAME_RESOURCES,
-        name=NAME_RESOURCES,
+        translation_key="resources",
         icon=ICON_RESOURCES,
         native_unit_of_measurement=UNIT_RESOURCES,
         extra_attrs=[ATTR_RESOURCES_LIST],

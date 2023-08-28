@@ -28,7 +28,7 @@ OPENABLE_LOCK = "lock.openable_lock"
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass, disable_platforms):
     """Set up demo component."""
     assert await async_setup_component(
         hass, LOCK_DOMAIN, {LOCK_DOMAIN: {"platform": DOMAIN}}

@@ -38,6 +38,8 @@ UPDATE_FIELDS = {
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""

@@ -872,7 +872,7 @@ async def test_light_context(
 
 
 async def test_light_turn_on_auth(
-    hass: HomeAssistant, hass_admin_user: MockUser, enable_custom_integrations: None
+    hass: HomeAssistant, hass_read_only_user: MockUser, enable_custom_integrations: None
 ) -> None:
     """Test that light context works."""
     platform = getattr(hass.components, "test.light")
@@ -883,7 +883,7 @@ async def test_light_turn_on_auth(
     state = hass.states.get("light.ceiling")
     assert state is not None
 
-    hass_admin_user.mock_policy({})
+    hass_read_only_user.mock_policy({})
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
@@ -891,7 +891,7 @@ async def test_light_turn_on_auth(
             "turn_on",
             {"entity_id": state.entity_id},
             blocking=True,
-            context=core.Context(user_id=hass_admin_user.id),
+            context=core.Context(user_id=hass_read_only_user.id),
         )
 
 

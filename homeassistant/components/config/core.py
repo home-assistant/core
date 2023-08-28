@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.sensor import async_update_suggested_units
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.core import HomeAssistant
@@ -28,6 +28,7 @@ class CheckConfigView(HomeAssistantView):
     url = "/api/config/core/check_config"
     name = "api:config:core:check_config"
 
+    @require_admin
     async def post(self, request):
         """Validate configuration and return results."""
         errors = await async_check_ha_config_file(request.app["hass"])

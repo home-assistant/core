@@ -16,8 +16,8 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinutPointClient
@@ -67,7 +67,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(POINT_DOMAIN, home_id)},
             manufacturer="Minut",
-            name=self._home["name"],
+            name=self._attr_name,
         )
 
     async def async_added_to_hass(self) -> None:

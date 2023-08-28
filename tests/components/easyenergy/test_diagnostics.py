@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
@@ -19,39 +20,13 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "entry": {
-            "title": "energy",
-        },
-        "energy_usage": {
-            "current_hour_price": 0.22541,
-            "next_hour_price": 0.24677,
-            "average_price": 0.17665,
-            "max_price": 0.24677,
-            "min_price": 0.12308,
-            "highest_price_time": "2023-01-19T16:00:00+00:00",
-            "lowest_price_time": "2023-01-19T02:00:00+00:00",
-            "percentage_of_max": 91.34,
-        },
-        "energy_return": {
-            "current_hour_price": 0.18629,
-            "next_hour_price": 0.20394,
-            "average_price": 0.14599,
-            "max_price": 0.20394,
-            "min_price": 0.10172,
-            "highest_price_time": "2023-01-19T16:00:00+00:00",
-            "lowest_price_time": "2023-01-19T02:00:00+00:00",
-            "percentage_of_max": 91.35,
-        },
-        "gas": {
-            "current_hour_price": 0.7253,
-            "next_hour_price": 0.7253,
-        },
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19 15:00:00")
@@ -60,6 +35,7 @@ async def test_diagnostics_no_gas_today(
     hass_client: ClientSessionGenerator,
     mock_easyenergy: MagicMock,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
     await async_setup_component(hass, "homeassistant", {})
@@ -73,34 +49,7 @@ async def test_diagnostics_no_gas_today(
     )
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, init_integration
-    ) == {
-        "entry": {
-            "title": "energy",
-        },
-        "energy_usage": {
-            "current_hour_price": 0.22541,
-            "next_hour_price": 0.24677,
-            "average_price": 0.17665,
-            "max_price": 0.24677,
-            "min_price": 0.12308,
-            "highest_price_time": "2023-01-19T16:00:00+00:00",
-            "lowest_price_time": "2023-01-19T02:00:00+00:00",
-            "percentage_of_max": 91.34,
-        },
-        "energy_return": {
-            "current_hour_price": 0.18629,
-            "next_hour_price": 0.20394,
-            "average_price": 0.14599,
-            "max_price": 0.20394,
-            "min_price": 0.10172,
-            "highest_price_time": "2023-01-19T16:00:00+00:00",
-            "lowest_price_time": "2023-01-19T02:00:00+00:00",
-            "percentage_of_max": 91.35,
-        },
-        "gas": {
-            "current_hour_price": None,
-            "next_hour_price": None,
-        },
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )

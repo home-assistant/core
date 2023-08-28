@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from apcaccess.status import ALL_UNITS
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,7 +21,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, APCUPSdData
@@ -379,7 +376,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="stesti",
         name="UPS Self Test Interval",
         icon="mdi:information-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
@@ -427,18 +423,26 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SPECIFIC_UNITS = {"ITEMP": UnitOfTemperature.CELSIUS}
 INFERRED_UNITS = {
     " Minutes": UnitOfTime.MINUTES,
     " Seconds": UnitOfTime.SECONDS,
     " Percent": PERCENTAGE,
     " Volts": UnitOfElectricPotential.VOLT,
     " Ampere": UnitOfElectricCurrent.AMPERE,
+    " Amps": UnitOfElectricCurrent.AMPERE,
     " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
+    " VA": UnitOfApparentPower.VOLT_AMPERE,
     " Watts": UnitOfPower.WATT,
     " Hz": UnitOfFrequency.HERTZ,
     " C": UnitOfTemperature.CELSIUS,
+    # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal
+    # Temperature sensor in this integration) with a trailing "Internal", e.g.,
+    # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
+    " C Internal": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
+    # "stesti" field (Self Test Interval) field could report a "days" unit, e.g.,
+    # "7 days", so here we add support for it.
+    " days": UnitOfTime.DAYS,
 }
 
 
@@ -466,15 +470,16 @@ async def async_setup_entry(
 
 
 def infer_unit(value: str) -> tuple[str, str | None]:
-    """If the value ends with any of the units from ALL_UNITS.
+    """If the value ends with any of the units from supported units.
 
     Split the unit off the end of the value and return the value, unit tuple
     pair. Else return the original value and None as the unit.
     """
 
-    for unit in ALL_UNITS:
+    for unit, ha_unit in INFERRED_UNITS.items():
         if value.endswith(unit):
-            return value.removesuffix(unit), INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), ha_unit
+
     return value, None
 
 
@@ -490,13 +495,7 @@ class APCUPSdSensor(SensorEntity):
         # Set up unique id and device info if serial number is available.
         if (serial_no := data_service.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, serial_no)},
-                model=data_service.model,
-                manufacturer="APC",
-                hw_version=data_service.hw_version,
-                sw_version=data_service.sw_version,
-            )
+        self._attr_device_info = data_service.device_info
 
         self.entity_description = description
         self._data_service = data_service

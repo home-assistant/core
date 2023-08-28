@@ -10,7 +10,9 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -24,7 +26,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, VALID_DATA_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 5
+    assert len(hass.states.async_all("sensor")) == 6
 
     batt_sensor = hass.states.get("sensor.aranet4_12345_battery")
     batt_sensor_attrs = batt_sensor.attributes
@@ -61,11 +63,20 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert press_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
     assert press_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
+    interval_sensor = hass.states.get("sensor.aranet4_12345_update_interval")
+    interval_sensor_attrs = interval_sensor.attributes
+    assert interval_sensor.state == "300"
+    assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Update Interval"
+    assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
+    assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_smart_home_integration_disabled(hass: HomeAssistant) -> None:
+async def test_smart_home_integration_disabled(
+    hass: HomeAssistant, entity_registry_enabled_by_default: None
+) -> None:
     """Test disabling smart home integration marks entities as unavailable."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -79,7 +90,7 @@ async def test_smart_home_integration_disabled(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, DISABLED_INTEGRATIONS_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 5
+    assert len(hass.states.async_all("sensor")) == 6
 
     batt_sensor = hass.states.get("sensor.aranet4_12345_battery")
     assert batt_sensor.state == "unavailable"

@@ -20,16 +20,19 @@ ENTITY_LEGACY_PROVIDER_GROUP = "entity_or_legacy_provider"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Exclusive(CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP): cv.entity_id,
-        vol.Exclusive(CONF_ENTITY_ID, ENTITY_LEGACY_PROVIDER_GROUP): cv.entities_domain(
-            DOMAIN
-        ),
-        vol.Required(CONF_MEDIA_PLAYER): cv.entity_id,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_TTS_SERVICE, CONF_ENTITY_ID),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Exclusive(CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP): cv.entity_id,
+            vol.Exclusive(
+                CONF_ENTITY_ID, ENTITY_LEGACY_PROVIDER_GROUP
+            ): cv.entities_domain(DOMAIN),
+            vol.Required(CONF_MEDIA_PLAYER): cv.entity_id,
+            vol.Optional(ATTR_LANGUAGE): cv.string,
+        }
+    ),
 )
 
 

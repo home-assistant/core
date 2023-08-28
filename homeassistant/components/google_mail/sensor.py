@@ -1,7 +1,7 @@
 """Support for Google Mail Sensors."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from googleapiclient.http import HttpRequest
 
@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 SENSOR_TYPE = SensorEntityDescription(
     key="vacation_end_date",
-    name="Vacation end date",
+    translation_key="vacation_end_date",
     icon="mdi:clock",
     device_class=SensorDeviceClass.TIMESTAMP,
 )
@@ -46,7 +46,7 @@ class GoogleMailSensor(GoogleMailEntity, SensorEntity):
         data: dict = await self.hass.async_add_executor_job(settings.execute)
 
         if data["enableAutoReply"] and (end := data.get("endTime")):
-            value = datetime.fromtimestamp(int(end) / 1000, tz=timezone.utc)
+            value = datetime.fromtimestamp(int(end) / 1000, tz=UTC)
         else:
             value = None
         self._attr_native_value = value

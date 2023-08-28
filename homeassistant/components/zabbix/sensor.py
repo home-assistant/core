@@ -67,17 +67,14 @@ def setup_platform(
             for hostid in hostids:
                 _LOGGER.debug("Creating Zabbix Sensor: %s", str(hostid))
                 sensors.append(ZabbixSingleHostTriggerCountSensor(zapi, [hostid], name))
+        elif not hostids:
+            # Single sensor that provides the total count of triggers.
+            _LOGGER.debug("Creating Zabbix Sensor")
+            sensors.append(ZabbixTriggerCountSensor(zapi, name))
         else:
-            if not hostids:
-                # Single sensor that provides the total count of triggers.
-                _LOGGER.debug("Creating Zabbix Sensor")
-                sensors.append(ZabbixTriggerCountSensor(zapi, name))
-            else:
-                # Single sensor that sums total issues for all hosts
-                _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
-                sensors.append(
-                    ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name)
-                )
+            # Single sensor that sums total issues for all hosts
+            _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
+            sensors.append(ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name))
 
     else:
         # Single sensor that provides the total count of triggers.

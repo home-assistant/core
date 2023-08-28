@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -183,7 +182,7 @@ class SystemBridgeDataUpdateCoordinator(
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
         try:
-            async with async_timeout.timeout(20):
+            async with asyncio.timeout(20):
                 await self.websocket_client.connect(
                     session=async_get_clientsession(self.hass),
                 )

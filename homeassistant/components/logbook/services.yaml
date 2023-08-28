@@ -1,29 +1,19 @@
 log:
-  name: Log
-  description: Create a custom entry in your logbook.
   fields:
     name:
-      name: Name
-      description: Custom name for an entity, can be referenced with entity_id.
       required: true
       example: "Kitchen"
       selector:
         text:
     message:
-      name: Message
-      description: Message of the custom logbook entry.
       required: true
       example: "is being used"
       selector:
         text:
     entity_id:
-      name: Entity ID
-      description: Entity to reference in custom logbook entry.
       selector:
         entity:
     domain:
-      name: Domain
-      description: Icon of domain to display in custom logbook entry.
       example: "light"
       selector:
         text:

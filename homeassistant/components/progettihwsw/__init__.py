@@ -1,7 +1,7 @@
 """Automation manager for boards manufactured by ProgettiHWSW Italy."""
 
-from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.input import Input
+from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 from ProgettiHWSW.relay import Relay
 
 from homeassistant.config_entries import ConfigEntry

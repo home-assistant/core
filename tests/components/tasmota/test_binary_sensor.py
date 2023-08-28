@@ -125,13 +125,13 @@ async def test_controlling_state_via_mqtt_switchname(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
@@ -139,35 +139,35 @@ async def test_controlling_state_via_mqtt_switchname(
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"Custom Name":{"Action":"ON"}}'
     )
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/RESULT", '{"Custom Name":{"Action":"OFF"}}'
     )
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_OFF
 
     # Test periodic state update
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", '{"Custom Name":"ON"}')
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", '{"Custom Name":"OFF"}')
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_OFF
 
     # Test polled state update
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/STATUS10", '{"StatusSNS":{"Custom Name":"ON"}}'
     )
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/stat/STATUS10", '{"StatusSNS":{"Custom Name":"OFF"}}'
     )
-    state = hass.states.get("binary_sensor.custom_name")
+    state = hass.states.get("binary_sensor.tasmota_custom_name")
     assert state.state == STATE_OFF
 
 
@@ -243,9 +243,9 @@ async def test_friendly_names(
     assert state.state == "unavailable"
     assert state.attributes.get("friendly_name") == "Tasmota binary_sensor 1"
 
-    state = hass.states.get("binary_sensor.beer")
+    state = hass.states.get("binary_sensor.tasmota_beer")
     assert state.state == "unavailable"
-    assert state.attributes.get("friendly_name") == "Beer"
+    assert state.attributes.get("friendly_name") == "Tasmota Beer"
 
 
 async def test_off_delay(

@@ -50,6 +50,15 @@ TEST_CONFIG_WITH_PROVINCE = {
     "add_holidays": [],
     "remove_holidays": [],
 }
+TEST_CONFIG_INCORRECT_COUNTRY = {
+    "name": DEFAULT_NAME,
+    "country": "ZZ",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+}
 TEST_CONFIG_INCORRECT_PROVINCE = {
     "name": DEFAULT_NAME,
     "country": "DE",

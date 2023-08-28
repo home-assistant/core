@@ -171,6 +171,7 @@ async def test_zooz_zen72(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -256,6 +257,7 @@ async def test_indicator_test(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,

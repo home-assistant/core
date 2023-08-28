@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.geo_json_events import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 from tests.components.geo_json_events.conftest import URL
@@ -31,7 +32,7 @@ async def test_duplicate_error_user(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -44,7 +45,7 @@ async def test_duplicate_error_user(
             },
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -64,7 +65,7 @@ async def test_duplicate_error_import(
             CONF_RADIUS: 25,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -82,7 +83,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
             CONF_SCAN_INTERVAL: timedelta(minutes=4),
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["title"] == "http://geo.json.local/geo_json_events.json (-41.2, 174.7)"
     )
@@ -100,7 +101,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -113,7 +114,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             },
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert (
         result["title"] == "http://geo.json.local/geo_json_events.json (-41.2, 174.7)"
     )

@@ -87,7 +87,7 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         api = DelugeRPCClient(
-            host=host, port=port, username=username, password=password
+            host=host, port=port, username=username, password=password, decode_utf8=True
         )
         try:
             await self.hass.async_add_executor_job(api.connect)

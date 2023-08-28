@@ -203,7 +203,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
+            connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:

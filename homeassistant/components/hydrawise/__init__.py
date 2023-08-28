@@ -1,7 +1,7 @@
 """Support for Hydrawise cloud."""
 
 
-from hydrawiser.core import Hydrawiser
+from pydrawise.legacy import LegacyHydrawise
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        hydrawise = await hass.async_add_executor_job(Hydrawiser, access_token)
+        hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
     except (ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         _show_failure_notification(hass, str(ex))
@@ -53,18 +53,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _show_failure_notification(hass: HomeAssistant, error: str):
+def _show_failure_notification(hass: HomeAssistant, error: str) -> None:
     persistent_notification.create(
         hass,
         f"Error: {error}<br />You will need to restart hass after fixing.",
         title=NOTIFICATION_TITLE,
         notification_id=NOTIFICATION_ID,
     )
-
-
-class HydrawiseHub:
-    """Representation of a base Hydrawise device."""
-
-    def __init__(self, data):
-        """Initialize the entity."""
-        self.data = data

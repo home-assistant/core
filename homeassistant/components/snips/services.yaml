@@ -1,83 +1,55 @@
 feedback_off:
-  name: Feedback off
-  description: Turns feedback sounds off.
   fields:
     site_id:
-      name: Site ID
-      description: Site to turn sounds on, defaults to all sites.
       example: bedroom
       default: default
       selector:
         text:
 feedback_on:
-  name: Feedback on
-  description: Turns feedback sounds on.
   fields:
     site_id:
-      name: Site ID
-      description: Site to turn sounds on, defaults to all sites.
       example: bedroom
       default: default
       selector:
         text:
 say:
-  name: Say
-  description: Send a TTS message to Snips.
   fields:
     custom_data:
-      name: Custom data
-      description: custom data that will be included with all messages in this session
       example: user=UserName
       default: ""
       selector:
         text:
     site_id:
-      name: Site ID
-      description: Site to use to start session, defaults to default.
       example: bedroom
       default: default
       selector:
         text:
     text:
-      name: Text
-      description: Text to say.
       required: true
       example: My name is snips
       selector:
         text:
 say_action:
-  name: Say action
-  description: Send a TTS message to Snips to listen for a response.
   fields:
     can_be_enqueued:
-      name: Can be enqueued
-      description: If True, session waits for an open session to end, if False session is dropped if one is running
       default: true
       selector:
         boolean:
     custom_data:
-      name: Custom data
-      description: custom data that will be included with all messages in this session
       example: user=UserName
       default: ""
       selector:
         text:
     intent_filter:
-      name: Intent filter
-      description: Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.
       example: "turnOnLights, turnOffLights"
       selector:
         object:
     site_id:
-      name: Site ID
-      description: Site to use to start session, defaults to default.
       example: bedroom
       default: default
       selector:
         text:
     text:
-      name: Text
-      description: Text to say
       required: true
       example: My name is snips
       selector:

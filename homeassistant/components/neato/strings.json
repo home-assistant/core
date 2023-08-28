@@ -18,5 +18,46 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "button": {
+      "dismiss_alert": {
+        "name": "Dismiss alert"
+      }
+    },
+    "camera": {
+      "cleaning_map": {
+        "name": "Cleaning map"
+      }
+    },
+    "switch": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    }
+  },
+  "services": {
+    "custom_cleaning": {
+      "name": "Zone cleaning service",
+      "description": "Zone cleaning service call specific to Neato Botvacs.",
+      "fields": {
+        "mode": {
+          "name": "Set cleaning mode",
+          "description": "Set the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set."
+        },
+        "navigation": {
+          "name": "Set navigation mode",
+          "description": "Set the navigation mode: 1 for normal, 2 for extra care, 3 for deep. Defaults to normal if not set."
+        },
+        "category": {
+          "name": "Use cleaning map",
+          "description": "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found)."
+        },
+        "zone": {
+          "name": "Name of the zone to clean (Only Botvac D7)",
+          "description": "Only supported on the Botvac D7. Name of the zone to clean. Defaults to no zone i.e. complete house cleanup."
+        }
+      }
+    }
   }
 }

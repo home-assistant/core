@@ -21,7 +21,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -228,7 +228,7 @@ async def test_themes_save_storage(
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=60))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
     # To execute the save
     await hass.async_block_till_done()
 

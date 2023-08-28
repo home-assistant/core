@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/obihai",
   "iot_class": "local_polling",
   "loggers": ["pyobihai"],
-  "requirements": ["pyobihai==1.3.2"]
+  "requirements": ["pyobihai==1.4.2"]
 }

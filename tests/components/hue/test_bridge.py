@@ -51,9 +51,16 @@ async def test_bridge_setup_v2(hass: HomeAssistant, mock_api_v2) -> None:
     assert hue_bridge.api is mock_api_v2
     assert isinstance(hue_bridge.api, HueBridgeV2)
     assert hue_bridge.api_version == 2
-    assert len(mock_forward.mock_calls) == 5
+    assert len(mock_forward.mock_calls) == 6
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
-    assert forward_entries == {"light", "binary_sensor", "sensor", "switch", "scene"}
+    assert forward_entries == {
+        "light",
+        "binary_sensor",
+        "event",
+        "sensor",
+        "switch",
+        "scene",
+    }
 
 
 async def test_bridge_setup_invalid_api_key(hass: HomeAssistant) -> None:

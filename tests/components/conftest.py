@@ -1,6 +1,7 @@
 """Fixtures for component testing."""
 from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -32,3 +33,61 @@ def entity_registry_enabled_by_default() -> Generator[None, None, None]:
         return_value=True,
     ):
         yield
+
+
+# Blueprint test fixtures
+@pytest.fixture(name="stub_blueprint_populate")
+def stub_blueprint_populate_fixture() -> Generator[None, Any, None]:
+    """Stub copying the blueprints to the config folder."""
+    from tests.components.blueprint.common import stub_blueprint_populate_fixture_helper
+
+    yield from stub_blueprint_populate_fixture_helper()
+
+
+# TTS test fixtures
+@pytest.fixture(name="mock_tts_get_cache_files")
+def mock_tts_get_cache_files_fixture():
+    """Mock the list TTS cache function."""
+    from tests.components.tts.common import mock_tts_get_cache_files_fixture_helper
+
+    yield from mock_tts_get_cache_files_fixture_helper()
+
+
+@pytest.fixture(name="mock_tts_init_cache_dir")
+def mock_tts_init_cache_dir_fixture(
+    init_tts_cache_dir_side_effect: Any,
+) -> Generator[MagicMock, None, None]:
+    """Mock the TTS cache dir in memory."""
+    from tests.components.tts.common import mock_tts_init_cache_dir_fixture_helper
+
+    yield from mock_tts_init_cache_dir_fixture_helper(init_tts_cache_dir_side_effect)
+
+
+@pytest.fixture(name="init_tts_cache_dir_side_effect")
+def init_tts_cache_dir_side_effect_fixture() -> Any:
+    """Return the cache dir."""
+    from tests.components.tts.common import (
+        init_tts_cache_dir_side_effect_fixture_helper,
+    )
+
+    return init_tts_cache_dir_side_effect_fixture_helper()
+
+
+@pytest.fixture(name="mock_tts_cache_dir")
+def mock_tts_cache_dir_fixture(
+    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
+):
+    """Mock the TTS cache dir with empty dir."""
+    from tests.components.tts.common import mock_tts_cache_dir_fixture_helper
+
+    yield from mock_tts_cache_dir_fixture_helper(
+        tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
+    )
+
+
+@pytest.fixture(name="tts_mutagen_mock")
+def tts_mutagen_mock_fixture():
+    """Mock writing tags."""
+    from tests.components.tts.common import tts_mutagen_mock_fixture_helper
+
+    yield from tts_mutagen_mock_fixture_helper()

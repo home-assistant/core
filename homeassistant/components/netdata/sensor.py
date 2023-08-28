@@ -66,7 +66,7 @@ async def async_setup_platform(
     port = config[CONF_PORT]
     resources = config[CONF_RESOURCES]
 
-    netdata = NetdataData(Netdata(host, port=port))
+    netdata = NetdataData(Netdata(host, port=port, timeout=20.0))
     await netdata.async_update()
 
     if netdata.api.metrics is None:

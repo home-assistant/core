@@ -60,6 +60,9 @@ CLOUD_COVER = "cloud_cover"
 CLOUD_CEILING = "cloud_ceiling"
 WIND_GUST = "wind_gust"
 PRECIPITATION_TYPE = "precipitation_type"
+UV_INDEX = "uv_index"
+UV_HEALTH_CONCERN = "uv_radiation_health_concern"
+
 
 V3_FIELDS = [
     O3,
@@ -91,6 +94,8 @@ V4_FIELDS = [
     CLOUD_CEILING,
     WIND_GUST,
     PRECIPITATION_TYPE,
+    UV_INDEX,
+    UV_HEALTH_CONCERN,
 ]
 
 
@@ -171,6 +176,8 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_CEILING, "0.74")
     check_sensor_state(hass, WIND_GUST, "12.64")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+    check_sensor_state(hass, UV_INDEX, "3")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
 
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
@@ -202,6 +209,8 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, CLOUD_CEILING, "0.46")
     check_sensor_state(hass, WIND_GUST, "28.27")
     check_sensor_state(hass, PRECIPITATION_TYPE, "rain")
+    check_sensor_state(hass, UV_INDEX, "3")
+    check_sensor_state(hass, UV_HEALTH_CONCERN, "moderate")
 
 
 async def test_entity_description() -> None:

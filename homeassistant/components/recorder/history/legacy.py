@@ -434,11 +434,11 @@ def _state_changed_during_period_stmt(
             )
         else:
             stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
+    elif schema_version >= 31:
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated_ts)
     else:
-        if schema_version >= 31:
-            stmt += lambda q: q.order_by(States.entity_id, States.last_updated_ts)
-        else:
-            stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+        stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+
     if limit:
         stmt += lambda q: q.limit(limit)
     return stmt
@@ -565,8 +565,6 @@ def _get_states_for_entities_stmt(
                 most_recent_states_for_entities_by_date := (
                     select(
                         States.entity_id.label("max_entity_id"),
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                        # pylint: disable-next=not-callable
                         func.max(States.last_updated_ts).label("max_last_updated"),
                     )
                     .filter(
@@ -590,8 +588,6 @@ def _get_states_for_entities_stmt(
             (
                 most_recent_states_for_entities_by_date := select(
                     States.entity_id.label("max_entity_id"),
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(States.last_updated).label("max_last_updated"),
                 )
                 .filter(

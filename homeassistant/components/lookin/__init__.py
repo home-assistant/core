@@ -104,6 +104,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
+    if entry.unique_id != (found_uuid := lookin_device.id.upper()):
+        # If the uuid of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, "
+            f"found {found_uuid}"
+        )
+
     push_coordinator = LookinPushCoordinator(entry.title)
 
     if lookin_device.model >= 2:

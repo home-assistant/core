@@ -11,3 +11,27 @@ extend-select = [
     "PT021", # use yield instead of request.addfinalizer
     "PT022", # No teardown in fixture, replace useless yield with return
 ]
+
+extend-ignore = [
+    "PLC", # pylint
+    "PLE", # pylint
+    "PLR", # pylint
+    "PLW", # pylint
+    "N815", # Variable {name} in class scope should not be mixedCase
+]
+
+[isort]
+known-first-party = [
+    "homeassistant",
+    "tests",
+    "script",
+]
+known-third-party = [
+    "syrupy",
+    "pytest",
+    "voluptuous",
+    "pylint",
+]
+forced-separate = [
+    "tests",
+]

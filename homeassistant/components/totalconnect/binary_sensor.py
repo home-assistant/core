@@ -81,15 +81,9 @@ class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):
             return BinarySensorDeviceClass.MOTION
         if self._zone.is_type_medical():
             return BinarySensorDeviceClass.SAFETY
-        # "security" type is a generic category so test for it last
-        if self._zone.is_type_security():
-            return BinarySensorDeviceClass.DOOR
-
-        _LOGGER.error(
-            "TotalConnect zone %s reported an unexpected device class",
-            self._zone.zoneid,
-        )
-        return None
+        if self._zone.is_type_temperature():
+            return BinarySensorDeviceClass.PROBLEM
+        return BinarySensorDeviceClass.DOOR
 
     def update(self):
         """Return the state of the device."""

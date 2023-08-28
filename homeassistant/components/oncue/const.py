@@ -3,10 +3,15 @@
 import asyncio
 
 import aiohttp
+from aiooncue import ServiceFailedException
 
 DOMAIN = "oncue"
 
-CONNECTION_EXCEPTIONS = (asyncio.TimeoutError, aiohttp.ClientError)
+CONNECTION_EXCEPTIONS = (
+    asyncio.TimeoutError,
+    aiohttp.ClientError,
+    ServiceFailedException,
+)
 
 CONNECTION_ESTABLISHED_KEY: str = "NetworkConnectionEstablished"
 

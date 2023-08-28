@@ -1,4 +1,5 @@
 """Test the Z-Wave JS lock platform."""
+import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
@@ -6,6 +7,7 @@ from zwave_js_server.const.command_class.lock import (
     CURRENT_MODE_PROPERTY,
 )
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node, NodeStatus
 
 from homeassistant.components.lock import (
@@ -27,6 +29,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
 
@@ -152,6 +155,33 @@ async def test_door_lock(
         "propertyKey": 1,
     }
     assert args["value"] == 0
+
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    # Test set usercode service error handling
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            ZWAVE_JS_DOMAIN,
+            SERVICE_SET_LOCK_USERCODE,
+            {
+                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+                ATTR_USERCODE: "1234",
+            },
+            blocking=True,
+        )
+
+    # Test clear usercode service error handling
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            ZWAVE_JS_DOMAIN,
+            SERVICE_CLEAR_LOCK_USERCODE,
+            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            blocking=True,
+        )
+
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="dead",

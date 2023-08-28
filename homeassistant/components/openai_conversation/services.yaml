@@ -1,0 +1,22 @@
+generate_image:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: openai_conversation
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    size:
+      required: true
+      example: "512"
+      default: "512"
+      selector:
+        select:
+          options:
+            - "256"
+            - "512"
+            - "1024"

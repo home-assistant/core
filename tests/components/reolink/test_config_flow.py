@@ -9,6 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.components.reolink.exceptions import ReolinkWebhookException
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -28,9 +29,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures(
-    "mock_setup_entry", "reolink_connect", "reolink_ONVIF_wait"
-)
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "reolink_connect")
 
 
 async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
@@ -108,6 +107,20 @@ async def test_config_flow_errors(
     assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    reolink_connect.get_host_data.side_effect = ReolinkWebhookException("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "webhook_exception"}
 
     reolink_connect.get_host_data.side_effect = json.JSONDecodeError(
         "test_error", "test", 1

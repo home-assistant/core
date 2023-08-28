@@ -27,7 +27,7 @@ async def test_sensors(
     assert entity
     assert entity.state == "none"
     assert (
-        entity.attributes.get(ATTR_FRIENDLY_NAME) == f"{FRIENDLY_NAME} Media Location"
+        entity.attributes.get(ATTR_FRIENDLY_NAME) == f"{FRIENDLY_NAME} Media location"
     )
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-media_location"
@@ -36,7 +36,7 @@ async def test_sensors(
     entry = er.async_get(hass).async_get(f"{ENTITY_ID}_play_status")
     assert entity
     assert entity.state == "none"
-    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == f"{FRIENDLY_NAME} Play Status"
+    assert entity.attributes.get(ATTR_FRIENDLY_NAME) == f"{FRIENDLY_NAME} Play status"
     assert entry
     assert entry.unique_id == f"{MOCK_SERIAL}-play_status"
 

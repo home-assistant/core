@@ -25,11 +25,11 @@
         }
       },
       "reauth_confirm": {
-        "description": "Login to your Vulcan Account using mobile app registration page.",
+        "description": "[%key:component::vulcan::config::step::auth::description%]",
         "data": {
           "token": "Token",
-          "region": "Symbol",
-          "pin": "Pin"
+          "region": "[%key:component::vulcan::config::step::auth::data::region%]",
+          "pin": "[%key:component::vulcan::config::step::auth::data::pin%]"
         }
       },
       "select_student": {

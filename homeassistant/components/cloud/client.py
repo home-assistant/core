@@ -17,6 +17,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -53,7 +54,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -135,7 +135,7 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def on_cloud_connected(self) -> None:
+    async def cloud_connected(self) -> None:
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
@@ -182,6 +182,9 @@ class CloudClient(Interface):
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
 
+    async def cloud_disconnected(self) -> None:
+        """When cloud disconnected."""
+
     async def cloud_started(self) -> None:
         """When cloud is started."""
 
@@ -209,11 +212,24 @@ class CloudClient(Interface):
         """Process cloud remote message to client."""
         await self._prefs.async_update(remote_enabled=connect)
 
+    async def async_cloud_connection_info(
+        self, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Process cloud connection info message to client."""
+        return {
+            "remote": {
+                "connected": self.cloud.remote.is_connected,
+                "enabled": self._prefs.remote_enabled,
+                "instance_domain": self.cloud.remote.instance_domain,
+            },
+            "version": HA_VERSION,
+        }
+
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_smart_home.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,

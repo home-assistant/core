@@ -149,11 +149,11 @@ async def test_cloud_setup(
     assert registry.async_is_registered(SECOND_CLOUD_ENTITY_ID)
 
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0")})
+    device = registry.async_get_device(identifiers={(DOMAIN, TEST_SITE_UUID + "_0")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1")})
+    device = registry.async_get_device(identifiers={(DOMAIN, TEST_SITE_UUID + "_1")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
@@ -485,11 +485,15 @@ async def test_local_setup(
     assert registry.async_is_registered(SECOND_LOCAL_ENTITY_ID)
 
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0_local")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_0_local")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1_local")})
+    device = registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_1_local")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
     with patch("homeassistant.components.risco.RiscoLocal.disconnect") as mock_close:

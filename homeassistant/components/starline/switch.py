@@ -18,7 +18,6 @@ from .entity import StarlineEntity
 class StarlineRequiredKeysMixin:
     """Mixin for required keys."""
 
-    name_: str
     icon_on: str
     icon_off: str
 
@@ -33,25 +32,25 @@ class StarlineSwitchEntityDescription(
 SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
     StarlineSwitchEntityDescription(
         key="ign",
-        name_="Engine",
+        translation_key="engine",
         icon_on="mdi:engine-outline",
         icon_off="mdi:engine-off-outline",
     ),
     StarlineSwitchEntityDescription(
         key="webasto",
-        name_="Webasto",
+        translation_key="webasto",
         icon_on="mdi:radiator",
         icon_off="mdi:radiator-off",
     ),
     StarlineSwitchEntityDescription(
         key="out",
-        name_="Additional Channel",
+        translation_key="additional_channel",
         icon_on="mdi:access-point-network",
         icon_off="mdi:access-point-network-off",
     ),
     StarlineSwitchEntityDescription(
         key="poke",
-        name_="Horn",
+        translation_key="horn",
         icon_on="mdi:bullhorn-outline",
         icon_off="mdi:bullhorn-outline",
     ),
@@ -85,7 +84,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         description: StarlineSwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(account, device, description.key, description.name_)
+        super().__init__(account, device, description.key)
         self.entity_description = description
 
     @property

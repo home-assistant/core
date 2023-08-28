@@ -41,5 +41,43 @@
         }
       }
     }
+  },
+  "services": {
+    "effect": {
+      "name": "Set effect",
+      "description": "Controls the effect settings of WLED.",
+      "fields": {
+        "effect": {
+          "name": "Effect",
+          "description": "Name or ID of the WLED light effect."
+        },
+        "intensity": {
+          "name": "Effect intensity",
+          "description": "Intensity of the effect. Number between 0 and 255."
+        },
+        "palette": {
+          "name": "Color palette",
+          "description": "Name or ID of the WLED light palette."
+        },
+        "speed": {
+          "name": "Effect speed",
+          "description": "Speed of the effect."
+        },
+        "reverse": {
+          "name": "Reverse effect",
+          "description": "Reverse the effect. Either true to reverse or false otherwise."
+        }
+      }
+    },
+    "preset": {
+      "name": "Set preset (deprecated)",
+      "description": "Sets a preset for the WLED device.",
+      "fields": {
+        "preset": {
+          "name": "Preset ID",
+          "description": "ID of the WLED preset."
+        }
+      }
+    }
   }
 }

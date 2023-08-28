@@ -84,3 +84,21 @@ async def test_state_and_attributes(hass: HomeAssistant) -> None:
         assert state.state == STATE_OFF
         state = hass.states.get("binary_sensor.gas_tamper")
         assert state.state == STATE_ON
+
+        # Zone 6 is unknown type, assume it is a security (door) sensor
+        state = hass.states.get("binary_sensor.unknown")
+        assert state.state == STATE_OFF
+        assert state.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
+        state = hass.states.get("binary_sensor.unknown_low_battery")
+        assert state.state == STATE_OFF
+        state = hass.states.get("binary_sensor.unknown_tamper")
+        assert state.state == STATE_OFF
+
+        # Zone 7 is temperature
+        state = hass.states.get("binary_sensor.temperature")
+        assert state.state == STATE_OFF
+        assert state.attributes.get("device_class") == BinarySensorDeviceClass.PROBLEM
+        state = hass.states.get("binary_sensor.temperature_low_battery")
+        assert state.state == STATE_OFF
+        state = hass.states.get("binary_sensor.temperature_tamper")
+        assert state.state == STATE_OFF

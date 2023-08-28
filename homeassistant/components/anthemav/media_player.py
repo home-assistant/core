@@ -15,11 +15,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ANTHEMAV_UDATE_SIGNAL, CONF_MODEL, DOMAIN, MANUFACTURER
+from .const import ANTHEMAV_UPDATE_SIGNAL, CONF_MODEL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,7 @@ class AnthemAVR(MediaPlayerEntity):
             self._attr_name = f"zone {zone_number}"
             self._attr_unique_id = f"{mac_address}_{zone_number}"
         else:
+            self._attr_name = None
             self._attr_unique_id = mac_address
 
         self._attr_device_info = DeviceInfo(
@@ -95,7 +96,7 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{ANTHEMAV_UDATE_SIGNAL}_{self._entry_id}",
+                f"{ANTHEMAV_UPDATE_SIGNAL}_{self._entry_id}",
                 self.update_states,
             )
         )

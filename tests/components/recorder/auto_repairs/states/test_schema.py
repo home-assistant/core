@@ -1,6 +1,5 @@
 """The test repairing states schema."""
 
-# pylint: disable=invalid-name
 from unittest.mock import ANY, patch
 
 import pytest

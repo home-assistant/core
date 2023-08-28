@@ -49,13 +49,12 @@ async def test_device_remove_devices(
     device_registry = dr.async_get(hass)
 
     device_entry = device_registry.async_get_device(
-        {
+        identifiers={
             (
                 DOMAIN,
                 "426c7565-4368-6172-6d42-6561636f6e73_3838_4949_61DE521B-F0BF-9F44-64D4-75BBE1738105",
             )
         },
-        {},
     )
     assert (
         await remove_device(await hass_ws_client(hass), device_entry.id, entry.entry_id)

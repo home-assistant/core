@@ -44,10 +44,27 @@
           }
         }
       }
+    }
+  },
+  "services": {
+    "lock_n_go": {
+      "name": "Lock 'n' go",
+      "description": "Nuki Lock 'n' Go.",
+      "fields": {
+        "unlatch": {
+          "name": "Unlatch",
+          "description": "Whether to unlatch the lock."
+        }
+      }
     },
-    "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
+    "set_continuous_mode": {
+      "name": "Set continuous mode",
+      "description": "Enables or disables continuous mode on Nuki Opener.",
+      "fields": {
+        "enable": {
+          "name": "[%key:common::action::enable%]",
+          "description": "Whether to enable or disable the feature."
+        }
       }
     }
   }

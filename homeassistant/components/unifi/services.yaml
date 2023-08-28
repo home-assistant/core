@@ -1,15 +1,9 @@
 reconnect_client:
-  name: Reconnect wireless client
-  description: Try to get wireless client to reconnect to UniFi Network
   fields:
     device_id:
-      name: Device
-      description: Try reconnect client to wireless network
       required: true
       selector:
         device:
           integration: unifi
 
 remove_clients:
-  name: Remove clients from the UniFi Network
-  description: Clean up clients that has only been associated with the controller for a short period of time.

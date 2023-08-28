@@ -1,0 +1,14 @@
+{
+  "services": {
+    "write": {
+      "name": "Write",
+      "description": "Calls the ebusd write command.",
+      "fields": {
+        "call": {
+          "name": "Call",
+          "description": "Property name and value to set."
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 """Base class for Ring entity."""
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from . import ATTRIBUTION, DOMAIN
 
@@ -10,6 +11,7 @@ class RingEntityMixin(Entity):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, config_entry_id, device):
         """Initialize a sensor for Ring device."""

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/alpha_vantage",
   "iot_class": "cloud_polling",
   "loggers": ["alpha_vantage"],
-  "requirements": ["alpha_vantage==2.3.1"]
+  "requirements": ["alpha-vantage==2.3.1"]
 }

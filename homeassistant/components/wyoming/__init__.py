@@ -7,10 +7,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "ATTR_SPEAKER",
+    "DOMAIN",
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

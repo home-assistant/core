@@ -13,7 +13,6 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
-import async_timeout
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.engine import Engine
@@ -299,9 +298,39 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self) -> None:
         """Initialize the recorder."""
+        entity_filter = self.entity_filter
+        exclude_event_types = self.exclude_event_types
+        queue_put = self._queue.put_nowait
+        event_task = EventTask
+
+        @callback
+        def _event_listener(event: Event) -> None:
+            """Listen for new events and put them in the process queue."""
+            if event.event_type in exclude_event_types:
+                return
+
+            if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
+                queue_put(event_task(event))
+                return
+
+            if isinstance(entity_id, str):
+                if entity_filter(entity_id):
+                    queue_put(event_task(event))
+                return
+
+            if isinstance(entity_id, list):
+                for eid in entity_id:
+                    if entity_filter(eid):
+                        queue_put(event_task(event))
+                        return
+                return
+
+            # Unknown what it is.
+            queue_put(event_task(event))
+
         self._event_listener = self.hass.bus.async_listen(
             MATCH_ALL,
-            self.event_listener,
+            _event_listener,
             run_immediately=True,
         )
         self._queue_watcher = async_track_time_interval(
@@ -411,27 +440,6 @@ class Recorder(threading.Thread):
         if self._periodic_listener:
             self._periodic_listener()
             self._periodic_listener = None
-
-    @callback
-    def _async_event_filter(self, event: Event) -> bool:
-        """Filter events."""
-        if event.event_type in self.exclude_event_types:
-            return False
-
-        if (entity_id := event.data.get(ATTR_ENTITY_ID)) is None:
-            return True
-
-        if isinstance(entity_id, str):
-            return self.entity_filter(entity_id)
-
-        if isinstance(entity_id, list):
-            for eid in entity_id:
-                if self.entity_filter(eid):
-                    return True
-            return False
-
-        # Unknown what it is.
-        return True
 
     async def _async_close(self, event: Event) -> None:
         """Empty the queue if its still present at close."""
@@ -544,10 +552,10 @@ class Recorder(threading.Thread):
         If the number of entities has increased, increase the size of the LRU
         cache to avoid thrashing.
         """
-        new_size = self.hass.states.async_entity_ids_count() * 2
-        self.state_attributes_manager.adjust_lru_size(new_size)
-        self.states_meta_manager.adjust_lru_size(new_size)
-        self.statistics_meta_manager.adjust_lru_size(new_size)
+        if new_size := self.hass.states.async_entity_ids_count() * 2:
+            self.state_attributes_manager.adjust_lru_size(new_size)
+            self.states_meta_manager.adjust_lru_size(new_size)
+            self.statistics_meta_manager.adjust_lru_size(new_size)
 
     @callback
     def async_periodic_statistics(self) -> None:
@@ -1257,12 +1265,6 @@ class Recorder(threading.Thread):
         _LOGGER.debug("Sending keepalive")
         self.event_session.connection().scalar(select(1))
 
-    @callback
-    def event_listener(self, event: Event) -> None:
-        """Listen for new events and put them in the process queue."""
-        if self._async_event_filter(event):
-            self.queue_task(EventTask(event))
-
     async def async_block_till_done(self) -> None:
         """Async version of block_till_done."""
         if self._queue.empty() and not self._event_session_has_pending_writes:
@@ -1303,7 +1305,7 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+            async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()

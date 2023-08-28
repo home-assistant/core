@@ -5,8 +5,9 @@ from typing import Any
 
 from pyrisco.common import Zone
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RiscoDataUpdateCoordinator, zone_update_signal
@@ -55,7 +56,6 @@ class RiscoCloudZoneEntity(RiscoCloudEntity):
         self,
         *,
         coordinator: RiscoDataUpdateCoordinator,
-        name: str | None,
         suffix: str,
         zone_id: int,
         zone: Zone,
@@ -65,7 +65,6 @@ class RiscoCloudZoneEntity(RiscoCloudEntity):
         super().__init__(coordinator=coordinator, **kwargs)
         self._zone_id = zone_id
         self._zone = zone
-        self._attr_name = name
         device_unique_id = zone_unique_id(self._risco, zone_id)
         self._attr_unique_id = f"{device_unique_id}{suffix}"
         self._attr_device_info = DeviceInfo(
@@ -89,7 +88,6 @@ class RiscoLocalZoneEntity(Entity):
         self,
         *,
         system_id: str,
-        name: str | None,
         suffix: str,
         zone_id: int,
         zone: Zone,
@@ -99,7 +97,6 @@ class RiscoLocalZoneEntity(Entity):
         super().__init__(**kwargs)
         self._zone_id = zone_id
         self._zone = zone
-        self._attr_name = name
         device_unique_id = f"{system_id}_zone_{zone_id}_local"
         self._attr_unique_id = f"{device_unique_id}{suffix}"
         self._attr_device_info = DeviceInfo(

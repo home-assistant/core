@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Final
-
-from homeassistant.backports.enum import StrEnum
 
 LOGGER: Final = logging.getLogger(__package__)
 

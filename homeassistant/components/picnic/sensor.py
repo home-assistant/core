@@ -14,8 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -270,11 +269,6 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             else {}
         )
         return self.entity_description.value_fn(data_set)
-
-    @property
-    def available(self) -> bool:
-        """Return True if last update was successful."""
-        return self.coordinator.last_update_success
 
     @property
     def device_info(self) -> DeviceInfo:

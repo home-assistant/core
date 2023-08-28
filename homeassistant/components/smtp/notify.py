@@ -56,7 +56,6 @@ DEFAULT_ENCRYPTION = "starttls"
 
 ENCRYPTION_OPTIONS = ["tls", "starttls", "none"]
 
-# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),

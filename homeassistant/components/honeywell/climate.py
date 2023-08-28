@@ -6,7 +6,8 @@ import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
-import aiosomecomfort
+from aiosomecomfort import SomeComfortError, UnauthorizedError, UnexpectedResponse
+from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -26,7 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HoneywellData
@@ -101,11 +102,12 @@ class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
         data: HoneywellData,
-        device: aiosomecomfort.device.Device,
+        device: SomeComfortDevice,
         cool_away_temp: int | None,
         heat_away_temp: int | None,
     ) -> None:
@@ -145,13 +147,13 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:
+        if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
+        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
-        if not device._data["hasFan"]:
+        if not device._data.get("hasFan"):
             return
 
         # not all honeywell fans support all modes
@@ -311,7 +313,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode == "heat":
                     await self._device.set_setpoint_heat(temperature)
 
-        except aiosomecomfort.SomeComfortError as err:
+        except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -324,7 +326,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
 
-            except aiosomecomfort.SomeComfortError as err:
+            except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -353,7 +355,7 @@ class HoneywellUSThermostat(ClimateEntity):
             if mode in HEATING_MODES:
                 await self._device.set_hold_heat(True, self._heat_away_temp)
 
-        except aiosomecomfort.SomeComfortError:
+        except SomeComfortError:
             _LOGGER.error(
                 "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
                 mode,
@@ -374,7 +376,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
-            except aiosomecomfort.SomeComfortError:
+            except SomeComfortError:
                 _LOGGER.error("Couldn't set permanent hold")
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
@@ -386,7 +388,7 @@ class HoneywellUSThermostat(ClimateEntity):
             # Disabling all hold modes
             await self._device.set_hold_cool(False)
             await self._device.set_hold_heat(False)
-        except aiosomecomfort.SomeComfortError:
+        except SomeComfortError:
             _LOGGER.error("Can not stop hold mode")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -415,12 +417,14 @@ class HoneywellUSThermostat(ClimateEntity):
         try:
             await self._device.refresh()
             self._attr_available = True
-        except aiosomecomfort.SomeComfortError:
+        except UnauthorizedError:
             try:
                 await self._data.client.login()
+                await self._device.refresh()
+                self._attr_available = True
 
             except (
-                aiosomecomfort.SomeComfortError,
+                SomeComfortError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
             ):
@@ -428,3 +432,6 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except (ClientConnectionError, asyncio.TimeoutError):
             self._attr_available = False
+
+        except UnexpectedResponse:
+            pass

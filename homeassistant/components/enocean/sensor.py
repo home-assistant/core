@@ -9,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
@@ -151,9 +150,8 @@ def setup_platform(
     add_entities(entities)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
-    """Representation of an  EnOcean sensor device such as a power meter."""
+class EnOceanSensor(EnOceanEntity, RestoreSensor):
+    """Representation of an EnOcean sensor device such as a power meter."""
 
     def __init__(
         self,
@@ -174,14 +172,13 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        if (state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = state.state
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
 
@@ -202,7 +199,6 @@ class EnOceanPowerSensor(EnOceanSensor):
             self.schedule_update_ha_state()
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
 
@@ -252,7 +248,6 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
 
@@ -271,7 +266,6 @@ class EnOceanHumiditySensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
 

@@ -1,5 +1,4 @@
 """The tests for the person component."""
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -24,47 +23,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import collection, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
 from tests.common import MockUser, mock_component, mock_restore_cache
 from tests.typing import WebSocketGenerator
-
-DEVICE_TRACKER = "device_tracker.test_tracker"
-DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"
-
-
-@pytest.fixture
-def storage_collection(hass):
-    """Return an empty storage collection."""
-    id_manager = collection.IDManager()
-    return person.PersonStorageCollection(
-        person.PersonStore(hass, person.STORAGE_VERSION, person.STORAGE_KEY),
-        id_manager,
-        collection.YamlCollection(
-            logging.getLogger(f"{person.__name__}.yaml_collection"), id_manager
-        ),
-    )
-
-
-@pytest.fixture
-def storage_setup(hass, hass_storage, hass_admin_user):
-    """Storage setup."""
-    hass_storage[DOMAIN] = {
-        "key": DOMAIN,
-        "version": 1,
-        "data": {
-            "persons": [
-                {
-                    "id": "1234",
-                    "name": "tracked person",
-                    "user_id": hass_admin_user.id,
-                    "device_trackers": [DEVICE_TRACKER],
-                }
-            ]
-        },
-    }
-    assert hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, {}))
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:

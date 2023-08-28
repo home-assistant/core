@@ -60,7 +60,7 @@ async def test_remove_stale_devices(
     assert (
         bool(
             device_registry.async_get_device(
-                {
+                identifiers={
                     (
                         "zwave_me",
                         f"{config_entry.unique_id}-{identifier}",

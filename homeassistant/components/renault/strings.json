@@ -34,9 +34,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "charging": {
-        "name": "[%key:component::binary_sensor::entity_component::battery_charging::name%]"
-      },
       "hatch_status": {
         "name": "Hatch"
       },
@@ -46,14 +43,8 @@
       "hvac_status": {
         "name": "HVAC"
       },
-      "lock_status": {
-        "name": "[%key:component::binary_sensor::entity_component::lock::name%]"
-      },
       "passenger_door_status": {
         "name": "Passenger door"
-      },
-      "plugged_in": {
-        "name": "[%key:component::binary_sensor::entity_component::plug::name%]"
       },
       "rear_left_door_status": {
         "name": "Rear left door"
@@ -75,7 +66,7 @@
     },
     "device_tracker": {
       "location": {
-        "name": "Location"
+        "name": "[%key:common::config_flow::data::location%]"
       }
     },
     "select": {
@@ -83,7 +74,7 @@
         "name": "Charge mode",
         "state": {
           "always": "Instant",
-          "always_charging": "Instant",
+          "always_charging": "[%key:component::renault::entity::select::charge_mode::state::always%]",
           "schedule_mode": "Planner"
         }
       }
@@ -100,9 +91,6 @@
       },
       "battery_last_activity": {
         "name": "Last battery activity"
-      },
-      "battery_level": {
-        "name": "Battery level"
       },
       "battery_temperature": {
         "name": "Battery temperature"
@@ -161,6 +149,50 @@
       },
       "res_state_code": {
         "name": "Remote engine start code"
+      }
+    }
+  },
+  "services": {
+    "ac_start": {
+      "name": "Start A/C",
+      "description": "Starts A/C on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the command to."
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target A/C temperature in °C."
+        },
+        "when": {
+          "name": "When",
+          "description": "Timestamp for the start of the A/C (optional - defaults to now)."
+        }
+      }
+    },
+    "ac_cancel": {
+      "name": "Cancel A/C",
+      "description": "Canceles A/C on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]"
+        }
+      }
+    },
+    "charge_set_schedules": {
+      "name": "Update charge schedule",
+      "description": "Updates charge schedule on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]"
+        },
+        "schedules": {
+          "name": "Schedules",
+          "description": "Schedule details."
+        }
       }
     }
   }

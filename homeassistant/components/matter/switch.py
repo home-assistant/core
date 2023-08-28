@@ -63,7 +63,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=SwitchEntityDescription(
-            key="MatterPlug", device_class=SwitchDeviceClass.OUTLET
+            key="MatterPlug", device_class=SwitchDeviceClass.OUTLET, name=None
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -77,6 +77,7 @@ DISCOVERY_SCHEMAS = [
             device_types.ColorDimmerSwitch,
             device_types.DimmerSwitch,
             device_types.OnOffLightSwitch,
+            device_types.Thermostat,
         ),
     ),
 ]

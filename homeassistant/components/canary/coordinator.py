@@ -1,11 +1,11 @@
 """Provides the Canary DataUpdateCoordinator."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import ValuesView
 from datetime import timedelta
 import logging
 
-from async_timeout import timeout
 from canary.api import Api
 from canary.model import Location, Reading
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -58,7 +58,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
         """Fetch data from Canary."""
 
         try:
-            async with timeout(15):
+            async with asyncio.timeout(15):
                 return await self.hass.async_add_executor_job(self._update_data)
         except (ConnectTimeout, HTTPError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error

@@ -1,4 +1,4 @@
-"""Support for the demo for text to speech service."""
+"""Support for the demo for text-to-speech service."""
 from __future__ import annotations
 
 import os
@@ -57,7 +57,7 @@ class DemoProvider(Provider):
         return ["voice", "age"]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from demo."""
         filename = os.path.join(os.path.dirname(__file__), "tts.mp3")

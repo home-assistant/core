@@ -4,9 +4,8 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
 
@@ -105,7 +104,7 @@ class ZHAIdentifyButton(ZHAButton):
             return None
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
+    _attr_device_class = ButtonDeviceClass.IDENTIFY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Identify"
     _command_name = "identify"

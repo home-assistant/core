@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RAIN_SENSOR_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
     key="rainsensor",
-    name="Rainsensor",
+    translation_key="rainsensor",
     icon="mdi:water",
 )
 
@@ -37,6 +37,8 @@ async def async_setup_entry(
 
 class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], BinarySensorEntity):
     """A sensor implementation for Rain Bird device."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

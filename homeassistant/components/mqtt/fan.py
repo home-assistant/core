@@ -50,12 +50,7 @@ from .const import (
     PAYLOAD_NONE,
 )
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import (
     MessageCallbackType,
     MqttCommandTemplate,
@@ -132,7 +127,7 @@ def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
 
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_DIRECTION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DIRECTION_COMMAND_TEMPLATE): cv.template,
@@ -181,12 +176,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-# Configuring MQTT Fans under the fan platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(fan.DOMAIN),
-)
-
 PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
@@ -226,6 +215,7 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 

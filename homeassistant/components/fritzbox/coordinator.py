@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
-import requests
+from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,9 +51,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             self.fritz.update_devices()
             if self.has_templates:
                 self.fritz.update_templates()
-        except requests.exceptions.ConnectionError as ex:
+        except RequestConnectionError as ex:
             raise UpdateFailed from ex
-        except requests.exceptions.HTTPError:
+        except HTTPError:
             # If the device rebooted, login again
             try:
                 self.fritz.login()

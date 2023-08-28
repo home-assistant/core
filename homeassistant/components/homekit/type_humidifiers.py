@@ -21,8 +21,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import State, callback
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -157,12 +161,14 @@ class HumidifierDehumidifier(HomeAccessory):
         await super().run()
 
     @callback
-    def async_update_current_humidity_event(self, event):
+    def async_update_current_humidity_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
-        self._async_update_current_humidity(event.data.get("new_state"))
+        self._async_update_current_humidity(event.data["new_state"])
 
     @callback
-    def _async_update_current_humidity(self, new_state):
+    def _async_update_current_humidity(self, new_state: State | None) -> None:
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
             _LOGGER.error(

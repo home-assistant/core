@@ -74,6 +74,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
         state_fn=lambda api, device: device.state == 4,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_update-{obj_id}",
@@ -102,7 +103,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self._attr_supported_features = UpdateEntityFeature.PROGRESS
-        if self.controller.site_role == "admin":
+        if self.controller.is_admin:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)

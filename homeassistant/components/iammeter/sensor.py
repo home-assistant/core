@@ -5,7 +5,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from iammeter import real_time_api
 from iammeter.power_meter import IamMeterError
 import voluptuous as vol
@@ -52,7 +51,7 @@ async def async_setup_platform(
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
     try:
-        async with async_timeout.timeout(PLATFORM_TIMEOUT):
+        async with asyncio.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
     except (IamMeterError, asyncio.TimeoutError) as err:
         _LOGGER.error("Device is not ready")
@@ -60,7 +59,7 @@ async def async_setup_platform(
 
     async def async_update_data():
         try:
-            async with async_timeout.timeout(PLATFORM_TIMEOUT):
+            async with asyncio.timeout(PLATFORM_TIMEOUT):
                 return await api.get_data()
         except (IamMeterError, asyncio.TimeoutError) as err:
             raise UpdateFailed from err

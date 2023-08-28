@@ -5,7 +5,8 @@ from aioskybell import SkybellDevice
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN

@@ -1,13 +1,12 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from enum import StrEnum
 from logging import Logger, getLogger
 import re
 from typing import Final
 
 from awesomeversion import AwesomeVersion
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "shelly"
 
@@ -174,3 +173,11 @@ class BLEScannerMode(StrEnum):
     DISABLED = "disabled"
     ACTIVE = "active"
     PASSIVE = "passive"
+
+
+MAX_PUSH_UPDATE_FAILURES = 5
+PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
+
+NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
+
+GAS_VALVE_OPEN_STATES = ("opening", "opened")

@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
   "iot_class": "local_polling",
   "loggers": ["ndms2_client"],
-  "requirements": ["ndms2_client==0.1.2"],
+  "requirements": ["ndms2-client==0.1.2"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",

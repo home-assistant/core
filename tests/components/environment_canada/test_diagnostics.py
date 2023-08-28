@@ -1,7 +1,9 @@
 """Test Environment Canada diagnostics."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.environment_canada.const import (
     CONF_LANGUAGE,
@@ -43,7 +45,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     )
 
     weather_mock = mock_ec()
-    ec_data["metadata"]["timestamp"] = datetime(2022, 10, 4, tzinfo=timezone.utc)
+    ec_data["metadata"]["timestamp"] = datetime(2022, 10, 4, tzinfo=UTC)
     weather_mock.conditions = ec_data["conditions"]
     weather_mock.alerts = ec_data["alerts"]
     weather_mock.daily_forecasts = ec_data["daily_forecasts"]
@@ -51,7 +53,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     radar_mock = mock_ec()
     radar_mock.image = b"GIF..."
-    radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=timezone.utc)
+    radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=UTC)
 
     with patch(
         "homeassistant.components.environment_canada.ECWeather",
@@ -72,7 +74,9 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
 
@@ -80,8 +84,5 @@ async def test_entry_diagnostics(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
-    redacted_entry = json.loads(
-        load_fixture("environment_canada/config_entry_data.json")
-    )
 
-    assert diagnostics == redacted_entry
+    assert diagnostics == snapshot

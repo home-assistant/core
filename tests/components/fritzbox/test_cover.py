@@ -38,7 +38,7 @@ async def test_open_cover(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_open.call_count == 1
@@ -51,7 +51,7 @@ async def test_close_cover(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_close.call_count == 1
@@ -64,7 +64,7 @@ async def test_set_position_cover(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 50},
@@ -80,7 +80,7 @@ async def test_stop_cover(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_stop.call_count == 1

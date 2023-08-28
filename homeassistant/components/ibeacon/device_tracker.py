@@ -48,6 +48,8 @@ async def async_setup_entry(
 class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
     """An iBeacon Tracker entity."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: IBeaconCoordinator,

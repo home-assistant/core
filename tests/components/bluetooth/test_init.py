@@ -8,7 +8,6 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -2387,6 +2386,65 @@ async def test_wrapped_instance_with_service_uuids(
         assert len(detected) == 2
 
 
+async def test_wrapped_instance_with_service_uuids_with_coro_callback(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
+) -> None:
+    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner.
+
+    Verify that coro callbacks are supported.
+    """
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ):
+        await async_setup_with_default_adapter(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        detected = []
+
+        async def _device_detected(
+            device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Handle a detected device."""
+            detected.append((device, advertisement_data))
+
+        switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+        switchbot_adv = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        switchbot_adv_2 = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+        empty_device = generate_ble_device("11:22:33:44:55:66", "empty")
+        empty_adv = generate_advertisement_data(local_name="empty")
+
+        assert _get_manager() is not None
+        scanner = HaBleakScannerWrapper(
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+        scanner.register_detection_callback(_device_detected)
+
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv_2)
+
+        await hass.async_block_till_done()
+
+        assert len(detected) == 2
+
+        # The UUIDs list we created in the wrapped scanner with should be respected
+        # and we should not get another callback
+        inject_advertisement(hass, empty_device, empty_adv)
+        assert len(detected) == 2
+
+
 async def test_wrapped_instance_with_broken_callbacks(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
 ) -> None:
@@ -2922,35 +2980,13 @@ async def test_discover_new_usb_adapters_with_firmware_fallback_delay(
     assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
 
 
-async def test_issue_outdated_haos(
-    hass: HomeAssistant,
-    mock_bleak_scanner_start: MagicMock,
-    one_adapter: None,
-    operating_system_85: None,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test we create an issue on outdated haos."""
-    entry = MockConfigEntry(
-        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-    registry = async_get_issue_registry(hass)
-    issue = registry.async_get_issue(DOMAIN, "haos_outdated")
-    assert issue is not None
-    assert issue == snapshot
-
-
-async def test_issue_outdated_haos_no_adapters(
+async def test_issue_outdated_haos_removed(
     hass: HomeAssistant,
     mock_bleak_scanner_start: MagicMock,
     no_adapters: None,
     operating_system_85: None,
 ) -> None:
-    """Test we do not create an issue on outdated haos if there are no adapters."""
+    """Test we do not create an issue on outdated haos anymore."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

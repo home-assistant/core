@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from lacrosse_view import Sensor
 
@@ -22,13 +23,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -63,7 +67,6 @@ SENSOR_DESCRIPTIONS = {
     "Temperature": LaCrosseSensorEntityDescription(
         key="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Temperature",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -71,22 +74,20 @@ SENSOR_DESCRIPTIONS = {
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        name="Humidity",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
+        translation_key="heat_index",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Heat index",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
-        name="Wind speed",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -94,7 +95,6 @@ SENSOR_DESCRIPTIONS = {
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
-        name="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
@@ -102,23 +102,23 @@ SENSOR_DESCRIPTIONS = {
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",
-        name="Wind heading",
+        translation_key="wind_heading",
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",
-        name="Wet/Dry",
+        translation_key="wet_dry",
         value_fn=get_value,
     ),
     "Flex": LaCrosseSensorEntityDescription(
         key="Flex",
-        name="Flex",
+        translation_key="flex",
         value_fn=get_value,
     ),
     "BarometricPressure": LaCrosseSensorEntityDescription(
         key="BarometricPressure",
-        name="Barometric pressure",
+        translation_key="barometric_pressure",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -126,7 +126,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "FeelsLike": LaCrosseSensorEntityDescription(
         key="FeelsLike",
-        name="Feels like",
+        translation_key="feels_like",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -134,7 +134,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
-        name="Wind chill",
+        translation_key="wind_chill",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -169,7 +169,7 @@ async def async_setup_entry(
                     f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
 
-                LOGGER.warning(message)
+                _LOGGER.warning(message)
                 continue
             sensor_list.append(
                 LaCrosseViewSensor(
@@ -189,7 +189,7 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
-    _attr_has_entity_name: bool = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -203,13 +203,13 @@ class LaCrosseViewSensor(
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.sensor_id}-{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, sensor.sensor_id)},
-            "name": sensor.name,
-            "manufacturer": "LaCrosse Technology",
-            "model": sensor.model,
-            "via_device": (DOMAIN, sensor.location.id),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sensor.sensor_id)},
+            name=sensor.name,
+            manufacturer="LaCrosse Technology",
+            model=sensor.model,
+            via_device=(DOMAIN, sensor.location.id),
+        )
         self.index = index
 
     @property

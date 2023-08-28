@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import save_json
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
@@ -176,7 +176,7 @@ class BackupManager:
                     raise result
 
             backup_name = f"Core {HAVERSION}"
-            date_str = dt.now().isoformat()
+            date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
 
             backup_data = {

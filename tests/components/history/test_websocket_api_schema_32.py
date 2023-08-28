@@ -1,5 +1,4 @@
 """The tests the History component websocket_api."""
-# pylint: disable=protected-access,invalid-name
 
 import pytest
 

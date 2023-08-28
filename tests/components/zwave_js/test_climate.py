@@ -5,6 +5,7 @@ from zwave_js_server.const.command_class.thermostat import (
     THERMOSTAT_OPERATING_STATE_PROPERTY,
 )
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.climate import (
@@ -17,6 +18,7 @@ from homeassistant.components.climate import (
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
@@ -30,6 +32,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -37,8 +40,10 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .common import (
+    CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
@@ -49,7 +54,11 @@ from .common import (
 
 
 async def test_thermostat_v2(
-    hass: HomeAssistant, client, climate_radio_thermostat_ct100_plus, integration
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a thermostat v2 command class entity."""
     node = climate_radio_thermostat_ct100_plus
@@ -279,6 +288,20 @@ async def test_thermostat_v2(
             },
             blocking=True,
         )
+
+    # Refresh value should log an error when there is an issue
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert "Error while refreshing value" in caplog.text
 
 
 async def test_thermostat_different_endpoints(
@@ -674,3 +697,98 @@ async def test_thermostat_unknown_values(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert ATTR_HVAC_ACTION not in state.attributes
+
+
+async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+) -> None:
+    """Test that dry and fan modes are both available as hvac mode and preset."""
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+        HVACMode.HEAT_COOL,
+    ]
+    assert state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_NONE,
+        "Fan",
+        "Dry",
+    ]
+
+
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test raise of repair issue and warning when setting Dry preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
+            ATTR_PRESET_MODE: "Dry",
+        },
+        blocking=True,
+    )
+
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
+    )
+
+
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset(
+    hass: HomeAssistant,
+    client,
+    climate_airzone_aidoo_control_hvac_unit,
+    integration,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test raise of repair issue and warning when setting Fan preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
+    state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
+    assert state
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
+            ATTR_PRESET_MODE: "Fan",
+        },
+        blocking=True,
+    )
+
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
+    assert (
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
+        in caplog.text
+    )

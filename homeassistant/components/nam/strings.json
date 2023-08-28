@@ -39,11 +39,6 @@
     }
   },
   "entity": {
-    "button": {
-      "restart": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      }
-    },
     "sensor": {
       "bme280_humidity": {
         "name": "BME280 humidity"
@@ -152,9 +147,6 @@
       },
       "dht22_temperature": {
         "name": "DHT22 temperature"
-      },
-      "signal_strength": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "last_restart": {
         "name": "Last restart"

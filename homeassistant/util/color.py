@@ -180,8 +180,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x: float = attr.ib()  # pylint: disable=invalid-name
-    y: float = attr.ib()  # pylint: disable=invalid-name
+    x: float = attr.ib()
+    y: float = attr.ib()
 
 
 @attr.s()
@@ -203,9 +203,6 @@ def color_name_to_rgb(color_name: str) -> RGBColor:
         raise ValueError("Unknown color")
 
     return hex_value
-
-
-# pylint: disable=invalid-name
 
 
 def color_RGB_to_xy(

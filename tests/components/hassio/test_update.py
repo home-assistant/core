@@ -247,7 +247,7 @@ async def test_update_addon(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.test_update"},
@@ -276,7 +276,7 @@ async def test_update_os(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_operating_system_update"},
@@ -305,7 +305,7 @@ async def test_update_core(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_os_update"},
@@ -334,7 +334,7 @@ async def test_update_supervisor(
         json={"result": "ok", "data": {}},
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_supervisor_update"},

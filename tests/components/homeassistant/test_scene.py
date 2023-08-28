@@ -49,13 +49,13 @@ async def test_apply_service(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene", "apply", {"entities": {"light.bed_light": "off"}}, blocking=True
     )
 
     assert hass.states.get("light.bed_light").state == "off"
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "apply",
         {"entities": {"light.bed_light": {"state": "on", "brightness": 50}}},
@@ -67,7 +67,7 @@ async def test_apply_service(hass: HomeAssistant) -> None:
     assert state.attributes["brightness"] == 50
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "apply",
         {
@@ -98,7 +98,7 @@ async def test_create_service(
     assert hass.states.get("scene.hallo") is None
     assert hass.states.get("scene.hallo_2") is not None
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {"scene_id": "hallo", "entities": {}, "snapshot_entities": []},
@@ -108,7 +108,7 @@ async def test_create_service(
     assert "Empty scenes are not allowed" in caplog.text
     assert hass.states.get("scene.hallo") is None
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {
@@ -126,7 +126,7 @@ async def test_create_service(
     assert scene.state == STATE_UNKNOWN
     assert scene.attributes.get("entity_id") == ["light.bed_light"]
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {
@@ -144,7 +144,7 @@ async def test_create_service(
     assert scene.state == STATE_UNKNOWN
     assert scene.attributes.get("entity_id") == ["light.kitchen_light"]
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {
@@ -173,7 +173,7 @@ async def test_snapshot_service(
     hass.states.async_set("light.my_light", "on", {"hs_color": (345, 75)})
     assert hass.states.get("scene.hallo") is None
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {"scene_id": "hallo", "snapshot_entities": ["light.my_light"]},
@@ -186,7 +186,7 @@ async def test_snapshot_service(
 
     hass.states.async_set("light.my_light", "off", {"hs_color": (123, 45)})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene", "turn_on", {"entity_id": "scene.hallo"}, blocking=True
     )
     await hass.async_block_till_done()
@@ -194,7 +194,7 @@ async def test_snapshot_service(
     assert turn_on_calls[0].data.get("entity_id") == "light.my_light"
     assert turn_on_calls[0].data.get("hs_color") == (345, 75)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {"scene_id": "hallo_2", "snapshot_entities": ["light.not_existent"]},
@@ -207,7 +207,7 @@ async def test_snapshot_service(
         in caplog.text
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "scene",
         "create",
         {
@@ -230,7 +230,7 @@ async def test_ensure_no_intersection(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with pytest.raises(vol.MultipleInvalid) as ex:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "scene",
             "create",
             {

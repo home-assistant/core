@@ -36,6 +36,7 @@ from tests.common import async_mock_service
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
 NOTIFIER = "test"
+BAD_NOTIFIER = "bad_notifier"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
@@ -197,6 +198,26 @@ async def test_notification(
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 2
+
+
+async def test_bad_notifier(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test a broken notifier does not break the alert."""
+    config = deepcopy(TEST_CONFIG)
+    config[DOMAIN][NAME][CONF_NOTIFIERS] = [BAD_NOTIFIER, NOTIFIER]
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(mock_notifier) == 0
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 1
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(mock_notifier) == 2
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
 async def test_no_notifiers(

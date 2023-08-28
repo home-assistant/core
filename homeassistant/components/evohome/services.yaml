@@ -2,14 +2,8 @@
 # Describes the format for available services
 
 set_system_mode:
-  name: Set system mode
-  description: >-
-    Set the system mode, either indefinitely, or for a specified period of time, after
-    which it will revert to Auto. Not all systems support all modes.
   fields:
     mode:
-      name: Mode
-      description: "Mode to set thermostat."
       example: Away
       selector:
         select:
@@ -21,41 +15,19 @@ set_system_mode:
             - "DayOff"
             - "HeatingOff"
     period:
-      name: Period
-      description: >-
-        A period of time in days; used only with Away, DayOff, or Custom. The system
-        will revert to Auto at midnight (up to 99 days, today is day 1).
       example: '{"days": 28}'
       selector:
         object:
     duration:
-      name: Duration
-      description: The duration in hours; used only with AutoWithEco (up to 24 hours).
       example: '{"hours": 18}'
       selector:
         object:
 
 reset_system:
-  name: Reset system
-  description: >-
-    Set the system to Auto mode and reset all the zones to follow their schedules.
-    Not all Evohome systems support this feature (i.e. AutoWithReset mode).
-
 refresh_system:
-  name: Refresh system
-  description: >-
-    Pull the latest data from the vendor's servers now, rather than waiting for the
-    next scheduled update.
-
 set_zone_override:
-  name: Set zone override
-  description: >-
-    Override a zone's setpoint, either indefinitely, or for a specified period of
-    time, after which it will revert to following its schedule.
   fields:
     entity_id:
-      name: Entity
-      description: The entity_id of the Evohome zone.
       required: true
       example: climate.bathroom
       selector:
@@ -63,8 +35,6 @@ set_zone_override:
           integration: evohome
           domain: climate
     setpoint:
-      name: Setpoint
-      description: The temperature to be used instead of the scheduled setpoint.
       required: true
       selector:
         number:
@@ -72,21 +42,13 @@ set_zone_override:
           max: 35.0
           step: 0.1
     duration:
-      name: Duration
-      description: >-
-        The zone will revert to its schedule after this time. If 0 the change is until
-        the next scheduled setpoint.
       example: '{"minutes": 135}'
       selector:
         object:
 
 clear_zone_override:
-  name: Clear zone override
-  description: Set a zone to follow its schedule.
   fields:
     entity_id:
-      name: Entity
-      description: The entity_id of the zone.
       required: true
       selector:
         entity:

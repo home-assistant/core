@@ -1,10 +1,10 @@
 """Sensor for checking the status of London Underground tube lines."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from london_tube_status import TubeData
 import voluptuous as vol
 
@@ -90,7 +90,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator):
         self._data = data
 
     async def _async_update_data(self):
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await self._data.update()
             return self._data.data
 

@@ -2,6 +2,7 @@
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -56,10 +57,10 @@ class PlaatoEntity(entity.Entity):
         return f"{self._device_id}_{self._sensor_type}"
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Get device info."""
         sw_version = self._sensor_data.firmware_version
-        return entity.DeviceInfo(
+        return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Plaato",
             model=self._device_type,

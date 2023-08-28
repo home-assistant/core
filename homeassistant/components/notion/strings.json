@@ -24,5 +24,26 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "safe": {
+        "name": "Safe"
+      },
+      "sliding_door_window": {
+        "name": "Sliding door/window"
+      },
+      "smoke_carbon_monoxide_detector": {
+        "name": "Smoke/Carbon monoxide detector"
+      },
+      "hinged_window": {
+        "name": "Hinged window"
+      }
+    },
+    "sensor": {
+      "mold_risk": {
+        "name": "Mold risk"
+      }
+    }
   }
 }

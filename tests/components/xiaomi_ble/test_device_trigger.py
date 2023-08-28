@@ -99,7 +99,7 @@ async def test_get_triggers(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -196,7 +196,7 @@ async def test_if_fires_on_motion_detected(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -256,7 +256,7 @@ async def test_automation_with_invalid_trigger_type(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(
@@ -305,7 +305,7 @@ async def test_automation_with_invalid_trigger_event_property(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({get_device_id(mac)})
+    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
     device_id = device.id
 
     assert await async_setup_component(

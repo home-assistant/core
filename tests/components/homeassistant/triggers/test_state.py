@@ -6,7 +6,12 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -554,7 +559,7 @@ async def test_if_action(hass: HomeAssistant, calls) -> None:
 
 async def test_if_fails_setup_if_to_boolean_value(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for boolean to."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -569,11 +574,12 @@ async def test_if_fails_setup_if_to_boolean_value(hass: HomeAssistant, calls) ->
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_if_fails_setup_if_from_boolean_value(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for boolean from."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -588,11 +594,12 @@ async def test_if_fails_setup_if_from_boolean_value(hass: HomeAssistant, calls) 
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls) -> None:
     """Test for setup failure for bad for."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -608,6 +615,7 @@ async def test_if_fails_setup_bad_for(hass: HomeAssistant, calls) -> None:
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_if_not_fires_on_entity_change_with_for(
@@ -1018,7 +1026,7 @@ async def test_if_fires_on_for_condition_attribute_change(
 
 async def test_if_fails_setup_for_without_time(hass: HomeAssistant, calls) -> None:
     """Test for setup failure if no time is provided."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -1035,11 +1043,12 @@ async def test_if_fails_setup_for_without_time(hass: HomeAssistant, calls) -> No
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_if_fails_setup_for_without_entity(hass: HomeAssistant, calls) -> None:
     """Test for setup failure if no entity is provided."""
-    with assert_setup_component(0, automation.DOMAIN):
+    with assert_setup_component(1, automation.DOMAIN):
         assert await async_setup_component(
             hass,
             automation.DOMAIN,
@@ -1055,6 +1064,7 @@ async def test_if_fails_setup_for_without_entity(hass: HomeAssistant, calls) -> 
                 }
             },
         )
+    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
 
 async def test_wait_template_with_trigger(hass: HomeAssistant, calls) -> None:

@@ -131,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TOGGLE,
         {},
         "async_toggle",
-        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
+        [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
 
     return True

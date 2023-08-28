@@ -1,6 +1,4 @@
 request_image:
-  name: Request Camera image
-  description: Request a new image from a Prosegur Camera
   target:
     entity:
       domain: camera

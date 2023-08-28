@@ -1,10 +1,10 @@
 """Provides the NZBGet DataUpdateCoordinator."""
+import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
-from async_timeout import timeout
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
 from homeassistant.const import (
@@ -96,7 +96,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
         try:
-            async with timeout(4):
+            async with asyncio.timeout(4):
                 return await self.hass.async_add_executor_job(_update_data)
         except NZBGetAPIException as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error

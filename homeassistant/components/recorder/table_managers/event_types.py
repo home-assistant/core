@@ -9,12 +9,12 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
 
-from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventTypes
 from ..queries import find_event_type_ids
 from ..tasks import RefreshEventTypesTask
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder

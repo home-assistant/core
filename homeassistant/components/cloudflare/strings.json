@@ -38,5 +38,11 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "update_records": {
+      "name": "Update records",
+      "description": "Manually trigger update to Cloudflare records."
+    }
   }
 }

@@ -12,10 +12,15 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .const import DOMAIN as SWITCH_AS_X_DOMAIN
 
@@ -63,7 +68,9 @@ class BaseEntity(Entity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         if (
             state := self.hass.states.get(self._switch_entity_id)
@@ -77,7 +84,9 @@ class BaseEntity(Entity):
         """Register callbacks and copy the wrapped entity's custom name if set."""
 
         @callback
-        def _async_state_changed_listener(event: Event | None = None) -> None:
+        def _async_state_changed_listener(
+            event: EventType[EventStateChangedData] | None = None,
+        ) -> None:
             """Handle child updates."""
             self.async_state_changed_listener(event)
             self.async_write_ha_state()
@@ -157,7 +166,9 @@ class BaseToggleEntity(BaseEntity, ToggleEntity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
         if (

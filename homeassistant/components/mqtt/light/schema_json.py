@@ -101,8 +101,6 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
-CONF_WHITE_VALUE = "white_value"
-
 
 def valid_color_configuration(config: ConfigType) -> ConfigType:
     """Test color_mode is not combined with deprecated config."""
@@ -134,7 +132,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
@@ -158,15 +156,11 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
@@ -186,6 +180,7 @@ async def async_setup_entity_json(
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -312,31 +307,31 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self._attr_color_mode = ColorMode.HS
                     self._attr_hs_color = (hue, saturation)
                 elif color_mode == ColorMode.RGB:
-                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
-                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
-                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
+                    r = int(values["color"]["r"])
+                    g = int(values["color"]["g"])
+                    b = int(values["color"]["b"])
                     self._attr_color_mode = ColorMode.RGB
                     self._attr_rgb_color = (r, g, b)
                 elif color_mode == ColorMode.RGBW:
-                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
-                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
-                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
-                    w = int(values["color"]["w"])  # pylint: disable=invalid-name
+                    r = int(values["color"]["r"])
+                    g = int(values["color"]["g"])
+                    b = int(values["color"]["b"])
+                    w = int(values["color"]["w"])
                     self._attr_color_mode = ColorMode.RGBW
                     self._attr_rgbw_color = (r, g, b, w)
                 elif color_mode == ColorMode.RGBWW:
-                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
-                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
-                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
-                    c = int(values["color"]["c"])  # pylint: disable=invalid-name
-                    w = int(values["color"]["w"])  # pylint: disable=invalid-name
+                    r = int(values["color"]["r"])
+                    g = int(values["color"]["g"])
+                    b = int(values["color"]["b"])
+                    c = int(values["color"]["c"])
+                    w = int(values["color"]["w"])
                     self._attr_color_mode = ColorMode.RGBWW
                     self._attr_rgbww_color = (r, g, b, c, w)
                 elif color_mode == ColorMode.WHITE:
                     self._attr_color_mode = ColorMode.WHITE
                 elif color_mode == ColorMode.XY:
-                    x = float(values["color"]["x"])  # pylint: disable=invalid-name
-                    y = float(values["color"]["y"])  # pylint: disable=invalid-name
+                    x = float(values["color"]["x"])
+                    y = float(values["color"]["y"])
                     self._attr_color_mode = ColorMode.XY
                     self._attr_xy_color = (x, y)
             except (KeyError, ValueError):

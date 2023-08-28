@@ -54,6 +54,22 @@ ATTR_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
 ATTR_LIGHT = "light"
 BOOST_INCLUSIVE = "boost_inclusive"
 
+AVAILABLE_FAN_MODES = {"quiet", "low", "medium", "medium_high", "high", "auto"}
+AVAILABLE_SWING_MODES = {
+    "stopped",
+    "fixedtop",
+    "fixedmiddletop",
+    "fixedmiddle",
+    "fixedmiddlebottom",
+    "fixedbottom",
+    "rangetop",
+    "rangemiddle",
+    "rangebottom",
+    "rangefull",
+    "horizontal",
+    "both",
+}
+
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -163,6 +179,8 @@ async def async_setup_entry(
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     """Representation of a Sensibo device."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: SensiboDataUpdateCoordinator, device_id: str
     ) -> None:
@@ -176,6 +194,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         )
         self._attr_supported_features = self.get_features()
         self._attr_precision = PRECISION_TENTHS
+        self._attr_translation_key = "climate_device"
 
     def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
@@ -307,6 +326,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Set new target fan mode."""
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
+        if fan_mode not in AVAILABLE_FAN_MODES:
+            raise HomeAssistantError(
+                f"Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
+            )
 
         transformation = self.device_data.fan_modes_translated
         await self.async_send_api_call(
@@ -348,6 +371,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Set new target swing operation."""
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
+        if swing_mode not in AVAILABLE_SWING_MODES:
+            raise HomeAssistantError(
+                f"Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+            )
 
         transformation = self.device_data.swing_modes_translated
         await self.async_send_api_call(

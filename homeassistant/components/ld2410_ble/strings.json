@@ -18,5 +18,84 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "moving_target_distance": {
+        "name": "Moving target distance"
+      },
+      "static_target_distance": {
+        "name": "Static target distance"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "moving_target_energy": {
+        "name": "Moving target energy"
+      },
+      "static_target_energy": {
+        "name": "Static target energy"
+      },
+      "max_motion_gates": {
+        "name": "Max motion gates"
+      },
+      "max_static_gates": {
+        "name": "Max static gates"
+      },
+      "motion_energy_gate_0": {
+        "name": "Motion energy gate 0"
+      },
+      "motion_energy_gate_1": {
+        "name": "Motion energy gate 1"
+      },
+      "motion_energy_gate_2": {
+        "name": "Motion energy gate 2"
+      },
+      "motion_energy_gate_3": {
+        "name": "Motion energy gate 3"
+      },
+      "motion_energy_gate_4": {
+        "name": "Motion energy gate 4"
+      },
+      "motion_energy_gate_5": {
+        "name": "Motion energy gate 5"
+      },
+      "motion_energy_gate_6": {
+        "name": "Motion energy gate 6"
+      },
+      "motion_energy_gate_7": {
+        "name": "Motion energy gate 7"
+      },
+      "motion_energy_gate_8": {
+        "name": "Motion energy gate 8"
+      },
+      "static_energy_gate_0": {
+        "name": "Static energy gate 0"
+      },
+      "static_energy_gate_1": {
+        "name": "Static energy gate 1"
+      },
+      "static_energy_gate_2": {
+        "name": "Static energy gate 2"
+      },
+      "static_energy_gate_3": {
+        "name": "Static energy gate 3"
+      },
+      "static_energy_gate_4": {
+        "name": "Static energy gate 4"
+      },
+      "static_energy_gate_5": {
+        "name": "Static energy gate 5"
+      },
+      "static_energy_gate_6": {
+        "name": "Static energy gate 6"
+      },
+      "static_energy_gate_7": {
+        "name": "Static energy gate 7"
+      },
+      "static_energy_gate_8": {
+        "name": "Static energy gate 8"
+      }
+    }
   }
 }

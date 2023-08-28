@@ -23,8 +23,6 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-from tests.common import mock_coro
-
 
 @pytest.fixture(autouse=True)
 def number_platform_only():
@@ -114,7 +112,7 @@ async def test_number(
     assert "engineering_units" in attr_reads
     assert "application_type" in attr_reads
 
-    entity_id = await find_entity_id(Platform.NUMBER, zha_device, hass)
+    entity_id = find_entity_id(Platform.NUMBER, zha_device, hass)
     assert entity_id is not None
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -153,7 +151,7 @@ async def test_number(
     # change value from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # set value via UI
         await hass.services.async_call(
@@ -211,7 +209,7 @@ async def test_level_control_number(
     }
     zha_device = await zha_device_joined(light)
 
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.NUMBER,
         zha_device,
         hass,
@@ -344,7 +342,7 @@ async def test_color_number(
     }
     zha_device = await zha_device_joined(light)
 
-    entity_id = await find_entity_id(
+    entity_id = find_entity_id(
         Platform.NUMBER,
         zha_device,
         hass,

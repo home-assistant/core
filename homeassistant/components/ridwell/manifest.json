@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioridwell"],
-  "requirements": ["aioridwell==2023.01.0"]
+  "requirements": ["aioridwell==2023.07.0"]
 }

@@ -14,7 +14,7 @@ from aiolookin import (
 )
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES

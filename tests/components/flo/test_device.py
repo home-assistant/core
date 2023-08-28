@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
@@ -83,7 +83,7 @@ async def test_device(
 
     call_count = aioclient_mock.call_count
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=90))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == call_count + 6

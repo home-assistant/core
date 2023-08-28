@@ -13,6 +13,7 @@ from zeroconf.asyncio import AsyncZeroconf
 from .const import (
     CONNECTED_STATIONS,
     DISCOVERY_INFO,
+    FIRMWARE_UPDATE_AVAILABLE,
     GUEST_WIFI,
     IP,
     NEIGHBOR_ACCESS_POINTS,
@@ -50,6 +51,9 @@ class MockDevice(Device):
         """Reset mock to starting point."""
         self.async_disconnect = AsyncMock()
         self.device = DeviceApi(IP, None, DISCOVERY_INFO)
+        self.device.async_check_firmware_available = AsyncMock(
+            return_value=FIRMWARE_UPDATE_AVAILABLE
+        )
         self.device.async_get_led_setting = AsyncMock(return_value=False)
         self.device.async_restart = AsyncMock(return_value=True)
         self.device.async_start_wps = AsyncMock(return_value=True)
@@ -60,6 +64,7 @@ class MockDevice(Device):
         self.device.async_get_wifi_neighbor_access_points = AsyncMock(
             return_value=NEIGHBOR_ACCESS_POINTS
         )
+        self.device.async_start_firmware_update = AsyncMock(return_value=True)
         self.plcnet = PlcNetApi(IP, None, DISCOVERY_INFO)
         self.plcnet.async_get_network_overview = AsyncMock(return_value=PLCNET)
         self.plcnet.async_identify_device_start = AsyncMock(return_value=True)

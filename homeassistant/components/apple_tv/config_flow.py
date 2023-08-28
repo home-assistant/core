@@ -407,8 +407,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Protocol specific arguments
         pair_args = {}
-        if self.protocol == Protocol.DMAP:
+        if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
+        if self.protocol == Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process

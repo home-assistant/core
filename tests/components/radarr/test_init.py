@@ -51,7 +51,7 @@ async def test_device_info(
     entry = await setup_integration(hass, aioclient_mock)
     device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "http://192.168.1.189:7887/test"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

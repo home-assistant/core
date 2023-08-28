@@ -365,6 +365,14 @@ def climate_adc_t3000_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
+@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit_state", scope="session")
+def climate_airzone_aidoo_control_hvac_unit_state_fixture():
+    """Load the climate Airzone Aidoo Control HVAC Unit state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/climate_airzone_aidoo_control_hvac_unit_state.json")
+    )
+
+
 @pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
 def climate_danfoss_lc_13_state_fixture():
     """Load Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
@@ -433,6 +441,12 @@ def leviton_zw4sf_state_fixture():
     return json.loads(load_fixture("zwave_js/leviton_zw4sf_state.json"))
 
 
+@pytest.fixture(name="fan_honeywell_39358_state", scope="session")
+def fan_honeywell_39358_state_fixture():
+    """Load the fan node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_honeywell_39358_state.json"))
+
+
 @pytest.fixture(name="gdc_zw062_state", scope="session")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
@@ -443,6 +457,12 @@ def motorized_barrier_cover_state_fixture():
 def iblinds_v2_state_fixture():
     """Load the iBlinds v2 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
+
+
+@pytest.fixture(name="iblinds_v3_state", scope="session")
+def iblinds_v3_state_fixture():
+    """Load the iBlinds v3 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
 
 
 @pytest.fixture(name="qubino_shutter_state", scope="session")
@@ -618,6 +638,18 @@ def indicator_test_state_fixture():
     return json.loads(load_fixture("zwave_js/indicator_test_state.json"))
 
 
+@pytest.fixture(name="energy_production_state", scope="session")
+def energy_production_state_fixture():
+    """Load a mock node with energy production CC state fixture data."""
+    return json.loads(load_fixture("zwave_js/energy_production_state.json"))
+
+
+@pytest.fixture(name="nice_ibt4zwave_state", scope="session")
+def nice_ibt4zwave_state_fixture():
+    """Load a Nice IBT4ZWAVE cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
+
+
 # model fixtures
 
 
@@ -647,12 +679,17 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
-        client.driver = Driver(client, controller_state, log_config_state)
+        client.driver = Driver(
+            client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
+        )
         node = Node(client, copy.deepcopy(controller_node_state))
         client.driver.controller.nodes[node.node_id] = node
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
+        client.async_send_command.return_value = {
+            "result": {"success": True, "status": 255}
+        }
 
         yield client
 
@@ -800,6 +837,16 @@ def climate_adc_t3000_missing_fan_mode_states_fixture(client, climate_adc_t3000_
     return node
 
 
+@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit")
+def climate_airzone_aidoo_control_hvac_unit_fixture(
+    client, climate_airzone_aidoo_control_hvac_unit_state
+):
+    """Mock a climate Airzone Aidoo Control HVAC node."""
+    node = Node(client, copy.deepcopy(climate_airzone_aidoo_control_hvac_unit_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_danfoss_lc_13")
 def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     """Mock a climate radio danfoss LC-13 node."""
@@ -929,6 +976,14 @@ def leviton_zw4sf_fixture(client, leviton_zw4sf_state):
     return node
 
 
+@pytest.fixture(name="fan_honeywell_39358")
+def fan_honeywell_39358_fixture(client, fan_honeywell_39358_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(fan_honeywell_39358_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="null_name_check")
 def null_name_check_fixture(client, null_name_check_state):
     """Mock a node with no name."""
@@ -949,6 +1004,14 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 def iblinds_v2_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, copy.deepcopy(iblinds_v2_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="iblinds_v3")
+def iblinds_v3_cover_fixture(client, iblinds_v3_state):
+    """Mock an iBlinds v3 window cover node."""
+    node = Node(client, copy.deepcopy(iblinds_v3_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1173,5 +1236,21 @@ def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state):
 def indicator_test_fixture(client, indicator_test_state):
     """Mock a indicator CC test node."""
     node = Node(client, copy.deepcopy(indicator_test_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="energy_production")
+def energy_production_fixture(client, energy_production_state):
+    """Mock a mock node with Energy Production CC."""
+    node = Node(client, copy.deepcopy(energy_production_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nice_ibt4zwave")
+def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
+    """Mock a Nice IBT4ZWAVE cover node."""
+    node = Node(client, copy.deepcopy(nice_ibt4zwave_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

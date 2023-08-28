@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import DESCRIPTION, setup_unifi_integration
+from .test_controller import SITE, setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -136,14 +136,11 @@ async def test_not_admin(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that the INSTALL feature is not available on a non-admin account."""
-    description = deepcopy(DESCRIPTION)
-    description[0]["site_role"] = "not admin"
+    site = deepcopy(SITE)
+    site[0]["role"] = "not admin"
 
     await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        site_description=description,
-        devices_response=[DEVICE_1],
+        hass, aioclient_mock, sites=site, devices_response=[DEVICE_1]
     )
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1

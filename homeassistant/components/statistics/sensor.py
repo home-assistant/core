@@ -32,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     State,
     callback,
@@ -41,12 +40,18 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
@@ -308,9 +313,11 @@ class StatisticsSensor(SensorEntity):
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(event: Event) -> None:
+        def async_stats_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle the sensor state changes."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := event.data["new_state"]) is None:
                 return
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)

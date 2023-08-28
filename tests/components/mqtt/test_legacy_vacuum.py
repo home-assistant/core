@@ -1,4 +1,8 @@
 """The tests for the Legacy Mqtt vacuum platform."""
+
+# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+# and will be removed with HA Core 2024.2.0
+
 from copy import deepcopy
 import json
 from typing import Any
@@ -32,6 +36,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
 from .test_common import (
@@ -121,6 +126,31 @@ def vacuum_platform_only():
     """Only setup the vacuum platform to speed up tests."""
     with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
         yield
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "deprecated"),
+    [
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "legacy"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}, True),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "state"}}}, False),
+    ],
+)
+async def test_deprecation(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    deprecated: bool,
+) -> None:
+    """Test that the depration warning for the legacy schema works."""
+    assert await mqtt_mock_entry()
+    entity = hass.states.get("vacuum.test")
+    assert entity is not None
+
+    if deprecated:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" in caplog.text
+    else:
+        assert "Deprecated `legacy` schema detected for MQTT vacuum" not in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -245,39 +275,83 @@ async def test_commands_without_supported_features(
     """Test commands which are not supported by the vacuum."""
     mqtt_mock = await mqtt_mock_entry()
 
-    await common.async_turn_on(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_turn_on(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_off(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_turn_off(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_stop(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_stop(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_clean_spot(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_clean_spot(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_locate(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_locate(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_start_pause(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_start_pause(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_return_to_base(hass, "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_return_to_base(hass, "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_set_fan_speed(hass, "high", "vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_set_fan_speed(hass, "high", "vacuum.mqtttest")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(hass, "44 FE 93", entity_id="vacuum.mqtttest")
+    with pytest.raises(HomeAssistantError):
+        await common.async_send_command(hass, "44 FE 93", entity_id="vacuum.mqtttest")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            "mqtt": {
+                "vacuum": {
+                    "name": "test",
+                    "schema": "legacy",
+                    mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
+                        ALL_SERVICES, SERVICE_TO_STRING
+                    ),
+                }
+            }
+        }
+    ],
+)
+async def test_command_without_command_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test commands which are not supported by the vacuum."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    await common.async_turn_on(hass, "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_fan_speed(hass, "low", "vacuum.test")
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_send_command(hass, "some command", "vacuum.test")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
@@ -769,8 +843,8 @@ async def test_discovery_broken(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer",  "command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk",  "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, data1, data2
     )
@@ -1013,7 +1087,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

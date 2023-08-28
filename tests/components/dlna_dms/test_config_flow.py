@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import dataclasses
+import logging
 from typing import Final
 from unittest.mock import Mock, patch
 
@@ -125,6 +126,9 @@ async def test_user_flow_no_devices(
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     """Test that SSDP discovery with an available device works."""
+    logging.getLogger("homeassistant.components.dlna_dms.config_flow").setLevel(
+        logging.DEBUG
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},

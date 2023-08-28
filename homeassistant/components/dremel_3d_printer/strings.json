@@ -1,0 +1,96 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "cancel_job": {
+        "name": "Cancel job"
+      },
+      "pause_job": {
+        "name": "Pause job"
+      },
+      "resume_job": {
+        "name": "Resume job"
+      }
+    },
+    "sensor": {
+      "job_phase": {
+        "name": "Job phase"
+      },
+      "completion_time": {
+        "name": "Completion time"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "chamber": {
+        "name": "Chamber"
+      },
+      "platform_temperature": {
+        "name": "Platform temperature"
+      },
+      "target_platform_temperature": {
+        "name": "Target platform temperature"
+      },
+      "max_platform_temperature": {
+        "name": "Max platform temperature"
+      },
+      "extruder": {
+        "name": "Extruder"
+      },
+      "target_extruder_temperature": {
+        "name": "Target extruder temperature"
+      },
+      "max_extruder_temperature": {
+        "name": "Max extruder temperature"
+      },
+      "network_build": {
+        "name": "Network build"
+      },
+      "filament": {
+        "name": "Filament"
+      },
+      "elapsed_time": {
+        "name": "Elapsed time"
+      },
+      "estimated_total_time": {
+        "name": "Estimated total time"
+      },
+      "job_status": {
+        "name": "Job status"
+      },
+      "job_name": {
+        "name": "Job name"
+      },
+      "api_version": {
+        "name": "API version"
+      },
+      "host": {
+        "name": "[%key:common::config_flow::data::host%]"
+      },
+      "connection_type": {
+        "name": "Connection type"
+      },
+      "available_storage": {
+        "name": "Available storage"
+      },
+      "hours_used": {
+        "name": "Hours used"
+      }
+    }
+  }
+}

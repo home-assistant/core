@@ -1,6 +1,7 @@
 """The Honeywell Lyric integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -10,7 +11,6 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -22,9 +22,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,27 +36,11 @@ from .api import (
 )
 from .const import DOMAIN
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Honeywell Lyric integration."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_yaml",
-            breaks_in_ha_version="2022.8.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_yaml",
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -92,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(exception) from exception
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 await lyric.get_locations()
             return lyric
         except LyricAuthenticationException as exception:
@@ -135,6 +117,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     """Defines a base Honeywell Lyric entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

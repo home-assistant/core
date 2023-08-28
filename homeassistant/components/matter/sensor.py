@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfPressure,
     UnitOfTemperature,
@@ -68,7 +69,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="TemperatureSensor",
-            name="Temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             measurement_to_ha=lambda x: x / 100,
@@ -80,7 +80,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PressureSensor",
-            name="Pressure",
             native_unit_of_measurement=UnitOfPressure.KPA,
             device_class=SensorDeviceClass.PRESSURE,
             measurement_to_ha=lambda x: x / 10,
@@ -92,9 +91,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="FlowSensor",
-            name="Flow",
             native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-            device_class=SensorDeviceClass.WATER,  # what is the device class here ?
+            translation_key="flow",
             measurement_to_ha=lambda x: x / 10,
         ),
         entity_class=MatterSensor,
@@ -104,7 +102,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="HumiditySensor",
-            name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.HUMIDITY,
             measurement_to_ha=lambda x: x / 100,
@@ -118,7 +115,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="LightSensor",
-            name="Illuminance",
             native_unit_of_measurement=LIGHT_LUX,
             device_class=SensorDeviceClass.ILLUMINANCE,
             measurement_to_ha=lambda x: round(pow(10, ((x - 1) / 10000)), 1),
@@ -130,9 +126,9 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSource",
-            name="Battery",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             # value has double precision
             measurement_to_ha=lambda x: int(x / 2),
         ),

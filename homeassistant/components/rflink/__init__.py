@@ -5,7 +5,6 @@ import asyncio
 from collections import defaultdict
 import logging
 
-import async_timeout
 from rflink.protocol import ProtocolBase, create_rflink_connection
 from serial import SerialException
 import voluptuous as vol
@@ -280,7 +279,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         try:
-            async with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with asyncio.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
@@ -323,7 +322,6 @@ class RflinkDevice(Entity):
     Contains the common logic for Rflink entities.
     """
 
-    platform = None
     _state: bool | None = None
     _available = True
     _attr_should_poll = False

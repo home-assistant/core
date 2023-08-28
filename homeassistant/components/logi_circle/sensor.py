@@ -4,25 +4,64 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local
 
-from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN, SENSOR_TYPES
+from .const import ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    SensorEntityDescription(
+        key="last_activity_time",
+        translation_key="last_activity",
+        icon="mdi:history",
+    ),
+    SensorEntityDescription(
+        key="recording",
+        translation_key="recording_mode",
+        icon="mdi:eye",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_category",
+        translation_key="wifi_signal_category",
+        icon="mdi:wifi",
+    ),
+    SensorEntityDescription(
+        key="signal_strength_percentage",
+        translation_key="wifi_signal_strength",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:wifi",
+    ),
+    SensorEntityDescription(
+        key="streaming",
+        translation_key="streaming_mode",
+        icon="mdi:camera",
+    ),
+)
 
 
 async def async_setup_platform(
@@ -58,13 +97,13 @@ class LogiSensor(SensorEntity):
     """A sensor implementation for a Logi Circle camera."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, camera, time_zone, description: SensorEntityDescription) -> None:
         """Initialize a sensor for Logi Circle camera."""
         self.entity_description = description
         self._camera = camera
         self._attr_unique_id = f"{camera.mac_address}-{description.key}"
-        self._attr_name = f"{camera.name} {description.name}"
         self._activity: dict[Any, Any] = {}
         self._tz = time_zone
 
@@ -98,10 +137,6 @@ class LogiSensor(SensorEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         sensor_type = self.entity_description.key
-        if sensor_type == "battery_level" and self._attr_native_value is not None:
-            return icon_for_battery_level(
-                battery_level=int(self._attr_native_value), charging=False
-            )
         if sensor_type == "recording_mode" and self._attr_native_value is not None:
             return "mdi:eye" if self._attr_native_value == STATE_ON else "mdi:eye-off"
         if sensor_type == "streaming_mode" and self._attr_native_value is not None:

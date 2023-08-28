@@ -205,7 +205,7 @@ async def test_coordinator_update_when_unreachable(
         unique_id="any",
     )
     entry.add_to_hass(hass)
-    fritz().get_devices.side_effect = [ConnectionError(), ""]
+    fritz().update_devices.side_effect = [ConnectionError(), ""]
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -252,6 +252,27 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when fritzbox is offline."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.fritzbox.Fritzhome.login",
+        side_effect=ConnectionError(),
+    ) as mock_login:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        mock_login.assert_called_once()
+
+    entries = hass.config_entries.async_entries()
+    config_entry = entries[0]
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> None:
+    """Config entry state is SETUP_ERROR when login to fritzbox fail."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,
         data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},

@@ -25,7 +25,7 @@ ENTITY_SIREN_WITH_ALL_FEATURES = "siren.siren_with_all_features"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_siren(hass):
+async def setup_demo_siren(hass, disable_platforms):
     """Initialize setup demo siren."""
     assert await async_setup_component(hass, DOMAIN, {"siren": {"platform": "demo"}})
     await hass.async_block_till_done()

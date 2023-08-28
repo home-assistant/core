@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import cache
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import PackageNotFoundError, distribution, version
 import logging
 import os
 from pathlib import Path
@@ -11,7 +11,7 @@ from subprocess import PIPE, Popen
 import sys
 from urllib.parse import urlparse
 
-import pkg_resources
+from packaging.requirements import InvalidRequirement, Requirement
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,26 +37,27 @@ def is_installed(package: str) -> bool:
     Returns False when the package is not installed or doesn't meet req.
     """
     try:
-        pkg_resources.get_distribution(package)
+        distribution(package)
         return True
-    except (IndexError, pkg_resources.ResolutionError, pkg_resources.ExtractionError):
-        req = pkg_resources.Requirement.parse(package)
-    except ValueError:
-        # This is a zip file. We no longer use this in Home Assistant,
-        # leaving it in for custom components.
-        req = pkg_resources.Requirement.parse(urlparse(package).fragment)
+    except (IndexError, PackageNotFoundError):
+        try:
+            req = Requirement(package)
+        except InvalidRequirement:
+            # This is a zip file. We no longer use this in Home Assistant,
+            # leaving it in for custom components.
+            req = Requirement(urlparse(package).fragment)
 
     try:
-        installed_version = version(req.project_name)
+        installed_version = version(req.name)
         # This will happen when an install failed or
         # was aborted while in progress see
         # https://github.com/home-assistant/core/issues/47699
         if installed_version is None:
             _LOGGER.error(  # type: ignore[unreachable]
-                "Installed version for %s resolved to None", req.project_name
+                "Installed version for %s resolved to None", req.name
             )
             return False
-        return installed_version in req
+        return req.specifier.contains(installed_version, prereleases=True)
     except PackageNotFoundError:
         return False
 

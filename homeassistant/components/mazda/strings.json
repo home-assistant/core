@@ -20,5 +20,120 @@
         "description": "Please enter the email address and password you use to log into the MyMazda mobile app."
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "driver_door": {
+        "name": "Driver door"
+      },
+      "passenger_door": {
+        "name": "Passenger door"
+      },
+      "rear_left_door": {
+        "name": "Rear left door"
+      },
+      "rear_right_door": {
+        "name": "Rear right door"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "hood": {
+        "name": "Hood"
+      },
+      "ev_plugged_in": {
+        "name": "Plugged in"
+      }
+    },
+    "button": {
+      "start_engine": {
+        "name": "Start engine"
+      },
+      "stop_engine": {
+        "name": "Stop engine"
+      },
+      "turn_on_hazard_lights": {
+        "name": "Turn on hazard lights"
+      },
+      "turn_off_hazard_lights": {
+        "name": "Turn off hazard lights"
+      },
+      "refresh_vehicle_status": {
+        "name": "Refresh status"
+      }
+    },
+    "climate": {
+      "climate": {
+        "name": "[%key:component::climate::title%]"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "name": "[%key:component::device_tracker::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "sensor": {
+      "fuel_remaining_percentage": {
+        "name": "Fuel remaining percentage"
+      },
+      "fuel_distance_remaining": {
+        "name": "Fuel distance remaining"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "front_left_tire_pressure": {
+        "name": "Front left tire pressure"
+      },
+      "front_right_tire_pressure": {
+        "name": "Front right tire pressure"
+      },
+      "rear_left_tire_pressure": {
+        "name": "Rear left tire pressure"
+      },
+      "rear_right_tire_pressure": {
+        "name": "Rear right tire pressure"
+      },
+      "ev_charge_level": {
+        "name": "Charge level"
+      },
+      "ev_remaining_range": {
+        "name": "Remaining range"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "services": {
+    "send_poi": {
+      "name": "Send POI",
+      "description": "Sends a GPS location to the vehicle's navigation system as a POI (Point of Interest). Requires a navigation SD card installed in the vehicle.",
+      "fields": {
+        "device_id": {
+          "name": "Vehicle",
+          "description": "The vehicle to send the GPS location to."
+        },
+        "latitude": {
+          "name": "[%key:common::config_flow::data::latitude%]",
+          "description": "The latitude of the location to send."
+        },
+        "longitude": {
+          "name": "[%key:common::config_flow::data::longitude%]",
+          "description": "The longitude of the location to send."
+        },
+        "poi_name": {
+          "name": "POI name",
+          "description": "A friendly name for the location."
+        }
+      }
+    }
   }
 }

@@ -37,6 +37,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_name = None
 
     def __init__(
         self, coordinator: OpenGarageDataUpdateCoordinator, device_id: str
@@ -89,7 +90,6 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         """Update the state and attributes."""
         status = self.coordinator.data
 
-        self._attr_name = status["name"]
         state = STATES_MAP.get(status.get("door"))  # type: ignore[arg-type]
         if self._state_before_move is not None:
             if self._state_before_move != state:

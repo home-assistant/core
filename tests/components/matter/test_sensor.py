@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 import pytest
 
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
@@ -179,3 +181,30 @@ async def test_temperature_sensor(
     state = hass.states.get("sensor.mock_temperature_sensor_temperature")
     assert state
     assert state.state == "25.0"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_battery_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    eve_contact_sensor_node: MatterNode,
+) -> None:
+    """Test battery sensor."""
+    entity_id = "sensor.eve_door_battery"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "100"
+
+    set_node_attribute(eve_contact_sensor_node, 1, 47, 12, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50"
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC

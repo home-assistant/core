@@ -32,7 +32,7 @@ async def async_setup_entry(
 class MazdaChargingSwitch(MazdaEntity, SwitchEntity):
     """Class for the charging switch."""
 
-    _attr_name = "Charging"
+    _attr_translation_key = "charging"
     _attr_icon = "mdi:ev-station"
 
     def __init__(

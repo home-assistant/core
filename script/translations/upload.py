@@ -42,6 +42,7 @@ def run_upload_docker():
             "--convert-placeholders=false",
             "--replace-modified",
         ],
+        check=False,
     )
     print()
 

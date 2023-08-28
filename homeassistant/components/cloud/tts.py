@@ -1,4 +1,4 @@
-"""Support for the cloud for text to speech service."""
+"""Support for the cloud for text-to-speech service."""
 from __future__ import annotations
 
 import logging
@@ -134,12 +134,11 @@ class CloudProvider(Provider):
         }
 
     async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any] | None = None
+        self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from NabuCasa Cloud."""
         # Process TTS
         try:
-            assert options is not None
             data = await self.cloud.voice.process_tts(
                 text=message,
                 language=language,

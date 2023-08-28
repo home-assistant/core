@@ -141,7 +141,7 @@ async def test_entry_diagnostics(
             "unique_id": "1",
             "version": 1,
         },
-        "site_role": "admin",
+        "role_is_admin": True,
         "clients": {
             "00:00:00:00:00:00": {
                 "blocked": False,

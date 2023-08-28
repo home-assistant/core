@@ -43,7 +43,11 @@
     "lights": true,
     "lock": true,
     "remote360": true,
-    "remoteChargingCommands": {},
+    "remoteChargingCommands": {
+      "chargingControl": ["START", "STOP"],
+      "flapControl": ["NOT_SUPPORTED"],
+      "plugControl": ["NOT_SUPPORTED"]
+    },
     "remoteSoftwareUpgrade": true,
     "sendPoi": true,
     "specialThemeSupport": [],
@@ -159,9 +163,9 @@
     "electricChargingState": {
       "chargingConnectionType": "UNKNOWN",
       "chargingLevelPercent": 80,
-      "chargingStatus": "INVALID",
+      "chargingStatus": "CHARGING",
       "chargingTarget": 80,
-      "isChargerConnected": false,
+      "isChargerConnected": true,
       "range": 472,
       "remainingChargingMinutes": 10
     },

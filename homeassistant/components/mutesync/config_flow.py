@@ -5,7 +5,6 @@ import asyncio
 from typing import Any
 
 import aiohttp
-import async_timeout
 import mutesync
 import voluptuous as vol
 
@@ -27,7 +26,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     session = async_get_clientsession(hass)
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             token = await mutesync.authenticate(session, data["host"])
     except aiohttp.ClientResponseError as error:
         if error.status == 403:

@@ -42,6 +42,7 @@ class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
     _device: AbodeLT
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

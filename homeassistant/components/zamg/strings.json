@@ -16,13 +16,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "station_not_found": "Station ID not found at zamg"
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The ZAMG YAML configuration is being removed",
-      "description": "Configuring ZAMG using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the ZAMG YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "station_not_found": "[%key:component::zamg::config::error::station_not_found%]"
     }
   }
 }

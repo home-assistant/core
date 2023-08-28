@@ -11,11 +11,11 @@ from homeassistant.core import Event
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from . import BaseLRUTableManager
 from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
 from ..util import chunked, execute_stmt_lambda_element
+from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
     from ..core import Recorder

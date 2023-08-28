@@ -10,8 +10,7 @@ from geocachingapi.models import GeocachingStatus
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -36,14 +35,14 @@ class GeocachingSensorEntityDescription(
 SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="find_count",
-        name="Total finds",
+        translation_key="find_count",
         icon="mdi:notebook-edit-outline",
         native_unit_of_measurement="caches",
         value_fn=lambda status: status.user.find_count,
     ),
     GeocachingSensorEntityDescription(
         key="hide_count",
-        name="Total hides",
+        translation_key="hide_count",
         icon="mdi:eye-off-outline",
         native_unit_of_measurement="caches",
         entity_registry_visible_default=False,
@@ -51,7 +50,7 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     ),
     GeocachingSensorEntityDescription(
         key="favorite_points",
-        name="Favorite points",
+        translation_key="favorite_points",
         icon="mdi:heart-outline",
         native_unit_of_measurement="points",
         entity_registry_visible_default=False,
@@ -59,14 +58,14 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     ),
     GeocachingSensorEntityDescription(
         key="souvenir_count",
-        name="Total souvenirs",
+        translation_key="souvenir_count",
         icon="mdi:license",
         native_unit_of_measurement="souvenirs",
         value_fn=lambda status: status.user.souvenir_count,
     ),
     GeocachingSensorEntityDescription(
         key="awarded_favorite_points",
-        name="Awarded favorite points",
+        translation_key="awarded_favorite_points",
         icon="mdi:heart",
         native_unit_of_measurement="points",
         entity_registry_visible_default=False,

@@ -7,7 +7,7 @@ import logging
 import bellows.zigbee.application
 import voluptuous as vol
 import zigpy.application
-from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+from zigpy.config import CONF_DEVICE_PATH  # noqa: F401
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application

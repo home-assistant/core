@@ -28,7 +28,7 @@ async def test_entity_registry_unsupported(
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" not in entity_registry.entities
-    assert "binary_sensor.zone_a_power" not in entity_registry.entities
+    assert "binary_sensor.zone_a_charging" not in entity_registry.entities
 
 
 async def test_entity_registry_supported(
@@ -37,7 +37,7 @@ async def test_entity_registry_supported(
     """Test sonos device with battery registered in the device registry."""
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
-    assert "binary_sensor.zone_a_power" in entity_registry.entities
+    assert "binary_sensor.zone_a_charging" in entity_registry.entities
 
 
 async def test_battery_attributes(
@@ -49,7 +49,7 @@ async def test_battery_attributes(
     assert battery_state.state == "100"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
 
-    power = entity_registry.entities["binary_sensor.zone_a_power"]
+    power = entity_registry.entities["binary_sensor.zone_a_charging"]
     power_state = hass.states.get(power.entity_id)
     assert power_state.state == STATE_ON
     assert (
@@ -73,7 +73,7 @@ async def test_battery_on_s1(
     sub_callback = subscription.callback
 
     assert "sensor.zone_a_battery" not in entity_registry.entities
-    assert "binary_sensor.zone_a_power" not in entity_registry.entities
+    assert "binary_sensor.zone_a_charging" not in entity_registry.entities
 
     # Update the speaker with a callback event
     sub_callback(device_properties_event)
@@ -83,7 +83,7 @@ async def test_battery_on_s1(
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
 
-    power = entity_registry.entities["binary_sensor.zone_a_power"]
+    power = entity_registry.entities["binary_sensor.zone_a_charging"]
     power_state = hass.states.get(power.entity_id)
     assert power_state.state == STATE_OFF
     assert power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "BATTERY"

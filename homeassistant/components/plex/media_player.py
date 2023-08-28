@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import plexapi.exceptions
 import requests.exceptions
@@ -21,12 +21,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
@@ -535,7 +534,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
             identifiers={(DOMAIN, self.machine_identifier)},
             manufacturer=self.device_platform or "Plex",
             model=self.device_product or self.device_make,
-            name=self.name,
+            # Instead of setting the device name to the entity name, plex
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             sw_version=self.device_version,
             via_device=(DOMAIN, self.plex_server.machine_identifier),
         )

@@ -4,7 +4,9 @@
     "step": {
       "choose_serial_port": {
         "title": "Select a Serial Port",
-        "data": { "path": "Serial Device Path" },
+        "data": {
+          "path": "Serial Device Path"
+        },
         "description": "Select the serial port for your Zigbee radio"
       },
       "confirm": {
@@ -14,8 +16,10 @@
         "description": "Do you want to set up {name}?"
       },
       "manual_pick_radio_type": {
-        "data": { "radio_type": "Radio Type" },
-        "title": "Radio Type",
+        "data": {
+          "radio_type": "Radio Type"
+        },
+        "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "Pick your Zigbee radio type"
       },
       "manual_port_config": {
@@ -23,8 +27,8 @@
         "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "port speed",
-          "flow_control": "data flow control"
+          "baudrate": "Port speed",
+          "flow_control": "Data flow control"
         }
       },
       "verify_radio": {
@@ -58,7 +62,7 @@
       },
       "maybe_confirm_ezsp_restore": {
         "title": "Overwrite Radio IEEE Address",
-        "description": "Your backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
+        "description": "Your backup has a different IEEE address than your radio. For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
           "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
         }
@@ -79,7 +83,7 @@
     "step": {
       "init": {
         "title": "Reconfigure ZHA",
-        "description": "ZHA will be stopped.  Do you wish to continue?"
+        "description": "ZHA will be stopped. Do you wish to continue?"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -90,12 +94,12 @@
         }
       },
       "intent_migrate": {
-        "title": "Migrate to a new radio",
-        "description": "Before plugging in your new radio, your old radio needs to be reset.  An automatic backup will be performed.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
+        "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
+        "description": "Before plugging in your new radio, your old radio needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
+        "description": "Your old radio has been reset. If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new radio."
       },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
@@ -220,14 +224,14 @@
       "device_offline": "Device offline"
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "dim_up": "Dim up",
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "Open",
-      "close": "Close",
+      "open": "[%key:common::action::open%]",
+      "close": "[%key:common::action::close%]",
       "both_buttons": "Both buttons",
       "button": "Button",
       "button_1": "First button",
@@ -237,12 +241,266 @@
       "button_5": "Fifth button",
       "button_6": "Sixth button",
       "face_any": "With any/specified face(s) activated",
-      "face_1": "with face 1 activated",
-      "face_2": "with face 2 activated",
-      "face_3": "with face 3 activated",
-      "face_4": "with face 4 activated",
-      "face_5": "with face 5 activated",
-      "face_6": "with face 6 activated"
+      "face_1": "With face 1 activated",
+      "face_2": "With face 2 activated",
+      "face_3": "With face 3 activated",
+      "face_4": "With face 4 activated",
+      "face_5": "With face 5 activated",
+      "face_6": "With face 6 activated"
+    }
+  },
+  "services": {
+    "permit": {
+      "name": "Permit",
+      "description": "Allows nodes to join the Zigbee network.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Time to permit joins."
+        },
+        "ieee": {
+          "name": "IEEE",
+          "description": "IEEE address of the node permitting new joins."
+        },
+        "source_ieee": {
+          "name": "Source IEEE",
+          "description": "IEEE address of the joining device (must be used with the install code)."
+        },
+        "install_code": {
+          "name": "Install code",
+          "description": "Install code of the joining device (must be used with the source_ieee)."
+        },
+        "qr_code": {
+          "name": "QR code",
+          "description": "Value of the QR install code (different between vendors)."
+        }
+      }
+    },
+    "remove": {
+      "name": "Remove",
+      "description": "Removes a node from the Zigbee network.",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "IEEE address of the node to remove."
+        }
+      }
+    },
+    "reconfigure_device": {
+      "name": "Reconfigure device",
+      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this service.",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "IEEE address of the device to reconfigure."
+        }
+      }
+    },
+    "set_zigbee_cluster_attribute": {
+      "name": "Set zigbee cluster attribute",
+      "description": "Sets an attribute value for the specified cluster on the specified entity.",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "IEEE address for the device."
+        },
+        "endpoint_id": {
+          "name": "Endpoint ID",
+          "description": "Endpoint ID for the cluster."
+        },
+        "cluster_id": {
+          "name": "Cluster ID",
+          "description": "ZCL cluster to retrieve attributes for."
+        },
+        "cluster_type": {
+          "name": "Cluster Type",
+          "description": "Type of the cluster."
+        },
+        "attribute": {
+          "name": "Attribute",
+          "description": "ID of the attribute to set."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value to write to the attribute."
+        },
+        "manufacturer": {
+          "name": "Manufacturer",
+          "description": "Manufacturer code."
+        }
+      }
+    },
+    "issue_zigbee_cluster_command": {
+      "name": "Issue zigbee cluster command",
+      "description": "Issues a command on the specified cluster on the specified entity.",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::ieee::description%]"
+        },
+        "endpoint_id": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::endpoint_id::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::endpoint_id::description%]"
+        },
+        "cluster_id": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_id::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_id::description%]"
+        },
+        "cluster_type": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_type::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_type::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "ID of the command to execute."
+        },
+        "command_type": {
+          "name": "Command Type",
+          "description": "Type of the command to execute."
+        },
+        "args": {
+          "name": "Args",
+          "description": "Arguments to pass to the command."
+        },
+        "params": {
+          "name": "Params",
+          "description": "Parameters to pass to the command."
+        },
+        "manufacturer": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::description%]"
+        }
+      }
+    },
+    "issue_zigbee_group_command": {
+      "name": "Issue zigbee group command",
+      "description": "Issue command on the specified cluster on the specified group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "Hexadecimal address of the group."
+        },
+        "cluster_id": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_id::name%]",
+          "description": "ZCL cluster to send command to."
+        },
+        "cluster_type": {
+          "name": "Cluster type",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::cluster_type::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "[%key:component::zha::services::issue_zigbee_cluster_command::fields::command::description%]"
+        },
+        "args": {
+          "name": "Args",
+          "description": "[%key:component::zha::services::issue_zigbee_cluster_command::fields::args::description%]"
+        },
+        "manufacturer": {
+          "name": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::manufacturer::description%]"
+        }
+      }
+    },
+    "warning_device_squawk": {
+      "name": "Warning device squawk",
+      "description": "This service uses the WD capabilities to emit a quick audible/visible pulse called a \"squawk\". The squawk command has no effect if the WD is currently active (warning in progress).",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::ieee::description%]"
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "The Squawk Mode field is used as a 4-bit enumeration, and can have one of the values shown in Table 8-24 of the ZCL spec - Squawk Mode Field. The exact operation of each mode (how the WD “squawks”) is implementation specific."
+        },
+        "strobe": {
+          "name": "Strobe",
+          "description": "The strobe field is used as a Boolean, and determines if the visual indication is also required in addition to the audible squawk, as shown in Table 8-25 of the ZCL spec - Strobe Bit."
+        },
+        "level": {
+          "name": "Level",
+          "description": "The squawk level field is used as a 2-bit enumeration, and determines the intensity of audible squawk sound as shown in Table 8-26 of the ZCL spec - Squawk Level Field Values."
+        }
+      }
+    },
+    "warning_device_warn": {
+      "name": "Warning device starts alert",
+      "description": "This service starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
+      "fields": {
+        "ieee": {
+          "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
+          "description": "[%key:component::zha::services::set_zigbee_cluster_attribute::fields::ieee::description%]"
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "The Warning Mode field is used as a 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the warning device in each mode is according to the relevant security standards."
+        },
+        "strobe": {
+          "name": "[%key:component::zha::services::warning_device_squawk::fields::strobe::name%]",
+          "description": "The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. \"0\" means no strobe, \"1\" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”), then only the strobe is activated."
+        },
+        "level": {
+          "name": "Level",
+          "description": "The Siren Level field is used as a 2-bit enumeration, and indicates the intensity of audible squawk sound as shown in Table 8-22 of the ZCL spec."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are \"0\" this field is ignored."
+        },
+        "duty_cycle": {
+          "name": "Duty cycle",
+          "description": "Indicates the length of the flash cycle. This allows you to vary the flash duration for different alarm types (e.g., fire, police, burglar). The valid range is 0-100 in increments of 10. All other values must be rounded to the nearest valid value. Strobe calculates a duty cycle over a duration of one second. The ON state must precede the OFF state. For example, if the Strobe Duty Cycle field specifies “40,”, then the strobe flashes ON for 4/10ths of a second and then turns OFF for 6/10ths of a second."
+        },
+        "intensity": {
+          "name": "Intensity",
+          "description": "Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec."
+        }
+      }
+    },
+    "clear_lock_user_code": {
+      "name": "Clear lock user",
+      "description": "Clears a user code from a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "Code slot",
+          "description": "Code slot to clear code from."
+        }
+      }
+    },
+    "enable_lock_user_code": {
+      "name": "Enable lock user",
+      "description": "Enables a user code on a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "[%key:component::zha::services::clear_lock_user_code::fields::code_slot::name%]",
+          "description": "Code slot to enable."
+        }
+      }
+    },
+    "disable_lock_user_code": {
+      "name": "Disable lock user",
+      "description": "Disables a user code on a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "[%key:component::zha::services::clear_lock_user_code::fields::code_slot::name%]",
+          "description": "Code slot to disable."
+        }
+      }
+    },
+    "set_lock_user_code": {
+      "name": "Set lock user code",
+      "description": "Sets a user code on a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "[%key:component::zha::services::clear_lock_user_code::fields::code_slot::name%]",
+          "description": "Code slot to set the code in."
+        },
+        "user_code": {
+          "name": "Code",
+          "description": "Code to set."
+        }
+      }
     }
   }
 }

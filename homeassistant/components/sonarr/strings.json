@@ -33,5 +33,27 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "commands": {
+        "name": "Commands"
+      },
+      "diskspace": {
+        "name": "Disk space"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "series": {
+        "name": "Shows"
+      },
+      "upcoming": {
+        "name": "Upcoming"
+      },
+      "wanted": {
+        "name": "Wanted"
+      }
+    }
   }
 }

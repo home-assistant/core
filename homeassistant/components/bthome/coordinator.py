@@ -13,7 +13,10 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothProcessorCoordinator,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from .const import CONF_SLEEPY_DEVICE
 
 
 class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
@@ -28,12 +31,19 @@ class BTHomePassiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordi
         update_method: Callable[[BluetoothServiceInfoBleak], Any],
         device_data: BTHomeBluetoothDeviceData,
         discovered_device_classes: set[str],
+        entry: ConfigEntry,
         connectable: bool = False,
     ) -> None:
         """Initialize the BTHome Bluetooth Passive Update Processor Coordinator."""
         super().__init__(hass, logger, address, mode, update_method, connectable)
         self.discovered_device_classes = discovered_device_classes
         self.device_data = device_data
+        self.entry = entry
+
+    @property
+    def sleepy_device(self) -> bool:
+        """Return True if the device is a sleepy device."""
+        return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
 
 
 class BTHomePassiveBluetoothDataProcessor(PassiveBluetoothDataProcessor):

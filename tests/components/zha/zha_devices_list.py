@@ -3013,11 +3013,6 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Illuminance",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_illuminance",
             },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                DEV_SIG_CLUSTER_HANDLERS: ["power"],
-                DEV_SIG_ENT_MAP_CLASS: "Battery",
-                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_battery",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-1-2"): {
                 DEV_SIG_CLUSTER_HANDLERS: ["device_temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "DeviceTemperature",

@@ -125,6 +125,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_humidity: IntegerTypeData | None = None
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
+    _attr_name = None
 
     def __init__(
         self,
@@ -205,7 +206,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
-        self._attr_hvac_modes: list[str] = []
+        self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
         if enum_type := self.find_dpcode(
             DPCode.MODE, dptype=DPType.ENUM, prefer_function=True

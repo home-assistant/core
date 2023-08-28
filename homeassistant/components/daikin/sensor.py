@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -55,7 +55,7 @@ class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysM
 SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_INSIDE_TEMPERATURE,
-        name="Inside temperature",
+        translation_key="inside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -63,7 +63,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
-        name="Outside temperature",
+        translation_key="outside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -71,7 +71,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
-        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -79,7 +78,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
-        name="Target humidity",
+        translation_key="target_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -87,7 +86,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_POWER,
-        name="Compressor estimated power consumption",
+        translation_key="compressor_estimated_power_consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
@@ -95,7 +94,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
-        name="Cool energy consumption",
+        translation_key="cool_energy_consumption",
         icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -104,7 +103,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
-        name="Heat energy consumption",
+        translation_key="heat_energy_consumption",
         icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -113,7 +112,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ENERGY_TODAY,
-        name="Energy consumption",
+        translation_key="energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -121,7 +120,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
-        name="Compressor frequency",
+        translation_key="compressor_frequency",
         icon="mdi:fan",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -131,7 +130,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_TODAY,
-        name="Compressor energy consumption",
+        translation_key="compressor_energy_consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,

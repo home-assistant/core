@@ -6,6 +6,7 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components.http import HomeAssistantAccessLogger
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     CONF_ENTITIES,
@@ -100,7 +101,7 @@ async def start_emulated_hue_bridge(
         config.advertise_port or config.listen_port,
     )
 
-    runner = web.AppRunner(app)
+    runner = web.AppRunner(app, access_log_class=HomeAssistantAccessLogger)
     await runner.setup()
 
     site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)

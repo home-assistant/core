@@ -909,3 +909,61 @@ async def test_rtsp_to_web_rtc_offer_not_accepted(
     assert mock_provider.called
 
     unsub()
+
+
+async def test_use_stream_for_stills(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_camera,
+) -> None:
+    """Test that the component can grab images from stream."""
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value=None,
+    ) as mock_stream_source, patch(
+        "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
+        return_value=True,
+    ):
+        # First test when the integration does not support stream should fail
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_stream_source.assert_not_called()
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        # Test when the integration does not provide a stream_source should fail
+        with patch(
+            "homeassistant.components.demo.camera.DemoCamera.supported_features",
+            return_value=camera.SUPPORT_STREAM,
+        ):
+            resp = await client.get("/api/camera_proxy/camera.demo_camera")
+            await hass.async_block_till_done()
+            mock_stream_source.assert_called_once()
+            assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="rtsp://some_source",
+    ) as mock_stream_source, patch(
+        "homeassistant.components.camera.create_stream"
+    ) as mock_create_stream, patch(
+        "homeassistant.components.demo.camera.DemoCamera.supported_features",
+        return_value=camera.SUPPORT_STREAM,
+    ), patch(
+        "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
+        return_value=True,
+    ):
+        # Now test when creating the stream succeeds
+        mock_stream = Mock()
+        mock_stream.async_get_image = AsyncMock()
+        mock_stream.async_get_image.return_value = b"stream_keyframe_image"
+        mock_create_stream.return_value = mock_stream
+
+        # should start the stream and get the image
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_create_stream.assert_called_once()
+        mock_stream.async_get_image.assert_called_once()
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == b"stream_keyframe_image"

@@ -27,7 +27,7 @@ ATTR_IN_CLUSTERS: Final[str] = "input_clusters"
 ATTR_OUT_CLUSTERS: Final[str] = "output_clusters"
 
 _LOGGER = logging.getLogger(__name__)
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 
 
 class Endpoint:

@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -177,7 +177,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Trigger a reload of the data
         async_fire_time_changed(
             self.hass,
-            dt.utcnow()
+            dt_util.utcnow()
             + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await self.hass.async_block_till_done()

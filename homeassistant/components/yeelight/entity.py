@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .device import YeelightDevice
@@ -12,6 +13,7 @@ class YeelightEntity(Entity):
     """Represents single Yeelight entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: YeelightDevice, entry: ConfigEntry) -> None:
         """Initialize the entity."""

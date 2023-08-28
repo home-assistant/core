@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
-from .const import DOMAIN, SENSOR_TEMPERATURE
+from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
 from .model import NotionEntityDescriptionMixin
 
 
@@ -26,8 +26,13 @@ class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMi
 
 SENSOR_DESCRIPTIONS = (
     NotionSensorDescription(
+        key=SENSOR_MOLD,
+        translation_key="mold_risk",
+        icon="mdi:liquid-spot",
+        listener_kind=ListenerKind.MOLD,
+    ),
+    NotionSensorDescription(
         key=SENSOR_TEMPERATURE,
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -76,11 +81,11 @@ class NotionSensor(NotionEntity, SensorEntity):
 
     @property
     def native_value(self) -> str | None:
-        """Return the value reported by the sensor.
-
-        The Notion API only returns a localized string for temperature (e.g. "70°"); we
-        simply remove the degree symbol:
-        """
+        """Return the value reported by the sensor."""
         if not self.listener.status_localized:
             return None
-        return self.listener.status_localized.state[:-1]
+        if self.listener.listener_kind == ListenerKind.TEMPERATURE:
+            # The Notion API only returns a localized string for temperature (e.g.
+            # "70°"); we simply remove the degree symbol:
+            return self.listener.status_localized.state[:-1]
+        return self.listener.status_localized.state

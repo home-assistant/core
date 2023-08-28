@@ -1,22 +1,16 @@
 # Describes the format for available switch services
 
 turn_on:
-  name: Turn on
-  description: Turn a switch on
   target:
     entity:
       domain: switch
 
 turn_off:
-  name: Turn off
-  description: Turn a switch off
   target:
     entity:
       domain: switch
 
 toggle:
-  name: Toggle
-  description: Toggles a switch state
   target:
     entity:
       domain: switch

@@ -1,7 +1,7 @@
 """The tests for the group cover platform."""
+import asyncio
 from datetime import timedelta
 
-import async_timeout
 import pytest
 
 from homeassistant.components.cover import (
@@ -828,7 +828,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["cover.bedroom_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,

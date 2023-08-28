@@ -5,9 +5,16 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, intent, script, template
+from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import (
+    config_validation as cv,
+    intent,
+    script,
+    service,
+    template,
+)
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,10 +62,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the intent script component."""
-    intents = config[DOMAIN]
+async def async_reload(hass: HomeAssistant, servie_call: ServiceCall) -> None:
+    """Handle start Intent Script service call."""
+    new_config = await async_integration_yaml_config(hass, DOMAIN)
+    existing_intents = hass.data[DOMAIN]
+
+    for intent_type in existing_intents:
+        intent.async_remove(hass, intent_type)
+
+    if not new_config or DOMAIN not in new_config:
+        hass.data[DOMAIN] = {}
+        return
+
+    new_intents = new_config[DOMAIN]
+
+    async_load_intents(hass, new_intents)
+
+
+def async_load_intents(hass: HomeAssistant, intents: dict):
+    """Load YAML intents into the intent system."""
     template.attach(hass, intents)
+    hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
@@ -66,6 +90,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass, conf[CONF_ACTION], f"Intent Script {intent_type}", DOMAIN
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the intent script component."""
+    intents = config[DOMAIN]
+
+    async_load_intents(hass, intents)
+
+    async def _handle_reload(servie_call: ServiceCall) -> None:
+        return await async_reload(hass, servie_call)
+
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        _handle_reload,
+    )
 
     return True
 

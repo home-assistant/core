@@ -7,8 +7,8 @@ from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
+    DeviceInfo,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -67,7 +67,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         """Return if entity is available."""
         return (
             self._dev_id in self.coordinator.data.devices
-            and ("available" not in self.device or self.device["available"])
+            and ("available" not in self.device or self.device["available"] is True)
             and super().available
         )
 

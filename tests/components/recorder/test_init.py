@@ -56,6 +56,10 @@ from homeassistant.components.recorder.services import (
     SERVICE_PURGE,
     SERVICE_PURGE_ENTITIES,
 )
+from homeassistant.components.recorder.table_managers import (
+    state_attributes as state_attributes_table_manager,
+    states_meta as states_meta_table_manager,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -91,6 +95,15 @@ from tests.common import (
     mock_platform,
 )
 from tests.typing import RecorderInstanceGenerator
+
+
+@pytest.fixture
+def small_cache_size() -> None:
+    """Patch the default cache size to 8."""
+    with patch.object(state_attributes_table_manager, "CACHE_SIZE", 8), patch.object(
+        states_meta_table_manager, "CACHE_SIZE", 8
+    ):
+        yield
 
 
 def _default_recorder(hass):
@@ -581,7 +594,6 @@ def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) ->
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=invalid-name
 def test_saving_state_include_domains(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
@@ -942,7 +954,6 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
     assert recorder_config["auto_repack"]
     assert recorder_config["purge_keep_days"] == 10
@@ -1426,7 +1437,7 @@ def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1460,7 +1471,7 @@ def test_service_disable_events_not_recording(
         )
         assert len(db_events) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1510,7 +1521,7 @@ def test_service_disable_states_not_recording(
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -1523,7 +1534,7 @@ def test_service_disable_states_not_recording(
     with session_scope(hass=hass, read_only=True) as session:
         assert len(list(session.query(States))) == 0
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_ENABLE,
         {},
@@ -1563,7 +1574,7 @@ def test_service_disable_run_information_recorded(tmp_path: Path) -> None:
         assert db_run_info[0].start is not None
         assert db_run_info[0].end is None
 
-    assert hass.services.call(
+    hass.services.call(
         DOMAIN,
         SERVICE_DISABLE,
         {},
@@ -2022,13 +2033,10 @@ def test_deduplication_event_data_inside_commit_interval(
         assert all(event.data_id == first_data_id for event in events)
 
 
-# Patch CACHE_SIZE since otherwise
-# the CI can fail because the test takes too long to run
-@patch(
-    "homeassistant.components.recorder.table_managers.state_attributes.CACHE_SIZE", 5
-)
 def test_deduplication_state_attributes_inside_commit_interval(
-    hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
+    small_cache_size: None,
+    hass_recorder: Callable[..., HomeAssistant],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deduplication of state attributes inside the commit interval."""
     hass = hass_recorder()
@@ -2214,7 +2222,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
             return "mysql"
 
         @classmethod
-        def dbapi(cls):
+        def import_dbapi(cls):
             ...
 
         def engine_created(*args):
@@ -2306,16 +2314,15 @@ async def test_excluding_attributes_by_integration(
 
 
 async def test_lru_increases_with_many_entities(
-    recorder_mock: Recorder, hass: HomeAssistant
+    small_cache_size: None, recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test that the recorder's internal LRU cache increases with many entities."""
-    # We do not actually want to record 4096 entities so we mock the entity count
-    mock_entity_count = 4096
-    with patch.object(
-        hass.states, "async_entity_ids_count", return_value=mock_entity_count
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await async_wait_recording_done(hass)
+    mock_entity_count = 16
+    for idx in range(mock_entity_count):
+        hass.states.async_set(f"test.entity{idx}", "on")
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await async_wait_recording_done(hass)
 
     assert (
         recorder_mock.state_attributes_manager._id_map.get_size()

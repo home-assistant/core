@@ -131,8 +131,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
-        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
-        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
@@ -195,6 +193,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        slave_raise = False
+
         params = {}
         if hvac_mode == HVACMode.OFF:
             params[API_ON] = 0
@@ -204,11 +204,12 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
                 if self.get_airzone_value(AZD_MASTER):
                     params[API_MODE] = mode
                 else:
-                    raise HomeAssistantError(
-                        f"Mode can't be changed on slave zone {self.name}"
-                    )
+                    slave_raise = True
             params[API_ON] = 1
         await self._async_update_hvac_params(params)
+
+        if slave_raise:
+            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -240,6 +241,8 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             ]
         else:
             self._attr_hvac_mode = HVACMode.OFF
+        self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
+        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))

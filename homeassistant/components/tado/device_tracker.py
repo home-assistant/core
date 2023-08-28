@@ -8,7 +8,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -109,7 +108,7 @@ class TadoDeviceScanner(DeviceScanner):
         last_results = []
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
                 url = self.tadoapiurl.format(

@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.json import JsonObjectType
 
@@ -192,12 +192,10 @@ class PS4Device(MediaPlayerEntity):
                             self.async_get_title_data(title_id, name),
                             "ps4.media_player-get_title_data",
                         )
-                else:
-                    if self.state != MediaPlayerState.IDLE:
-                        self.idle()
-            else:
-                if self.state != MediaPlayerState.STANDBY:
-                    self.state_standby()
+                elif self.state != MediaPlayerState.IDLE:
+                    self.idle()
+            elif self.state != MediaPlayerState.STANDBY:
+                self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()

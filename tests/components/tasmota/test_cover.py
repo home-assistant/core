@@ -55,6 +55,7 @@ async def test_missing_relay(
 @pytest.mark.parametrize(
     ("relay_config", "num_covers"),
     [
+        ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3] + [3, 3] * 12, 16),
         ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
         ([3, 3, 3, 3, 0, 0, 0, 0], 2),
         ([3, 3, 1, 1, 0, 0, 0, 0], 1),
@@ -658,7 +659,7 @@ async def test_availability_when_connection_lost(
         mqtt_mock,
         Platform.COVER,
         config,
-        entity_id="test_cover_1",
+        object_id="test_cover_1",
     )
 
 
@@ -671,7 +672,7 @@ async def test_availability(
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_availability(
-        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, object_id="test_cover_1"
     )
 
 
@@ -684,7 +685,7 @@ async def test_availability_discovery_update(
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_availability_discovery_update(
-        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, object_id="test_cover_1"
     )
 
 
@@ -727,7 +728,7 @@ async def test_discovery_removal_cover(
         Platform.COVER,
         config1,
         config2,
-        entity_id="test_cover_1",
+        object_id="test_cover_1",
         name="Test cover 1",
     )
 
@@ -753,7 +754,7 @@ async def test_discovery_update_unchanged_cover(
             Platform.COVER,
             config,
             discovery_update,
-            entity_id="test_cover_1",
+            object_id="test_cover_1",
             name="Test cover 1",
         )
 
@@ -787,7 +788,7 @@ async def test_entity_id_update_subscriptions(
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, Platform.COVER, config, topics, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, topics, object_id="test_cover_1"
     )
 
 
@@ -800,5 +801,5 @@ async def test_entity_id_update_discovery_update(
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, Platform.COVER, config, entity_id="test_cover_1"
+        hass, mqtt_mock, Platform.COVER, config, object_id="test_cover_1"
     )

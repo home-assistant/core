@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -20,7 +21,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -78,17 +78,21 @@ def inject_rpc_device_event(
     mock_rpc_device.mock_event()
 
 
-async def mock_rest_update(hass: HomeAssistant, seconds=REST_SENSORS_UPDATE_INTERVAL):
+async def mock_rest_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    seconds=REST_SENSORS_UPDATE_INTERVAL,
+):
     """Move time to create REST sensors update event."""
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=seconds))
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
-async def mock_polling_rpc_update(hass: HomeAssistant):
+async def mock_polling_rpc_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
     """Move time to create polling RPC sensors update event."""
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL)
-    )
+    freezer.tick(timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 

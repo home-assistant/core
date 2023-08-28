@@ -15,8 +15,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -53,7 +53,7 @@ async def async_setup_entry(
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     ffmpeg = get_ffmpeg_manager(hass)
 
-    cameras = [LogiCam(device, entry, ffmpeg) for device in devices]
+    cameras = [LogiCam(device, ffmpeg) for device in devices]
 
     async_add_entities(cameras, True)
 
@@ -64,12 +64,13 @@ class LogiCam(Camera):
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, camera, device_info, ffmpeg):
+    def __init__(self, camera, ffmpeg):
         """Initialize Logi Circle camera."""
         super().__init__()
         self._camera = camera
-        self._name = self._camera.name
         self._id = self._camera.mac_address
         self._has_battery = self._camera.supports_feature("battery_level")
         self._ffmpeg = ffmpeg

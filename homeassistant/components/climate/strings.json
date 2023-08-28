@@ -28,9 +28,15 @@
         "fan_only": "Fan only"
       },
       "state_attributes": {
-        "aux_heat": { "name": "Aux heat" },
-        "current_humidity": { "name": "Current humidity" },
-        "current_temperature": { "name": "Current temperature" },
+        "aux_heat": {
+          "name": "Aux heat"
+        },
+        "current_humidity": {
+          "name": "Current humidity"
+        },
+        "current_temperature": {
+          "name": "Current temperature"
+        },
         "fan_mode": {
           "name": "Fan mode",
           "state": {
@@ -49,11 +55,14 @@
         "fan_modes": {
           "name": "Fan modes"
         },
-        "humidity": { "name": "Target humidity" },
+        "humidity": {
+          "name": "Target humidity"
+        },
         "hvac_action": {
           "name": "Current action",
           "state": {
-            "off": "Off",
+            "off": "[%key:common::state::off%]",
+            "preheating": "Preheating",
             "heating": "Heating",
             "cooling": "Cooling",
             "drying": "Drying",
@@ -64,10 +73,18 @@
         "hvac_modes": {
           "name": "HVAC modes"
         },
-        "max_humidity": { "name": "Max target humidity" },
-        "max_temp": { "name": "Max target temperature" },
-        "min_humidity": { "name": "Min target humidity" },
-        "min_temp": { "name": "Min target temperature" },
+        "max_humidity": {
+          "name": "Max target humidity"
+        },
+        "max_temp": {
+          "name": "Max target temperature"
+        },
+        "min_humidity": {
+          "name": "Min target humidity"
+        },
+        "min_temp": {
+          "name": "Min target temperature"
+        },
         "preset_mode": {
           "name": "Preset",
           "state": {
@@ -97,10 +114,123 @@
         "swing_modes": {
           "name": "Swing modes"
         },
-        "target_temp_high": { "name": "Upper target temperature" },
-        "target_temp_low": { "name": "Lower target temperature" },
-        "target_temp_step": { "name": "Target temperature step" },
-        "temperature": { "name": "Target temperature" }
+        "target_temp_high": {
+          "name": "Upper target temperature"
+        },
+        "target_temp_low": {
+          "name": "Lower target temperature"
+        },
+        "target_temp_step": {
+          "name": "Target temperature step"
+        },
+        "temperature": {
+          "name": "Target temperature"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_aux_heat": {
+      "name": "Turn on/off auxiliary heater",
+      "description": "Turns auxiliary heater on/off.",
+      "fields": {
+        "aux_heat": {
+          "name": "Auxiliary heating",
+          "description": "New value of auxiliary heater."
+        }
+      }
+    },
+    "set_preset_mode": {
+      "name": "Set preset mode",
+      "description": "Sets preset mode.",
+      "fields": {
+        "preset_mode": {
+          "name": "Preset mode",
+          "description": "Preset mode."
+        }
+      }
+    },
+    "set_temperature": {
+      "name": "Set target temperature",
+      "description": "Sets target temperature.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "Target temperature."
+        },
+        "target_temp_high": {
+          "name": "Target temperature high",
+          "description": "High target temperature."
+        },
+        "target_temp_low": {
+          "name": "Target temperature low",
+          "description": "Low target temperature."
+        },
+        "hvac_mode": {
+          "name": "HVAC mode",
+          "description": "HVAC operation mode."
+        }
+      }
+    },
+    "set_humidity": {
+      "name": "Set target humidity",
+      "description": "Sets target humidity.",
+      "fields": {
+        "humidity": {
+          "name": "Humidity",
+          "description": "Target humidity."
+        }
+      }
+    },
+    "set_fan_mode": {
+      "name": "Set fan mode",
+      "description": "Sets fan operation mode.",
+      "fields": {
+        "fan_mode": {
+          "name": "Fan mode",
+          "description": "Fan operation mode."
+        }
+      }
+    },
+    "set_hvac_mode": {
+      "name": "Set HVAC mode",
+      "description": "Sets HVAC operation mode.",
+      "fields": {
+        "hvac_mode": {
+          "name": "HVAC mode",
+          "description": "HVAC operation mode."
+        }
+      }
+    },
+    "set_swing_mode": {
+      "name": "Set swing mode",
+      "description": "Sets swing operation mode.",
+      "fields": {
+        "swing_mode": {
+          "name": "Swing mode",
+          "description": "Swing operation mode."
+        }
+      }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns climate device on."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns climate device off."
+    }
+  },
+  "selector": {
+    "hvac_mode": {
+      "options": {
+        "off": "Off",
+        "auto": "Auto",
+        "cool": "Cool",
+        "dry": "Dry",
+        "fan_only": "Fan only",
+        "heat_cool": "Heat/cool",
+        "heat": "Heat"
       }
     }
   }

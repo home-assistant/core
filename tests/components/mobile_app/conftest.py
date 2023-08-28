@@ -1,7 +1,6 @@
 """Tests for mobile_app component."""
 from http import HTTPStatus
 
-# pylint: disable=unused-import
 import pytest
 
 from homeassistant.components.mobile_app.const import DOMAIN

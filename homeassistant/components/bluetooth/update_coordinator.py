@@ -3,20 +3,17 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
-from typing import cast
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
-from . import (
-    BluetoothCallbackMatcher,
-    BluetoothChange,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
+from .api import (
     async_address_present,
     async_last_service_info,
     async_register_callback,
     async_track_unavailable,
 )
+from .match import BluetoothCallbackMatcher
+from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -38,11 +35,11 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.logger = logger
         self.address = address
         self.connectable = connectable
-        self._cancel_track_unavailable: CALLBACK_TYPE | None = None
-        self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
+        self._on_stop: list[CALLBACK_TYPE] = []
         self.mode = mode
         self._last_unavailable_time = 0.0
         self._last_name = address
+        self._available = async_address_present(hass, address, connectable)
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
@@ -70,7 +67,7 @@ class BasePassiveBluetoothCoordinator(ABC):
         if service_info := async_last_service_info(
             self.hass, self.address, self.connectable
         ):
-            return cast(str, service_info.name)  # for compat this can be a pyobjc
+            return service_info.name
         return self._last_name
 
     @property
@@ -89,32 +86,46 @@ class BasePassiveBluetoothCoordinator(ABC):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return async_address_present(self.hass, self.address, self.connectable)
+        return self._available
+
+    @callback
+    def _async_handle_bluetooth_event_internal(
+        self,
+        service_info: BluetoothServiceInfoBleak,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a bluetooth event."""
+        self._available = True
+        self._async_handle_bluetooth_event(service_info, change)
 
     @callback
     def _async_start(self) -> None:
         """Start the callbacks."""
-        self._cancel_bluetooth_advertisements = async_register_callback(
-            self.hass,
-            self._async_handle_bluetooth_event,
-            BluetoothCallbackMatcher(
-                address=self.address, connectable=self.connectable
-            ),
-            self.mode,
+        self._on_stop.append(
+            async_register_callback(
+                self.hass,
+                self._async_handle_bluetooth_event_internal,
+                BluetoothCallbackMatcher(
+                    address=self.address, connectable=self.connectable
+                ),
+                self.mode,
+            )
         )
-        self._cancel_track_unavailable = async_track_unavailable(
-            self.hass, self._async_handle_unavailable, self.address, self.connectable
+        self._on_stop.append(
+            async_track_unavailable(
+                self.hass,
+                self._async_handle_unavailable,
+                self.address,
+                self.connectable,
+            )
         )
 
     @callback
     def _async_stop(self) -> None:
         """Stop the callbacks."""
-        if self._cancel_bluetooth_advertisements is not None:
-            self._cancel_bluetooth_advertisements()
-            self._cancel_bluetooth_advertisements = None
-        if self._cancel_track_unavailable is not None:
-            self._cancel_track_unavailable()
-            self._cancel_track_unavailable = None
+        for unsub in self._on_stop:
+            unsub()
+        self._on_stop.clear()
 
     @callback
     def _async_handle_unavailable(
@@ -123,3 +134,4 @@ class BasePassiveBluetoothCoordinator(ABC):
         """Handle the device going unavailable."""
         self._last_unavailable_time = service_info.time
         self._last_name = service_info.name
+        self._available = False

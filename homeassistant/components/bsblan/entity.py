@@ -5,8 +5,8 @@ from bsblan import BSBLAN, Device, Info, StaticState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 

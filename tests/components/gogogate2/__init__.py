@@ -77,7 +77,7 @@ def _mocked_ismartgate_closed_door_response():
         ismartgatename="ismartgatename0",
         model="ismartgatePRO",
         apiversion="",
-        remoteaccessenabled=False,
+        remoteaccessenabled=True,
         remoteaccess="abc321.blah.blah",
         firmwareversion="555",
         pin=123,

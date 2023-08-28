@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
 
@@ -12,6 +13,7 @@ class CrownstoneBaseEntity(Entity):
     """Base entity class for Crownstone devices."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: Crownstone) -> None:
         """Initialize the device."""

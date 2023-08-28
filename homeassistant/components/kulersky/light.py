@@ -16,7 +16,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -62,7 +62,10 @@ async def async_setup_entry(
 
 
 class KulerskyLight(LightEntity):
-    """Representation of an Kuler Sky Light."""
+    """Representation of a Kuler Sky Light."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
@@ -89,11 +92,6 @@ class KulerskyLight(LightEntity):
             )
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._light.name
-
-    @property
     def unique_id(self):
         """Return the ID of this light."""
         return self._light.address
@@ -104,7 +102,7 @@ class KulerskyLight(LightEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Brightech",
-            name=self.name,
+            name=self._light.name,
         )
 
     @property

@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -192,6 +191,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
+            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._zcl_attribute) is None
         ):
             _LOGGER.debug(

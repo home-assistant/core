@@ -248,6 +248,10 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )
 
+        notify_sound: Sound | None = None
+        if device.model != "sa5":
+            notify_sound = Sound(sound=NotificationSound.WIN)
+
         await lametric.notify(
             notification=Notification(
                 priority=NotificationPriority.CRITICAL,
@@ -255,7 +259,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 model=Model(
                     cycles=2,
                     frames=[Simple(text="Connected to Home Assistant!", icon=7956)],
-                    sound=Sound(sound=NotificationSound.WIN),
+                    sound=notify_sound,
                 ),
             )
         )

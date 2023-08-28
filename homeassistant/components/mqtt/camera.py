@@ -20,12 +20,7 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-    warn_for_legacy_schema,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import ReceiveMessage
 from .util import valid_subscribe_topic
 
@@ -46,7 +41,7 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }
@@ -54,12 +49,6 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 
 PLATFORM_SCHEMA_MODERN = vol.All(
     PLATFORM_SCHEMA_BASE.schema,
-)
-
-# Configuring MQTT Camera under the camera platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(camera.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA)
@@ -91,6 +80,7 @@ async def _async_setup_entity(
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format: str = camera.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_CAMERA_ATTRIBUTES_BLOCKED
 

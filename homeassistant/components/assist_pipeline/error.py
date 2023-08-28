@@ -18,8 +18,16 @@ class PipelineNotFound(PipelineError):
     """Unspecified pipeline picked."""
 
 
+class WakeWordDetectionError(PipelineError):
+    """Error in wake-word-detection portion of pipeline."""
+
+
+class WakeWordTimeoutError(WakeWordDetectionError):
+    """Timeout when wake word was not detected."""
+
+
 class SpeechToTextError(PipelineError):
-    """Error in speech to text portion of pipeline."""
+    """Error in speech-to-text portion of pipeline."""
 
 
 class IntentRecognitionError(PipelineError):
@@ -27,4 +35,4 @@ class IntentRecognitionError(PipelineError):
 
 
 class TextToSpeechError(PipelineError):
-    """Error in text to speech portion of pipeline."""
+    """Error in text-to-speech portion of pipeline."""

@@ -14,8 +14,14 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -474,7 +480,7 @@ async def test_extract_all_use_match_all(
 
 
 async def test_register_entity_service(hass: HomeAssistant) -> None:
-    """Test not expanding a group."""
+    """Test registering an enttiy service and calling it."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
     calls = []
 
@@ -522,6 +528,70 @@ async def test_register_entity_service(hass: HomeAssistant) -> None:
         DOMAIN, "hello", {"area_id": ENTITY_MATCH_NONE, "some": "data"}, blocking=True
     )
     assert len(calls) == 2
+
+
+async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
+    """Test an enttiy service that does not support response data."""
+    entity = MockEntity(entity_id=f"{DOMAIN}.entity")
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": "response-value"}
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity])
+
+    component.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        service_data={"entity_id": entity.entity_id, "some": "data"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {"response-key": "response-value"}
+
+
+async def test_register_entity_service_response_data_multiple_matches(
+    hass: HomeAssistant,
+) -> None:
+    """Test asking for service response data but matching many entities."""
+    entity1 = MockEntity(entity_id=f"{DOMAIN}.entity1")
+    entity2 = MockEntity(entity_id=f"{DOMAIN}.entity2")
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        raise ValueError("Should not be invoked")
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity1, entity2])
+
+    component.async_register_entity_service(
+        "hello",
+        {},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    with pytest.raises(HomeAssistantError, match="matched more than one entity"):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:

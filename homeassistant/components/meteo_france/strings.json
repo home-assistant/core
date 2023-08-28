@@ -10,7 +10,7 @@
       "cities": {
         "description": "Choose your city from the list",
         "data": {
-          "city": "City"
+          "city": "[%key:component::meteo_france::config::step::user::data::city%]"
         }
       }
     },
@@ -20,15 +20,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "mode": "Forecast mode"
-        }
-      }
     }
   }
 }

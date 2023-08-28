@@ -616,7 +616,6 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert "person.one" not in list(group_state.attributes["entity_id"])
 
 
-# pylint: disable=invalid-name
 async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None:
     """Check if service are available."""
     with assert_setup_component(0, "group"):

@@ -5,8 +5,6 @@ import mill
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    FAN_OFF,
-    FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -17,14 +15,12 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
-    PRECISION_HALVES,
-    PRECISION_WHOLE,
+    PRECISION_TENTHS,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -90,9 +86,13 @@ async def async_setup_entry(
 class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
-    _attr_fan_modes = [FAN_ON, FAN_OFF]
+    _attr_has_entity_name = True
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
+    _attr_name = None
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
@@ -106,26 +106,12 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
-        self._attr_name = heater.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
-            model=f"Generation {heater.generation}",
-            name=self.name,
+            model=heater.model,
+            name=heater.name,
         )
-        if heater.is_gen1:
-            self._attr_hvac_modes = [HVACMode.HEAT]
-        else:
-            self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-
-        if heater.generation < 3:
-            self._attr_supported_features = (
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-            )
-            self._attr_target_temperature_step = PRECISION_WHOLE
-        else:
-            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_target_temperature_step = PRECISION_HALVES
 
         self._update_attr(heater)
 
@@ -138,26 +124,16 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        fan_status = 1 if fan_mode == FAN_ON else 0
-        await self.coordinator.mill_data_connection.heater_control(
-            self._id, fan_status=fan_status
-        )
-        await self.coordinator.async_request_refresh()
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        heater = self.coordinator.data[self._id]
-
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.mill_data_connection.heater_control(
-                self._id, power_status=1
+                self._id, power_status=True
             )
             await self.coordinator.async_request_refresh()
-        elif hvac_mode == HVACMode.OFF and not heater.is_gen1:
+        elif hvac_mode == HVACMode.OFF:
             await self.coordinator.mill_data_connection.heater_control(
-                self._id, power_status=0
+                self._id, power_status=False
             )
             await self.coordinator.async_request_refresh()
 
@@ -177,23 +153,20 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._available = heater.available
         self._attr_extra_state_attributes = {
             "open_window": heater.open_window,
-            "heating": heater.is_heating,
             "controlled_by_tibber": heater.tibber_control,
-            "heater_generation": heater.generation,
         }
-        if heater.room:
-            self._attr_extra_state_attributes["room"] = heater.room.name
-            self._attr_extra_state_attributes["avg_room_temp"] = heater.room.avg_temp
+        if heater.room_name:
+            self._attr_extra_state_attributes["room"] = heater.room_name
+            self._attr_extra_state_attributes["avg_room_temp"] = heater.room_avg_temp
         else:
             self._attr_extra_state_attributes["room"] = "Independent device"
         self._attr_target_temperature = heater.set_temp
         self._attr_current_temperature = heater.current_temp
-        self._attr_fan_mode = FAN_ON if heater.fan_status == 1 else HVACMode.OFF
-        if heater.is_heating == 1:
+        if heater.is_heating:
             self._attr_hvac_action = HVACAction.HEATING
         else:
             self._attr_hvac_action = HVACAction.IDLE
-        if heater.is_gen1 or heater.power_status == 1:
+        if heater.power_status:
             self._attr_hvac_mode = HVACMode.HEAT
         else:
             self._attr_hvac_mode = HVACMode.OFF
@@ -202,18 +175,19 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
 class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
+    _attr_has_entity_name = True
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
+    _attr_name = None
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = PRECISION_HALVES
+    _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.mill_data_connection.name
         if mac := coordinator.mill_data_connection.mac_address:
             self._attr_unique_id = mac
             self._attr_device_info = DeviceInfo(

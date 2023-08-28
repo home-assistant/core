@@ -94,7 +94,7 @@ async def async_get_config_entry_diagnostics(
     diag["config"] = async_redact_data(
         async_replace_dict_data(config_entry.as_dict(), macs_to_redact), REDACT_CONFIG
     )
-    diag["site_role"] = controller.site_role
+    diag["role_is_admin"] = controller.is_admin
     diag["clients"] = {
         macs_to_redact[k]: async_redact_data(
             async_replace_dict_data(v.raw, macs_to_redact), REDACT_CLIENTS

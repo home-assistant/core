@@ -4,9 +4,8 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -176,6 +175,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._select_attr in cluster_handler.cluster.unsupported_attributes
+            or cls._select_attr not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._select_attr) is None
         ):
             _LOGGER.debug(

@@ -4,7 +4,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -26,7 +25,7 @@ CONDITION_TYPES = {"is_cleaning", "is_docked"}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
     }
 )
@@ -48,7 +47,7 @@ async def async_get_conditions(
             CONF_CONDITION: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         conditions += [{**base_condition, CONF_TYPE: cond} for cond in CONDITION_TYPES]
@@ -66,9 +65,15 @@ def async_condition_from_config(
     else:
         test_states = [STATE_CLEANING, STATE_RETURNING]
 
+    registry = er.async_get(hass)
+    entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
+
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        state = hass.states.get(config[ATTR_ENTITY_ID])
-        return state is not None and state.state in test_states
+        return (
+            entity_id is not None
+            and (state := hass.states.get(entity_id)) is not None
+            and state.state in test_states
+        )
 
     return test_is_state

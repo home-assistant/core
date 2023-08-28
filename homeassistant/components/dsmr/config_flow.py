@@ -6,7 +6,6 @@ from functools import partial
 import os
 from typing import Any
 
-from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -121,7 +120,7 @@ class DSMRConnection:
 
         if transport:
             try:
-                async with timeout(30):
+                async with asyncio.timeout(30):
                     await protocol.wait_closed()
             except asyncio.TimeoutError:
                 # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)

@@ -20,5 +20,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "reboot": {
+      "name": "Reboot",
+      "description": "Reboots the Freebox."
+    }
   }
 }

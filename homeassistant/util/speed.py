@@ -1,7 +1,7 @@
 """Distance util functions."""
 from __future__ import annotations
 
-# pylint: disable-next=unused-import,hass-deprecated-import
+# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     SPEED,
     SPEED_FEET_PER_SECOND,
@@ -16,7 +16,7 @@ from homeassistant.const import (  # noqa: F401
 )
 from homeassistant.helpers.frame import report
 
-from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
+from .unit_conversion import (  # noqa: F401
     _FOOT_TO_M as FOOT_TO_M,
     _HRS_TO_SECS as HRS_TO_SECS,
     _IN_TO_M as IN_TO_M,

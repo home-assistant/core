@@ -41,7 +41,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,

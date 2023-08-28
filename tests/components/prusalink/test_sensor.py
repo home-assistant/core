@@ -1,6 +1,6 @@
 """Test Prusalink sensors."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -125,7 +125,7 @@ async def test_sensors_active_job(
     """Test sensors while active job."""
     with patch(
         "homeassistant.components.prusalink.sensor.utcnow",
-        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=timezone.utc),
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
     ):
         assert await async_setup_component(hass, "prusalink", {})
 

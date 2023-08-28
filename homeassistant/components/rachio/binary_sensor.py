@@ -43,7 +43,6 @@ async def async_setup_entry(
     """Set up the Rachio binary sensors."""
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     async_add_entities(entities)
-    _LOGGER.debug("%d Rachio binary sensor(s) added", len(entities))
 
 
 def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
@@ -57,6 +56,8 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
 
 class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     """Represent a binary sensor that reflects a Rachio state."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, controller):
         """Set up a new Rachio controller binary sensor."""
@@ -86,33 +87,17 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     """Represent a binary sensor that reflects if the controller is online."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of this sensor including the controller name."""
-        return self._controller.name
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def unique_id(self) -> str:
         """Return a unique id for this entity."""
         return f"{self._controller.controller_id}-online"
 
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device, from BinarySensorDeviceClass."""
-        return BinarySensorDeviceClass.CONNECTIVITY
-
-    @property
-    def icon(self) -> str:
-        """Return the name of an icon for this sensor."""
-        return "mdi:wifi-strength-4" if self.is_on else "mdi:wifi-strength-off-outline"
-
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        if (
-            args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE
-            or args[0][0][KEY_SUBTYPE] == SUBTYPE_COLD_REBOOT
-        ):
+        if args[0][0][KEY_SUBTYPE] in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT):
             self._state = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
             self._state = False
@@ -135,25 +120,13 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 class RachioRainSensor(RachioControllerBinarySensor):
     """Represent a binary sensor that reflects the status of the rain sensor."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of this sensor including the controller name."""
-        return f"{self._controller.name} rain sensor"
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
+    _attr_translation_key = "rain"
 
     @property
     def unique_id(self) -> str:
         """Return a unique id for this entity."""
         return f"{self._controller.controller_id}-rain_sensor"
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this device."""
-        return BinarySensorDeviceClass.MOISTURE
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for this sensor."""
-        return "mdi:water" if self.is_on else "mdi:water-off"
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:

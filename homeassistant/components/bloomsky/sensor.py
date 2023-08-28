@@ -93,7 +93,7 @@ def setup_platform(
 class BloomSkySensor(SensorEntity):
     """Representation of a single sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
+    def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]

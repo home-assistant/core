@@ -66,7 +66,7 @@ STATE_UP = "up"
 
 UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
 UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
-UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor_active"
+UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor"
 
 
 class MockApiResponseKey(str, Enum):

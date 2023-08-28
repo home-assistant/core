@@ -48,13 +48,15 @@ FAN_ACTION = "fan_action"
 PRESET_HOLD = "Hold"
 
 
-async def test_no_thermostats(
+async def test_no_thermostat_options(
     hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
 ) -> None:
-    """Test the setup of the climate entities when there are no appliances available."""
+    """Test the setup of the climate entities when there are no additional options available."""
     device._data = {}
     await init_integration(hass, config_entry)
-    assert len(hass.states.async_all()) == 0
+    assert hass.states.get("climate.device1")
+    assert hass.states.get("sensor.device1_temperature")
+    assert hass.states.get("sensor.device1_humidity")
 
 
 async def test_static_attributes(
@@ -296,6 +298,7 @@ async def test_service_calls_off_mode(
 
     device.set_setpoint_heat.reset_mock()
     device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
+    caplog.clear()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -308,8 +311,9 @@ async def test_service_calls_off_mode(
     )
     device.set_setpoint_cool.assert_called_with(95)
     device.set_setpoint_heat.assert_called_with(77)
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
+    caplog.clear()
     reset_mock(device)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -436,6 +440,7 @@ async def test_service_calls_cool_mode(
     device.set_setpoint_cool.assert_called_with(95)
     device.set_setpoint_heat.assert_called_with(77)
 
+    caplog.clear()
     device.set_setpoint_cool.reset_mock()
     device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
     await hass.services.async_call(
@@ -450,7 +455,7 @@ async def test_service_calls_cool_mode(
     )
     device.set_setpoint_cool.assert_called_with(95)
     device.set_setpoint_heat.assert_called_with(77)
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
     reset_mock(device)
     await hass.services.async_call(
@@ -467,6 +472,7 @@ async def test_service_calls_cool_mode(
     reset_mock(device)
 
     device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
+    caplog.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -478,7 +484,7 @@ async def test_service_calls_cool_mode(
     device.set_hold_cool.assert_called_once_with(True, 12)
     device.set_hold_heat.assert_not_called()
     device.set_setpoint_heat.assert_not_called()
-    assert "Temperature out of range" in caplog.messages[-1]
+    assert "Temperature out of range" in caplog.text
 
     reset_mock(device)
 
@@ -512,6 +518,7 @@ async def test_service_calls_cool_mode(
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
+    caplog.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -521,7 +528,7 @@ async def test_service_calls_cool_mode(
     )
     device.set_hold_cool.assert_called_once_with(True)
     device.set_hold_heat.assert_not_called()
-    assert "Couldn't set permanent hold" in caplog.messages[-1]
+    assert "Couldn't set permanent hold" in caplog.text
 
     reset_mock(device)
 
@@ -536,6 +543,7 @@ async def test_service_calls_cool_mode(
     device.set_hold_cool.assert_called_once_with(False)
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
@@ -548,7 +556,7 @@ async def test_service_calls_cool_mode(
 
     device.set_hold_heat.assert_not_called()
     device.set_hold_cool.assert_called_once_with(False)
-    assert "Can not stop hold mode" in caplog.messages[-1]
+    assert "Can not stop hold mode" in caplog.text
 
     reset_mock(device)
 
@@ -566,6 +574,8 @@ async def test_service_calls_cool_mode(
     device.set_hold_heat.assert_not_called()
 
     reset_mock(device)
+    caplog.clear()
+
     device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
 
     device.raw_ui_data["StatusHeat"] = 2
@@ -580,9 +590,10 @@ async def test_service_calls_cool_mode(
 
     device.set_hold_cool.assert_called_once_with(True)
     device.set_hold_heat.assert_not_called()
-    assert "Couldn't set permanent hold" in caplog.messages[-1]
+    assert "Couldn't set permanent hold" in caplog.text
 
     reset_mock(device)
+    caplog.clear()
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -597,7 +608,7 @@ async def test_service_calls_cool_mode(
 
     device.set_hold_cool.assert_not_called()
     device.set_hold_heat.assert_not_called()
-    assert "Invalid system mode returned" in caplog.messages[-2]
+    assert "Invalid system mode returned" in caplog.text
 
 
 async def test_service_calls_heat_mode(
@@ -638,8 +649,9 @@ async def test_service_calls_heat_mode(
     )
     device.set_hold_heat.assert_called_once_with(datetime.time(2, 30), 59)
     device.set_hold_heat.reset_mock()
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
+    caplog.clear()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -667,7 +679,7 @@ async def test_service_calls_heat_mode(
     )
     device.set_setpoint_cool.assert_called_with(95)
     device.set_setpoint_heat.assert_called_with(77)
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
     reset_mock(device)
     device.raw_ui_data["StatusHeat"] = 2
@@ -696,6 +708,7 @@ async def test_service_calls_heat_mode(
     device.set_setpoint_heat.assert_called_once()
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
 
@@ -710,7 +723,7 @@ async def test_service_calls_heat_mode(
     )
     device.set_hold_heat.assert_called_once_with(True)
     device.set_hold_cool.assert_not_called()
-    assert "Couldn't set permanent hold" in caplog.messages[-1]
+    assert "Couldn't set permanent hold" in caplog.text
 
     reset_mock(device)
 
@@ -726,6 +739,7 @@ async def test_service_calls_heat_mode(
     device.set_setpoint_cool.assert_not_called()
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
 
@@ -739,9 +753,10 @@ async def test_service_calls_heat_mode(
     device.set_hold_heat.assert_called_once_with(True, 22)
     device.set_hold_cool.assert_not_called()
     device.set_setpoint_cool.assert_not_called()
-    assert "Temperature out of range" in caplog.messages[-1]
+    assert "Temperature out of range" in caplog.text
 
     reset_mock(device)
+    caplog.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -765,7 +780,7 @@ async def test_service_calls_heat_mode(
     )
 
     device.set_hold_heat.assert_called_once_with(False)
-    assert "Can not stop hold mode" in caplog.messages[-1]
+    assert "Can not stop hold mode" in caplog.text
 
     reset_mock(device)
     device.raw_ui_data["StatusHeat"] = 2
@@ -844,6 +859,7 @@ async def test_service_calls_auto_mode(
     device.set_setpoint_heat.assert_called_once_with(77)
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_cool.side_effect = aiosomecomfort.SomeComfortError
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
@@ -855,9 +871,10 @@ async def test_service_calls_auto_mode(
         blocking=True,
     )
     device.set_setpoint_heat.assert_not_called()
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_setpoint_heat.side_effect = aiosomecomfort.SomeComfortError
     device.set_setpoint_cool.side_effect = aiosomecomfort.SomeComfortError
@@ -872,9 +889,10 @@ async def test_service_calls_auto_mode(
         blocking=True,
     )
     device.set_setpoint_heat.assert_not_called()
-    assert "Invalid temperature" in caplog.messages[-1]
+    assert "Invalid temperature" in caplog.text
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_heat.side_effect = None
     device.set_hold_cool.side_effect = None
@@ -893,6 +911,7 @@ async def test_service_calls_auto_mode(
     device.set_hold_heat.assert_called_once_with(True)
 
     reset_mock(device)
+    caplog.clear()
 
     device.set_hold_heat.side_effect = aiosomecomfort.SomeComfortError
     device.raw_ui_data["StatusHeat"] = 2
@@ -906,7 +925,7 @@ async def test_service_calls_auto_mode(
     )
     device.set_hold_cool.assert_called_once_with(True)
     device.set_hold_heat.assert_called_once_with(True)
-    assert "Couldn't set permanent hold" in caplog.messages[-1]
+    assert "Couldn't set permanent hold" in caplog.text
 
     reset_mock(device)
     device.set_setpoint_heat.side_effect = None
@@ -923,6 +942,7 @@ async def test_service_calls_auto_mode(
     device.set_hold_heat.assert_called_once_with(True, 22)
 
     reset_mock(device)
+    caplog.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -946,9 +966,10 @@ async def test_service_calls_auto_mode(
 
     device.set_hold_heat.assert_not_called()
     device.set_hold_cool.assert_called_once_with(False)
-    assert "Can not stop hold mode" in caplog.messages[-1]
+    assert "Can not stop hold mode" in caplog.text
 
     reset_mock(device)
+    caplog.clear()
 
     device.raw_ui_data["StatusHeat"] = 2
     device.raw_ui_data["StatusCool"] = 2
@@ -978,7 +999,7 @@ async def test_service_calls_auto_mode(
 
     device.set_hold_cool.assert_called_once_with(True)
     device.set_hold_heat.assert_not_called()
-    assert "Couldn't set permanent hold" in caplog.messages[-1]
+    assert "Couldn't set permanent hold" in caplog.text
 
 
 async def test_async_update_errors(
@@ -991,8 +1012,8 @@ async def test_async_update_errors(
 
     await init_integration(hass, config_entry)
 
-    device.refresh.side_effect = aiosomecomfort.SomeComfortError
-    client.login.side_effect = aiosomecomfort.SomeComfortError
+    device.refresh.side_effect = aiosomecomfort.UnauthorizedError
+    client.login.side_effect = aiosomecomfort.AuthError
     entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
     assert state.state == "off"
@@ -1018,6 +1039,28 @@ async def test_async_update_errors(
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
+    device.refresh.side_effect = aiosomecomfort.UnexpectedResponse
+    client.login.side_effect = None
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
+    device.refresh.side_effect = [aiosomecomfort.UnauthorizedError, None]
+    client.login.side_effect = None
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "off"
+
     # "reload integration" test
     device.refresh.side_effect = aiosomecomfort.SomeComfortError
     client.login.side_effect = aiosomecomfort.AuthError
@@ -1027,9 +1070,8 @@ async def test_async_update_errors(
     )
     await hass.async_block_till_done()
 
-    entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
-    assert state.state == "unavailable"
+    assert state.state == "off"
 
     device.refresh.side_effect = ClientConnectionError
     async_fire_time_changed(
@@ -1038,7 +1080,6 @@ async def test_async_update_errors(
     )
     await hass.async_block_till_done()
 
-    entity_id = f"climate.{device.name}"
     state = hass.states.get(entity_id)
     assert state.state == "unavailable"
 

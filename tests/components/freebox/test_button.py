@@ -1,5 +1,7 @@
 """Tests for the Freebox config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
+
+from pytest_unordered import unordered
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.freebox.const import DOMAIN
@@ -22,7 +24,7 @@ async def test_reboot_button(hass: HomeAssistant, router: Mock) -> None:
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert hass.config_entries.async_entries() == [entry]
+    assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
     assert router().open.call_count == 1

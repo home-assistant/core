@@ -1,5 +1,7 @@
 """The tests for the analytics ."""
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+import asyncio
+from typing import Any
+from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
 import pytest
@@ -14,17 +16,25 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
 )
 from homeassistant.components.recorder import Recorder
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
 MOCK_VERSION_DEV = "1970.1.0.dev0"
 MOCK_VERSION_NIGHTLY = "1970.1.0.dev19700101"
+
+
+def _last_call_payload(aioclient: AiohttpClientMocker) -> dict[str, Any]:
+    """Return the payload of the last call."""
+    return aioclient.mock_calls[-1][2]
 
 
 async def test_no_send(
@@ -206,18 +216,36 @@ async def test_send_usage(
     assert analytics.preferences[ATTR_USAGE]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ), patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"default_config": {}},
+    ), patch(
+        "homeassistant.components.analytics.analytics.async_get_system_info",
+        return_value={"installation_type": "Home Assistant Tests"},
+    ):
         await analytics.send_analytics()
 
-    assert "'integrations': ['default_config']" in caplog.text
-    assert "'integration_count':" not in caplog.text
-    assert "'certificate': False" in caplog.text
+    assert (
+        "Submitted analytics to Home Assistant servers. Information submitted includes"
+        in caplog.text
+    )
+    assert _last_call_payload(aioclient_mock) == {
+        "uuid": ANY,
+        "version": MOCK_VERSION,
+        "installation_type": "Home Assistant Tests",
+        "certificate": False,
+        "integrations": ["default_config"],
+        "custom_integrations": [],
+    }
 
 
 async def test_send_usage_with_supervisor(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send usage with supervisor preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -284,7 +312,12 @@ async def test_send_statistics(
     assert analytics.preferences[ATTR_STATISTICS]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ), patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"default_config": {}},
+    ):
         await analytics.send_analytics()
     assert (
         "'state_count': 0, 'automation_count': 0, 'integration_count': 1,"
@@ -297,6 +330,7 @@ async def test_send_statistics_one_integration_fails(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -317,10 +351,85 @@ async def test_send_statistics_one_integration_fails(
     assert post_call[2]["integration_count"] == 0
 
 
+async def test_send_statistics_disabled_integration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
+) -> None:
+    """Test send statistics with disabled integration."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
+    hass.config.components = ["default_config"]
+
+    with patch(
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={
+            "disabled_integration_manifest": mock_integration(
+                hass,
+                MockModule(
+                    "disabled_integration",
+                    async_setup=AsyncMock(return_value=True),
+                    partial_manifest={"disabled": "system"},
+                ),
+            )
+        },
+    ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+        await analytics.send_analytics()
+
+    payload = _last_call_payload(aioclient_mock)
+    assert "uuid" in payload
+    assert payload["integration_count"] == 0
+
+
+async def test_send_statistics_ignored_integration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
+) -> None:
+    """Test send statistics with ignored integration."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
+
+    mock_config_entry = MockConfigEntry(
+        domain="ignored_integration",
+        state=ConfigEntryState.LOADED,
+        source="ignore",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={
+            "ignored_integration": mock_integration(
+                hass,
+                MockModule(
+                    "ignored_integration",
+                    async_setup=AsyncMock(return_value=True),
+                    partial_manifest={"config_flow": True},
+                ),
+            ),
+        },
+    ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+        await analytics.send_analytics()
+
+    payload = _last_call_payload(aioclient_mock)
+    assert "uuid" in payload
+    assert payload["integration_count"] == 0
+
+
 async def test_send_statistics_async_get_integration_unknown_exception(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -341,6 +450,7 @@ async def test_send_statistics_with_supervisor(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send statistics preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -421,7 +531,12 @@ async def test_custom_integrations(
     assert await async_setup_component(hass, "test_package", {"test_package": {}})
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ), patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"test_package": {}},
+    ):
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0][2]
@@ -486,7 +601,9 @@ async def test_nightly_endpoint(
 
 
 async def test_send_with_no_energy(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -510,7 +627,10 @@ async def test_send_with_no_energy(
 
 
 async def test_send_with_no_energy_config(
-    recorder_mock: Recorder, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -534,7 +654,10 @@ async def test_send_with_no_energy_config(
 
 
 async def test_send_with_energy_config(
-    recorder_mock: Recorder, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -561,6 +684,7 @@ async def test_send_usage_with_certificate(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
 ) -> None:
     """Test send usage preferences with certificate."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
@@ -570,7 +694,6 @@ async def test_send_usage_with_certificate(
 
     assert analytics.preferences[ATTR_BASE]
     assert analytics.preferences[ATTR_USAGE]
-    hass.config.components = ["default_config"]
 
     with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
@@ -590,8 +713,101 @@ async def test_send_with_recorder(
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
 
-    with patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ), patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"recorder": {}},
+    ):
         await analytics.send_analytics()
 
-    postdata = aioclient_mock.mock_calls[-1][2]
+    postdata = _last_call_payload(aioclient_mock)
     assert postdata["recorder"]["engine"] == "sqlite"
+
+
+async def test_send_with_problems_loading_yaml(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test error loading YAML configuration."""
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        side_effect=HomeAssistantError("Error loading YAML file"),
+    ):
+        await analytics.send_analytics()
+
+    assert "Error loading YAML file" in caplog.text
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+async def test_timeout_while_sending(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    mock_hass_config: None,
+) -> None:
+    """Test timeout error while sending analytics."""
+    analytics = Analytics(hass)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=asyncio.TimeoutError())
+
+    await analytics.save_preferences({ATTR_BASE: True})
+    with patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
+    ):
+        await analytics.send_analytics()
+
+    assert "Timeout sending analytics" in caplog.text
+
+
+async def test_not_check_config_entries_if_yaml(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test skip config entry check if defined in yaml."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+    hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
+
+    await analytics.save_preferences(
+        {ATTR_BASE: True, ATTR_STATISTICS: True, ATTR_USAGE: True}
+    )
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
+    hass.config.components = ["default_config"]
+
+    mock_config_entry = MockConfigEntry(
+        domain="ignored_integration",
+        state=ConfigEntryState.LOADED,
+        source="ignore",
+        disabled_by="user",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={
+            "default_config": mock_integration(
+                hass,
+                MockModule(
+                    "default_config",
+                    async_setup=AsyncMock(return_value=True),
+                    partial_manifest={"config_flow": True},
+                ),
+            ),
+        },
+    ), patch(
+        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
+    ), patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={"default_config": {}},
+    ):
+        await analytics.send_analytics()
+
+    payload = _last_call_payload(aioclient_mock)
+    assert payload["integration_count"] == 1
+    assert payload["integrations"] == ["default_config"]

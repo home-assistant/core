@@ -537,6 +537,7 @@ class Stream:
         self,
         width: int | None = None,
         height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes.
 
@@ -548,7 +549,9 @@ class Stream:
         self.add_provider(HLS_PROVIDER)
         await self.start()
         return await self._keyframe_converter.async_get_image(
-            width=width, height=height
+            width=width,
+            height=height,
+            wait_for_next_keyframe=wait_for_next_keyframe,
         )
 
     def get_diagnostics(self) -> dict[str, Any]:

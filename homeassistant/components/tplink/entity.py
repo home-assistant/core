@@ -7,7 +7,7 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 from kasa import SmartDevice
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,13 +32,14 @@ def async_refresh_after(
 class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
     """Common base class for all coordinated tplink entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
-        self._attr_name = self.device.alias
         self._attr_unique_id = self.device.device_id
 
     @property

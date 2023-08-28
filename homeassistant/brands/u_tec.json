@@ -1,5 +1,5 @@
 {
   "domain": "u_tec",
   "name": "U-tec",
-  "integrations": ["ultraloq"]
+  "iot_standards": ["zwave"]
 }

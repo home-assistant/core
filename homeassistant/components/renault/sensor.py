@@ -165,7 +165,6 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="battery_level",
     ),
     RenaultSensorEntityDescription(
         key="charge_state",
@@ -191,6 +190,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="charging_remaining_time",
         coordinator="battery",
         data_key="chargingRemainingTime",
+        device_class=SensorDeviceClass.DURATION,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.MINUTES,

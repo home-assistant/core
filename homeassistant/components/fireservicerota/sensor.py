@@ -28,19 +28,16 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "incidents"
 
     def __init__(self, client):
         """Initialize."""
         self._client = client
         self._entry_id = self._client.entry_id
-        self._unique_id = f"{self._client.unique_id}_Incidents"
+        self._attr_unique_id = f"{self._client.unique_id}_Incidents"
         self._state = None
         self._state_attributes = {}
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Incidents"
 
     @property
     def icon(self) -> str:
@@ -57,11 +54,6 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

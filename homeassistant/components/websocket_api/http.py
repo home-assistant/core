@@ -4,13 +4,11 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable
-from contextlib import suppress
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
-import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -21,7 +19,6 @@ from homeassistant.util.json import json_loads
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
-    CANCELLATION_ERRORS,
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
     PENDING_MSG_PEAK,
@@ -58,88 +55,122 @@ class WebSocketAdapter(logging.LoggerAdapter):
 
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
-        if not self.extra or "connid" not in self.extra:
-            return msg, kwargs
+        assert self.extra is not None
         return f'[{self.extra["connid"]}] {msg}', kwargs
 
 
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
+    __slots__ = (
+        "_hass",
+        "_request",
+        "_wsock",
+        "_handle_task",
+        "_writer_task",
+        "_closing",
+        "_authenticated",
+        "_logger",
+        "_peak_checker_unsub",
+        "_connection",
+        "_message_queue",
+        "_ready_future",
+    )
+
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
-        self.hass = hass
-        self.request = request
-        self.wsock = web.WebSocketResponse(heartbeat=55)
+        self._hass = hass
+        self._request: web.Request = request
+        self._wsock = web.WebSocketResponse(heartbeat=55)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
+        self._authenticated: bool = False
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub: Callable[[], None] | None = None
-        self.connection: ActiveConnection | None = None
+        self._connection: ActiveConnection | None = None
 
         # The WebSocketHandler has a single consumer and path
         # to where messages are queued. This allows the implementation
         # to use a deque and an asyncio.Future to avoid the overhead of
         # an asyncio.Queue.
-        self._message_queue: deque = deque()
+        self._message_queue: deque[str | None] = deque()
         self._ready_future: asyncio.Future[None] | None = None
+
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return (
+            "<WebSocketHandler "
+            f"closing={self._closing} "
+            f"authenticated={self._authenticated} "
+            f"description={self.description}>"
+        )
 
     @property
     def description(self) -> str:
         """Return a description of the connection."""
-        if self.connection is not None:
-            return self.connection.get_description(self.request)
-        return describe_request(self.request)
+        if connection := self._connection:
+            return connection.get_description(self._request)
+        if request := self._request:
+            return describe_request(request)
+        return "finished connection"
 
     async def _writer(self) -> None:
         """Write outgoing messages."""
         # Variables are set locally to avoid lookups in the loop
         message_queue = self._message_queue
         logger = self._logger
-        send_str = self.wsock.send_str
-        loop = self.hass.loop
+        wsock = self._wsock
+        send_str = wsock.send_str
+        loop = self._hass.loop
         debug = logger.debug
+        is_enabled_for = logger.isEnabledFor
+        logging_debug = logging.DEBUG
         # Exceptions if Socket disconnected or cancelled by connection handler
         try:
-            with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
-                while not self.wsock.closed:
-                    if (messages_remaining := len(message_queue)) == 0:
-                        self._ready_future = loop.create_future()
-                        await self._ready_future
-                        messages_remaining = len(message_queue)
+            while not wsock.closed:
+                if (messages_remaining := len(message_queue)) == 0:
+                    self._ready_future = loop.create_future()
+                    await self._ready_future
+                    messages_remaining = len(message_queue)
 
+                # A None message is used to signal the end of the connection
+                if (message := message_queue.popleft()) is None:
+                    return
+
+                debug_enabled = is_enabled_for(logging_debug)
+                messages_remaining -= 1
+
+                if (
+                    not messages_remaining
+                    or not (connection := self._connection)
+                    or not connection.can_coalesce
+                ):
+                    if debug_enabled:
+                        debug("%s: Sending %s", self.description, message)
+                    await send_str(message)
+                    continue
+
+                messages: list[str] = [message]
+                while messages_remaining:
                     # A None message is used to signal the end of the connection
-                    if (process := message_queue.popleft()) is None:
+                    if (message := message_queue.popleft()) is None:
                         return
-
+                    messages.append(message)
                     messages_remaining -= 1
-                    message = process if isinstance(process, str) else process()
 
-                    if (
-                        not messages_remaining
-                        or not self.connection
-                        or not self.connection.can_coalesce
-                    ):
-                        debug("Sending %s", message)
-                        await send_str(message)
-                        continue
-
-                    messages: list[str] = [message]
-                    while messages_remaining:
-                        # A None message is used to signal the end of the connection
-                        if (process := message_queue.popleft()) is None:
-                            return
-                        messages.append(
-                            process if isinstance(process, str) else process()
-                        )
-                        messages_remaining -= 1
-
-                    joined_messages = ",".join(messages)
-                    coalesced_messages = f"[{joined_messages}]"
-                    debug("Sending %s", coalesced_messages)
-                    await send_str(coalesced_messages)
+                joined_messages = ",".join(messages)
+                coalesced_messages = f"[{joined_messages}]"
+                if debug_enabled:
+                    debug("%s: Sending %s", self.description, coalesced_messages)
+                await send_str(coalesced_messages)
+        except asyncio.CancelledError:
+            debug("%s: Writer cancelled", self.description)
+            raise
+        except (RuntimeError, ConnectionResetError) as ex:
+            debug("%s: Unexpected error in writer: %s", self.description, ex)
         finally:
+            debug("%s: Writer done", self.description)
             # Clean up the peak checker when we shut down the writer
             self._cancel_peak_checker()
 
@@ -151,7 +182,7 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
+    def _send_message(self, message: str | dict[str, Any]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
@@ -183,8 +214,9 @@ class WebSocketHandler:
             return
 
         message_queue.append(message)
-        if self._ready_future and not self._ready_future.done():
-            self._ready_future.set_result(None)
+        ready_future = self._ready_future
+        if ready_future and not ready_future.done():
+            ready_future.set_result(None)
 
         peak_checker_active = self._peak_checker_unsub is not None
 
@@ -195,7 +227,7 @@ class WebSocketHandler:
 
         if not peak_checker_active:
             self._peak_checker_unsub = async_call_later(
-                self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
+                self._hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
             )
 
     @callback
@@ -231,16 +263,22 @@ class WebSocketHandler:
 
     async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
-        request = self.request
-        wsock = self.wsock
+        request = self._request
+        wsock = self._wsock
+        logger = self._logger
+        debug = logger.debug
+        hass = self._hass
+        is_enabled_for = logger.isEnabledFor
+        logging_debug = logging.DEBUG
+
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await wsock.prepare(request)
         except asyncio.TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
             return wsock
 
-        self._logger.debug("Connected from %s", request.remote)
+        debug("%s: Connected from %s", self.description, request.remote)
         self._handle_task = asyncio.current_task()
 
         @callback
@@ -248,17 +286,13 @@ class WebSocketHandler:
             """Cancel this connection."""
             self._cancel()
 
-        unsub_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, handle_hass_stop
-        )
+        unsub_stop = hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_hass_stop)
 
         # As the webserver is now started before the start
         # event we do not want to block for websocket responses
         self._writer_task = asyncio.create_task(self._writer())
 
-        auth = AuthPhase(
-            self._logger, self.hass, self._send_message, self._cancel, request
-        )
+        auth = AuthPhase(logger, hass, self._send_message, self._cancel, request)
         connection = None
         disconnect_warn = None
 
@@ -267,7 +301,7 @@ class WebSocketHandler:
 
             # Auth Phase
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     msg = await wsock.receive()
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
@@ -281,21 +315,22 @@ class WebSocketHandler:
                 raise Disconnect
 
             try:
-                msg_data = msg.json(loads=json_loads)
+                auth_msg_data = json_loads(msg.data)
             except ValueError as err:
                 disconnect_warn = "Received invalid JSON."
                 raise Disconnect from err
 
-            self._logger.debug("Received %s", msg_data)
-            self.connection = connection = await auth.async_handle(msg_data)
-            self.hass.data[DATA_CONNECTIONS] = (
-                self.hass.data.get(DATA_CONNECTIONS, 0) + 1
-            )
-            async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
+            if is_enabled_for(logging_debug):
+                debug("%s: Received %s", self.description, auth_msg_data)
+            connection = await auth.async_handle(auth_msg_data)
+            self._connection = connection
+            hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
+            async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 
+            self._authenticated = True
             #
             #
-            # Our websocket implementation is backed by an asyncio.Queue
+            # Our websocket implementation is backed by a deque
             #
             # As back-pressure builds, the queue will back up and use more memory
             # until we disconnect the client when the queue size reaches
@@ -329,6 +364,8 @@ class WebSocketHandler:
             # reach the code to set the limit, so we have to set it directly.
             #
             wsock._writer._limit = 2**20  # type: ignore[union-attr] # pylint: disable=protected-access
+            async_handle_str = connection.async_handle
+            async_handle_binary = connection.async_handle_binary
 
             # Command phase
             while not wsock.closed:
@@ -343,7 +380,7 @@ class WebSocketHandler:
                         break
                     handler = msg.data[0]
                     payload = msg.data[1:]
-                    connection.async_handle_binary(handler, payload)
+                    async_handle_binary(handler, payload)
                     continue
 
                 if msg.type != WSMsgType.TEXT:
@@ -351,30 +388,37 @@ class WebSocketHandler:
                     break
 
                 try:
-                    msg_data = msg.json(loads=json_loads)
+                    command_msg_data = json_loads(msg.data)
                 except ValueError:
                     disconnect_warn = "Received invalid JSON."
                     break
 
-                self._logger.debug("Received %s", msg_data)
-                if not isinstance(msg_data, list):
-                    connection.async_handle(msg_data)
+                if is_enabled_for(logging_debug):
+                    debug("%s: Received %s", self.description, command_msg_data)
+
+                if not isinstance(command_msg_data, list):
+                    async_handle_str(command_msg_data)
                     continue
 
-                for split_msg in msg_data:
-                    connection.async_handle(split_msg)
+                for split_msg in command_msg_data:
+                    async_handle_str(split_msg)
 
         except asyncio.CancelledError:
-            self._logger.info("Connection closed by client")
+            debug("%s: Connection cancelled", self.description)
+            raise
 
-        except Disconnect:
-            pass
+        except Disconnect as ex:
+            debug("%s: Connection closed by client: %s", self.description, ex)
 
         except Exception:  # pylint: disable=broad-except
-            self._logger.exception("Unexpected error inside websocket API")
+            self._logger.exception(
+                "%s: Unexpected error inside websocket API", self.description
+            )
 
         finally:
             unsub_stop()
+
+            self._cancel_peak_checker()
 
             if connection is not None:
                 connection.async_handle_close()
@@ -385,20 +429,37 @@ class WebSocketHandler:
             if self._ready_future and not self._ready_future.done():
                 self._ready_future.set_result(None)
 
+            # If the writer gets canceled we still need to close the websocket
+            # so we have another finally block to make sure we close the websocket
+            # if the writer gets canceled.
             try:
-                # Make sure all error messages are written before closing
                 await self._writer_task
-                await wsock.close()
             finally:
-                if disconnect_warn is None:
-                    self._logger.debug("Disconnected")
-                else:
-                    self._logger.warning("Disconnected: %s", disconnect_warn)
+                try:
+                    # Make sure all error messages are written before closing
+                    await wsock.close()
+                finally:
+                    if disconnect_warn is None:
+                        debug("%s: Disconnected", self.description)
+                    else:
+                        self._logger.warning(
+                            "%s: Disconnected: %s", self.description, disconnect_warn
+                        )
 
-                if connection is not None:
-                    self.hass.data[DATA_CONNECTIONS] -= 1
-                    self.connection = None
+                    if connection is not None:
+                        hass.data[DATA_CONNECTIONS] -= 1
+                        self._connection = None
 
-                async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
+                    async_dispatcher_send(hass, SIGNAL_WEBSOCKET_DISCONNECTED)
+
+                    # Break reference cycles to make sure GC can happen sooner
+                    self._wsock = None  # type: ignore[assignment]
+                    self._request = None  # type: ignore[assignment]
+                    self._hass = None  # type: ignore[assignment]
+                    self._logger = None  # type: ignore[assignment]
+                    self._message_queue = None  # type: ignore[assignment]
+                    self._handle_task = None
+                    self._writer_task = None
+                    self._ready_future = None
 
         return wsock
