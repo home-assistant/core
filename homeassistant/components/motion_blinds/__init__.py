@@ -5,7 +5,7 @@ import logging
 from socket import timeout
 from typing import TYPE_CHECKING, Any
 
-from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
+from motionblinds import AsyncMotionMulticast, ParseException
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP

@@ -11,7 +11,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DataUpdateCoordinatorMotionBlinds
-from .const import ATTR_AVAILABLE, DEFAULT_GATEWAY_NAME, DOMAIN, KEY_GATEWAY, MANUFACTURER
+from .const import (
+    ATTR_AVAILABLE,
+    DEFAULT_GATEWAY_NAME,
+    DOMAIN,
+    KEY_GATEWAY,
+    MANUFACTURER,
+)
 from .gateway import device_name
 
 _T = TypeVar("_T")

@@ -32,21 +32,15 @@ async def async_setup_entry(
     for blind in motion_gateway.device_list.values():
         entities.append(MotionSignalStrengthSensor(coordinator, blind))
         if blind.type == BlindType.TopDownBottomUp:
-            entities.append(
-                MotionTDBUBatterySensor(coordinator, blind, "Bottom")
-            )
-            entities.append(
-                MotionTDBUBatterySensor(coordinator, blind, "Top")
-            )
+            entities.append(MotionTDBUBatterySensor(coordinator, blind, "Bottom"))
+            entities.append(MotionTDBUBatterySensor(coordinator, blind, "Top"))
         elif blind.battery_voltage is not None and blind.battery_voltage > 0:
             # Only add battery powered blinds
             entities.append(MotionBatterySensor(coordinator, blind))
 
     # Do not add signal sensor twice for direct WiFi blinds
     if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
-        entities.append(
-            MotionSignalStrengthSensor(coordinator, motion_gateway)
-        )
+        entities.append(MotionSignalStrengthSensor(coordinator, motion_gateway))
 
     async_add_entities(entities)
 
