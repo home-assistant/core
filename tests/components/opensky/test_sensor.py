@@ -3,6 +3,7 @@ from datetime import timedelta
 import json
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from python_opensky import StatesResponse
 from syrupy import SnapshotAssertion
 
@@ -16,7 +17,6 @@ from homeassistant.const import CONF_PLATFORM, CONF_RADIUS, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .conftest import ComponentSetup
 
@@ -78,6 +78,7 @@ async def test_sensor_altitude(
 async def test_sensor_updating(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     setup_integration: ComponentSetup,
     snapshot: SnapshotAssertion,
 ):
@@ -97,8 +98,8 @@ async def test_sensor_updating(
     hass.bus.async_listen(EVENT_OPENSKY_EXIT, event_listener)
 
     async def skip_time_and_check_events() -> None:
-        future = dt_util.utcnow() + timedelta(minutes=15)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(minutes=15))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert events == snapshot

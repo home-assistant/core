@@ -474,7 +474,24 @@ async def async_api_unlock(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process an unlock request."""
-    if config.locale not in {"de-DE", "en-US", "ja-JP"}:
+    if config.locale not in {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "pt-BR",
+    }:
         msg = (
             "The unlock directive is not supported for the following locales:"
             f" {config.locale}"
@@ -758,7 +775,9 @@ async def async_api_previous(
     return directive.response()
 
 
-def temperature_from_object(hass: ha.HomeAssistant, temp_obj, interval=False):
+def temperature_from_object(
+    hass: ha.HomeAssistant, temp_obj: dict[str, Any], interval: bool = False
+) -> float:
     """Get temperature from Temperature object in requested unit."""
     to_unit = hass.config.units.temperature_unit
     from_unit = UnitOfTemperature.CELSIUS

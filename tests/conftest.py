@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import asynccontextmanager
-import datetime
 import functools
 import gc
 import itertools
@@ -32,6 +31,9 @@ import pytest_socket
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
+# Setup patching if dt_util time functions before any other Home Assistant imports
+from . import patch_time  # noqa: F401, isort:skip
+
 from homeassistant import core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
@@ -53,7 +55,6 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
-    event,
     issue_registry as ir,
     recorder as recorder_helper,
 )
@@ -107,15 +108,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
-
-
-def _utcnow() -> datetime.datetime:
-    """Make utcnow patchable by freezegun."""
-    return datetime.datetime.now(datetime.UTC)
-
-
-dt_util.utcnow = _utcnow  # type: ignore[assignment]
-event.time_tracker_utcnow = _utcnow  # type: ignore[assignment]
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -560,8 +552,8 @@ async def stop_hass(
 
     created = []
 
-    def mock_hass():
-        hass_inst = orig_hass()
+    def mock_hass(*args):
+        hass_inst = orig_hass(*args)
         created.append(hass_inst)
         return hass_inst
 

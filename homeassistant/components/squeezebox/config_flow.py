@@ -4,7 +4,6 @@ from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -131,7 +130,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # no host specified, see if we can discover an unconfigured LMS server
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 await self._discover()
             return await self.async_step_edit()
         except asyncio.TimeoutError:

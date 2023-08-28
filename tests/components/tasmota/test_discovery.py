@@ -143,12 +143,12 @@ async def test_correct_config_discovery(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("switch.test")
+    entity_entry = entity_reg.async_get("switch.tasmota_test")
     assert entity_entry is not None
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == "Tasmota Test"
 
     assert (mac, "switch", "relay", 0) in hass.data[ALREADY_DISCOVERED]
 
@@ -530,11 +530,11 @@ async def test_entity_duplicate_discovery(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
+    state = hass.states.get("switch.tasmota_test")
     state_duplicate = hass.states.get("binary_sensor.beer1")
 
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == "Tasmota Test"
     assert state_duplicate is None
     assert (
         f"Entity already added, sending update: switch ('{mac}', 'switch', 'relay', 0)"

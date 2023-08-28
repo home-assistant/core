@@ -22,8 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -167,7 +166,6 @@ class AirthingsSensor(
             name += f" ({identifier})"
 
         self._attr_unique_id = f"{name}_{entity_description.key}"
-        self._id = airthings_device.address
         self._attr_device_info = DeviceInfo(
             connections={
                 (
