@@ -9,6 +9,8 @@ from screenlogicpy.const.data import ATTR, DEVICE, VALUE
 from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
+from homeassistant.const import EntityCategory
+
 from .const import SL_UNIT_TO_HA_UNIT, ScreenLogicDataPath
 
 
@@ -69,6 +71,7 @@ class SupportedValueParameters:
     enabled: ScreenLogicRule = ScreenLogicRule()
     included: ScreenLogicRule = ScreenLogicRule()
     subscription_code: int | None = None
+    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
 
 
 SupportedValueDescriptions = dict[str, SupportedValueParameters]
@@ -158,6 +161,28 @@ def iterate_expand_group_wildcard(
                 yield ((device, index, value_key), value_params)
         else:
             yield (data_path, value_params)
+
+
+def build_base_entity_description(
+    gateway: ScreenLogicGateway,
+    entity_key: str,
+    data_path: ScreenLogicDataPath,
+    value_data: dict,
+    value_params: SupportedValueParameters,
+) -> dict:
+    """Build base entity description.
+
+    Returns a dict of entity description key value pairs common to all entities.
+    """
+    return {
+        "data_path": data_path,
+        "key": entity_key,
+        "entity_category": value_params.entity_category,
+        "entity_registry_enabled_default": value_params.enabled.test(
+            gateway, data_path
+        ),
+        "name": value_data.get(ATTR.NAME),
+    }
 
 
 ENTITY_MIGRATIONS = {

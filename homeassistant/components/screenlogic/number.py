@@ -22,6 +22,7 @@ from .data import (
     DEVICE_INCLUSION_RULES,
     PathPart,
     SupportedValueParameters,
+    build_base_entity_description,
     get_ha_unit,
     iterate_expand_group_wildcard,
     preprocess_supported_values,
@@ -41,7 +42,6 @@ class SupportedNumberValueParametersMixin:
 
     set_value_config: tuple[str, tuple[tuple[PathPart | str | int, ...], ...]]
     device_class: NumberDeviceClass | None = None
-    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
 
 
 @dataclass
@@ -115,14 +115,10 @@ async def async_setup_entry(
         set_value_str, set_value_params = value_params.set_value_config
         set_value_func = getattr(gateway, set_value_str)
 
-        entity_kwargs = {
-            "data_path": data_path,  #
-            "key": entity_key,  #
-            "entity_category": value_params.entity_category,
-            "entity_registry_enabled_default": value_params.enabled.test(
-                gateway, data_path
+        entity_description_kwargs = {
+            **build_base_entity_description(
+                gateway, entity_key, data_path, value_data, value_params
             ),
-            "name": value_data.get(ATTR.NAME),
             "device_class": value_params.device_class,
             "native_unit_of_measurement": get_ha_unit(value_data),
             "native_max_value": value_data.get(ATTR.MAX_SETPOINT),
@@ -135,7 +131,7 @@ async def async_setup_entry(
         entities.append(
             ScreenLogicNumber(
                 coordinator,
-                ScreenLogicNumberDescription(**entity_kwargs),
+                ScreenLogicNumberDescription(**entity_description_kwargs),
             )
         )
 

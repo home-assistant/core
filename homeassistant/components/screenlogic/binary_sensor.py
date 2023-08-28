@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,6 +21,7 @@ from .data import (
     DEVICE_INCLUSION_RULES,
     DEVICE_SUBSCRIPTION,
     SupportedValueParameters,
+    build_base_entity_description,
     iterate_expand_group_wildcard,
     preprocess_supported_values,
 )
@@ -41,7 +41,6 @@ class SupportedBinarySensorValueParameters(SupportedValueParameters):
     """Supported predefined data for a ScreenLogic binary sensor entity."""
 
     device_class: BinarySensorDeviceClass | None = None
-    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
 
 
 SUPPORTED_DATA: list[
@@ -126,14 +125,10 @@ async def async_setup_entry(
             _LOGGER.debug("Failed to find %s", data_path)
             continue
 
-        entity_kwargs = {
-            "data_path": data_path,  #
-            "key": entity_key,  #
-            "entity_category": value_params.entity_category,
-            "entity_registry_enabled_default": value_params.enabled.test(
-                gateway, data_path
+        entity_description_kwargs = {
+            **build_base_entity_description(
+                gateway, entity_key, data_path, value_data, value_params
             ),
-            "name": value_data.get(ATTR.NAME),
             "device_class": SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(
                 value_data.get(ATTR.DEVICE_TYPE)
             ),
@@ -148,14 +143,15 @@ async def async_setup_entry(
                 ScreenLogicPushBinarySensor(
                     coordinator,
                     ScreenLogicPushBinarySensorDescription(
-                        subscription_code=sub_code, **entity_kwargs
+                        subscription_code=sub_code, **entity_description_kwargs
                     ),
                 )
             )
         else:
             entities.append(
                 ScreenLogicBinarySensor(
-                    coordinator, ScreenLogicBinarySensorDescription(**entity_kwargs)
+                    coordinator,
+                    ScreenLogicBinarySensorDescription(**entity_description_kwargs),
                 )
             )
 
