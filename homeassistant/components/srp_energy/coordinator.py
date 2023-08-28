@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 from srpenergy.client import SrpEnergyClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, MIN_TIME_BETWEEN_UPDATES, PHOENIX_TIME_ZONE
+
+TIMEOUT = 10
 
 
 class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
@@ -40,38 +41,35 @@ class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
         so entities can quickly look up their data.
         """
         LOGGER.debug("async_update_data enter")
+        # Fetch srp_energy data
+        phx_time_zone = dt_util.get_time_zone(PHOENIX_TIME_ZONE)
+        end_date = dt_util.now(phx_time_zone)
+        start_date = end_date - timedelta(days=1)
         try:
-            # Fetch srp_energy data
-            phx_time_zone = dt_util.get_time_zone(PHOENIX_TIME_ZONE)
-            end_date = dt_util.now(phx_time_zone)
-            start_date = end_date - timedelta(days=1)
-
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(TIMEOUT):
                 hourly_usage = await self.hass.async_add_executor_job(
                     self._client.usage,
                     start_date,
                     end_date,
                     self._is_time_of_use,
                 )
-
-                LOGGER.debug(
-                    "async_update_data: Received %s record(s) from %s to %s",
-                    len(hourly_usage) if hourly_usage else "None",
-                    start_date,
-                    end_date,
-                )
-
-                previous_daily_usage = 0.0
-                for _, _, _, kwh, _ in hourly_usage:
-                    previous_daily_usage += float(kwh)
-
-                LOGGER.debug(
-                    "async_update_data: previous_daily_usage %s",
-                    previous_daily_usage,
-                )
-
-                return previous_daily_usage
-        except TimeoutError as timeout_err:
-            raise UpdateFailed("Timeout communicating with API") from timeout_err
-        except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
+        except (ValueError, TypeError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        LOGGER.debug(
+            "async_update_data: Received %s record(s) from %s to %s",
+            len(hourly_usage) if hourly_usage else "None",
+            start_date,
+            end_date,
+        )
+
+        previous_daily_usage = 0.0
+        for _, _, _, kwh, _ in hourly_usage:
+            previous_daily_usage += float(kwh)
+
+        LOGGER.debug(
+            "async_update_data: previous_daily_usage %s",
+            previous_daily_usage,
+        )
+
+        return previous_daily_usage
