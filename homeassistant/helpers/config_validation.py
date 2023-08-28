@@ -120,8 +120,6 @@ CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
     {UrlProtocolSchema.HOMEASSISTANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
 )
 
-DATA_KEY_ADDONS = "addons"
-
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
@@ -578,22 +576,6 @@ def slugify(value: Any) -> str:
     if slg:
         return slg
     raise vol.Invalid(f"Unable to slugify {value}")
-
-
-def valid_addon(value: Any) -> str:
-    """Validate value is a valid addon slug.
-
-    Depends on hassio component, will not work before it has been loaded.
-    """
-    value = slug(value)
-
-    hass: HomeAssistant | None = None
-    with contextlib.suppress(HomeAssistantError):
-        hass = async_get_hass()
-
-    if value not in hass.data[DATA_KEY_ADDONS]:
-        raise vol.Invalid("Not a valid add-on slug")
-    return value
 
 
 def string(value: Any) -> str:

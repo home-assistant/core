@@ -32,6 +32,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    async_get_hass,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -147,6 +148,19 @@ SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
+
+
+def valid_addon(value: Any) -> str:
+    """Validate value is a valid addon slug."""
+    value = cv.slug(value)
+
+    hass: HomeAssistant | None = None
+    with suppress(HomeAssistantError):
+        hass = async_get_hass()
+
+    if value not in hass.data[DATA_KEY_ADDONS]:
+        raise vol.Invalid("Not a valid add-on slug")
+    return value
 
 
 SCHEMA_NO_DATA = vol.Schema({})
