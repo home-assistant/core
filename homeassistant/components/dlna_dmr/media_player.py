@@ -146,7 +146,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
-        self._attr_unique_id = udn
         self.device_type = device_type
         self._attr_name = name
         self._event_addr = EventListenAddr(None, event_port, event_callback_url)
