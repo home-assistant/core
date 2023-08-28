@@ -245,10 +245,9 @@ def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
     if wemo.model_name == "DLI emulated Belkin Socket":
-        unique_id = wemo.serial_number[:-1]
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
-        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, unique_id)}
-        _dev_info[ATTR_NAME] = f"Digital Loggers {unique_id}"
+        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
+        _dev_info[ATTR_NAME] = "Digital Loggers"
     return _dev_info
 
 

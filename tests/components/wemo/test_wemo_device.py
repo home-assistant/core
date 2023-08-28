@@ -242,11 +242,11 @@ async def test_dli_multi_wemo(
         await hass.async_block_till_done()
 
         # Verify the expected devices are present.
-        device_names = frozenset(
+        device_names = [
             device_entry.name for device_entry in device_registry.devices.values()
-        )
-        assert "Digital Loggers 1" in device_names
-        assert "Digital Loggers 2" in device_names
+        ]
+        assert device_names[0] == "Digital Loggers"
+        assert device_names[1] == "Digital Loggers"
 
         # Verify the expected entities are present.
         entity_names = frozenset(
