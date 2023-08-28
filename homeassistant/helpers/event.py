@@ -1488,19 +1488,13 @@ def async_track_time_interval(
         action, f"track time interval {interval}", cancel_on_shutdown=cancel_on_shutdown
     )
 
-    def next_interval() -> datetime:
-        """Return the next interval."""
-        return dt_util.utcnow() + interval
-
     @callback
     def interval_listener(now: datetime) -> None:
         """Handle elapsed intervals."""
         nonlocal remove
         nonlocal interval_listener_job
 
-        remove = async_track_point_in_utc_time(
-            hass, interval_listener_job, next_interval()
-        )
+        remove = async_call_later(hass, interval, interval_listener_job)
         hass.async_run_hass_job(job, now)
 
     if name:
@@ -1511,7 +1505,7 @@ def async_track_time_interval(
     interval_listener_job = HassJob(
         interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
     )
-    remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
+    remove = async_call_later(hass, interval, interval_listener_job)
 
     def remove_listener() -> None:
         """Remove interval listener."""
