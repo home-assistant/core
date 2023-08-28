@@ -1327,9 +1327,7 @@ def async_track_same_state(
         if not async_check_same_func(entity, from_state, to_state):
             clear_listener()
 
-    async_remove_state_for_listener = async_track_point_in_utc_time(
-        hass, state_for_listener, dt_util.utcnow() + period
-    )
+    async_remove_state_for_listener = async_call_later(hass, period, state_for_listener)
 
     if entity_ids == MATCH_ALL:
         async_remove_state_for_cancel = hass.bus.async_listen(
