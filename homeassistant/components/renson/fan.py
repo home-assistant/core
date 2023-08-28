@@ -64,7 +64,8 @@ class RensonFan(RensonEntity, FanEntity):
     """Representation of the Renson fan platform."""
 
     _attr_icon = "mdi:air-conditioner"
-    _attr_name = "Fan"
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED
     current_speed: int | None = None
 
