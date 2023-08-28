@@ -120,7 +120,7 @@ class SwitcherBaseSwitchEntity(
         if error or not response or not response.successful:
             _LOGGER.error(
                 "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.name,
+                self.coordinator.name,
                 api,
                 args,
                 response or error,
@@ -152,7 +152,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_SET_AUTO_OFF_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
@@ -160,7 +160,7 @@ class SwitcherBaseSwitchEntity(
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_TURN_ON_WITH_TIMER_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
 
