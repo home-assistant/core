@@ -142,7 +142,6 @@ async def test_setup_minimum(
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all(BINARY_SENSOR_DOMAIN)) == 1
-    assert len(hass.states.async_all("binary_sensor")) == 1
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
 
 

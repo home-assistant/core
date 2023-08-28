@@ -103,6 +103,7 @@ async def test_setup_timeout(
     assert "No route to resource/endpoint" in caplog.text
 
 
+@respx.mock
 async def test_setup_minimum(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -113,7 +114,7 @@ async def test_setup_minimum(
     with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
 
 
