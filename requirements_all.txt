@@ -324,7 +324,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.3.3
+aioqsw==0.3.4
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
