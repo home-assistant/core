@@ -48,7 +48,7 @@ SENSOR_TYPES = (
         key="powerMeasurement",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="humidity",
@@ -100,6 +100,5 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
     def last_reset(self):
         """Return the time when the sensor was last reset, if implemented."""
         native_implementation = getattr(self._feature, "last_reset", None)
-        if callable(native_implementation):
-            return native_implementation
-        return super().last_reset
+
+        return native_implementation or super().last_reset
