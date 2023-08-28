@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DataUpdateCoordinatorMotionBlinds
-from .const import ATTR_AVAILABLE, DOMAIN, KEY_GATEWAY, MANUFACTURER
+from .const import ATTR_AVAILABLE, DEFAULT_GATEWAY_NAME, DOMAIN, KEY_GATEWAY, MANUFACTURER
 from .gateway import device_name
 
 _T = TypeVar("_T")
@@ -26,7 +26,6 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         self,
         coordinator: DataUpdateCoordinatorMotionBlinds,
         blind: MotionGateway | MotionBlind,
-        sw_version: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -35,8 +34,22 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         self._api_lock = coordinator.api_lock
 
         if blind.device_type in DEVICE_TYPES_GATEWAY:
+            gateway = blind
+        else:
+            gateway = blind._gateway
+        if gateway.firmware is not None:
+            sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
+        else:
+            sw_version = f"Protocol: {gateway.protocol}"
+
+        if blind.device_type in DEVICE_TYPES_GATEWAY:
             self._attr_device_info = DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, blind.mac)},
                 identifiers={(DOMAIN, blind.mac)},
+                manufacturer=MANUFACTURER,
+                name=DEFAULT_GATEWAY_NAME,
+                model="Wi-Fi bridge",
+                sw_version=sw_version,
             )
         elif blind.device_type in DEVICE_TYPES_WIFI:
             self._attr_device_info = DeviceInfo(

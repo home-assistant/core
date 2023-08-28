@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY, KEY_VERSION
+from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 from .entity import MotionCoordinatorEntity
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
@@ -28,25 +28,24 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
     for blind in motion_gateway.device_list.values():
-        entities.append(MotionSignalStrengthSensor(coordinator, blind, sw_version))
+        entities.append(MotionSignalStrengthSensor(coordinator, blind))
         if blind.type == BlindType.TopDownBottomUp:
             entities.append(
-                MotionTDBUBatterySensor(coordinator, blind, sw_version, "Bottom")
+                MotionTDBUBatterySensor(coordinator, blind, "Bottom")
             )
             entities.append(
-                MotionTDBUBatterySensor(coordinator, blind, sw_version, "Top")
+                MotionTDBUBatterySensor(coordinator, blind, "Top")
             )
         elif blind.battery_voltage is not None and blind.battery_voltage > 0:
             # Only add battery powered blinds
-            entities.append(MotionBatterySensor(coordinator, blind, sw_version))
+            entities.append(MotionBatterySensor(coordinator, blind))
 
     # Do not add signal sensor twice for direct WiFi blinds
     if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
         entities.append(
-            MotionSignalStrengthSensor(coordinator, motion_gateway, sw_version)
+            MotionSignalStrengthSensor(coordinator, motion_gateway)
         )
 
     async_add_entities(entities)
@@ -58,9 +57,9 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, coordinator, blind, sw_version):
+    def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
-        super().__init__(coordinator, blind, sw_version)
+        super().__init__(coordinator, blind)
 
         self._attr_unique_id = f"{blind.mac}-battery"
 
@@ -78,9 +77,9 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
 class MotionTDBUBatterySensor(MotionBatterySensor):
     """Representation of a Motion Battery Sensor for a Top Down Bottom Up blind."""
 
-    def __init__(self, coordinator, blind, sw_version, motor):
+    def __init__(self, coordinator, blind, motor):
         """Initialize the Motion Battery Sensor."""
-        super().__init__(coordinator, blind, sw_version)
+        super().__init__(coordinator, blind)
 
         self._motor = motor
         self._attr_unique_id = f"{blind.mac}-{motor}-battery"
@@ -112,9 +111,9 @@ class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator, blind, sw_version):
+    def __init__(self, coordinator, blind):
         """Initialize the Motion Signal Strength Sensor."""
-        super().__init__(coordinator, blind, sw_version)
+        super().__init__(coordinator, blind)
 
         self._attr_unique_id = f"{blind.mac}-RSSI"
 

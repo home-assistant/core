@@ -27,7 +27,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
-    KEY_VERSION,
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_DELAY_STOP,
     UPDATE_INTERVAL_MOVING,
@@ -89,7 +88,6 @@ async def async_setup_entry(
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
@@ -98,7 +96,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -108,7 +105,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -118,7 +114,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_ONLY_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -128,7 +123,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Top",
                 )
             )
@@ -137,7 +131,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Bottom",
                 )
             )
@@ -146,7 +139,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Combined",
                 )
             )
@@ -161,7 +153,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[BlindType.RollerBlind],
-                    sw_version,
                 )
             )
 
@@ -181,9 +172,9 @@ class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
     _attr_name = None
     _restore_tilt = False
 
-    def __init__(self, coordinator, blind, device_class, sw_version):
+    def __init__(self, coordinator, blind, device_class):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, sw_version)
+        super().__init__(coordinator, blind)
 
         self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions = []
@@ -404,9 +395,9 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, sw_version, motor):
+    def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, sw_version)
+        super().__init__(coordinator, blind, device_class)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_translation_key = motor.lower()
