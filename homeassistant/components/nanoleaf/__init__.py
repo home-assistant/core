@@ -29,7 +29,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
+from .const import (
+    DOMAIN,
+    NANOLEAF_EVENT,
+    NANOLEAF_PANEL_ID,
+    TOUCH_GESTURE_TRIGGER_MAP,
+    TOUCH_MODELS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +98,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("Received touch gesture %s", gesture_type)
             hass.bus.async_fire(
                 NANOLEAF_EVENT,
-                {CONF_DEVICE_ID: device_entry.id, CONF_TYPE: gesture_type},
+                {
+                    CONF_DEVICE_ID: device_entry.id,
+                    CONF_TYPE: gesture_type,
+                    NANOLEAF_PANEL_ID: event.panel_id,
+                },
             )
 
     event_listener = asyncio.create_task(

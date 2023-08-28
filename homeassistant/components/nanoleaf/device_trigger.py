@@ -14,19 +14,28 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
+from . import NanoleafEntryData
+from .const import (
+    DOMAIN,
+    NANOLEAF_EVENT,
+    NANOLEAF_PANEL_ID,
+    TOUCH_GESTURE_TRIGGER_MAP,
+    TOUCH_MODELS,
+)
 
 TRIGGER_TYPES = TOUCH_GESTURE_TRIGGER_MAP.values()
+TRIGGER_TYPES_THAT_REPORT_PANEL_ID = [p for p in TRIGGER_TYPES if p.endswith("_tap")]
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        vol.Optional(NANOLEAF_PANEL_ID): vol.Coerce(int),
     }
 )
 
@@ -52,6 +61,42 @@ async def async_get_triggers(
     ]
 
 
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
+    """List trigger capabilities."""
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(config[CONF_DEVICE_ID])
+    if device_entry is None:
+        raise DeviceNotFound(f"Device ID {config[CONF_DEVICE_ID]} is not valid")
+    if config[CONF_TYPE] in TRIGGER_TYPES_THAT_REPORT_PANEL_ID:
+        entryData: NanoleafEntryData = hass.data[DOMAIN][
+            next(iter(device_entry.config_entries))
+        ]
+        panels = entryData.device.panels
+        options = [
+            selector.SelectOptionDict(value=str(p.id), label=f"{p.id} - {p.shape.name}")
+            for p in panels
+            if p.id is not None
+        ]
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Optional(NANOLEAF_PANEL_ID): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                            multiple=False,
+                            custom_value=True,
+                            options=options,
+                        )
+                    )
+                }
+            )
+        }
+
+    return {}
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -66,6 +111,9 @@ async def async_attach_trigger(
             event_trigger.CONF_EVENT_DATA: {
                 CONF_TYPE: config[CONF_TYPE],
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                NANOLEAF_PANEL_ID: (
+                    config[NANOLEAF_PANEL_ID] if NANOLEAF_PANEL_ID in config else None
+                ),
             },
         }
     )

@@ -27,6 +27,8 @@
   },
   "device_automation": {
     "trigger_type": {
+      "single_tap": "Single Tap",
+      "double_tap": "Double Tap",
       "swipe_up": "Swipe Up",
       "swipe_down": "Swipe Down",
       "swipe_left": "Swipe Left",
