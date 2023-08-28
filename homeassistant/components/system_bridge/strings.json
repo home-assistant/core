@@ -133,6 +133,20 @@
           "description": "Text to type."
         }
       }
+    },
+    "power_command": {
+      "name": "Power command",
+      "description": "Sends a power command to the system.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "command": {
+          "name": "Command",
+          "description": "Command to call."
+        }
+      }
     }
   }
 }
