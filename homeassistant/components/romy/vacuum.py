@@ -101,26 +101,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_name = self.romy.name
         self.async_write_ha_state()
 
-    #    @property
-    #    def fan_speed(self) -> str:
-    #        """Return the current fan speed of the vacuum cleaner."""
-    #        return FAN_SPEEDS[self.romy.fan_speed]
-    #
-    #    @property
-    #    def battery_level(self) -> None | int:
-    #        """Return the battery level of the vacuum cleaner."""
-    #        return self.romy.battery_level
-    #
-    #    @property
-    #    def state(self) -> None | str:
-    #        """Return the state/status of the vacuum cleaner."""
-    #        return self.romy.status
-    #
-    #    @property
-    #    def name(self) -> str:
-    #        """Return the name of the device."""
-    #        return self.romy.name
-
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
