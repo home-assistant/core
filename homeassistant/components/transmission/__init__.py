@@ -146,12 +146,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    client.register_services()
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Transmission Entry from config_entry."""
-    client = hass.data[DOMAIN].pop(config_entry.entry_id)
+    client: TransmissionClient = hass.data[DOMAIN].pop(config_entry.entry_id)
     if client.unsub_timer:
         client.unsub_timer()
 
@@ -344,7 +345,7 @@ class TransmissionClient:
     @staticmethod
     async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
-        tm_client = hass.data[DOMAIN][entry.entry_id]
+        tm_client: TransmissionClient = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
         await hass.async_add_executor_job(tm_client.tm_data.update)
 
