@@ -488,3 +488,52 @@ async def test_pipeline_saved_audio_with_device_id(
                 end_stage=assist_pipeline.PipelineStage.STT,
                 device_id=device_id,
             )
+
+
+async def test_pipeline_saved_audio_write_error(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSttProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_supporting_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that saved audio thread closes WAV file even if there's a write error."""
+    with tempfile.TemporaryDirectory() as temp_dir_str:
+        # Enable audio recording to temporary directory
+        temp_dir = Path(temp_dir_str)
+        assert await async_setup_component(
+            hass,
+            "assist_pipeline",
+            {"assist_pipeline": {"debug_recording_dir": temp_dir_str}},
+        )
+
+        def event_callback(event: assist_pipeline.PipelineEvent):
+            if event.type == "run-end":
+                # Verify WAV file exists, but contains no data
+                pipeline_dirs = list(temp_dir.iterdir())
+                run_dirs = list(pipeline_dirs[0].iterdir())
+                wav_path = next(run_dirs[0].iterdir())
+                with wave.open(str(wav_path), "rb") as wav_file:
+                    assert wav_file.getnframes() == 0
+
+        async def audio_data():
+            yield b"not used"
+
+        # Force a timeout during wake word detection
+        with patch("wave.Wave_write.writeframes", raises=RuntimeError()):
+            await assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=event_callback,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_data(),
+                start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+                end_stage=assist_pipeline.PipelineStage.STT,
+            )
