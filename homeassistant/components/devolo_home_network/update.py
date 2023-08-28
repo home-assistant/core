@@ -92,7 +92,6 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         """Initialize entity."""
         self.entity_description = description
         super().__init__(entry, coordinator, device)
-        self._attr_translation_key = None
         self._in_progress_old_version: str | None = None
 
     @property
@@ -124,7 +123,7 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
         except DevicePasswordProtected as ex:
             self.entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                f"Device {self.entry.title} require re-authenticatication to set or change the password"
+                f"Device {self.entry.title} require re-authentication to set or change the password"
             ) from ex
         except DeviceUnavailable as ex:
             raise HomeAssistantError(
