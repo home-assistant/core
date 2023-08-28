@@ -30,7 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
 API_STOP = "stop_shutter"
-
+COVER1_ID = "runner1"
+COVER2_ID = "runner2"
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,11 +44,11 @@ async def async_setup_entry(
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
-            async_add_entities([SwitcherCoverEntity(coordinator)])
+            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
         elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
-            async_add_entities([SwitcherCoverEntity(coordinator)])
+            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
         elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
-            async_add_entities([SwitcherCoverEntity(coordinator)])
+            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID), SwitcherCoverEntity(coordinator, COVER2_ID)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
@@ -67,12 +68,13 @@ class SwitcherCoverEntity(
         | CoverEntityFeature.STOP
     )
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self.cover_id = cover_id
 
-        self._attr_name = coordinator.name
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+        self._attr_name = f"{coordinator.name} {self.cover_id}"
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.cover_id}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
@@ -115,13 +117,13 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
-    def _get_shutter_index(self, is_first_shutter: bool = True) -> int:
+    def _get_shutter_index(self) -> int:
         if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER:
             return 1
         elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
             return 3
         elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
-            if is_first_shutter:
+            if self.cover_id == COVER1_ID:
                 return 2
             else:
                 return 3
@@ -146,24 +148,4 @@ class SwitcherCoverEntity(
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         index = self._get_shutter_index()
-        await self._async_call_api(API_STOP, index)
-
-    async def async_close_cover2(self, **kwargs: Any) -> None:
-        """Close cover 2."""
-        index = self._get_shutter_index(False)
-        await self._async_call_api(API_SET_POSITON, 0, index)
-
-    async def async_open_cover2(self, **kwargs: Any) -> None:
-        """Open cover 2."""
-        index = self._get_shutter_index(False)
-        await self._async_call_api(API_SET_POSITON, 100, index)
-
-    async def async_set_cover2_position(self, **kwargs: Any) -> None:
-        """Move the cover 2 to a specific position."""
-        index = self._get_shutter_index(False)
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], index)
-
-    async def async_stop_cover2(self, **kwargs: Any) -> None:
-        """Stop the cover 2."""
-        index = self._get_shutter_index(False)
         await self._async_call_api(API_STOP, index)
