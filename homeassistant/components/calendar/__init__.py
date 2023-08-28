@@ -20,10 +20,12 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
+    CALLBACK_TYPE,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -34,6 +36,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -478,6 +481,8 @@ def is_offset_reached(
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
+    _alarm_unsubs: list[CALLBACK_TYPE] = []
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -512,6 +517,48 @@ class CalendarEntity(Entity):
             return STATE_ON
 
         return STATE_OFF
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        This sets up listeners to handle state transitions for start or end of
+        the current or upcoming event.
+        """
+        super().async_write_ha_state()
+
+        for unsub in self._alarm_unsubs:
+            unsub()
+
+        now = dt_util.now()
+        event = self.event
+        if event is None or now >= event.end_datetime_local:
+            return
+
+        @callback
+        def update(_: datetime.datetime) -> None:
+            """Run when the active or upcoming event starts or ends."""
+            self._async_write_ha_state()
+
+        if now < event.start_datetime_local:
+            self._alarm_unsubs.append(
+                async_track_point_in_time(
+                    self.hass,
+                    update,
+                    event.start_datetime_local,
+                )
+            )
+        self._alarm_unsubs.append(
+            async_track_point_in_time(self.hass, update, event.end_datetime_local)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+        for unsub in self._alarm_unsubs:
+            unsub()
 
     async def async_get_events(
         self,

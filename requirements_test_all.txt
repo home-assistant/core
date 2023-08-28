@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.3.0
+AEMET-OpenData==0.4.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
@@ -335,7 +335,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.5
 
 # homeassistant.components.unifi
-aiounifi==55
+aiounifi==58
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -397,7 +397,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.34.1
+async-upnp-client==0.35.0
 
 # homeassistant.components.esphome
 async_interrupt==1.1.1
@@ -454,7 +454,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.9.0
+bluetooth-data-tools==1.9.1
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -515,7 +515,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.94.0
+dbus-fast==1.94.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -629,7 +629,7 @@ flux-led==1.0.2
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==0.4.0
+fnv-hash-fast==0.4.1
 
 # homeassistant.components.foobot
 foobot-async==1.0.0
@@ -1034,7 +1034,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.31
+opower==0.0.32
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2029,7 +2029,7 @@ youtubeaio==1.1.5
 zamg==0.2.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.82.1
+zeroconf==0.85.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

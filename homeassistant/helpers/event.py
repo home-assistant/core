@@ -68,6 +68,10 @@ _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
 
+# Used to spread async_track_utc_time_change listeners and DataUpdateCoordinator
+# refresh cycles between RANDOM_MICROSECOND_MIN..RANDOM_MICROSECOND_MAX.
+# The values have been determined experimentally in production testing, background
+# in PR https://github.com/home-assistant/core/pull/82233
 RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
@@ -1640,7 +1644,7 @@ def async_track_utc_time_change(
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
-    # Avoid aligning all time trackers to the same second
+    # Avoid aligning all time trackers to the same fraction of a second
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
     microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)

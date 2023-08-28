@@ -40,7 +40,6 @@ from .common import (
     MockPlatform,
     async_fire_time_changed,
     mock_config_flow,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -605,7 +604,10 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=lambda *args: mock_coro(True))
+        hass,
+        MockModule(
+            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
+        ),
     )
     mock_entity_platform(hass, "config_flow.test", None)
 
