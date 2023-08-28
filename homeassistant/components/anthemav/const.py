@@ -1,5 +1,5 @@
 """Constants for the Anthem A/V Receivers integration."""
-ANTHEMAV_UDATE_SIGNAL = "anthemav_update"
+ANTHEMAV_UPDATE_SIGNAL = "anthemav_update"
 CONF_MODEL = "model"
 DEFAULT_NAME = "Anthem AV"
 DEFAULT_PORT = 14999

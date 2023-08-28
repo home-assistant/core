@@ -68,6 +68,10 @@ _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
 
+# Used to spread async_track_utc_time_change listeners and DataUpdateCoordinator
+# refresh cycles between RANDOM_MICROSECOND_MIN..RANDOM_MICROSECOND_MAX.
+# The values have been determined experimentally in production testing, background
+# in PR https://github.com/home-assistant/core/pull/82233
 RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
@@ -1432,6 +1436,37 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 
 @callback
 @bind_hass
+def async_call_at(
+    hass: HomeAssistant,
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    loop_time: float,
+) -> CALLBACK_TYPE:
+    """Add a listener that is called at <loop_time>."""
+
+    @callback
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
+
+    job = (
+        action
+        if isinstance(action, HassJob)
+        else HassJob(action, f"call_at {loop_time}")
+    )
+    cancel_callback = hass.loop.call_at(loop_time, run_action, job)
+
+    @callback
+    def unsub_call_later_listener() -> None:
+        """Cancel the call_later."""
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_call_later_listener
+
+
+@callback
+@bind_hass
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
@@ -1640,7 +1675,7 @@ def async_track_utc_time_change(
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
-    # Avoid aligning all time trackers to the same second
+    # Avoid aligning all time trackers to the same fraction of a second
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
     microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)
