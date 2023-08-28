@@ -92,6 +92,13 @@ GUEST_WIFI = WifiGuestAccessGet(
     remaining_duration=0,
 )
 
+GUEST_WIFI_CHANGED = WifiGuestAccessGet(
+    ssid="devolo-guest-930",
+    key="HMANPGAS",
+    enabled=False,
+    remaining_duration=0,
+)
+
 NEIGHBOR_ACCESS_POINTS = [
     NeighborAPInfo(
         mac_address="AA:BB:CC:DD:EE:FF",
