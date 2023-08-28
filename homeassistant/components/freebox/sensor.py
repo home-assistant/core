@@ -14,7 +14,6 @@ from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -64,7 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities: list[Entity] = []
+    entities: list[FreeboxSensor] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -229,30 +228,13 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._attr_native_value = value
 
 
-class FreeboxBatterySensor(FreeboxHomeEntity):
+class FreeboxBatterySensor(FreeboxHomeEntity, FreeboxSensor):
     """Representation of a Freebox battery sensor."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        router: FreeboxRouter,
-        node: dict[str, Any],
-        sub_node: dict[str, Any],
-    ) -> None:
-        """Initialize a battery sensor."""
-        super().__init__(hass, router, node, sub_node)
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the class of this device."""
-        return SensorDeviceClass.BATTERY
-
-    @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the current state of the device."""
         return self.get_value("signal", "battery")
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit_of_measurement of the device."""
-        return PERCENTAGE
