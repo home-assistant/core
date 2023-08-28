@@ -11,7 +11,7 @@ from romy import RomyRobot
 
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -92,30 +92,39 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._fan_speed = FAN_SPEEDS.index(FAN_SPEED_NONE)
         self._fan_speed_update = False
 
-    @property
-    def fan_speed(self) -> str:
-        """Return the current fan speed of the vacuum cleaner."""
-        return FAN_SPEEDS[self.romy.fan_speed]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
+        self._attr_battery_level = self.romy.battery_level
+        self._attr_state = self.romy.status
+        self._attr_name = self.romy.name
+        self.async_write_ha_state()
 
-    @property
-    def battery_level(self) -> None | int:
-        """Return the battery level of the vacuum cleaner."""
-        return self.romy.battery_level
-
-    @property
-    def state(self) -> None | str:
-        """Return the state/status of the vacuum cleaner."""
-        return self.romy.status
+    #    @property
+    #    def fan_speed(self) -> str:
+    #        """Return the current fan speed of the vacuum cleaner."""
+    #        return FAN_SPEEDS[self.romy.fan_speed]
+    #
+    #    @property
+    #    def battery_level(self) -> None | int:
+    #        """Return the battery level of the vacuum cleaner."""
+    #        return self.romy.battery_level
+    #
+    #    @property
+    #    def state(self) -> None | str:
+    #        """Return the state/status of the vacuum cleaner."""
+    #        return self.romy.status
+    #
+    #    @property
+    #    def name(self) -> str:
+    #        """Return the name of the device."""
+    #        return self.romy.name
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._is_on
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self.romy.name
 
     async def async_start(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
