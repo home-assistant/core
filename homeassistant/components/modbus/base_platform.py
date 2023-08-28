@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -188,10 +187,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int | str) -> float | int | str:
+    def __process_raw_value(self, entry: float | int | str) -> float | int | str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
-            return STATE_UNAVAILABLE
+            return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -231,6 +230,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # the conversion only when it's absolutely necessary.
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
+                elif v_temp is None:
+                    v_result.append("")  # pragma: no cover
                 elif v_temp != v_temp:  # noqa: PLR0124
                     # NaN float detection replace with None
                     v_result.append("nan")  # pragma: no cover
@@ -245,6 +246,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # we lose some precision, and unit tests will fail. Therefore, we do
         # the conversion only when it's absolutely necessary.
 
+        if val_result is None:
+            return None
         # NaN float detection replace with None
         if val_result != val_result:  # noqa: PLR0124
             return None  # pragma: no cover
@@ -252,7 +255,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return str(val_result)
         if isinstance(val_result, str):
             if val_result == "nan":
-                val_result = STATE_UNAVAILABLE  # pragma: no cover
+                val_result = None  # pragma: no cover
             return val_result
         return f"{float(val_result):.{self._precision}f}"
 
