@@ -341,7 +341,7 @@ class TransmissionClient:
     def set_scan_interval(self, scan_interval: float) -> None:
         """Update scan interval."""
 
-        def refresh(event_time: datetime):
+        def refresh(event_time: datetime) -> None:
             """Get the latest data from Transmission."""
             self.api.update()
 
@@ -368,22 +368,22 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data: SessionStats = None
-        self.available: bool = True
-        self._all_torrents: list[transmission_rpc.Torrent] = []
         self._api: transmission_rpc.Client = api
+        self.data: SessionStats | None = None
+        self.available: bool = True
+        self._session: transmission_rpc.Session | None = None
+        self._all_torrents: list[transmission_rpc.Torrent] = []
         self._completed_torrents: list[transmission_rpc.Torrent] = []
-        self._session: transmission_rpc.Session = None
         self._started_torrents: list[transmission_rpc.Torrent] = []
         self._torrents: list[transmission_rpc.Torrent] = []
 
     @property
-    def host(self):
+    def host(self) -> str:
         """Return the host name."""
         return self.config.data[CONF_HOST]
 
     @property
-    def signal_update(self):
+    def signal_update(self) -> str:
         """Update signal per transmission entry."""
         return f"{DATA_UPDATED}-{self.host}"
 
@@ -392,7 +392,7 @@ class TransmissionData:
         """Get the list of torrents."""
         return self._torrents
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission instance."""
         try:
             self.data = self._api.session_stats()
@@ -410,7 +410,7 @@ class TransmissionData:
             _LOGGER.error("Unable to connect to Transmission client %s", self.host)
         dispatcher_send(self.hass, self.signal_update)
 
-    def init_torrent_list(self):
+    def init_torrent_list(self) -> None:
         """Initialize torrent lists."""
         self._torrents = self._api.get_torrents()
         self._completed_torrents = [
@@ -420,7 +420,7 @@ class TransmissionData:
             torrent for torrent in self._torrents if torrent.status == "downloading"
         ]
 
-    def check_completed_torrent(self):
+    def check_completed_torrent(self) -> None:
         """Get completed torrent functionality."""
         old_completed_torrent_names = {
             torrent.name for torrent in self._completed_torrents
@@ -438,7 +438,7 @@ class TransmissionData:
 
         self._completed_torrents = current_completed_torrents
 
-    def check_started_torrent(self):
+    def check_started_torrent(self) -> None:
         """Get started torrent functionality."""
         old_started_torrent_names = {torrent.name for torrent in self._started_torrents}
 
@@ -454,7 +454,7 @@ class TransmissionData:
 
         self._started_torrents = current_started_torrents
 
-    def check_removed_torrent(self):
+    def check_removed_torrent(self) -> None:
         """Get removed torrent functionality."""
         current_torrent_names = {torrent.name for torrent in self._torrents}
 
@@ -466,24 +466,24 @@ class TransmissionData:
 
         self._all_torrents = self._torrents.copy()
 
-    def start_torrents(self):
+    def start_torrents(self) -> None:
         """Start all torrents."""
         if not self._torrents:
             return
         self._api.start_all()
 
-    def stop_torrents(self):
+    def stop_torrents(self) -> None:
         """Stop all active torrents."""
         if not self._torrents:
             return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)
 
-    def set_alt_speed_enabled(self, is_enabled):
+    def set_alt_speed_enabled(self, is_enabled: bool) -> None:
         """Set the alternative speed flag."""
         self._api.set_session(alt_speed_enabled=is_enabled)
 
-    def get_alt_speed_enabled(self):
+    def get_alt_speed_enabled(self) -> bool | None:
         """Get the alternative speed flag."""
         if self._session is None:
             return None

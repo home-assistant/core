@@ -237,7 +237,7 @@ def _filter_torrents(
 
 def _torrents_info(
     torrents: list[Torrent], order: str, limit: int, statuses: list[str] | None = None
-):
+) -> dict[str, Any]:
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
