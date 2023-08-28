@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -237,6 +237,46 @@ SENSOR_TYPES = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("gpu", "name"): GlancesSensorEntityDescription(
+        key="name",
+        type="gpu",
+        name_suffix="Name",
+        icon="mdi:expansion-card",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        name_suffix="Memory",
+        icon="mdi:memory",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        name_suffix="Core",
+        icon="mdi:cpu-64-bit",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        name_suffix="Temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        name_suffix="Fan speed",
+        icon="mdi:fan",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -266,7 +306,7 @@ async def async_setup_entry(
             )
 
     for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "sensors", "raid"]:
+        if sensor_type in ["fs", "sensors", "raid", "gpu"]:
             for sensor_label, params in sensors.items():
                 for param in params:
                     if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
