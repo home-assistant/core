@@ -3,9 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from devolo_home_control_api.devices.zwave import Zwave
-from devolo_home_control_api.homecontrol import HomeControl
-
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -43,22 +40,12 @@ async def async_setup_entry(
 class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     """Representation of a cover device within devolo Home Control."""
 
-    def __init__(
-        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
-    ) -> None:
-        """Initialize a climate entity within devolo Home Control."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-        )
-
-        self._attr_device_class = CoverDeviceClass.BLIND
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-        )
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+    _attr_device_class = CoverDeviceClass.BLIND
 
     @property
     def current_cover_position(self) -> int:
