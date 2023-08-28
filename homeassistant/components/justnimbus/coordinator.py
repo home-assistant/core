@@ -7,11 +7,11 @@ import logging
 import justnimbus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_ZIP_CODE
+from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONF_ZIP_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

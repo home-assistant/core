@@ -5,7 +5,7 @@ from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.justnimbus.const import DOMAIN
+from homeassistant.components.justnimbus.const import CONF_ZIP_CODE, DOMAIN
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -57,9 +57,7 @@ async def test_form_errors(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
-            user_input={
-                CONF_CLIENT_ID: "test_id",
-            },
+            user_input={CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -73,8 +71,8 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="JustNimbus",
-        data={CONF_CLIENT_ID: "test_id"},
-        unique_id="test_id",
+        data={CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"},
+        unique_id="test_idtest_zip",
     )
     entry.add_to_hass(hass)
 
@@ -88,6 +86,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
         flow_id=result["flow_id"],
         user_input={
             CONF_CLIENT_ID: "test_id",
+            CONF_ZIP_CODE: "test_zip",
         },
     )
 
@@ -105,6 +104,7 @@ async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
             flow_id=flow_id,
             user_input={
                 CONF_CLIENT_ID: "test_id",
+                CONF_ZIP_CODE: "test_zip",
             },
         )
         await hass.async_block_till_done()
@@ -113,5 +113,6 @@ async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
     assert result2["title"] == "JustNimbus"
     assert result2["data"] == {
         CONF_CLIENT_ID: "test_id",
+        CONF_ZIP_CODE: "test_zip",
     }
     assert len(mock_setup_entry.mock_calls) == 1
