@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EGSUpdateCoordinator
@@ -43,7 +44,7 @@ async def async_setup_entry(
     )
 
 
-class EGSSensor(SensorEntity):
+class EGSSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Epic Games Store sensor."""
 
     _attr_has_entity_name = True
@@ -54,6 +55,7 @@ class EGSSensor(SensorEntity):
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self.entity_description = entity_description
         self._attr_unique_id = (
