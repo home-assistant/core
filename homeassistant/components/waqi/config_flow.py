@@ -26,7 +26,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.selector import LocationSelector
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION_NUMBER, DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN, ISSUE_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +107,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="deprecated_yaml_import_issue_already_configured",
+                translation_placeholders=ISSUE_PLACEHOLDER,
             )
             raise exc
 

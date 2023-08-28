@@ -29,7 +29,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_STATION_NUMBER, DOMAIN
+from .const import CONF_STATION_NUMBER, DOMAIN, ISSUE_PLACEHOLDER
 from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,6 +121,7 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_invalid_auth",
+            translation_placeholders=ISSUE_PLACEHOLDER,
         )
         _LOGGER.exception("Could not authenticate with WAQI")
         raise PlatformNotReady from err
@@ -134,6 +135,7 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml_import_issue_cannot_connect",
+            translation_placeholders=ISSUE_PLACEHOLDER,
         )
         _LOGGER.exception("Failed to connect to WAQI servers")
         raise PlatformNotReady from err
