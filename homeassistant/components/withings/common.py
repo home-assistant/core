@@ -548,6 +548,7 @@ class BaseWithingsSensor(Entity):
 
     _attr_should_poll = False
     entity_description: WithingsEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self, data_manager: DataManager, description: WithingsEntityDescription
@@ -555,9 +556,6 @@ class BaseWithingsSensor(Entity):
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self.entity_description = description
-        self._attr_name = (
-            f"Withings {description.measurement.value} {data_manager.profile}"
-        )
         self._attr_unique_id = get_attribute_unique_id(
             description, data_manager.user_id
         )
