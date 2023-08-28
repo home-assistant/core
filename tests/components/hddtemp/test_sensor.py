@@ -16,6 +16,8 @@ VALID_CONFIG_ONE_DISK = {"sensor": {"platform": "hddtemp", "disks": ["/dev/sdd1"
 
 VALID_CONFIG_WRONG_DISK = {"sensor": {"platform": "hddtemp", "disks": ["/dev/sdx1"]}}
 
+VALID_CONFIG_STANDBY_DISK = {"sensor": {"platform": "hddtemp", "disks": ["/dev/sdc1"]}}
+
 VALID_CONFIG_MULTIPLE_DISKS = {
     "sensor": {
         "platform": "hddtemp",
@@ -43,7 +45,7 @@ REFERENCE = {
     },
     "/dev/sdc1": {
         "device": "/dev/sdc1",
-        "temperature": "29",
+        "temperature": "unknown",
         "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "model": "WDC WD20EARX-22MMMB0",
     },
@@ -67,7 +69,7 @@ class TelnetMock:
         self.sample_data = bytes(
             "|/dev/sda1|WDC WD30EZRX-12DC0B0|29|C|"
             + "|/dev/sdb1|WDC WD15EADS-11P7B2|32|C|"
-            + "|/dev/sdc1|WDC WD20EARX-22MMMB0|29|C|"
+            + "|/dev/sdc1|WDC WD20EARX-22MMMB0|SLP|*|"
             + "|/dev/sdd1|WDC WD15EARS-00Z5B1|89|F|",
             "ascii",
         )
@@ -150,6 +152,22 @@ async def test_hddtemp_wrong_disk(hass: HomeAssistant, telnetmock) -> None:
     assert len(hass.states.async_all()) == 1
     state = hass.states.get("sensor.hd_temperature_dev_sdx1")
     assert state.attributes.get("friendly_name") == "HD Temperature /dev/sdx1"
+
+
+async def test_hddtemp_standby_disk(hass: HomeAssistant, telnetmock) -> None:
+    """Test hddtemp wrong disk configuration."""
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG_STANDBY_DISK)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    state = hass.states.get("sensor.hd_temperature_dev_sdc1")
+    reference = REFERENCE[state.attributes.get("device")]
+    assert state.state == reference["temperature"]
+    assert (
+        state.attributes.get("unit_of_measurement")
+        == reference["unit_of_measurement"]
+    )
+    assert state.attributes.get("friendly_name") == "HD Temperature /dev/sdc1"
 
 
 async def test_hddtemp_multiple_disks(hass: HomeAssistant, telnetmock) -> None:
