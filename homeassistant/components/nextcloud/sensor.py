@@ -422,7 +422,7 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NextcloudSensorEntityDescription(
-        key="server_num_shares_user",
+        key="shares_num_shares_user",
         translation_key="nextcloud_shares_num_shares_user",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
