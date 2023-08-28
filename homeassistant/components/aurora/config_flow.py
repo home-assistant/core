@@ -1,4 +1,4 @@
-"""Config flow for SpaceX Launches and Starman."""
+"""Config flow for Aurora."""
 from __future__ import annotations
 
 import logging
@@ -8,7 +8,7 @@ from auroranoaa import AuroraForecast
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -16,7 +16,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
-from .const import CONF_THRESHOLD, DEFAULT_NAME, DEFAULT_THRESHOLD, DOMAIN
+from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = user_input[CONF_NAME]
             longitude = user_input[CONF_LONGITUDE]
             latitude = user_input[CONF_LATITUDE]
 
@@ -70,14 +69,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"Aurora - {name}", data=user_input
+                    title="Aurora visibility", data=user_input
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(
                         CONF_LONGITUDE,
                         default=self.hass.config.longitude,
