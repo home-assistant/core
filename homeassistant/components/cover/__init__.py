@@ -263,6 +263,10 @@ class CoverEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the state of the cover."""
+
+        _LOGGER.info(
+            f"state: is_opening={self.is_opening}, is_closing={self.is_closing}, is_closed{self.is_closed}"
+        )
         if self.is_opening:
             self._cover_is_last_toggle_direction_open = True
             return STATE_OPENING

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Custom title",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "custom user step description",
@@ -9,6 +9,7 @@
         }
       },
       "bluetooth_confirm": {
+        "title": "Confirm integrating this device",
         "description": "custom bluetooth confirm description"
       }
     },

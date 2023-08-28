@@ -1,6 +1,8 @@
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -8,19 +10,29 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, TITLE
 from .kindhome_solarbeaker_ble import supported
 from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
 
+class ConnectionError(HomeAssistantError):
+    pass
 
 
 class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kindhome."""
 
     VERSION = 1
+
+    def _create_config_entry(self, address):
+        # TODO maybe here I should do connection test
+        title = f"{TITLE} {address}"
+        return self.async_create_entry(title=title, data={
+            "address": address
+        })
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -34,8 +46,8 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         log(_LOGGER, "async_step_bluetooth", f"called! {discovery_info.as_dict()}")
         await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
 
-        # self._abort_if_unique_id_configured()
         log(_LOGGER, "async_step_bluetooth", f"address: {discovery_info.address} hasn't been configured")
 
         if not supported(discovery_info):
@@ -51,15 +63,13 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         log(_LOGGER, "async_step_bluetooth_confirm", "called!")
         assert self._discover_info is not None
 
-        title = self._discover_info.name
-        log(_LOGGER, "async_step_bluetooth_confirm",
-            f"title = {title}")
-
         log(_LOGGER, "async_step_bluetooth_confirm", f"user_input = {user_input}")
         if user_input is not None:
-            return self.async_create_entry(title=title, data={
-                "address": self._discover_info.address
-            })
+            return self._create_config_entry(self._discover_info.address)
+
+        title = f"{self._discover_info.name} ({self._discover_info.address})"
+        log(_LOGGER, "async_step_bluetooth_confirm",
+            f"title = {title}")
 
         self._set_confirm_only()
         placeholders = {"name": title}
@@ -68,6 +78,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    # TODO Dont know what that does
     async def async_step_user(
             self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -79,9 +90,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=self._discovered_devices[address], data={}
-            )
+            return self._create_config_entry(address)
 
         current_addresses = self._async_current_ids()
 
@@ -92,7 +101,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             if supported(discovery_info):
                 self._discovered_devices[address] = (
-                    discovery_info.name
+                    discovery_info.address
                 )
 
         if not self._discovered_devices:

@@ -46,7 +46,7 @@ async def async_setup_entry(
     log(_LOGGER, "async_setup_entry", coordinator.data)
 
     async_add_entities(
-        [KindhomeSolarbeakerEntity(coordinator, device)]
+        [KindhomeSolarbeakerEntity(hass, coordinator, device)]
     )
 
 
@@ -55,7 +55,8 @@ class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[Kindhome
     should_poll = False
     device_class = CoverDeviceClass.SHADE
 
-    def __init__(self, coordinator: DataUpdateCoordinator[KindhomeSolarBeakerData], device: KindhomeBluetoothDevice):
+    def __init__(self, hass, coordinator: DataUpdateCoordinator[KindhomeSolarBeakerData], device: KindhomeBluetoothDevice):
+        self.hass = hass
         self.device: KindhomeBluetoothDevice = device
         self.coordinator = coordinator
         self._is_open = None
@@ -64,7 +65,6 @@ class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[Kindhome
         self._is_opening = False
         self._is_closing = False
         self._is_closed = False
-        self._is_open = False
 
     @property
     def name(self):
@@ -91,27 +91,38 @@ class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[Kindhome
 
     @property
     def is_closed(self):
-        return not self._is_closed
-
-    @property
-    def is_open(self):
-        return not self._is_closed
+        return self._is_closed
 
     async def async_open_cover(self, **kwargs):
-        log(_LOGGER, "async_open_cover", "opening cover")
+
+        self._is_closed = False
+        self._is_closing = False
         self._is_opening = True
         await self.device.move_forward()
+        log(_LOGGER, "async_open_cover", "opened cover")
+        self.async_write_ha_state()
+        log(_LOGGER, "async_open_cover", "wrote state")
 
     async def async_close_cover(self, **kwargs):
         """Close the marquee."""
-        log(_LOGGER, "async_close_cover", "closing the cover")
+
+        self._is_closed = True
+
+        self._is_opening = False
         self._is_closing = True
         await self.device.move_backward()
+        log(_LOGGER, "async_close_cover", "closed the cover")
+        self.async_write_ha_state()
+        log(_LOGGER, "async_close_cover", "wrote state")
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         log(_LOGGER, "async_stop_cover", "stopping the cover")
+
+        self._is_opening = False
+        self._is_closing = False
         await self.device.stop()
+        self.async_write_ha_state()
 
 
     # If I want to fetch by polling
