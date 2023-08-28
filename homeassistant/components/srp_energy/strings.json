@@ -22,8 +22,8 @@
   },
   "entity": {
     "sensor": {
-      "total_usage": {
-        "name": "Total usage"
+      "energy_usage": {
+        "name": "Energy usage"
       }
     }
   }

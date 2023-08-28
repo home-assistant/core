@@ -34,7 +34,7 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_has_entity_name = True
-    _attr_translation_key = "total_usage"
+    _attr_translation_key = "energy_usage"
 
     def __init__(
         self, coordinator: SRPEnergyDataUpdateCoordinator, config_entry: ConfigEntry
