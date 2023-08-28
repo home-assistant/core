@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from queue import Queue
 from threading import Thread
+import time
 from typing import Any, cast
 import wave
 
@@ -902,12 +903,17 @@ class PipelineRun:
             if device_id is None:
                 # <debug_recording_dir>/<pipeline.name>/<run.id>
                 run_recording_dir = (
-                    Path(debug_recording_dir) / self.pipeline.name / self.id
+                    Path(debug_recording_dir)
+                    / self.pipeline.name
+                    / str(time.monotonic_ns())
                 )
             else:
                 # <debug_recording_dir>/<device_id>/<pipeline.name>/<run.id>
                 run_recording_dir = (
-                    Path(debug_recording_dir) / device_id / self.pipeline.name / self.id
+                    Path(debug_recording_dir)
+                    / device_id
+                    / self.pipeline.name
+                    / str(time.monotonic_ns())
                 )
 
             self.debug_recording_queue = Queue()
