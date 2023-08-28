@@ -130,7 +130,6 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -173,6 +172,11 @@ class BlockSleepingClimate(
     def unique_id(self) -> str:
         """Set unique id of entity."""
         return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Name of entity."""
+        return self.coordinator.name
 
     @property
     def target_temperature(self) -> float | None:
@@ -350,7 +354,7 @@ class BlockSleepingClimate(
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="device_not_calibrated",
                 translation_placeholders={
-                    "device_name": self.coordinator.name,
+                    "device_name": self.name,
                     "ip_address": self.coordinator.device.ip_address,
                 },
             )

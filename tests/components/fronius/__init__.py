@@ -6,7 +6,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -85,7 +84,7 @@ def mock_responses(
     )
 
 
-async def enable_all_entities(hass, config_entry_id, time_till_next_update):
+async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_update):
     """Enable all entities for a config entry and fast forward time to receive data."""
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, config_entry_id)
@@ -96,5 +95,6 @@ async def enable_all_entities(hass, config_entry_id, time_till_next_update):
     ]:
         registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + time_till_next_update)
+    freezer.tick(time_till_next_update)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
