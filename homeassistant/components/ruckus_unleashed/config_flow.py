@@ -14,8 +14,6 @@ from .const import (
     API_MESH_NAME,
     API_SYS_SYSINFO,
     API_SYS_SYSINFO_SERIAL,
-    API_SYS_UNLEASHEDNETWORK,
-    API_SYS_UNLEASHEDNETWORK_TOKEN,
     DOMAIN,
     KEY_SYS_SERIAL,
     KEY_SYS_TITLE,
@@ -42,14 +40,9 @@ async def validate_input(hass: core.HomeAssistant, data):
         ) as ruckus:
             system_info = await ruckus.api.get_system_info(
                 SystemStat.SYSINFO,
-                SystemStat.UNLEASHED_NETWORK,
             )
             mesh_name = (await ruckus.api.get_mesh_info())[API_MESH_NAME]
-            zd_serial = (
-                system_info[API_SYS_UNLEASHEDNETWORK][API_SYS_UNLEASHEDNETWORK_TOKEN]
-                if API_SYS_UNLEASHEDNETWORK in system_info
-                else system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
-            )
+            zd_serial = system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
             return {
                 KEY_SYS_TITLE: mesh_name,
                 KEY_SYS_SERIAL: zd_serial,
