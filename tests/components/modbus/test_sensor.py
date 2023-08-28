@@ -1,7 +1,7 @@
 """The tests for the Modbus sensor component."""
-from freezegun.api import FrozenDateTimeFactory
 import struct
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.modbus.const import (
