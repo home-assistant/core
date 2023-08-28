@@ -106,7 +106,7 @@ def config_flow_handler(
 def options_flow_poll_addon_state() -> Generator[None, None, None]:
     """Fixture for patching options flow addon state polling."""
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.SyncAddonManager.async_wait_until_addon_state"
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
     ):
         yield
 
@@ -170,7 +170,7 @@ def get_suggested(schema, key):
     "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.ADDON_STATE_POLL_INTERVAL",
     0,
 )
-async def test_uninstall_addon_sync(
+async def test_uninstall_addon_waiting(
     hass: HomeAssistant,
     addon_store_info,
     addon_info,
@@ -191,7 +191,7 @@ async def test_uninstall_addon_sync(
     multipan_manager.async_get_addon_info.side_effect = [
         Mock(state=AddonState.NOT_INSTALLED)
     ]
-    await multipan_manager.async_uninstall_addon_sync()
+    await multipan_manager.async_uninstall_addon_waiting()
     multipan_manager.async_uninstall_addon.assert_not_called()
 
     # Next, try uninstalling the addon but in a complex case where the API fails first
@@ -204,7 +204,7 @@ async def test_uninstall_addon_sync(
         # And finally it is uninstalled
         Mock(state=AddonState.NOT_INSTALLED),
     ]
-    await multipan_manager.async_uninstall_addon_sync()
+    await multipan_manager.async_uninstall_addon_waiting()
     multipan_manager.async_uninstall_addon.assert_called_once()
 
 

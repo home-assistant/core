@@ -32,7 +32,7 @@ USB_DATA = usb.UsbServiceInfo(
 def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
     """Fixture for a test config flow."""
     with patch(
-        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.SyncAddonManager.async_wait_until_addon_state"
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
     ):
         yield
 

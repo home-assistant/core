@@ -69,8 +69,8 @@ async def get_multiprotocol_addon_manager(
     return manager
 
 
-class SyncAddonManager(AddonManager):
-    """Addon manager which supports synchronous operations for managing an addon."""
+class WaitingAddonManager(AddonManager):
+    """Addon manager which supports waiting operations for managing an addon."""
 
     async def async_wait_until_addon_state(self, *states: AddonState) -> None:
         """Poll an addon's info until it is in a specific state."""
@@ -88,12 +88,12 @@ class SyncAddonManager(AddonManager):
 
                 await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
 
-    async def async_start_addon_sync(self) -> None:
+    async def async_start_addon_waiting(self) -> None:
         """Start an add-on."""
         await self.async_schedule_start_addon()
         await self.async_wait_until_addon_state(AddonState.RUNNING)
 
-    async def async_install_addon_sync(self) -> None:
+    async def async_install_addon_waiting(self) -> None:
         """Install an add-on."""
         await self.async_schedule_install_addon()
         await self.async_wait_until_addon_state(
@@ -101,7 +101,7 @@ class SyncAddonManager(AddonManager):
             AddonState.NOT_RUNNING,
         )
 
-    async def async_uninstall_addon_sync(self) -> None:
+    async def async_uninstall_addon_waiting(self) -> None:
         """Uninstall an add-on."""
         try:
             info = await self.async_get_addon_info()
@@ -116,7 +116,7 @@ class SyncAddonManager(AddonManager):
         await self.async_wait_until_addon_state(AddonState.NOT_INSTALLED)
 
 
-class MultiprotocolAddonManager(SyncAddonManager):
+class MultiprotocolAddonManager(WaitingAddonManager):
     """Silicon Labs Multiprotocol add-on manager."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -262,9 +262,9 @@ class MultipanProtocol(Protocol):
 
 @singleton(DATA_FLASHER_ADDON_MANAGER)
 @callback
-def get_flasher_addon_manager(hass: HomeAssistant) -> SyncAddonManager:
+def get_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
     """Get the flasher add-on manager."""
-    return SyncAddonManager(
+    return WaitingAddonManager(
         hass,
         LOGGER,
         "Silicon Labs Flasher",
@@ -416,7 +416,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.install_task = self.hass.async_create_task(
                 self._resume_flow_when_done(
-                    multipan_manager.async_install_addon_sync()
+                    multipan_manager.async_install_addon_waiting()
                 ),
                 "SiLabs Multiprotocol addon install",
             )
@@ -522,7 +522,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         if not self.start_task:
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
-                self._resume_flow_when_done(multipan_manager.async_start_addon_sync())
+                self._resume_flow_when_done(
+                    multipan_manager.async_start_addon_waiting()
+                )
             )
             return self.async_show_progress(
                 step_id="start_addon",
@@ -714,7 +716,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
         if not self.install_task:
             self.install_task = self.hass.async_create_task(
-                self._resume_flow_when_done(flasher_manager.async_install_addon_sync()),
+                self._resume_flow_when_done(
+                    flasher_manager.async_install_addon_waiting()
+                ),
                 "SiLabs Flasher addon install",
             )
             return self.async_show_progress(
@@ -802,7 +806,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.stop_task = self.hass.async_create_task(
                 self._resume_flow_when_done(
-                    multipan_manager.async_uninstall_addon_sync()
+                    multipan_manager.async_uninstall_addon_waiting()
                 ),
                 "SiLabs Multiprotocol addon uninstall",
             )
@@ -828,7 +832,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
             flasher_manager = get_flasher_addon_manager(self.hass)
 
             async def start_and_wait_until_done() -> None:
-                await flasher_manager.async_start_addon_sync()
+                await flasher_manager.async_start_addon_waiting()
                 # Now that the addon is running, wait for it to finish
                 await flasher_manager.async_wait_until_addon_state(
                     AddonState.NOT_RUNNING
@@ -868,7 +872,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
     ) -> FlowResult:
         """Finish flashing and update the config entry."""
         flasher_manager = get_flasher_addon_manager(self.hass)
-        await flasher_manager.async_uninstall_addon_sync()
+        await flasher_manager.async_uninstall_addon_waiting()
 
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
