@@ -6,8 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api
-from aioswitcher.device import DeviceCategory, DeviceState
+from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api, SwitcherType2Api
+from aioswitcher.device import DeviceCategory, DeviceState, LightState
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -29,10 +29,15 @@ from .const import (
     CONF_TIMER_MINUTES,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
+    CONF_TOKEN,
     SIGNAL_DEVICE_ADD,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+API_SET_LIGHT = "set_light"
+LIGHT1_ID = "light1"
+LIGHT2_ID = "light2"
 
 SERVICE_SET_AUTO_OFF_SCHEMA = {
     vol.Required(CONF_AUTO_OFF): cv.time_period_str,
@@ -72,6 +77,10 @@ async def async_setup_entry(
             async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
+        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+            async_add_entities([SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT1_ID), SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT2_ID)])
+        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+            async_add_entities([SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT1_ID)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_switch)
@@ -161,6 +170,94 @@ class SwitcherBaseSwitchEntity(
             self.name,
         )
 
+class SwitcherBaselLightEntity(
+    CoordinatorEntity[SwitcherDataUpdateCoordinator], SwitchEntity
+):
+    """Representation of a Switcher light entity."""
+
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator, light_id: str) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self.control_result: bool | None = None
+        self.light_id = light_id
+
+        # Entity class attributes
+        self._attr_name = f"{coordinator.name} {self.light_id}"
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.light_id}"
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """When device updates, clear control result that overrides state."""
+        self.control_result = None
+        self.async_write_ha_state()
+
+    async def _async_call_api(self, api: str, *args: Any) -> None:
+        """Call Switcher API."""
+        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
+        response: SwitcherBaseResponse = None
+        error = None
+
+        try:
+            async with SwitcherType2Api(
+                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id, self.coordinator.config_entry.data.get(CONF_TOKEN)
+            ) as swapi:
+                response = await getattr(swapi, api)(*args)
+        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+            error = repr(err)
+
+        if error or not response or not response.successful:
+            _LOGGER.error(
+                "Call api for %s failed, api: '%s', args: %s, response/error: %s",
+                self.name,
+                api,
+                args,
+                response or error,
+            )
+            self.coordinator.last_update_success = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        if self.control_result is not None:
+            return self.control_result
+
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+            if self.light_id == LIGHT1_ID:
+                return bool(self.coordinator.data.light1 == LightState.ON)
+            else:
+                return bool(self.coordinator.data.light2 == LightState.ON)
+
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+            if self.light_id == LIGHT1_ID:
+                return bool(self.coordinator.data.light1 == LightState.ON)
+
+        return bool(self.coordinator.data.device_state == LightState.ON)
+
+    def _get_light_index(self) -> int:
+        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+            if self.light_id == LIGHT1_ID:
+                return 1
+            else:
+                return 2
+        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+            return 1
+        else:
+            return 0
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_call_api("control_device", Command.ON)
+        self.control_result = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_call_api("control_device", Command.OFF)
+        self.control_result = False
+        self.async_write_ha_state()
 
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
@@ -182,4 +279,23 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
         """Use for turning device on with a timer service calls."""
         await self._async_call_api("control_device", Command.ON, timer_minutes)
         self.control_result = True
+        self.async_write_ha_state()
+
+class SwitcherShutterSingleLightDualSwitchEntity(SwitcherBaselLightEntity):
+    """Representation of a Switcher shutter single light dual switch entity."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        index = self._get_light_index()
+        await self._async_call_api(API_SET_LIGHT, LightState.ON, index)
+        self.control_result = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        index = self._get_light_index()
+        await self._async_call_api(API_SET_LIGHT, LightState.OFF, index)
+        self.control_result = False
         self.async_write_ha_state()

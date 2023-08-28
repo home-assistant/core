@@ -44,9 +44,9 @@ async def async_setup_entry(
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
             async_add_entities([SwitcherCoverEntity(coordinator)])
-        if coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
             async_add_entities([SwitcherCoverEntity(coordinator)])
-        if coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
             async_add_entities([SwitcherCoverEntity(coordinator)])
 
     config_entry.async_on_unload(
@@ -118,13 +118,15 @@ class SwitcherCoverEntity(
     def _get_shutter_index(self, is_first_shutter: bool = True) -> int:
         if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER:
             return 1
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
             return 3
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
             if is_first_shutter:
                 return 2
             else:
                 return 3
+        else:
+            return 0
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

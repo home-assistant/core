@@ -50,7 +50,10 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        self._token = user_input[CONF_TOKEN]
+        if CONF_TOKEN in user_input:
+            self._token = user_input[CONF_TOKEN]
+        else:
+            self._token = ""
 
         self.hass.data.setdefault(DOMAIN, {})
         if DATA_DISCOVERY not in self.hass.data[DOMAIN]:
