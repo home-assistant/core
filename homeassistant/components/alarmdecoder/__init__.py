@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await hass.async_add_executor_job(controller.open, baud)
         except NoDeviceError:
             _LOGGER.debug("Failed to connect. Retrying in 5 seconds")
-            async_call_later(hass, open_connection, timedelta(seconds=5))
+            async_call_later(hass, timedelta(seconds=5), open_connection)
             return
         _LOGGER.debug("Established a connection with the alarmdecoder")
         hass.data[DOMAIN][entry.entry_id][DATA_RESTART] = True
