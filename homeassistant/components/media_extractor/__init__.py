@@ -16,7 +16,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -84,9 +83,7 @@ class MediaExtractor:
 
     def get_media_url(self) -> str:
         """Return media content url."""
-        if (media_url := self.call_data.get(ATTR_MEDIA_CONTENT_ID)) is not None:
-            return media_url
-        raise HomeAssistantError("No media URL provided")
+        return str(self.call_data.get(ATTR_MEDIA_CONTENT_ID))
 
     def get_entities(self) -> list[str]:
         """Return list of entities."""
@@ -141,8 +138,8 @@ class MediaExtractor:
                 best_stream = requested_stream["formats"][
                     len(requested_stream["formats"]) - 1
                 ]
-                return best_stream["url"]
-            return requested_stream["url"]
+                return str(best_stream["url"])
+            return str(requested_stream["url"])
 
         return stream_selector
 
@@ -170,14 +167,14 @@ class MediaExtractor:
 
     def get_stream_query_for_entity(self, entity_id: str | None) -> str:
         """Get stream format query for entity."""
-        default_stream_query = self.config.get(
+        default_stream_query: str = self.config.get(
             CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
         )
 
         if entity_id:
             media_content_type = self.call_data.get(ATTR_MEDIA_CONTENT_TYPE)
 
-            return (
+            return str(
                 self.config.get(CONF_CUSTOMIZE_ENTITIES, {})
                 .get(entity_id, {})
                 .get(media_content_type, default_stream_query)
