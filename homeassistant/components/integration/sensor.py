@@ -269,11 +269,11 @@ class IntegrationSensor(RestoreSensor):
             self._last_valid_state = last_sensor_data.last_valid_state
 
             _LOGGER.debug(
-                "Restored state %s and last_valid_state %s",
+                "%s restored state %s and last_valid_state %s",
+                self.name,
                 self._state,
                 self._last_valid_state,
             )
-            self.async_write_ha_state()
         elif (state := await self.async_get_last_state()) is not None:
             # legacy to be removed on 2023.10 (we are keeping this to avoid losing data during the transition)
             if state.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -292,7 +292,6 @@ class IntegrationSensor(RestoreSensor):
 
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            self.async_write_ha_state()
 
         @callback
         def calc_integration(event: EventType[EventStateChangedData]) -> None:
