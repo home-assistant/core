@@ -14,10 +14,12 @@ from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities = []
+    entities: list[Entity] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -98,7 +100,19 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    async_add_entities(entities, True)
+    for node in router.home_devices.values():
+        battery_node: dict[str, Any] = next(
+            filter(
+                lambda x: (x["name"] == "battery" and x["ep_type"] == "signal"),
+                node["show_endpoints"],
+            ),
+            {},
+        )
+        if battery_node.get("value") is not None:
+            entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
+
+    if entities:
+        async_add_entities(entities, True)
 
 
 class FreeboxSensor(SensorEntity):
@@ -125,7 +139,7 @@ class FreeboxSensor(SensorEntity):
             self._attr_native_value = state
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
@@ -213,3 +227,32 @@ class FreeboxDiskSensor(FreeboxSensor):
                 self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
             )
         self._attr_native_value = value
+
+
+class FreeboxBatterySensor(FreeboxHomeEntity):
+    """Representation of a Freebox battery sensor."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        router: FreeboxRouter,
+        node: dict[str, Any],
+        sub_node: dict[str, Any],
+    ) -> None:
+        """Initialize a battery sensor."""
+        super().__init__(hass, router, node, sub_node)
+
+    @property
+    def device_class(self) -> SensorDeviceClass:
+        """Return the class of this device."""
+        return SensorDeviceClass.BATTERY
+
+    @property
+    def state(self) -> int:
+        """Return the current state of the device."""
+        return self.get_value("signal", "battery")
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit_of_measurement of the device."""
+        return PERCENTAGE
