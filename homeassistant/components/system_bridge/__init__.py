@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COMMAND,
     CONF_HOST,
     CONF_PATH,
     CONF_PORT,
@@ -47,9 +48,19 @@ CONF_KEY = "key"
 CONF_TEXT = "text"
 
 SERVICE_OPEN_PATH = "open_path"
+SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+
+POWER_COMMAND_MAP = {
+    "hibernate": "power_hibernate",
+    "lock": "power_lock",
+    "logout": "power_logout",
+    "restart": "power_restart",
+    "shutdown": "power_shutdown",
+    "sleep": "power_sleep",
+}
 
 
 async def async_setup_entry(
@@ -136,7 +147,7 @@ async def async_setup_entry(
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
 
-    def valid_device(device: str):
+    def valid_device(device: str) -> str:
         """Check device is valid."""
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device)
@@ -160,6 +171,17 @@ async def async_setup_entry(
         await coordinator.websocket_client.open_path(
             OpenPath(path=call.data[CONF_PATH])
         )
+
+    async def handle_power_command(call: ServiceCall) -> None:
+        """Handle the power command service call."""
+        _LOGGER.info("Power command: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+        )()
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
@@ -195,6 +217,18 @@ async def async_setup_entry(
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_PATH): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_POWER_COMMAND,
+        handle_power_command,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
     )
