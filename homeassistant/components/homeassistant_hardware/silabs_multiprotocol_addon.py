@@ -886,7 +886,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
 
 async def check_multi_pan_addon(hass: HomeAssistant) -> None:
-    """Check the multi-PAN addon state, and start it if installed but not started.
+    """Check the multiprotocol addon state, and start it if installed but not started.
 
     Does nothing if Hass.io is not loaded.
     Raises on error or if the add-on is installed but not started.
