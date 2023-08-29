@@ -5,10 +5,36 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import (
+    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
+    CONF_MODULES_POWER,
+    DOMAIN,
+)
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry."""
+
+    if entry.version == 1:
+        new_options = entry.options.copy()
+        new_options |= {
+            CONF_MODULES_POWER: new_options.pop("modules power"),
+            CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, 0.0),
+            CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
+        }
+
+        entry.version = 2
+
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data, options=new_options
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

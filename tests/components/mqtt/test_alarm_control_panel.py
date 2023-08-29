@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import alarm_control_panel, mqtt
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.mqtt.alarm_control_panel import (
     MQTT_ALARM_ATTRIBUTES_BLOCKED,
 )
@@ -73,6 +74,15 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 CODE_NUMBER = "1234"
 CODE_TEXT = "HELLO_CODE"
+
+DEFAULT_FEATURES = (
+    AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
+    | AlarmControlPanelEntityFeature.ARM_VACATION
+    | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    | AlarmControlPanelEntityFeature.TRIGGER
+)
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
@@ -221,6 +231,89 @@ async def test_ignore_update_state_if_unknown_via_state_topic(
 
     async_fire_mqtt_message(hass, "alarm/state", "unsupported state")
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "expected_features", "valid"),
+    [
+        (
+            DEFAULT_CONFIG,
+            DEFAULT_FEATURES,
+            True,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": []},),
+            ),
+            AlarmControlPanelEntityFeature(0),
+            True,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": ["arm_home"]},),
+            ),
+            AlarmControlPanelEntityFeature.ARM_HOME,
+            True,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": ["arm_home", "arm_away"]},),
+            ),
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY,
+            True,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": "invalid"},),
+            ),
+            None,
+            False,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": ["invalid"]},),
+            ),
+            None,
+            False,
+        ),
+        (
+            help_custom_config(
+                alarm_control_panel.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"supported_features": ["arm_home", "invalid"]},),
+            ),
+            None,
+            False,
+        ),
+    ],
+)
+async def test_supported_features(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_features: AlarmControlPanelEntityFeature | None,
+    valid: bool,
+) -> None:
+    """Test conditional enablement of supported features."""
+    if valid:
+        await mqtt_mock_entry()
+        assert (
+            hass.states.get("alarm_control_panel.test").attributes["supported_features"]
+            == expected_features
+        )
+    else:
+        with pytest.raises(AssertionError):
+            await mqtt_mock_entry()
 
 
 @pytest.mark.parametrize(

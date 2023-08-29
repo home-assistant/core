@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_storage
 
-from tests.common import MockUser, mock_coro
+from tests.common import MockUser
 
 # Temporarily: if auth not active, always set onboarded=True
 
@@ -31,7 +31,6 @@ async def test_setup_views_if_not_onboarded(hass: HomeAssistant) -> None:
     """Test if onboarding is not done, we setup views."""
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
-        return_value=mock_coro(),
     ) as mock_setup:
         assert await async_setup_component(hass, "onboarding", {})
 

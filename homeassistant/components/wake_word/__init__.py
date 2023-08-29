@@ -7,7 +7,7 @@ import logging
 from typing import final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
@@ -43,7 +43,7 @@ def async_get_wake_word_detection_entity(
     hass: HomeAssistant, entity_id: str
 ) -> WakeWordDetectionEntity | None:
     """Return wake word entity."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[WakeWordDetectionEntity] = hass.data[DOMAIN]
 
     return component.get_entity(entity_id)
 
@@ -71,16 +71,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WakeWordDetectionEntity(RestoreEntity):
     """Represent a single wake word provider."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_should_poll = False
-    __last_processed: str | None = None
+    __last_detected: str | None = None
 
     @property
     @final
     def state(self) -> str | None:
         """Return the state of the entity."""
-        if self.__last_processed is None:
-            return None
-        return self.__last_processed
+        return self.__last_detected
 
     @property
     @abstractmethod
@@ -103,9 +102,13 @@ class WakeWordDetectionEntity(RestoreEntity):
 
         Audio must be 16Khz sample rate with 16-bit mono PCM samples.
         """
-        self.__last_processed = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self._async_process_audio_stream(stream)
+        result = await self._async_process_audio_stream(stream)
+        if result is not None:
+            # Update last detected only when there is a detection
+            self.__last_detected = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
+
+        return result
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
@@ -116,4 +119,4 @@ class WakeWordDetectionEntity(RestoreEntity):
             and state.state is not None
             and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         ):
-            self.__last_processed = state.state
+            self.__last_detected = state.state

@@ -41,8 +41,8 @@ from homeassistant.helpers import (
     recorder,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -535,10 +535,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
 
-        async_track_point_in_utc_time(
+        async_call_later(
             hass,
+            HASSIO_UPDATE_INTERVAL,
             HassJob(update_info_data, cancel_on_shutdown=True),
-            utcnow() + HASSIO_UPDATE_INTERVAL,
         )
 
     # Fetch data
@@ -610,10 +610,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Set up hardaware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
-            async_track_point_in_utc_time(
+            async_call_later(
                 hass,
+                HASSIO_UPDATE_INTERVAL,
                 async_setup_hardware_integration_job,
-                utcnow() + HASSIO_UPDATE_INTERVAL,
             )
             return
         if (board := os_info.get("board")) is None:

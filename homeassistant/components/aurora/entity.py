@@ -2,8 +2,7 @@
 
 import logging
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
@@ -20,14 +19,14 @@ class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: AuroraDataUpdateCoordinator,
-        name: str,
+        translation_key: str,
         icon: str,
     ) -> None:
         """Initialize the Aurora Entity."""
 
         super().__init__(coordinator=coordinator)
 
-        self._attr_name = name
+        self._attr_translation_key = translation_key
         self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
         self._attr_icon = icon
 

@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_ACTIVITY_LABEL,
     ATTR_BUZZER,
     ATTR_CALORIES,
     ATTR_DAILY_GOAL,
@@ -32,6 +33,7 @@ from .const import (
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
+    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT,
     CLIENT_ID,
@@ -89,7 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     tractive = TractiveClient(hass, client, creds["user_id"], entry)
-    tractive.subscribe()
 
     try:
         trackable_objects = await client.trackable_objects()
@@ -97,7 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *(_generate_trackables(client, item) for item in trackable_objects)
         )
     except aiotractive.exceptions.TractiveError as error:
-        await tractive.unsubscribe()
         raise ConfigEntryNotReady from error
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
@@ -173,6 +173,14 @@ class TractiveClient:
         """Return user id."""
         return self._user_id
 
+    @property
+    def subscribed(self) -> bool:
+        """Return True if subscribed."""
+        if self._listen_task is None:
+            return False
+
+        return not self._listen_task.cancelled()
+
     async def trackable_objects(
         self,
     ) -> list[aiotractive.trackable_object.TrackableObject]:
@@ -201,6 +209,7 @@ class TractiveClient:
         while True:
             try:
                 async for event in self._client.events():
+                    _LOGGER.debug("Received event: %s", event)
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
@@ -274,10 +283,12 @@ class TractiveClient:
 
     def _send_wellness_update(self, event: dict[str, Any]) -> None:
         payload = {
+            ATTR_ACTIVITY_LABEL: event["wellness"]["activity_label"],
             ATTR_CALORIES: event["activity"]["calories"],
             ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
             ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
             ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
+            ATTR_SLEEP_LABEL: event["wellness"]["sleep_label"],
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
