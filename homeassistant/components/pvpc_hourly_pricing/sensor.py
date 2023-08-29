@@ -31,6 +31,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:currency-eur",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         state_class=SensorStateClass.MEASUREMENT,
+        name="PVPC",
     ),
 )
 _PRICE_SENSOR_ATTRIBUTES_MAP = {
@@ -128,7 +129,6 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
     """Class to hold the prices of electricity as a sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -147,7 +147,7 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="REE",
-            name=name,
+            name="ESIOS",
         )
 
     async def async_added_to_hass(self) -> None:
