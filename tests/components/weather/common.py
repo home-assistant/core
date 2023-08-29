@@ -2,9 +2,23 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
+    ATTR_FORECAST_CLOUD_COVERAGE,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEW_POINT,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_UV_INDEX,
+    ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
     WeatherEntity,
@@ -41,6 +55,12 @@ class MockWeatherEntity(WeatherEntity):
         """Initiate Entity."""
         super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
+        self._attr_humidity = 50
+        self._attr_ozone = 20
+        self._attr_cloud_coverage = 20
+        self._attr_uv_index = 1.2
+        self._attr_precision = PRECISION_HALVES
+        self._attr_wind_bearing = 180
         self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
         self._attr_native_pressure = 10
         self._attr_native_pressure_unit = UnitOfPressure.HPA
@@ -61,12 +81,49 @@ class MockWeatherEntity(WeatherEntity):
                 native_dew_point=2,
             )
         ]
-        self._attr_forecast_twice_daily = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=10,
-                native_temperature=25,
-            )
+        self.native_precipitation = 20
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the forecast_daily."""
+        return self._attr_forecast
+
+    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the forecast_twice_daily."""
+        return [
+            {
+                ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_UV_INDEX: self.uv_index,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self.native_precipitation,
+                ATTR_FORECAST_HUMIDITY: self.humidity,
+                ATTR_FORECAST_IS_DAYTIME: True,
+            }
+        ]
+
+    async def async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the forecast_hourly."""
+        return [
+            {
+                ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_UV_INDEX: self.uv_index,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self.native_precipitation,
+                ATTR_FORECAST_HUMIDITY: self.humidity,
+            }
         ]
 
 
@@ -87,10 +144,13 @@ class MockWeatherEntityPrecision(WeatherEntity):
 class MockWeatherTestEntity(MockWeatherEntity):
     """Mock a Weather Entity."""
 
-    def __init__(self) -> None:
+    def __init__(self, values: dict[str, Any] | None = None) -> None:
         """Initiate Entity."""
         super().__init__()
         self._attr_name = "test"
+        if values:
+            for key, value in values.items():
+                setattr(self, values[key], values[value])
 
 
 async def mock_setup(
