@@ -65,15 +65,11 @@ def check_remote_service_call(
     if remote_service:
         # Get remote service call
         first_remote_service_call: respx.models.Call = next(
-            iter(
-                [
-                    c
-                    for c in router.calls
-                    if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
-                    or c.request.url.path.startswith(
-                        VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
-                    )
-                ]
+            c
+            for c in router.calls
+            if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+            or c.request.url.path.startswith(
+                VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
         )
         assert (
@@ -93,9 +89,7 @@ def check_remote_service_call(
 
     # Now check final result
     last_event_status_call = next(
-        reversed(
-            [c for c in router.calls if c.request.url.path.endswith("eventStatus")]
-        )
+        c for c in reversed(router.calls) if c.request.url.path.endswith("eventStatus")
     )
 
     assert last_event_status_call is not None
