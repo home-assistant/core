@@ -142,7 +142,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
 async def test_form_auth_error(hass: HomeAssistant) -> None:
     """Test setting up with api auth error."""
     mocked_aemet = MagicMock()
-    mocked_aemet.get_conventional_observation_stations.side_effect = AuthError
+    mocked_aemet.select_coordinates.side_effect = AuthError
 
     with patch(
         "homeassistant.components.aemet.config_flow.AEMET",
