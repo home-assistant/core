@@ -1,12 +1,10 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import aiohttp.client_exceptions
-from freebox_api.exceptions import HttpRequestError, InsufficientPermissionsError
+from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -62,17 +60,6 @@ class FreeboxSwitch(SwitchEntity):
                 "Home Assistant does not have permissions to modify the Freebox"
                 " settings. Please refer to documentation"
             )
-        except HttpRequestError as error:
-            _LOGGER.warning("The Freebox API URL switch error %s", error)
-            return
-        except asyncio.TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during update switch")
-            return
-        except aiohttp.client_exceptions.ClientError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during update switch %s", error
-            )
-            return
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -84,22 +71,5 @@ class FreeboxSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the state and update it."""
-        try:
-            datas = await self._router.wifi.get_global_config()
-            self._attr_is_on = bool(datas["enabled"])
-        except InsufficientPermissionsError:
-            _LOGGER.warning(
-                "Home Assistant does not have permissions to modify the Freebox"
-                " settings. Please refer to documentation"
-            )
-        except HttpRequestError as error:
-            _LOGGER.warning("The Freebox API URL switch update error %s", error)
-            return
-        except asyncio.TimeoutError:
-            _LOGGER.warning("The Freebox API Timeout during async update switch")
-            return
-        except aiohttp.client_exceptions.ClientError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during async update switch %s", error
-            )
-            return
+        datas = await self._router.wifi.get_global_config()
+        self._attr_is_on = bool(datas["enabled"])
