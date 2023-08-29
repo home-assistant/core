@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CURRENCY_EURO, UnitOfEnergy
+from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -119,10 +119,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the electricity price sensor from config_entry."""
     coordinator: ElecPricesDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    name = entry.data[CONF_NAME]
-    async_add_entities(
-        [ElecPriceSensor(coordinator, SENSOR_TYPES[0], entry.unique_id, name)]
-    )
+    async_add_entities([ElecPriceSensor(coordinator, SENSOR_TYPES[0], entry.unique_id)])
 
 
 class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], SensorEntity):
@@ -135,7 +132,6 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
         coordinator: ElecPricesDataUpdateCoordinator,
         description: SensorEntityDescription,
         unique_id: str | None,
-        name: str,
     ) -> None:
         """Initialize ESIOS sensor."""
         super().__init__(coordinator)
