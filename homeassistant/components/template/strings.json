@@ -4,8 +4,8 @@
       "sensor": {
         "data": {
           "device_class": "Device class",
-          "name": "Name",
-          "state_class": "State class",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state_template": "State template",
           "unit_of_measurement": "Unit of measurement"
         },
@@ -25,16 +25,16 @@
       "sensor": {
         "data": {
           "device_class": "Device class",
-          "state_template": "State template"
+          "state_template": "[%key:component::template::config::step::sensor::data::state_template%]"
         },
-        "title": "Template sensor"
+        "title": "[%key:component::template::config::step::sensor::title%]"
       }
     }
   },
   "selector": {
     "sensor_device_class": {
       "options": {
-        "none": "None",
+        "none": "No device class",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
@@ -88,10 +88,10 @@
     },
     "sensor_state_class": {
       "options": {
-        "measurement": "Measurement",
         "none": "No state class",
-        "total": "Total",
-        "total_increasing": "Total increasing"
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     },
     "sensor_unit_of_measurement": {
