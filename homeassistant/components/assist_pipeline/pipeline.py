@@ -429,11 +429,11 @@ class PipelineRun:
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
-    def end(self) -> None:
+    async def end(self) -> None:
         """Emit run end event."""
         # Stop the recording thread before emitting run-end.
         # This ensures that files are properly closed if the event handler reads them.
-        self._stop_debug_recording_thread()
+        await self._stop_debug_recording_thread()
 
         self.process_event(
             PipelineEvent(
@@ -924,7 +924,7 @@ class PipelineRun:
             )
             self.debug_recording_thread.start()
 
-    def _stop_debug_recording_thread(self) -> None:
+    async def _stop_debug_recording_thread(self) -> None:
         """Stop recording thread."""
         if (self.debug_recording_thread is None) or (
             self.debug_recording_queue is None
@@ -934,7 +934,9 @@ class PipelineRun:
 
         # Signal thread to stop gracefully
         self.debug_recording_queue.put(None)
-        self.debug_recording_thread.join()
+
+        # Wait until the thread has finished to ensure that files are fully written
+        await self.hass.async_add_executor_job(self.debug_recording_thread.join)
 
         self.debug_recording_queue = None
         self.debug_recording_thread = None
@@ -1015,7 +1017,7 @@ class PipelineInput:
                 )
                 if detect_result is None:
                     # No wake word. Abort the rest of the pipeline.
-                    self.run.end()
+                    await self.run.end()
                     return
 
                 current_stage = PipelineStage.STT
@@ -1078,7 +1080,7 @@ class PipelineInput:
         finally:
             # Always end the run since it needs to shut down the debug recording
             # thread, etc.
-            self.run.end()
+            await self.run.end()
 
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
