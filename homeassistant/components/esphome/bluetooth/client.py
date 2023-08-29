@@ -51,9 +51,7 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
-_WrapFuncType = TypeVar(  # pylint: disable=invalid-name
-    "_WrapFuncType", bound=Callable[..., Any]
-)
+_WrapFuncType = TypeVar("_WrapFuncType", bound=Callable[..., Any])
 
 
 def mac_to_int(address: str) -> int:

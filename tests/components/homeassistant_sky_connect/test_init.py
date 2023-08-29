@@ -24,6 +24,13 @@ CONFIG_ENTRY_DATA = {
 }
 
 
+@pytest.fixture(autouse=True)
+def disable_usb_probing() -> Generator[None, None, None]:
+    """Disallow touching of system USB devices during unit tests."""
+    with patch("homeassistant.components.usb.comports", return_value=[]):
+        yield
+
+
 @pytest.fixture
 def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     """Mock the radio connection and probing of the ZHA config flow."""
