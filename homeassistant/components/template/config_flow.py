@@ -102,7 +102,7 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
                         ),
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="unit_of_measurement",
+                    translation_key="sensor_unit_of_measurement",
                     custom_value=True,
                 ),
             ),
@@ -134,7 +134,7 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
                         *sorted([cls.value for cls in SensorStateClass]),
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="state_class",
+                    translation_key="sensor_state_class",
                 ),
             ),
         }

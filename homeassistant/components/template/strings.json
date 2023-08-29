@@ -87,7 +87,7 @@
         "wind_speed": "Wind speed"
       }
     },
-    "state_class": {
+    "sensor_state_class": {
       "options": {
         "measurement": "Measurement",
         "none": "No state class",
@@ -95,7 +95,7 @@
         "total_increasing": "Total increasing"
       }
     },
-    "unit_of_measurement": {
+    "sensor_unit_of_measurement": {
       "options": {
         "none": "No unit of measurement"
       }
