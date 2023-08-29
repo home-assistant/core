@@ -25,7 +25,7 @@ from homeassistant.helpers import (
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_get_persistent_notifications
 
 
 @pytest.fixture(name="connect_timeout")
@@ -1500,4 +1500,25 @@ async def test_disabled_entity_on_value_removed(
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities
+    )
+
+
+async def test_identify_event(
+    hass: HomeAssistant, client, multisensor_6, integration
+) -> None:
+    """Test controller identify event."""
+    event = Event(
+        type="identify",
+        data={
+            "source": "controller",
+            "event": "identify",
+            "nodeId": multisensor_6.node_id,
+        },
+    )
+    client.driver.controller.receive_event(event)
+    notifications = async_get_persistent_notifications(hass)
+    assert len(notifications) == 1
+    assert notifications[f"{DOMAIN}.identify_controller"]["message"] == (
+        "`Multisensor 6` has requested the Z-Wave controller, Home Assistant, to "
+        "identify itself. No action is needed from you."
     )

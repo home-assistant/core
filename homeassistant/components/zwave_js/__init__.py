@@ -21,6 +21,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -290,6 +291,11 @@ class DriverEvents:
             controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
+        # listen for identify events for the controller
+        self.config_entry.async_on_unload(
+            controller.on("identify", self.controller_events.async_on_identify)
+        )
+
     async def async_setup_platform(self, platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
@@ -416,6 +422,25 @@ class ControllerEvents:
             )
         else:
             self.remove_device(device)
+
+    @callback
+    def async_on_identify(self, event: dict) -> None:
+        """Handle identify event."""
+        # Get node device
+        node: ZwaveNode = event["node"]
+        dev_id = get_device_id(self.driver_events.driver, node)
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        assert device
+        name = device.name_by_user or device.name
+        async_create(
+            self.hass,
+            (
+                f"`{name}` has requested the Z-Wave controller, Home Assistant, to "
+                "identify itself. No action is needed from you."
+            ),
+            "Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller",
+        )
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
