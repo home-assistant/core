@@ -83,6 +83,32 @@ class MockWeatherEntity(WeatherEntity):
         ]
         self.native_precipitation = 20
 
+
+class MockWeatherEntityPrecision(WeatherEntity):
+    """Mock a Weather Entity with precision."""
+
+    def __init__(self) -> None:
+        """Initiate Entity."""
+        super().__init__()
+        self._attr_condition = ATTR_CONDITION_SUNNY
+        self._attr_native_temperature = 20.3
+        self._attr_native_apparent_temperature = 25.3
+        self._attr_native_dew_point = 2.3
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_precision = PRECISION_HALVES
+
+
+class MockWeatherTestEntity(MockWeatherEntity):
+    """Mock a Weather Entity."""
+
+    def __init__(self, values: dict[str, Any] | None = None) -> None:
+        """Initiate Entity."""
+        super().__init__()
+        self._attr_name = "test"
+        if values:
+            for key, value in values.items():
+                setattr(self, values[key], values[value])
+
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the forecast_daily."""
         return self._attr_forecast
@@ -127,27 +153,13 @@ class MockWeatherEntity(WeatherEntity):
         ]
 
 
-class MockWeatherEntityPrecision(WeatherEntity):
-    """Mock a Weather Entity with precision."""
-
-    def __init__(self) -> None:
-        """Initiate Entity."""
-        super().__init__()
-        self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_native_temperature = 20.3
-        self._attr_native_apparent_temperature = 25.3
-        self._attr_native_dew_point = 2.3
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_precision = PRECISION_HALVES
-
-
-class MockWeatherTestEntity(MockWeatherEntity):
+class MockWeatherTestLegacyEntity(MockWeatherEntity):
     """Mock a Weather Entity."""
 
     def __init__(self, values: dict[str, Any] | None = None) -> None:
         """Initiate Entity."""
         super().__init__()
-        self._attr_name = "test"
+        self._attr_name = "testlegacy"
         if values:
             for key, value in values.items():
                 setattr(self, values[key], values[value])
