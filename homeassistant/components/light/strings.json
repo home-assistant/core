@@ -308,7 +308,7 @@
         },
         "flash": {
           "name": "Flash",
-          "description": "If the light should flash."
+          "description": "Tell light to flash, can be either value short or long."
         },
         "effect": {
           "name": "Effect",

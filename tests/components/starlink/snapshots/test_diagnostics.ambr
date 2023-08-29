@@ -16,6 +16,11 @@
       'alert_thermal_throttle': False,
       'alert_unexpected_location': False,
     }),
+    'location': dict({
+      'altitude': '**REDACTED**',
+      'latitude': '**REDACTED**',
+      'longitude': '**REDACTED**',
+    }),
     'obstruction': dict({
       'raw_wedges_fraction_obstructed[]': list([
         None,

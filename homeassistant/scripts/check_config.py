@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.check_config import async_check_ha_config_file
 from homeassistant.util.yaml import Secrets
@@ -231,13 +232,13 @@ def check(config_dir, secrets=False):
 
 async def async_check_config(config_dir):
     """Check the HA config."""
-    hass = core.HomeAssistant()
+    hass = core.HomeAssistant(config_dir)
     loader.async_setup(hass)
-    hass.config.config_dir = config_dir
     hass.config_entries = ConfigEntries(hass, {})
     await ar.async_load(hass)
     await dr.async_load(hass)
     await er.async_load(hass)
+    await ir.async_load(hass, read_only=True)
     components = await async_check_ha_config_file(hass)
     await hass.async_stop(force=True)
     return components

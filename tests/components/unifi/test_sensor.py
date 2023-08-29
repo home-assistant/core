@@ -8,7 +8,11 @@ from aiounifi.websocket import WebsocketState
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SCAN_INTERVAL,
+    SensorDeviceClass,
+)
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -19,7 +23,6 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
@@ -686,7 +689,7 @@ async def test_wlan_client_sensors(
     ssid_1 = hass.states.get("sensor.ssid_1")
     assert ssid_1.state == "1"
 
-    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     ssid_1 = hass.states.get("sensor.ssid_1")
@@ -697,7 +700,7 @@ async def test_wlan_client_sensors(
     wireless_client_1["essid"] = "SSID"
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_1)
 
-    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     ssid_1 = hass.states.get("sensor.ssid_1")
@@ -708,7 +711,7 @@ async def test_wlan_client_sensors(
     wireless_client_2["last_seen"] = 0
     mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client_2)
 
-    async_fire_time_changed(hass, datetime.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     ssid_1 = hass.states.get("sensor.ssid_1")
