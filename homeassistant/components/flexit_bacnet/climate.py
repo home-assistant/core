@@ -1,6 +1,5 @@
 """The Flexit Nordic (BACnet) integration."""
 import asyncio.exceptions
-from dataclasses import dataclass
 from typing import Any
 
 from flexit_bacnet import (
@@ -15,7 +14,6 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_HOME,
     ClimateEntity,
-    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -23,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,19 +36,6 @@ from .const import (
 )
 
 
-@dataclass
-class FlexitClimateEntityDescription(ClimateEntityDescription):
-    """Describe a Flexit climate entity."""
-
-
-CLIMATE_DESCRIPTIONS: tuple[FlexitClimateEntityDescription, ...] = (
-    FlexitClimateEntityDescription(
-        key="flexit_nordic",
-        name="Flexit Nordic climate",
-    ),
-)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -58,17 +43,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Flexit Nordic unit."""
     data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = [
-        FlexitClimateEntity(data_coordinator, description)
-        for description in CLIMATE_DESCRIPTIONS
-    ]
-    async_add_entities(entities)
+    async_add_entities([FlexitClimateEntity(data_coordinator)])
 
 
 class FlexitClimateEntity(CoordinatorEntity, ClimateEntity):
     """Flexit air handling unit."""
-
-    entity_description: FlexitClimateEntityDescription
 
     _attr_has_entity_name = True
 
@@ -95,13 +74,11 @@ class FlexitClimateEntity(CoordinatorEntity, ClimateEntity):
     def __init__(
         self,
         coordinator: FlexitDataUpdateCoordinator,
-        entity_description: FlexitClimateEntityDescription,
     ) -> None:
         """Initialize the unit."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
         self._flexit_bacnet = coordinator.flexit_bacnet
-        self._attr_unique_id = self._flexit_bacnet.serial_number
+        self._attr_unique_id = f"{self._flexit_bacnet.serial_number}-climate"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, coordinator.flexit_bacnet.serial_number),

@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_ID = 1
+DEFAULT_DEVICE_ID = 2
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -37,6 +37,11 @@ async def validate_input(data: dict[str, Any]) -> str:
 
     try:
         await device.update()
+        # If wrong device id is used, reading values will succeed, but device
+        # name and id will be invalid. They will be non-zero value when correct
+        # device id is used.
+        if str(device.device_name) == "0" or str(device.serial_number) == "0":
+            raise ConnectionError
     except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
         raise CannotConnect from exc
 
