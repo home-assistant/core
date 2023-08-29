@@ -26,6 +26,16 @@ from tests.typing import WebSocketGenerator
     ),
     (
         (
+            "binary_sensor",
+            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {},
+        ),
+        (
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
             "50.0",
@@ -125,15 +135,26 @@ def get_suggested(schema, key):
         "template_type",
         "old_state_template",
         "new_state_template",
+        "template_state",
         "input_states",
         "extra_options",
         "options_options",
     ),
     (
         (
+            "binary_sensor",
+            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
+            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {},
+            {},
+        ),
+        (
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
             "{{ float(states('sensor.one')) - float(states('sensor.two')) }}",
+            ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
             {},
             {},
@@ -145,6 +166,7 @@ async def test_options(
     template_type,
     old_state_template,
     new_state_template,
+    template_state,
     input_states,
     extra_options,
     options_options,
@@ -174,7 +196,7 @@ async def test_options(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{template_type}.my_template")
-    assert state.state == "50.0"
+    assert state.state == template_state[0]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -207,7 +229,7 @@ async def test_options(
     # Check config entry is reloaded with new options
     await hass.async_block_till_done()
     state = hass.states.get(f"{template_type}.my_template")
-    assert state.state == "10.0"
+    assert state.state == template_state[1]
 
     # Check we don't get suggestions from another entry
     result = await hass.config_entries.flow.async_init(
@@ -233,16 +255,24 @@ async def test_options(
         "state_template",
         "extra_user_input",
         "input_states",
-        "template_state",
+        "template_states",
         "extra_attributes",
     ),
     (
+        (
+            "binary_sensor",
+            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            {},
+            {"one": "on", "two": "off"},
+            ["off", "on"],
+            [{}, {}],
+        ),
         (
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            "50.0",
+            ["unavailable", "50.0"],
             [{}, {}],
         ),
     ),
@@ -254,7 +284,7 @@ async def test_config_flow_preview(
     state_template: str,
     extra_user_input: dict[str, Any],
     input_states: list[str],
-    template_state: str,
+    template_states: str,
     extra_attributes: list[dict[str, Any]],
 ) -> None:
     """Test the config flow preview."""
@@ -293,7 +323,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
-        "state": "unavailable",
+        "state": template_states[0],
     }
 
     for input_entity in input_entities:
@@ -306,7 +336,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
-        "state": template_state,
+        "state": template_states[1],
     }
     assert len(hass.states.async_all()) == 2
 
@@ -317,6 +347,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
 @pytest.mark.parametrize(
     ("template_type", "state_template", "extra_user_input", "error"),
     [
+        ("binary_sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         ("sensor", "{{", {}, {"state": EARLY_END_ERROR}),
         (
             "sensor",
@@ -453,6 +484,16 @@ async def test_config_flow_preview_bad_state(
         "extra_attributes",
     ),
     [
+        (
+            "binary_sensor",
+            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
+            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            {},
+            {},
+            {"one": "on", "two": "off"},
+            "off",
+            {},
+        ),
         (
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
