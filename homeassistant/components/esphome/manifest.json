@@ -16,7 +16,7 @@
   "loggers": ["aioesphomeapi", "noiseprotocol"],
   "requirements": [
     "async_interrupt==1.1.1",
-    "aioesphomeapi==16.0.1",
+    "aioesphomeapi==16.0.3",
     "bluetooth-data-tools==1.9.1",
     "esphome-dashboard-api==1.2.3"
   ],
