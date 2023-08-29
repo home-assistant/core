@@ -6,7 +6,7 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, NodeStatus
+from zwave_js_server.const import CommandClass, ControllerStatus, NodeStatus
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
@@ -91,7 +91,13 @@ from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
 
-STATUS_ICON: dict[NodeStatus, str] = {
+CONTROLLER_STATUS_ICON: dict[ControllerStatus, str] = {
+    ControllerStatus.READY: "mdi:check",
+    ControllerStatus.UNRESPONSIVE: "mdi:bell-off",
+    ControllerStatus.JAMMED: "mdi:lock",
+}
+
+NODE_STATUS_ICON: dict[NodeStatus, str] = {
     NodeStatus.ALIVE: "mdi:heart-pulse",
     NodeStatus.ASLEEP: "mdi:sleep",
     NodeStatus.AWAKE: "mdi:eye",
@@ -530,6 +536,13 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     @callback
+    def async_add_controller_status_sensor() -> None:
+        """Add controller status sensor."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZWaveControllerStatusSensor(config_entry, driver)])
+
+    @callback
     def async_add_node_status_sensor(node: ZwaveNode) -> None:
         """Add node status sensor."""
         driver = client.driver
@@ -562,6 +575,14 @@ async def async_setup_entry(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{SENSOR_DOMAIN}",
             async_add_sensor,
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_controller_status_sensor",
+            async_add_controller_status_sensor,
         )
     )
 
@@ -828,7 +849,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon of the entity."""
-        return STATUS_ICON[self.node.status]
+        return NODE_STATUS_ICON[self.node.status]
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -853,6 +874,72 @@ class ZWaveNodeStatusSensor(SensorEntity):
             )
         )
         self._attr_native_value: str = self.node.status.name.lower()
+        self.async_write_ha_state()
+
+
+class ZWaveControllerStatusSensor(SensorEntity):
+    """Representation of a controller status sensor."""
+
+    _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+
+    def __init__(self, config_entry: ConfigEntry, driver: Driver) -> None:
+        """Initialize a generic Z-Wave device entity."""
+        self.config_entry = config_entry
+        self.controller = driver.controller
+        node = self.controller.own_node
+        assert node
+
+        # Entity class attributes
+        self._attr_name = "Status"
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        self._attr_unique_id = f"{self._base_unique_id}.controller_status"
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
+
+    async def async_poll_value(self, _: bool) -> None:
+        """Poll a value."""
+        # We log an error instead of raising an exception because this service call occurs
+        # in a separate task since it is called via the dispatcher and we don't want to
+        # raise the exception in that separate task because it is confusing to the user.
+        LOGGER.error(
+            "There is no value to refresh for this entity so the zwave_js.refresh_value"
+            " service won't work for it"
+        )
+
+    @callback
+    def _status_changed(self, _: dict) -> None:
+        """Call when status event is received."""
+        self._attr_native_value = self.controller.status.name.lower()
+        self.async_write_ha_state()
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return CONTROLLER_STATUS_ICON[self.controller.status]
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        # Add value_changed callbacks.
+        self.async_on_remove(self.controller.on("status changed", self._status_changed))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
+        )
+        # we don't listen for `remove_entity_on_ready_node` signal because this is not
+        # a regular node
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
+                self.async_remove,
+            )
+        )
+        self._attr_native_value: str = self.controller.status.name.lower()
         self.async_write_ha_state()
 
 

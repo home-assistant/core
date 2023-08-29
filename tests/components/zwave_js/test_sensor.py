@@ -261,6 +261,41 @@ async def test_config_parameter_sensor(
     await hass.async_block_till_done()
 
 
+async def test_controller_status_sensor(
+    hass: HomeAssistant, client, integration
+) -> None:
+    """Test controller status sensor is created and gets updated on controller state changes."""
+    entity_id = "sensor.z_stick_gen5_usb_controller_status"
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(entity_id)
+
+    assert not entity_entry.disabled
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert hass.states.get(entity_id).state == "ready"
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:check"
+
+    event = Event(
+        "status changed",
+        data={"source": "controller", "event": "status changed", "status": 1},
+    )
+    client.driver.controller.receive_event(event)
+    assert hass.states.get(entity_id).state == "unresponsive"
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:bell-off"
+
+    # Test transitions work
+    event = Event(
+        "status changed",
+        data={"source": "controller", "event": "status changed", "status": 2},
+    )
+    client.driver.controller.receive_event(event)
+    assert hass.states.get(entity_id).state == "jammed"
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:lock"
+
+    # Disconnect the client and make sure the entity is still available
+    await client.disconnect()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_node_status_sensor(
     hass: HomeAssistant, client, lock_id_lock_as_id150, integration
 ) -> None:
@@ -321,6 +356,16 @@ async def test_node_status_sensor(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.node_status",
+        )
+        is None
+    )
+
+    # Assert a controller status sensor entity is not created for a node
+    assert (
+        ent_reg.async_get_entity_id(
+            DOMAIN,
+            "sensor",
+            f"{get_valueless_base_unique_id(driver, node)}.controller_status",
         )
         is None
     )
