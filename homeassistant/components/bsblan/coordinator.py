@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from random import randint
 
 from bsblan import BSBLAN, BSBLANConnectionError
@@ -13,9 +12,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
@@ -37,7 +34,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             # use the default scan interval and add a random number of seconds to avoid timeouts when
             # the BSB-Lan device is already/still busy retrieving data, e.g. for MQTT or internal logging.
