@@ -964,7 +964,7 @@ class TrackTemplateResultInfo:
         self._update_time_listeners()
         _LOGGER.debug(
             (
-                "Template group %s listens for %s, first render blocker by super"
+                "Template group %s listens for %s, first render blocked by super"
                 " template: %s"
             ),
             self._track_templates,
