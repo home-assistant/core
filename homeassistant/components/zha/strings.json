@@ -507,12 +507,12 @@
   },
   "issues": {
     "wrong_silabs_firmware_installed_nabucasa": {
-      "title": "Zigbee radio has the wrong firmware installed",
-      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install the EmberZNet Zigbee firmware:\n\n1. Open the documentation by selecting the link under \"Learn More\".\n2. Follow the instructions described in the step to flash the EmberZNet Zigbee radio firmware."
+      "title": "Zigbee radio with multiprotocol firmware detected",
+      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). \n Option 1: To run your radio exclusively with ZHA, you need to install the Zigbee firmware:\n - Open the documentation by selecting the link under \"Learn More\".\n -. Follow the instructions described in the step to flash the Zigbee firmware.\n Option 2: To run your radio with multiprotocol, follow these steps: \n - Go to Settings > System > Hardware, select the device and select Configure. \n - Select the Configure IEEE 802.15.4 radio multiprotocol support option. \n - Select the checkbox and select Submit. \n - Once installed, configure the newly discovered ZHA integration."
     },
     "wrong_silabs_firmware_installed_other": {
       "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]",
-      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install the EmberZNet Zigbee firmware. Follow your Zigbee radio manufacturer's instructions for how to do this."
+      "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install Zigbee firmware. Follow your Zigbee radio manufacturer's instructions for how to do this."
     }
   }
 }
