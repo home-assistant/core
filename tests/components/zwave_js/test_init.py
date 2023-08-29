@@ -1518,7 +1518,9 @@ async def test_identify_event(
     client.driver.controller.receive_event(event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
-    assert notifications[f"{DOMAIN}.identify_controller"]["message"] == (
-        "`Multisensor 6` has requested the Z-Wave controller, Home Assistant, to "
-        "identify itself. No action is needed from you."
+    dev_id = get_device_id(client.driver, multisensor_6)
+    msg_id = f"{DOMAIN}.identify_controller.{dev_id[1]}"
+    assert list(notifications)[0] == msg_id
+    assert notifications[msg_id]["message"].startswith(
+        "`Multisensor 6` has just requested"
     )

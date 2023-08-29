@@ -431,15 +431,30 @@ class ControllerEvents:
         dev_id = get_device_id(self.driver_events.driver, node)
         device = self.dev_reg.async_get_device(identifiers={dev_id})
         assert device
-        name = device.name_by_user or device.name
+        device_name = device.name_by_user or device.name
+        home_id = self.driver_events.driver.controller.home_id
+        # In case the user has multiple networks, we should give them more information
+        # about the network for the controller being identified.
+        identifier = ""
+        if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
+            if home_id is None:
+                identifier = f"`{self.config_entry.title}` "
+            elif str(home_id) != self.config_entry.title:
+                identifier = (
+                    f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
+                )
+            else:
+                identifier = f"with the home ID `{home_id}` "
         async_create(
             self.hass,
             (
-                f"`{name}` has requested the Z-Wave controller, Home Assistant, to "
-                "identify itself. No action is needed from you."
+                f"`{device_name}` has just requested the controller for your Z-Wave "
+                f"network {identifier}to identify itself. No action is needed from "
+                "you other than to note the source of the request, and you can safely "
+                "dismiss this notification when ready."
             ),
-            "Z-Wave Identify Controller Request",
-            f"{DOMAIN}.identify_controller",
+            "New Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
     @callback
