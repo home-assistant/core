@@ -58,7 +58,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.account.get_vehicles()
         except MyBMWAuthError as err:
-            # Allow one retry interval before raising AuthFailed to avoid flaky API iissues
+            # Allow one retry interval before raising AuthFailed to avoid flaky API issues
             if self.last_update_success:
                 raise UpdateFailed(err) from err
             # Clear refresh token and trigger reauth if previous update failed as well
