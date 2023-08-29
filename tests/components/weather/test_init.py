@@ -1,5 +1,4 @@
 """The test for weather entity."""
-from datetime import datetime
 from typing import Any
 
 import pytest
@@ -34,8 +33,6 @@ from homeassistant.components.weather import (
     DOMAIN,
     ROUNDING_PRECISION,
     SERVICE_GET_FORECAST,
-    Forecast,
-    WeatherEntity,
     WeatherEntityFeature,
     round_temperature,
 )
@@ -58,7 +55,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -68,6 +64,7 @@ from homeassistant.util.unit_conversion import (
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import create_entity
+from .common import MockWeatherEntity, MockWeatherEntityPrecision
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 from tests.testing_config.custom_components.test_weather import (
@@ -76,54 +73,15 @@ from tests.testing_config.custom_components.test_weather import (
 from tests.typing import WebSocketGenerator
 
 
-class MockWeatherEntity(WeatherEntity):
-    """Mock a Weather Entity."""
-
-    def __init__(self) -> None:
-        """Initiate Entity."""
-        super().__init__()
-        self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
-        self._attr_native_pressure = 10
-        self._attr_native_pressure_unit = UnitOfPressure.HPA
-        self._attr_native_temperature = 20
-        self._attr_native_apparent_temperature = 25
-        self._attr_native_dew_point = 2
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_native_visibility = 30
-        self._attr_native_visibility_unit = UnitOfLength.KILOMETERS
-        self._attr_native_wind_gust_speed = 10
-        self._attr_native_wind_speed = 3
-        self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_forecast = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=1,
-                native_temperature=20,
-                native_dew_point=2,
-            )
-        ]
-        self._attr_forecast_twice_daily = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=10,
-                native_temperature=25,
-            )
-        ]
-
-
-class MockWeatherEntityPrecision(WeatherEntity):
-    """Mock a Weather Entity with precision."""
-
-    def __init__(self) -> None:
-        """Initiate Entity."""
-        super().__init__()
-        self._attr_condition = ATTR_CONDITION_SUNNY
-        self._attr_native_temperature = 20.3
-        self._attr_native_apparent_temperature = 25.3
-        self._attr_native_dew_point = 2.3
-        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_precision = PRECISION_HALVES
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_setup_component(hass: HomeAssistant, setup: str) -> None:
+    """Set up a Weather platform with defaults."""
+    assert hass.services.has_service(DOMAIN, "get_forecast")
+    assert f"{DOMAIN}.test" in hass.config.components
+    state = hass.states.get("weather.test")
+    assert state.state == ATTR_CONDITION_SUNNY
 
 
 @pytest.mark.parametrize(
