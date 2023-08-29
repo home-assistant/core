@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
-from functools import partial
 from typing import Any, cast
 
 import voluptuous as vol
@@ -175,23 +174,47 @@ def _strip_sentinel(options: dict[str, Any]) -> None:
             options.pop(key)
 
 
-def set_template_type(
+def _validate_unit(options: dict[str, Any]) -> None:
+    """Validate unit of measurement."""
+    if (
+        (device_class := options.get(CONF_DEVICE_CLASS))
+        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
+    ):
+        units_string = sorted(
+            [str(unit) if unit else "no unit of measurement" for unit in units],
+            key=str.casefold,
+        )
+
+        raise vol.Invalid(
+            f"'{unit}' is not a valid unit for device class '{device_class}'; "
+            f"expected one of {', '.join(units_string)}"
+        )
+
+
+def validate_user_input(
     template_type: str,
 ) -> Callable[
     [SchemaCommonFlowHandler, dict[str, Any]],
     Coroutine[Any, Any, dict[str, Any]],
 ]:
-    """Set template type."""
+    """Do post validation of user input.
 
-    async def _set_template_type(
+    For sensors: Strip none-sentinels and validate unit of measurement.
+    For all domaines: Set template type.
+    """
+
+    async def _validate_user_input(
         _: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        _strip_sentinel(user_input)
+        if template_type == Platform.SENSOR:
+            _strip_sentinel(user_input)
+            _validate_unit(user_input)
         return {"template_type": template_type} | user_input
 
-    return _set_template_type
+    return _validate_user_input
 
 
 TEMPLATE_TYPES = [
@@ -203,7 +226,7 @@ CONFIG_FLOW = {
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
         preview="template",
-        validate_user_input=set_template_type(Platform.SENSOR),
+        validate_user_input=validate_user_input(Platform.SENSOR),
     ),
 }
 
@@ -211,7 +234,9 @@ CONFIG_FLOW = {
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     Platform.SENSOR: SchemaFlowFormStep(
-        partial(options_schema, Platform.SENSOR), preview="template"
+        options_schema(Platform.SENSOR),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.SENSOR),
     ),
 }
 
@@ -256,7 +281,7 @@ def ws_start_preview(
 ) -> None:
     """Generate a preview."""
 
-    def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> Any:
+    def _validate(schema: vol.Schema, domain: str, user_input: dict[str, Any]) -> Any:
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
@@ -267,22 +292,12 @@ def ws_start_preview(
             except vol.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
 
-        unit = user_input.get(CONF_UNIT_OF_MEASUREMENT)
-        if unit == NONE_SENTINEL:
-            unit = None
-        if (
-            (device_class := user_input.get(CONF_DEVICE_CLASS))
-            and device_class != NONE_SENTINEL
-            and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
-            and unit not in units
-        ):
-            units_string = [
-                str(unit) if unit else "no unit of measurement" for unit in units
-            ]
-            errors[CONF_UNIT_OF_MEASUREMENT] = (
-                f"'{unit}' is not a valid unit for device class '{device_class}'; "
-                f"expected one of {', '.join(units_string)}"
-            )
+        if domain == Platform.SENSOR:
+            _strip_sentinel(user_input)
+            try:
+                _validate_unit(user_input)
+            except vol.Invalid as ex:
+                errors[CONF_UNIT_OF_MEASUREMENT] = str(ex.msg)
 
         return errors
 
@@ -291,7 +306,6 @@ def ws_start_preview(
         template_type = flow_status["step_id"]
         form_step = cast(SchemaFlowFormStep, CONFIG_FLOW[template_type])
         schema = cast(vol.Schema, form_step.schema)
-        errors = _validate(schema, msg["user_input"])
         name = msg["user_input"]["name"]
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
@@ -301,7 +315,8 @@ def ws_start_preview(
         template_type = config_entry.options["template_type"]
         name = config_entry.options["name"]
         schema = cast(vol.Schema, OPTIONS_FLOW[template_type].schema)
-        errors = _validate(schema, msg["user_input"])
+
+    errors = _validate(schema, template_type, msg["user_input"])
 
     @callback
     def async_preview_updated(
