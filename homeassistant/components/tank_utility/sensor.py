@@ -33,6 +33,7 @@ SENSOR_ATTRS = [
     "name",
     "address",
     "capacity",
+    "device_id",
     "fuelType",
     "orientation",
     "status",
@@ -77,7 +78,6 @@ class TankUtilitySensor(SensorEntity):
         self._token = token
         self._device = device
         self._state = None
-        self._name = f"Tank Utility {self.device}"
         self._unit_of_measurement = PERCENTAGE
         self._attributes = {}
 
@@ -94,7 +94,8 @@ class TankUtilitySensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        name = self._attributes.get("name", self.device)
+        return f"Tank Utility {name}"
 
     @property
     def native_unit_of_measurement(self):
