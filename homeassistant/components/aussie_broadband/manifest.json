@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/aussie_broadband",
   "iot_class": "cloud_polling",
   "loggers": ["aussiebb"],
-  "requirements": ["pyaussiebb==0.1.1"]
+  "requirements": ["pyaussiebb==0.0.15"]
 }

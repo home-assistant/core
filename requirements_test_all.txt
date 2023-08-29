@@ -1184,7 +1184,7 @@ pyatmo==7.5.0
 pyatv==0.13.4
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.1.1
+pyaussiebb==0.0.15
 
 # homeassistant.components.balboa
 pybalboa==1.0.1
