@@ -57,6 +57,7 @@ omit =
     homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/__init__.py
     homeassistant/components/ambient_station/binary_sensor.py
+    homeassistant/components/ambient_station/entity.py
     homeassistant/components/ambient_station/sensor.py
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -1005,6 +1006,7 @@ omit =
     homeassistant/components/renson/const.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
+    homeassistant/components/renson/binary_sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
@@ -1356,6 +1358,7 @@ omit =
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
+    homeassistant/components/transmission/__init__.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py
     homeassistant/components/travisci/sensor.py
@@ -1438,6 +1441,10 @@ omit =
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
+    homeassistant/components/vodafone_station/__init__.py
+    homeassistant/components/vodafone_station/const.py
+    homeassistant/components/vodafone_station/coordinator.py
+    homeassistant/components/vodafone_station/device_tracker.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py
@@ -1507,7 +1514,6 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/binary_sensor.py
     homeassistant/components/yale_smart_alarm/button.py
-    homeassistant/components/yale_smart_alarm/coordinator.py
     homeassistant/components/yale_smart_alarm/entity.py
     homeassistant/components/yale_smart_alarm/lock.py
     homeassistant/components/yalexs_ble/__init__.py
@@ -1522,6 +1528,9 @@ omit =
     homeassistant/components/yamaha_musiccast/select.py
     homeassistant/components/yamaha_musiccast/switch.py
     homeassistant/components/yandex_transport/sensor.py
+    homeassistant/components/yardian/__init__.py
+    homeassistant/components/yardian/coordinator.py
+    homeassistant/components/yardian/switch.py
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
     homeassistant/components/yolink/__init__.py

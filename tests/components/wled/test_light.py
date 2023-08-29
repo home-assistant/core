@@ -2,6 +2,7 @@
 import json
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -27,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
@@ -177,6 +177,7 @@ async def test_master_change_state(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_dynamically_handle_segments(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -190,7 +191,8 @@ async def test_dynamically_handle_segments(
         json.loads(load_fixture("wled/rgb.json"))
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (master := hass.states.get("light.wled_rgb_light_master"))
@@ -202,7 +204,8 @@ async def test_dynamically_handle_segments(
 
     # Test adding if segment shows up again, including the master entity
     mock_wled.update.return_value = return_value
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (master := hass.states.get("light.wled_rgb_light_master"))
@@ -216,6 +219,7 @@ async def test_dynamically_handle_segments(
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
 async def test_single_segment_behavior(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
 ) -> None:
     """Test the behavior of the integration with a single segment."""
@@ -228,7 +232,8 @@ async def test_single_segment_behavior(
     # Test segment brightness takes master into account
     device.state.brightness = 100
     device.state.segments[0].brightness = 255
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("light.wled_rgb_light"))
@@ -236,7 +241,8 @@ async def test_single_segment_behavior(
 
     # Test segment is off when master is off
     device.state.on = False
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("light.wled_rgb_light")
     assert state

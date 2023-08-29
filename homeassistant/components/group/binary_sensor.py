@@ -1,7 +1,6 @@
 """Platform allowing several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -24,14 +23,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 
@@ -92,6 +87,20 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_binary_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> BinarySensorGroup:
+    """Create a preview sensor."""
+    return BinarySensorGroup(
+        None,
+        name,
+        None,
+        validated_config[CONF_ENTITIES],
+        validated_config[CONF_ALL],
+    )
+
+
 class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     """Representation of a BinarySensorGroup."""
 
@@ -115,45 +124,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self.mode = any
         if mode:
             self.mode = all
-
-    @callback
-    def async_start_preview(
-        self,
-        preview_callback: Callable[[str, Mapping[str, Any]], None],
-    ) -> CALLBACK_TYPE:
-        """Render a preview."""
-
-        @callback
-        def async_state_changed_listener(
-            event: EventType[EventStateChangedData] | None,
-        ) -> None:
-            """Handle child updates."""
-            self.async_update_group_state()
-            preview_callback(*self._async_generate_attributes())
-
-        async_state_changed_listener(None)
-        return async_track_state_change_event(
-            self.hass, self._entity_ids, async_state_changed_listener
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(
-            event: EventType[EventStateChangedData],
-        ) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:
