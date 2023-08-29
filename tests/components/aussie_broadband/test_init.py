@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aussie_broadband import validate_service_type
@@ -24,6 +25,10 @@ async def test_validate_service_type() -> None:
     """Testing the validation function."""
     test_service = {"type": "Hardware"}
     validate_service_type(None, test_service)
+
+    with pytest.raises(UnrecognisedServiceType):
+        test_service = {"type": "FunkyBob"}
+        validate_service_type(None, test_service)
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
