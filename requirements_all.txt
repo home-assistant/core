@@ -96,7 +96,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.39.0
+PySwitchbot==0.39.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
