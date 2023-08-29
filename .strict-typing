@@ -183,6 +183,7 @@ homeassistant.components.imap.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
+homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -212,6 +213,7 @@ homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.mastodon.*
 homeassistant.components.matter.*
+homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
@@ -325,6 +327,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
