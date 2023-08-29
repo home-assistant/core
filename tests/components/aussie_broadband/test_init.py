@@ -5,6 +5,7 @@ from aiohttp import ClientConnectionError
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
 
 from homeassistant import data_entry_flow
+from homeassistant.components.aussie_broadband import validate_service_type
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -17,6 +18,12 @@ async def test_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_validate_service_type() -> None:
+    """Testing the validation function."""
+    test_service = {"type": "Hardware"}
+    validate_service_type(None, test_service)
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
