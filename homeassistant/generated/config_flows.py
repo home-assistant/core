@@ -509,6 +509,7 @@ FLOWS = {
         "vilfo",
         "vizio",
         "vlc_telnet",
+        "vodafone_station",
         "voip",
         "volumio",
         "volvooncall",

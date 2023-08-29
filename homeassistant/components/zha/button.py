@@ -6,9 +6,6 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-import zigpy.exceptions
-from zigpy.zcl.foundation import Status
-
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
@@ -134,17 +131,10 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Write attribute with defined value."""
-        try:
-            result = await self._cluster_handler.cluster.write_attributes(
-                {self._attribute_name: self._attribute_value}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self._cluster_handler.write_attributes_safe(
+            {self._attribute_name: self._attribute_value}
+        )
+        self.async_write_ha_state()
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
