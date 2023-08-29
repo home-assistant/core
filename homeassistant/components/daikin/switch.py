@@ -63,7 +63,7 @@ class DaikinZoneSwitch(SwitchEntity):
         self._api = api
         self._zone_id = zone_id
         self._attr_device_info = api.device_info
-        self._attr_unique_id = f"{self._api.device.mac}-zone{self._zone_id}"
+        self._attr_unique_id = f"{api.device.mac}-zone{zone_id}"
 
     @property
     def name(self) -> str:
