@@ -630,7 +630,7 @@ async def websocket_delete_all_refresh_tokens(
     if tasks:
         for result in await asyncio.gather(*tasks, return_exceptions=True):
             if isinstance(result, Exception):
-                getLogger(__name__).error(
+                getLogger(__name__).exception(
                     "During refresh token removal, the following error occurred: %s",
                     result,
                 )
