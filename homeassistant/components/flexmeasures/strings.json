@@ -5,7 +5,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "power_sensor": "[%key:common::config_flow::data::power_sensor%]",
+          "price_sensor": "[%key:common::config_flow::data::price_sensor%]",
+          "soc_sensor": "[%key:common::config_flow::data::soc_sensor%]",
+          "rm_discharge_sensor": "[%key:common::config_flow::data::rm_discharge_sensor%]",
+          "schedule_duration": "[%key:common::config_flow::data::schedule_duration%]"
         }
       }
     },

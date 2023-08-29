@@ -13,7 +13,12 @@
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username"
+                    "username": "Username",
+                    "power_sensor": "Power Sensor",
+                    "price_sensor": "Price Sensor",
+                    "soc_sensor": "SOC Sensor",
+                    "rm_discharge_sensor": "Resource Manager Discharge Sensor",
+                    "schedule_duration": "Schedule Duration (Hours)"
                 }
             }
         }

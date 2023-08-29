@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .helpers import get_previous_option
@@ -25,6 +26,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ): str,
         vol.Required("username"): str,
         vol.Required("password"): str,
+        vol.Required("power_sensor", default=1): int,
+        vol.Required("price_sensor", default=2): int,
+        vol.Required("soc_sensor", default=4): int,
+        vol.Required("rm_discharge_sensor", default=5): int,
+        vol.Required("schedule_duration", default=24): int,
     }
 )
 
@@ -53,6 +59,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Currently used here solely for config validation (i.e. not returned to be stored in the config entry)
     try:
         client = FlexMeasuresClient(
+            session=async_get_clientsession(hass),
             host=data["host"],
             email=data["username"],
             password=data["password"],
@@ -94,12 +101,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
-            if "host" in str(exception):
-                errors["host"] = str(exception)
-            elif "email" in str(exception):
-                errors["username"] = str(exception)
-            elif "password" in str(exception):
-                errors["password"] = str(exception)
+
+            for field in ["host", "email", "password"]:
+                if field in str(exception):
+                    errors[field] = str(exception)
+
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -161,6 +167,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     "password",
                     default=get_previous_option(self.config_entry, "password"),
                 ): str,
+                vol.Required(
+                    "power_sensor",
+                    default=get_previous_option(self.config_entry, "power_sensor"),
+                ): int,
+                vol.Required(
+                    "price_sensor",
+                    default=get_previous_option(self.config_entry, "price_sensor"),
+                ): int,
+                vol.Required(
+                    "soc_sensor",
+                    default=get_previous_option(self.config_entry, "soc_sensor"),
+                ): int,
+                vol.Required(
+                    "rm_discharge_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "rm_discharge_sensor"
+                    ),
+                ): int,
+                vol.Required(
+                    "schedule_duration",
+                    default=get_previous_option(self.config_entry, "schedule_duration"),
+                ): int,
             }
         )
         return self.async_show_form(

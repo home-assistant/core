@@ -1,0 +1,10 @@
+change_control_type:
+  fields:
+    control_type:
+      required: true
+      default: "NO_SELECTION"
+      selector:
+        select:
+          options:
+            - "NO_SELECTION"
+            - "FILL_RATE_BASED_CONTROL"
