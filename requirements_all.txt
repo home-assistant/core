@@ -463,6 +463,9 @@ apsystems-ez1==1.3.1
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
+# homeassistant.components.aqvify
+aqvify==0.1.1
+
 # homeassistant.components.aranet
 aranet4==2.3.4
 
