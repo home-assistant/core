@@ -412,43 +412,34 @@ class WeatherEntity(Entity, PostInit):
         if self.__weather_legacy_forecast and not _reported_forecast:
             module = inspect.getmodule(self)
             if module and module.__file__ and "custom_components" in module.__file__:
+                # Do not report on core integrations as they are already fixed or PR is open.
                 report_issue = "report it to the custom integration author."
-            else:
-                report_issue = (
-                    "create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                _LOGGER.warning(
+                    (
+                        "%s::%s is using a forecast attribute on an instance of "
+                        "WeatherEntity, this is deprecated and will be unsupported "
+                        "from Home Assistant 2024.3. Please %s"
+                    ),
+                    self.__module__,
+                    self.entity_id,
+                    report_issue,
                 )
-            _LOGGER.warning(
-                (
-                    "%s::%s is using a forecast attribute on an instance of "
-                    "WeatherEntity, this is deprecated and will be unsupported "
-                    "from Home Assistant 2024.3. Please %s"
-                ),
-                self.__module__,
-                self.entity_id,
-                report_issue,
-            )
-            if report_issue.startswith("create"):
-                report_issue = (
-                    "create a [bug report]"
-                    "(https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue)"
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_weather_forecast_{self.platform.platform_name}",
+                    breaks_in_ha_version="2024.3.0",
+                    is_fixable=False,
+                    is_persistent=False,
+                    issue_domain=self.platform.platform_name,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="deprecated_weather_forecast",
+                    translation_placeholders={
+                        "platform": self.platform.platform_name,
+                        "report_issue": report_issue,
+                    },
                 )
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_weather_forecast_{self.platform.platform_name}",
-                breaks_in_ha_version="2024.3.0",
-                is_fixable=False,
-                is_persistent=False,
-                issue_domain=self.platform.platform_name,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_weather_forecast",
-                translation_placeholders={
-                    "platform": self.platform.platform_name,
-                    "report_issue": report_issue,
-                },
-            )
-            _reported_forecast = True
+                _reported_forecast = True
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
