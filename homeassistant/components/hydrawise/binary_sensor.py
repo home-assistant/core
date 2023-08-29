@@ -90,7 +90,7 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         """Get the latest data and updates the state."""
         LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
         if self.entity_description.key == "status":
-            self._attr_is_on = self.coordinator.api.status == "All good!"
+            self._attr_is_on = self.coordinator.api.status is not None
         elif self.entity_description.key == "is_watering":
             relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
             self._attr_is_on = relay_data["timestr"] == "Now"
