@@ -195,17 +195,9 @@ def update_pyav_logging(_event: Event | None = None) -> None:
 
     def set_pyav_logging(enable: bool) -> None:
         """Turn PyAV logging on or off."""
-        # PyAV messages are logged at several different levels. Setting the logger level
-        # to CRITICAL should silence nearly all of them.
-        logging.getLogger("libav").setLevel(
-            logging.INFO if enable else logging.CRITICAL
-        )
-        # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
-        # at logging.WARNING. Set those levels to logging.ERROR if enabled.
-        for logging_namespace in ("libav.mp4", "libav.swscaler"):
-            logging.getLogger(logging_namespace).setLevel(
-                logging.ERROR if enable else logging.CRITICAL
-            )
+        import av  # pylint: disable=import-outside-toplevel
+
+        av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
     # enable PyAV logging iff Stream logger is set to debug
     set_pyav_logging(logging.getLogger(__name__).isEnabledFor(logging.DEBUG))
@@ -218,6 +210,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cancel_logging_listener = hass.bus.async_listen(
         EVENT_LOGGING_CHANGED, update_pyav_logging
     )
+    # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
+    # at logging.WARNING. Set those Logger levels to logging.ERROR
+    for logging_namespace in ("libav.mp4", "libav.swscaler"):
+        logging.getLogger(logging_namespace).setLevel(logging.ERROR)
     update_pyav_logging()
 
     # Keep import here so that we can import stream integration without installing reqs
