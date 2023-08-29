@@ -3299,7 +3299,7 @@ async def test_subscribe_log_updates(
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "zwave_js_server.model.driver.Driver.async_start_listening_logs",
+        "zwave_js_server.client.Client.async_start_listening_logs",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
