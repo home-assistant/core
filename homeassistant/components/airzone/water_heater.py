@@ -40,6 +40,20 @@ OPERATION_LIB_TO_HASS: Final[dict[HotWaterOperation, str]] = {
     HotWaterOperation.Powerful: STATE_PERFORMANCE,
 }
 
+OPERATION_MODE_TO_DHW_PARAMS: Final[dict[str, dict[str, Any]]] = {
+    STATE_OFF: {
+        API_ACS_ON: 0,
+    },
+    STATE_ECO: {
+        API_ACS_ON: 1,
+        API_ACS_POWER_MODE: 0,
+    },
+    STATE_PERFORMANCE: {
+        API_ACS_ON: 1,
+        API_ACS_POWER_MODE: 1,
+    },
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -94,15 +108,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
-        params: dict[str, Any] = {}
-        if operation_mode == STATE_OFF:
-            params[API_ACS_ON] = 0
-        elif operation_mode == STATE_ECO:
-            params[API_ACS_ON] = 1
-            params[API_ACS_POWER_MODE] = 0
-        elif operation_mode == STATE_PERFORMANCE:
-            params[API_ACS_ON] = 1
-            params[API_ACS_POWER_MODE] = 1
+        params: dict[str, Any] = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
         await self._async_update_dhw_params(params)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
