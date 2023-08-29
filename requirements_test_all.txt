@@ -1542,7 +1542,7 @@ pytautulli==23.1.1
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.15
+python-bsblan==0.5.16
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
