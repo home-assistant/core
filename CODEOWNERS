@@ -293,8 +293,6 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
 /tests/components/dsmr_reader/ @depl0y @glodenox
-/homeassistant/components/dunehd/ @bieniu
-/tests/components/dunehd/ @bieniu
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -1057,8 +1055,8 @@ build.json @home-assistant/supervisor
 /tests/components/rss_feed_template/ @home-assistant/core
 /homeassistant/components/rtsp_to_webrtc/ @allenporter
 /tests/components/rtsp_to_webrtc/ @allenporter
-/homeassistant/components/ruckus_unleashed/ @gabe565
-/tests/components/ruckus_unleashed/ @gabe565
+/homeassistant/components/ruckus_unleashed/ @gabe565 @lanrat
+/tests/components/ruckus_unleashed/ @gabe565 @lanrat
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1368,6 +1366,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
+/homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
+/tests/components/vodafone_station/ @paoloantinori @chemelli74
 /homeassistant/components/voip/ @balloob @synesthesiam
 /tests/components/voip/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
