@@ -26,6 +26,9 @@ async def test_validate_service_type() -> None:
     test_service = {"type": "Hardware", "name": "test service"}
     validate_service_type(None, test_service)
 
+    with pytest.raises(ValueError):
+        test_service = {"name": "test service"}
+        validate_service_type(None, test_service)
     with pytest.raises(UnrecognisedServiceType):
         test_service = {"type": "FunkyBob", "name": "test service"}
         validate_service_type(None, test_service)
