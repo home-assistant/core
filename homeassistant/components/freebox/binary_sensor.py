@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, Freeboxlabel
+from .const import DOMAIN, FreeboxHomeCategory
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -53,9 +53,9 @@ async def async_setup_entry(
     for nodeid, node in router.home_devices.items():
         if nodeid in tracked:
             continue
-        if node["category"] == Freeboxlabel.PIR:
+        if node["category"] == FreeboxHomeCategory.PIR:
             new_trackedpir.append(FreeboxPirSensor(hass, router, node))
-        elif node["category"] == Freeboxlabel.DWS:
+        elif node["category"] == FreeboxHomeCategory.DWS:
             new_trackeddws.append(FreeboxDwsSensor(hass, router, node))
 
         sensor_cover_node = next(
