@@ -77,12 +77,14 @@ async def async_setup_entry(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+    default_watering_timer = DEFAULT_WATERING_TIME
 
     entities = [
         HydrawiseSwitch(
             data=zone,
             coordinator=coordinator,
             description=description,
+            default_watering_timer=default_watering_timer,
         )
         for zone in coordinator.api.relays
         for description in SWITCH_TYPES
@@ -94,11 +96,23 @@ async def async_setup_entry(
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
+    def __init__(
+        self,
+        *,
+        data: dict[str, Any],
+        coordinator: HydrawiseDataUpdateCoordinator,
+        description: SwitchEntityDescription,
+        default_watering_timer: int,
+    ) -> None:
+        """Initialize a switch for Hydrawise device."""
+        super().__init__(data=data, coordinator=coordinator, description=description)
+        self._default_watering_timer = default_watering_timer
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         zone_number = self.data["relay"]
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(DEFAULT_WATERING_TIME, zone_number)
+            self.coordinator.api.run_zone(self._default_watering_timer, zone_number)
         elif self.entity_description.key == "auto_watering":
             self.coordinator.api.suspend_zone(0, zone_number)
 
