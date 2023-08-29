@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools~=68.0", "wheel~=0.40.0"]
+requires = ["setuptools==68.0.0", "wheel~=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,8 +25,8 @@ requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp==3.8.5",
     "astral==2.2",
-    "async-timeout==4.0.2",
-    "attrs==22.2.0",
+    "async-timeout==4.0.3",
+    "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.9.0",
     "bcrypt==4.0.1",
@@ -35,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
-    "home-assistant-bluetooth==1.10.2",
+    "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -51,7 +51,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.7.0,<5.0",
-    "ulid-transform==0.8.0",
+    "ulid-transform==0.8.1",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
@@ -120,18 +120,6 @@ fail-on = [
 
 [tool.pylint.BASIC]
 class-const-naming-style = "any"
-good-names = [
-    "_",
-    "ev",
-    "ex",
-    "fp",
-    "i",
-    "id",
-    "j",
-    "k",
-    "Run",
-    "ip",
-]
 
 [tool.pylint."MESSAGES CONTROL"]
 # Reasons disabled:
@@ -266,6 +254,7 @@ disable = [
     "missing-module-docstring", # D100
     "multiple-imports", #E401
     "singleton-comparison", # E711, E712
+    "subprocess-run-check", # PLW1510
     "superfluous-parens", # UP034
     "ungrouped-imports", # I001
     "unidiomatic-typecheck", # E721
@@ -428,11 +417,95 @@ norecursedirs = [
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
-filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
+filterwarnings = [
+    "error::sqlalchemy.exc.SAWarning",
+
+    # -- HomeAssistant - aiohttp
+    # Overwrite web.Application to pass a custom default argument to _make_request
+    "ignore:Inheritance class HomeAssistantApplication from web.Application is discouraged:DeprecationWarning",
+    # Hass wraps `ClientSession.close` to emit a warning if the session is closed accidentally
+    "ignore:Setting custom ClientSession.close attribute is discouraged:DeprecationWarning:homeassistant.helpers.aiohttp_client",
+    # Modify app state for testing
+    "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
+
+    # -- Tests
+    # Ignore custom pytest marks
+    "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
+
+    # -- design choice 3rd party
+    # https://github.com/gwww/elkm1/blob/2.2.5/elkm1_lib/util.py#L8-L19
+    "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
+    # https://github.com/michaeldavie/env_canada/blob/v0.5.36/env_canada/ec_cache.py
+    "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
+    # https://github.com/bachya/regenmaschine/blob/2023.08.0/regenmaschine/client.py#L51
+    "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
+
+    # -- Setuptools DeprecationWarnings
+    # https://github.com/googleapis/google-cloud-python/issues/11184
+    # https://github.com/zopefoundation/meta/issues/194
+    "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
+    "ignore:Deprecated call to `pkg_resources.declare_namespace\\('google.*'\\)`:DeprecationWarning:google.rpc",
+
+    # -- tracked upstream / open PRs
+    # https://github.com/caronc/apprise/issues/659 - v1.4.5
+    "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:apprise.AppriseLocal",
+    # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
+    "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
+    # https://github.com/eclipse/paho.mqtt.python/issues/653 - v1.6.1
+    # https://github.com/eclipse/paho.mqtt.python/pull/665
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
+    # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
+    "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
+    # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
+    "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
+    # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - v0.5.3
+    "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
+    # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
+    # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
+    "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
+
+    # -- fixed, waiting for release / update
+    # https://github.com/gurumitts/pylutron-caseta/pull/143 - >0.18.1
+    "ignore:ssl.PROTOCOL_TLSv1_2 is deprecated:DeprecationWarning:pylutron_caseta.smartbridge",
+    # https://github.com/Danielhiversen/pyMillLocal/pull/8 - >=0.3.0
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:mill_local",
+
+    # -- not helpful
+    # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
+    "ignore:The module pyatmo.* is deprecated:DeprecationWarning:pyatmo",
+
+    # -- unmaintained projects, last release about 2+ years
+    # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
+    # https://pypi.org/project/aiomodernforms/ - v0.1.8 - 2021-06-27
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:aiomodernforms.modernforms",
+    # https://pypi.org/project/directv/ - v0.4.0 - 2020-09-12
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:directv.directv",
+    # https://pypi.org/project/emulated-roku/ - v0.2.1 - 2020-01-23 (archived)
+    "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
+    # https://pypi.org/project/foobot_async/ - v1.0.0 - 2020-11-24
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
+    # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
+    # https://pypi.org/project/commentjson/ - v0.9.0 - 2020-10-05
+    # https://github.com/vaidik/commentjson/issues/51
+    # Fixed upstream, commentjson depends on old version and seems to be unmaintained
+    "ignore:module '(sre_parse|sre_constants)' is deprecate:DeprecationWarning:lark.utils",
+    # https://pypi.org/project/lomond/ - v0.3.3 - 2018-09-21
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:lomond.session",
+    # https://pypi.org/project/passlib/ - v1.7.4 - 2020-10-08
+    "ignore:'crypt' is deprecated and slated for removal in Python 3.13:DeprecationWarning:passlib.utils",
+    # https://pypi.org/project/pyqwikswitch/ - v0.94 - 2019-08-19
+    "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
+    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
+    # https://pypi.org/project/rxv/ - v0.7.0 - 2021-10-10
+    "ignore:defusedxml.cElementTree is deprecated, import from defusedxml.ElementTree instead:DeprecationWarning:rxv.ssdp",
+    # https://pypi.org/project/vilfo-api-client/ - v0.4.1 - 2021-11-06
+    "ignore:Function 'semver.compare' is deprecated. Deprecated since version 3.0.0:PendingDeprecationWarning:.*vilfo.client",
+    # https://pypi.org/project/webrtcvad/ - v2.0.10 - 2017-01-08
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
+]
 
 [tool.ruff]
-target-version = "py310"
-
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
@@ -442,6 +515,8 @@ select = [
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
+    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
     "G", # flake8-logging-format
@@ -488,6 +563,7 @@ select = [
     "SIM401", # Use get from dict with default instead of an if block
     "T100", # Trace found: {name} used
     "T20",  # flake8-print
+    "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
     "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
@@ -530,6 +606,9 @@ voluptuous = "vol"
 
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
+
+[tool.ruff.flake8-tidy-imports.banned-api]
+"pytz".msg = "use zoneinfo instead"
 
 [tool.ruff.isort]
 force-sort-within-sections = true

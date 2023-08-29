@@ -1,12 +1,12 @@
 """Binary sensor platform for hvv_departures."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectorError
-import async_timeout
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.binary_sensor import (
@@ -90,7 +90,7 @@ async def async_setup_entry(
         payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
                     station_name, await hub.gti.stationInformation(payload)
                 )

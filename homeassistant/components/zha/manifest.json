@@ -114,6 +114,10 @@
       "name": "*zigstar*"
     },
     {
+      "type": "_uzg-01._tcp.local.",
+      "name": "uzg-01*"
+    },
+    {
       "type": "_slzb-06._tcp.local.",
       "name": "slzb-06*"
     }

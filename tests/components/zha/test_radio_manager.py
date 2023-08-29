@@ -32,7 +32,9 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001):
+    with patch(
+        "homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001
+    ), patch("homeassistant.components.zha.radio_manager.RETRY_DELAY_S", 0.0001):
         yield
 
 
@@ -87,7 +89,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 
 @pytest.fixture
-def mock_connect_zigpy_app() -> Generator[None, None, None]:
+def mock_connect_zigpy_app() -> Generator[MagicMock, None, None]:
     """Mock the radio connection."""
 
     mock_connect_app = MagicMock()
@@ -100,7 +102,7 @@ def mock_connect_zigpy_app() -> Generator[None, None, None]:
         "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
         return_value=mock_connect_app,
     ):
-        yield
+        yield mock_connect_app
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -374,6 +376,55 @@ async def test_migrate_non_matching_port(
         "radio_type": "ezsp",
     }
     assert config_entry.title == "Test"
+
+
+async def test_migrate_initiate_failure(
+    hass: HomeAssistant,
+    mock_connect_zigpy_app,
+) -> None:
+    """Test retries with failure."""
+    # Set up the config entry
+    config_entry = MockConfigEntry(
+        data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
+        domain=DOMAIN,
+        options={},
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+
+    migration_data = {
+        "new_discovery_info": {
+            "name": "Test Updated",
+            "port": {
+                "path": "socket://some/virtual_port",
+                "baudrate": 115200,
+                "flow_control": "hardware",
+            },
+            "radio_type": "efr32",
+        },
+        "old_discovery_info": {
+            "hw": {
+                "name": "Test",
+                "port": {
+                    "path": "/dev/ttyTEST123",
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
+                },
+                "radio_type": "efr32",
+            }
+        },
+    }
+
+    mock_load_info = AsyncMock(side_effect=OSError())
+    mock_connect_zigpy_app.__aenter__.return_value.load_network_info = mock_load_info
+
+    migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
+
+    with pytest.raises(OSError):
+        await migration_helper.async_initiate_migration(migration_data)
+
+    assert len(mock_load_info.mock_calls) == radio_manager.BACKUP_RETRIES
 
 
 @pytest.fixture(name="radio_manager")

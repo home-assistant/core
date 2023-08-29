@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Any
 
+from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
@@ -49,7 +50,9 @@ RECOMMENDED_RADIOS = (
 )
 
 CONNECT_DELAY_S = 1.0
+RETRY_DELAY_S = 1.0
 
+BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
@@ -144,6 +147,7 @@ class ZhaRadioManager:
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
+        app_config[CONF_USE_THREAD] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -358,7 +362,24 @@ class ZhaMultiPANMigrationHelper:
         old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
         old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
         old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
-        backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
+
+        for retry in range(BACKUP_RETRIES):
+            try:
+                backup = await old_radio_mgr.async_load_network_settings(
+                    create_backup=True
+                )
+                break
+            except OSError as err:
+                if retry >= BACKUP_RETRIES - 1:
+                    raise
+
+                _LOGGER.debug(
+                    "Failed to create backup %r, retrying in %s seconds",
+                    err,
+                    RETRY_DELAY_S,
+                )
+
+            await asyncio.sleep(RETRY_DELAY_S)
 
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
@@ -398,10 +419,10 @@ class ZhaMultiPANMigrationHelper:
                 _LOGGER.debug(
                     "Failed to restore backup %r, retrying in %s seconds",
                     err,
-                    CONNECT_DELAY_S,
+                    RETRY_DELAY_S,
                 )
 
-            await asyncio.sleep(CONNECT_DELAY_S)
+            await asyncio.sleep(RETRY_DELAY_S)
 
         _LOGGER.debug("Restored backup after %s retries", retry)
 
