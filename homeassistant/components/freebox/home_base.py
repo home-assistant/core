@@ -133,23 +133,6 @@ class FreeboxHomeEntity(Entity):
             return None
         return node["id"]
 
-    async def async_set_value(self, ep_type, name, value) -> None:
-        """Set the value."""
-        node = next(
-            filter(
-                lambda x: (x["name"] == name and x["ep_type"] == ep_type),
-                self._node["show_endpoints"],
-            ),
-            None,
-        )
-        if node is None:
-            _LOGGER.warning(
-                "The Freebox Home device has no node for: %s/%s", ep_type, name
-            )
-            return
-        node["value"] = value
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Register state update callback."""
         self.remove_signal_update(
