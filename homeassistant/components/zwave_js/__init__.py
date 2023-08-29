@@ -433,13 +433,14 @@ class ControllerEvents:
         assert device
         device_name = device.name_by_user or device.name
         home_id = self.driver_events.driver.controller.home_id
+        # We do this because we know at this point the controller has its home ID as
+        # as it is part of the device ID
+        assert home_id
         # In case the user has multiple networks, we should give them more information
         # about the network for the controller being identified.
         identifier = ""
         if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
-            if home_id is None:
-                identifier = f"`{self.config_entry.title}` "
-            elif str(home_id) != self.config_entry.title:
+            if str(home_id) != self.config_entry.title:
                 identifier = (
                     f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
                 )
