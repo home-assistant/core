@@ -3,6 +3,7 @@ from collections.abc import Generator
 
 import pytest
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
 
@@ -27,7 +28,9 @@ class WeatherFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> Generator[None, None, None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -37,6 +40,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 @pytest.fixture(name="setup")
 async def setup_fixture(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
     mock_weather_entity: MockWeatherTestEntity,
