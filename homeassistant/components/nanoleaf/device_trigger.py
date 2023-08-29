@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import NanoleafEntryData
+from .connection import get_nanoleaf_connection_by_device_id
 from .const import (
     DOMAIN,
     NANOLEAF_EVENT,
@@ -70,29 +70,31 @@ async def async_get_trigger_capabilities(
     if device_entry is None:
         raise DeviceNotFound(f"Device ID {config[CONF_DEVICE_ID]} is not valid")
     if config[CONF_TYPE] in TRIGGER_TYPES_THAT_REPORT_PANEL_ID:
-        entryData: NanoleafEntryData = hass.data[DOMAIN][
-            next(iter(device_entry.config_entries))
-        ]
-        panels = entryData.device.panels
-        options = [
-            selector.SelectOptionDict(value=str(p.id), label=f"{p.id} - {p.shape.name}")
-            for p in panels
-            if p.id is not None
-        ]
-        return {
-            "extra_fields": vol.Schema(
-                {
-                    vol.Optional(NANOLEAF_PANEL_ID): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            mode=selector.SelectSelectorMode.DROPDOWN,
-                            multiple=False,
-                            custom_value=True,
-                            options=options,
-                        )
+        if nanoleaf := get_nanoleaf_connection_by_device_id(
+            hass, config[CONF_DEVICE_ID]
+        ):
+            if panels := nanoleaf.panels:
+                options = [
+                    selector.SelectOptionDict(
+                        value=str(p.id), label=f"{p.id} - {p.shape.name}"
+                    )
+                    for p in panels
+                    if p.id is not None
+                ]
+                return {
+                    "extra_fields": vol.Schema(
+                        {
+                            vol.Optional(NANOLEAF_PANEL_ID): selector.SelectSelector(
+                                selector.SelectSelectorConfig(
+                                    mode=selector.SelectSelectorMode.DROPDOWN,
+                                    multiple=False,
+                                    custom_value=True,
+                                    options=options,
+                                )
+                            )
+                        }
                     )
                 }
-            )
-        }
 
     return {}
 
