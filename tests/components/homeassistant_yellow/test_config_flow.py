@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow config flow."""
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 @pytest.fixture(name="get_yellow_settings")
