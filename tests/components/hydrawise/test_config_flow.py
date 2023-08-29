@@ -32,7 +32,6 @@ async def test_form(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"api_key": "abc123"}
     )
-    mock_api.return_value.status = "All good!"
     mock_api.return_value.customer_id = 12345
     await hass.async_block_till_done()
 
@@ -42,47 +41,43 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@patch("pydrawise.legacy.LegacyHydrawise", side_effect=HTTPError)
+@patch("pydrawise.legacy.LegacyHydrawise")
 async def test_form_api_error(mock_api: MagicMock, hass: HomeAssistant) -> None:
     """Test we handle API errors."""
-    result = await hass.config_entries.flow.async_init(
+    mock_api.side_effect = HTTPError
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": "abc123"}
+    data = {"api_key": "abc123"}
+    result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], data
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-@patch("pydrawise.legacy.LegacyHydrawise", side_effect=ConnectTimeout)
-async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) -> None:
-    """Test we handle API errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": "abc123"}
-    )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "timeout_connect"}
+    mock_api.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
-async def test_form_no_status(mock_api: MagicMock, hass: HomeAssistant) -> None:
-    """Test we handle a lack of API status."""
-    mock_api.return_value.status = None
-    result = await hass.config_entries.flow.async_init(
+async def test_form_connect_timeout(mock_api: MagicMock, hass: HomeAssistant) -> None:
+    """Test we handle API errors."""
+    mock_api.side_effect = ConnectTimeout
+    init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": "abc123"}
+    data = {"api_key": "abc123"}
+    result = await hass.config_entries.flow.async_configure(
+        init_result["flow_id"], data
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+
+    mock_api.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
 @patch("pydrawise.legacy.LegacyHydrawise")
