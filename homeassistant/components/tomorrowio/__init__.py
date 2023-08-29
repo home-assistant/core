@@ -221,7 +221,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.async_refresh()
 
         self.update_interval = async_set_update_interval(self.hass, self._api)
-        self._schedule_refresh()
+        self._next_refresh = None
+        self._async_unsub_refresh()
+        if self._listeners:
+            self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """Unload a config entry from coordinator.

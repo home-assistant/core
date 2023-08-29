@@ -1,10 +1,10 @@
 """YoLink DataUpdateCoordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
@@ -41,7 +41,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 device_state_resp = await self.device.fetch_state()
                 device_state = device_state_resp.data.get(ATTR_DEVICE_STATE)
                 if self.paired_device is not None and device_state is not None:

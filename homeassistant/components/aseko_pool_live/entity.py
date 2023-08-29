@@ -11,6 +11,8 @@ from .coordinator import AsekoDataUpdateCoordinator
 class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
     """Representation of an aseko entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, unit: Unit, coordinator: AsekoDataUpdateCoordinator) -> None:
         """Initialize the aseko entity."""
         super().__init__(coordinator)

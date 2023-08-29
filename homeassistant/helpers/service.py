@@ -597,7 +597,7 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, missing)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # pylint: disable=unidiomatic-typecheck
+            if type(int_or_exc) is Integration:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:

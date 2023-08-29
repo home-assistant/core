@@ -688,6 +688,12 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
+        },
+    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
