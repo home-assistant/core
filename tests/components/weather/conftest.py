@@ -24,7 +24,7 @@ def mock_weather_entity() -> MockWeatherTestEntity:
     To override the entity, tests can be marked with:
     @pytest.mark.parametrize("get_weather_entity", [{...}])
     """
-    return MockWeatherTestEntity()
+    return MockWeatherTestEntity
 
 
 class WeatherFlow(ConfigFlow):

@@ -53,7 +53,6 @@ class MockWeatherEntity(WeatherEntity):
 
     def __init__(self) -> None:
         """Initiate Entity."""
-        super().__init__()
         self._attr_condition = ATTR_CONDITION_SUNNY
         self._attr_humidity = 50
         self._attr_ozone = 20
@@ -82,6 +81,10 @@ class MockWeatherEntity(WeatherEntity):
             )
         ]
         self.native_precipitation = 20
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
 
 
 class MockWeatherEntityPrecision(WeatherEntity):
@@ -153,16 +156,24 @@ class MockWeatherTestEntity(MockWeatherEntity):
         ]
 
 
-class MockWeatherTestLegacyEntity(MockWeatherEntity):
+class MockWeatherTestLegacyEntity(WeatherEntity):
     """Mock a Weather Entity."""
 
-    def __init__(self, values: dict[str, Any] | None = None) -> None:
+    _attr_attribution = "Made by Home Assistant"
+
+    def __init__(self) -> None:
         """Initiate Entity."""
-        super().__init__()
         self._attr_name = "testlegacy"
-        if values:
-            for key, value in values.items():
-                setattr(self, values[key], values[value])
+        self._attr_unique_id = "testlegacy"
+        self._attr_condition = ATTR_CONDITION_SUNNY
+        self._attr_forecast = [
+            Forecast(
+                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
+                native_precipitation=1,
+                native_temperature=20,
+                native_dew_point=2,
+            )
+        ]
 
 
 async def mock_setup(
@@ -179,7 +190,7 @@ async def mock_setup(
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up test tts platform via config entry."""
-        async_add_entities([weather_entity])
+        async_add_entities([weather_entity()])
 
     loaded_platform = MockPlatform(async_setup_platform=async_setup_platform)
     mock_platform(hass, f"{TEST_DOMAIN}.{WEATHER_DOMAIN}", loaded_platform)
@@ -228,7 +239,8 @@ async def mock_config_entry_setup(
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test tts platform via config entry."""
-        async_add_entities([weather_entity])
+        load_entity = weather_entity
+        async_add_entities([load_entity()])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
     mock_platform(hass, f"{TEST_DOMAIN}.{WEATHER_DOMAIN}", loaded_platform)

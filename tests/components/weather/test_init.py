@@ -909,12 +909,8 @@ async def test_get_forecast_unsupported(
             )
 
 
-@pytest.mark.parametrize("get_weather_entity", [MockWeatherTestLegacyEntity()])
-@pytest.mark.parametrize(
-    "setup",
-    ["mock_config_entry_setup"],
-    indirect=True,
-)
+@pytest.mark.parametrize("get_weather_entity", [MockWeatherTestLegacyEntity])
+@pytest.mark.parametrize("setup", ["mock_config_entry_setup"], indirect=True)
 async def test_issue_forecast_deprecated_logging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, setup: str
 ) -> None:
