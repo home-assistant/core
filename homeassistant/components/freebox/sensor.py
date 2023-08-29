@@ -63,7 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities: list[FreeboxSensor] = []
+    entities: list[SensorEntity] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -226,7 +226,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._attr_native_value = value
 
 
-class FreeboxBatterySensor(FreeboxHomeEntity, FreeboxSensor):
+class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     """Representation of a Freebox battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
