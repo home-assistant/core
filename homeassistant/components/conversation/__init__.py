@@ -224,6 +224,7 @@ async def websocket_process(
         context=connection.context(msg),
         language=msg.get("language"),
         agent_id=msg.get("agent_id"),
+        device_id=msg.get("device_id"),
     )
     connection.send_result(msg["id"], result.as_dict())
 

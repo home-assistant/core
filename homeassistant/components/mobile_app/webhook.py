@@ -341,6 +341,7 @@ async def webhook_conversation_process(
         language=data.get("language"),
         conversation_id=data.get("conversation_id"),
         context=registration_context(config_entry.data),
+        device_id=config_entry.data[ATTR_DEVICE_ID],
     )
     return webhook_response(result.as_dict(), registration=config_entry.data)
 

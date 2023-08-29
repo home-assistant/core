@@ -187,12 +187,20 @@ class DefaultAgent(AbstractConversationAgent):
             _LOGGER.warning("No intents were loaded for language: %s", language)
             return None
 
+        intent_context = None
+
+        if user_input.device_id:
+            if device := dr.async_get(self.hass).async_get(user_input.device_id):
+                if (device is not None) and device.area_id:
+                    intent_context = {"area": device.area_id}
+
         slot_lists = self._make_slot_lists()
         result = await self.hass.async_add_executor_job(
             self._recognize,
             user_input,
             lang_intents,
             slot_lists,
+            intent_context,
         )
 
         return result
@@ -277,12 +285,16 @@ class DefaultAgent(AbstractConversationAgent):
         user_input: ConversationInput,
         lang_intents: LanguageIntents,
         slot_lists: dict[str, SlotList],
+        intent_context: dict[str, Any] | None,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         # Prioritize matches with entity names above area names
         maybe_result: RecognizeResult | None = None
         for result in recognize_all(
-            user_input.text, lang_intents.intents, slot_lists=slot_lists
+            user_input.text,
+            lang_intents.intents,
+            slot_lists=slot_lists,
+            intent_context=intent_context,
         ):
             if "name" in result.entities:
                 return result
