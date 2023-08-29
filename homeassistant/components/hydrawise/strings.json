@@ -19,7 +19,7 @@
   "issues": {
     "deprecated_yaml_import_issue": {
       "title": "The Hydrawise YAML configuration import failed",
-      "description": "Configuring Hydrawise using YAML is being removed but there was an {error_type} error importing your YAML configuration.\n\nEnsure connection to Hydrawise works and restart Home Assistant to try again or remove the Hydrawise YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=hydrawise) manually."
+      "description": "Configuring Hydrawise using YAML is being removed but there was an {error_type} error importing your YAML configuration.\n\nEnsure connection to Hydrawise works and restart Home Assistant to try again or remove the Hydrawise YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }
