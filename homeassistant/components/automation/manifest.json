@@ -5,13 +5,13 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["blueprint", "trace"],
   "documentation": "https://www.home-assistant.io/integrations/automation",
-  "history_excluded_attributes": [
-    "last_triggered",
-    "mode",
-    "current",
-    "max",
-    "id"
-  ],
   "integration_type": "system",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "current",
+    "id",
+    "last_triggered",
+    "max",
+    "mode"
+  ]
 }

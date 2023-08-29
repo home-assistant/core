@@ -11,7 +11,7 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     data: dict[str, set[str]] = {}
 
     for domain in sorted(integrations):
-        exclude_list = integrations[domain].manifest.get("history_excluded_attributes")
+        exclude_list = integrations[domain].manifest.get("recorder_excluded_attributes")
 
         if not exclude_list:
             continue
@@ -32,7 +32,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     with open(str(recorder_path)) as fp:
         if fp.read() != content:
             config.add_error(
-                "mqtt",
+                "recorder",
                 "File recorder.py is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
