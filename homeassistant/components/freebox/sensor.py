@@ -64,9 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    entities = []
-    new_entities = []
-    tracked: set = set()
+    entities: list[SensorEntity] = []
 
     _LOGGER.debug(
         "%s - %s - %s temperature sensors",
@@ -102,26 +100,17 @@ async def async_setup_entry(
         for description in DISK_PARTITION_SENSORS
     )
 
-    for nodeid, node in router.home_devices.items():
-        if nodeid in tracked:
-            continue
-
-        battery_node = next(
-            filter(
-                lambda x: (x["name"] == "battery" and x["ep_type"] == "signal"),
-                node["show_endpoints"],
-            ),
-            None,
-        )
-        if battery_node and battery_node.get("value") is not None:
-            new_entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
-
-        tracked.add(nodeid)
+    for node in router.home_devices.values():
+        for endpoint in node["show_endpoints"]:
+            if (
+                endpoint["name"] == "battery"
+                and endpoint["ep_type"] == "signal"
+                and endpoint.get("value") is not None
+            ):
+                entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
 
     if entities:
         async_add_entities(entities, True)
-    if new_entities:
-        async_add_entities(new_entities, True)
 
 
 class FreeboxSensor(SensorEntity):
@@ -238,24 +227,13 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._attr_native_value = value
 
 
-class FreeboxBatterySensor(FreeboxHomeEntity):
+class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     """Representation of a Freebox battery sensor."""
 
-    def __init__(self, hass: HomeAssistant, router, node, sub_node) -> None:
-        """Initialize a battery sensor."""
-        super().__init__(hass, router, node, sub_node)
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def device_class(self) -> SensorDeviceClass:
-        """Return the class of this device."""
-        return SensorDeviceClass.BATTERY
-
-    @property
-    def state(self) -> StateType | None | str | int | float:
+    def native_value(self) -> int:
         """Return the current state of the device."""
         return self.get_value("signal", "battery")
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit_of_measurement of the device."""
-        return PERCENTAGE

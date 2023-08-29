@@ -63,7 +63,6 @@ from .models import (
 
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 class Base(DeclarativeBase):
     """Base class for tables."""
 

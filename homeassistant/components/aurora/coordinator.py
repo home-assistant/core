@@ -19,7 +19,6 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         name: str,
-        polling_interval: int,
         api: AuroraForecast,
         latitude: float,
         longitude: float,
@@ -31,7 +30,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=name,
-            update_interval=timedelta(minutes=polling_interval),
+            update_interval=timedelta(minutes=5),
         )
 
         self.api = api

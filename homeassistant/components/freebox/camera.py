@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DETECTION, DOMAIN, Freeboxlabel
+from .const import ATTR_DETECTION, DOMAIN, FreeboxHomeCategory
 from .home_base import FreeboxHomeEntity
 from .router import FreeboxRouter
 
@@ -50,7 +50,7 @@ def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
     new_tracked = []
 
     for nodeid, node in router.home_devices.items():
-        if (node["category"] != Freeboxlabel.CAMERA) or (nodeid in tracked):
+        if (node["category"] != FreeboxHomeCategory.CAMERA) or (nodeid in tracked):
             continue
         new_tracked.append(FreeboxCamera(hass, router, node))
         tracked.add(nodeid)

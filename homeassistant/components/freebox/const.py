@@ -59,8 +59,9 @@ DEVICE_ICONS = {
 ATTR_DETECTION = "detection"
 
 
-class Freeboxlabel(enum.StrEnum):
-    """Available Freebox label."""
+# Home
+class FreeboxHomeCategory(enum.StrEnum):
+    """Freebox Home categories."""
 
     ALARM = "alarm"
     CAMERA = "camera"
@@ -73,20 +74,20 @@ class Freeboxlabel(enum.StrEnum):
 
 
 CATEGORY_TO_MODEL = {
-    Freeboxlabel.PIR: "F-HAPIR01A",
-    Freeboxlabel.CAMERA: "F-HACAM01A",
-    Freeboxlabel.DWS: "F-HADWS01A",
-    Freeboxlabel.KFB: "F-HAKFB01A",
-    Freeboxlabel.ALARM: "F-MSEC07A",
-    Freeboxlabel.RTS: "RTS",
-    Freeboxlabel.IOHOME: "IOHome",
+    FreeboxHomeCategory.PIR: "F-HAPIR01A",
+    FreeboxHomeCategory.CAMERA: "F-HACAM01A",
+    FreeboxHomeCategory.DWS: "F-HADWS01A",
+    FreeboxHomeCategory.KFB: "F-HAKFB01A",
+    FreeboxHomeCategory.ALARM: "F-MSEC07A",
+    FreeboxHomeCategory.RTS: "RTS",
+    FreeboxHomeCategory.IOHOME: "IOHome",
 }
 
 HOME_COMPATIBLE_PLATFORMS = [
-    Freeboxlabel.CAMERA,
-    Freeboxlabel.DWS,
-    Freeboxlabel.IOHOME,
-    Freeboxlabel.KFB,
-    Freeboxlabel.PIR,
-    Freeboxlabel.RTS,
+    FreeboxHomeCategory.CAMERA,
+    FreeboxHomeCategory.DWS,
+    FreeboxHomeCategory.IOHOME,
+    FreeboxHomeCategory.KFB,
+    FreeboxHomeCategory.PIR,
+    FreeboxHomeCategory.RTS,
 ]

@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CATEGORY_TO_MODEL, DOMAIN, Freeboxlabel
+from .const import CATEGORY_TO_MODEL, DOMAIN, FreeboxHomeCategory
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,10 +51,10 @@ class FreeboxHomeEntity(Entity):
         if self._model is None:
             if node["type"].get("inherit") == "node::rts":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get(Freeboxlabel.RTS)
+                self._model = CATEGORY_TO_MODEL[FreeboxHomeCategory.RTS]
             elif node["type"].get("inherit") == "node::ios":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get(Freeboxlabel.IOHOME)
+                self._model = CATEGORY_TO_MODEL[FreeboxHomeCategory.IOHOME]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._id)},

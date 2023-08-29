@@ -31,9 +31,6 @@
       },
       "grid_status": {
         "name": "Grid status"
-      },
-      "relay": {
-        "name": "Relay status"
       }
     },
     "number": {
