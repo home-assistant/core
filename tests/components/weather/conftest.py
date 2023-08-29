@@ -17,9 +17,13 @@ from .common import (
 from tests.common import mock_config_flow, mock_platform
 
 
-@pytest.fixture
+@pytest.fixture(name="get_weather_entity")
 def mock_weather_entity() -> MockWeatherTestEntity:
-    """Test Weather entity."""
+    """Test Weather entity.
+
+    To override the entity, tests can be marked with:
+    @pytest.mark.parametrize("get_weather_entity", [{...}])
+    """
     return MockWeatherTestEntity()
 
 
@@ -43,12 +47,12 @@ async def setup_fixture(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    mock_weather_entity: MockWeatherTestEntity,
+    get_weather_entity: MockWeatherTestEntity,
 ) -> None:
     """Set up the test environment."""
     if request.param == "mock_setup":
-        await mock_setup(hass, mock_weather_entity)
+        await mock_setup(hass, get_weather_entity)
     elif request.param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, mock_weather_entity)
+        await mock_config_entry_setup(hass, get_weather_entity)
     else:
         raise RuntimeError("Invalid setup fixture")
