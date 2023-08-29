@@ -18,13 +18,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     Forecast,
     WeatherEntity,
 )
@@ -327,21 +322,3 @@ class MockWeatherMockLegacyForecastOnly(MockWeather):
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast."""
         return self.forecast_list
-
-
-class MockWeatherMockForecastCompat(MockWeatherCompat):
-    """Mock weather class with mocked forecast for compatibility check."""
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
-        return [
-            {
-                ATTR_FORECAST_TEMP: self.temperature,
-                ATTR_FORECAST_TEMP_LOW: self.temperature,
-                ATTR_FORECAST_PRESSURE: self.pressure,
-                ATTR_FORECAST_WIND_SPEED: self.wind_speed,
-                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
-                ATTR_FORECAST_PRECIPITATION: self._values.get("precipitation"),
-            }
-        ]
