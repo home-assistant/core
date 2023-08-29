@@ -100,15 +100,13 @@ async def async_setup_entry(
     )
 
     for node in router.home_devices.values():
-        battery_node: dict[str, Any] = next(
-            filter(
-                lambda x: (x["name"] == "battery" and x["ep_type"] == "signal"),
-                node["show_endpoints"],
-            ),
-            {},
-        )
-        if battery_node.get("value") is not None:
-            entities.append(FreeboxBatterySensor(hass, router, node, battery_node))
+        for endpoint in node["show_endpoints"]:
+            if (
+                endpoint["name"] == "battery"
+                and endpoint["ep_type"] == "signal"
+                and endpoint.get("value") is not None
+            ):
+                entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
 
     if entities:
         async_add_entities(entities, True)
