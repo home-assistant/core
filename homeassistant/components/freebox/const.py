@@ -83,7 +83,7 @@ CATEGORY_TO_MODEL = {
     FreeboxHomeCategory.IOHOME: "IOHome",
 }
 
-HOME_COMPATIBLE_PLATFORMS = [
+HOME_COMPATIBLE_CATEGORIES = [
     FreeboxHomeCategory.CAMERA,
     FreeboxHomeCategory.DWS,
     FreeboxHomeCategory.IOHOME,
