@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/group",
   "integration_type": "helper",
   "iot_class": "calculated",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": ["auto", "entity_id", "order"]
 }

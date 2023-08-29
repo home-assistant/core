@@ -4,5 +4,16 @@
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/climate",
   "integration_type": "entity",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "fan_modes",
+    "hvac_modes",
+    "max_humidity",
+    "max_temp",
+    "min_humidity",
+    "min_temp",
+    "preset_modes",
+    "swing_modes",
+    "target_temp_step"
+  ]
 }

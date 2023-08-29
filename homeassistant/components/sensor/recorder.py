@@ -30,19 +30,13 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import (
-    ATTR_LAST_RESET,
-    ATTR_OPTIONS,
-    ATTR_STATE_CLASS,
-    DOMAIN,
-    SensorStateClass,
-)
+from .const import ATTR_LAST_RESET, ATTR_STATE_CLASS, DOMAIN, SensorStateClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -787,9 +781,3 @@ def validate_statistics(
         )
 
     return validation_result
-
-
-@callback
-def exclude_attributes(hass: HomeAssistant) -> set[str]:
-    """Exclude attributes from being recorded in the database."""
-    return {ATTR_OPTIONS}

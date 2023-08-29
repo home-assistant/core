@@ -4,5 +4,13 @@
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/light",
   "integration_type": "entity",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "effect_list",
+    "max_color_temp_kelvin",
+    "max_mireds",
+    "min_color_temp_kelvin",
+    "min_mireds",
+    "supported_color_modes"
+  ]
 }

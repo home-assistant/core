@@ -5,5 +5,12 @@
   "dependencies": ["blueprint", "trace"],
   "documentation": "https://www.home-assistant.io/integrations/script",
   "integration_type": "system",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "current",
+    "last_action",
+    "last_triggered",
+    "max",
+    "mode"
+  ]
 }

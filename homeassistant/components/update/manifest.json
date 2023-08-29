@@ -4,5 +4,10 @@
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/update",
   "integration_type": "entity",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "entity_picture",
+    "in_progress",
+    "release_summary"
+  ]
 }

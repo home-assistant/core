@@ -4,5 +4,10 @@
   "codeowners": ["@home-assistant/core", "@Shulyaka"],
   "documentation": "https://www.home-assistant.io/integrations/humidifier",
   "integration_type": "entity",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "available_modes",
+    "max_humidity",
+    "min_humidity"
+  ]
 }

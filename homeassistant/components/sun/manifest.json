@@ -5,5 +5,16 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sun",
   "iot_class": "calculated",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "azimuth",
+    "elevation",
+    "next_dawn",
+    "next_dusk",
+    "next_midnight",
+    "next_noon",
+    "next_rising",
+    "next_setting",
+    "rising"
+  ]
 }

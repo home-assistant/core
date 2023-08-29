@@ -42,7 +42,6 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
@@ -284,8 +283,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
-
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     component: EntityComponent[Group] = hass.data[DOMAIN]
 

@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/camera",
   "integration_type": "entity",
   "quality_scale": "internal",
+  "recorder_excluded_attributes": ["access_token", "entity_picture"],
   "requirements": ["PyTurboJPEG==1.7.1"]
 }

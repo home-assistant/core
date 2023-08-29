@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_camera",
   "iot_class": "cloud_polling",
   "loggers": ["pytrafikverket"],
+  "recorder_excluded_attributes": ["description", "location"],
   "requirements": ["pytrafikverket==0.3.5"]
 }
