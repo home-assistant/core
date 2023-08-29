@@ -1,5 +1,7 @@
 """The AEMET OpenData component."""
 
+import logging
+
 from aemet_opendata.exceptions import TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions
 
@@ -17,6 +19,8 @@ from .const import (
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AEMET OpenData as config entry."""
@@ -30,7 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
     try:
         await aemet.select_coordinates(latitude, longitude)
-    except TownNotFound:
+    except TownNotFound as err:
+        _LOGGER.error(err)
         return False
 
     weather_coordinator = WeatherUpdateCoordinator(hass, aemet)
