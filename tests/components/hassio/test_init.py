@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
@@ -608,6 +609,28 @@ async def test_service_calls(
         "name": "2021-11-13 11:48:00",
         "location": None,
     }
+
+
+async def test_invalid_service_calls(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Call service with invalid input and check that it raises."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
+    ):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            "hassio", "addon_start", {"addon": "does_not_exist"}
+        )
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            "hassio", "addon_stdin", {"addon": "does_not_exist", "input": "test"}
+        )
 
 
 async def test_service_calls_core(
