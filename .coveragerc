@@ -1006,6 +1006,7 @@ omit =
     homeassistant/components/renson/const.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
+    homeassistant/components/renson/binary_sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
@@ -1440,6 +1441,10 @@ omit =
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
+    homeassistant/components/vodafone_station/__init__.py
+    homeassistant/components/vodafone_station/const.py
+    homeassistant/components/vodafone_station/coordinator.py
+    homeassistant/components/vodafone_station/device_tracker.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py

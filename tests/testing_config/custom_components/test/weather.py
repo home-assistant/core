@@ -18,13 +18,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     Forecast,
     WeatherEntity,
 )
@@ -298,19 +293,32 @@ class MockWeatherMockForecast(MockWeather):
         ]
 
 
-class MockWeatherMockForecastCompat(MockWeatherCompat):
-    """Mock weather class with mocked forecast for compatibility check."""
+class MockWeatherMockLegacyForecastOnly(MockWeather):
+    """Mock weather class with mocked legacy forecast."""
+
+    def __init__(self, **values: Any) -> None:
+        """Initialize."""
+        super().__init__(**values)
+        self.forecast_list: list[Forecast] | None = [
+            {
+                ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_UV_INDEX: self.uv_index,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
+                    "native_precipitation"
+                ),
+                ATTR_FORECAST_HUMIDITY: self.humidity,
+            }
+        ]
 
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast."""
-        return [
-            {
-                ATTR_FORECAST_TEMP: self.temperature,
-                ATTR_FORECAST_TEMP_LOW: self.temperature,
-                ATTR_FORECAST_PRESSURE: self.pressure,
-                ATTR_FORECAST_WIND_SPEED: self.wind_speed,
-                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
-                ATTR_FORECAST_PRECIPITATION: self._values.get("precipitation"),
-            }
-        ]
+        return self.forecast_list
