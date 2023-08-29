@@ -88,6 +88,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
