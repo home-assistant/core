@@ -202,7 +202,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
-    validated_config = SENSOR_SCHEMA(config_entry.options)
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = SENSOR_SCHEMA(_options)
     async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
 
 
