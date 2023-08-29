@@ -73,7 +73,6 @@ UDP = "udp"
 # service call attributes
 ATTR_ADDRESS = CONF_ADDRESS
 ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
 

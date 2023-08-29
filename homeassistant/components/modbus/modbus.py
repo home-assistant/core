@@ -42,7 +42,6 @@ from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -168,11 +167,9 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        unit = 0
-        if ATTR_UNIT in service.data:
-            unit = int(float(service.data[ATTR_UNIT]))
+        slave = 0
         if ATTR_SLAVE in service.data:
-            unit = int(float(service.data[ATTR_SLAVE]))
+            slave = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         hub = hub_collect[
@@ -180,29 +177,30 @@ async def async_modbus_setup(
         ]
         if isinstance(value, list):
             await hub.async_pb_call(
-                unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
+                slave,
+                address,
+                [int(float(i)) for i in value],
+                CALL_TYPE_WRITE_REGISTERS,
             )
         else:
             await hub.async_pb_call(
-                unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+                slave, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        unit = 0
-        if ATTR_UNIT in service.data:
-            unit = int(float(service.data[ATTR_UNIT]))
+        slave = 0
         if ATTR_SLAVE in service.data:
-            unit = int(float(service.data[ATTR_SLAVE]))
+            slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         hub = hub_collect[
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         ]
         if isinstance(state, list):
-            await hub.async_pb_call(unit, address, state, CALL_TYPE_WRITE_COILS)
+            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
         else:
-            await hub.async_pb_call(unit, address, state, CALL_TYPE_WRITE_COIL)
+            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COIL)
 
     for x_write in (
         (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
@@ -215,8 +213,7 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
+                    vol.Required(ATTR_SLAVE, default=1): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])
@@ -405,10 +402,10 @@ class ModbusHub:
         return True
 
     def pb_call(
-        self, unit: int | None, address: int, value: int | list[int], use_call: str
+        self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": unit} if unit else {}
+        kwargs = {"slave": slave} if slave else {}
         entry = self._pb_request[use_call]
         try:
             result: ModbusResponse = entry.func(address, value, **kwargs)
@@ -423,7 +420,7 @@ class ModbusHub:
 
     async def async_pb_call(
         self,
-        unit: int | None,
+        slave: int | None,
         address: int,
         value: int | list[int],
         use_call: str,
@@ -435,7 +432,7 @@ class ModbusHub:
             if not self._client:
                 return None
             result = await self.hass.async_add_executor_job(
-                self.pb_call, unit, address, value, use_call
+                self.pb_call, slave, address, value, use_call
             )
             if self._msg_wait:
                 # small delay until next request/response

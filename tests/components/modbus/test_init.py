@@ -28,7 +28,6 @@ from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -565,18 +564,10 @@ SERVICE = "service"
         {VALUE: ModbusException("fail write_"), DATA: "Pymodbus:"},
     ],
 )
-@pytest.mark.parametrize(
-    "do_unit",
-    [
-        ATTR_UNIT,
-        ATTR_SLAVE,
-    ],
-)
 async def test_pb_service_write(
     hass: HomeAssistant,
     do_write,
     do_return,
-    do_unit,
     caplog: pytest.LogCaptureFixture,
     mock_modbus_with_pymodbus,
 ) -> None:
@@ -591,7 +582,7 @@ async def test_pb_service_write(
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        do_unit: 17,
+        ATTR_SLAVE: 17,
         ATTR_ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
@@ -932,7 +923,7 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
+        ATTR_SLAVE: 17,
         ATTR_ADDRESS: 16,
         ATTR_STATE: True,
     }
