@@ -8,8 +8,10 @@ from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.components.number import (
     NumberEntity,
+    NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -18,6 +20,17 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
+    key="filter_change",
+    name="Filter change",
+    icon="mdi:filter",
+    native_step=1,
+    native_min_value=0,
+    native_max_value=360,
+    entity_category=EntityCategory.CONFIG,
+)
 
 
 async def async_setup_entry(
@@ -32,24 +45,30 @@ async def async_setup_entry(
         config_entry.entry_id
     ].coordinator
 
-    async_add_entities([RensonNumber(api, coordinator)])
+    async_add_entities([RensonNumber(RENSON_NUMBER_DESCRIPTION, api, coordinator)])
 
 
 class RensonNumber(RensonEntity, NumberEntity):
     """Representation of the Renson number platform."""
 
-    _attr_icon = "mdi:filter"
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
+    def __init__(
+        self,
+        description: NumberEntityDescription,
+        api: RensonVentilation,
+        coordinator: RensonCoordinator,
+    ) -> None:
         """Initialize the Renson number."""
-        super().__init__("number", api, coordinator)
+        super().__init__(description.key, api, coordinator)
+
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.api.parse_value(
+        self._attr_native_value = self.api.parse_value(
             self.api.get_field_value(self.coordinator.data, FILTER_PRESET_FIELD.name),
             DataType.NUMERIC,
         )
