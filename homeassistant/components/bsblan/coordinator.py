@@ -44,6 +44,10 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
     async def _async_update_data(self) -> State:
         """Get state from BSB-Lan device."""
 
+        # use the default scan interval and add a random number of seconds to avoid timeouts when
+        # the BSB-Lan device is already/still busy retrieving data, e.g. for MQTT or internal logging.
+        self.update_interval = SCAN_INTERVAL + timedelta(seconds=randint(1, 8))
+
         try:
             return await self.client.state()
         except BSBLANConnectionError as err:
