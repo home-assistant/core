@@ -719,6 +719,8 @@ omit =
     homeassistant/components/minecraft_server/entity.py
     homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/minio_helper.py
+    homeassistant/components/miraie_ac/climate.py
+    homeassistant/components/miraie_ac/__init__.py
     homeassistant/components/mjpeg/camera.py
     homeassistant/components/mjpeg/util.py
     homeassistant/components/mochad/__init__.py
@@ -1552,8 +1554,6 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
-    homeassistant/components/miraie_ac/climate.py
-    homeassistant/components/miraie_ac/__init__.py
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
