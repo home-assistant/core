@@ -1656,7 +1656,7 @@ pydrawise==2023.8.0
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.3
+pyduotecno==2023.8.4
 
 # homeassistant.components.ebox
 pyebox==1.1.4
