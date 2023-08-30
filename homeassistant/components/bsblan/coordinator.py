@@ -50,5 +50,6 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
             return await self.client.state()
         except BSBLANConnectionError as err:
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {self.config_entry.data[CONF_HOST]}"
+                f"Error while establishing connection with "
+                f"BSB-Lan device at {self.config_entry.data[CONF_HOST]}"
             ) from err
