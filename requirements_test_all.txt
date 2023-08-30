@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.1
+AEMET-OpenData==0.4.3
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
@@ -86,7 +86,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.38.0
+PySwitchbot==0.39.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -927,7 +927,7 @@ micloud==0.5
 mill-local==0.2.0
 
 # homeassistant.components.mill
-millheater==0.11.0
+millheater==0.11.1
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1211,7 +1211,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.10.5
+pydaikin==2.11.1
 
 # homeassistant.components.deconz
 pydeconz==113
@@ -1226,7 +1226,7 @@ pydiscovergy==2.0.3
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.3
+pyduotecno==2023.8.4
 
 # homeassistant.components.econet
 pyeconet==0.1.20
@@ -1542,7 +1542,7 @@ pytautulli==23.1.1
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.11
+python-bsblan==0.5.16
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14

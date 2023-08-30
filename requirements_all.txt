@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.1
+AEMET-OpenData==0.4.3
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
@@ -96,7 +96,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.38.0
+PySwitchbot==0.39.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1213,7 +1213,7 @@ micloud==0.5
 mill-local==0.2.0
 
 # homeassistant.components.mill
-millheater==0.11.0
+millheater==0.11.1
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1629,7 +1629,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.10.5
+pydaikin==2.11.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1656,7 +1656,7 @@ pydrawise==2023.8.0
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.3
+pyduotecno==2023.8.4
 
 # homeassistant.components.ebox
 pyebox==1.1.4
@@ -2074,7 +2074,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.11
+python-bsblan==0.5.16
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
