@@ -167,7 +167,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         state = self.coordinator.data.state
 
         # If this is the one and only segment, calculate brightness based
-        # on the main and segment brightness
+        # on the master and segment brightness
         if not self.coordinator.has_master_light:
             return int(
                 (state.segments[self._segment].brightness * state.brightness) / 255
@@ -261,7 +261,7 @@ def async_update_segments(
     segment_ids = {light.segment_id for light in coordinator.data.state.segments}
     new_entities: list[WLEDMasterLight | WLEDSegmentLight] = []
 
-    # More than 1 segment now? No main? Add main controls
+    # More than 1 segment now? No master? Add master controls
     if not coordinator.keep_master_light and (
         len(current_ids) < 2 and len(segment_ids) > 1
     ):
