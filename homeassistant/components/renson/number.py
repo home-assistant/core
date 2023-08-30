@@ -6,10 +6,7 @@ import logging
 from renson_endura_delta.field_enum import FILTER_PRESET_FIELD, DataType
 from renson_endura_delta.renson import RensonVentilation
 
-from homeassistant.components.number import (
-    NumberEntity,
-    NumberEntityDescription,
-)
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -24,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
     key="filter_change",
-    name="Filter change",
+    translation_key="filter_change",
     icon="mdi:filter",
     native_step=1,
     native_min_value=0,
@@ -77,6 +74,5 @@ class RensonNumber(RensonEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        _LOGGER.debug("Changing filter days to %s", value)
 
         await self.hass.async_add_executor_job(self.api.set_filter_days, value)
