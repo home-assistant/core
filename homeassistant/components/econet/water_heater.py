@@ -16,7 +16,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -59,6 +59,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     """Define an Econet water heater."""
 
     _attr_should_poll = True  # Override False default from EcoNetEntity
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, water_heater):
         """Initialize."""

@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,7 +62,9 @@ async def async_setup_entry(
 
 
 class EcoNetThermostat(EcoNetEntity, ClimateEntity):
-    """Define a Econet thermostat."""
+    """Define an Econet thermostat."""
+
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, thermostat):
         """Initialize."""
