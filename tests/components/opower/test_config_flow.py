@@ -78,27 +78,95 @@ async def test_form_with_mfa(
     assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "utility": "Consolidated Edison (ConEd)",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert not result2["errors"]
+
     with patch(
         "homeassistant.components.opower.config_flow.Opower.async_login",
     ) as mock_login:
-        result2 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "utility": "Pacific Gas and Electric Company (PG&E)",
-                "username": "test-username",
-                "password": "test-password",
                 "totp_secret": "test-totp",
             },
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
-    assert result2["data"] == {
-        "utility": "Pacific Gas and Electric Company (PG&E)",
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Consolidated Edison (ConEd) (test-username)"
+    assert result3["data"] == {
+        "utility": "Consolidated Edison (ConEd)",
         "username": "test-username",
         "password": "test-password",
         "totp_secret": "test-totp",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_login.call_count == 1
+
+
+async def test_form_with_mfa_bad_secret(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test MFA asks for password again when validation fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "utility": "Consolidated Edison (ConEd)",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert not result2["errors"]
+
+    with patch(
+        "homeassistant.components.opower.config_flow.Opower.async_login",
+        side_effect=InvalidAuth,
+    ) as mock_login:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "totp_secret": "test-totp",
+            },
+        )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "base": "invalid_auth",
+    }
+
+    with patch(
+        "homeassistant.components.opower.config_flow.Opower.async_login",
+    ) as mock_login:
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "updated-password",
+                "totp_secret": "updated-totp",
+            },
+        )
+
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Consolidated Edison (ConEd) (test-username)"
+    assert result4["data"] == {
+        "utility": "Consolidated Edison (ConEd)",
+        "username": "test-username",
+        "password": "updated-password",
+        "totp_secret": "updated-totp",
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_login.call_count == 1
@@ -250,6 +318,14 @@ async def test_form_valid_reauth_with_mfa(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we can handle a valid reauth."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            # Requires MFA
+            "utility": "Consolidated Edison (ConEd)",
+        },
+    )
     mock_config_entry.state = ConfigEntryState.LOADED
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
@@ -275,7 +351,7 @@ async def test_form_valid_reauth_with_mfa(
 
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries(DOMAIN)[0].data == {
-        "utility": "Pacific Gas and Electric Company (PG&E)",
+        "utility": "Consolidated Edison (ConEd)",
         "username": "test-username",
         "password": "test-password2",
         "totp_secret": "test-totp",
