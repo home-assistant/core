@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    coordinator = BSBLanUpdateCoordinator(hass, bsblan)
+    coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
     await coordinator.async_config_entry_first_refresh()
 
     device = await bsblan.device()

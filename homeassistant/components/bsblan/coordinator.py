@@ -23,16 +23,18 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan coordinator."""
 
+        self.config_entry = config_entry
         self.client = client
 
         super().__init__(
             hass,
             LOGGER,
-            name=f"{DOMAIN}_{self.config_entry.data[CONF_HOST]}",
+            name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             # use the default scan interval and add a random number of seconds to avoid timeouts when
             # the BSB-Lan device is already/still busy retrieving data, e.g. for MQTT or internal logging.
             update_interval=SCAN_INTERVAL + timedelta(seconds=randint(1, 8)),
