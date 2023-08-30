@@ -161,6 +161,17 @@
           }
         }
       }
+    },
+    "device_config_file_changed": {
+      "title": "Z-Wave device configuration file changed: {device_name}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Z-Wave device configuration file changed: {device_name}",
+            "description": "Z-Wave JS discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not strictly required and device functionality will be impacted during the re-interview process.\n\nIf you'd like to proceed, click on SUBMIT below. The re-interview will take place in the background."
+          }
+        }
+      }
     }
   },
   "services": {
