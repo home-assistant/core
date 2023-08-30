@@ -271,16 +271,20 @@ async def test_controller_status_sensor(
 
     assert not entity_entry.disabled
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
-    assert hass.states.get(entity_id).state == "ready"
-    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:check"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "ready"
+    assert state.attributes[ATTR_ICON] == "mdi:check"
 
     event = Event(
         "status changed",
         data={"source": "controller", "event": "status changed", "status": 1},
     )
     client.driver.controller.receive_event(event)
-    assert hass.states.get(entity_id).state == "unresponsive"
-    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:bell-off"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unresponsive"
+    assert state.attributes[ATTR_ICON] == "mdi:bell-off"
 
     # Test transitions work
     event = Event(
@@ -288,8 +292,10 @@ async def test_controller_status_sensor(
         data={"source": "controller", "event": "status changed", "status": 2},
     )
     client.driver.controller.receive_event(event)
-    assert hass.states.get(entity_id).state == "jammed"
-    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:lock"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "jammed"
+    assert state.attributes[ATTR_ICON] == "mdi:lock"
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
