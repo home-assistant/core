@@ -41,7 +41,12 @@ __all__ = (
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): {vol.Optional("debug_recording_dir"): str}}
+    {
+        DOMAIN: vol.Schema(
+            {vol.Optional("debug_recording_dir"): str},
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
