@@ -39,27 +39,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     password = data[CONF_PASSWORD]
 
     if not _validate_mobile_number(login_id):
-        _LOGGER.error("Invalid Mobile Number")
         raise ValidationError()
 
     async with MirAIeAPI(
         auth_type=AuthType.MOBILE, login_id=login_id, password=password
     ) as api:
-        try:
-            _LOGGER.debug("Initializing MirAIe API")
-            await api.initialize()
-
-        except AuthException:
-            _LOGGER.error("Invalid user ID or password")
-            raise
-        except ConnectionException:
-            _LOGGER.error("Error connecting to the MirAIe services")
-            raise
-        except MobileNotRegisteredException:
-            _LOGGER.error("Mobile number not registered with MirAIe")
-            raise
-
+        _LOGGER.debug("Initializing MirAIe API")
+        await api.initialize()
         _LOGGER.debug("Connection successful!")
+
         # Return info that you want to store in the config entry.
         return {"title": "MirAIe"}
 
@@ -84,12 +72,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except AuthException:
+                _LOGGER.error("Invalid user ID or password")
                 errors["base"] = "invalid_auth"
             except ValidationError:
+                _LOGGER.error("Invalid Mobile Number")
                 errors["base"] = "invalid_mobile"
             except ConnectionException:
+                _LOGGER.error("Error connecting to the MirAIe services")
                 errors["base"] = "cannot_connect"
             except MobileNotRegisteredException:
+                _LOGGER.error("Mobile number not registered with MirAIe")
                 errors["base"] = "mobile_not_registered"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
