@@ -173,6 +173,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_name = f"{consumption.capitalize()} consumption"
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the entity.
