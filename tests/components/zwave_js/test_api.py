@@ -1,5 +1,4 @@
 """Test the Z-Wave JS Websocket API."""
-from copy import deepcopy
 from http import HTTPStatus
 import json
 from typing import Any
@@ -30,7 +29,6 @@ from zwave_js_server.model.controller import (
     QRProvisioningInformation,
 )
 from zwave_js_server.model.controller.firmware import ControllerFirmwareUpdateData
-from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.firmware import NodeFirmwareUpdateData
 from zwave_js_server.model.value import ConfigurationValue, get_value_id_str
 
@@ -242,77 +240,6 @@ async def test_network_status(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
-
-
-async def test_subscribe_node_status(
-    hass: HomeAssistant,
-    multisensor_6_state,
-    client,
-    integration,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the subscribe node status websocket command."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
-    node = Node(client, node_data)
-    node.data["ready"] = False
-    driver = client.driver
-    driver.controller.nodes[node.node_id] = node
-
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={get_device_id(driver, node)}
-    )
-
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/subscribe_node_status",
-            DEVICE_ID: device.id,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-
-    new_node_data = deepcopy(multisensor_6_state)
-    new_node_data["ready"] = True
-
-    event = Event(
-        "ready",
-        {
-            "source": "node",
-            "event": "ready",
-            "nodeId": node.node_id,
-            "nodeState": new_node_data,
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    msg = await ws_client.receive_json()
-
-    assert msg["event"]["event"] == "ready"
-    assert msg["event"]["status"] == 1
-    assert msg["event"]["ready"]
-
-    event = Event(
-        "wake up",
-        {
-            "source": "node",
-            "event": "wake up",
-            "nodeId": node.node_id,
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-
-    msg = await ws_client.receive_json()
-
-    assert msg["event"]["event"] == "wake up"
-    assert msg["event"]["status"] == 2
-    assert msg["event"]["ready"]
 
 
 async def test_node_status(
