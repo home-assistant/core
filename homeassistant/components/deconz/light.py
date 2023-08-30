@@ -288,16 +288,25 @@ class DeconzGroup(DeconzBaseLight[Group]):
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
-        self._attr_unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
+        self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
 
         self._attr_name = None
-        self._attr_device_info = DeviceInfo(
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return DeviceInfo(
             identifiers={(DECONZ_DOMAIN, self.unique_id)},
             manufacturer="Dresden Elektronik",
             model="deCONZ group",
-            name=device.name,
-            via_device=(DECONZ_DOMAIN, gateway.api.config.bridge_id),
+            name=self._device.name,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
         )
 
     @property
