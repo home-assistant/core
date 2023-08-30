@@ -36,17 +36,14 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         cem: CEM = hass.data[DOMAIN]["cem"]
 
         control_type = call.data.get("control_type")
-        print(control_type)
-        print(hasattr(ControlType, control_type))
+
         if not hasattr(ControlType, control_type):
             LOGGER.exception("TODO")
             return False
         else:
             control_type = getattr(ControlType, control_type)
 
-            await cem.activate_control_type(
-                control_type=ControlType.FILL_RATE_BASED_CONTROL
-            )
+            await cem.activate_control_type(control_type=control_type)
 
         hass.states.async_set(
             f"{DOMAIN}.cem", json.dumps({"control_type": str(cem._control_type)})
@@ -57,7 +54,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     #####################
 
     for service in SERVICES:
-        # print(service)
         if "service_func_name" in service:
             service_func_name = service.pop("service_func_name")
             service["service_func"] = locals()[service_func_name]

@@ -178,14 +178,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_setup_services(hass)
 
     hass.http.register_view(WebsocketAPIView(cem))
-    # hass.services.async_register(DOMAIN, "change_control_type", change_control_type)
-
-    # async def blabla_service(call):
-    #     print("#"*10)
-    #     print(call)
-    #     print("#"*10)
-
-    # hass.services.async_register(DOMAIN, "blabla_service", blabla_service)
 
     return True
 
@@ -197,15 +189,11 @@ async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # print(entry)
-
-    # close fm_client
-    await hass.data[DOMAIN]["fm_client"].close()
 
     # Remove services
     await async_unload_services(hass)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok
