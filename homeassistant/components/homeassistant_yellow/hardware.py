@@ -39,6 +39,6 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             config_entries=config_entries,
             dongle=None,
             name=BOARD_NAME,
-            url=None,
+            url="https://yellow.home-assistant.io/documentation/",
         )
     ]
