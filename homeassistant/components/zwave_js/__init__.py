@@ -563,7 +563,9 @@ class NodeEvents:
                 is_persistent=False,
                 translation_key="device_config_file_changed",
                 translation_placeholders={
-                    "device_name": device.name_by_user or device.name or ""
+                    "device_name": device.name_by_user
+                    or device.name
+                    or "Unnamed device"
                 },
                 severity=IssueSeverity.WARNING,
             )
