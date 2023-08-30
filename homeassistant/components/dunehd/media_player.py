@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
@@ -49,10 +49,14 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     def __init__(self, player: DuneHDPlayer, name: str, unique_id: str) -> None:
         """Initialize entity to control Dune HD."""
         self._player = player
-        self._name = name
         self._media_title: str | None = None
         self._state: dict[str, Any] = {}
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=name,
+        )
 
     def update(self) -> None:
         """Update internal status of the entity."""
@@ -77,20 +81,6 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return len(self._state) > 0
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
-            manufacturer=ATTR_MANUFACTURER,
-            name=self._name,
-        )
 
     @property
     def volume_level(self) -> float:

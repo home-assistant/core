@@ -163,11 +163,12 @@ class TadoConnector:
 
     def setup(self):
         """Connect to Tado and fetch the zones."""
-        self.tado = Tado(self._username, self._password, None, True)
+        self.tado = Tado(self._username, self._password)
+        self.tado.setDebugging(True)
         # Load zones and devices
-        self.zones = self.tado.get_zones()
-        self.devices = self.tado.get_devices()
-        tado_home = self.tado.get_me()["homes"][0]
+        self.zones = self.tado.getZones()
+        self.devices = self.tado.getDevices()
+        tado_home = self.tado.getMe()["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
@@ -180,7 +181,7 @@ class TadoConnector:
 
     def update_devices(self):
         """Update the device data from Tado."""
-        devices = self.tado.get_devices()
+        devices = self.tado.getDevices()
         for device in devices:
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
@@ -189,7 +190,7 @@ class TadoConnector:
                     INSIDE_TEMPERATURE_MEASUREMENT
                     in device["characteristics"]["capabilities"]
                 ):
-                    device[TEMP_OFFSET] = self.tado.get_device_info(
+                    device[TEMP_OFFSET] = self.tado.getDeviceInfo(
                         device_short_serial_no, TEMP_OFFSET
                     )
             except RuntimeError:
@@ -217,7 +218,7 @@ class TadoConnector:
     def update_zones(self):
         """Update the zone data from Tado."""
         try:
-            zone_states = self.tado.get_zone_states()["zoneStates"]
+            zone_states = self.tado.getZoneStates()["zoneStates"]
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zones")
             return
@@ -229,7 +230,7 @@ class TadoConnector:
         """Update the internal data from Tado."""
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
-            data = self.tado.get_zone_state(zone_id)
+            data = self.tado.getZoneState(zone_id)
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zone %s", zone_id)
             return
@@ -250,8 +251,8 @@ class TadoConnector:
     def update_home(self):
         """Update the home data from Tado."""
         try:
-            self.data["weather"] = self.tado.get_weather()
-            self.data["geofence"] = self.tado.get_home_state()
+            self.data["weather"] = self.tado.getWeather()
+            self.data["geofence"] = self.tado.getHomeState()
             dispatcher_send(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "home", "data"),
@@ -264,15 +265,15 @@ class TadoConnector:
 
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""
-        return self.tado.get_capabilities(zone_id)
+        return self.tado.getCapabilities(zone_id)
 
     def get_auto_geofencing_supported(self):
         """Return whether the Tado Home supports auto geofencing."""
-        return self.tado.get_auto_geofencing_supported()
+        return self.tado.getAutoGeofencingSupported()
 
     def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
-        self.tado.reset_zone_overlay(zone_id)
+        self.tado.resetZoneOverlay(zone_id)
         self.update_zone(zone_id)
 
     def set_presence(
@@ -281,11 +282,11 @@ class TadoConnector:
     ):
         """Set the presence to home, away or auto."""
         if presence == PRESET_AWAY:
-            self.tado.set_away()
+            self.tado.setAway()
         elif presence == PRESET_HOME:
-            self.tado.set_home()
+            self.tado.setHome()
         elif presence == PRESET_AUTO:
-            self.tado.set_auto()
+            self.tado.setAuto()
 
         # Update everything when changing modes
         self.update_zones()
@@ -319,7 +320,7 @@ class TadoConnector:
         )
 
         try:
-            self.tado.set_zone_overlay(
+            self.tado.setZoneOverlay(
                 zone_id,
                 overlay_mode,
                 temperature,
@@ -339,7 +340,7 @@ class TadoConnector:
     def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
         try:
-            self.tado.set_zone_overlay(
+            self.tado.setZoneOverlay(
                 zone_id, overlay_mode, None, None, device_type, "OFF"
             )
         except RequestException as exc:
@@ -350,6 +351,6 @@ class TadoConnector:
     def set_temperature_offset(self, device_id, offset):
         """Set temperature offset of device."""
         try:
-            self.tado.set_temp_offset(device_id, offset)
+            self.tado.setTempOffset(device_id, offset)
         except RequestException as exc:
             _LOGGER.error("Could not set temperature offset: %s", exc)

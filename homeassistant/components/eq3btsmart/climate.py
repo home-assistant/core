@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import eq3bt as eq3  # pylint: disable=import-error
+import eq3bt as eq3
 import voluptuous as vol
 
 from homeassistant.components.climate import (

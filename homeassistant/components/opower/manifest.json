@@ -6,5 +6,6 @@
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/opower",
   "iot_class": "cloud_polling",
-  "requirements": ["opower==0.0.20"]
+  "loggers": ["opower"],
+  "requirements": ["opower==0.0.32"]
 }

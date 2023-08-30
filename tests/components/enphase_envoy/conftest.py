@@ -24,6 +24,7 @@ def config_entry_fixture(hass: HomeAssistant, config, serial_number):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title=f"Envoy {serial_number}" if serial_number else "Envoy",
         unique_id=serial_number,
         data=config,
