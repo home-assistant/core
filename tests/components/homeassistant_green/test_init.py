@@ -44,13 +44,17 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
         title="Home Assistant Green",
     )
     config_entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries()) == 1
+
     with patch(
         "homeassistant.components.homeassistant_green.get_os_info",
         return_value={"board": "generic-x86-64"},
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(mock_get_os_info.mock_calls) == 1
+
+    assert len(mock_get_os_info.mock_calls) == 1
+    assert len(hass.config_entries.async_entries()) == 0
 
 
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
@@ -71,5 +75,6 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(mock_get_os_info.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert len(mock_get_os_info.mock_calls) == 1
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
