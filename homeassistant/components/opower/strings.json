@@ -5,14 +5,16 @@
         "data": {
           "utility": "Utility name",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "totp_secret": "TOTP Secret (only for some utilities, see documentation)"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "totp_secret": "TOTP Secret (only for some utilities, see documentation)"
         }
       }
     },

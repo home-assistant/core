@@ -28,7 +28,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_UTILITY, DOMAIN
+from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
+            entry_data.get(CONF_TOTP_SECRET, None),
         )
 
     async def _async_update_data(
