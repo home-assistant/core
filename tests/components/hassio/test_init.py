@@ -891,6 +891,7 @@ async def test_coordinator_updates(
 @pytest.mark.parametrize(
     ("extra_os_info", "integration"),
     [
+        ({"board": "green"}, "homeassistant_green"),
         ({"board": "odroid-c2"}, "hardkernel"),
         ({"board": "odroid-c4"}, "hardkernel"),
         ({"board": "odroid-n2"}, "hardkernel"),
