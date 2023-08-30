@@ -28,7 +28,6 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
     ) -> None:
         """Initialize the BSB-Lan coordinator."""
 
-        self.config_entry = config_entry
         self.client = client
 
         super().__init__(
