@@ -114,6 +114,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_supported_features = BASE_SUPPORTED_FEATURES
+    _attr_media_image_remotely_accessible = True
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -122,9 +124,16 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._player = player
         self._signals = []
-        self._attr_supported_features = BASE_SUPPORTED_FEATURES
         self._source_manager = None
         self._group_manager = None
+        self._attr_unique_id = player.player_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(HEOS_DOMAIN, player.player_id)},
+            manufacturer="HEOS",
+            model=player.model,
+            name=player.name,
+            sw_version=player.version,
+        )
 
     async def _player_update(self, player_id, event):
         """Handle player attribute updated."""
@@ -307,17 +316,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.available
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Get attributes about the device."""
-        return DeviceInfo(
-            identifiers={(HEOS_DOMAIN, self._player.player_id)},
-            manufacturer="HEOS",
-            model=self._player.model,
-            name=self._player.name,
-            sw_version=self._player.version,
-        )
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attribute about the state."""
         return {
@@ -378,11 +376,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._media_position_updated_at
 
     @property
-    def media_image_remotely_accessible(self) -> bool:
-        """If the image url is remotely accessible."""
-        return True
-
-    @property
     def media_image_url(self) -> str:
         """Image url of current playing media."""
         # May be an empty string, if so, return None
@@ -413,11 +406,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def state(self) -> MediaPlayerState:
         """State of the player."""
         return PLAY_STATE_TO_STATE[self._player.state]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return str(self._player.player_id)
 
     @property
     def volume_level(self) -> float:
