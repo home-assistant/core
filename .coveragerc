@@ -1011,6 +1011,7 @@ omit =
     homeassistant/components/renson/sensor.py
     homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
+    homeassistant/components/renson/number.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
