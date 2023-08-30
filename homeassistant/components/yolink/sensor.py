@@ -92,6 +92,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_POWER_FAILURE_ALARM,
+    ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SMART_REMOTER,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
@@ -252,6 +253,12 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
+        if (
+            self.coordinator.device.device_type == ATTR_DEVICE_SIREN
+            and state.get("powerSupply") == "usb"
+        ):
+            # When the power supply mode is usb, the power information is wrong
+            state["battery"] = None
         if (
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
