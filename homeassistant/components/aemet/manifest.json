@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/aemet",
   "iot_class": "cloud_polling",
   "loggers": ["aemet_opendata"],
-  "requirements": ["AEMET-OpenData==0.2.2"]
+  "requirements": ["AEMET-OpenData==0.4.3"]
 }

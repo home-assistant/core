@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.const import ATTRIBUTION, DOMAIN
@@ -36,20 +35,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from .util import aemet_requests_mock, async_init_integration
+from .util import async_init_integration, mock_api_call
 
 from tests.typing import WebSocketGenerator
 
 
-async def test_aemet_weather(hass: HomeAssistant) -> None:
+async def test_aemet_weather(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test states of the weather."""
 
     hass.config.set_time_zone("UTC")
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ):
-        await async_init_integration(hass)
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    await async_init_integration(hass)
 
     state = hass.states.get("weather.aemet")
     assert state
@@ -77,8 +76,11 @@ async def test_aemet_weather(hass: HomeAssistant) -> None:
     assert state is None
 
 
-async def test_aemet_weather_legacy(hass: HomeAssistant) -> None:
-    """Test states of the weather."""
+async def test_aemet_weather_legacy(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test states of legacy weather."""
 
     registry = er.async_get(hass)
     registry.async_get_or_create(
@@ -88,11 +90,8 @@ async def test_aemet_weather_legacy(hass: HomeAssistant) -> None:
     )
 
     hass.config.set_time_zone("UTC")
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ):
-        await async_init_integration(hass)
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    await async_init_integration(hass)
 
     state = hass.states.get("weather.aemet_daily")
     assert state
@@ -122,15 +121,14 @@ async def test_aemet_weather_legacy(hass: HomeAssistant) -> None:
 
 async def test_forecast_service(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test multiple forecast."""
+
     hass.config.set_time_zone("UTC")
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ):
-        await async_init_integration(hass)
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    await async_init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -191,8 +189,10 @@ async def test_forecast_subscription(
 
     assert forecast1 == snapshot
 
-    with requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
         freezer.tick(WEATHER_UPDATE_INTERVAL + datetime.timedelta(seconds=1))
         await hass.async_block_till_done()
         msg = await client.receive_json()

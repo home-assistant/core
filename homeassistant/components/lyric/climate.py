@@ -138,6 +138,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     coordinator: DataUpdateCoordinator[Lyric]
     entity_description: ClimateEntityDescription
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Lyric],

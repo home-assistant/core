@@ -96,10 +96,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         yellow_radio.manufacturer = "Nabu Casa"
 
     # Present the multi-PAN addon as a setup option, if it's available
-    addon_manager = await silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
 
     try:
-        addon_info = await addon_manager.async_get_addon_info()
+        addon_info = await multipan_manager.async_get_addon_info()
     except (AddonError, KeyError):
         addon_info = None
 

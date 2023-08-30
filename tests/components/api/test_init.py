@@ -81,7 +81,6 @@ async def test_api_state_change(
     assert hass.states.get("test.test").state == "debug_state_change2"
 
 
-# pylint: disable=invalid-name
 async def test_api_state_change_of_non_existing_entity(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -97,7 +96,6 @@ async def test_api_state_change_of_non_existing_entity(
     assert hass.states.get("test_entity.that_does_not_exist").state == new_state
 
 
-# pylint: disable=invalid-name
 async def test_api_state_change_with_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -109,7 +107,6 @@ async def test_api_state_change_with_bad_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-# pylint: disable=invalid-name
 async def test_api_state_change_to_zero_value(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -127,7 +124,6 @@ async def test_api_state_change_to_zero_value(
     assert resp.status == HTTPStatus.OK
 
 
-# pylint: disable=invalid-name
 async def test_api_state_change_push(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -154,7 +150,6 @@ async def test_api_state_change_push(
     assert len(events) == 1
 
 
-# pylint: disable=invalid-name
 async def test_api_fire_event_with_no_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -174,7 +169,6 @@ async def test_api_fire_event_with_no_data(
     assert len(test_value) == 1
 
 
-# pylint: disable=invalid-name
 async def test_api_fire_event_with_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
@@ -199,7 +193,6 @@ async def test_api_fire_event_with_data(
     assert len(test_value) == 1
 
 
-# pylint: disable=invalid-name
 async def test_api_fire_event_with_invalid_json(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:

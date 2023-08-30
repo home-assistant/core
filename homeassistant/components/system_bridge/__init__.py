@@ -19,6 +19,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COMMAND,
     CONF_HOST,
     CONF_PATH,
     CONF_PORT,
@@ -47,9 +48,19 @@ CONF_KEY = "key"
 CONF_TEXT = "text"
 
 SERVICE_OPEN_PATH = "open_path"
+SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
+
+POWER_COMMAND_MAP = {
+    "hibernate": "power_hibernate",
+    "lock": "power_lock",
+    "logout": "power_logout",
+    "restart": "power_restart",
+    "shutdown": "power_shutdown",
+    "sleep": "power_sleep",
+}
 
 
 async def async_setup_entry(
@@ -136,7 +147,7 @@ async def async_setup_entry(
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
 
-    def valid_device(device: str):
+    def valid_device(device: str) -> str:
         """Check device is valid."""
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device)
@@ -160,6 +171,17 @@ async def async_setup_entry(
         await coordinator.websocket_client.open_path(
             OpenPath(path=call.data[CONF_PATH])
         )
+
+    async def handle_power_command(call: ServiceCall) -> None:
+        """Handle the power command service call."""
+        _LOGGER.info("Power command: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+        )()
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
@@ -195,6 +217,18 @@ async def async_setup_entry(
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_PATH): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_POWER_COMMAND,
+        handle_power_command,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
     )
@@ -273,19 +307,19 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     """Defines a base System Bridge entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
         api_port: int,
         key: str,
-        name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
         self._key = f"{self._hostname}_{key}"
-        self._name = f"{self._hostname} {name}"
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
@@ -297,11 +331,6 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
