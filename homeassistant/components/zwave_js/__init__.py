@@ -7,9 +7,8 @@ from collections.abc import Coroutine
 from contextlib import suppress
 from typing import Any
 
-from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -22,6 +21,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # connect and throw error if connection failed
     try:
-        async with timeout(CONNECT_TIMEOUT):
+        async with asyncio.timeout(CONNECT_TIMEOUT):
             await client.connect()
     except InvalidServerVersion as err:
         if use_addon:
@@ -291,6 +291,11 @@ class DriverEvents:
             controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
+        # listen for identify events for the controller
+        self.config_entry.async_on_unload(
+            controller.on("identify", self.controller_events.async_on_identify)
+        )
+
     async def async_setup_platform(self, platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
@@ -348,8 +353,13 @@ class ControllerEvents:
             )
         )
 
-        # No need for a ping button or node status sensor for controller nodes
-        if not node.is_controller_node:
+        if node.is_controller_node:
+            # Create a controller status sensor for each device
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_controller_status_sensor",
+            )
+        else:
             # Create a node status sensor for each device
             async_dispatcher_send(
                 self.hass,
@@ -398,13 +408,13 @@ class ControllerEvents:
     def async_on_node_removed(self, event: dict) -> None:
         """Handle node removed event."""
         node: ZwaveNode = event["node"]
-        replaced: bool = event.get("replaced", False)
+        reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
         device = self.dev_reg.async_get_device(identifiers={dev_id})
         # We assert because we know the device exists
         assert device
-        if replaced:
+        if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
             self.discovered_value_ids.pop(device.id, None)
 
             async_dispatcher_send(
@@ -417,6 +427,41 @@ class ControllerEvents:
             )
         else:
             self.remove_device(device)
+
+    @callback
+    def async_on_identify(self, event: dict) -> None:
+        """Handle identify event."""
+        # Get node device
+        node: ZwaveNode = event["node"]
+        dev_id = get_device_id(self.driver_events.driver, node)
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        assert device
+        device_name = device.name_by_user or device.name
+        home_id = self.driver_events.driver.controller.home_id
+        # We do this because we know at this point the controller has its home ID as
+        # as it is part of the device ID
+        assert home_id
+        # In case the user has multiple networks, we should give them more information
+        # about the network for the controller being identified.
+        identifier = ""
+        if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
+            if str(home_id) != self.config_entry.title:
+                identifier = (
+                    f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
+                )
+            else:
+                identifier = f"with the home ID `{home_id}` "
+        async_create(
+            self.hass,
+            (
+                f"`{device_name}` has just requested the controller for your Z-Wave "
+                f"network {identifier}to identify itself. No action is needed from "
+                "you other than to note the source of the request, and you can safely "
+                "dismiss this notification when ready."
+            ),
+            "New Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller.{dev_id[1]}",
+        )
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
@@ -549,6 +594,26 @@ class NodeEvents:
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_firmware_update_entity",
                 node,
+            )
+
+        # After ensuring the node is set up in HA, we should check if the node's
+        # device config has changed, and if so, issue a repair registry entry for a
+        # possible reinterview
+        if not node.is_controller_node and await node.async_has_device_config_changed():
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"device_config_file_changed.{device.id}",
+                data={"device_id": device.id},
+                is_fixable=True,
+                is_persistent=False,
+                translation_key="device_config_file_changed",
+                translation_placeholders={
+                    "device_name": device.name_by_user
+                    or device.name
+                    or "Unnamed device"
+                },
+                severity=IssueSeverity.WARNING,
             )
 
     async def async_handle_discovery_info(

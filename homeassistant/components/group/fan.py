@@ -38,11 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 from .util import (
@@ -100,6 +96,16 @@ async def async_setup_entry(
     async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
+@callback
+def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+    """Create a preview sensor."""
+    return FanGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
@@ -108,7 +114,7 @@ class FanGroup(GroupEntity, FanEntity):
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""
-        self._entities = entities
+        self._entity_ids = entities
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
         self._percentage = None
         self._oscillating = None
@@ -145,20 +151,10 @@ class FanGroup(GroupEntity, FanEntity):
         return self._oscillating
 
     @callback
-    def _update_supported_features_event(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
-        self.async_set_context(event.context)
-        self.async_update_supported_features(
-            event.data["entity_id"], event.data["new_state"]
-        )
-
-    @callback
     def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
-        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -171,25 +167,6 @@ class FanGroup(GroupEntity, FanEntity):
                     self._fans[feature].add(entity_id)
                 else:
                     self._fans[feature].discard(entity_id)
-
-        if update_state:
-            self.async_defer_or_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register listeners."""
-        for entity_id in self._entities:
-            if (new_state := self.hass.states.get(entity_id)) is None:
-                continue
-            self.async_update_supported_features(
-                entity_id, new_state, update_state=False
-            )
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entities, self._update_supported_features_event
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -250,7 +227,7 @@ class FanGroup(GroupEntity, FanEntity):
         await self.hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: self._entities},
+            {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )
@@ -275,7 +252,7 @@ class FanGroup(GroupEntity, FanEntity):
 
         states = [
             state
-            for entity_id in self._entities
+            for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
         ]
         self._attr_assumed_state |= not states_equal(states)

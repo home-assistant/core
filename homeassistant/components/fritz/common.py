@@ -36,8 +36,9 @@ from homeassistant.helpers import (
     entity_registry as er,
     update_coordinator,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -784,27 +785,20 @@ class AvmWrapper(FritzBoxTools):
             )
             return result
         except FritzSecurityError:
-            _LOGGER.error(
-                (
-                    "Authorization Error: Please check the provided credentials and"
-                    " verify that you can log into the web interface"
-                ),
-                exc_info=True,
+            _LOGGER.exception(
+                "Authorization Error: Please check the provided credentials and"
+                " verify that you can log into the web interface"
             )
         except FRITZ_EXCEPTIONS:
-            _LOGGER.error(
+            _LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
-                exc_info=True,
             )
         except FritzConnectionException:
-            _LOGGER.error(
-                (
-                    "Connection Error: Please check the device is properly configured"
-                    " for remote login"
-                ),
-                exc_info=True,
+            _LOGGER.exception(
+                "Connection Error: Please check the device is properly configured"
+                " for remote login"
             )
         return {}
 

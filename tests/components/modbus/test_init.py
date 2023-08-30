@@ -49,6 +49,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
@@ -64,6 +65,7 @@ from homeassistant.components.modbus.const import (
 from homeassistant.components.modbus.validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
+    nan_validator,
     number_validator,
     struct_validator,
 )
@@ -141,6 +143,23 @@ async def test_number_validator() -> None:
     pytest.fail("Number_validator not throwing exception")
 
 
+async def test_nan_validator() -> None:
+    """Test number validator."""
+
+    for value, value_type in (
+        (15, int),
+        ("15", int),
+        ("abcdef", int),
+        ("0xabcdef", int),
+    ):
+        assert isinstance(nan_validator(value), value_type)
+
+    with pytest.raises(vol.Invalid):
+        nan_validator("x15")
+    with pytest.raises(vol.Invalid):
+        nan_validator("not a hex string")
+
+
 @pytest.mark.parametrize(
     "do_config",
     [
@@ -163,6 +182,30 @@ async def test_number_validator() -> None:
             CONF_COUNT: 2,
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">i",
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_BYTE,
         },
     ],
 )
@@ -235,6 +278,16 @@ async def test_ok_struct_validator(do_config) -> None:
             CONF_COUNT: 2,
             CONF_SLAVE_COUNT: 2,
             CONF_DATA_TYPE: DataType.INT32,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
 )
@@ -926,3 +979,20 @@ async def test_integration_reload_failed(
 
     assert "Modbus reloading" in caplog.text
     assert "connect failed, retry in pymodbus" in caplog.text
+
+
+@pytest.mark.parametrize("do_config", [{}])
+async def test_integration_setup_failed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+) -> None:
+    """Run test for integration setup on reload."""
+    with mock.patch.object(
+        hass_config,
+        "YAML_CONFIG_FILE",
+        get_fixture_path("configuration.yaml", "modbus"),
+    ):
+        hass.data[DOMAIN][TEST_MODBUS_NAME].async_setup = mock.AsyncMock(
+            return_value=False
+        )
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()

@@ -6,8 +6,8 @@ from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 8
-PATCH_VERSION: Final = "4"
+MINOR_VERSION: Final = 9
+PATCH_VERSION: Final = "0b0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
@@ -39,6 +39,7 @@ class Platform(StrEnum):
     HUMIDIFIER = "humidifier"
     IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
+    LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
     MAILBOX = "mailbox"
@@ -57,6 +58,7 @@ class Platform(StrEnum):
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
+    WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 

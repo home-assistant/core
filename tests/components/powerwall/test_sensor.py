@@ -47,58 +47,58 @@ async def test_sensors(
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 
-    state = hass.states.get("sensor.powerwall_load_now")
+    state = hass.states.get("sensor.mysite_load_power")
     assert state.state == "1.971"
     attributes = state.attributes
     assert attributes[ATTR_DEVICE_CLASS] == "power"
     assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "kW"
     assert attributes[ATTR_STATE_CLASS] == "measurement"
-    assert attributes[ATTR_FRIENDLY_NAME] == "Powerwall Load Now"
+    assert attributes[ATTR_FRIENDLY_NAME] == "MySite Load power"
 
-    state = hass.states.get("sensor.powerwall_load_frequency_now")
+    state = hass.states.get("sensor.mysite_load_frequency")
     assert state.state == "60"
     attributes = state.attributes
     assert attributes[ATTR_DEVICE_CLASS] == "frequency"
     assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "Hz"
     assert attributes[ATTR_STATE_CLASS] == "measurement"
-    assert attributes[ATTR_FRIENDLY_NAME] == "Powerwall Load Frequency Now"
+    assert attributes[ATTR_FRIENDLY_NAME] == "MySite Load frequency"
 
-    state = hass.states.get("sensor.powerwall_load_average_voltage_now")
+    state = hass.states.get("sensor.mysite_load_voltage")
     assert state.state == "120.7"
     attributes = state.attributes
     assert attributes[ATTR_DEVICE_CLASS] == "voltage"
     assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "V"
     assert attributes[ATTR_STATE_CLASS] == "measurement"
-    assert attributes[ATTR_FRIENDLY_NAME] == "Powerwall Load Average Voltage Now"
+    assert attributes[ATTR_FRIENDLY_NAME] == "MySite Load voltage"
 
-    state = hass.states.get("sensor.powerwall_load_average_current_now")
+    state = hass.states.get("sensor.mysite_load_current")
     assert state.state == "0"
     attributes = state.attributes
     assert attributes[ATTR_DEVICE_CLASS] == "current"
     assert attributes[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert attributes[ATTR_STATE_CLASS] == "measurement"
-    assert attributes[ATTR_FRIENDLY_NAME] == "Powerwall Load Average Current Now"
+    assert attributes[ATTR_FRIENDLY_NAME] == "MySite Load current"
 
-    assert float(hass.states.get("sensor.powerwall_load_export").state) == 1056.8
-    assert float(hass.states.get("sensor.powerwall_load_import").state) == 4693.0
+    assert float(hass.states.get("sensor.mysite_load_export").state) == 1056.8
+    assert float(hass.states.get("sensor.mysite_load_import").state) == 4693.0
 
-    state = hass.states.get("sensor.powerwall_battery_now")
+    state = hass.states.get("sensor.mysite_battery_power")
     assert state.state == "-8.55"
 
-    assert float(hass.states.get("sensor.powerwall_battery_export").state) == 3620.0
-    assert float(hass.states.get("sensor.powerwall_battery_import").state) == 4216.2
+    assert float(hass.states.get("sensor.mysite_battery_export").state) == 3620.0
+    assert float(hass.states.get("sensor.mysite_battery_import").state) == 4216.2
 
-    state = hass.states.get("sensor.powerwall_solar_now")
+    state = hass.states.get("sensor.mysite_solar_power")
     assert state.state == "10.49"
 
-    assert float(hass.states.get("sensor.powerwall_solar_export").state) == 9864.2
-    assert float(hass.states.get("sensor.powerwall_solar_import").state) == 28.2
+    assert float(hass.states.get("sensor.mysite_solar_export").state) == 9864.2
+    assert float(hass.states.get("sensor.mysite_solar_import").state) == 28.2
 
-    state = hass.states.get("sensor.powerwall_charge")
+    state = hass.states.get("sensor.mysite_charge")
     assert state.state == "47"
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
-        "friendly_name": "Powerwall Charge",
+        "friendly_name": "MySite Charge",
         "device_class": "battery",
     }
     # Only test for a subset of attributes in case
@@ -106,11 +106,11 @@ async def test_sensors(
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
 
-    state = hass.states.get("sensor.powerwall_backup_reserve")
+    state = hass.states.get("sensor.mysite_backup_reserve")
     assert state.state == "15"
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
-        "friendly_name": "Powerwall Backup Reserve",
+        "friendly_name": "MySite Backup reserve",
         "device_class": "battery",
     }
     # Only test for a subset of attributes in case

@@ -29,8 +29,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
         base_path: str,
         tls: bool,
         verify_ssl: bool,
+        device_id: str,
     ) -> None:
         """Initialize global IPP data updater."""
+        self.device_id = device_id
         self.ipp = IPP(
             host=host,
             port=port,

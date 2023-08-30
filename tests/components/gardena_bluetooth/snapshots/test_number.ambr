@@ -67,6 +67,40 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_connected_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Sensor threshold',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_sensor_threshold',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_connected_state.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Sensor threshold',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_title_sensor_threshold',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45.0',
+  })
+# ---
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({

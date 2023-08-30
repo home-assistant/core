@@ -68,7 +68,7 @@ async def test_setup_entry_exception(
     # ConfigEntryNotReady.
     with patch(
         "renault_api.renault_session.RenaultSession.login",
-        side_effect=aiohttp.ClientConnectionError,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -91,6 +91,22 @@ async def test_setup_entry_kamereon_exception(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
+async def test_setup_entry_missing_vehicle_details(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test ConfigEntryNotReady when vehicleDetails is missing."""
+    # In this case we are testing the condition where renault_hub fails to retrieve
+    # vehicle details (see #99127).
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY

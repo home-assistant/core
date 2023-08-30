@@ -17,19 +17,18 @@ from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client, ClientBlockRequest
-from aiounifi.models.device import (
-    DeviceSetOutletRelayRequest,
-    DeviceSetPoePortModeRequest,
-)
+from aiounifi.models.device import DeviceSetOutletRelayRequest
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
+from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
@@ -41,11 +40,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceEntryType,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -55,6 +50,7 @@ from .entity import (
     SubscriptionT,
     UnifiEntity,
     UnifiEntityDescription,
+    async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_wlan_device_info_fn,
@@ -78,18 +74,9 @@ def async_dpi_group_is_on_fn(
 
 
 @callback
-def async_client_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for client."""
-    client = api.clients[obj_id]
-    return DeviceInfo(
-        connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
-    )
-
-
-@callback
-def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_dpi_group_device_info_fn(
+    controller: UniFiController, obj_id: str
+) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
@@ -100,59 +87,95 @@ def async_dpi_group_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Dev
     )
 
 
+@callback
+def async_port_forward_device_info_fn(
+    controller: UniFiController, obj_id: str
+) -> DeviceInfo:
+    """Create device registry entry for port forward."""
+    unique_id = controller.config_entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
+    )
+
+
 async def async_block_client_control_fn(
-    api: aiounifi.Controller, obj_id: str, target: bool
+    controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control network access of client."""
-    await api.request(ClientBlockRequest.create(obj_id, not target))
+    await controller.api.request(ClientBlockRequest.create(obj_id, not target))
 
 
 async def async_dpi_group_control_fn(
-    api: aiounifi.Controller, obj_id: str, target: bool
+    controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Enable or disable DPI group."""
-    dpi_group = api.dpi_groups[obj_id]
+    dpi_group = controller.api.dpi_groups[obj_id]
     await asyncio.gather(
         *[
-            api.request(DPIRestrictionAppEnableRequest.create(app_id, target))
+            controller.api.request(
+                DPIRestrictionAppEnableRequest.create(app_id, target)
+            )
             for app_id in dpi_group.dpiapp_ids or []
         ]
     )
 
 
+@callback
+def async_outlet_supports_switching_fn(
+    controller: UniFiController, obj_id: str
+) -> bool:
+    """Determine if an outlet supports switching."""
+    outlet = controller.api.outlets[obj_id]
+    return outlet.has_relay or outlet.caps in (1, 3)
+
+
 async def async_outlet_control_fn(
-    api: aiounifi.Controller, obj_id: str, target: bool
+    controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
     mac, _, index = obj_id.partition("_")
-    device = api.devices[mac]
-    await api.request(DeviceSetOutletRelayRequest.create(device, int(index), target))
+    device = controller.api.devices[mac]
+    await controller.api.request(
+        DeviceSetOutletRelayRequest.create(device, int(index), target)
+    )
 
 
 async def async_poe_port_control_fn(
-    api: aiounifi.Controller, obj_id: str, target: bool
+    controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control poe state."""
     mac, _, index = obj_id.partition("_")
-    device = api.devices[mac]
-    port = api.ports[obj_id]
+    port = controller.api.ports[obj_id]
     on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
     state = on_state if target else "off"
-    await api.request(DeviceSetPoePortModeRequest.create(device, int(index), state))
+    controller.async_queue_poe_port_command(mac, int(index), state)
+
+
+async def async_port_forward_control_fn(
+    controller: UniFiController, obj_id: str, target: bool
+) -> None:
+    """Control port forward state."""
+    port_forward = controller.api.port_forwarding[obj_id]
+    await controller.api.request(PortForwardEnableRequest.create(port_forward, target))
 
 
 async def async_wlan_control_fn(
-    api: aiounifi.Controller, obj_id: str, target: bool
+    controller: UniFiController, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
-    await api.request(WlanEnableRequest.create(obj_id, target))
+    await controller.api.request(WlanEnableRequest.create(obj_id, target))
 
 
 @dataclass
 class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    control_fn: Callable[[aiounifi.Controller, str, bool], Coroutine[Any, Any, None]]
+    control_fn: Callable[[UniFiController, str, bool], Coroutine[Any, Any, None]]
     is_on_fn: Callable[[UniFiController, ApiItemT], bool]
 
 
@@ -224,8 +247,28 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=False,
-        supported_fn=lambda c, obj_id: c.api.outlets[obj_id].has_relay,
+        supported_fn=async_outlet_supports_switching_fn,
         unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
+    ),
+    UnifiSwitchEntityDescription[PortForwarding, PortForward](
+        key="Port forward control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        icon="mdi:upload-network",
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.port_forwarding,
+        available_fn=lambda controller, obj_id: controller.available,
+        control_fn=async_port_forward_control_fn,
+        device_info_fn=async_port_forward_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        is_on_fn=lambda controller, port_forward: port_forward.enabled,
+        name_fn=lambda port_forward: f"{port_forward.name}",
+        object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
+        should_poll=False,
+        supported_fn=lambda controller, obj_id: True,
+        unique_id_fn=lambda controller, obj_id: f"port_forward-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
@@ -279,7 +322,7 @@ async def async_setup_entry(
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    if controller.site_role != "admin":
+    if not controller.is_admin:
         return
 
     for mac in controller.option_block_clients:
@@ -309,15 +352,11 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.entity_description.control_fn(
-            self.controller.api, self._obj_id, True
-        )
+        await self.entity_description.control_fn(self.controller, self._obj_id, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.entity_description.control_fn(
-            self.controller.api, self._obj_id, False
-        )
+        await self.entity_description.control_fn(self.controller, self._obj_id, False)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

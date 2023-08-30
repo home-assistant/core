@@ -1,4 +1,5 @@
 """The climate tests for the Airzone platform."""
+import copy
 from unittest.mock import patch
 
 from aioairzone.const import (
@@ -54,6 +55,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
 from .util import (
+    HVAC_DHW_MOCK,
     HVAC_MOCK,
     HVAC_SYSTEMS_MOCK,
     HVAC_WEBSERVER_MOCK,
@@ -221,11 +223,14 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.8
 
-    HVAC_MOCK_CHANGED = {**HVAC_MOCK}
+    HVAC_MOCK_CHANGED = copy.deepcopy(HVAC_MOCK)
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MAX_TEMP] = 25
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MIN_TEMP] = 10
 
     with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK_CHANGED,
     ), patch(
@@ -433,10 +438,13 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.salon")
     assert state.state == HVACMode.FAN_ONLY
 
-    HVAC_MOCK_NO_SET_POINT = {**HVAC_MOCK}
+    HVAC_MOCK_NO_SET_POINT = copy.deepcopy(HVAC_MOCK)
     del HVAC_MOCK_NO_SET_POINT[API_SYSTEMS][0][API_DATA][0][API_SET_POINT]
 
     with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK_NO_SET_POINT,
     ), patch(

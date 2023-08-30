@@ -8,7 +8,7 @@ from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import STT_INFO, TTS_INFO
+from . import STT_INFO, TTS_INFO, WAKE_WORD_INFO
 
 from tests.common import MockConfigEntry
 
@@ -53,6 +53,21 @@ def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
+def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain="wyoming",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+        },
+        title="Test Wake Word",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
 async def init_wyoming_stt(hass: HomeAssistant, stt_config_entry: ConfigEntry):
     """Initialize Wyoming STT."""
     with patch(
@@ -70,6 +85,18 @@ async def init_wyoming_tts(hass: HomeAssistant, tts_config_entry: ConfigEntry):
         return_value=TTS_INFO,
     ):
         await hass.config_entries.async_setup(tts_config_entry.entry_id)
+
+
+@pytest.fixture
+async def init_wyoming_wake_word(
+    hass: HomeAssistant, wake_word_config_entry: ConfigEntry
+):
+    """Initialize Wyoming Wake Word."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=WAKE_WORD_INFO,
+    ):
+        await hass.config_entries.async_setup(wake_word_config_entry.entry_id)
 
 
 @pytest.fixture
