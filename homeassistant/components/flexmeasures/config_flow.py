@@ -21,16 +21,19 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            "host", description={"suggested_value": "https://flexmeasures.seita.nl"}
-        ): str,
-        vol.Required("username"): str,
+        vol.Required("host", description={"suggested_value": "localhost:5000"}): str,
+        vol.Required("username", default="toy-user@flexmeasures.io"): str,
         vol.Required("password"): str,
         vol.Required("power_sensor", default=1): int,
-        vol.Required("price_sensor", default=2): int,
+        vol.Required("consumption_price_sensor", default=2): int,
+        vol.Required("production_price_sensor", default=2): int,
         vol.Required("soc_sensor", default=4): int,
         vol.Required("rm_discharge_sensor", default=5): int,
-        vol.Required("schedule_duration", default=24): int,
+        # TODO: Is it possible to use a duration string?
+        vol.Required("schedule_duration", default="PT24H"): str,
+        vol.Required("soc_unit", default="kWh"): str,
+        vol.Required("soc_min", default=0.0): float,
+        vol.Required("soc_max", default=0.001): float,
     }
 )
 
@@ -172,8 +175,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=get_previous_option(self.config_entry, "power_sensor"),
                 ): int,
                 vol.Required(
-                    "price_sensor",
-                    default=get_previous_option(self.config_entry, "price_sensor"),
+                    "consumption_price_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "consumption_price_sensor"
+                    ),
+                ): int,
+                vol.Required(
+                    "production_price_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "production_price_sensor"
+                    ),
                 ): int,
                 vol.Required(
                     "soc_sensor",
@@ -188,9 +199,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     "schedule_duration",
                     default=get_previous_option(self.config_entry, "schedule_duration"),
-                ): int,
+                ): str,
+                vol.Required(
+                    "soc_unit",
+                    default=get_previous_option(self.config_entry, "soc_unit"),
+                ): str,
+                vol.Required(
+                    "soc_min",
+                    default=get_previous_option(self.config_entry, "soc_min"),
+                ): float,
+                vol.Required(
+                    "soc_max",
+                    default=get_previous_option(self.config_entry, "soc_max"),
+                ): float,
             }
         )
+
         return self.async_show_form(
             step_id="init", data_schema=options_schema, errors=errors
         )

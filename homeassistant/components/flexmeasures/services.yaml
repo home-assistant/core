@@ -8,3 +8,9 @@ change_control_type:
           options:
             - "NO_SELECTION"
             - "FILL_RATE_BASED_CONTROL"
+trigger_and_get_schedule:
+  fields:
+    soc_at_start:
+      required: true
+      selector:
+        number:

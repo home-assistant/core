@@ -794,7 +794,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.2.0
 
 # homeassistant.components.flexmeasures
-flexmeasures-client==0.1.4
+flexmeasures-client==0.1.5
 
 # homeassistant.components.flipr
 flipr-api==1.5.0
@@ -1064,6 +1064,9 @@ iperf3==0.1.11
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.0
+
+# homeassistant.components.flexmeasures
+isodate==0.6.1
 
 # homeassistant.components.file_upload
 janus==1.0.0
@@ -1687,6 +1690,9 @@ pyfibaro==0.7.2
 
 # homeassistant.components.fido
 pyfido==2.1.2
+
+# homeassistant.components.flexmeasures
+pyfiglet==0.8.post1
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
