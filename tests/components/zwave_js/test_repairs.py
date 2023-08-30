@@ -17,6 +17,7 @@ from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
+import homeassistant.helpers.issue_registry as ir
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -93,6 +94,62 @@ async def test_device_config_file_changed(
         "command": "node.refresh_info",
         "nodeId": node.node_id,
     }
+
+    # Assert the issue is resolved
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
+
+
+async def test_invalid_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    integration,
+) -> None:
+    """Test the invalid issue."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "invalid_issue_id",
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="invalid_issue",
+    )
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    # Assert the issue is present
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    issue = msg["result"]["issues"][0]
+    assert issue["issue_id"] == "invalid_issue_id"
+
+    url = RepairsFlowIndexView.url
+    resp = await http_client.post(
+        url, json={"handler": DOMAIN, "issue_id": "invalid_issue_id"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
+
+    # Apply fix
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    resp = await http_client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "create_entry"
+
+    await hass.async_block_till_done()
 
     # Assert the issue is resolved
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
