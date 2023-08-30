@@ -1,15 +1,17 @@
-"""Services."""
+"""Services.."""
 
 from datetime import datetime, timedelta
 import json
 import logging
 
 from flexmeasures_client.s2.cem import CEM
+
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 import pytz
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+
 
 from .const import DOMAIN
 from .helpers import time_ceil
@@ -53,7 +55,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         control_type = call.data.get("control_type")
 
-        if control_type not in ControlType:
+        if not hasattr(ControlType, control_type):
             LOGGER.exception("TODO")
             return False
         else:
@@ -101,12 +103,29 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             prior=call.data.get("prior"),
         )
 
+    async def change_control_type(call: ServiceCall):
+        """Change control type S2 Protocol."""
+        cem: CEM = hass.data[DOMAIN]["cem"]
+
+        control_type = call.data.get("control_type")
+
+        if not hasattr(ControlType, control_type):
+            LOGGER.exception("TODO")
+            return False
+        else:
+            control_type = getattr(ControlType, control_type)
+
+            await cem.activate_control_type(control_type=control_type)
+
+        hass.states.async_set(
+            f"{DOMAIN}.cem", json.dumps({"control_type": str(cem._control_type)})
+        )  # TODO: expose control type as public property
+
     #####################
     # Register services #
     #####################
 
     for service in SERVICES:
-        # print(service)
         if "service_func_name" in service:
             service_func_name = service.pop("service_func_name")
             service["service_func"] = locals()[service_func_name]

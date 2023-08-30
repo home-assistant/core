@@ -2,7 +2,7 @@ change_control_type:
   fields:
     control_type:
       required: true
-      default: "NO_SELECTION"
+      default: NO_SELECTION
       selector:
         select:
           options:
@@ -14,3 +14,4 @@ trigger_and_get_schedule:
       required: true
       selector:
         number:
+

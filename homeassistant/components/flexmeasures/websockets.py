@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from typing import Any, Final
 
@@ -82,7 +81,7 @@ class WebSocketHandler:
         cem = self.cem
 
         async for msg in self.wsock:
-            message = json.loads(msg.json())
+            message = msg.json()
 
             self._logger.debug(message)
 
@@ -92,6 +91,7 @@ class WebSocketHandler:
                     await self.wsock.close()
                 else:
                     # process message
+                    # breakpoint()
                     await cem.handle_message(message)
 
             elif msg.type == aiohttp.WSMsgType.ERROR:

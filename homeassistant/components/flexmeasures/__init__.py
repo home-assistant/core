@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 # from .api import S2FlexMeasuresClient, async_register_s2_api
 from .const import DOMAIN
 from .services import async_setup_services, async_unload_services
+from .websockets import WebsocketAPIView
 
 ATTR_NAME = "name"
 DEFAULT_NAME = "World"
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # print(entry)
 
     config_data = dict(entry.data)
-    print(config_data)
+    # print(config_data)
     # # Registers update listener to update config entry when options are updated.
     # unsub_options_update_listener = entry.add_update_listener(options_update_listener)
     # # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
@@ -74,15 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass)
 
-    # hass.http.register_view(WebsocketAPIView(cem))
-    # hass.services.async_register(DOMAIN, "change_control_type", change_control_type)
-
-    # async def blabla_service(call):
-    #     print("#"*10)
-    #     print(call)
-    #     print("#"*10)
-
-    # hass.services.async_register(DOMAIN, "blabla_service", blabla_service)
+    hass.http.register_view(WebsocketAPIView(cem))
 
     return True
 
@@ -94,15 +87,11 @@ async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # print(entry)
-
-    # close fm_client
-    await hass.data[DOMAIN]["fm_client"].close()
 
     # Remove services
     await async_unload_services(hass)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok
