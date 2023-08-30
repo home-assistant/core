@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
+import pydantic
 import pytest
 
 from homeassistant import data_entry_flow
@@ -54,3 +55,8 @@ async def test_service_failure(hass: HomeAssistant) -> None:
     """Test init with a invalid service."""
     entry = await setup_platform(hass, usage_effect=UnrecognisedServiceType())
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_not_pydantic2() -> None:
+    """Testing that Home Assistant still does not support Pydantic 2."""
+    assert pydantic.__version__ < "2"
