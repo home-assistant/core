@@ -283,3 +283,21 @@ async def test_shopping_list_add_item(
     assert result.response.speech == {
         "plain": {"speech": "Added apples", "extra_data": None}
     }
+
+
+async def test_intent_context(
+    hass: HomeAssistant, init_components, mock_device
+) -> None:
+    """Test if sending a device ID that's associated to an area adds area context to the intent."""
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        wraps=conversation.default_agent.recognize_all,
+    ) as mock_recognize:
+        result = await conversation.async_converse(
+            hass, "how many lights are on", None, Context(), device_id=mock_device.id
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        assert mock_recognize.call_args.kwargs["intent_context"]
+        assert mock_recognize.call_args.kwargs["intent_context"]["area"] == "kitchen"

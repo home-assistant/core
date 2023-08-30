@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
+from homeassistant.helpers import device_registry as dr
 
 from . import MockAgent
 
@@ -30,6 +31,19 @@ def mock_agent_support_all(hass):
     agent = MockAgent(entry.entry_id, MATCH_ALL)
     conversation.async_set_agent(hass, entry, agent)
     return agent
+
+
+@pytest.fixture
+def mock_device(hass):
+    """Mock voice satellite device that's located in the kitchen."""
+    entry = MockConfigEntry(entry_id="mock-entry-kitchen-satellite")
+    entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        suggested_area="kitchen",
+    )
+    return device
 
 
 @pytest.fixture(autouse=True)

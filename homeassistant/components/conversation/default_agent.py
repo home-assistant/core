@@ -192,7 +192,7 @@ class DefaultAgent(AbstractConversationAgent):
         if user_input.device_id:
             if device := dr.async_get(self.hass).async_get(user_input.device_id):
                 if (device is not None) and device.area_id:
-                    intent_context = {"area": device.area_id}
+                    intent_context = {"area": device.area_id, "device_id": device.id}
 
         slot_lists = self._make_slot_lists()
         result = await self.hass.async_add_executor_job(
