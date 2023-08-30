@@ -1,9 +1,9 @@
 {
   "domain": "duotecno",
-  "name": "duotecno",
+  "name": "Duotecno",
   "codeowners": ["@cereal2nd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/duotecno",
   "iot_class": "local_push",
-  "requirements": ["pyduotecno==2023.7.3"]
+  "requirements": ["pyduotecno==2023.8.4"]
 }

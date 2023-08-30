@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import WSMsgType, web
-import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -273,7 +272,7 @@ class WebSocketHandler:
         logging_debug = logging.DEBUG
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await wsock.prepare(request)
         except asyncio.TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
@@ -302,7 +301,7 @@ class WebSocketHandler:
 
             # Auth Phase
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     msg = await wsock.receive()
             except asyncio.TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"

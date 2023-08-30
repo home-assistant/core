@@ -11,5 +11,5 @@
   "documentation": "https://www.home-assistant.io/integrations/qnap_qsw",
   "iot_class": "local_polling",
   "loggers": ["aioqsw"],
-  "requirements": ["aioqsw==0.3.2"]
+  "requirements": ["aioqsw==0.3.4"]
 }

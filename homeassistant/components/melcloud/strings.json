@@ -26,7 +26,7 @@
       "fields": {
         "position": {
           "name": "Position",
-          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute.\n."
+          "description": "Horizontal vane position. Possible options can be found in the vane_horizontal_positions state attribute."
         }
       }
     },
@@ -36,8 +36,40 @@
       "fields": {
         "position": {
           "name": "Position",
-          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute.\n."
+          "description": "Vertical vane position. Possible options can be found in the vane_vertical_positions state attribute."
         }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The MELCloud YAML configuration import failed",
+      "description": "Configuring MELCloud using YAML is being removed but there was an authentication error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The MELCloud YAML configuration import failed",
+      "description": "Configuring MELCloud using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "daily_energy": {
+        "name": "Daily energy consumed"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "tank_temperature": {
+        "name": "Tank temperature"
+      },
+      "flow_temperature": {
+        "name": "Flow temperature"
+      },
+      "return_temperature": {
+        "name": "Flow return temperature"
       }
     }
   }
