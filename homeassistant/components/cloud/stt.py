@@ -13,13 +13,14 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    Provider,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .client import CloudClient
 from .const import DOMAIN
@@ -27,22 +28,21 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> CloudProvider:
-    """Set up Cloud speech component."""
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Demo speech platform via config entry."""
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
-
-    cloud_provider = CloudProvider(cloud)
-    if discovery_info is not None:
-        discovery_info["platform_loaded"].set()
-    return cloud_provider
+    async_add_entities([CloudProviderEntity(cloud)])
 
 
-class CloudProvider(Provider):
+class CloudProviderEntity(SpeechToTextEntity):
     """NabuCasa speech API provider."""
+
+    _attr_name = "Cloud"
+    _attr_unique_id = "cloud-speech-to-text"
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Home Assistant NabuCasa Speech to text."""
