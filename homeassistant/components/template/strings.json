@@ -1,6 +1,14 @@
 {
   "config": {
     "step": {
+      "binary_sensor": {
+        "data": {
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state_template": "[%key:component::template::config::step::sensor::data::state_template%]"
+        },
+        "title": "Template binary sensor"
+      },
       "sensor": {
         "data": {
           "device_class": "Device class",
@@ -14,6 +22,7 @@
       "user": {
         "description": "This helper allow you to create helper entities that define their state using a template.",
         "menu_options": {
+          "binary_sensor": "Template a binary sensor",
           "sensor": "Template a sensor"
         },
         "title": "Template helper"
@@ -22,6 +31,13 @@
   },
   "options": {
     "step": {
+      "binary_sensor": {
+        "data": {
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "state_template": "[%key:component::template::config::step::sensor::data::state_template%]"
+        },
+        "title": "[%key:component::template::config::step::binary_sensor::title%]"
+      },
       "sensor": {
         "data": {
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
@@ -34,6 +50,38 @@
     }
   },
   "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "none": "[%key:component::template::selector::sensor_device_class::options::none%]",
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
     "sensor_device_class": {
       "options": {
         "none": "No device class",

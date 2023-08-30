@@ -7,6 +7,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -31,6 +32,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from .binary_sensor import async_create_preview_binary_sensor
 from .const import DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
@@ -41,6 +43,23 @@ NONE_SENTINEL = "none"
 def generate_schema(domain: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+
+    if domain == Platform.BINARY_SENSOR:
+        schema = {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        NONE_SENTINEL,
+                        *sorted(
+                            [cls.value for cls in BinarySensorDeviceClass],
+                            key=str.casefold,
+                        ),
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="binary_sensor_device_class",
+                ),
+            )
+        }
 
     if domain == Platform.SENSOR:
         schema = {
@@ -197,11 +216,17 @@ def validate_user_input(
 
 
 TEMPLATE_TYPES = [
+    "binary_sensor",
     "sensor",
 ]
 
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        config_schema(Platform.BINARY_SENSOR),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
         preview="template",
@@ -212,6 +237,11 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        options_schema(Platform.BINARY_SENSOR),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),
         preview="template",
@@ -223,6 +253,7 @@ CREATE_PREVIEW_ENTITY: dict[
     str,
     Callable[[HomeAssistant, str, dict[str, Any]], TemplateEntity],
 ] = {
+    "binary_sensor": async_create_preview_binary_sensor,
     "sensor": async_create_preview_sensor,
 }
 
