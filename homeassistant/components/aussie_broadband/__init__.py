@@ -23,14 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
+# Backport for the pyaussiebb=0.0.15 validate_service_type method
 def validate_service_type(service: dict[str, Any]) -> None:
-    """Override for the original class's validation method - Check the service types against known types."""
+    """Check the service types against known types."""
 
     if "type" not in service:
         raise ValueError("Field 'type' not found in service data")
     if service["type"] not in NBN_TYPES + PHONE_TYPES + ["Hardware"]:
         raise UnrecognisedServiceType(
-            f"Service type {service['type']=} {service['name']=} -  not recognised - please raise an issue about this - https://github.com/yaleman/aussiebb/issues/new"
+            f"Service type {service['type']=} {service['name']=} - not recognised - ",
+            "please report this at https://github.com/yaleman/aussiebb/issues/new",
         )
 
 
@@ -42,8 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    # override the packaged method because pydantic 2.x isn't supported yet
-    # and the updated package requires it.
+    # Overwrite the pyaussiebb=0.0.15 validate_service_type method with backport
+    # Required until pydantic 2.x is supported
     client.validate_service_type = validate_service_type
     try:
         await client.login()
