@@ -148,6 +148,13 @@ class ScriptIntentHandler(intent.IntentHandler):
 
         response = intent_obj.create_response()
 
+        slots = slots | {
+            "context_items": {
+                target.type: {"name": target.name, "id": target.id}
+                for target in response.intent_targets
+            }
+        }
+
         if speech is not None:
             response.async_set_speech(
                 speech[CONF_TEXT].async_render(slots, parse_result=False),
