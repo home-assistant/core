@@ -38,9 +38,6 @@
       },
       "dew_point": {
         "name": "Dew point"
-      },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
       }
     }
   }
