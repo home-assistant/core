@@ -193,7 +193,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except UnauthorizedRequest as ex:
             return self.handle_step_exception(
-                "user", ex, schema, *addr, UNKNOWN, _LOGGER.error
+                "user", ex, schema, *addr, CANNOT_CONNECT, _LOGGER.error
             )
 
         except Error as ex:
