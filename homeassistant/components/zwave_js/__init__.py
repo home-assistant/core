@@ -353,8 +353,13 @@ class ControllerEvents:
             )
         )
 
-        # No need for a ping button or node status sensor for controller nodes
-        if not node.is_controller_node:
+        if node.is_controller_node:
+            # Create a controller status sensor for each device
+            async_dispatcher_send(
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_add_controller_status_sensor",
+            )
+        else:
             # Create a node status sensor for each device
             async_dispatcher_send(
                 self.hass,
