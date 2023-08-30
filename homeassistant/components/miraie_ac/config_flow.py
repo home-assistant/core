@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONFIG_KEY_USER_ID, DOMAIN
+from .const import CONFIG_KEY_USER_ID, COUNTRY_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +58,12 @@ def _validate_mobile_number(mobile_number):
     return match is not None
 
 
+def _add_country_code(phone_number):
+    if not phone_number.startswith(COUNTRY_CODE):
+        return COUNTRY_CODE + phone_number
+    return phone_number
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MirAIe AC."""
 
@@ -70,6 +76,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
+                phone_number = user_input[CONFIG_KEY_USER_ID]
+                user_input[CONFIG_KEY_USER_ID] = _add_country_code(phone_number)
+
                 info = await validate_input(self.hass, user_input)
             except AuthException:
                 _LOGGER.error("Invalid user ID or password")

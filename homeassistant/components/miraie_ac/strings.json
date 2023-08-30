@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "mobile": "Mobile Number (e.g. +91xxxxxxxxxx)",
+          "mobile": "Mobile Number",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
