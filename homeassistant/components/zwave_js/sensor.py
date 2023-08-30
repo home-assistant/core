@@ -940,7 +940,6 @@ class ZWaveControllerStatusSensor(SensorEntity):
             )
         )
         self._attr_native_value: str = self.controller.status.name.lower()
-        self.async_write_ha_state()
 
 
 class ZWaveStatisticsSensor(SensorEntity):
