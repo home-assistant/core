@@ -34,6 +34,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=False,
             is_persistent=False,
             issue_domain=DOMAIN,

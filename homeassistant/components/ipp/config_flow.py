@@ -59,9 +59,9 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up the instance."""
-        self.discovery_info = {}
+        self.discovery_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -17,9 +17,7 @@ from . import (
     WATER_TIMER_UNNAMED_SERVICE_INFO,
 )
 
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-)
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

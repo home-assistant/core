@@ -7,8 +7,10 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -19,9 +21,17 @@ from homeassistant.helpers.schema_config_entry_flow import (
     entity_selector_without_own_entities,
 )
 
-from . import DOMAIN
-from .binary_sensor import CONF_ALL
+from . import DOMAIN, GroupEntity
+from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC
+from .cover import async_create_preview_cover
+from .event import async_create_preview_event
+from .fan import async_create_preview_fan
+from .light import async_create_preview_light
+from .lock import async_create_preview_lock
+from .media_player import MediaPlayerGroup, async_create_preview_media_player
+from .sensor import async_create_preview_sensor
+from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
     "min",
@@ -36,15 +46,22 @@ _STATISTIC_MEASURES = [
 
 
 async def basic_group_options_schema(
-    domain: str | list[str], handler: SchemaCommonFlowHandler
+    domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
+    if handler is None:
+        entity_selector = selector.selector(
+            {"entity": {"domain": domain, "multiple": True}}
+        )
+    else:
+        entity_selector = entity_selector_without_own_entities(
+            cast(SchemaOptionsFlowHandler, handler.parent_handler),
+            selector.EntitySelectorConfig(domain=domain, multiple=True),
+        )
+
     return vol.Schema(
         {
-            vol.Required(CONF_ENTITIES): entity_selector_without_own_entities(
-                cast(SchemaOptionsFlowHandler, handler.parent_handler),
-                selector.EntitySelectorConfig(domain=domain, multiple=True),
-            ),
+            vol.Required(CONF_ENTITIES): entity_selector,
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
     )
@@ -63,7 +80,9 @@ def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
     )
 
 
-async def binary_sensor_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def binary_sensor_options_schema(
+    handler: SchemaCommonFlowHandler | None,
+) -> vol.Schema:
     """Generate options schema."""
     return (await basic_group_options_schema("binary_sensor", handler)).extend(
         {
@@ -96,7 +115,7 @@ SENSOR_OPTIONS = {
 
 
 async def sensor_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler
+    domain: str, handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
     return (
@@ -110,7 +129,7 @@ SENSOR_CONFIG_SCHEMA = basic_group_config_schema(
 
 
 async def light_switch_options_schema(
-    domain: str, handler: SchemaCommonFlowHandler
+    domain: str, handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
@@ -125,6 +144,7 @@ async def light_switch_options_schema(
 GROUP_TYPES = [
     "binary_sensor",
     "cover",
+    "event",
     "fan",
     "light",
     "lock",
@@ -159,34 +179,47 @@ CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
         BINARY_SENSOR_CONFIG_SCHEMA,
+        preview="group",
         validate_user_input=set_group_type("binary_sensor"),
     ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
+        preview="group",
         validate_user_input=set_group_type("cover"),
+    ),
+    "event": SchemaFlowFormStep(
+        basic_group_config_schema("event"),
+        preview="group",
+        validate_user_input=set_group_type("event"),
     ),
     "fan": SchemaFlowFormStep(
         basic_group_config_schema("fan"),
+        preview="group",
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
         basic_group_config_schema("light"),
+        preview="group",
         validate_user_input=set_group_type("light"),
     ),
     "lock": SchemaFlowFormStep(
         basic_group_config_schema("lock"),
+        preview="group",
         validate_user_input=set_group_type("lock"),
     ),
     "media_player": SchemaFlowFormStep(
         basic_group_config_schema("media_player"),
+        preview="group",
         validate_user_input=set_group_type("media_player"),
     ),
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
+        preview="group",
         validate_user_input=set_group_type("sensor"),
     ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
+        preview="group",
         validate_user_input=set_group_type("switch"),
     ),
 }
@@ -194,16 +227,59 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
-    "binary_sensor": SchemaFlowFormStep(binary_sensor_options_schema),
-    "cover": SchemaFlowFormStep(partial(basic_group_options_schema, "cover")),
-    "fan": SchemaFlowFormStep(partial(basic_group_options_schema, "fan")),
-    "light": SchemaFlowFormStep(partial(light_switch_options_schema, "light")),
-    "lock": SchemaFlowFormStep(partial(basic_group_options_schema, "lock")),
-    "media_player": SchemaFlowFormStep(
-        partial(basic_group_options_schema, "media_player")
+    "binary_sensor": SchemaFlowFormStep(
+        binary_sensor_options_schema,
+        preview="group",
     ),
-    "sensor": SchemaFlowFormStep(partial(sensor_options_schema, "sensor")),
-    "switch": SchemaFlowFormStep(partial(light_switch_options_schema, "switch")),
+    "cover": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "cover"),
+        preview="group",
+    ),
+    "event": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "event"),
+        preview="group",
+    ),
+    "fan": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "fan"),
+        preview="group",
+    ),
+    "light": SchemaFlowFormStep(
+        partial(light_switch_options_schema, "light"),
+        preview="group",
+    ),
+    "lock": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "lock"),
+        preview="group",
+    ),
+    "media_player": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "media_player"),
+        preview="group",
+    ),
+    "sensor": SchemaFlowFormStep(
+        partial(sensor_options_schema, "sensor"),
+        preview="group",
+    ),
+    "switch": SchemaFlowFormStep(
+        partial(light_switch_options_schema, "switch"),
+        preview="group",
+    ),
+}
+
+PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
+
+CREATE_PREVIEW_ENTITY: dict[
+    str,
+    Callable[[str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
+] = {
+    "binary_sensor": async_create_preview_binary_sensor,
+    "cover": async_create_preview_cover,
+    "event": async_create_preview_event,
+    "fan": async_create_preview_fan,
+    "light": async_create_preview_light,
+    "lock": async_create_preview_lock,
+    "media_player": async_create_preview_media_player,
+    "sensor": async_create_preview_sensor,
+    "switch": async_create_preview_switch,
 }
 
 
@@ -241,6 +317,21 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         )
         _async_hide_members(hass, options[CONF_ENTITIES], hidden_by)
 
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        for group_type, form_step in OPTIONS_FLOW.items():
+            if group_type not in GROUP_TYPES:
+                continue
+            schema = cast(
+                Callable[
+                    [SchemaCommonFlowHandler | None], Coroutine[Any, Any, vol.Schema]
+                ],
+                form_step.schema,
+            )
+            PREVIEW_OPTIONS_SCHEMA[group_type] = await schema(None)
+        websocket_api.async_register_command(hass, ws_start_preview)
+
 
 def _async_hide_members(
     hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
@@ -253,3 +344,52 @@ def _async_hide_members(
         if entity_id not in registry.entities:
             continue
         registry.async_update_entity(entity_id, hidden_by=hidden_by)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "group/start_preview",
+        vol.Required("flow_id"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("user_input"): dict,
+    }
+)
+@callback
+def ws_start_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a preview."""
+    if msg["flow_type"] == "config_flow":
+        flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
+        group_type = flow_status["step_id"]
+        form_step = cast(SchemaFlowFormStep, CONFIG_FLOW[group_type])
+        schema = cast(vol.Schema, form_step.schema)
+        validated = schema(msg["user_input"])
+        name = validated["name"]
+    else:
+        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        if not config_entry:
+            raise HomeAssistantError
+        group_type = config_entry.options["group_type"]
+        name = config_entry.options["name"]
+        validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
+
+    @callback
+    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
+        """Forward config entry state events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"], {"attributes": attributes, "state": state}
+            )
+        )
+
+    preview_entity = CREATE_PREVIEW_ENTITY[group_type](name, validated)
+    preview_entity.hass = hass
+
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+        async_preview_updated
+    )

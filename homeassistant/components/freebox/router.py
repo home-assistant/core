@@ -18,9 +18,8 @@ from freebox_api.exceptions import HttpRequestError, NotOpenError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -29,7 +28,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORMS,
+    HOME_COMPATIBLE_CATEGORIES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -191,7 +190,7 @@ class FreeboxRouter:
 
         new_device = False
         for home_node in home_nodes:
-            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node

@@ -725,8 +725,9 @@ async def test_this_variable_early_hass_not_running(
     # Signal hass started
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    # Re-render icon, name, pciture + other templates now rendered
+    # icon, name, picture + other templates now re-rendered
     state = hass.states.get(entity_id)
     assert state.state == "sensor.none_false: sensor.none_false"
     assert state.attributes == {
