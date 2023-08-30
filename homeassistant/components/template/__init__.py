@@ -6,6 +6,7 @@ from collections.abc import Callable
 import logging
 
 from homeassistant import config as conf_util
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
@@ -58,6 +59,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    await hass.config_entries.async_forward_entry_setups(
+        entry, (entry.options["template_type"],)
+    )
+    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+    return True
+
+
+async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener, called when the config entry options are changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, (entry.options["template_type"],)
+    )
 
 
 async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
