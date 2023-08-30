@@ -203,6 +203,7 @@ FLOWS = {
         "hue",
         "huisbaasje",
         "hunterdouglas_powerview",
+        "husqvarna_automower",
         "hvv_departures",
         "hyperion",
         "ialarm",
