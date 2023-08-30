@@ -46,7 +46,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.restore_state import StoredState, async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -266,7 +270,9 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.freeze_time("2023-06-05 17:47:50")
-async def test_start_service(hass: HomeAssistant) -> None:
+async def test_start_service(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test the start/stop service."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -311,6 +317,12 @@ async def test_start_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
     await hass.async_block_till_done()
+
+    # Ensure an issue is raised for the use of this deprecated service
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="deprecated_duration_in_start"
+    )
+
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
