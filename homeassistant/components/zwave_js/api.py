@@ -391,7 +391,6 @@ def node_status(node: Node) -> dict[str, Any]:
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
-    websocket_api.async_register_command(hass, websocket_subscribe_controller_status)
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
@@ -523,47 +522,6 @@ async def websocket_network_status(
         msg[ID],
         data,
     )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/subscribe_controller_status",
-        vol.Required(DEVICE_ID): str,
-    }
-)
-@websocket_api.async_response
-@async_get_node
-async def websocket_subscribe_controller_status(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-    node: Node,
-) -> None:
-    """Subscribe to controller status update events of a Z-Wave JS controller."""
-    driver = node.client.driver
-    assert driver
-    controller = driver.controller
-
-    @callback
-    def forward_event(event: dict) -> None:
-        """Forward the event."""
-        connection.send_message(
-            websocket_api.event_message(
-                msg[ID],
-                {"event": event["event"], "status": controller.status},
-            )
-        )
-
-    @callback
-    def async_cleanup() -> None:
-        """Remove signal listeners."""
-        for unsub in unsubs:
-            unsub()
-
-    connection.subscriptions[msg[ID]] = async_cleanup
-    msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on("status changed", forward_event)]
-
-    connection.send_result(msg[ID], controller.status)
 
 
 @websocket_api.websocket_command(

@@ -244,52 +244,6 @@ async def test_network_status(
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
-async def test_subscribe_controller_status(
-    hass: HomeAssistant,
-    client,
-    integration,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the subscribe controller status websocket command."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-    driver = client.driver
-    node = driver.controller.nodes[1]
-
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={get_device_id(driver, node)}
-    )
-
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/subscribe_controller_status",
-            DEVICE_ID: device.id,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == 0
-
-    event = Event(
-        "status changed",
-        {
-            "source": "controller",
-            "event": "status changed",
-            "status": 1,
-        },
-    )
-    driver.controller.receive_event(event)
-    await hass.async_block_till_done()
-
-    msg = await ws_client.receive_json()
-
-    assert msg["event"]["event"] == "status changed"
-    assert msg["event"]["status"] == 1
-
-
 async def test_subscribe_node_status(
     hass: HomeAssistant,
     multisensor_6_state,
