@@ -19,26 +19,6 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
-    UnitOfApparentPower,
-    UnitOfDataRate,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfFrequency,
-    UnitOfInformation,
-    UnitOfIrradiance,
-    UnitOfLength,
-    UnitOfMass,
-    UnitOfPower,
-    UnitOfPrecipitationDepth,
-    UnitOfPressure,
-    UnitOfSoundPressure,
-    UnitOfSpeed,
-    UnitOfTemperature,
-    UnitOfTime,
-    UnitOfVolume,
-    UnitOfVolumeFlowRate,
-    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -71,31 +51,10 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
                         "none",
                         *sorted(
                             {
-                                cls.value
-                                for unit in (
-                                    UnitOfApparentPower,
-                                    UnitOfEnergy,
-                                    UnitOfLength,
-                                    UnitOfApparentPower,
-                                    UnitOfElectricCurrent,
-                                    UnitOfElectricPotential,
-                                    UnitOfFrequency,
-                                    UnitOfPower,
-                                    UnitOfTemperature,
-                                    UnitOfInformation,
-                                    UnitOfIrradiance,
-                                    UnitOfMass,
-                                    UnitOfDataRate,
-                                    UnitOfPressure,
-                                    UnitOfPrecipitationDepth,
-                                    UnitOfSoundPressure,
-                                    UnitOfSpeed,
-                                    UnitOfTime,
-                                    UnitOfVolume,
-                                    UnitOfVolumeFlowRate,
-                                    UnitOfVolumetricFlux,
-                                )
-                                for cls in unit
+                                str(unit)
+                                for units in DEVICE_CLASS_UNITS.values()
+                                for unit in units
+                                if unit is not None
                             },
                             key=str.casefold,
                         ),
