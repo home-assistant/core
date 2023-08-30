@@ -247,7 +247,7 @@ async def test_reauth(
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
     async_fire_time_changed(hass, _MOCK_TIME_VALID_RESPONSES)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_TOKEN: "good-token"}
+        result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

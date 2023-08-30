@@ -148,9 +148,7 @@ async def async_setup_entry(
     sensors = [ElecPriceSensor(coordinator, SENSOR_TYPES[0], entry.unique_id)]
     if coordinator.api.using_private_api:
         for sensor_desc in SENSOR_TYPES[1:]:
-            sensors.append(
-                ElecPriceSensor(coordinator, sensor_desc, entry.unique_id)
-            )
+            sensors.append(ElecPriceSensor(coordinator, sensor_desc, entry.unique_id))
     async_add_entities(sensors)
 
 
