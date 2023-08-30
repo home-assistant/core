@@ -85,6 +85,19 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_switch(
+    name: str, validated_config: dict[str, Any]
+) -> SwitchGroup:
+    """Create a preview sensor."""
+    return SwitchGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_ALL, False),
+    )
+
+
 class SwitchGroup(GroupEntity, SwitchEntity):
     """Representation of a switch group."""
 

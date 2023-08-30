@@ -35,7 +35,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.24.1",
-    "home-assistant-bluetooth==1.10.2",
+    "home-assistant-bluetooth==1.10.3",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -51,7 +51,7 @@ dependencies    = [
     "PyYAML==6.0.1",
     "requests==2.31.0",
     "typing-extensions>=4.7.0,<5.0",
-    "ulid-transform==0.8.0",
+    "ulid-transform==0.8.1",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.2",
@@ -515,6 +515,8 @@ select = [
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
+    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
     "G", # flake8-logging-format
