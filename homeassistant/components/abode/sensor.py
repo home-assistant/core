@@ -14,12 +14,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
+
+ABODE_TEMPERATURE_UNIT_HA_UNIT = {
+    CONST.UNIT_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    CONST.UNIT_CELSIUS: UnitOfTemperature.CELSIUS,
+}
 
 
 @dataclass
@@ -39,13 +44,15 @@ SENSOR_TYPES: tuple[AbodeSensorDescription, ...] = (
     AbodeSensorDescription(
         key=CONST.TEMP_STATUS_KEY,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device: device.temp_unit,
+        native_unit_of_measurement_fn=lambda device: ABODE_TEMPERATURE_UNIT_HA_UNIT[
+            device.temp_unit
+        ],
         value_fn=lambda device: cast(float, device.temp),
     ),
     AbodeSensorDescription(
         key=CONST.HUMI_STATUS_KEY,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement_fn=lambda device: device.humidity_unit,
+        native_unit_of_measurement_fn=lambda _: PERCENTAGE,
         value_fn=lambda device: cast(float, device.humidity),
     ),
     AbodeSensorDescription(
