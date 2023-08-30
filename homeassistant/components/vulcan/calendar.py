@@ -57,7 +57,7 @@ class VulcanCalendarEntity(CalendarEntity):
     """A calendar entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(self, client, data, entity_id) -> None:
         """Create the Calendar entity."""
@@ -70,7 +70,7 @@ class VulcanCalendarEntity(CalendarEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"calendar_{self.student_info['id']}")},
             entry_type=DeviceEntryType.SERVICE,
-            name=f"{self.student_info['full_name']}: Calendar",
+            name=f"{self.student_info['full_name']}",
             model=(
                 f"{self.student_info['full_name']} -"
                 f" {self.student_info['class']} {self.student_info['school']}"
