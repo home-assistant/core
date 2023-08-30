@@ -47,7 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
-    distance = entry.data[CONF_RADIUS]
+
+    # Station Radius is a user-configurable option
+    distance = entry.options[CONF_RADIUS]
 
     # Reports are published hourly but update twice per hour
     update_interval = datetime.timedelta(minutes=30)
@@ -65,7 +67,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Listen for option changes
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        new_options = {CONF_RADIUS: entry.data[CONF_RADIUS]}
+        new_data = entry.data.copy()
+        del new_data[CONF_RADIUS]
+
+        entry.version = 2
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options
+        )
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
 
@@ -78,6 +102,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class AirNowDataUpdateCoordinator(DataUpdateCoordinator):

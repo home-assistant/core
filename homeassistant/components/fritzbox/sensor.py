@@ -48,6 +48,8 @@ class FritzSensorEntityDescription(
 ):
     """Description for Fritz!Smarthome sensor entities."""
 
+    entity_category_fn: Callable[[FritzhomeDevice], EntityCategory | None] | None = None
+
 
 def suitable_eco_temperature(device: FritzhomeDevice) -> bool:
     """Check suitablity for eco temperature sensor."""
@@ -74,6 +76,13 @@ def suitable_temperature(device: FritzhomeDevice) -> bool:
     return device.has_temperature_sensor and not device.has_thermostat
 
 
+def entity_category_temperature(device: FritzhomeDevice) -> EntityCategory | None:
+    """Determine proper entity category for temperature sensor."""
+    if device.has_switch or device.has_lightbulb:
+        return EntityCategory.DIAGNOSTIC
+    return None
+
+
 def value_nextchange_preset(device: FritzhomeDevice) -> str:
     """Return native value for next scheduled preset sensor."""
     if device.nextchange_temperature == device.eco_temperature:
@@ -94,7 +103,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category_fn=entity_category_temperature,
         suitable=suitable_temperature,
         native_value=lambda device: device.temperature,
     ),
@@ -224,3 +233,10 @@ class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.data)
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return the category of the entity, if any."""
+        if self.entity_description.entity_category_fn is not None:
+            return self.entity_description.entity_category_fn(self.data)
+        return super().entity_category
