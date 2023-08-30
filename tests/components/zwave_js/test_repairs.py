@@ -50,6 +50,8 @@ async def test_device_config_file_changed(
         client.driver.controller.receive_event(event)
         await hass.async_block_till_done()
 
+    client.async_send_command_no_wait.reset_mock()
+
     device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
@@ -83,6 +85,14 @@ async def test_device_config_file_changed(
     data = await resp.json()
 
     assert data["type"] == "create_entry"
+
+    await hass.async_block_till_done()
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    assert client.async_send_command_no_wait.call_args[0][0] == {
+        "command": "node.refresh_info",
+        "nodeId": node.node_id,
+    }
 
     # Assert the issue is resolved
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
