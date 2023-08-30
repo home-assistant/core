@@ -242,6 +242,7 @@ omit =
     homeassistant/components/duotecno/switch.py
     homeassistant/components/duotecno/cover.py
     homeassistant/components/duotecno/light.py
+    homeassistant/components/duotecno/climate.py
     homeassistant/components/dwd_weather_warnings/const.py
     homeassistant/components/dwd_weather_warnings/coordinator.py
     homeassistant/components/dwd_weather_warnings/sensor.py
