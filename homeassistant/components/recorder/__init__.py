@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
-from homeassistant.generated.recorder import EXCLUDED_ATTRIBUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -133,7 +132,7 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    exclude_attributes_by_domain: dict[str, set[str]] = dict(EXCLUDED_ATTRIBUTES)
+    exclude_attributes_by_domain: dict[str, set[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf).get_filter()
