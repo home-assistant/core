@@ -149,6 +149,7 @@ homeassistant.components.history.*
 homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
+homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
