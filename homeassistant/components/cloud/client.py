@@ -54,7 +54,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -230,7 +229,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_smart_home.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,

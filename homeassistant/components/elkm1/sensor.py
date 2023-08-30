@@ -6,7 +6,6 @@ from typing import Any
 from elkm1_lib.const import SettingFormat, ZoneType
 from elkm1_lib.counters import Counter
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
 from elkm1_lib.keypads import Keypad
 from elkm1_lib.panel import Panel
 from elkm1_lib.settings import Setting
@@ -84,15 +83,7 @@ def temperature_to_state(temperature: int, undefined_temperature: int) -> str | 
 class ElkSensor(ElkAttachedEntity, SensorEntity):
     """Base representation of Elk-M1 sensor."""
 
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
-        """Initialize the base of all Elk sensors."""
-        super().__init__(element, elk, elk_data)
-        self._state: str | None = None
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        return self._state
+    _attr_native_value: str | None = None
 
     async def async_counter_refresh(self) -> None:
         """Refresh the value of a counter from the panel."""
@@ -124,20 +115,17 @@ class ElkSensor(ElkAttachedEntity, SensorEntity):
 class ElkCounter(ElkSensor):
     """Representation of an Elk-M1 Counter."""
 
+    _attr_icon = "mdi:numeric"
     _element: Counter
 
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return "mdi:numeric"
-
     def _element_changed(self, _: Element, changeset: Any) -> None:
-        self._state = self._element.value
+        self._attr_native_value = self._element.value
 
 
 class ElkKeypad(ElkSensor):
     """Representation of an Elk-M1 Keypad."""
 
+    _attr_icon = "mdi:thermometer-lines"
     _element: Keypad
 
     @property
@@ -151,16 +139,11 @@ class ElkKeypad(ElkSensor):
         return self._temperature_unit
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return "mdi:thermometer-lines"
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the sensor."""
         attrs: dict[str, Any] = self.initial_attrs()
         attrs["area"] = self._element.area + 1
-        attrs["temperature"] = self._state
+        attrs["temperature"] = self._attr_native_value
         attrs["last_user_time"] = self._element.last_user_time.isoformat()
         attrs["last_user"] = self._element.last_user + 1
         attrs["code"] = self._element.code
@@ -169,7 +152,7 @@ class ElkKeypad(ElkSensor):
         return attrs
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
-        self._state = temperature_to_state(
+        self._attr_native_value = temperature_to_state(
             self._element.temperature, UNDEFINED_TEMPERATURE
         )
 
@@ -177,13 +160,9 @@ class ElkKeypad(ElkSensor):
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""
 
+    _attr_icon = "mdi:home"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _element: Panel
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return "mdi:home"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -194,25 +173,21 @@ class ElkPanel(ElkSensor):
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
         if self._elk.is_connected():
-            self._state = (
+            self._attr_native_value = (
                 "Paused" if self._element.remote_programming_status else "Connected"
             )
         else:
-            self._state = "Disconnected"
+            self._attr_native_value = "Disconnected"
 
 
 class ElkSetting(ElkSensor):
     """Representation of an Elk-M1 Setting."""
 
+    _attr_icon = "mdi:numeric"
     _element: Setting
 
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return "mdi:numeric"
-
     def _element_changed(self, _: Element, changeset: Any) -> None:
-        self._state = self._element.value
+        self._attr_native_value = self._element.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -282,10 +257,10 @@ class ElkZone(ElkSensor):
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
         if self._element.definition == ZoneType.TEMPERATURE:
-            self._state = temperature_to_state(
+            self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
         elif self._element.definition == ZoneType.ANALOG_ZONE:
-            self._state = f"{self._element.voltage}"
+            self._attr_native_value = f"{self._element.voltage}"
         else:
-            self._state = pretty_const(self._element.logical_status.name)
+            self._attr_native_value = pretty_const(self._element.logical_status.name)

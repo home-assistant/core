@@ -138,6 +138,6 @@ def async_track_time_interval_backoff(
     def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener

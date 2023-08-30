@@ -55,7 +55,6 @@ from .const import (  # noqa: F401
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -64,7 +63,6 @@ from .const import (  # noqa: F401
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
-    CONF_HUB,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -242,13 +240,27 @@ CLIMATE_SCHEMA = vol.All(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }

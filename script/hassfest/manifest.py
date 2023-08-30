@@ -254,12 +254,8 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(
-            "issue_tracker"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -268,6 +264,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("recorder_excluded_attributes"): [str],
     }
 )
 
@@ -397,4 +394,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             ["pre-commit", "run", "--hook-stage", "manual", "prettier", "--files"]
             + manifests_resorted,
             stdout=subprocess.DEVNULL,
+            check=True,
         )

@@ -1,4 +1,5 @@
 """The tests for the Modbus sensor component."""
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -46,6 +47,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+
+from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 SLAVE_UNIQUE_ID = "ground_floor_sensor"
@@ -244,7 +247,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"Error in sensor {TEST_ENTITY_NAME} swap(word) not possible due to the registers count: 1, needed: 2",
+            f"{TEST_ENTITY_NAME}: `structure` illegal with `swap`",
         ),
     ],
 )
@@ -503,7 +506,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102],
             False,
-            str(int(0x0102)),
+            str(0x0102),
         ),
         (
             {
@@ -512,7 +515,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0201],
             False,
-            str(int(0x0102)),
+            str(0x0102),
         ),
         (
             {
@@ -521,7 +524,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x02010403)),
+            str(0x02010403),
         ),
         (
             {
@@ -530,7 +533,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x03040102)),
+            str(0x03040102),
         ),
         (
             {
@@ -539,25 +542,25 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(int(0x04030201)),
+            str(0x04030201),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_MAX_VALUE: int(0x02010400),
+                CONF_MAX_VALUE: 0x02010400,
             },
             [0x0201, 0x0403],
             False,
-            str(int(0x02010400)),
+            str(0x02010400),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_MIN_VALUE: int(0x02010404),
+                CONF_MIN_VALUE: 0x02010404,
             },
             [0x0201, 0x0403],
             False,
-            str(int(0x02010404)),
+            str(0x02010404),
         ),
         (
             {
@@ -571,20 +574,20 @@ async def test_config_wrong_struct_sensor(
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_ZERO_SUPPRESS: int(0x00000001),
+                CONF_ZERO_SUPPRESS: 0x00000001,
             },
             [0x0000, 0x0002],
             False,
-            str(int(0x00000002)),
+            str(0x00000002),
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.INT32,
-                CONF_ZERO_SUPPRESS: int(0x00000002),
+                CONF_ZERO_SUPPRESS: 0x00000002,
             },
             [0x0000, 0x0002],
             False,
-            str(int(0)),
+            str(0),
         ),
         (
             {
@@ -613,9 +616,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                     CONF_ADDRESS: 51,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DATA_TYPE: DataType.UINT32,
-                    CONF_SCALE: 1,
-                    CONF_OFFSET: 0,
-                    CONF_PRECISION: 0,
+                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -687,15 +688,182 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 )
 async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     """Run test for sensor."""
-    assert hass.states.get(ENTITY_ID).state == expected[0]
     entity_registry = er.async_get(hass)
-
-    for i in range(1, len(expected)):
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i}".replace(" ", "_")
-        assert hass.states.get(entity_id).state == expected[i]
-        unique_id = f"{SLAVE_UNIQUE_ID}_{i}"
+    for i in range(0, len(expected)):
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+        unique_id = f"{SLAVE_UNIQUE_ID}"
+        if i:
+            entity_id = f"{entity_id}_{i}"
+            unique_id = f"{unique_id}_{i}"
         entry = entity_registry.async_get(entity_id)
+        state = hass.states.get(entity_id).state
+        assert state == expected[i]
         assert entry.unique_id == unique_id
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "do_exception", "expected"),
+    [
+        (
+            {
+                CONF_SLAVE_COUNT: 0,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_SWAP: CONF_SWAP_BYTE,
+                CONF_DATA_TYPE: DataType.UINT16,
+            },
+            [0x0102],
+            False,
+            [str(0x0201)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 0,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            False,
+            [str(0x03040102)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 0,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT64,
+            },
+            [0x0102, 0x0304, 0x0506, 0x0708],
+            False,
+            [str(0x0708050603040102)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT16,
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+            [0x0102, 0x0304],
+            False,
+            [str(0x0201), str(0x0403)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT32,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [0x0102, 0x0304, 0x0506, 0x0708],
+            False,
+            [str(0x03040102), str(0x07080506)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT64,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [0x0102, 0x0304, 0x0506, 0x0708, 0x0901, 0x0902, 0x0903, 0x0904],
+            False,
+            [str(0x0708050603040102), str(0x0904090309020901)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 3,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT16,
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+            [0x0102, 0x0304, 0x0506, 0x0708],
+            False,
+            [str(0x0201), str(0x0403), str(0x0605), str(0x0807)],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 3,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT32,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [
+                0x0102,
+                0x0304,
+                0x0506,
+                0x0708,
+                0x090A,
+                0x0B0C,
+                0x0D0E,
+                0x0F00,
+            ],
+            False,
+            [
+                str(0x03040102),
+                str(0x07080506),
+                str(0x0B0C090A),
+                str(0x0F000D0E),
+            ],
+        ),
+        (
+            {
+                CONF_SLAVE_COUNT: 3,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.UINT64,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [
+                0x0601,
+                0x0602,
+                0x0603,
+                0x0604,
+                0x0701,
+                0x0702,
+                0x0703,
+                0x0704,
+                0x0801,
+                0x0802,
+                0x0803,
+                0x0804,
+                0x0901,
+                0x0902,
+                0x0903,
+                0x0904,
+            ],
+            False,
+            [
+                str(0x0604060306020601),
+                str(0x0704070307020701),
+                str(0x0804080308020801),
+                str(0x0904090309020901),
+            ],
+        ),
+    ],
+)
+async def test_slave_swap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+    """Run test for sensor."""
+    for i in range(0, len(expected)):
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+        if i:
+            entity_id = f"{entity_id}_{i}"
+        state = hass.states.get(entity_id).state
+        assert state == expected[i]
 
 
 @pytest.mark.parametrize(
@@ -761,16 +929,15 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     ],
 )
 async def test_lazy_error_sensor(
-    hass: HomeAssistant, mock_do_cycle, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 
@@ -906,23 +1073,27 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     assert hass.states.get(ENTITY_ID).state == expected
 
 
-@pytest.mark.parametrize(
-    "mock_test_state",
-    [(State(ENTITY_ID, "unknown"), State(f"{ENTITY_ID}_1", "119"))],
-    indirect=True,
-)
+@pytest.fixture(name="mock_restore")
+async def mock_restore(hass):
+    """Mock restore cache."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(ENTITY_ID, "121"),
+                {"native_value": "121", "native_unit_of_measurement": "kg"},
+            ),
+            (
+                State(ENTITY_ID + "_1", "119"),
+                {"native_value": "119", "native_unit_of_measurement": "kg"},
+            ),
+        ),
+    )
+
+
 @pytest.mark.parametrize(
     "do_config",
     [
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 0,
-                }
-            ]
-        },
         {
             CONF_SENSORS: [
                 {
@@ -936,10 +1107,13 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     ],
 )
 async def test_restore_state_sensor(
-    hass: HomeAssistant, mock_test_state, mock_modbus
+    hass: HomeAssistant, mock_restore, mock_modbus
 ) -> None:
     """Run test for sensor restore state."""
-    assert hass.states.get(ENTITY_ID).state == mock_test_state[0].state
+    state = hass.states.get(ENTITY_ID).state
+    state2 = hass.states.get(ENTITY_ID + "_1").state
+    assert state
+    assert state2
 
 
 @pytest.mark.parametrize(

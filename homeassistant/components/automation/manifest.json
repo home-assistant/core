@@ -6,5 +6,12 @@
   "dependencies": ["blueprint", "trace"],
   "documentation": "https://www.home-assistant.io/integrations/automation",
   "integration_type": "system",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "recorder_excluded_attributes": [
+    "current",
+    "id",
+    "last_triggered",
+    "max",
+    "mode"
+  ]
 }

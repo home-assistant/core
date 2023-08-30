@@ -15,6 +15,7 @@ import zigpy.group
 import zigpy.profiles
 import zigpy.quirks
 import zigpy.types
+import zigpy.util
 from zigpy.zcl.clusters.general import Basic, Groups
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
@@ -30,6 +31,17 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_request_retry_delay():
+    """Disable ZHA request retrying delay to speed up failures."""
+
+    with patch(
+        "homeassistant.components.zha.core.cluster_handlers.RETRYABLE_REQUEST_DECORATOR",
+        zigpy.util.retryable_request(tries=3, delay=0),
+    ):
+        yield
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -77,6 +77,9 @@
     }),
   })
 # ---
+# name: test_audio_pipeline.7
+  None
+# ---
 # name: test_audio_pipeline_debug
   dict({
     'language': 'en',
@@ -155,6 +158,252 @@
     }),
   })
 # ---
+# name: test_audio_pipeline_debug.7
+  None
+# ---
+# name: test_audio_pipeline_no_wake_word_engine
+  dict({
+    'code': 'wake-engine-missing',
+    'message': 'No wake word engine',
+  })
+# ---
+# name: test_audio_pipeline_no_wake_word_entity
+  dict({
+    'code': 'wake-provider-missing',
+    'message': 'No wake-word-detection provider for: wake_word.bad-entity-id',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.1
+  dict({
+    'engine': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.2
+  dict({
+    'wake_word_output': dict({
+      'queued_audio': None,
+      'timestamp': 1000,
+      'ww_id': 'test_ww',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.3
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.4
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.5
+  dict({
+    'conversation_id': None,
+    'device_id': None,
+    'engine': 'homeassistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.6
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.7
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word.8
+  dict({
+    'tts_output': dict({
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.1
+  dict({
+    'engine': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.2
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'ww_id': 'test_ww',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.3
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.4
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.5
+  dict({
+    'conversation_id': None,
+    'device_id': None,
+    'engine': 'homeassistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.6
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.7
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.8
+  dict({
+    'tts_output': dict({
+      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&voice=james_earl_jones",
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.9
+  None
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 30,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.1
+  dict({
+    'engine': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.2
+  dict({
+    'code': 'wake-word-timeout',
+    'message': 'Wake word was not detected',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.3
+  None
+# ---
 # name: test_intent_failed
   dict({
     'language': 'en',
@@ -173,6 +422,9 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
   })
+# ---
+# name: test_intent_failed.2
+  None
 # ---
 # name: test_intent_timeout
   dict({
@@ -194,6 +446,9 @@
   })
 # ---
 # name: test_intent_timeout.2
+  None
+# ---
+# name: test_intent_timeout.3
   dict({
     'code': 'timeout',
     'message': 'Timeout running pipeline',
@@ -245,6 +500,9 @@
     }),
   })
 # ---
+# name: test_stt_stream_failed.2
+  None
+# ---
 # name: test_text_only_pipeline
   dict({
     'language': 'en',
@@ -286,6 +544,9 @@
     }),
   })
 # ---
+# name: test_text_only_pipeline.3
+  None
+# ---
 # name: test_text_pipeline_timeout
   dict({
     'code': 'timeout',
@@ -309,4 +570,7 @@
     'tts_input': 'Lights are on.',
     'voice': 'james_earl_jones',
   })
+# ---
+# name: test_tts_failed.2
+  None
 # ---

@@ -40,7 +40,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-from homeassistant.util import ssl as ssl_util
+from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
@@ -52,6 +52,7 @@ from .const import (  # noqa: F401
     KEY_HASS_USER,
 )
 from .cors import setup_cors
+from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
 from .headers import setup_headers
 from .request_context import current_request, setup_request_context
@@ -317,7 +318,7 @@ class HomeAssistantHTTP:
         # By default aiohttp does a linear search for routing rules,
         # we have a lot of routes, so use a dict lookup with a fallback
         # to the linear search.
-        self.app._router = FastUrlDispatcher()  # pylint: disable=protected-access
+        self.app._router = FastUrlDispatcher()
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -502,14 +503,15 @@ class HomeAssistantHTTP:
                 x509.NameAttribute(NameOID.COMMON_NAME, host),
             ]
         )
+        now = dt_util.utcnow()
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
             .issuer_name(issuer)
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.datetime.utcnow())
-            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

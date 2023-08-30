@@ -27,8 +27,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import discovery
@@ -833,7 +833,6 @@ class LogRelayHandler(logging.Handler):
 
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
-        assert config_dir is not None
         paths_re = re.compile(
             r"(?:{})/(.*)".format(
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])

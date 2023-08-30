@@ -158,7 +158,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-
     try:
         del hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     except KeyError:
