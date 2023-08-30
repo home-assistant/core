@@ -653,14 +653,6 @@ def nice_ibt4zwave_state_fixture():
 # model fixtures
 
 
-SETUP_COMMAND_RESPONSES = {
-    "node.has_device_config_changed": {"result": {"changed": False}},
-    "controller.get_available_firmware_updates": {
-        "result": {"success": True, "status": 255}
-    },
-}
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state, controller_node_state, version_state, log_config_state
@@ -698,8 +690,8 @@ def mock_client_fixture(
 
         async def async_send_command_side_effect(message, require_schema=None):
             """Return the command response."""
-            if resp := SETUP_COMMAND_RESPONSES.get(message["command"]):
-                return resp
+            if message["command"] == "node.has_device_config_changed":
+                return {"changed": False}
             return DEFAULT
 
         client.async_send_command.return_value = {
