@@ -49,7 +49,7 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
             vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        "none",
+                        NONE_SENTINEL,
                         *sorted(
                             [cls.value for cls in BinarySensorDeviceClass],
                             key=str.casefold,
