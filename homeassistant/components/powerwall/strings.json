@@ -33,5 +33,142 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "connected_to_tesla": {
+        "name": "Connected to Tesla"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      },
+      "grid_services_active": {
+        "name": "Grid services active"
+      }
+    },
+    "sensor": {
+      "charge": {
+        "name": "Charge"
+      },
+      "solar_instant_power": {
+        "name": "Solar power"
+      },
+      "solar_instant_frequency": {
+        "name": "Solar frequency"
+      },
+      "solar_instant_current": {
+        "name": "Solar current"
+      },
+      "solar_instant_voltage": {
+        "name": "Solar voltage"
+      },
+      "site_instant_power": {
+        "name": "Site power"
+      },
+      "site_instant_frequency": {
+        "name": "Site frequency"
+      },
+      "site_instant_current": {
+        "name": "Site current"
+      },
+      "site_instant_voltage": {
+        "name": "Site voltage"
+      },
+      "battery_instant_power": {
+        "name": "Battery power"
+      },
+      "battery_instant_frequency": {
+        "name": "Battery frequency"
+      },
+      "battery_instant_current": {
+        "name": "Battery current"
+      },
+      "battery_instant_voltage": {
+        "name": "Battery voltage"
+      },
+      "load_instant_power": {
+        "name": "Load power"
+      },
+      "load_instant_frequency": {
+        "name": "Load frequency"
+      },
+      "load_instant_current": {
+        "name": "Load current"
+      },
+      "load_instant_voltage": {
+        "name": "Load voltage"
+      },
+      "generator_instant_power": {
+        "name": "Generator power"
+      },
+      "generator_instant_frequency": {
+        "name": "Generator frequency"
+      },
+      "generator_instant_current": {
+        "name": "Generator current"
+      },
+      "generator_instant_voltage": {
+        "name": "Generator voltage"
+      },
+      "busway_instant_power": {
+        "name": "Busway power"
+      },
+      "busway_instant_frequency": {
+        "name": "Busway frequency"
+      },
+      "busway_instant_current": {
+        "name": "Busway current"
+      },
+      "busway_instant_voltage": {
+        "name": "Busway voltage"
+      },
+      "backup_reserve": {
+        "name": "Backup reserve"
+      },
+      "solar_import": {
+        "name": "Solar import"
+      },
+      "solar_export": {
+        "name": "Solar export"
+      },
+      "site_import": {
+        "name": "Site import"
+      },
+      "site_export": {
+        "name": "Site export"
+      },
+      "battery_import": {
+        "name": "Battery import"
+      },
+      "battery_export": {
+        "name": "Battery export"
+      },
+      "load_import": {
+        "name": "Load import"
+      },
+      "load_export": {
+        "name": "Load export"
+      },
+      "generator_import": {
+        "name": "Generator import"
+      },
+      "generator_export": {
+        "name": "Generator export"
+      },
+      "busway_import": {
+        "name": "Busway import"
+      },
+      "busway_export": {
+        "name": "Busway export"
+      }
+    },
+    "switch": {
+      "off_grid_operation": {
+        "name": "Off-grid operation"
+      }
+    }
   }
 }

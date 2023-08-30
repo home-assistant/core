@@ -160,7 +160,7 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
         description: EnOceanSensorEntityDescription,
     ) -> None:
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id)
         self.entity_description = description
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)

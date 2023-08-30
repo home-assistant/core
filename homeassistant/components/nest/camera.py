@@ -7,6 +7,7 @@ import datetime
 import functools
 import logging
 from pathlib import Path
+from typing import cast
 
 from google_nest_sdm.camera_traits import (
     CameraImageTrait,
@@ -71,8 +72,23 @@ class NestCamera(Camera):
         self._stream: RtspStream | None = None
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
-        self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._attr_is_streaming = False
+        self._attr_supported_features = CameraEntityFeature(0)
+        self._rtsp_live_stream_trait: CameraLiveStreamTrait | None = None
+        if CameraLiveStreamTrait.NAME in self._device.traits:
+            self._attr_is_streaming = True
+            self._attr_supported_features |= CameraEntityFeature.STREAM
+            trait = cast(
+                CameraLiveStreamTrait, self._device.traits[CameraLiveStreamTrait.NAME]
+            )
+            if StreamingProtocol.RTSP in trait.supported_protocols:
+                self._rtsp_live_stream_trait = trait
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return self._rtsp_live_stream_trait is not None
 
     @property
     def unique_id(self) -> str:
@@ -96,14 +112,6 @@ class NestCamera(Camera):
         return self._device_info.device_model
 
     @property
-    def supported_features(self) -> CameraEntityFeature:
-        """Flag supported features."""
-        supported_features = CameraEntityFeature(0)
-        if CameraLiveStreamTrait.NAME in self._device.traits:
-            supported_features |= CameraEntityFeature.STREAM
-        return supported_features
-
-    @property
     def frontend_stream_type(self) -> StreamType | None:
         """Return the type of stream supported by this camera."""
         if CameraLiveStreamTrait.NAME not in self._device.traits:
@@ -125,18 +133,15 @@ class NestCamera(Camera):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        if not self.supported_features & CameraEntityFeature.STREAM:
-            return None
-        if CameraLiveStreamTrait.NAME not in self._device.traits:
-            return None
-        trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        if StreamingProtocol.RTSP not in trait.supported_protocols:
+        if not self._rtsp_live_stream_trait:
             return None
         async with self._create_stream_url_lock:
             if not self._stream:
                 _LOGGER.debug("Fetching stream url")
                 try:
-                    self._stream = await trait.generate_rtsp_stream()
+                    self._stream = (
+                        await self._rtsp_live_stream_trait.generate_rtsp_stream()
+                    )
                 except ApiException as err:
                     raise HomeAssistantError(f"Nest API error: {err}") from err
                 self._schedule_stream_refresh()
@@ -204,10 +209,7 @@ class NestCamera(Camera):
     ) -> bytes | None:
         """Return bytes of camera image."""
         # Use the thumbnail from RTSP stream, or a placeholder if stream is
-        # not supported (e.g. WebRTC)
-        stream = await self.async_create_stream()
-        if stream:
-            return await stream.async_get_image(width, height)
+        # not supported (e.g. WebRTC) as a fallback when 'use_stream_for_stills' if False
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod
