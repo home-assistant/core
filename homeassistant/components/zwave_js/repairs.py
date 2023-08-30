@@ -19,7 +19,6 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
     def __init__(self, node: Node) -> None:
         """Initialize."""
         self.node = node
-        super().__init__()
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
