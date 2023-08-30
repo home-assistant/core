@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorStateClass,
@@ -48,7 +49,7 @@ def generate_schema(domain: str) -> dict[vol.Marker, Any]:
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        "none",
+                        NONE_SENTINEL,
                         *sorted(
                             {
                                 str(unit)
@@ -151,6 +152,24 @@ def _validate_unit(options: dict[str, Any]) -> None:
         )
 
 
+def _validate_state_class(options: dict[str, Any]) -> None:
+    """Validate state class."""
+    if (
+        (device_class := options.get(CONF_DEVICE_CLASS))
+        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+        and (state_class := options.get(CONF_STATE_CLASS)) not in state_classes
+    ):
+        state_classes_string = sorted(
+            [str(state_class) for state_class in state_classes],
+            key=str.casefold,
+        )
+
+        raise vol.Invalid(
+            f"'{state_class}' is not a valid state class for device class "
+            f"'{device_class}'; expected one of {', '.join(state_classes_string)}"
+        )
+
+
 def validate_user_input(
     template_type: str,
 ) -> Callable[
@@ -171,6 +190,7 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _strip_sentinel(user_input)
             _validate_unit(user_input)
+            _validate_state_class(user_input)
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -216,7 +236,7 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options["name"]) if "name" in options else ""
+        return cast(str, options["name"])
 
     @staticmethod
     async def async_setup_preview(hass: HomeAssistant) -> None:
@@ -257,6 +277,10 @@ def ws_start_preview(
                 _validate_unit(user_input)
             except vol.Invalid as ex:
                 errors[CONF_UNIT_OF_MEASUREMENT] = str(ex.msg)
+            try:
+                _validate_state_class(user_input)
+            except vol.Invalid as ex:
+                errors[CONF_STATE_CLASS] = str(ex.msg)
 
         return errors
 

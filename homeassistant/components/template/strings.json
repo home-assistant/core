@@ -24,8 +24,10 @@
     "step": {
       "sensor": {
         "data": {
-          "device_class": "Device class",
-          "state_template": "[%key:component::template::config::step::sensor::data::state_template%]"
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "state_class": "[%key:component::template::config::step::sensor::data::state_class%]",
+          "state_template": "[%key:component::template::config::step::sensor::data::state_template%]",
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
         "title": "[%key:component::template::config::step::sensor::title%]"
       }

@@ -323,10 +323,14 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
             "",
             {"device_class": "temperature", "unit_of_measurement": "cats"},
             {
+                "state_class": (
+                    "'None' is not a valid state class for device class 'temperature'; "
+                    "expected one of measurement"
+                ),
                 "unit_of_measurement": (
                     "'cats' is not a valid unit for device class 'temperature'; "
                     "expected one of K, °C, °F"
-                )
+                ),
             },
         ),
     ],
