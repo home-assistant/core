@@ -3,7 +3,6 @@
   "name": "MirAIe AC",
   "codeowners": ["@milothomas"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/miraie_ac",
   "homekit": {},
   "iot_class": "cloud_push",
