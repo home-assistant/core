@@ -197,7 +197,6 @@ class FreeboxDiskSensor(FreeboxSensor):
     ) -> None:
         """Initialize a Freebox disk sensor."""
         super().__init__(router, description)
-        self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
         self._attr_unique_id = (
