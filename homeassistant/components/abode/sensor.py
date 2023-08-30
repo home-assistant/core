@@ -7,7 +7,6 @@ from typing import cast
 
 from jaraco.abode.devices.sensor import Sensor as AbodeSense
 from jaraco.abode.helpers import constants as CONST
-from jaraco.abode.helpers.constants import UNIT_CELSIUS, UNIT_FAHRENHEIT
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,8 +22,8 @@ from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 ABODE_TEMPERATURE_UNIT_HA_UNIT = {
-    UNIT_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
-    UNIT_CELSIUS: UnitOfTemperature.CELSIUS,
+    CONST.UNIT_FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    CONST.UNIT_CELSIUS: UnitOfTemperature.CELSIUS,
 }
 
 
