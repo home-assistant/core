@@ -21,6 +21,7 @@ from zwave_js_server.model.notification import (
 from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -290,6 +291,11 @@ class DriverEvents:
             controller.on("node removed", self.controller_events.async_on_node_removed)
         )
 
+        # listen for identify events for the controller
+        self.config_entry.async_on_unload(
+            controller.on("identify", self.controller_events.async_on_identify)
+        )
+
     async def async_setup_platform(self, platform: Platform) -> None:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
@@ -416,6 +422,41 @@ class ControllerEvents:
             )
         else:
             self.remove_device(device)
+
+    @callback
+    def async_on_identify(self, event: dict) -> None:
+        """Handle identify event."""
+        # Get node device
+        node: ZwaveNode = event["node"]
+        dev_id = get_device_id(self.driver_events.driver, node)
+        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        assert device
+        device_name = device.name_by_user or device.name
+        home_id = self.driver_events.driver.controller.home_id
+        # We do this because we know at this point the controller has its home ID as
+        # as it is part of the device ID
+        assert home_id
+        # In case the user has multiple networks, we should give them more information
+        # about the network for the controller being identified.
+        identifier = ""
+        if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
+            if str(home_id) != self.config_entry.title:
+                identifier = (
+                    f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
+                )
+            else:
+                identifier = f"with the home ID `{home_id}` "
+        async_create(
+            self.hass,
+            (
+                f"`{device_name}` has just requested the controller for your Z-Wave "
+                f"network {identifier}to identify itself. No action is needed from "
+                "you other than to note the source of the request, and you can safely "
+                "dismiss this notification when ready."
+            ),
+            "New Z-Wave Identify Controller Request",
+            f"{DOMAIN}.identify_controller.{dev_id[1]}",
+        )
 
     @callback
     def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
