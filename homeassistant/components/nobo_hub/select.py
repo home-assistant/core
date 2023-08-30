@@ -7,6 +7,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -84,9 +85,12 @@ class NoboGlobalSelector(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set override."""
         mode = [k for k, v in self._modes.items() if v == option][0]
-        await self._nobo.async_create_override(
-            mode, self._override_type, nobo.API.OVERRIDE_TARGET_GLOBAL
-        )
+        try:
+            await self._nobo.async_create_override(
+                mode, self._override_type, nobo.API.OVERRIDE_TARGET_GLOBAL
+            )
+        except Exception as exp:
+            raise HomeAssistantError from exp
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
@@ -137,7 +141,12 @@ class NoboProfileSelector(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set week profile."""
         week_profile_id = [k for k, v in self._profiles.items() if v == option][0]
-        await self._nobo.async_update_zone(self._id, week_profile_id=week_profile_id)
+        try:
+            await self._nobo.async_update_zone(
+                self._id, week_profile_id=week_profile_id
+            )
+        except Exception as exp:
+            raise HomeAssistantError from exp
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""
