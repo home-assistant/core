@@ -38,19 +38,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     login_id = data[CONFIG_KEY_USER_ID]
     password = data[CONF_PASSWORD]
 
+    if not _validate_mobile_number(login_id):
+        _LOGGER.error("Invalid Mobile Number")
+        raise ValidationError()
+
     async with MirAIeAPI(
         auth_type=AuthType.MOBILE, login_id=login_id, password=password
     ) as api:
         try:
             _LOGGER.debug("Initializing MirAIe API")
-
-            if not _validate_mobile_number(login_id):
-                raise ValidationError()
-
             await api.initialize()
-        except ValidationError:
-            _LOGGER.error("Invalid Mobile Number")
-            raise
+
         except AuthException:
             _LOGGER.error("Invalid user ID or password")
             raise
