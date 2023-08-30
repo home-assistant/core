@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-def validate_service_type(cls: AussieBB, service: dict[str, Any]) -> None:
+def validate_service_type(service: dict[str, Any]) -> None:
     """Override for the original class's validation method - Check the service types against known types."""
 
     if "type" not in service:

@@ -24,14 +24,14 @@ async def test_unload(hass: HomeAssistant) -> None:
 async def test_validate_service_type() -> None:
     """Testing the validation function."""
     test_service = {"type": "Hardware", "name": "test service"}
-    validate_service_type(None, test_service)
+    validate_service_type(test_service)
 
     with pytest.raises(ValueError):
         test_service = {"name": "test service"}
-        validate_service_type(None, test_service)
+        validate_service_type(test_service)
     with pytest.raises(UnrecognisedServiceType):
         test_service = {"type": "FunkyBob", "name": "test service"}
-        validate_service_type(None, test_service)
+        validate_service_type(test_service)
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
