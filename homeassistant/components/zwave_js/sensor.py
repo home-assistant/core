@@ -491,12 +491,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    driver = client.driver
+    assert driver is not None  # Driver is ready before platforms are loaded.
 
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
-        driver = client.driver
-        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
 
         if info.platform_data:
@@ -538,22 +538,16 @@ async def async_setup_entry(
     @callback
     def async_add_controller_status_sensor() -> None:
         """Add controller status sensor."""
-        driver = client.driver
-        assert driver is not None  # Driver is ready before platforms are loaded.
         async_add_entities([ZWaveControllerStatusSensor(config_entry, driver)])
 
     @callback
     def async_add_node_status_sensor(node: ZwaveNode) -> None:
         """Add node status sensor."""
-        driver = client.driver
-        assert driver is not None  # Driver is ready before platforms are loaded.
         async_add_entities([ZWaveNodeStatusSensor(config_entry, driver, node)])
 
     @callback
     def async_add_statistics_sensors(node: ZwaveNode) -> None:
         """Add statistics sensors."""
-        driver = client.driver
-        assert driver is not None  # Driver is ready before platforms are loaded.
         async_add_entities(
             [
                 ZWaveStatisticsSensor(
