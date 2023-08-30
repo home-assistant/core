@@ -1480,6 +1480,9 @@ pushover-complete==1.1.1
 # homeassistant.components.pvoutput
 pvo==1.0.0
 
+# homeassistant.components.remote_rpi_gpio
+pwmled==1.6.7
+
 # homeassistant.components.canary
 py-canary==0.5.3
 
