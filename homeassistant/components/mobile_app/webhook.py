@@ -329,6 +329,7 @@ async def webhook_fire_event(
         vol.Required("text"): cv.string,
         vol.Optional("language"): cv.string,
         vol.Optional("conversation_id"): cv.string,
+        vol.Optional("device_id"): cv.string,
     }
 )
 async def webhook_conversation_process(
@@ -341,7 +342,7 @@ async def webhook_conversation_process(
         language=data.get("language"),
         conversation_id=data.get("conversation_id"),
         context=registration_context(config_entry.data),
-        device_id=config_entry.data[ATTR_DEVICE_ID],
+        device_id=data[ATTR_DEVICE_ID],
     )
     return webhook_response(result.as_dict(), registration=config_entry.data)
 
