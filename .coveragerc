@@ -843,6 +843,7 @@ omit =
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
+    homeassistant/components/octoprint/coordinator.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/ombi/*
