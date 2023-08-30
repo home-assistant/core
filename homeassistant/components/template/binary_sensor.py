@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -192,6 +193,29 @@ async def async_setup_platform(
         discovery_info["entities"],
         discovery_info["unique_id"],
     )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = BINARY_SENSOR_SCHEMA(_options)
+    async_add_entities(
+        [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]
+    )
+
+
+@callback
+def async_create_preview_binary_sensor(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> BinarySensorTemplate:
+    """Create a preview sensor."""
+    validated_config = BINARY_SENSOR_SCHEMA(config | {CONF_NAME: name})
+    return BinarySensorTemplate(hass, validated_config, None)
 
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
