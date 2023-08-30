@@ -25,7 +25,6 @@ from homeassistant.components.climate import (
 
 DOMAIN = "miraie_ac"
 CONFIG_KEY_USER_ID = "mobile"
-CONFIG_KEY_PASSWORD = "password"
 
 # max and min values supported by the devices
 MAX_TEMP = 30.0

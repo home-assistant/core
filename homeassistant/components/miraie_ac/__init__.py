@@ -6,10 +6,10 @@ import logging
 from py_miraie_ac import AuthType, MirAIeAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_KEY_PASSWORD, CONFIG_KEY_USER_ID, DOMAIN
+from .const import CONFIG_KEY_USER_ID, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     login_id = entry.data[CONFIG_KEY_USER_ID]
-    password = entry.data[CONFIG_KEY_PASSWORD]
+    password = entry.data[CONF_PASSWORD]
 
     api = MirAIeAPI(auth_type=AuthType.MOBILE, login_id=login_id, password=password)
     hass.data[DOMAIN][entry.entry_id] = api

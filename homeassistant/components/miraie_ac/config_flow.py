@@ -15,18 +15,19 @@ from py_miraie_ac import (
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONFIG_KEY_PASSWORD, CONFIG_KEY_USER_ID, DOMAIN
+from .const import CONFIG_KEY_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONFIG_KEY_USER_ID): str,
-        vol.Required(CONFIG_KEY_PASSWORD): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -35,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     login_id = data[CONFIG_KEY_USER_ID]
-    password = data[CONFIG_KEY_PASSWORD]
+    password = data[CONF_PASSWORD]
 
     async with MirAIeAPI(
         auth_type=AuthType.MOBILE, login_id=login_id, password=password

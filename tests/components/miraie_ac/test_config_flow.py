@@ -10,11 +10,8 @@ from homeassistant.components.miraie_ac.config_flow import (
     MobileNotRegisteredException,
     ValidationError,
 )
-from homeassistant.components.miraie_ac.const import (
-    CONFIG_KEY_PASSWORD,
-    CONFIG_KEY_USER_ID,
-    DOMAIN,
-)
+from homeassistant.components.miraie_ac.const import CONFIG_KEY_USER_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,7 +34,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
         )
         await hass.async_block_till_done()
 
@@ -45,7 +42,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["title"] == "MirAIe"
     assert result2["data"] == {
         CONFIG_KEY_USER_ID: "+919876543219",
-        CONFIG_KEY_PASSWORD: "P@ssw0rD",
+        CONF_PASSWORD: "P@ssw0rD",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,7 +59,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -81,7 +78,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -100,7 +97,7 @@ async def test_form_mobile_not_registered(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -119,7 +116,7 @@ async def test_form_invalid_mobile(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+9198765432", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+9198765432", CONF_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -138,7 +135,7 @@ async def test_form_unhandled_exception(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONFIG_KEY_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
         )
 
     assert result2["type"] == FlowResultType.FORM
