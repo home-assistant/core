@@ -126,7 +126,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._signals = []
         self._source_manager = None
         self._group_manager = None
-        self._attr_unique_id = player.player_id
+        self._attr_unique_id = str(player.player_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(HEOS_DOMAIN, player.player_id)},
             manufacturer="HEOS",
