@@ -67,11 +67,11 @@ class RensonFan(RensonEntity, FanEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED
-    current_speed: int | None = None
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
         super().__init__("fan", api, coordinator)
+        self._attr_speed_count = int_states_in_range(SPEED_RANGE)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -81,21 +81,11 @@ class RensonFan(RensonEntity, FanEntity):
             DataType.LEVEL,
         )
 
-        self.current_speed = SPEED_MAPPING[level]
+        self._attr_percentage = ranged_value_to_percentage(
+            SPEED_RANGE, SPEED_MAPPING[level]
+        )
 
         super()._handle_coordinator_update()
-
-    @property
-    def percentage(self) -> int | None:
-        """Return the current speed percentage."""
-        if self.current_speed is None:
-            return None
-        return ranged_value_to_percentage(SPEED_RANGE, self.current_speed)
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
 
     async def async_turn_on(
         self,
