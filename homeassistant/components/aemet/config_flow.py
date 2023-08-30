@@ -1,8 +1,8 @@
 """Config flow for AEMET OpenData."""
 from __future__ import annotations
 
-from aemet_opendata import AEMET
 from aemet_opendata.exceptions import AuthError
+from aemet_opendata.interface import AEMET, ConnectionOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -40,12 +40,10 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            aemet = AEMET(
-                aiohttp_client.async_get_clientsession(self.hass),
-                user_input[CONF_API_KEY],
-            )
+            options = ConnectionOptions(user_input[CONF_API_KEY], False)
+            aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
             try:
-                await aemet.get_conventional_observation_stations(False)
+                await aemet.select_coordinates(latitude, longitude)
             except AuthError:
                 errors["base"] = "invalid_api_key"
 
