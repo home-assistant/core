@@ -16,6 +16,8 @@ import zigpy.profiles
 import zigpy.quirks
 import zigpy.types
 import zigpy.util
+from zigpy.zcl.clusters.general import Basic, Groups
+from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
@@ -116,6 +118,9 @@ def zigpy_app_controller():
         {
             zigpy.config.CONF_DATABASE: None,
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/null"},
+            zigpy.config.CONF_STARTUP_ENERGY_SCAN: False,
+            zigpy.config.CONF_NWK_BACKUP_ENABLED: False,
+            zigpy.config.CONF_TOPO_SCAN_ENABLED: False,
         }
     )
 
@@ -128,9 +133,24 @@ def zigpy_app_controller():
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
 
-    with patch("zigpy.device.Device.request"), patch.object(
-        app, "permit", autospec=True
-    ), patch.object(app, "permit_with_key", autospec=True):
+    # Create a fake coordinator device
+    dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
+    dev.node_desc = zdo_t.NodeDescriptor()
+    dev.node_desc.logical_type = zdo_t.LogicalType.Coordinator
+    dev.manufacturer = "Coordinator Manufacturer"
+    dev.model = "Coordinator Model"
+
+    ep = dev.add_endpoint(1)
+    ep.add_input_cluster(Basic.cluster_id)
+    ep.add_input_cluster(Groups.cluster_id)
+
+    with patch(
+        "zigpy.device.Device.request", return_value=[Status.SUCCESS]
+    ), patch.object(app, "permit", autospec=True), patch.object(
+        app, "startup", wraps=app.startup
+    ), patch.object(
+        app, "permit_with_key", autospec=True
+    ):
         yield app
 
 
