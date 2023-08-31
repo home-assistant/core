@@ -80,7 +80,11 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
         )
         # Build the schema or a an items view if the schema is simple
-        # and does not contain lists
+        # and does not contain lists. Lists are a special case to support
+        # matching events by user_id. (see test test_if_fires_on_multiple_user_ids)
+        # This can likely be optimized further in the future to handle the
+        # multiple user_id case without requiring expensive schema
+        # validation.
         if any(isinstance(value, list) for value in event_context.values()):
             event_context_schema = vol.Schema(
                 {
