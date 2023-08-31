@@ -99,8 +99,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_load_intents(hass, intents)
 
-    async def _handle_reload(servie_call: ServiceCall) -> None:
-        return await async_reload(hass, servie_call)
+    async def _handle_reload(service_call: ServiceCall) -> None:
+        return await async_reload(hass, service_call)
 
     service.async_register_admin_service(
         hass,
