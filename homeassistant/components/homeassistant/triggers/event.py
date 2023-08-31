@@ -102,14 +102,19 @@ async def async_attach_trigger(
             # Check that the event data and context match the configured
             # schema if one was provided
             if event_data_items:
+                # Fast path for simple items comparison
                 if not (event.data.items() >= event_data_items):
                     return False
             elif event_data_schema:
+                # Slow path for schema validation
                 event_data_schema(event.data)
+
             if event_context_items:
+                # Fast path for simple items comparison
                 if not (event.context.as_dict().items() >= event_context_items):
                     return False
             elif event_context_schema:
+                # Slow path for schema validation
                 event_context_schema(dict(event.context.as_dict()))
         except vol.Invalid:
             # If event doesn't match, skip event
