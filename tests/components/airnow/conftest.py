@@ -12,12 +12,15 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(hass, config, options):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        version=2,
+        entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id=f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}",
         data=config,
+        options=options,
     )
     entry.add_to_hass(hass)
     return entry
@@ -30,7 +33,14 @@ def config_fixture(hass):
         CONF_API_KEY: "abc123",
         CONF_LATITUDE: 34.053718,
         CONF_LONGITUDE: -118.244842,
-        CONF_RADIUS: 75,
+    }
+
+
+@pytest.fixture(name="options")
+def options_fixture(hass):
+    """Define a config options data fixture."""
+    return {
+        CONF_RADIUS: 150,
     }
 
 
