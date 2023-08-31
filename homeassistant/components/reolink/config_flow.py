@@ -117,6 +117,14 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 raise AbortFlow("already_configured") from err
             if format_mac(host.api.mac_address) != mac_address:
+                _LOGGER.debug(
+                    "Reolink mac address '%s' at new IP '%s' from DHCP, "
+                    "does not match mac '%s' of config entry, so sticking to IP '%s'",
+                    format_mac(host.api.mac_address),
+                    discovery_info.ip,
+                    mac_address,
+                    existing_entry.data[CONF_HOST],
+                )
                 raise AbortFlow("already_configured")
 
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
