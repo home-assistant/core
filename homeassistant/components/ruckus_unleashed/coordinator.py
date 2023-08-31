@@ -6,6 +6,7 @@ from aioruckus import AjaxSession
 from aioruckus.exceptions import AuthenticationError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_CLIENT_MAC, DOMAIN, KEY_SYS_CLIENTS, SCAN_INTERVAL
@@ -40,6 +41,6 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return {KEY_SYS_CLIENTS: await self._fetch_clients()}
         except AuthenticationError as autherror:
-            raise UpdateFailed(autherror) from autherror
+            raise ConfigEntryAuthFailed(autherror) from autherror
         except (ConnectionRefusedError, ConnectionError) as conerr:
             raise UpdateFailed(conerr) from conerr

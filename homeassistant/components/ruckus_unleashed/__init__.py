@@ -84,7 +84,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         for listener in hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENERS]:
             listener()
-            await hass.data[DOMAIN][entry.entry_id][COORDINATOR].ruckus.close()
+        await hass.data[DOMAIN][entry.entry_id][COORDINATOR].ruckus.close()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

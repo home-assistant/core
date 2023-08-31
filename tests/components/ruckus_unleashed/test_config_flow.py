@@ -37,11 +37,11 @@ async def test_form(hass: HomeAssistant) -> None:
             CONFIG,
         )
         await hass.async_block_till_done()
-
-        assert result2["type"] == "create_entry"
-        assert result2["title"] == DEFAULT_TITLE
-        assert result2["data"] == CONFIG
         assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == DEFAULT_TITLE
+    assert result2["data"] == CONFIG
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -68,7 +68,13 @@ async def test_form_user_reauth(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -77,19 +83,140 @@ async def test_form_user_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flows[0]["flow_id"],
-        user_input={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "new_name",
-            CONF_PASSWORD: "new_pass",
+    with RuckusAjaxApiPatchContext():
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_form_user_reauth_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauth."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
         },
+        data=entry.data,
     )
 
-    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert "flow_id" in flows[0]
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    with RuckusAjaxApiPatchContext(
+        login_mock=AsyncMock(side_effect=AuthenticationError(ERROR_LOGIN_INCORRECT))
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_user_reauth_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert "flow_id" in flows[0]
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    with RuckusAjaxApiPatchContext(
+        login_mock=AsyncMock(side_effect=ConnectionError(ERROR_CONNECT_TIMEOUT))
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_user_reauth_general_exception(hass: HomeAssistant) -> None:
+    """Test reauth."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert "flow_id" in flows[0]
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    with RuckusAjaxApiPatchContext(login_mock=AsyncMock(side_effect=Exception)):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "new_name",
+                CONF_PASSWORD: "new_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "user"
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -108,6 +235,23 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_general_exception(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with RuckusAjaxApiPatchContext(login_mock=AsyncMock(side_effect=Exception)):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {}
 
 
 async def test_form_unexpected_response(hass: HomeAssistant) -> None:
