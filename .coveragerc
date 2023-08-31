@@ -34,6 +34,7 @@ omit =
     homeassistant/components/agent_dvr/camera.py
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
+    homeassistant/components/airnow/coordinator.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airq/__init__.py
     homeassistant/components/airq/coordinator.py
