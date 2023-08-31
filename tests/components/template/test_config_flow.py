@@ -352,15 +352,59 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
         (
             "sensor",
             "",
+            {"device_class": "aqi", "unit_of_measurement": "cats"},
+            {
+                "unit_of_measurement": (
+                    "'cats' is not a valid unit for device class 'aqi'; "
+                    "expected no unit of measurement"
+                ),
+            },
+        ),
+        (
+            "sensor",
+            "",
             {"device_class": "temperature", "unit_of_measurement": "cats"},
             {
-                "state_class": (
-                    "'None' is not a valid state class for device class 'temperature'; "
-                    "expected one of measurement"
-                ),
                 "unit_of_measurement": (
                     "'cats' is not a valid unit for device class 'temperature'; "
-                    "expected one of K, °C, °F"
+                    "expected one of 'K', '°C', '°F'"
+                ),
+            },
+        ),
+        (
+            "sensor",
+            "",
+            {"device_class": "timestamp", "state_class": "measurement"},
+            {
+                "state_class": (
+                    "'measurement' is not a valid state class for device class "
+                    "'timestamp'; expected no state class"
+                ),
+            },
+        ),
+        (
+            "sensor",
+            "",
+            {"device_class": "aqi", "state_class": "total"},
+            {
+                "state_class": (
+                    "'total' is not a valid state class for device class "
+                    "'aqi'; expected 'measurement'"
+                ),
+            },
+        ),
+        (
+            "sensor",
+            "",
+            {"device_class": "energy", "state_class": "measurement"},
+            {
+                "state_class": (
+                    "'measurement' is not a valid state class for device class "
+                    "'energy'; expected one of 'total', 'total_increasing'"
+                ),
+                "unit_of_measurement": (
+                    "'None' is not a valid unit for device class 'energy'; "
+                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
                 ),
             },
         ),
