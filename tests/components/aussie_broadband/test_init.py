@@ -58,5 +58,5 @@ async def test_service_failure(hass: HomeAssistant) -> None:
 
 
 async def test_not_pydantic2() -> None:
-    """Testing that Home Assistant still does not support Pydantic 2."""
+    """Test that Home Assistant still does not support Pydantic 2 for PR#99077."""
     assert pydantic.__version__ < "2"
