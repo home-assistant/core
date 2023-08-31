@@ -13,6 +13,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -69,6 +73,20 @@ STATE_TO_AC_MODE = {
     HVACMode.DRY: "dry",
     HVACMode.HEAT: "heat",
     HVACMode.FAN_ONLY: "fanOnly",
+}
+
+SWING_TO_FAN_OSCILLATION = {
+    SWING_BOTH: "all",
+    SWING_HORIZONTAL: "horizontal",
+    SWING_VERTICAL: "vertical",
+    SWING_OFF: "fixed",
+}
+
+FAN_OSCILLATION_TO_SWING = {
+    "all": SWING_BOTH,
+    "horizontal": SWING_HORIZONTAL,
+    "vertical": SWING_VERTICAL,
+    "fixed": SWING_OFF,
 }
 
 UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
@@ -322,14 +340,19 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-    )
-
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
         self._hvac_modes = None
+        self._attr_supported_features = self._determine_supported_features()
+
+    def _determine_supported_features(self) -> ClimateEntityFeature:
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        if self._device.get_capability(Capability.fan_oscillation_mode):
+            features |= ClimateEntityFeature.SWING_MODE
+        return features
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -462,3 +485,26 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return UNIT_MAP.get(self._device.status.attributes[Attribute.temperature].unit)
+
+    @property
+    def swing_modes(self) -> list[str] | None:
+        """Return the list of available swing modes."""
+        supported_modes = self._device.status.attributes[
+            Attribute.supported_fan_oscillation_modes
+        ][0]
+        supported_swings = [
+            FAN_OSCILLATION_TO_SWING.get(m, SWING_OFF) for m in supported_modes
+        ]
+        return supported_swings
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set swing mode."""
+        fan_oscillation_mode = SWING_TO_FAN_OSCILLATION[swing_mode]
+        await self._device.set_fan_oscillation_mode(fan_oscillation_mode)
+
+    @property
+    def swing_mode(self) -> str:
+        """Return the swing setting."""
+        return FAN_OSCILLATION_TO_SWING.get(
+            self._device.status.fan_oscillation_mode, SWING_OFF
+        )
