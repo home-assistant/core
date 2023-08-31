@@ -16,10 +16,10 @@ CONFIG = {
     "consumption_price_sensor": 2,
     "production_price_sensor": 2,
     "soc_unit": "kWh",
-    "soc_min" : 0.0,
+    "soc_min": 0.0,
     "soc_max": 0.001,
-
 }
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test that the form pops up on loading."""
