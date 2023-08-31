@@ -1374,7 +1374,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.32
+opower==0.0.33
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
