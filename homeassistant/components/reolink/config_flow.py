@@ -98,7 +98,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(discovery_info.macaddress)
         existing_entry = await self.async_set_unique_id(mac_address)
         if (
-            existing_entry and CONF_PASSWORD in existing_entry.data
+            existing_entry
+            and CONF_PASSWORD in existing_entry.data
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
             # check if the camera is reachable at the new IP
@@ -108,8 +109,11 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 host.api.logout()
             except ReolinkError as err:
                 _LOGGER.debug(
-                    "Reolink DHCP reported new IP '%s', but got error '%s' trying to connect, "
-                    "so sticking to IP '%s'", discovery_info.ip, str(err), existing_entry.data[CONF_HOST]
+                    "Reolink DHCP reported new IP '%s', "
+                    "but got error '%s' trying to connect, so sticking to IP '%s'",
+                    discovery_info.ip,
+                    str(err),
+                    existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured")
 
