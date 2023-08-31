@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAME = "Home Assistant Yellow"
+DOCUMENTATION_URL = "https://yellow.home-assistant.io/documentation/"
 MANUFACTURER = "homeassistant"
 MODEL = "yellow"
 
@@ -39,6 +40,6 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             config_entries=config_entries,
             dongle=None,
             name=BOARD_NAME,
-            url="https://yellow.home-assistant.io/documentation/",
+            url=DOCUMENTATION_URL,
         )
     ]
