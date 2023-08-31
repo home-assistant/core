@@ -112,7 +112,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class _IntentSpeechRepromptData(TypedDict, total=False):
+class _IntentSpeechRepromptData(TypedDict):
     """Intent config data type for speech or reprompt info."""
 
     content: template.Template
@@ -121,7 +121,7 @@ class _IntentSpeechRepromptData(TypedDict, total=False):
     type: str
 
 
-class _IntentCardData(TypedDict, total=False):
+class _IntentCardData(TypedDict):
     """Intent config data type for card info."""
 
     type: str
