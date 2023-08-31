@@ -7,7 +7,7 @@ import re
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
@@ -25,7 +25,6 @@ from .core.const import (
     BAUD_RATES,
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
-    CONF_DATABASE,
     CONF_DEVICE_CONFIG,
     CONF_ENABLE_QUIRKS,
     CONF_RADIO_TYPE,

@@ -14,7 +14,13 @@ import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from zigpy.application import ControllerApplication
-from zigpy.config import CONF_DEVICE
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_CHANNEL,
+)
 import zigpy.device
 import zigpy.endpoint
 import zigpy.exceptions
@@ -39,10 +45,6 @@ from .const import (
     ATTR_NWK,
     ATTR_SIGNATURE,
     ATTR_TYPE,
-    CONF_DATABASE,
-    CONF_DEVICE_PATH,
-    CONF_NWK,
-    CONF_NWK_CHANNEL,
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,

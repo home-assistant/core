@@ -14,7 +14,12 @@ from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK_BACKUP_ENABLED,
+)
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -23,7 +28,6 @@ from homeassistant.core import HomeAssistant
 
 from . import repairs
 from .core.const import (
-    CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DATA_ZHA,
