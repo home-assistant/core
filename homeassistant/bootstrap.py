@@ -111,8 +111,7 @@ async def async_setup_hass(
     runtime_config: RuntimeConfig,
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant()
-    hass.config.config_dir = runtime_config.config_dir
+    hass = core.HomeAssistant(runtime_config.config_dir)
 
     async_enable_logging(
         hass,
@@ -179,14 +178,13 @@ async def async_setup_hass(
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
-        hass = core.HomeAssistant()
+        hass = core.HomeAssistant(old_config.config_dir)
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
         hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
-        hass.config.config_dir = old_config.config_dir
         # Setup loader cache after the config dir has been set
         loader.async_setup(hass)
 

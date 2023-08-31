@@ -59,16 +59,20 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
         """Set up cover device."""
         super().__init__(cover := gateway.api.lights.covers[cover_id], gateway)
 
-        self._attr_supported_features = CoverEntityFeature.OPEN
-        self._attr_supported_features |= CoverEntityFeature.CLOSE
-        self._attr_supported_features |= CoverEntityFeature.STOP
-        self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+        )
 
         if self._device.tilt is not None:
-            self._attr_supported_features |= CoverEntityFeature.OPEN_TILT
-            self._attr_supported_features |= CoverEntityFeature.CLOSE_TILT
-            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
-            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
+            self._attr_supported_features |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
 
         self._attr_device_class = DECONZ_TYPE_TO_DEVICE_CLASS.get(cover.type)
 

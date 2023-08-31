@@ -20,7 +20,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.template_entity import CONF_AVAILABILITY, CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+)
 
 from tests.common import MockConfigEntry
 

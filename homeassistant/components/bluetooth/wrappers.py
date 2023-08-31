@@ -199,7 +199,7 @@ class HaBleakClientWrapper(BleakClient):
     when an integration does this.
     """
 
-    def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
+    def __init__(  # pylint: disable=super-init-not-called
         self,
         address_or_ble_device: str | BLEDevice,
         disconnected_callback: Callable[[BleakClient], None] | None = None,

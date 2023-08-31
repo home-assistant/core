@@ -1,4 +1,6 @@
 """Tests for Shelly binary sensor platform."""
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import SLEEP_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -54,7 +56,7 @@ async def test_block_binary_sensor_extra_state_attr(
 
 
 async def test_block_rest_binary_sensor(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block REST binary sensor."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -64,13 +66,13 @@ async def test_block_rest_binary_sensor(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_block_rest_binary_sensor_connected_battery_devices(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block REST binary sensor for connected battery devices."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -84,11 +86,11 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
 
     # Verify no update on fast intervals
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # Verify update on slow intervals
-    await mock_rest_update(hass, seconds=SLEEP_PERIOD_MULTIPLIER * 3600)
+    await mock_rest_update(hass, freezer, seconds=SLEEP_PERIOD_MULTIPLIER * 3600)
     assert hass.states.get(entity_id).state == STATE_ON
 
 
