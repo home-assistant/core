@@ -1,6 +1,9 @@
 """Test the Home Assistant SkyConnect config flow."""
+from collections.abc import Generator
 import copy
 from unittest.mock import Mock, patch
+
+import pytest
 
 from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
@@ -23,6 +26,15 @@ USB_DATA = usb.UsbServiceInfo(
     manufacturer="bla_manufacturer",
     description="bla_description",
 )
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:

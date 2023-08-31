@@ -21,14 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DATA_COORDINATOR,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,12 +66,12 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
-        "name": "EZVIZ Alarm",
-        "model": "EZVIZ Alarm",
-        "manufacturer": MANUFACTURER,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+        name="EZVIZ Alarm",
+        model="EZVIZ Alarm",
+        manufacturer=MANUFACTURER,
+    )
 
     async_add_entities(
         [EzvizAlarm(coordinator, entry.entry_id, device_info, ALARM_TYPE)]

@@ -7,8 +7,8 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -63,11 +63,14 @@ class IcloudDeviceBatterySensor(SensorEntity):
         self._account = account
         self._device = device
         self._unsub_dispatcher: CALLBACK_TYPE | None = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.unique_id}_battery"
+        self._attr_unique_id = f"{device.unique_id}_battery"
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://icloud.com/",
+            identifiers={(DOMAIN, device.unique_id)},
+            manufacturer="Apple",
+            model=device.device_model,
+            name=device.name,
+        )
 
     @property
     def native_value(self) -> int | None:
@@ -86,17 +89,6 @@ class IcloudDeviceBatterySensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
         return self._device.extra_state_attributes
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            configuration_url="https://icloud.com/",
-            identifiers={(DOMAIN, self._device.unique_id)},
-            manufacturer="Apple",
-            model=self._device.device_model,
-            name=self._device.name,
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""

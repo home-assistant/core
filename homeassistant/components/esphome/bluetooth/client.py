@@ -22,7 +22,6 @@ from aioesphomeapi import (
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
 from async_interrupt import interrupt
-import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -52,9 +51,7 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
-_WrapFuncType = TypeVar(  # pylint: disable=invalid-name
-    "_WrapFuncType", bound=Callable[..., Any]
-)
+_WrapFuncType = TypeVar("_WrapFuncType", bound=Callable[..., Any])
 
 
 def mac_to_int(address: str) -> int:
@@ -402,7 +399,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             await bluetooth_device.wait_for_ble_connections_free()
 
     @property
