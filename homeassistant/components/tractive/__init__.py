@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_ACTIVITY_LABEL,
     ATTR_BUZZER,
     ATTR_CALORIES,
     ATTR_DAILY_GOAL,
@@ -32,6 +33,7 @@ from .const import (
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
+    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT,
     CLIENT_ID,
@@ -238,7 +240,9 @@ class TractiveClient:
                     self._config_entry.data[CONF_EMAIL],
                 )
                 return
-
+            except KeyError as error:
+                _LOGGER.error("Error while listening for events: %s", error)
+                continue
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     (
@@ -281,10 +285,12 @@ class TractiveClient:
 
     def _send_wellness_update(self, event: dict[str, Any]) -> None:
         payload = {
+            ATTR_ACTIVITY_LABEL: event["wellness"].get("activity_label"),
             ATTR_CALORIES: event["activity"]["calories"],
             ATTR_MINUTES_DAY_SLEEP: event["sleep"]["minutes_day_sleep"],
             ATTR_MINUTES_NIGHT_SLEEP: event["sleep"]["minutes_night_sleep"],
             ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
+            ATTR_SLEEP_LABEL: event["wellness"].get("sleep_label"),
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload

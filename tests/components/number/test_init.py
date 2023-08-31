@@ -506,7 +506,7 @@ async def test_restore_number_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == RESTORE_DATA
-    assert type(extra_data["native_value"]) == float
+    assert isinstance(extra_data["native_value"], float)
 
 
 @pytest.mark.parametrize(
