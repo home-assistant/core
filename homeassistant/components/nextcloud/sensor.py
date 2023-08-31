@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from typing import Final, cast
+from datetime import datetime
+from typing import Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utc_from_timestamp
 
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
@@ -113,7 +114,7 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda val: datetime.fromtimestamp(cast(int, val), tz=UTC),
+        value_fn=lambda val: utc_from_timestamp(float(val)),
     ),
     NextcloudSensorEntityDescription(
         key="cache_ttl",
@@ -247,7 +248,7 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda val: datetime.fromtimestamp(cast(int, val), tz=UTC),
+        value_fn=lambda val: utc_from_timestamp(float(val)),
     ),
     NextcloudSensorEntityDescription(
         key="opcache_statistics_manual_restarts",
@@ -299,7 +300,7 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda val: datetime.fromtimestamp(cast(int, val), tz=UTC),
+        value_fn=lambda val: utc_from_timestamp(float(val)),
     ),
     NextcloudSensorEntityDescription(
         key="server_php_opcache_memory_usage_current_wasted_percentage",
