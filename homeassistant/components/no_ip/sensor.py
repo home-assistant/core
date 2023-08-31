@@ -91,9 +91,6 @@ class NoIPSensor(SensorEntity):
                         ip_address,
                     )
                     self._attr_native_value = ip_address
-                    _LOGGER.debug(
-                        "Updating No-IP.com domain success: %s", self._no_ip_domain
-                    )
                 else:
                     _LOGGER.debug(
                         "Failed to update No-IP.com: %s => %s",
