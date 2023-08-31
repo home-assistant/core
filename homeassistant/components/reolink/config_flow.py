@@ -102,6 +102,21 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and CONF_PASSWORD in existing_entry.data
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
+            # check the existing entry indeed has a connection problem
+            reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(existing_entry.entry_id)
+            if (
+                reolink_data
+                and existing_entry.state == config_entries.ConfigEntryState.LOADED 
+                and reolink_data.device_coordinator.last_update_success
+            ):
+                _LOGGER.debug(
+                    "Reolink DHCP reported new IP '%s', "
+                    "but connection to camera seems to be okay, so sticking to IP '%s'",
+                    discovery_info.ip,
+                    existing_entry.data[CONF_HOST],
+                )
+                raise AbortFlow("already_configured")
+
             # check if the camera is reachable at the new IP
             host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
             try:
