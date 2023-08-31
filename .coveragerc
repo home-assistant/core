@@ -1300,6 +1300,7 @@ omit =
     homeassistant/components/tellstick/*
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
+    homeassistant/components/template/coordinator.py
     homeassistant/components/tensorflow/image_processing.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
