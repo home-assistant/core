@@ -27,6 +27,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
@@ -85,6 +86,16 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
             and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
             < controller.option_detection_time
         ]
+    )
+
+
+@callback
+def async_device_uptime_value_fn(
+    controller: UniFiController, device: Device
+) -> datetime:
+    """Calculate the uptime of the device."""
+    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(
+        second=0, microsecond=0
     )
 
 
@@ -288,12 +299,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         should_poll=False,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_uptime-{obj_id}",
-        value_fn=lambda ctrlr, device: dt_util.now() - timedelta(seconds=device.uptime),
+        value_fn=async_device_uptime_value_fn,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         has_entity_name=True,
         allowed_fn=lambda controller, obj_id: True,
         api_handler_fn=lambda api: api.devices,
