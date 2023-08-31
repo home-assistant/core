@@ -105,7 +105,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # check if the camera is reachable at the new IP
             host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
             try:
-                host.api.login()
+                host.api.get_state("GetLocalLink")
                 host.api.logout()
             except ReolinkError as err:
                 _LOGGER.debug(
@@ -116,6 +116,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured") from err
+            if format_mac(host.api.mac_address) != mac_address:
+                raise AbortFlow("already_configured")
 
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
