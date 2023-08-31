@@ -11,7 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_HASS_CONFIG, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
-from .coordinator import NoIPDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -46,12 +45,6 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up No-IP.com from a config entry."""
-    coordinator = NoIPDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
     return True

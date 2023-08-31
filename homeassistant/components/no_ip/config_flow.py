@@ -90,13 +90,13 @@ async def async_validate_no_ip(
             return {"title": MANUFACTURER, "exception": no_ip_error}
     except (aiohttp.ClientError, aiohttp.ClientResponseError) as client_error:
         _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
-        raise
-    except asyncio.TimeoutError:
+        raise aiohttp.ClientError(client_error) from client_error
+    except asyncio.TimeoutError as timeout_error:
         _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
-        raise
+        raise asyncio.TimeoutError(timeout_error) from timeout_error
     except Exception as error:  # pylint: disable=broad-except
         _LOGGER.error("Error updating data from No-IP.com: %s", error)
-        raise
+        raise Exception(error) from error  # pylint: disable=broad-exception-raised
 
 
 class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

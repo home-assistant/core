@@ -60,18 +60,18 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
         },
     )
     assert result
-    assert aioclient_mock.call_count == 3
+    assert aioclient_mock.call_count == 2
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 4
+    assert aioclient_mock.call_count == 3
 
 
 @pytest.mark.parametrize(
     ("result_text", "counter"),
     [
-        ("good 192.168.1.1", 3),
-        ("nochg 192.168.1.1", 3),
+        ("good 192.168.1.1", 2),
+        ("nochg 192.168.1.1", 2),
         ("badauth", 1),
         ("badagent", 1),
         ("nohost", 1),

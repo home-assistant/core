@@ -15,7 +15,9 @@
       "badagent": "Client disabled",
       "!donator": "An update request was sent with a feature that is not available",
       "abuse": "Username is blocked due to abuse",
-      "911": "A fatal error on No-IP's side such as a database outage"
+      "911": "A fatal error on No-IP's side such as a database outage",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

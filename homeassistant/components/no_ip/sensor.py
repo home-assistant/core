@@ -1,55 +1,33 @@
 """public IP address Sensor."""
 from __future__ import annotations
 
-from collections.abc import Callable
+import asyncio
+import base64
+from datetime import timedelta
+import logging
 
-from homeassistant.components.sensor import RestoreSensor, SensorEntity
+import aiohttp
+from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DOMAIN, CONF_IP_ADDRESS
+from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, TRACKER_UPDATE_STR
-from .coordinator import NoIPDataUpdateCoordinator
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    HA_USER_AGENT,
+    MANUFACTURER,
+    UPDATE_URL,
+)
 
+SCAN_INTERVAL = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
-class NoIPBaseEntity(CoordinatorEntity[NoIPDataUpdateCoordinator], RestoreSensor):
-    """Base entity class for No-IP.com."""
-
-    _attr_force_update = False
-
-    def __init__(self, coordinator: NoIPDataUpdateCoordinator) -> None:
-        """Init base entity class."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(MANUFACTURER, f"{self.coordinator.data[CONF_DOMAIN]}")},
-            manufacturer=MANUFACTURER,
-            name=f"{self.coordinator.data[CONF_DOMAIN]}",
-            configuration_url="https://www.home-assistant.io/integrations/no_ip",
-        )
-        self._unsub_dispatchers: list[Callable[[], None]] = []
-
-    async def async_added_to_hass(self) -> None:
-        """Run when the entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        if self.coordinator.data:
-            self._attr_native_value = self.coordinator.data.get(CONF_IP_ADDRESS, None)
-        self._unsub_dispatchers.append(
-            async_dispatcher_connect(
-                self.hass, TRACKER_UPDATE_STR, self.async_write_ha_state
-            )
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Clean up before removing the entity."""
-        for unsub in self._unsub_dispatchers[:]:
-            unsub()
-            self._unsub_dispatchers.remove(unsub)
-        self._unsub_dispatchers = []
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -58,27 +36,76 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the No-IP.com sensors from config entry."""
-    coordinator: NoIPDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[NoIPSensor] = []
-    if CONF_DOMAIN in coordinator.data:
-        entities.append(NoIPSensor(coordinator))
-    async_add_entities(entities)
+    no_ip_domain = config_entry.data[CONF_DOMAIN]
+    username = config_entry.data[CONF_USERNAME]
+    password = config_entry.data[CONF_PASSWORD]
+    async_add_entities([NoIPSensor(no_ip_domain, username, password)])
 
 
-class NoIPSensor(NoIPBaseEntity, SensorEntity):
+class NoIPSensor(SensorEntity):
     """NoIPSensor class for No-IP.com."""
 
     _attr_icon = "mdi:ip"
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator: NoIPDataUpdateCoordinator) -> None:
+    def __init__(self, no_ip_domain: str, username: str, password: str) -> None:
         """Init NoIPSensor."""
-        super().__init__(coordinator)
-        self._attr_name: str = f"{coordinator.data[CONF_DOMAIN]}"
-        self._attr_unique_id = f"{coordinator.data[CONF_DOMAIN]}"
+        self._attr_unique_id = no_ip_domain
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the native value of the sensor."""
-        if CONF_IP_ADDRESS in self.coordinator.data:
-            return str(self.coordinator.data[CONF_IP_ADDRESS])
-        return None
+        self._no_ip_domain = no_ip_domain
+        self._username = username
+        self._password = password
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(MANUFACTURER, no_ip_domain)},
+            manufacturer=MANUFACTURER,
+            name=no_ip_domain,
+            configuration_url="https://www.home-assistant.io/integrations/no_ip",
+        )
+
+    async def async_update(self) -> None:
+        """Update the IP address from No-IP.com."""
+        auth_str = base64.b64encode(
+            f"{self._username}:{self._password}".encode()
+        ).decode("utf-8")
+
+        session = aiohttp_client.async_create_clientsession(self.hass)
+        params = {"hostname": self._no_ip_domain}
+
+        headers = {
+            AUTHORIZATION: f"Basic {auth_str}",
+            USER_AGENT: HA_USER_AGENT,
+        }
+
+        try:
+            async with asyncio.timeout(DEFAULT_TIMEOUT), session.get(
+                UPDATE_URL, params=params, headers=headers
+            ) as resp:
+                body = await resp.text()
+                body = body.strip()
+                if body.startswith("good") or body.startswith("nochg"):
+                    ip_address = body.split(" ")[1]
+                    _LOGGER.debug(
+                        "Successfully updated No-IP.com: %s IP: %s",
+                        self._no_ip_domain,
+                        ip_address,
+                    )
+                    self._attr_native_value = ip_address
+                    _LOGGER.debug(
+                        "Updating No-IP.com domain success: %s", self._no_ip_domain
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Failed to update No-IP.com: %s => %s",
+                        self._no_ip_domain,
+                        body,
+                    )
+        except aiohttp.ClientError as client_error:
+            _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout from No-IP.com API for domain: %s",
+                self._no_ip_domain,
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            _LOGGER.warning("Error updating data from No-IP.com: %s", e)
