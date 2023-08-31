@@ -22,7 +22,7 @@ ha-av==10.1.1
 hass-nabucasa==0.70.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.3
-home-assistant-frontend==20230830.0
+home-assistant-frontend==20230831.0
 home-assistant-intents==2023.8.2
 httpx==0.24.1
 ifaddr==0.2.0
@@ -30,7 +30,7 @@ janus==1.0.0
 Jinja2==3.1.2
 lru-dict==1.2.0
 mutagen==1.46.0
-orjson==3.9.4
+orjson==3.9.2
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.0.0
