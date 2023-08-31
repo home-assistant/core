@@ -80,7 +80,3 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Re Authenticate a user."""
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
         return await self.async_step_user(data)
-
-    async def async_step_import(self, user_input=None) -> FlowResult:
-        """Import user."""
-        return await self.async_step_user(user_input)

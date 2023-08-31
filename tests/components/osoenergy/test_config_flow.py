@@ -15,30 +15,6 @@ SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Check import flow."""
-
-    with patch(
-        "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_devices",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.osoenergy.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_API_KEY: SUBSCRIPTION_KEY},
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == TITLE
-    assert result["data"] == {
-        CONF_API_KEY: SUBSCRIPTION_KEY,
-    }
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(

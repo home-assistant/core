@@ -29,7 +29,6 @@
   "entity": {
     "water_heater": {
       "saga_heater": {
-        "name": "Water Heater",
         "state_attributes": {
           "heater_state": {
             "name": "Heater state",

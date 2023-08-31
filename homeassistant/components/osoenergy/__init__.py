@@ -32,7 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         devices: Any = await osoenergy.session.start_session(osoenergy_config)
     except HTTPException as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
     except OSOEnergyReauthRequired as err:
         raise ConfigEntryAuthFailed from err

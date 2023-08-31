@@ -25,7 +25,6 @@ from .const import (
     HEATER_MAX_TEMP,
     HEATER_MIN_TEMP,
     MANUFACTURER,
-    OPERATION_LIST,
     OSO_ENERGY_TO_HASS_STATE,
     SERVICE_SET_PROFILE,
     SERVICE_SET_V40MIN,
@@ -97,7 +96,9 @@ def _get_local_hour(utc_hour: int):
     now_local = dt_util.now()
     utc_time = now.replace(hour=utc_hour, minute=0, second=0, microsecond=0)
     local_hour = dt_util.as_local(utc_time)
-    local_hour = local_hour.replace(day=now_local.day)
+    local_hour = local_hour.replace(
+        year=now_local.year, month=now_local.month, day=now_local.day
+    )
     return local_hour
 
 
@@ -116,7 +117,6 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
     """OSO Energy Water Heater Device."""
 
     _attr_name = None
-    _attr_operation_list = OPERATION_LIST
     _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "saga_heater"
