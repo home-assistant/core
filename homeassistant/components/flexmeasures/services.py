@@ -59,13 +59,13 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not hasattr(ControlType, control_type):
             LOGGER.exception("TODO")
             return False
-        else:
-            control_type = ControlType[control_type]
-            # print(control_type)
 
-            # await cem.activate_control_type(
-            #     control_type=ControlType.FILL_RATE_BASED_CONTROL
-            # )
+        control_type = ControlType[control_type]
+        # print(control_type)
+
+        # await cem.activate_control_type(
+        #     control_type=ControlType.FILL_RATE_BASED_CONTROL
+        # )
 
         hass.states.async_set(
             f"{DOMAIN}.cem", json.dumps({"control_type": str(cem._control_type)})
