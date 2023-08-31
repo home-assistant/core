@@ -231,7 +231,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         self._attr_target_temperature = data["set_temperature"]
         self._attr_current_temperature = data["ambient_temperature"]
 
-        if data["operation_mode"] == OperationMode.OFF:
+        if data["operation_mode"] == OperationMode.OFF.value:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
         else:
