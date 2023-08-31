@@ -2,6 +2,7 @@
 from typing import Any
 
 import mill
+from mill_local import OperationMode
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -230,7 +231,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         self._attr_target_temperature = data["set_temperature"]
         self._attr_current_temperature = data["ambient_temperature"]
 
-        if data["operation_mode"] == "OFF":
+        if data["operation_mode"] == OperationMode.OFF:
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = HVACAction.OFF
         else:
