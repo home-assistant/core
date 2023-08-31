@@ -1,6 +1,7 @@
 """Offer event listening automation rules."""
 from __future__ import annotations
 
+from collections.abc import ItemsView
 from typing import Any
 
 import voluptuous as vol
@@ -47,10 +48,8 @@ async def async_attach_trigger(
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
-    removes = []
-
-    event_data_schema = None
-    event_data_items = None
+    event_data_schema: vol.Schema | None = None
+    event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_DATA])
@@ -68,8 +67,8 @@ async def async_attach_trigger(
             # Use a simple items comparison if possible
             event_data_items = event_data.items()
 
-    event_context_schema = None
-    event_context_items = None
+    event_context_schema: vol.Schema | None = None
+    event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_CONTEXT])
