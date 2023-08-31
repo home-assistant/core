@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -16,7 +17,7 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None) -> FlowResult:
-        """First and only step in the config flow."""
+        """First step in the config flow."""
         errors = {}
 
         if user_input is not None:
@@ -45,6 +46,19 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="Errors Found in Configuration")
 
+        # Detect if there is an existing yaml configuration
+        # existing_yaml_config = await self.hass.async_add_executor_job(
+        #    self._check_existing_yaml_config(base_config: ConfigType)
+        # )
+
+        # if existing_yaml_config:
+        # Prompt the user to migrate from YAML to config entry
+        #    return self.async_show_form(
+        #        step_id="migrate",
+        #        description_placeholders={"domain": DOMAIN},
+        #        data_schema=config_entries.yaml_configuration_schema(DOMAIN),
+        #    )
+
         # Show the form to the user
         return self.async_show_form(
             step_id="user",
@@ -57,3 +71,36 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    def _check_existing_yaml_config(self, base_config: ConfigType):
+        # Check if there's an existing YAML configuration
+        # Return True if found, False otherwise
+        config = base_config[DOMAIN]
+        if config[CONF_HOST] and config[CONF_USERNAME] and config[CONF_PASSWORD]:
+            return True
+        return False
+
+    # async def async_step_migrate(self, user_input) -> FlowResult:
+    # Handle user's YAML configuration for migration
+    #   if user_input:
+    #       return self.async_create_entry(
+    #           title="My Integration", data=user_input
+    #       )
+
+    #   return self.async_abort(reason="migration_not_confirmed")
+
+    # async def async_step_import(self, import_config: ConfigType) -> FlowResult:
+    # 3    """Import a config entry from configuration.yaml."""
+    ##    entry_data = {
+    #        CONF_USERNAME: import_config[CONF_USERNAME],
+    #        CONF_PASSWORD: import_config[CONF_PASSWORD],
+    #        CONF_HOST: import_config[CONF_HOST],
+    #    }
+    #   self._async_abort_entries_match(entry_data)
+    #   return self.async_create_entry(
+    #       title="Lutron Integration",
+    #       data=entry_data,
+    #   )
+    async def async_step_import(self, user_input) -> FlowResult:
+        """Handle import."""
+        return await self.async_step_user(user_input)

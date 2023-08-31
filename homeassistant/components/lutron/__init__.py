@@ -61,6 +61,7 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     if DOMAIN in base_config:
         lutron_configs = base_config[DOMAIN]
         for config in lutron_configs:
+            _LOGGER.info("Looper2: %s", str(config))
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
