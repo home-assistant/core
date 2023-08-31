@@ -93,5 +93,5 @@ class MyStromSwitchSensor(SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the value of the sensor"""
+        """Return the value of the sensor."""
         return self.entity_description.value_fn(self.device)
