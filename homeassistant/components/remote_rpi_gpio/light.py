@@ -27,15 +27,16 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
+from .const import (
+    CONF_FREQUENCY,
+    CONF_LEDS,
+    CONF_PINS,
+    DEFAULT_BRIGHTNESS,
+    DEFAULT_COLOR,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LEDS = "leds"
-CONF_DRIVER = "driver"
-CONF_PINS = "pins"
-CONF_FREQUENCY = "frequency"
-
-DEFAULT_BRIGHTNESS = 255
-DEFAULT_COLOR = [0, 0]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
