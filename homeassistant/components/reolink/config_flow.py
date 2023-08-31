@@ -97,7 +97,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {
             "ip_address": discovery_info.ip,
