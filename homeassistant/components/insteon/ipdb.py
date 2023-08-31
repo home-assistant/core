@@ -10,6 +10,7 @@ from pyinsteon.device_types.ipdb import (
     DimmableLightingControl_Dial,
     DimmableLightingControl_DinRail,
     DimmableLightingControl_FanLinc,
+    DimmableLightingControl_I3_KeypadLinc_4,
     DimmableLightingControl_InLineLinc01,
     DimmableLightingControl_InLineLinc02,
     DimmableLightingControl_KeypadLinc_6,
@@ -55,6 +56,9 @@ DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
     DimmableLightingControl_FanLinc: {Platform.LIGHT: [1], Platform.FAN: [2]},
     DimmableLightingControl_InLineLinc01: {Platform.LIGHT: [1]},
     DimmableLightingControl_InLineLinc02: {Platform.LIGHT: [1]},
+    DimmableLightingControl_I3_KeypadLinc_4: {
+        Platform.LIGHT: [1, 2, 3, 4],
+    },
     DimmableLightingControl_KeypadLinc_6: {
         Platform.LIGHT: [1],
         Platform.SWITCH: [3, 4, 5, 6],
