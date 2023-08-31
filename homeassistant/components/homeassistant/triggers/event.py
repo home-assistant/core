@@ -58,7 +58,9 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
         # Build the schema or a an items view if the schema is simple
-        # and does not contain sub-dicts
+        # and does not contain sub-dicts. We explicitly do not check for
+        # list like the context data below since lists are a special case
+        # only for context data. (see test test_event_data_with_list)
         if any(isinstance(value, dict) for value in event_data.values()):
             event_data_schema = vol.Schema(
                 {vol.Required(key): value for key, value in event_data.items()},
