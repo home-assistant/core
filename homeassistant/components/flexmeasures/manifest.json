@@ -8,8 +8,7 @@
   "homekit": {},
   "iot_class": "cloud_polling",
   "requirements": [
-    "flexmeasures-client==0.1.5",
-    "pyfiglet==0.8.post1",
+    "flexmeasures-client==0.1.7",
     "isodate==0.6.1"
   ],
   "ssdp": [],
