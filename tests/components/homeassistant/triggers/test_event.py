@@ -315,6 +315,30 @@ async def test_if_fires_on_event_with_nested_data(hass: HomeAssistant, calls) ->
     assert len(calls) == 1
 
 
+async def test_if_fires_on_event_with_empty_data(hass: HomeAssistant, calls) -> None:
+    """Test the firing of events with empty data.
+
+    This test exercises the fast path to validate matching event data.
+    """
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    hass.bus.async_fire("test_event", {"any_attr": {}})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_if_not_fires_if_event_data_not_matches(
     hass: HomeAssistant, calls
 ) -> None:
