@@ -1,12 +1,12 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from logging import Logger
 import ssl
 
+import async_timeout
 from elmax_api.exceptions import (
     ElmaxApiError,
     ElmaxBadLoginError,
@@ -97,7 +97,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         )
 
     @property
-    def panel_entry(self) -> PanelEntry | None:
+    def panel_entry(self) -> PanelEntry:
         """Return the panel entry."""
         return self._panel_entry
 
@@ -149,9 +149,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 }
                 return status
 
-                # Otherwise, return None. Listeners will know that this means the device is offline
-                return None
-
         except ElmaxBadPinError as err:
             raise ConfigEntryAuthFailed("Control panel pin was refused") from err
         except ElmaxBadLoginError as err:
@@ -186,8 +183,8 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         self._attr_unique_id = elmax_device.endpoint_id
         self._attr_name = elmax_device.name
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, panel.hash)},
-            name=panel.get_name_by_user(
+            identifiers={(DOMAIN, coordinator.panel_entry.hash)},
+            name=coordinator.panel_entry.get_name_by_user(
                 coordinator.http_client.get_authenticated_username()
             ),
             manufacturer="Elmax",
