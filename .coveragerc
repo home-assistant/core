@@ -87,6 +87,9 @@ omit =
     homeassistant/components/apsystems/sensor.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
+    homeassistant/components/aqvify/__init__.py
+    homeassistant/components/aqvify/const.py
+    homeassistant/components/aqvify/sensor.py
     homeassistant/components/arcam_fmj/__init__.py
     homeassistant/components/arcam_fmj/media_player.py
     homeassistant/components/arest/binary_sensor.py
