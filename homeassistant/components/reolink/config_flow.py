@@ -115,7 +115,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     str(err),
                     existing_entry.data[CONF_HOST],
                 )
-                raise AbortFlow("already_configured")
+                raise AbortFlow("already_configured") from err
 
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
