@@ -28,6 +28,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+# TODO: Think this needs to go
 # For your initial PR, limit it to 1 platform.
 # PLATFORMS: list[Platform] = [Platform.LIGHT]
 PLATFORMS: list[Platform] = [Platform.SWITCH]
@@ -35,6 +36,8 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FlexMeasures from a config entry."""
+
+    # TODO: order everything in a sensible way.
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -46,16 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # unsub_options_update_listener = entry.add_update_listener(options_update_listener)
     # # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
     # config_data["unsub_options_update_listener"] = unsub_options_update_listener
+
     session = async_get_clientsession(hass)
     client = FlexMeasuresClient(
-        host=config_data["host"],
-        email=config_data["username"],
-        password=config_data["password"],
+        host=config_data.get("host"),
+        email=config_data.get("username"),
+        password=config_data.get("password"),
         session=session,
     )
 
-    hass.data[DOMAIN]["config_entry_id"] = entry.entry_id
-    hass.data[DOMAIN][entry.entry_id] = config_data
     hass.data[DOMAIN]["fm_client"] = client
 
     cem = CEM(fm_client=client)
@@ -66,14 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         rm_discharge_sensor_id=config_data.get("rm_discharge_sensor"),  # 5
         schedule_duration=isodate.parse_duration(
             config_data.get("schedule_duration")
-        ),  # 24h
+        ),  # PT24H
     )
 
     cem.register_control_type(frbc)
 
     hass.data[DOMAIN]["cem"] = cem
 
-    await async_setup_services(hass)
+    await async_setup_services(hass, entry)
 
     hass.http.register_view(WebsocketAPIView(cem))
 
