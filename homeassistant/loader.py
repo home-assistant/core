@@ -897,7 +897,7 @@ async def async_get_integrations(
     for domain in domains:
         int_or_fut = cache.get(domain, _UNDEF)
         # Integration is never subclassed, so we can check for type
-        if type(int_or_fut) is Integration:  # pylint: disable=unidiomatic-typecheck
+        if type(int_or_fut) is Integration:  # noqa: E721
             results[domain] = int_or_fut
         elif int_or_fut is not _UNDEF:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
@@ -1148,17 +1148,13 @@ async def _async_component_dependencies(
     return loaded
 
 
-def _async_mount_config_dir(hass: HomeAssistant) -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> None:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
     """
-    if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - configuration directory is not set")
-        return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
-    return True
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:

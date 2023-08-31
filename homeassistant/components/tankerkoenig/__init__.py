@@ -170,6 +170,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
 class TankerkoenigCoordinatorEntity(CoordinatorEntity):
     """Tankerkoenig base entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: TankerkoenigDataUpdateCoordinator, station: dict
     ) -> None:

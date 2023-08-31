@@ -26,7 +26,6 @@ from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
 class SelectPlatform(MockPlatform):
     """Fake select platform."""
 
-    # pylint: disable=method-hidden
     async def async_setup_entry(
         self,
         hass: HomeAssistant,
