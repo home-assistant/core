@@ -15,7 +15,7 @@ from homeassistant.components.zha.repairs import (
     DISABLE_MULTIPAN_URL,
     ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
     HardwareType,
-    detect_radio_hardware,
+    _detect_radio_hardware,
     probe_silabs_firmware_type,
     warn_on_wrong_silabs_firmware,
 )
@@ -55,17 +55,21 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
     )
     skyconnect_config_entry.add_to_hass(hass)
 
-    assert detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
-    assert detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER
-    assert detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.OTHER
+    assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
+    assert (
+        _detect_radio_hardware(hass, SKYCONNECT_DEVICE + "_foo") == HardwareType.OTHER
+    )
+    assert _detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.OTHER
 
     with patch(
         "homeassistant.components.homeassistant_yellow.hardware.get_os_info",
         return_value={"board": "yellow"},
     ):
-        assert detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.YELLOW
-        assert detect_radio_hardware(hass, "/dev/ttyAMA2") == HardwareType.OTHER
-        assert detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
+        assert _detect_radio_hardware(hass, "/dev/ttyAMA1") == HardwareType.YELLOW
+        assert _detect_radio_hardware(hass, "/dev/ttyAMA2") == HardwareType.OTHER
+        assert (
+            _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT
+        )
 
 
 def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
@@ -78,7 +82,7 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
         "homeassistant.components.homeassistant_sky_connect.hardware.async_info",
         side_effect=HomeAssistantError(),
     ):
-        assert detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
+        assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
 
 
 @pytest.mark.parametrize(
@@ -109,7 +113,7 @@ async def test_multipan_firmware_repair(
         "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
         side_effect=RuntimeError(),
     ), patch(
-        "homeassistant.components.zha.repairs.detect_radio_hardware",
+        "homeassistant.components.zha.repairs._detect_radio_hardware",
         return_value=detected_hardware,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

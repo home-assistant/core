@@ -48,10 +48,10 @@ DISABLE_MULTIPAN_URL = {
 ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED = "wrong_silabs_firmware_installed"
 
 
-def detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
+def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
     """Identify the radio hardware with the given serial port."""
     try:
-        info = yellow_hardware.async_info(hass)
+        yellow_hardware.async_info(hass)
     except HomeAssistantError:
         pass
     else:
@@ -102,7 +102,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         # reconnect, it should work
         raise AlreadyRunningEZSP()
 
-    hardware_type = detect_radio_hardware(hass, device)
+    hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
         hass,
         domain=DOMAIN,
