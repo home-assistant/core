@@ -20,6 +20,7 @@ from zigpy.config import (
     CONF_DEVICE_PATH,
     CONF_NWK,
     CONF_NWK_CHANNEL,
+    CONF_NWK_VALIDATE_SETTINGS,
 )
 import zigpy.device
 import zigpy.endpoint
@@ -165,6 +166,9 @@ class ZHAGateway:
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
+
+        if CONF_NWK_VALIDATE_SETTINGS not in app_config:
+            app_config[CONF_NWK_VALIDATE_SETTINGS] = True
 
         # The bellows UART thread sometimes propagates a cancellation into the main Core
         # event loop, when a connection to a TCP coordinator fails in a specific way
