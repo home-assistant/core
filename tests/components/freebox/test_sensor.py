@@ -1,13 +1,14 @@
 """Tests for the Freebox sensors."""
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
+
+from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from .const import (
     DATA_CONNECTION_GET_STATUS,
@@ -20,7 +21,9 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_network_speed(hass: HomeAssistant, router: Mock) -> None:
+async def test_network_speed(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
     """Test missed call sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -40,14 +43,17 @@ async def test_network_speed(hass: HomeAssistant, router: Mock) -> None:
     data_connection_get_status_changed["rate_up"] = 432100
     router().connection.get_status.return_value = data_connection_get_status_changed
     # Simulate an update
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_download_speed").state == "123.4"
     assert hass.states.get("sensor.freebox_upload_speed").state == "432.1"
 
 
-async def test_call(hass: HomeAssistant, router: Mock) -> None:
+async def test_call(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
     """Test missed call sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -64,13 +70,16 @@ async def test_call(hass: HomeAssistant, router: Mock) -> None:
     data_call_get_calls_marked_as_read = []
     router().call.get_calls_log.return_value = data_call_get_calls_marked_as_read
     # Simulate an update
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_missed_calls").state == "0"
 
 
-async def test_disk(hass: HomeAssistant, router: Mock) -> None:
+async def test_disk(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
     """Test disk sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -88,13 +97,16 @@ async def test_disk(hass: HomeAssistant, router: Mock) -> None:
     data_storage_get_disks_changed[2]["partitions"][0]["free_bytes"] = 880000000000
     router().storage.get_disks.return_value = data_storage_get_disks_changed
     # Simulate an update
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_free_space").state == "44.9"
 
 
-async def test_battery(hass: HomeAssistant, router: Mock) -> None:
+async def test_battery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
     """Test battery sensor."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -116,7 +128,8 @@ async def test_battery(hass: HomeAssistant, router: Mock) -> None:
     data_home_get_nodes_changed[4]["show_endpoints"][3]["value"] = 75
     router().home.get_home_nodes.return_value = data_home_get_nodes_changed
     # Simulate an update
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "25"
