@@ -57,7 +57,8 @@ async def async_attach_trigger(
         event_data.update(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
-        # Build the schema
+        # Build the schema or a an items view if the schema is simple
+        # and does not contain sub-dicts
         if any(isinstance(value, dict) for value in event_data.values()):
             event_data_schema = vol.Schema(
                 {vol.Required(key): value for key, value in event_data.items()},
@@ -76,7 +77,8 @@ async def async_attach_trigger(
         event_context.update(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
         )
-        # Build the schema
+        # Build the schema or a an items view if the schema is simple
+        # and does not contain lists
         if any(isinstance(value, list) for value in event_context.values()):
             event_context_schema = vol.Schema(
                 {
