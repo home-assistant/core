@@ -83,7 +83,7 @@ class MyStromSwitchSensor(SensorEntity):
         self.device = device
         self.entity_description = description
 
-        self._attr_unique_id = self.device.mac + "_" + description.key
+        self._attr_unique_id = f"{self.device.mac}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.mac)},
             name=name,
