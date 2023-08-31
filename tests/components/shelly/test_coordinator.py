@@ -347,14 +347,14 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0") is not None
+    assert hass.states.get("switch.test_switch_0") is not None
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0") is None
+    assert hass.states.get("switch.test_switch_0") is None
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -577,7 +577,7 @@ async def test_rpc_reconnect_error(
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
 
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_ON
+    assert hass.states.get("switch.test_switch_0").state == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(
@@ -593,7 +593,7 @@ async def test_rpc_reconnect_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_test_switch_0").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.test_switch_0").state == STATE_UNAVAILABLE
 
 
 async def test_rpc_polling_connection_error(

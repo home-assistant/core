@@ -176,8 +176,9 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "ok",
             "good",
+            "low",
+            "ok",
         ],
     ),
     TractiveSensorEntityDescription(
@@ -188,8 +189,9 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         value_fn=lambda state: state.lower() if isinstance(state, str) else state,
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "ok",
             "good",
+            "low",
+            "ok",
         ],
     ),
 )

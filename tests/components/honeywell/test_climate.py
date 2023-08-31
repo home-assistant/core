@@ -54,7 +54,9 @@ async def test_no_thermostat_options(
     """Test the setup of the climate entities when there are no additional options available."""
     device._data = {}
     await init_integration(hass, config_entry)
-    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.device1")
+    assert hass.states.get("sensor.device1_temperature")
+    assert hass.states.get("sensor.device1_humidity")
 
 
 async def test_static_attributes(

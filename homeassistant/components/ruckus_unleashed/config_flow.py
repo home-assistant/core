@@ -1,22 +1,29 @@
 """Config flow for Ruckus Unleashed integration."""
-import logging
+from collections.abc import Mapping
+from typing import Any
 
-from pyruckus import Ruckus
-from pyruckus.exceptions import AuthenticationError
+from aioruckus import AjaxSession, SystemStat
+from aioruckus.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
-
-_LOGGER = logging.getLogger(__package__)
+from .const import (
+    API_MESH_NAME,
+    API_SYS_SYSINFO,
+    API_SYS_SYSINFO_SERIAL,
+    DOMAIN,
+    KEY_SYS_SERIAL,
+    KEY_SYS_TITLE,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -28,26 +35,22 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     try:
-        ruckus = await Ruckus.create(
+        async with AjaxSession.async_create(
             data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
-    except AuthenticationError as error:
-        raise InvalidAuth from error
-    except ConnectionError as error:
-        raise CannotConnect from error
-
-    mesh_name = await ruckus.mesh_name()
-
-    system_info = await ruckus.system_info()
-    try:
-        host_serial = system_info[API_SYSTEM_OVERVIEW][API_SERIAL]
-    except KeyError as error:
-        raise CannotConnect from error
-
-    return {
-        "title": mesh_name,
-        "serial": host_serial,
-    }
+        ) as ruckus:
+            system_info = await ruckus.api.get_system_info(
+                SystemStat.SYSINFO,
+            )
+            mesh_name = (await ruckus.api.get_mesh_info())[API_MESH_NAME]
+            zd_serial = system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
+            return {
+                KEY_SYS_TITLE: mesh_name,
+                KEY_SYS_SERIAL: zd_serial,
+            }
+    except AuthenticationError as autherr:
+        raise InvalidAuth from autherr
+    except (ConnectionRefusedError, ConnectionError, KeyError) as connerr:
+        raise CannotConnect from connerr
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,7 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -65,17 +70,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["serial"])
+                await self.async_set_unique_id(info[KEY_SYS_SERIAL])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info[KEY_SYS_TITLE], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=DATA_SCHEMA,
+            )
+        return await self.async_step_user()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

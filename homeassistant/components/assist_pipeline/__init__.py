@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterable
 
+import voluptuous as vol
+
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_CONFIG, DOMAIN
 from .error import PipelineNotFound
 from .pipeline import (
     Pipeline,
@@ -39,11 +40,20 @@ __all__ = (
     "WakeWordSettings",
 )
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Optional("debug_recording_dir"): str},
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Assist pipeline integration."""
+    hass.data[DATA_CONFIG] = config.get(DOMAIN, {})
+
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 
