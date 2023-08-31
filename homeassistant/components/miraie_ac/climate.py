@@ -67,38 +67,39 @@ async def async_setup_entry(
 class MirAIeClimateEntity(ClimateEntity):
     """Define MirAIe Climate."""
 
+    _attr_hvac_modes = SUPPORTED_HVAC_MODES
+    _attr_preset_modes = SUPPORTED_PRESET_MODES
+    _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_swing_modes = SUPPORTED_SWING_MODES
+    _attr_supported_features = SUPPORTED_FEATURES
+    _attr_fan_mode = FAN_OFF
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_precision = PRECISION_WHOLE
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
+    _attr_icon = "mdi:air-conditioner"
+
     def __init__(self, device: MirAIeDevice) -> None:
         """Initialize MirAIe climate entity."""
-        self._attr_hvac_modes = SUPPORTED_HVAC_MODES
-        self._attr_preset_modes = SUPPORTED_PRESET_MODES
-        self._attr_fan_modes = SUPPORTED_FAN_MODES
-        self._attr_swing_modes = SUPPORTED_SWING_MODES
-        self._attr_supported_features = SUPPORTED_FEATURES
-        self._attr_fan_mode = FAN_OFF
-        self._attr_max_temp = MAX_TEMP
-        self._attr_min_temp = MIN_TEMP
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_precision = PRECISION_WHOLE
-        self._attr_unique_id = device.device_id
-        self._friendly_name = device.friendly_name
+
         self.device = device
+        self._friendly_name = device.friendly_name
+
+        self._attr_unique_id = device.device_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            name=device.friendly_name,
+            manufacturer=device.brand,
+            model=device.model_number,
+            sw_version=device.firmware_version,
+            suggested_area=device.area_name,
+        )
 
         _LOGGER.debug("MirAIe device added: %s", device.friendly_name)
-
-    @property
-    def should_poll(self) -> bool:
-        """Let Hass know that polling is not required."""
-        return False
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._friendly_name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use on the frontend, if any."""
-        return "mdi:air-conditioner"
 
     @property
     def device_info(self) -> DeviceInfo:
