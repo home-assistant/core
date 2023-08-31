@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TypedDict
 
 import voluptuous as vol
 
@@ -62,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_reload(hass: HomeAssistant, servie_call: ServiceCall) -> None:
+async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Handle start Intent Script service call."""
     new_config = await async_integration_yaml_config(hass, DOMAIN)
     existing_intents = hass.data[DOMAIN]
@@ -79,7 +80,7 @@ async def async_reload(hass: HomeAssistant, servie_call: ServiceCall) -> None:
     async_load_intents(hass, new_intents)
 
 
-def async_load_intents(hass: HomeAssistant, intents: dict):
+def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> None:
     """Load YAML intents into the intent system."""
     template.attach(hass, intents)
     hass.data[DOMAIN] = intents
@@ -111,22 +112,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class _IntentSpeechRepromptData(TypedDict, total=False):
+    """Intent config data type for speech or reprompt info."""
+
+    content: template.Template
+    title: template.Template
+    text: template.Template
+    type: str
+
+
+class _IntentCardData(TypedDict, total=False):
+    """Intent config data type for card info."""
+
+    type: str
+    title: template.Template
+    content: template.Template
+
+
 class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
-    def __init__(self, intent_type, config):
+    def __init__(self, intent_type: str, config: ConfigType) -> None:
         """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
 
-    async def async_handle(self, intent_obj: intent.Intent):
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
-        speech = self.config.get(CONF_SPEECH)
-        reprompt = self.config.get(CONF_REPROMPT)
-        card = self.config.get(CONF_CARD)
-        action = self.config.get(CONF_ACTION)
-        is_async_action = self.config.get(CONF_ASYNC_ACTION)
-        slots = {key: value["value"] for key, value in intent_obj.slots.items()}
+        speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)
+        reprompt: _IntentSpeechRepromptData | None = self.config.get(CONF_REPROMPT)
+        card: _IntentCardData | None = self.config.get(CONF_CARD)
+        action: script.Script | None = self.config.get(CONF_ACTION)
+        is_async_action: bool = self.config[CONF_ASYNC_ACTION]
+        slots: dict[str, str] = {
+            key: value["value"] for key, value in intent_obj.slots.items()
+        }
 
         _LOGGER.debug(
             "Intent named %s received with slots: %s",
@@ -150,23 +170,23 @@ class ScriptIntentHandler(intent.IntentHandler):
 
         if speech is not None:
             response.async_set_speech(
-                speech[CONF_TEXT].async_render(slots, parse_result=False),
-                speech[CONF_TYPE],
+                speech["text"].async_render(slots, parse_result=False),
+                speech["type"],
             )
 
         if reprompt is not None:
-            text_reprompt = reprompt[CONF_TEXT].async_render(slots, parse_result=False)
+            text_reprompt = reprompt["text"].async_render(slots, parse_result=False)
             if text_reprompt:
                 response.async_set_reprompt(
                     text_reprompt,
-                    reprompt[CONF_TYPE],
+                    reprompt["type"],
                 )
 
         if card is not None:
             response.async_set_card(
-                card[CONF_TITLE].async_render(slots, parse_result=False),
-                card[CONF_CONTENT].async_render(slots, parse_result=False),
-                card[CONF_TYPE],
+                card["title"].async_render(slots, parse_result=False),
+                card["content"].async_render(slots, parse_result=False),
+                card["type"],
             )
 
         return response
