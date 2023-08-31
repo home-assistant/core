@@ -50,6 +50,7 @@ async def async_attach_trigger(
     removes = []
 
     event_data_schema = None
+    event_data_items = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_DATA])
@@ -58,12 +59,17 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
         # Build the schema
-        event_data_schema = vol.Schema(
-            {vol.Required(key): value for key, value in event_data.items()},
-            extra=vol.ALLOW_EXTRA,
-        )
+        if any(isinstance(value, dict) for value in event_data.values()):
+            event_data_schema = vol.Schema(
+                {vol.Required(key): value for key, value in event_data.items()},
+                extra=vol.ALLOW_EXTRA,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_data_items = event_data.items()
 
     event_context_schema = None
+    event_context_items = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_CONTEXT])
@@ -72,13 +78,17 @@ async def async_attach_trigger(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
         )
         # Build the schema
-        event_context_schema = vol.Schema(
-            {
-                vol.Required(key): _schema_value(value)
-                for key, value in event_context.items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+        if any(isinstance(value, list) for value in event_context.values()):
+            event_context_schema = vol.Schema(
+                {
+                    vol.Required(key): _schema_value(value)
+                    for key, value in event_context.items()
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_context_items = event_context.items()
 
     job = HassJob(action, f"event trigger {trigger_info}")
 
@@ -88,9 +98,15 @@ async def async_attach_trigger(
         try:
             # Check that the event data and context match the configured
             # schema if one was provided
-            if event_data_schema:
+            if event_data_items:
+                if not (event.data.items() >= event_data_items):
+                    return False
+            elif event_data_schema:
                 event_data_schema(event.data)
-            if event_context_schema:
+            if event_context_items:
+                if not (event.context.as_dict().items() >= event_context_items):
+                    return False
+            elif event_context_schema:
                 event_context_schema(dict(event.context.as_dict()))
         except vol.Invalid:
             # If event doesn't match, skip event
