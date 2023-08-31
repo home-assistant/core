@@ -1065,6 +1065,9 @@ iperf3==0.1.11
 # homeassistant.components.gogogate2
 ismartgate==5.0.0
 
+# homeassistant.components.flexmeasures
+isodate==0.6.1
+
 # homeassistant.components.file_upload
 janus==1.0.0
 

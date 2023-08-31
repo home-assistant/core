@@ -1,15 +1,19 @@
-"""Services."""
+"""Services.."""
 
+from datetime import datetime, timedelta
 import json
 import logging
 
 from flexmeasures_client.s2.cem import CEM
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
+import pytz
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from .const import DOMAIN
+from .const import DOMAIN, RESOLUTION
+from .helpers import time_ceil
 
 CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
 
@@ -18,14 +22,29 @@ SERVICES = [
         "schema": CHANGE_CONTROL_TYPE_SCHEMA,
         "service": "change_control_type",
         "service_func_name": "change_control_type",
-    }
+    },
+    {
+        "schema": None,
+        "service": "trigger_and_get_schedule",
+        "service_func_name": "trigger_and_get_schedule",
+    },
+    {
+        "schema": None,
+        "service": "post_measurements",
+        "service_func_name": "post_measurements",
+    },
 ]
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up services."""
+
+    # TODO: Is this the correct way and place to set this?
+    client = hass.data[DOMAIN]["fm_client"]
+
+    config_data = dict(entry.data)
 
     ############
     # Services #
@@ -40,14 +59,63 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         if not hasattr(ControlType, control_type):
             LOGGER.exception("TODO")
             return False
-        else:
-            control_type = getattr(ControlType, control_type)
 
-            await cem.activate_control_type(control_type=control_type)
+        control_type = ControlType[control_type]
+        # print(control_type)
+
+        # await cem.activate_control_type(
+        #     control_type=ControlType.FILL_RATE_BASED_CONTROL
+        # )
 
         hass.states.async_set(
             f"{DOMAIN}.cem", json.dumps({"control_type": str(cem._control_type)})
         )  # TODO: expose control type as public property
+
+    async def trigger_and_get_schedule(call: ServiceCall):
+        print(
+            {
+                "sensor_id": config_data["power_sensor"],
+                "start": time_ceil(
+                    datetime.now(tz=pytz.utc), timedelta(minutes=RESOLUTION)
+                ),
+                "duration": config_data["schedule_duration"],
+                "soc_unit": config_data["soc_unit"],
+                "soc_min": config_data["soc_min"],
+                "soc_max": config_data["soc_max"],
+                "consumption_price_sensor": config_data["consumption_price_sensor"],
+                "production_price_sensor": config_data["production_price_sensor"],
+                "soc_at_start": call.data.get("soc_at_start"),
+            }
+        )
+
+        schedule = await client.trigger_and_get_schedule(
+            sensor_id=config_data["power_sensor"],
+            start=time_ceil(datetime.now(tz=pytz.utc), timedelta(minutes=15)),
+            duration=config_data["schedule_duration"],
+            soc_unit=config_data["soc_unit"],
+            soc_min=config_data["soc_min"],
+            soc_max=config_data["soc_max"],
+            consumption_price_sensor=config_data["consumption_price_sensor"],
+            production_price_sensor=config_data["production_price_sensor"],
+            soc_at_start=call.data.get("soc_at_start"),
+        )
+
+        # TODO: create state with sensible name and format
+        schedule_state = "ChargeScheduleAvailable" + datetime.now().isoformat()
+
+        hass.states.async_set(
+            f"{DOMAIN}.charge_schedule", new_state=schedule_state, attributes=schedule
+        )
+
+    async def post_measurements(call: ServiceCall):
+        client.post_measurements(
+            sensor_id=call.data.get("sensor_id"),
+            start=call.data.get("start"),
+            duration=call.data.get("duration"),
+            values=call.data.get("values"),
+            unit=call.data.get("unit"),
+            prior=call.data.get("prior"),
+        )
 
     #####################
     # Register services #
