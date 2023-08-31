@@ -509,7 +509,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.35.9
+bellows==0.36.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -994,7 +994,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230802.1
+home-assistant-frontend==20230830.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1374,7 +1374,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.32
+opower==0.0.33
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1854,7 +1854,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.4.1
+pymodbus==3.5.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2772,7 +2772,7 @@ zeroconf==0.88.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.102
+zha-quirks==0.0.103
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2793,7 +2793,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.56.4
+zigpy==0.57.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

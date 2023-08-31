@@ -10,6 +10,7 @@ FLOWS = {
         "integration",
         "min_max",
         "switch_as_x",
+        "template",
         "threshold",
         "tod",
         "utility_meter",
