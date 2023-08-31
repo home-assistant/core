@@ -1518,7 +1518,7 @@ pysml==0.0.12
 pysnmplib==5.0.21
 
 # homeassistant.components.snooz
-pysnooz==0.8.3
+pysnooz==0.8.6
 
 # homeassistant.components.soma
 pysoma==0.0.12
