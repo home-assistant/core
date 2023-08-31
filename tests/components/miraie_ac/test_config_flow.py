@@ -3,14 +3,18 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.miraie_ac.config_flow import (
     AuthException,
     ConnectionException,
     MobileNotRegisteredException,
     ValidationError,
 )
-from homeassistant.components.miraie_ac.const import CONFIG_KEY_USER_ID, DOMAIN
+from homeassistant.components.miraie_ac.const import (
+    CONFIG_KEY_USER_ID,
+    COUNTRY_CODE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -20,6 +24,8 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
+    MOBILE = "+919876543219"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -34,14 +40,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "+919876543219", CONF_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: MOBILE, CONF_PASSWORD: "P@ssw0rD"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MirAIe"
+    assert result2["title"] == f"MirAIe ({MOBILE})"
     assert result2["data"] == {
-        CONFIG_KEY_USER_ID: "+919876543219",
+        CONFIG_KEY_USER_ID: MOBILE,
         CONF_PASSWORD: "P@ssw0rD",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -51,6 +57,8 @@ async def test_form_no_country_code(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we get the form."""
+    MOBILE = "9876543219"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -65,17 +73,56 @@ async def test_form_no_country_code(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONFIG_KEY_USER_ID: "9876543219", CONF_PASSWORD: "P@ssw0rD"},
+            {CONFIG_KEY_USER_ID: MOBILE, CONF_PASSWORD: "P@ssw0rD"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "MirAIe"
+    assert result2["title"] == f"MirAIe ({COUNTRY_CODE}{MOBILE})"
     assert result2["data"] == {
-        CONFIG_KEY_USER_ID: "+919876543219",
+        CONFIG_KEY_USER_ID: f"{COUNTRY_CODE}{MOBILE}",
         CONF_PASSWORD: "P@ssw0rD",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_unique_id_already_configured(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form."""
+    MOBILE = "9876543219"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.miraie_ac.config_flow.MirAIeAPI.initialize",
+        return_value=None,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONFIG_KEY_USER_ID: MOBILE, CONF_PASSWORD: "P@ssw0rD"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Test Duplicate Config Flow
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {CONFIG_KEY_USER_ID: MOBILE, CONF_PASSWORD: "P@ssw0rD"},
+    )
+    assert result4["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:

@@ -16,7 +16,7 @@
       "unknown": "There was an unexpected error, please try again later or if the problem presists log an issue on https://github.com/home-assistant/core/issues?q=is%3Aissue+is%3Aopen+label%3A%22integration%3A+miraie_ac%22"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "This account has already been configured."
     }
   }
 }
