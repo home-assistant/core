@@ -10,12 +10,16 @@ CONFIG = {
     "password": "admin",
     "host": "localhost:5000",
     "power_sensor": 1,
-    "price_sensor": 2,
     "soc_sensor": 3,
     "rm_discharge_sensor": 4,
-    "schedule_duration": 5,
-}
+    "schedule_duration": "PT24H",
+    "consumption_price_sensor": 2,
+    "production_price_sensor": 2,
+    "soc_unit": "kWh",
+    "soc_min" : 0.0,
+    "soc_max": 0.001,
 
+}
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test that the form pops up on loading."""

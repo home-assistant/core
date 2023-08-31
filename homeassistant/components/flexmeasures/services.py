@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from .const import DOMAIN, RESOLUTION
+from .const import DOMAIN, RESOLUTION, SERVICE_CHANGE_CONTROL_TYPE
 from .helpers import time_ceil
 
 CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
@@ -20,7 +20,7 @@ CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
 SERVICES = [
     {
         "schema": CHANGE_CONTROL_TYPE_SCHEMA,
-        "service": "change_control_type",
+        "service": SERVICE_CHANGE_CONTROL_TYPE,
         "service_func_name": "change_control_type",
     },
     {
@@ -61,14 +61,13 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             return False
 
         control_type = ControlType[control_type]
-        # print(control_type)
 
-        # await cem.activate_control_type(
-        #     control_type=ControlType.FILL_RATE_BASED_CONTROL
-        # )
+        await cem.activate_control_type(
+            control_type=control_type
+        )
 
         hass.states.async_set(
-            f"{DOMAIN}.cem", json.dumps({"control_type": str(cem._control_type)})
+            f"{DOMAIN}.cem", json.dumps({"control_type": str(cem.control_type)})
         )  # TODO: expose control type as public property
 
     async def trigger_and_get_schedule(call: ServiceCall):

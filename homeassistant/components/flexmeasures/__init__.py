@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cem = CEM(fm_client=client)
     frbc = FRBCSimple(
         power_sensor_id=config_data.get("power_sensor"),  # 1
-        price_sensor_id=config_data.get("price_sensor"),  # 2
+        price_sensor_id=config_data.get("consumption_price_sensor"),  # 2
         soc_sensor_id=config_data.get("soc_sensor"),  # 4
         rm_discharge_sensor_id=config_data.get("rm_discharge_sensor"),  # 5
         schedule_duration=isodate.parse_duration(
