@@ -25,6 +25,7 @@ from awesomeversion import (
 import voluptuous as vol
 
 from . import generated
+from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
@@ -37,7 +38,6 @@ from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .config_entries import ConfigEntry
-    from .core import HomeAssistant
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
 
@@ -875,6 +875,7 @@ def _resolve_integrations_from_root(
     return integrations
 
 
+@callback
 def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration which is already loaded.
 

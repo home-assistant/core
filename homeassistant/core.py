@@ -32,7 +32,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, loader, util
+from . import block_async_io, util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -296,6 +296,9 @@ class HomeAssistant:
 
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import loader
+
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
