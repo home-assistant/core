@@ -341,15 +341,19 @@ def verify_cleanup(
             original_maxother = arepr.maxother
             arepr.maxstring = 300
             arepr.maxother = 300
-            if expected_lingering_timers:
-                _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[-1], HassJob):
-                pytest.fail(f"Lingering timer after job {repr(job)}")
-            else:
-                pytest.fail(f"Lingering timer after test {repr(handle)}")
-            handle.cancel()
-            arepr.maxstring = original_maxstring
-            arepr.maxother = original_maxother
+            try:
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {repr(job)}")
+                else:
+                    pytest.fail(f"Lingering timer after test {repr(handle)}")
+                handle.cancel()
+            finally:
+                arepr.maxstring = original_maxstring
+                arepr.maxother = original_maxother
 
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
