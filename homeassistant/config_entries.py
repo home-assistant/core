@@ -496,7 +496,7 @@ class ConfigEntry:
         if self._setup_again_job:
             return self._setup_again_job
         self._setup_again_job = HassJob(
-            functools.partial(self._async_setup_again, hass)
+            functools.partial(self._async_setup_again, hass), cancel_on_shutdown=True
         )
         return self._setup_again_job
 
