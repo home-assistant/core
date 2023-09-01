@@ -775,6 +775,7 @@ omit =
     homeassistant/components/mystrom/switch.py
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/__init__.py
+    homeassistant/components/nanoleaf/connection.py
     homeassistant/components/nanoleaf/button.py
     homeassistant/components/nanoleaf/entity.py
     homeassistant/components/nanoleaf/light.py
