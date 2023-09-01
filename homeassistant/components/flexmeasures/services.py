@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 from flexmeasures_client.s2.cem import CEM
-from flexmeasures_client.client import FlexMeasuresClient
+from flexmeasures_client import FlexMeasuresClient
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 import pandas as pd
 import voluptuous as vol
@@ -45,7 +45,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up services."""
 
     # Is this the correct way and place to set this?
-    client = hass.data[DOMAIN]["fm_client"]
+    client: FlexMeasuresClient = hass.data[DOMAIN]["fm_client"]
 
     config_data = dict(entry.data)
 
@@ -80,20 +80,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         start = time_ceil(datetime.now(tz=tzinfo), resolution)
 
-        # print(
-        #     {
-        #         "sensor_id": config_data["power_sensor"],
-        #         "start": start,
-        #         "duration": config_data["schedule_duration"],
-        #         "soc_unit": "MWh",
-        #         "soc_min": config_data["soc_min"],
-        #         "soc_max": config_data["soc_max"],
-        #         "consumption_price_sensor": config_data["consumption_price_sensor"],
-        #         "production_price_sensor": config_data["production_price_sensor"],
-        #         "soc_at_start": call.data.get("soc_at_start"),
-        #     }
-        # )
-
         schedule = await client.trigger_and_get_schedule(
             sensor_id=config_data["power_sensor"],
             start=start,
@@ -111,8 +97,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             {"start": start + resolution * i, "value": value}
             for i, value in enumerate(schedule["values"])
         ]
-
-        # print(schedule)
 
         hass.states.async_set(
             f"{DOMAIN}.charge_schedule",
