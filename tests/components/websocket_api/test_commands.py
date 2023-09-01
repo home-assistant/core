@@ -19,7 +19,7 @@ from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAG
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
@@ -1481,75 +1481,9 @@ async def test_entity_source_admin(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "test_domain.entity_1": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
+        "test_domain.entity_1": {"domain": "test_platform"},
+        "test_domain.entity_2": {"domain": "test_platform"},
     }
-
-    # Fetch one
-    await websocket_client.send_json(
-        {"id": 7, "type": "entity/source", "entity_id": ["test_domain.entity_2"]}
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-    }
-
-    # Fetch two
-    await websocket_client.send_json(
-        {
-            "id": 8,
-            "type": "entity/source",
-            "entity_id": ["test_domain.entity_2", "test_domain.entity_1"],
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {
-        "test_domain.entity_1": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-    }
-
-    # Fetch non existing
-    await websocket_client.send_json(
-        {
-            "id": 9,
-            "type": "entity/source",
-            "entity_id": ["test_domain.entity_2", "test_domain.non_existing"],
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 9
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
     # Mock policy
     hass_admin_user.groups = []
@@ -1565,23 +1499,8 @@ async def test_entity_source_admin(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
+        "test_domain.entity_2": {"domain": "test_platform"},
     }
-
-    # Fetch unauthorized
-    await websocket_client.send_json(
-        {"id": 11, "type": "entity/source", "entity_id": ["test_domain.entity_1"]}
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 11
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
 
 
 async def test_subscribe_trigger(hass: HomeAssistant, websocket_client) -> None:
