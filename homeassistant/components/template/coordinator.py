@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TriggerUpdateCoordinator(DataUpdateCoordinator):
-"""Data update coordinator for trigger based template entities."""
+    """Data update coordinator for trigger based template entities."""
 
     REMOVE_TRIGGER = object()
 
