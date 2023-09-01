@@ -336,7 +336,7 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if not integration:
+        if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
