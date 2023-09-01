@@ -52,7 +52,6 @@ class BasePrivateDeviceEntity(Entity):
             )
         )
 
-        # There is a bug here - this doesn't set up availability tracking until an announcement is seen.
         if service_info := async_last_service_info(self.hass, self._irk):
             self._async_track_service_info(
                 service_info, bluetooth.BluetoothChange.ADVERTISEMENT
