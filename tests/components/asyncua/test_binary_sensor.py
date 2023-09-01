@@ -80,7 +80,7 @@ async def test_setup_minimal(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == name
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
 
     # Test state on
     hass.states.async_set(

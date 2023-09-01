@@ -36,7 +36,7 @@ async def test_setup_duplicate_hub_name(
             "url": "opc.tcp://mock-url:mock-port",
             "manufacturer": "mock-manufacturer",
             "model": "mock-model",
-            "scan_interval": "30",
+            "scan_interval": 30,
             "username": "mock-username",
             "password": "mock-password",
         },
@@ -45,7 +45,7 @@ async def test_setup_duplicate_hub_name(
             "url": "opc.tcp://mock-url:mock-port",
             "manufacturer": "mock-manufacturer",
             "model": "mock-model",
-            "scan_interval": "30",
+            "scan_interval": 30,
             "username": "mock-username",
             "password": "mock-password",
         },
@@ -70,7 +70,7 @@ async def test_setup_pass(
                 {
                     "name": "mock-hub",
                     "url": "opc.tcp://mock-url:mock-port",
-                    "scan_interval": "30",
+                    "scan_interval": 30,
                 }
             ]
         },
