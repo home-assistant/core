@@ -831,7 +831,6 @@ omit =
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
-    homeassistant/components/no_ip/sensor.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuki/__init__.py
     homeassistant/components/nuki/binary_sensor.py
