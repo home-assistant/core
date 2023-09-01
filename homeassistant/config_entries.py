@@ -493,11 +493,11 @@ class ConfigEntry:
     @callback
     def _async_get_setup_again_job(self, hass: HomeAssistant) -> HassJob:
         """Get a job that will call setup again."""
-        if self._setup_again_job:
-            return self._setup_again_job
-        self._setup_again_job = HassJob(
-            functools.partial(self._async_setup_again, hass), cancel_on_shutdown=True
-        )
+        if not self._setup_again_job:
+            self._setup_again_job = HassJob(
+                functools.partial(self._async_setup_again, hass),
+                cancel_on_shutdown=True,
+            )
         return self._setup_again_job
 
     async def async_shutdown(self) -> None:
