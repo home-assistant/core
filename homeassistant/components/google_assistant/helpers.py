@@ -733,7 +733,11 @@ def deep_update(target, source):
 def async_get_google_entity_if_supported_cached(
     hass: HomeAssistant, config: AbstractConfig, state: State
 ) -> GoogleEntity | None:
-    """Return a GoogleEntity if entity is supported checking the cache first."""
+    """Return a GoogleEntity if entity is supported checking the cache first.
+
+    This function will check the cache, and call async_get_google_entity_if_supported
+    if the entity is not in the cache, which will update the cache.
+    """
     entity_id = state.entity_id
     is_supported_cache = config.is_supported_cache
     features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
@@ -749,7 +753,10 @@ def async_get_google_entity_if_supported_cached(
 def async_get_google_entity_if_supported(
     hass: HomeAssistant, config: AbstractConfig, state: State
 ) -> GoogleEntity | None:
-    """Return a GoogleEntity if entity is supported."""
+    """Return a GoogleEntity if entity is supported.
+
+    This function will update the cache, but it does not check the cache first.
+    """
     features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
     entity = GoogleEntity(hass, config, state)
     is_supported = bool(entity.traits())
