@@ -22,35 +22,27 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("host", description={"suggested_value": "localhost:5000"}): str,
-        vol.Required("username", default="toy-user@flexmeasures.io"): str,
+        vol.Required(
+            "username", description={"suggested_value": "toy-user@flexmeasures.io"}
+        ): str,
         vol.Required("password"): str,
-        vol.Required("power_sensor", default=1): int,
-        vol.Required("consumption_price_sensor", default=2): int,
-        vol.Required("production_price_sensor", default=2): int,
-        vol.Required("soc_sensor", default=4): int,
-        vol.Required("rm_discharge_sensor", default=5): int,
-        # TODO: Is it possible to use a duration string?
-        vol.Required("schedule_duration", default="PT24H"): str,
-        vol.Required("soc_unit", default="kWh"): str,
-        vol.Required("soc_min", default=0.0): float,
-        vol.Required("soc_max", default=0.001): float,
+        vol.Required("power_sensor", description={"suggested_value": 1}): int,
+        vol.Required(
+            "consumption_price_sensor", description={"suggested_value": 2}
+        ): int,
+        vol.Required(
+            "production_price_sensor", description={"suggested_value": 2}
+        ): int,
+        vol.Required("soc_sensor", description={"suggested_value": 4}): int,
+        vol.Required("rm_discharge_sensor", description={"suggested_value": 5}): int,
+        vol.Required(
+            "schedule_duration", description={"suggested_value": "PT24H"}
+        ): str,
+        vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
+        vol.Required("soc_min", description={"suggested_value": 0.001}): float,
+        vol.Required("soc_max", description={"suggested_value": 0.002}): float,
     }
 )
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -105,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
 
-            for field in ["host", "email", "password"]:
+            for field in ("host", "email", "password"):
                 if field in str(exception):
                     errors[field] = str(exception)
 

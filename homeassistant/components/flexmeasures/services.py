@@ -1,17 +1,19 @@
 """Services.."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import logging
+from typing import cast
 
 from flexmeasures_client.s2.cem import CEM
 from flexmeasures_client.client import FlexMeasuresClient
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
-import pytz
+import pandas as pd
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RESOLUTION, SERVICE_CHANGE_CONTROL_TYPE
 from .helpers import time_ceil
@@ -42,8 +44,8 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up services."""
 
-    # TODO: Is this the correct way and place to set this?
-    client: FlexMeasuresClient = hass.data[DOMAIN]["fm_client"]
+    # Is this the correct way and place to set this?
+    client = hass.data[DOMAIN]["fm_client"]
 
     config_data = dict(entry.data)
 
@@ -51,11 +53,13 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Services #
     ############
 
-    async def change_control_type(call: ServiceCall):
+    async def change_control_type(
+        call: ServiceCall,
+    ):  # pylint: disable=possibly-unused-variable
         """Change control type S2 Protocol."""
         cem: CEM = hass.data[DOMAIN]["cem"]
 
-        control_type = call.data.get("control_type")
+        control_type = cast(str, call.data.get("control_type"))
 
         if not hasattr(ControlType, control_type):
             LOGGER.exception("TODO")
@@ -67,28 +71,32 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         hass.states.async_set(
             f"{DOMAIN}.cem", json.dumps({"control_type": str(cem.control_type)})
-        )  # TODO: expose control type as public property
-
-    async def trigger_and_get_schedule(call: ServiceCall):
-        print(
-            {
-                "sensor_id": config_data["power_sensor"],
-                "start": time_ceil(
-                    datetime.now(tz=pytz.utc), timedelta(minutes=RESOLUTION)
-                ),
-                "duration": config_data["schedule_duration"],
-                "soc_unit": config_data["soc_unit"],
-                "soc_min": config_data["soc_min"],
-                "soc_max": config_data["soc_max"],
-                "consumption_price_sensor": config_data["consumption_price_sensor"],
-                "production_price_sensor": config_data["production_price_sensor"],
-                "soc_at_start": call.data.get("soc_at_start"),
-            }
         )
+
+    async def trigger_and_get_schedule(
+        call: ServiceCall,
+    ):  # pylint: disable=possibly-unused-variable
+        resolution = pd.Timedelta(RESOLUTION)
+        tzinfo = dt_util.get_time_zone(hass.config.time_zone)
+        start = time_ceil(datetime.now(tz=tzinfo), resolution)
+
+        # print(
+        #     {
+        #         "sensor_id": config_data["power_sensor"],
+        #         "start": start,
+        #         "duration": config_data["schedule_duration"],
+        #         "soc_unit": "MWh",
+        #         "soc_min": config_data["soc_min"],
+        #         "soc_max": config_data["soc_max"],
+        #         "consumption_price_sensor": config_data["consumption_price_sensor"],
+        #         "production_price_sensor": config_data["production_price_sensor"],
+        #         "soc_at_start": call.data.get("soc_at_start"),
+        #     }
+        # )
 
         schedule = await client.trigger_and_get_schedule(
             sensor_id=config_data["power_sensor"],
-            start=time_ceil(datetime.now(tz=pytz.utc), timedelta(minutes=15)),
+            start=start,
             duration=config_data["schedule_duration"],
             soc_unit=config_data["soc_unit"],
             soc_min=config_data["soc_min"],
@@ -98,16 +106,25 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             soc_at_start=call.data.get("soc_at_start"),
         )
 
-        # TODO: create state with sensible name and format
-        schedule_state = "ChargeScheduleAvailable" + datetime.now().isoformat()
+        schedule_state = start.isoformat()
+        schedule = [
+            {"start": start + resolution * i, "value": value}
+            for i, value in enumerate(schedule["values"])
+        ]
+
+        # print(schedule)
 
         hass.states.async_set(
-            f"{DOMAIN}.charge_schedule", new_state=schedule_state, attributes=schedule
+            f"{DOMAIN}.charge_schedule",
+            new_state=schedule_state,
+            attributes={"schedule": schedule},
         )
 
-    async def post_measurements(call: ServiceCall):
-        print("POST MEASUREMENTS")
-        client.post_measurements(
+    async def post_measurements(
+        call: ServiceCall,
+    ):  # pylint: disable=possibly-unused-variable
+        # print(call)
+        await client.post_measurements(
             sensor_id=call.data.get("sensor_id"),
             start=call.data.get("start"),
             duration=call.data.get("duration"),

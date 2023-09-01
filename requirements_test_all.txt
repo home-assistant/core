@@ -627,6 +627,9 @@ fivem-api==0.1.2
 # homeassistant.components.fjaraskupan
 fjaraskupan==2.2.0
 
+# homeassistant.components.flexmeasures
+flexmeasures-client==0.1.7
+
 # homeassistant.components.flipr
 flipr-api==1.5.0
 
@@ -832,6 +835,9 @@ intellifire4py==2.2.2
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.0
+
+# homeassistant.components.flexmeasures
+isodate==0.6.1
 
 # homeassistant.components.file_upload
 janus==1.0.0
