@@ -16,6 +16,7 @@ from pydeconz.models.sensor.daylight import DAYLIGHT_STATUS, Daylight
 from pydeconz.models.sensor.generic_status import GenericStatus
 from pydeconz.models.sensor.humidity import Humidity
 from pydeconz.models.sensor.light_level import LightLevel
+from pydeconz.models.sensor.moisture import Moisture
 from pydeconz.models.sensor.power import Power
 from pydeconz.models.sensor.pressure import Pressure
 from pydeconz.models.sensor.switch import Switch
@@ -81,6 +82,7 @@ T = TypeVar(
     GenericStatus,
     Humidity,
     LightLevel,
+    Moisture,
     Power,
     Pressure,
     Temperature,
@@ -194,6 +196,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
     ),
     DeconzSensorDescription[LightLevel](
         key="light_level",
@@ -204,6 +207,17 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+    ),
+    DeconzSensorDescription[Moisture](
+        key="moisture",
+        supported_fn=lambda device: device.moisture is not None,
+        update_key="moisture",
+        value_fn=lambda device: device.scaled_moisture,
+        instance_check=Moisture,
+        device_class=SensorDeviceClass.MOISTURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=1,
     ),
     DeconzSensorDescription[Power](
         key="power",
@@ -234,6 +248,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
     ),
     DeconzSensorDescription[Time](
         key="last_set",

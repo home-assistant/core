@@ -1,10 +1,8 @@
 """Support for IBM Watson TTS integration."""
 import logging
 
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
-    IAMAuthenticator,
-)
-from ibm_watson import TextToSpeechV1  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -180,7 +178,7 @@ class WatsonTTSProvider(Provider):
         """Return a list of supported options."""
         return [CONF_VOICE]
 
-    def get_tts_audio(self, message, language=None, options=None):
+    def get_tts_audio(self, message, language, options):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
             text=message, accept=self.output_format, voice=options[CONF_VOICE]

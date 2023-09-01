@@ -6,7 +6,7 @@
           "location": "Get data for",
           "api_key": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Visit https://co2signal.com/ to request a token."
+        "description": "Visit https://electricitymaps.com/free-tier to request a token."
       },
       "coordinates": {
         "data": {
@@ -28,13 +28,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "API Ratelimit exceeded"
+      "api_ratelimit": "[%key:component::co2signal::config::error::api_ratelimit%]"
     }
   },
   "entity": {
     "sensor": {
-      "carbon_intensity": { "name": "CO2 intensity" },
-      "fossil_fuel_percentage": { "name": "Grid fossil fuel percentage" }
+      "carbon_intensity": {
+        "name": "CO2 intensity"
+      },
+      "fossil_fuel_percentage": {
+        "name": "Grid fossil fuel percentage"
+      }
     }
   }
 }

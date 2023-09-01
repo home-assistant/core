@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import CONFIG_ENTRY_DATA, UNAVAILABLE_RESPONSE, ComponentSetup
+from .conftest import (
+    CONFIG_ENTRY_DATA,
+    MODEL_AND_VERSION_RESPONSE,
+    ComponentSetup,
+    mock_response,
+    mock_response_error,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
@@ -44,16 +52,50 @@ async def test_init_success(
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_data", "responses", "config_entry_states"),
     [
-        ({}, CONFIG_ENTRY_DATA, [UNAVAILABLE_RESPONSE], [ConfigEntryState.SETUP_RETRY]),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
+            ],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
+        (
+            {},
+            CONFIG_ENTRY_DATA,
+            [
+                mock_response(MODEL_AND_VERSION_RESPONSE),
+                mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
+            ],
+            [ConfigEntryState.SETUP_RETRY],
+        ),
     ],
-    ids=["config_entry_failure"],
+    ids=[
+        "unavailable",
+        "server-error",
+        "coordinator-unavailable",
+        "coordinator-server-error",
+    ],
 )
 async def test_communication_failure(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry_states: list[ConfigEntryState],
 ) -> None:
-    """Test unable to talk to server on startup, which permanently fails setup."""
+    """Test unable to talk to device on startup, which fails setup."""
 
     assert await setup_integration()
 

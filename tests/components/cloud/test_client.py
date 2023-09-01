@@ -18,7 +18,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     ExposedEntities,
     async_expose_entity,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -306,7 +306,7 @@ async def test_set_username(hass: HomeAssistant) -> None:
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.on_cloud_connected()
+    await client.cloud_connected()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
@@ -326,7 +326,7 @@ async def test_login_recovers_bad_internet(
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.on_cloud_connected()
+    await client.cloud_connected()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 
@@ -353,3 +353,23 @@ async def test_system_msg(hass: HomeAssistant) -> None:
 
     assert response is None
     assert cloud.client.relayer_region == "xx-earth-616"
+
+
+async def test_cloud_connection_info(hass: HomeAssistant) -> None:
+    """Test connection info msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    response = await cloud.client.async_cloud_connection_info({})
+
+    assert response == {
+        "remote": {
+            "connected": False,
+            "enabled": False,
+            "instance_domain": None,
+            "alias": None,
+        },
+        "version": HA_VERSION,
+    }

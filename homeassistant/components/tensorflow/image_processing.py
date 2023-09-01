@@ -7,9 +7,9 @@ import os
 import sys
 import time
 
-from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
-import tensorflow as tf  # pylint: disable=import-error
+from PIL import Image, ImageDraw, UnidentifiedImageError
+import tensorflow as tf
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
@@ -148,7 +148,7 @@ def setup_platform(
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+        import cv2  # noqa: F401 pylint: disable=import-outside-toplevel
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "

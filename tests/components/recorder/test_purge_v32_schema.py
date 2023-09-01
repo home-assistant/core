@@ -1,6 +1,5 @@
 """Test data purging."""
 
-# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import json
 import sqlite3
@@ -733,10 +732,7 @@ async def _add_test_states(hass: HomeAssistant):
             state = f"dontpurgeme_{event_id}"
             attributes = {"dontpurgeme": True, **base_attributes}
 
-        with patch(
-            "homeassistant.components.recorder.core.dt_util.utcnow",
-            return_value=timestamp,
-        ):
+        with freeze_time(timestamp):
             await set_state("test.recorder2", state, attributes=attributes)
 
 

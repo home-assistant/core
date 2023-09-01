@@ -8,14 +8,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster, IasZone
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 
-from . import ClusterHandler, ClusterHandlerStatus
 from .. import registries
 from ..const import (
     SIGNAL_ATTR_UPDATED,
@@ -25,6 +24,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from . import ClusterHandler, ClusterHandlerStatus
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -350,8 +350,11 @@ class IASZoneClusterHandler(ClusterHandler):
             self.debug("Updated alarm state: %s", zone_status)
         elif command_id == 1:
             self.debug("Enroll requested")
-            res = self._cluster.enroll_response(0, 0)
-            self._cluster.create_catching_task(res)
+            self._cluster.create_catching_task(
+                self.enroll_response(
+                    enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+                )
+            )
 
     async def async_configure(self):
         """Configure IAS device."""
@@ -366,14 +369,14 @@ class IASZoneClusterHandler(ClusterHandler):
         ieee = self.cluster.endpoint.device.application.state.node_info.ieee
 
         try:
-            res = await self._cluster.write_attributes({"cie_addr": ieee})
+            res = await self.write_attributes_safe({"cie_addr": ieee})
             self.debug(
                 "wrote cie_addr: %s to '%s' cluster: %s",
                 str(ieee),
                 self._cluster.ep_attribute,
                 res[0],
             )
-        except ZigbeeException as ex:
+        except HomeAssistantError as ex:
             self.debug(
                 "Failed to write cie_addr: %s to '%s' cluster: %s",
                 str(ieee),
@@ -382,13 +385,17 @@ class IASZoneClusterHandler(ClusterHandler):
             )
 
         self.debug("Sending pro-active IAS enroll response")
-        self._cluster.create_catching_task(self._cluster.enroll_response(0, 0))
+        self._cluster.create_catching_task(
+            self.enroll_response(
+                enroll_response_code=IasZone.EnrollResponse.Success, zone_id=0
+            )
+        )
 
         self._status = ClusterHandlerStatus.CONFIGURED
         self.debug("finished IASZoneClusterHandler configuration")
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == IasZone.attributes_by_name["zone_status"].id:
             self.async_send_signal(

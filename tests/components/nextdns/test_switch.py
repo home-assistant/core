@@ -637,7 +637,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.nextdns.NextDns.set_setting", return_value=True
     ) as mock_switch_on:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
@@ -663,7 +663,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.nextdns.NextDns.set_setting", return_value=True
     ) as mock_switch_on:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: "switch.fake_profile_web3"},

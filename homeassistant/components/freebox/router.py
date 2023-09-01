@@ -18,9 +18,8 @@ from freebox_api.exceptions import HttpRequestError, NotOpenError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -29,7 +28,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORMS,
+    HOME_COMPATIBLE_CATEGORIES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -72,6 +71,8 @@ class FreeboxRouter:
 
         self.devices: dict[str, dict[str, Any]] = {}
         self.disks: dict[int, dict[str, Any]] = {}
+        self.supports_raid = True
+        self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
@@ -145,6 +146,8 @@ class FreeboxRouter:
 
         await self._update_disks_sensors()
 
+        await self._update_raids_sensors()
+
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
     async def _update_disks_sensors(self) -> None:
@@ -154,6 +157,24 @@ class FreeboxRouter:
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
+
+    async def _update_raids_sensors(self) -> None:
+        """Update Freebox raids."""
+        if not self.supports_raid:
+            return
+
+        try:
+            fbx_raids: list[dict[str, Any]] = await self._api.storage.get_raids() or []
+        except HttpRequestError:
+            self.supports_raid = False
+            _LOGGER.info(
+                "Router %s API does not support RAID",
+                self.name,
+            )
+            return
+
+        for fbx_raid in fbx_raids:
+            self.raids[fbx_raid["id"]] = fbx_raid
 
     async def update_home_devices(self) -> None:
         """Update Home devices (alarm, light, sensor, switch, remote ...)."""
@@ -169,7 +190,7 @@ class FreeboxRouter:
 
         new_device = False
         for home_node in home_nodes:
-            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node

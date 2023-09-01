@@ -9,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
@@ -151,8 +150,8 @@ def setup_platform(
     add_entities(entities)
 
 
-class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
-    """Representation of an  EnOcean sensor device such as a power meter."""
+class EnOceanSensor(EnOceanEntity, RestoreSensor):
+    """Representation of an EnOcean sensor device such as a power meter."""
 
     def __init__(
         self,
@@ -161,7 +160,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         description: EnOceanSensorEntityDescription,
     ) -> None:
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id)
         self.entity_description = description
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)
@@ -173,8 +172,8 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        if (state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = state.state
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""

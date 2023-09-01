@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -69,7 +69,7 @@ def _format_backup_choice(
 ) -> str:
     """Format network backup info into a short piece of text."""
     if not pan_ids:
-        return dt.as_local(backup.backup_time).strftime("%c")
+        return dt_util.as_local(backup.backup_time).strftime("%c")
 
     identifier = (
         # PAN ID
@@ -78,7 +78,7 @@ def _format_backup_choice(
         f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
     ).lower()
 
-    return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
+    return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
@@ -96,10 +96,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         yellow_radio.manufacturer = "Nabu Casa"
 
     # Present the multi-PAN addon as a setup option, if it's available
-    addon_manager = silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
 
     try:
-        addon_info = await addon_manager.async_get_addon_info()
+        addon_info = await multipan_manager.async_get_addon_info()
     except (AddonError, KeyError):
         addon_info = None
 
@@ -552,10 +554,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         vid = discovery_info.vid
         pid = discovery_info.pid
         serial_number = discovery_info.serial_number
-        device = discovery_info.device
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
 
         await self._set_unique_id_or_update_path(
             unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",

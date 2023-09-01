@@ -60,20 +60,29 @@ async def test_buttons(
 async def test_button_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault device trackers with empty data from Renault."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = mock_vehicle[Platform.BUTTON]
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
+
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")

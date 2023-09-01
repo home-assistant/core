@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Request an API account at {api_account_url}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "main_user": "Last.fm username"
+        }
+      },
+      "friends": {
+        "description": "Fill in other users you want to add.",
+        "data": {
+          "users": "Last.fm usernames"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "Invalid username",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::lastfm::config::step::friends::description%]",
+        "data": {
+          "users": "[%key:component::lastfm::config::step::friends::data::users%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "[%key:component::lastfm::config::error::invalid_account%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

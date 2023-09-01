@@ -1,7 +1,6 @@
 """General cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
@@ -12,14 +11,9 @@ from zigpy.zcl.clusters import general
 from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later
 
-from . import (
-    AttrReportConfig,
-    ClientClusterHandler,
-    ClusterHandler,
-    parse_and_log_command,
-)
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -32,6 +26,12 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
+)
+from . import (
+    AttrReportConfig,
+    ClientClusterHandler,
+    ClusterHandler,
+    parse_and_log_command,
 )
 from .helpers import is_hue_motion_sensor
 
@@ -111,18 +111,9 @@ class AnalogOutput(ClusterHandler):
         """Return cached value of application_type."""
         return self.cluster.get("application_type")
 
-    async def async_set_present_value(self, value: float) -> bool:
+    async def async_set_present_value(self, value: float) -> None:
         """Update present_value."""
-        try:
-            res = await self.cluster.write_attributes({"present_value": value})
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return False
-        if not isinstance(res, Exception) and all(
-            record.status == Status.SUCCESS for record in res[0]
-        ):
-            return True
-        return False
+        await self.write_attributes_safe({"present_value": value})
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(general.AnalogValue.cluster_id)
@@ -164,9 +155,7 @@ class BasicClusterHandler(ClusterHandler):
         """Initialize Basic cluster handler."""
         super().__init__(cluster, endpoint)
         if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
             self.ZCL_INIT_ATTRS["trigger_indicator"] = True
         elif (
             self.cluster.endpoint.manufacturer == "TexasInstruments"
@@ -297,7 +286,7 @@ class LevelControlClusterHandler(ClusterHandler):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         self.debug("received attribute: %s update with value: %s", attrid, value)
         if attrid == self.CURRENT_LEVEL:
@@ -358,7 +347,7 @@ class OnOffClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
         self._off_listener = None
 
-        if self.cluster.endpoint.model in (
+        if self.cluster.endpoint.model not in (
             "TS011F",
             "TS0121",
             "TS0001",
@@ -366,13 +355,19 @@ class OnOffClusterHandler(ClusterHandler):
             "TS0003",
             "TS0004",
         ):
-            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
-                self.ZCL_INIT_ATTRS.copy()
-            )
-            self.ZCL_INIT_ATTRS["backlight_mode"] = True
-            self.ZCL_INIT_ATTRS["power_on_state"] = True
-            if self.cluster.endpoint.model == "TS011F":
-                self.ZCL_INIT_ATTRS["child_lock"] = True
+            return
+
+        try:
+            self.cluster.find_attribute("backlight_mode")
+        except KeyError:
+            return
+
+        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+        self.ZCL_INIT_ATTRS["backlight_mode"] = True
+        self.ZCL_INIT_ATTRS["power_on_state"] = True
+
+        if self.cluster.endpoint.model == "TS011F":
+            self.ZCL_INIT_ATTRS["child_lock"] = True
 
     @classmethod
     def matches(cls, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> bool:
@@ -388,21 +383,19 @@ class OnOffClusterHandler(ClusterHandler):
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
-    async def turn_on(self) -> bool:
+    async def turn_on(self) -> None:
         """Turn the on off cluster on."""
         result = await self.on()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-            return False
+        if result[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to turn on: {result[1]}")
         self.cluster.update_attribute(self.ON_OFF, t.Bool.true)
-        return True
 
-    async def turn_off(self) -> bool:
+    async def turn_off(self) -> None:
         """Turn the on off cluster off."""
         result = await self.off()
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-            return False
+        if result[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to turn off: {result[1]}")
         self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
-        return True
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -438,7 +431,7 @@ class OnOffClusterHandler(ClusterHandler):
         self.cluster.update_attribute(self.ON_OFF, t.Bool.false)
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
             self.async_send_signal(
@@ -504,13 +497,7 @@ class PollControl(ClusterHandler):
 
     async def async_configure_cluster_handler_specific(self) -> None:
         """Configure cluster handler: set check-in interval."""
-        try:
-            res = await self.cluster.write_attributes(
-                {"checkin_interval": self.CHECKIN_INTERVAL}
-            )
-            self.debug("%ss check-in interval set: %s", self.CHECKIN_INTERVAL / 4, res)
-        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-            self.debug("Couldn't set check-in interval: %s", ex)
+        await self.write_attributes_safe({"checkin_interval": self.CHECKIN_INTERVAL})
 
     @callback
     def cluster_command(

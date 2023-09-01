@@ -8,8 +8,8 @@ import attr
 
 from homeassistant.core import HomeAssistant
 
-from . import debug_info
 from .. import mqtt
+from . import debug_info
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 

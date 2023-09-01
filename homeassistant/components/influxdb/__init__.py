@@ -145,12 +145,11 @@ def validate_version_specific_config(conf: dict) -> dict:
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
-    else:
-        if CONF_TOKEN in conf:
-            raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
-            )
+    elif CONF_TOKEN in conf:
+        raise vol.Invalid(
+            f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+            f" {CONF_API_VERSION} is {API_VERSION_2}"
+        )
 
     return conf
 

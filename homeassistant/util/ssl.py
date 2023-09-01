@@ -1,12 +1,11 @@
 """Helper to create SSL contexts."""
 import contextlib
+from enum import StrEnum
 from functools import cache
 from os import environ
 import ssl
 
 import certifi
-
-from homeassistant.backports.enum import StrEnum
 
 
 class SSLCipherList(StrEnum):
@@ -73,8 +72,6 @@ def create_no_verify_ssl_context(
     https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
     """
     sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    sslcontext.options |= ssl.OP_NO_SSLv2
-    sslcontext.options |= ssl.OP_NO_SSLv3
     sslcontext.check_hostname = False
     sslcontext.verify_mode = ssl.CERT_NONE
     with contextlib.suppress(AttributeError):
@@ -130,14 +127,9 @@ def server_context_modern() -> ssl.SSLContext:
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
 
-    context.options |= (
-        ssl.OP_NO_SSLv2
-        | ssl.OP_NO_SSLv3
-        | ssl.OP_NO_TLSv1
-        | ssl.OP_NO_TLSv1_1
-        | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
+    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 

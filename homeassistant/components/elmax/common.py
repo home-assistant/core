@@ -1,11 +1,11 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from logging import Logger
 
-import async_timeout
 from elmax_api.exceptions import (
     ElmaxApiError,
     ElmaxBadLoginError,
@@ -16,11 +16,13 @@ from elmax_api.exceptions import (
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
 from elmax_api.model.area import Area
+from elmax_api.model.cover import Cover
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -79,6 +81,12 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             return self._state_by_endpoint[area_id]
         raise HomeAssistantError("Unknown area")
 
+    def get_cover_state(self, cover_id: str) -> Cover:
+        """Return state of a specific cover."""
+        if self._state_by_endpoint is not None:
+            return self._state_by_endpoint[cover_id]
+        raise HomeAssistantError("Unknown cover")
+
     @property
     def http_client(self):
         """Return the current http client being used by this instance."""
@@ -86,7 +94,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
 
     async def _async_update_data(self):
         try:
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
                 # Retrieve the panel online status first
                 panels = await self._client.list_control_panels()
                 panel = next(
@@ -149,36 +157,17 @@ class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
         super().__init__(coordinator=coordinator)
         self._panel = panel
         self._device = elmax_device
-        self._panel_version = panel_version
-        self._client = coordinator.http_client
-
-    @property
-    def panel_id(self) -> str:
-        """Retrieve the panel id."""
-        return self._panel.hash
-
-    @property
-    def unique_id(self) -> str | None:
-        """Provide a unique id for this entity."""
-        return self._device.endpoint_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the entity name."""
-        return self._device.name
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self._panel.hash)},
-            "name": self._panel.get_name_by_user(
-                self.coordinator.http_client.get_authenticated_username()
+        self._attr_unique_id = elmax_device.endpoint_id
+        self._attr_name = elmax_device.name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, panel.hash)},
+            name=panel.get_name_by_user(
+                coordinator.http_client.get_authenticated_username()
             ),
-            "manufacturer": "Elmax",
-            "model": self._panel_version,
-            "sw_version": self._panel_version,
-        }
+            manufacturer="Elmax",
+            model=panel_version,
+            sw_version=panel_version,
+        )
 
     @property
     def available(self) -> bool:

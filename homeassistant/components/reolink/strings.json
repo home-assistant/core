@@ -22,7 +22,8 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user ''{username}'' has authorisation level ''{userlevel}''",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -43,9 +44,13 @@
       "title": "Reolink webhook URL uses HTTPS (SSL)",
       "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
     },
+    "ssl": {
+      "title": "Reolink incompatible with global SSL certificate",
+      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore, the Reolink device can not reach Home Assistant to push its motion/AI events. Please make sure the local HTTP address is not covered by the SSL certificate, by for instance using [NGINX add-on]({nginx_link}) instead of a globally enforced SSL certificate."
+    },
     "webhook_url": {
       "title": "Reolink webhook URL unreachable",
-      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL."
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
     },
     "enable_port": {
       "title": "Reolink port not enabled",
@@ -57,27 +62,191 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "face": {
+        "name": "Face"
+      },
+      "person": {
+        "name": "Person"
+      },
+      "vehicle": {
+        "name": "Vehicle"
+      },
+      "pet": {
+        "name": "Pet"
+      },
+      "visitor": {
+        "name": "Visitor"
+      },
+      "motion_lens_0": {
+        "name": "Motion lens 0"
+      },
+      "face_lens_0": {
+        "name": "Face lens 0"
+      },
+      "person_lens_0": {
+        "name": "Person lens 0"
+      },
+      "vehicle_lens_0": {
+        "name": "Vehicle lens 0"
+      },
+      "pet_lens_0": {
+        "name": "Pet lens 0"
+      },
+      "visitor_lens_0": {
+        "name": "Visitor lens 0"
+      },
+      "motion_lens_1": {
+        "name": "Motion lens 1"
+      },
+      "face_lens_1": {
+        "name": "Face lens 1"
+      },
+      "person_lens_1": {
+        "name": "Person lens 1"
+      },
+      "vehicle_lens_1": {
+        "name": "Vehicle lens 1"
+      },
+      "pet_lens_1": {
+        "name": "Pet lens 1"
+      },
+      "visitor_lens_1": {
+        "name": "Visitor lens 1"
+      }
+    },
+    "button": {
+      "ptz_stop": {
+        "name": "PTZ stop"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      },
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ zoom out"
+      },
+      "ptz_calibrate": {
+        "name": "PTZ calibrate"
+      },
+      "guard_go_to": {
+        "name": "Guard go to"
+      },
+      "guard_set": {
+        "name": "Guard set current position"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Floodlight"
+      },
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
+      "status_led": {
+        "name": "Status LED"
+      }
+    },
+    "number": {
+      "zoom": {
+        "name": "Zoom"
+      },
+      "focus": {
+        "name": "Focus"
+      },
+      "floodlight_brightness": {
+        "name": "Floodlight turn on brightness"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "guard_return_time": {
+        "name": "Guard return time"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "ai_face_sensititvity": {
+        "name": "AI face sensitivity"
+      },
+      "ai_person_sensititvity": {
+        "name": "AI person sensitivity"
+      },
+      "ai_vehicle_sensititvity": {
+        "name": "AI vehicle sensitivity"
+      },
+      "ai_pet_sensititvity": {
+        "name": "AI pet sensitivity"
+      },
+      "ai_face_delay": {
+        "name": "AI face delay"
+      },
+      "ai_person_delay": {
+        "name": "AI person delay"
+      },
+      "ai_vehicle_delay": {
+        "name": "AI vehicle delay"
+      },
+      "ai_pet_delay": {
+        "name": "AI pet delay"
+      },
+      "auto_quick_reply_time": {
+        "name": "Auto quick reply time"
+      },
+      "auto_track_limit_left": {
+        "name": "Auto track limit left"
+      },
+      "auto_track_limit_right": {
+        "name": "Auto track limit right"
+      },
+      "auto_track_disappear_time": {
+        "name": "Auto track disappear time"
+      },
+      "auto_track_stop_time": {
+        "name": "Auto track stop time"
+      }
+    },
     "select": {
       "floodlight_mode": {
+        "name": "Floodlight mode",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "auto": "Auto",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
         }
       },
       "day_night_mode": {
+        "name": "Day night mode",
         "state": {
           "auto": "Auto",
           "color": "Color",
           "blackwhite": "Black&White"
         }
       },
+      "ptz_preset": {
+        "name": "PTZ preset"
+      },
       "auto_quick_reply_message": {
+        "name": "Auto quick reply message",
         "state": {
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "auto_track_method": {
+        "name": "Auto track method",
         "state": {
           "digital": "Digital",
           "digitalfirst": "Digital first",
@@ -85,11 +254,60 @@
         }
       },
       "status_led": {
+        "name": "Status LED",
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
           "alwaysonatnight": "Auto & always on at night"
         }
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "ptz_pan_position": {
+        "name": "PTZ pan position"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
+    "switch": {
+      "record_audio": {
+        "name": "Record audio"
+      },
+      "siren_on_event": {
+        "name": "Siren on event"
+      },
+      "auto_tracking": {
+        "name": "Auto tracking"
+      },
+      "auto_focus": {
+        "name": "Auto focus"
+      },
+      "gaurd_return": {
+        "name": "Guard return"
+      },
+      "email": {
+        "name": "Email on event"
+      },
+      "ftp_upload": {
+        "name": "FTP upload"
+      },
+      "push_notifications": {
+        "name": "Push notifications"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "buzzer": {
+        "name": "Buzzer on event"
+      },
+      "doorbell_button_sound": {
+        "name": "Doorbell button sound"
       }
     }
   }

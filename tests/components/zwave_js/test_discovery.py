@@ -1,6 +1,19 @@
-"""Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
+"""Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
@@ -9,6 +22,7 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -141,3 +155,145 @@ async def test_merten_507801_disabled_enitites(
         )
         assert updated_entry != entry
         assert updated_entry.disabled is False
+
+
+async def test_zooz_zen72(
+    hass: HomeAssistant, client, switch_zooz_zen72, integration
+) -> None:
+    """Test that Zooz ZEN72 Indicators are discovered as number entities."""
+    ent_reg = er.async_get(hass)
+    assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
+    entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.CONFIG
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 5,
+        },
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == switch_zooz_zen72.node_id
+    assert args["valueId"] == {
+        "commandClass": 135,
+        "endpoint": 0,
+        "property": "value",
+    }
+    assert args["value"] == 5
+
+    client.async_send_command.reset_mock()
+
+    entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.CONFIG
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == switch_zooz_zen72.node_id
+    assert args["valueId"] == {
+        "commandClass": 135,
+        "endpoint": 0,
+        "property": "identify",
+    }
+    assert args["value"] is True
+
+
+async def test_indicator_test(
+    hass: HomeAssistant, client, indicator_test, integration
+) -> None:
+    """Test that Indicators are discovered properly.
+
+    This test covers indicators that we don't already have device fixtures for.
+    """
+    ent_reg = er.async_get(hass)
+    assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+    assert (
+        len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    )  # include node + controller status
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    client.async_send_command.reset_mock()
+
+    entity_id = "sensor.this_is_a_fake_device_sensor"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+
+    client.async_send_command.reset_mock()
+
+    entity_id = "switch.this_is_a_fake_device_switch"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert entry.entity_category == EntityCategory.CONFIG
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == indicator_test.node_id
+    assert args["valueId"] == {
+        "commandClass": 135,
+        "endpoint": 0,
+        "property": "Test",
+        "propertyKey": "Switch",
+    }
+    assert args["value"] is True
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == indicator_test.node_id
+    assert args["valueId"] == {
+        "commandClass": 135,
+        "endpoint": 0,
+        "property": "Test",
+        "propertyKey": "Switch",
+    }
+    assert args["value"] is False

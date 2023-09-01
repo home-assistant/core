@@ -1,4 +1,5 @@
 """The tests for the Modbus climate component."""
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -22,6 +23,8 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
+    CONF_WRITE_REGISTERS,
     MODBUS_DOMAIN,
     DataType,
 )
@@ -86,8 +89,45 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_HVAC_ONOFF_REGISTER: 12,
+                    CONF_TARGET_TEMP_WRITE_REGISTERS: True,
+                    CONF_WRITE_REGISTERS: True,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 12,
                     CONF_HVAC_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            "state_off": 0,
+                            "state_heat": 1,
+                            "state_cool": 2,
+                            "state_heat_cool": 3,
+                            "state_dry": 4,
+                            "state_fan_only": 5,
+                            "state_auto": 6,
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 12,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_WRITE_REGISTERS: True,
                         CONF_HVAC_MODE_VALUES: {
                             "state_off": 0,
                             "state_heat": 1,
@@ -353,6 +393,22 @@ async def test_service_climate_update(
                 ]
             },
         ),
+        (
+            25,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DataType.INT16,
+                        CONF_TARGET_TEMP_WRITE_REGISTERS: True,
+                    }
+                ]
+            },
+        ),
     ],
 )
 async def test_service_climate_set_temperature(
@@ -413,6 +469,52 @@ async def test_service_climate_set_temperature(
                             },
                         },
                         CONF_HVAC_ONOFF_REGISTER: 119,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.HEAT,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                            CONF_WRITE_REGISTERS: True,
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.OFF,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 1,
+                                CONF_HVAC_MODE_HEAT: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                        CONF_WRITE_REGISTERS: True,
                     }
                 ]
             },
@@ -496,16 +598,15 @@ async def test_restore_state_climate(
     ],
 )
 async def test_lazy_error_climate(
-    hass: HomeAssistant, mock_do_cycle, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 

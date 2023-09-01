@@ -726,6 +726,10 @@ class DeviceTracker:
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
+
     host_name: str | None = None
     location_name: str | None = None
     gps: GPSType | None = None

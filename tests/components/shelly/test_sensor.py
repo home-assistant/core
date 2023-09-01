@@ -1,4 +1,6 @@
 """Tests for Shelly sensor platform."""
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import (
@@ -20,7 +22,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -89,7 +91,7 @@ async def test_power_factory_without_unit_migration(
 
 
 async def test_block_rest_sensor(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block REST sensor."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "rssi")
@@ -98,7 +100,7 @@ async def test_block_rest_sensor(
     assert hass.states.get(entity_id).state == "-64"
 
     monkeypatch.setitem(mock_block_device.status["wifi_sta"], "rssi", -71)
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == "-71"
 
@@ -137,7 +139,9 @@ async def test_block_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -216,7 +220,9 @@ async def test_block_not_matched_restored_sleeping_sensor(
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
     )
-    mock_restore_cache(hass, [State(entity_id, "20.4")])
+    extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
+
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -274,6 +280,16 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+async def test_rpc_illuminance_sensor(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC illuminacne sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "345"
+
+
 async def test_rpc_sensor_error(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
@@ -290,7 +306,7 @@ async def test_rpc_sensor_error(
 
 
 async def test_rpc_polling_sensor(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
 ) -> None:
     """Test RPC polling sensor."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -299,7 +315,7 @@ async def test_rpc_polling_sensor(
     assert hass.states.get(entity_id).state == "-63"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "wifi", "rssi", "-70")
-    await mock_polling_rpc_update(hass)
+    await mock_polling_rpc_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == "-70"
 
@@ -347,8 +363,9 @@ async def test_rpc_restored_sleeping_sensor(
         "temperature:0-temperature_0",
         entry,
     )
+    extra_data = {"native_value": "21.0", "native_unit_of_measurement": "°C"}
 
-    mock_restore_cache(hass, [State(entity_id, "21.0")])
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
 
     await hass.config_entries.async_setup(entry.entry_id)

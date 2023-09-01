@@ -10,6 +10,7 @@ from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
@@ -59,6 +60,7 @@ class FakeScanner(BaseHaRemoteScanner):
             advertisement_data.manufacturer_data,
             advertisement_data.tx_power,
             device.details | {"scanner_specific_data": "test"},
+            MONOTONIC_TIME(),
         )
 
 

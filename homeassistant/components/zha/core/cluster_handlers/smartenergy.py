@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
-from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -16,6 +15,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
+from . import AttrReportConfig, ClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint

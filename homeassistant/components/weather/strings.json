@@ -30,6 +30,9 @@
         "ozone": {
           "name": "Ozone"
         },
+        "cloud_coverage": {
+          "name": "Cloud coverage"
+        },
         "precipitation_unit": {
           "name": "Precipitation unit"
         },
@@ -38,6 +41,12 @@
         },
         "pressure_unit": {
           "name": "Pressure unit"
+        },
+        "apparent_temperature": {
+          "name": "Apparent temperature"
+        },
+        "dew_point": {
+          "name": "Dew point temperature"
         },
         "temperature": {
           "name": "Temperature"
@@ -54,13 +63,46 @@
         "wind_bearing": {
           "name": "Wind bearing"
         },
+        "wind_gust_speed": {
+          "name": "Wind gust speed"
+        },
         "wind_speed": {
           "name": "Wind speed"
         },
         "wind_speed_unit": {
           "name": "Wind speed unit"
+        },
+        "uv_index": {
+          "name": "UV index"
         }
       }
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly",
+        "twice_daily": "Twice daily"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Get forecast",
+      "description": "Get weather forecast.",
+      "fields": {
+        "type": {
+          "name": "Forecast type",
+          "description": "Forecast type: daily, hourly or twice daily."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_weather_forecast": {
+      "title": "The {platform} integration is using deprecated forecast",
+      "description": "The integration `{platform}` is using the deprecated forecast attribute.\n\nPlease {report_issue}."
     }
   }
 }
