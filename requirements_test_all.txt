@@ -340,7 +340,7 @@ arcam-fmj==1.3.0
 async-upnp-client==0.33.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.4
+asyncsleepiq==1.3.7
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
