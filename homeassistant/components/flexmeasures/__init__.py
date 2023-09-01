@@ -90,6 +90,9 @@ async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
+    if DOMAIN not in hass.data:
+        return True
+
     # Remove services
     await async_unload_services(hass)
 
