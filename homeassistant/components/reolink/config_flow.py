@@ -16,6 +16,7 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
+from . import ReolinkData
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
@@ -103,10 +104,12 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
             # check the existing entry indeed has a connection problem
-            reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(existing_entry.entry_id)
+            reolink_data: ReolinkData | None = self.hass.data.get(DOMAIN, {}).get(
+                existing_entry.entry_id
+            )
             if (
                 reolink_data
-                and existing_entry.state == config_entries.ConfigEntryState.LOADED 
+                and existing_entry.state == config_entries.ConfigEntryState.LOADED
                 and reolink_data.device_coordinator.last_update_success
             ):
                 _LOGGER.debug(
