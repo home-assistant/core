@@ -132,16 +132,21 @@ def _format_settings_diff(old_state: NetworkBackup, new_state: NetworkBackup) ->
     """Format the difference between two network backups."""
     lines: list[str] = []
 
-    def _add_difference(lines: list[str], text: str, old: Any, new: Any) -> None:
+    def _add_difference(
+        lines: list[str], text: str, old: Any, new: Any, pre: bool = True
+    ) -> None:
         """Add a line to the list if the values are different."""
+        wrap = "`" if pre else ""
+
         if old != new:
-            lines.append(f"{text}: {old} \u2192 {new}")
+            lines.append(f"{text}: {wrap}{old}{wrap} \u2192 {wrap}{new}{wrap}")
 
     _add_difference(
         lines,
         "Channel",
         old=old_state.network_info.channel,
         new=new_state.network_info.channel,
+        pre=False,
     )
     _add_difference(
         lines,
@@ -166,6 +171,7 @@ def _format_settings_diff(old_state: NetworkBackup, new_state: NetworkBackup) ->
         "NWK update ID",
         old=old_state.network_info.nwk_update_id,
         new=new_state.network_info.nwk_update_id,
+        pre=False,
     )
     _add_difference(
         lines,
