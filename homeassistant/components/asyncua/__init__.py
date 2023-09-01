@@ -120,9 +120,11 @@ async def async_setup(
                 username=hub.get(CONF_HUB_USERNAME),
                 password=hub.get(CONF_HUB_PASSWORD),
             ),
-            update_interval_in_second=hub.get(
-                CONF_HUB_SCAN_INTERVAL,
-                DEFAULT_SCAN_INTERVAL,
+            update_interval_in_second=timedelta(
+                seconds=hub.get(
+                    CONF_HUB_SCAN_INTERVAL,
+                    DEFAULT_SCAN_INTERVAL,
+                ),
             ),
         )
         await hass.data[DOMAIN][hub[CONF_HUB_ID]].async_config_entry_first_refresh()
