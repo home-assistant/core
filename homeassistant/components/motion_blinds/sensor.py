@@ -1,5 +1,5 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import DEVICE_TYPES_WIFI, BlindType
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
-from .gateway import device_name
 from .entity import MotionCoordinatorEntity
+from .gateway import device_name
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 
