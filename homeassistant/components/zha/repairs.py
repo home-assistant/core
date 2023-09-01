@@ -239,7 +239,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
         """Handle the first step of a fix flow."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["use_new_settings", "restore_old_settings"],
+            menu_options=["restore_old_settings", "use_new_settings"],
             description_placeholders={
                 "diff": _format_settings_diff(self._old_state, self._new_state)
             },
