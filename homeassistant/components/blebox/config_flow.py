@@ -104,7 +104,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_config["name"] = product.name
         # Check if configured but IP changed since
         await self.async_set_unique_id(product.unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
         self.context.update(
             {
                 "title_placeholders": {
