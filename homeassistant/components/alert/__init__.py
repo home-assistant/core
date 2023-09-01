@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+import logging
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -15,9 +16,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
+    SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -25,16 +28,18 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.dt import now
@@ -53,141 +58,206 @@ from .const import (
     LOGGER,
 )
 
-ALERT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
-        vol.Required(CONF_REPEAT): vol.All(
-            cv.ensure_list,
-            [vol.Coerce(float)],
-            # Minimum delay is 1 second = 0.016 minutes
-            [vol.Range(min=0.016)],
-        ),
-        vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
-        vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
-        vol.Optional(CONF_ALERT_MESSAGE): cv.template,
-        vol.Optional(CONF_DONE_MESSAGE): cv.template,
-        vol.Optional(CONF_TITLE): cv.template,
-        vol.Optional(CONF_DATA): dict,
-        vol.Optional(CONF_NOTIFIERS, default=list): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
-)
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 0
+
+STORAGE_FIELDS = {
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
+    vol.Required(CONF_REPEAT): vol.All(
+        cv.ensure_list,
+        [vol.Coerce(float)],
+        # Minimum delay is 1 second = 0.016 minutes
+        [vol.Range(min=0.016)],
+    ),
+    vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
+    vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+    vol.Optional(CONF_ALERT_MESSAGE): cv.template,
+    vol.Optional(CONF_DONE_MESSAGE): cv.template,
+    vol.Optional(CONF_TITLE): cv.template,
+    vol.Optional(CONF_DATA): dict,
+    vol.Optional(CONF_NOTIFIERS, default=list): vol.All(cv.ensure_list, [cv.string]),
+}
+
+ALERT_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+
+class AlertStore(Store):
+    """Store entity registry data."""
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
+
     component = EntityComponent[Alert](LOGGER, DOMAIN, hass)
 
-    entities: list[Alert] = []
+    id_manager = collection.IDManager()
 
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Alert
+    )
 
-        name = cfg[CONF_NAME]
-        watched_entity_id = cfg[CONF_ENTITY_ID]
-        alert_state = cfg[CONF_STATE]
-        repeat = cfg[CONF_REPEAT]
-        skip_first = cfg[CONF_SKIP_FIRST]
-        message_template = cfg.get(CONF_ALERT_MESSAGE)
-        done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg[CONF_NOTIFIERS]
-        can_ack = cfg[CONF_CAN_ACK]
-        title_template = cfg.get(CONF_TITLE)
-        data = cfg.get(CONF_DATA)
+    storage_collection = AlertStorageCollection(
+        AlertStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        ),
+        id_manager,
+    )
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Alert
+    )
 
-        entities.append(
-            Alert(
-                hass,
-                object_id,
-                name,
-                watched_entity_id,
-                alert_state,
-                repeat,
-                skip_first,
-                message_template,
-                done_message_template,
-                notifiers,
-                can_ack,
-                title_template,
-                data,
-            )
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **cfg} for id_, cfg in config[DOMAIN].items()]
+    )
+    await storage_collection.async_load()
+
+    collection.DictStorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
+    ).async_setup(hass)
+
+    async def reload_service_handler(_: ServiceCall) -> None:
+        """Reload yaml entities."""
+        conf = await component.async_prepare_reload(skip_reset=True) or {}
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
 
-    if not entities:
-        return False
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
 
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
-    await component.async_add_entities(entities)
-
     return True
 
 
-class Alert(Entity):
+class AlertStorageCollection(collection.DictStorageCollection):
+    """Input storage based collection."""
+
+    CREATE_UPDATE_SCHEMA = ALERT_SCHEMA
+
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:  # type: ignore[empty-body]
+        """Validate the config is valid."""
+
+    @callback
+    def _get_suggested_id(self, info: dict[str, Any]) -> str:  # type: ignore[empty-body]
+        """Suggest an ID based on the config."""
+
+    async def _update_data(  # type: ignore[empty-body]
+        self, item: dict[str, Any], update_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Return a new updated data object."""
+
+
+class Alert(collection.CollectionEntity):
     """Representation of an alert."""
 
     _attr_should_poll = False
 
+    _alert_state: str
+    _can_ack: bool
+    _config: ConfigType
+    _skip_first: bool
+    _done_message_template: Template | None
+    _title_template: Template | None
+    _message_template: Template | None
+    _data: dict[str, Any] | None
+
     def __init__(
         self,
-        hass: HomeAssistant,
-        entity_id: str,
-        name: str,
-        watched_entity_id: str,
-        state: str,
-        repeat: list[float],
-        skip_first: bool,
-        message_template: Template | None,
-        done_message_template: Template | None,
-        notifiers: list[str],
-        can_ack: bool,
-        title_template: Template | None,
-        data: dict[Any, Any],
+        config: ConfigType,
     ) -> None:
         """Initialize the alert."""
-        self.hass = hass
-        self._attr_name = name
-        self._alert_state = state
-        self._skip_first = skip_first
-        self._data = data
-
-        self._message_template = message_template
-        if self._message_template is not None:
-            self._message_template.hass = hass
-
-        self._done_message_template = done_message_template
-        if self._done_message_template is not None:
-            self._done_message_template.hass = hass
-
-        self._title_template = title_template
-        if self._title_template is not None:
-            self._title_template.hass = hass
-
-        self._notifiers = notifiers
-        self._can_ack = can_ack
-
-        self._delay = [timedelta(minutes=val) for val in repeat]
         self._next_delay = 0
 
         self._firing = False
         self._ack = False
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
-        self.entity_id = f"{DOMAIN}.{entity_id}"
 
-        async_track_state_change_event(
-            hass, [watched_entity_id], self.watched_entity_change
+        self._tracker: Callable[[], None] | None = None
+        self._async_load_config(config)
+
+    @callback
+    def _async_load_config(self, config: ConfigType) -> None:
+        """Load the alert config."""
+        self._attr_name = config[CONF_NAME]
+        self._alert_state = config[CONF_STATE]
+        self._skip_first = config[CONF_SKIP_FIRST]
+        self._data = config.get(CONF_DATA)
+
+        self._message_template = config.get(CONF_ALERT_MESSAGE)
+        self._done_message_template = config.get(CONF_DONE_MESSAGE)
+        self._title_template = config.get(CONF_TITLE)
+
+        self._notifiers = config[CONF_NOTIFIERS]
+        self._can_ack = config[CONF_CAN_ACK]
+
+        self._delay = [timedelta(minutes=val) for val in config[CONF_REPEAT]]
+        self._config = config
+
+    async def async_added_to_hass(self) -> None:
+        """Initialize alert when the entity is loaded."""
+        self._async_init_state_tracker()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up alert tracker when the entity is to be removed."""
+        if self._tracker is not None:
+            self._tracker()
+            self._tracker = None
+
+    async def async_update_config(self, config: ConfigType) -> None:
+        """Handle when the config is loaded or updated."""
+        self._async_load_config(config)
+        self._async_init_state_tracker()
+
+    @callback
+    def _async_init_state_tracker(self) -> None:
+        """Initialize state tracker and templates."""
+        if self._tracker is not None:
+            self._tracker()
+            self._tracker = None
+        self._tracker = async_track_state_change_event(
+            self.hass, [self._config[CONF_ENTITY_ID]], self.watched_entity_change
         )
+        if self._message_template is not None:
+            self._message_template.hass = self.hass
+
+        self._done_message_template = self._config.get(CONF_DONE_MESSAGE)
+        if self._done_message_template is not None:
+            self._done_message_template.hass = self.hass
+
+        self._title_template = self._config.get(CONF_TITLE)
+        if self._title_template is not None:
+            self._title_template.hass = self.hass
+
+    @classmethod
+    def from_storage(cls, config: ConfigType) -> Self:  # type: ignore[empty-body]
+        """Return entity instance initialized from storage."""
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
+        alert = cls(config)
+        alert.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
+        return alert
 
     @property
     def state(self) -> str:
