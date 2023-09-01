@@ -112,6 +112,8 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
 class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     """A representation of an ISY program switch."""
 
+    _attr_icon = "mdi:script-text-outline"  # Matches isy program icon
+
     @property
     def is_on(self) -> bool:
         """Get whether the ISY switch program is on."""
@@ -130,11 +132,6 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
             raise HomeAssistantError(
                 f"Unable to run 'else' clause on program switch {self._actions.address}"
             )
-
-    @property
-    def icon(self) -> str:
-        """Get the icon for programs."""
-        return "mdi:script-text-outline"  # Matches isy program icon
 
 
 class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
