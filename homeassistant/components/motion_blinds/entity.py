@@ -20,8 +20,6 @@ from .const import (
 )
 from .gateway import device_name
 
-_T = TypeVar("_T")
-
 
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
     """Representation of a Motion Blind entity."""
