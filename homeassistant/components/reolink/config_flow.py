@@ -123,8 +123,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # check if the camera is reachable at the new IP
             host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
             try:
-                host.api.get_state("GetLocalLink")
-                host.api.logout()
+                await host.api.get_state("GetLocalLink")
+                await host.api.logout()
             except ReolinkError as err:
                 _LOGGER.debug(
                     "Reolink DHCP reported new IP '%s', "
