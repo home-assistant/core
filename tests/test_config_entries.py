@@ -40,7 +40,6 @@ from .common import (
     MockPlatform,
     async_fire_time_changed,
     mock_config_flow,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -605,7 +604,10 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=lambda *args: mock_coro(True))
+        hass,
+        MockModule(
+            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
+        ),
     )
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -3379,11 +3381,13 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match(
@@ -3460,11 +3464,13 @@ async def test__async_abort_entries_match(
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
-        ({"vendor": "data"}, "no_match"),
+        # The next two data sets ensure options or data match
+        # as options previously shadowed data when matching.
+        ({"vendor": "data"}, "already_configured"),
         (
             {"vendor": "options"},
             "already_configured",
-        ),  # ensure options takes precedence over data
+        ),
     ],
 )
 async def test__async_abort_entries_match_options_flow(
@@ -3962,9 +3968,8 @@ async def test_preview_supported(
             """Mock Reauth."""
             return self.async_show_form(step_id="next", preview="test")
 
-        @callback
         @staticmethod
-        def async_setup_preview(hass: HomeAssistant) -> None:
+        async def async_setup_preview(hass: HomeAssistant) -> None:
             """Set up preview."""
             preview_calls.append(None)
 

@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    await controller.async_update_device_registry()
+    controller.async_update_device_registry()
 
     if len(hass.data[UNIFI_DOMAIN]) == 1:
         async_setup_services(hass)

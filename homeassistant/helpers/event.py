@@ -68,6 +68,10 @@ _ENTITIES_LISTENER = "entities"
 
 _LOGGER = logging.getLogger(__name__)
 
+# Used to spread async_track_utc_time_change listeners and DataUpdateCoordinator
+# refresh cycles between RANDOM_MICROSECOND_MIN..RANDOM_MICROSECOND_MAX.
+# The values have been determined experimentally in production testing, background
+# in PR https://github.com/home-assistant/core/pull/82233
 RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
@@ -960,7 +964,7 @@ class TrackTemplateResultInfo:
         self._update_time_listeners()
         _LOGGER.debug(
             (
-                "Template group %s listens for %s, first render blocker by super"
+                "Template group %s listens for %s, first render blocked by super"
                 " template: %s"
             ),
             self._track_templates,
@@ -1323,9 +1327,7 @@ def async_track_same_state(
         if not async_check_same_func(entity, from_state, to_state):
             clear_listener()
 
-    async_remove_state_for_listener = async_track_point_in_utc_time(
-        hass, state_for_listener, dt_util.utcnow() + period
-    )
+    async_remove_state_for_listener = async_call_later(hass, period, state_for_listener)
 
     if entity_ids == MATCH_ALL:
         async_remove_state_for_cancel = hass.bus.async_listen(
@@ -1432,6 +1434,37 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 
 @callback
 @bind_hass
+def async_call_at(
+    hass: HomeAssistant,
+    action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+    | Callable[[datetime], Coroutine[Any, Any, None] | None],
+    loop_time: float,
+) -> CALLBACK_TYPE:
+    """Add a listener that is called at <loop_time>."""
+
+    @callback
+    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
+        """Call the action."""
+        hass.async_run_hass_job(job, time_tracker_utcnow())
+
+    job = (
+        action
+        if isinstance(action, HassJob)
+        else HassJob(action, f"call_at {loop_time}")
+    )
+    cancel_callback = hass.loop.call_at(loop_time, run_action, job)
+
+    @callback
+    def unsub_call_later_listener() -> None:
+        """Cancel the call_later."""
+        assert cancel_callback is not None
+        cancel_callback.cancel()
+
+    return unsub_call_later_listener
+
+
+@callback
+@bind_hass
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
@@ -1479,14 +1512,11 @@ def async_track_time_interval(
     """Add a listener that fires repetitively at every timedelta interval."""
     remove: CALLBACK_TYPE
     interval_listener_job: HassJob[[datetime], None]
+    interval_seconds = interval.total_seconds()
 
     job = HassJob(
         action, f"track time interval {interval}", cancel_on_shutdown=cancel_on_shutdown
     )
-
-    def next_interval() -> datetime:
-        """Return the next interval."""
-        return dt_util.utcnow() + interval
 
     @callback
     def interval_listener(now: datetime) -> None:
@@ -1494,9 +1524,7 @@ def async_track_time_interval(
         nonlocal remove
         nonlocal interval_listener_job
 
-        remove = async_track_point_in_utc_time(
-            hass, interval_listener_job, next_interval()
-        )
+        remove = async_call_later(hass, interval_seconds, interval_listener_job)
         hass.async_run_hass_job(job, now)
 
     if name:
@@ -1507,7 +1535,7 @@ def async_track_time_interval(
     interval_listener_job = HassJob(
         interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
     )
-    remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
+    remove = async_call_later(hass, interval_seconds, interval_listener_job)
 
     def remove_listener() -> None:
         """Remove interval listener."""
@@ -1640,7 +1668,7 @@ def async_track_utc_time_change(
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
-    # Avoid aligning all time trackers to the same second
+    # Avoid aligning all time trackers to the same fraction of a second
     # since it can create a thundering herd problem
     # https://github.com/home-assistant/core/issues/82231
     microsecond = randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX)

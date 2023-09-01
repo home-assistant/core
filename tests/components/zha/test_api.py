@@ -71,7 +71,7 @@ async def test_async_get_network_settings_missing(
     await setup_zha()
 
     gateway = api._get_gateway(hass)
-    await zha.async_unload_entry(hass, gateway.config_entry)
+    await gateway.config_entry.async_unload(hass)
 
     # Network settings were never loaded for whatever reason
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()

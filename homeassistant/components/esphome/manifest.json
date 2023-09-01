@@ -2,7 +2,7 @@
   "domain": "esphome",
   "name": "ESPHome",
   "after_dependencies": ["zeroconf", "tag"],
-  "codeowners": ["@OttoWinter", "@jesserockz", "@bdraco"],
+  "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
   "dependencies": ["assist_pipeline", "bluetooth"],
   "dhcp": [
@@ -16,8 +16,8 @@
   "loggers": ["aioesphomeapi", "noiseprotocol"],
   "requirements": [
     "async_interrupt==1.1.1",
-    "aioesphomeapi==16.0.1",
-    "bluetooth-data-tools==1.9.0",
+    "aioesphomeapi==16.0.3",
+    "bluetooth-data-tools==1.9.1",
     "esphome-dashboard-api==1.2.3"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
