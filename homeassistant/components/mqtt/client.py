@@ -110,7 +110,7 @@ def publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
+    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
 async def async_publish(
@@ -376,6 +376,7 @@ class MQTT:
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         self.hass = hass
+        self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
 
@@ -806,7 +807,7 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
-        self.hass.add_job(self._mqtt_handle_message, msg)
+        self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
