@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from bluetooth_data_tools import calculate_distance_meters
+
 from homeassistant.components import bluetooth
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +19,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import BasePrivateDeviceEntity
-from .utils import calculate_distance_meters
 
 
 @dataclass

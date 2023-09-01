@@ -1,12 +1,12 @@
 """Central manager for tracking devices with random but resolvable MAC addresses."""
 from __future__ import annotations
 
-import binascii
 from collections.abc import Callable
 import logging
 from typing import cast
 
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from bluetooth_data_tools import get_cipher_for_irk, resolve_private_address
+from cryptography.hazmat.primitives.ciphers import Cipher
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -16,40 +16,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PADDING = b"\x00" * 13
-
 UnavailableCallback = Callable[[bluetooth.BluetoothServiceInfoBleak], None]
 Cancellable = Callable[[], None]
-
-
-def _async_get_cipher_for_irk(irk: bytes) -> Cipher:
-    return Cipher(algorithms.AES(irk), modes.ECB())
-
-
-def _async_service_info_matches_irk(
-    service_info: bluetooth.BluetoothServiceInfoBleak, cipher: Cipher
-) -> bool:
-    # https://www.mdpi.com/2227-7390/10/22/4346
-    # Use 128bit IRK as encryption key for ECB AES.
-    # Encrypt prand (the MSB, top 24bits of MAC address) with the IRK
-    # It's zero padded to 128bits.
-    # The top 24bits of the cipher text are taken as a hash
-    # This hash should match the low 24bits of the MAC address.
-    rpa = binascii.unhexlify(service_info.address.replace(":", ""))
-
-    if rpa[0] & 0xC0 != 0x40:
-        # Not an RPA
-        return False
-
-    pt = PADDING + rpa[:3]
-
-    encryptor = cipher.encryptor()
-    ct = encryptor.update(pt) + encryptor.finalize()
-
-    if ct[13:] != rpa[3:]:
-        return False
-
-    return True
 
 
 def async_last_service_info(
@@ -65,10 +33,10 @@ def async_last_service_info(
     # the coordinator doesn't know about the IRK, so doesn't optimise this lookup.
 
     cur: bluetooth.BluetoothServiceInfoBleak | None = None
-    cipher = _async_get_cipher_for_irk(irk)
+    cipher = get_cipher_for_irk(irk)
 
     for service_info in bluetooth.async_discovered_service_info(hass, False):
-        if _async_service_info_matches_irk(service_info, cipher):
+        if resolve_private_address(cipher, service_info.address):
             if not cur or cur.time < service_info.time:
                 cur = service_info
 
@@ -168,7 +136,7 @@ class PrivateDevicesCoordinator:
             return
 
         for irk, cipher in self._irks.items():
-            if _async_service_info_matches_irk(service_info, cipher):
+            if resolve_private_address(cipher, service_info.address):
                 self._async_irk_resolved_to_mac(irk, mac)
                 if callbacks := self._service_info_callbacks.get(irk):
                     for cb in callbacks:
@@ -187,7 +155,7 @@ class PrivateDevicesCoordinator:
         if irk not in self._irks:
             if service_info := async_last_service_info(self.hass, irk):
                 self._async_irk_resolved_to_mac(irk, service_info.address)
-            self._irks[irk] = _async_get_cipher_for_irk(irk)
+            self._irks[irk] = get_cipher_for_irk(irk)
 
     def _async_maybe_forget_irk(self, irk: bytes) -> None:
         """If no downstream caller is tracking this irk, lets forget it."""

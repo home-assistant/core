@@ -549,6 +549,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
+# homeassistant.components.private_ble_device
 bluetooth-data-tools==1.11.0
 
 # homeassistant.components.bond
