@@ -5,6 +5,7 @@ import json
 import logging
 
 from flexmeasures_client.s2.cem import CEM
+from flexmeasures_client.client import FlexMeasuresClient
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 import pytz
 import voluptuous as vol
@@ -42,7 +43,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up services."""
 
     # TODO: Is this the correct way and place to set this?
-    client = hass.data[DOMAIN]["fm_client"]
+    client: FlexMeasuresClient = hass.data[DOMAIN]["fm_client"]
 
     config_data = dict(entry.data)
 
@@ -105,6 +106,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
     async def post_measurements(call: ServiceCall):
+        print("POST MEASUREMENTS")
         client.post_measurements(
             sensor_id=call.data.get("sensor_id"),
             start=call.data.get("start"),
