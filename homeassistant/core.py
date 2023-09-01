@@ -1257,7 +1257,7 @@ class State:
                 "State max length is 255 characters."
             )
 
-        self.entity_id = entity_id.lower()
+        self.entity_id = entity_id
         self.state = state
         self.attributes = ReadOnlyDict(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
