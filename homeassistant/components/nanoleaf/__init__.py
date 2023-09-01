@@ -9,7 +9,9 @@ import logging
 from aionanoleaf import (
     EffectsEvent,
     InvalidToken,
+    LayoutEvent,
     Nanoleaf,
+    Panel,
     StateEvent,
     TouchEvent,
     Unavailable,
@@ -49,6 +51,7 @@ class NanoleafEntryData:
     device: Nanoleaf
     coordinator: DataUpdateCoordinator[None]
     event_listener: asyncio.Task
+    panels: set[Panel] | None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -105,17 +108,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
 
+    async def layout_event_callback(event: LayoutEvent | None) -> None:
+        """Handle a layout change event."""
+        entryData: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+        entryData.panels = entryData.device.panels
+
     event_listener = asyncio.create_task(
         nanoleaf.listen_events(
             state_callback=light_event_callback,
             effects_callback=light_event_callback,
+            layout_callback=layout_event_callback,
             touch_callback=touch_event_callback if supports_touch else None,
         )
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = NanoleafEntryData(
-        nanoleaf, coordinator, event_listener
+        nanoleaf, coordinator, event_listener, None
     )
+
+    await layout_event_callback(None)  # Populate the panel cache
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
