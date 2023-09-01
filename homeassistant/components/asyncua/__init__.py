@@ -54,7 +54,7 @@ BASE_SCHEMA = vol.Schema(
         vol.Required(CONF_HUB_URL): cv.string,
         vol.Optional(CONF_HUB_MANUFACTURER, default=""): cv.string,
         vol.Optional(CONF_HUB_MODEL, default=""): cv.string,
-        vol.Optional(CONF_HUB_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.string,
+        vol.Optional(CONF_HUB_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
         vol.Inclusive(CONF_HUB_USERNAME, None): cv.string,
         vol.Inclusive(CONF_HUB_PASSWORD, None): cv.string,
     }
@@ -121,13 +121,14 @@ async def async_setup(
                 password=hub.get(CONF_HUB_PASSWORD),
             ),
             update_interval_in_second=hub.get(
-                CONF_HUB_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                CONF_HUB_SCAN_INTERVAL,
+                DEFAULT_SCAN_INTERVAL,
             ),
         )
         await hass.data[DOMAIN][hub[CONF_HUB_ID]].async_config_entry_first_refresh()
         hass.services.async_register(
             domain=DOMAIN,
-            service=f"{hub[CONF_HUB_ID]}.{SERVICE_SET_VALUE}",
+            service=f"{SERVICE_SET_VALUE}",
             service_func=_set_value,
             schema=SERVICE_SET_VALUE_SCHEMA,
         )
