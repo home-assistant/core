@@ -69,7 +69,7 @@ async def test_report_state(
 
     # Test that if serialize returns same value, we don't send
     with patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
         return_value={"same": "info"},
     ), patch.object(BASIC_CONFIG, "async_report_state_all", AsyncMock()) as mock_report:
         # New state, so reported
@@ -104,7 +104,7 @@ async def test_report_state(
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report, patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
         side_effect=error.SmartHomeError("mock-error", "mock-msg"),
     ):
         hass.states.async_set("light.kitchen", "off")
