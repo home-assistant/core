@@ -18,7 +18,7 @@ from tests.components.matrix.conftest import (
 class LoginTestParameters:
     """Dataclass of parameters representing the login parameters and expected result state."""
 
-    valid_password: bool
+    password: str
     access_token: dict[str, str]
     expected_login_state: bool
     expected_caplog_messages: set[str]
@@ -93,10 +93,7 @@ async def test_login(
 ):
     """Test logging in with the given parameters and expected state."""
     await matrix_bot._client.logout()
-    password = "WrongPassword"
-    if params.valid_password:
-        password = TEST_PASSWORD
-    matrix_bot._password = password
+    matrix_bot._password = params.password
     matrix_bot._access_tokens = params.access_token
 
     if params.expected_expection:
