@@ -2,7 +2,7 @@
   "domain": "esphome",
   "name": "ESPHome",
   "after_dependencies": ["zeroconf", "tag"],
-  "codeowners": ["@OttoWinter", "@jesserockz", "@bdraco"],
+  "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
   "dependencies": ["assist_pipeline", "bluetooth"],
   "dhcp": [
