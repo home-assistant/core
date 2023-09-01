@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from datetime import datetime, timedelta
 import pytz
+import pandas as pd
+import homeassistant.util.dt as dt_util
 
 from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 from flexmeasures_client import FlexMeasuresClient
@@ -17,7 +19,9 @@ from homeassistant.components.flexmeasures.const import (
 from homeassistant.core import HomeAssistant
 
 
-async def test_change_control_type_service(hass: HomeAssistant, setup_fm_integration):
+async def test_change_control_type_service(
+    hass: HomeAssistant, setup_fm_integration
+) -> None:
     """Test that the method activate_control_type is called when calling the service active_control_type."""
 
     with patch(
@@ -32,12 +36,14 @@ async def test_change_control_type_service(hass: HomeAssistant, setup_fm_integra
         mocked_CEM.assert_called_with(control_type=ControlType.NO_SELECTION)
 
 
-async def test_trigger_and_get_schedule(hass: HomeAssistant, setup_fm_integration):
+async def test_trigger_and_get_schedule(
+    hass: HomeAssistant, setup_fm_integration
+) -> None:
     """Test that the method activate_control_type is called when calling the service active_control_type."""
 
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.trigger_and_get_schedule",
-        return_value=None,
+        return_value={"values": [0.5, 0.41492, -0.0, -0.0]},
     ) as mocked_FlexmeasuresClient:
         await hass.services.async_call(
             DOMAIN,
@@ -45,9 +51,10 @@ async def test_trigger_and_get_schedule(hass: HomeAssistant, setup_fm_integratio
             service_data={"soc_at_start": 10},
             blocking=True,
         )
+        tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         mocked_FlexmeasuresClient.assert_called_with(
             sensor_id=1,
-            start=time_ceil(datetime.now(tz=pytz.utc), timedelta(minutes=RESOLUTION)),
+            start=time_ceil(datetime.now(tz=tzinfo), pd.Timedelta(RESOLUTION)),
             duration="PT24H",
             soc_unit="kWh",
             soc_min=0.0,
@@ -58,7 +65,7 @@ async def test_trigger_and_get_schedule(hass: HomeAssistant, setup_fm_integratio
         )
 
 
-async def test_post_measurements(hass: HomeAssistant, setup_fm_integration):
+async def test_post_measurements(hass: HomeAssistant, setup_fm_integration) -> None:
     """Test that the method activate_control_type is called when calling the service active_control_type."""
 
     with patch(
