@@ -16,6 +16,7 @@ from nio import (
     Response,
     UploadResponse,
     WhoamiError,
+    WhoamiResponse,
 )
 from PIL import Image
 import pytest
@@ -82,10 +83,16 @@ class _MockAsyncClient(AsyncClient):
             self.access_token = ""
             return LoginError(message="LoginError", status_code="status_code")
 
+    async def logout(self, *args, **kwargs):
+        self.access_token = ""
+
     async def whoami(self):
         if self.access_token == TEST_TOKEN:
             self.user_id = TEST_MXID
             self.device_id = TEST_DEVICE_ID
+            return WhoamiResponse(
+                user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
+            )
         else:
             self.access_token = ""
             return WhoamiError(
