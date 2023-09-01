@@ -6,13 +6,17 @@ import logging
 from typing import Any
 
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_call_later, async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 
 from .const import DOMAIN
 from .error import SmartHomeError
-from .helpers import AbstractConfig, GoogleEntity, async_get_entities
+from .helpers import (
+    AbstractConfig,
+    async_get_entities,
+    async_get_google_entity_if_supported,
+)
 
 # Time to wait until the homegraph updates
 # https://github.com/actions-on-google/smart-home-nodejs/issues/196#issuecomment-439156639
@@ -54,8 +58,10 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
     report_states_job = HassJob(report_states)
 
-    async def async_entity_state_listener(changed_entity, old_state, new_state):
-        nonlocal unsub_pending
+    async def async_entity_state_listener(
+        changed_entity: str, old_state: State | None, new_state: State | None
+    ) -> None:
+        nonlocal unsub_pending, checker
 
         if not hass.is_running:
             return
@@ -66,9 +72,11 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not google_config.should_expose(new_state):
             return
 
-        entity = GoogleEntity(hass, google_config, new_state)
-
-        if not entity.is_supported():
+        if not (
+            entity := async_get_google_entity_if_supported(
+                hass, google_config, new_state
+            )
+        ):
             return
 
         try:
@@ -77,6 +85,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             _LOGGER.debug("Not reporting state for %s: %s", changed_entity, err.code)
             return
 
+        assert checker is not None
         if not checker.async_is_significant_change(new_state, extra_arg=entity_data):
             return
 
