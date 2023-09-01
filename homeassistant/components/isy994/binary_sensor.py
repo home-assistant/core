@@ -421,6 +421,8 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
 class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity):
     """Representation of the battery state of an ISY sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
     def __init__(
         self,
         node: Node,
@@ -521,11 +523,6 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         parent control event is received.
         """
         return bool(self._computed_state)
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Get the class of this device."""
-        return BinarySensorDeviceClass.BATTERY
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
