@@ -72,10 +72,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up sensors for Private BLE component."""
-    sensors = []
-    for description in SENSOR_DESCRIPTIONS:
-        sensors.append(PrivateBLEDeviceSensor(entry, description))
-    async_add_entities(sensors)
+    async_add_entities(
+        PrivateBLEDeviceSensor(entry, description)
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class PrivateBLEDeviceSensor(BasePrivateDeviceEntity, SensorEntity):
