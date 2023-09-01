@@ -236,6 +236,18 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "data": {CONF_DURATION: -5},
         },
         {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_CHANGE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_CHANGED,
+            "data": {CONF_DURATION: 5},
+        },
+        {
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_RESTARTED,
@@ -389,6 +401,31 @@ async def test_start_service(hass: HomeAssistant) -> None:
     assert state.state == STATUS_IDLE
     assert state.attributes[ATTR_DURATION] == "0:00:15"
     assert ATTR_REMAINING not in state.attributes
+
+    # Test we can also change duration on paused timers
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_PAUSED
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE,
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -2},
+        blocking=True,
+    )
+    state = hass.states.get("timer.test1")
+    assert state.state == STATUS_PAUSED
+    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_REMAINING] == "0:00:13"
 
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:

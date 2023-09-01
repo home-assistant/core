@@ -332,7 +332,9 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_change(self, duration: timedelta) -> None:
         """Change duration of a running timer."""
-        if self._listener is None or self._end is None:
+        if (
+            self._listener is None or self._end is None
+        ) and self._state != STATUS_PAUSED:  # Allow changing paused timers but not finished/cancelled
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
@@ -344,6 +346,15 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Not possible to change timer {self.entity_id} to negative time remaining"
             )
+
+        if self._listener is None or self._end is None:
+            assert self._remaining
+            self._remaining += duration
+            self.hass.bus.async_fire(
+                EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id}
+            )
+            self.async_write_ha_state()
+            return
 
         self._listener()
         self._end += duration
