@@ -1459,11 +1459,7 @@ class StateMachine:
         if isinstance(domain_filter, str):
             return len(self._domain_index.get(domain_filter.lower(), ()))
 
-        count = 0
-        for domain in domain_filter:
-            if domain_index := self._domain_index.get(domain):
-                count += len(domain_index)
-        return count
+        return sum(len(self._domain_index.get(domain, ())) for domain in domain_filter)
 
     def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
