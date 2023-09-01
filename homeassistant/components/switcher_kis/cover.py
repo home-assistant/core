@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
 API_STOP = "stop_shutter"
-COVER1_ID = "runner1"
+COVER1_ID = "runner"
 COVER2_ID = "runner2"
 
 async def async_setup_entry(
@@ -90,10 +90,16 @@ class SwitcherCoverEntity(
     def _update_data(self) -> None:
         """Update data from device."""
         data: SwitcherShutter = self.coordinator.data
-        self._attr_current_cover_position = data.position
-        self._attr_is_closed = data.position == 0
-        self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
-        self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
+        if not (data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE and self.cover_id == COVER2_ID):
+            self._attr_current_cover_position = data.position
+            self._attr_is_closed = data.position == 0
+            self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
+            self._attr_is_opening = data.direction == ShutterDirection.SHUTTER_UP
+        else:
+            self._attr_current_cover_position = data.position2
+            self._attr_is_closed = data.position2 == 0
+            self._attr_is_closing = data.direction2 == ShutterDirection.SHUTTER_DOWN
+            self._attr_is_opening = data.direction2 == ShutterDirection.SHUTTER_UP
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
