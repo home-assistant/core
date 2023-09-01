@@ -36,14 +36,12 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return extra state attributes for this device."""
-        attributes = {}
-
-        if self._last_info:
-            attributes["current_address"] = self._last_info.address
-            if self._last_info.source:
-                attributes["source"] = self._last_info.source
-
-        return attributes
+        if last_info := self._last_info:
+            return {
+                "current_address": last_info.address,
+                "source": last_info.source,
+            }
+        return {}
 
     @callback
     def _async_track_unavailable(
