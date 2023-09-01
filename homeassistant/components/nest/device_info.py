@@ -69,7 +69,7 @@ class NestDeviceInfo:
         # The API intentionally returns minimal information about specific
         # devices, instead relying on traits, but we can infer a generic model
         # name based on the type
-        return DEVICE_TYPE_MAP.get(self._device.type)
+        return DEVICE_TYPE_MAP.get(self._device.type or "", None)
 
     @property
     def suggested_area(self) -> str | None:
