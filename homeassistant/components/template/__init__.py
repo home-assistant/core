@@ -20,9 +20,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.script import (
-    Script,
-)
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
