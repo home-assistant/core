@@ -253,13 +253,15 @@ class SwitcherBaselLightEntity(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
+        index = self._get_light_index()
+        await self._async_call_api(API_SET_LIGHT, LightState.ON, index)
         self.control_result = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
+        index = self._get_light_index()
+        await self._async_call_api(API_SET_LIGHT, LightState.OFF, index)
         self.control_result = False
         self.async_write_ha_state()
 
@@ -290,35 +292,7 @@ class SwitcherShutterSingleLightDualSwitchEntity(SwitcherBaselLightEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
-        index = self._get_light_index()
-        await self._async_call_api(API_SET_LIGHT, LightState.ON, index)
-        self.control_result = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        index = self._get_light_index()
-        await self._async_call_api(API_SET_LIGHT, LightState.OFF, index)
-        self.control_result = False
-        self.async_write_ha_state()
-
 class SwitcherShutterDualLightSingleSwitchEntity(SwitcherBaselLightEntity):
     """Representation of a Switcher shutter dual light single switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
-        index = self._get_light_index()
-        await self._async_call_api(API_SET_LIGHT, LightState.ON, index)
-        self.control_result = True
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
-        index = self._get_light_index()
-        await self._async_call_api(API_SET_LIGHT, LightState.OFF, index)
-        self.control_result = False
-        self.async_write_ha_state()
