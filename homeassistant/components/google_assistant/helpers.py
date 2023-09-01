@@ -730,10 +730,10 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_google_entity_if_supported(
+def async_get_google_entity_if_supported_cached(
     hass: HomeAssistant, config: AbstractConfig, state: State
 ) -> GoogleEntity | None:
-    """Return a GoogleEntity if entity is supported."""
+    """Return a GoogleEntity if entity is supported checking the cache first."""
     entity_id = state.entity_id
     is_supported_cache = config.is_supported_cache
     features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
@@ -741,15 +741,20 @@ def async_get_google_entity_if_supported(
         cached_features, supported = result
         if cached_features == features:
             return GoogleEntity(hass, config, state) if supported else None
-        # Cached features don't match, fall through to check
-        # if the entity is supported and update the cache.
+    # Cache miss, check if entity is supported
+    return async_get_google_entity_if_supported(hass, config, state)
 
+
+@callback
+def async_get_google_entity_if_supported(
+    hass: HomeAssistant, config: AbstractConfig, state: State
+) -> GoogleEntity | None:
+    """Return a GoogleEntity if entity is supported."""
+    features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
     entity = GoogleEntity(hass, config, state)
     is_supported = bool(entity.traits())
-    is_supported_cache[entity_id] = (features, is_supported)
-    if is_supported:
-        return entity
-    return None
+    config.is_supported_cache[state.entity_id] = (features, is_supported)
+    return entity if is_supported else None
 
 
 @callback
@@ -758,9 +763,23 @@ def async_get_entities(
 ) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities: list[GoogleEntity] = []
+    is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
+        entity_id = state.entity_id
+        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
+        # Check check inlined for performance to avoid
+        # function calls for every entity since we enumerate
+        # the entire state machine here
+        features: int | None = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        if result := is_supported_cache.get(entity_id):
+            cached_features, supported = result
+            if cached_features == features:
+                if supported:
+                    entities.append(GoogleEntity(hass, config, state))
+                continue
+            # Cached features don't match, fall through to check
+            # if the entity is supported and update the cache.
         if entity := async_get_google_entity_if_supported(hass, config, state):
             entities.append(entity)
     return entities

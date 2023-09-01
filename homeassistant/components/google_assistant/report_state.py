@@ -15,7 +15,7 @@ from .error import SmartHomeError
 from .helpers import (
     AbstractConfig,
     async_get_entities,
-    async_get_google_entity_if_supported,
+    async_get_google_entity_if_supported_cached,
 )
 
 # Time to wait until the homegraph updates
@@ -73,7 +73,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             return
 
         if not (
-            entity := async_get_google_entity_if_supported(
+            entity := async_get_google_entity_if_supported_cached(
                 hass, google_config, new_state
             )
         ):
