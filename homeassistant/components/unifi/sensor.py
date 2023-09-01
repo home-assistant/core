@@ -49,6 +49,22 @@ from .entity import (
 
 
 @callback
+def async_bandwidth_sensor_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+    return controller.option_allow_bandwidth_sensors
+
+
+@callback
+def async_uptime_sensor_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+    return controller.option_allow_uptime_sensors
+
+
+@callback
 def async_client_rx_value_fn(controller: UniFiController, client: Client) -> float:
     """Calculate receiving data transfer value."""
     if controller.wireless_clients.is_wireless(client):
@@ -136,7 +152,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         has_entity_name=True,
-        allowed_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
+        allowed_fn=async_bandwidth_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
@@ -154,7 +170,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         has_entity_name=True,
-        allowed_fn=lambda controller, _: controller.option_allow_bandwidth_sensors,
+        allowed_fn=async_bandwidth_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, _: controller.available,
         device_info_fn=async_client_device_info_fn,
@@ -193,7 +209,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
         entity_registry_enabled_default=False,
-        allowed_fn=lambda controller, _: controller.option_allow_uptime_sensors,
+        allowed_fn=async_uptime_sensor_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         device_info_fn=async_client_device_info_fn,
