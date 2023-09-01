@@ -2464,3 +2464,10 @@ async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
 
     # Cleanup
     timer2.cancel()
+
+
+async def test_validate_state(hass: HomeAssistant) -> None:
+    """Test validate_state."""
+    assert ha.validate_state("test") == "test"
+    with pytest.raises(InvalidStateError):
+        ha.validate_state("t" * 256)

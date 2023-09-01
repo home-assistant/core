@@ -25,6 +25,7 @@ from homeassistant.core import (
     HomeAssistant,
     State,
     callback,
+    validate_state,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -413,8 +414,8 @@ class TemplateEntity(Entity):
             return
 
         for update in updates:
-            for attr in self._template_attrs[update.template]:
-                attr.handle_result(
+            for template_attr in self._template_attrs[update.template]:
+                template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
 
@@ -422,7 +423,13 @@ class TemplateEntity(Entity):
             self.async_write_ha_state()
             return
 
-        self._preview_callback(*self._async_generate_attributes(), None)
+        try:
+            state, attrs = self._async_generate_attributes()
+            validate_state(state)
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            self._preview_callback(None, None, str(err))
+        else:
+            self._preview_callback(state, attrs, None)
 
     @callback
     def _async_template_startup(self, *_: Any) -> None:
