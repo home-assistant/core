@@ -1,5 +1,5 @@
 """Test configuration for the ZHA component."""
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import itertools
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -155,10 +155,10 @@ def zigpy_app_controller():
 
 
 @pytest.fixture(name="config_entry")
-async def config_entry_fixture(hass):
+async def config_entry_fixture(hass) -> MockConfigEntry:
     """Fixture representing a config entry."""
-    entry = MockConfigEntry(
-        version=2,
+    return MockConfigEntry(
+        version=3,
         domain=zha_const.DOMAIN,
         data={
             zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
@@ -178,23 +178,30 @@ async def config_entry_fixture(hass):
             }
         },
     )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.fixture
-def setup_zha(hass, config_entry, zigpy_app_controller):
+def mock_zigpy_connect(
+    zigpy_app_controller: ControllerApplication,
+) -> Generator[ControllerApplication, None, None]:
+    """Patch the zigpy radio connection with our mock application."""
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        return_value=zigpy_app_controller,
+    ) as mock_app:
+        yield mock_app
+
+
+@pytest.fixture
+def setup_zha(hass, config_entry: MockConfigEntry, mock_zigpy_connect):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
-    p1 = patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        return_value=zigpy_app_controller,
-    )
-
     async def _setup(config=None):
+        config_entry.add_to_hass(hass)
         config = config or {}
-        with p1:
+
+        with mock_zigpy_connect:
             status = await async_setup_component(
                 hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
             )
