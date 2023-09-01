@@ -140,7 +140,7 @@ async def test_template_error(
         },
     )
     with patch(
-        "openai.Engine.list",
+        "openai.Model.list",
     ), patch("openai.ChatCompletion.acreate"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
