@@ -1,0 +1,14 @@
+{
+  "domain": "asyncua",
+  "name": "asyncua",
+  "codeowners": ["@KVSoong"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/asyncua",
+  "homekit": {},
+  "integration_type": "helper",
+  "iot_class": "local_polling",
+  "requirements": ["asyncua==1.0.2"],
+  "ssdp": [],
+  "zeroconf": []
+}

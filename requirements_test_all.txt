@@ -399,6 +399,9 @@ async-upnp-client==0.33.2
 # homeassistant.components.sleepiq
 asyncsleepiq==1.3.5
 
+# homeassistant.components.asyncua
+asyncua==1.0.2
+
 # homeassistant.components.aurora
 auroranoaa==0.0.3
 

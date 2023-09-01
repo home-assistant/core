@@ -113,6 +113,8 @@ build.json @home-assistant/supervisor
 /tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
+/homeassistant/components/asyncua/ @KVSoong
+/tests/components/asyncua/ @KVSoong
 /homeassistant/components/atag/ @MatsNL
 /tests/components/atag/ @MatsNL
 /homeassistant/components/aten_pe/ @mtdcr

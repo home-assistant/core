@@ -6569,6 +6569,12 @@
     }
   },
   "helper": {
+    "asyncua": {
+      "name": "asyncua",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false

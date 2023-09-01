@@ -1,0 +1,18 @@
+set_value:
+  description: Write to an opcua node.
+  target:
+    entity:
+      integration: asyncua
+  fields:
+    hub:
+      required: true
+      description: A specified hub that is configured under asyncua section in the configuration file.
+      example: "opcua-hub-1"
+    nodeid:
+      required: true
+      description: the opcua nodeid to write to.
+      example: "'ns=1;i=3333'"
+    value:
+      required: true
+      description: Value (single value) to write. Can be int, float, bool, string, byte
+      example: "0"
