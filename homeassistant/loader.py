@@ -875,6 +875,21 @@ def _resolve_integrations_from_root(
     return integrations
 
 
+def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integration:
+    """Get an integration which is already loaded.
+
+    Raises IntegrationNotLoaded if the integration is not loaded.
+    """
+    cache = hass.data[DATA_INTEGRATIONS]
+    if TYPE_CHECKING:
+        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
+    int_or_fut = cache.get(domain, _UNDEF)
+    # Integration is never subclassed, so we can check for type
+    if type(int_or_fut) is Integration:  # noqa: E721
+        return int_or_fut
+    raise IntegrationNotLoaded(domain)
+
+
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     integrations_or_excs = await async_get_integrations(hass, [domain])
@@ -967,6 +982,15 @@ class IntegrationNotFound(LoaderError):
     def __init__(self, domain: str) -> None:
         """Initialize a component not found error."""
         super().__init__(f"Integration '{domain}' not found.")
+        self.domain = domain
+
+
+class IntegrationNotLoaded(LoaderError):
+    """Raised when a component is not loaded."""
+
+    def __init__(self, domain: str) -> None:
+        """Initialize a component not found error."""
+        super().__init__(f"Integration '{domain}' not loaded.")
         self.domain = domain
 
 
