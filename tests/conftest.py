@@ -9,6 +9,7 @@ import gc
 import itertools
 import logging
 import os
+import reprlib
 import sqlite3
 import ssl
 import threading
@@ -335,13 +336,20 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
+            arepr = reprlib.aRepr
+            original_maxstring = arepr.maxstring
+            original_maxother = arepr.maxother
+            arepr.maxstring = 300
+            arepr.maxother = 300
             if expected_lingering_timers:
                 _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[0], HassJob):
+            elif handle._args and isinstance(job := handle._args[-1], HassJob):
                 pytest.fail(f"Lingering timer after job {repr(job)}")
             else:
                 pytest.fail(f"Lingering timer after test {repr(handle)}")
             handle.cancel()
+            arepr.maxstring = original_maxstring
+            arepr.maxother = original_maxother
 
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
