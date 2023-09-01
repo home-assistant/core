@@ -48,7 +48,7 @@ TOPIC_MATCHER = re.compile(
     r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
 )
 
-SUPPORTED_COMPONENTS = [
+SUPPORTED_COMPONENTS = {
     "alarm_control_panel",
     "binary_sensor",
     "button",
@@ -75,7 +75,7 @@ SUPPORTED_COMPONENTS = [
     "update",
     "vacuum",
     "water_heater",
-]
+}
 
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
