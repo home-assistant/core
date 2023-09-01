@@ -227,7 +227,9 @@ async def test_indicator_test(
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2  # include node status
+    assert (
+        len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    )  # include node + controller status
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"

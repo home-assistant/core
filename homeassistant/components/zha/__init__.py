@@ -10,15 +10,16 @@ from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
+from . import repairs, websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -33,7 +34,6 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -135,7 +135,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
+
+    try:
+        await zha_gateway.async_initialize()
+    except Exception:  # pylint: disable=broad-except
+        if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+            try:
+                await repairs.warn_on_wrong_silabs_firmware(
+                    hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+                )
+            except repairs.AlreadyRunningEZSP as exc:
+                # If connecting fails but we somehow probe EZSP (e.g. stuck in the
+                # bootloader), reconnect, it should work
+                raise ConfigEntryNotReady from exc
+
+        raise
+
+    repairs.async_delete_blocking_issues(hass)
+
+    config_entry.async_on_unload(zha_gateway.shutdown)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -149,15 +167,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     websocket_api.async_load_api(hass)
 
-    async def async_zha_shutdown(event):
-        """Handle shutdown tasks."""
-        zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
-        await zha_gateway.shutdown()
-
-    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
-    )
-
     await zha_gateway.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
@@ -166,8 +175,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
-    await zha_gateway.shutdown()
+    try:
+        del hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    except KeyError:
+        return False
 
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
@@ -179,8 +190,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             for platform in PLATFORMS
         )
     )
-
-    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
     return True
 

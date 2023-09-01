@@ -60,6 +60,8 @@ class SwitcherCoverEntity(
 ):
     """Representation of a Switcher cover entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
