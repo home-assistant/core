@@ -1,4 +1,4 @@
-"""The template update coordinator."""
+"""Data update coordinator for trigger based template entities."""
 from collections.abc import Callable
 import logging
 
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TriggerUpdateCoordinator(DataUpdateCoordinator):
-    """Class to handle incoming data."""
+"""Data update coordinator for trigger based template entities."""
 
     REMOVE_TRIGGER = object()
 
