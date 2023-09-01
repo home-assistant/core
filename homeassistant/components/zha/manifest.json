@@ -17,7 +17,8 @@
     "zigpy_deconz",
     "zigpy_xbee",
     "zigpy_zigate",
-    "zigpy_znp"
+    "zigpy_znp",
+    "universal_silabs_flasher"
   ],
   "requirements": [
     "bellows==0.36.1",
@@ -28,7 +29,8 @@
     "zigpy==0.57.0",
     "zigpy-xbee==0.18.1",
     "zigpy-zigate==0.11.0",
-    "zigpy-znp==0.11.4"
+    "zigpy-znp==0.11.4",
+    "universal-silabs-flasher==0.0.13"
   ],
   "usb": [
     {
