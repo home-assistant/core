@@ -8,11 +8,12 @@ import re
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import NetworkSettingsInconsistent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -137,7 +138,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await zha_gateway.async_initialize()
+    except NetworkSettingsInconsistent as exc:
+        await repairs.warn_on_inconsistent_network_settings(
+            hass,
+            config_entry=config_entry,
+            old_state=exc.old_state,
+            new_state=exc.new_state,
+        )
+        raise HomeAssistantError(
+            "Network settings do not match most recent backup"
+        ) from exc
     except Exception:  # pylint: disable=broad-except
+        _LOGGER.debug("Failed to start gateway", exc_info=True)
+
         if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
             try:
                 await repairs.warn_on_wrong_silabs_firmware(

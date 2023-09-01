@@ -8,7 +8,7 @@ import copy
 import enum
 import logging
 import os
-from typing import Any
+from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
@@ -130,6 +130,19 @@ class ZhaRadioManager:
         self.current_settings: zigpy.backups.NetworkBackup | None = None
         self.backups: list[zigpy.backups.NetworkBackup] = []
         self.chosen_backup: zigpy.backups.NetworkBackup | None = None
+
+    @classmethod
+    def from_config_entry(
+        cls, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    ) -> Self:
+        """Create an instance from a config entry."""
+        mgr = cls()
+        mgr.hass = hass
+        mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        mgr.device_settings = config_entry.data[CONF_DEVICE]
+        mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+        return mgr
 
     @contextlib.asynccontextmanager
     async def _connect_zigpy_app(self) -> ControllerApplication:

@@ -513,6 +513,21 @@
     "wrong_silabs_firmware_installed_other": {
       "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]",
       "description": "Your Zigbee radio was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}). To run your radio exclusively with ZHA, you need to install Zigbee firmware. Follow your Zigbee radio manufacturer's instructions for how to do this."
+    },
+    "inconsistent_network_settings": {
+      "title": "Zigbee network settings have changed",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "[%key:component::zha::issues::inconsistent_network_settings::title%]",
+            "description": "Your Zigbee radio's network settings are inconsistent with the most recent network backup. This usually happens if you have used the radio with another Zigbee integration or have manually changed them.\n\nBefore ZHA can start up, confirm the changes below:\n\n{diff}\n\nIf you did not change your network settings, restore from the most recent backup. If you intentionally changed the settings, use the settings currently on the radio.",
+            "menu_options": {
+              "use_new_settings": "Use the changed settings",
+              "restore_old_settings": "Restore the last-working settings (recommended)"
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import collections
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import timedelta
 from enum import Enum
 import itertools
@@ -24,7 +25,7 @@ from zigpy.config import (
 )
 import zigpy.device
 import zigpy.endpoint
-import zigpy.exceptions
+from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 import zigpy.group
 from zigpy.types.named import EUI64
 
@@ -230,7 +231,9 @@ class ZHAGateway:
         for attempt in range(STARTUP_RETRIES):
             try:
                 await self.application_controller.startup(auto_form=True)
-            except zigpy.exceptions.TransientConnectionError as exc:
+            except NetworkSettingsInconsistent:
+                raise
+            except TransientConnectionError as exc:
                 raise ConfigEntryNotReady from exc
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.warning(
@@ -261,12 +264,13 @@ class ZHAGateway:
         self.application_controller.groups.add_listener(self)
 
     def _find_coordinator_device(self) -> zigpy.device.Device:
+        zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
+
         if last_backup := self.application_controller.backups.most_recent_backup():
-            zigpy_coordinator = self.application_controller.get_device(
-                ieee=last_backup.node_info.ieee
-            )
-        else:
-            zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
+            with suppress(KeyError):
+                zigpy_coordinator = self.application_controller.get_device(
+                    ieee=last_backup.node_info.ieee
+                )
 
         return zigpy_coordinator
 
