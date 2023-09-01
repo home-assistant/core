@@ -1,8 +1,6 @@
 """Provides device triggers for Nanoleaf."""
 from __future__ import annotations
 
-from typing import cast
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -20,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import NanoleafEntryData
+from .connection import get_nanoleaf_connection_by_device_id
 from .const import (
     DOMAIN,
     NANOLEAF_EVENT,
@@ -40,26 +38,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Optional(NANOLEAF_PANEL_ID): vol.Coerce(int),
     }
 )
-
-
-def get_entry_data(hass: HomeAssistant, config_entry: str) -> NanoleafEntryData:
-    """Get (type-safe) Nanoleaf entry data given a config entry ID."""
-    return cast(NanoleafEntryData, hass.data[DOMAIN][config_entry])
-
-
-def get_entry_data_by_device_id(
-    hass: HomeAssistant, device_id: str
-) -> NanoleafEntryData | None:
-    """Get a Nanoleaf entry for the given device id."""
-    device_registry = dr.async_get(hass)
-    if device := device_registry.async_get(device_id):
-        for config_entry in device.config_entries:
-            if not (entry_data := get_entry_data(hass, config_entry)):
-                continue
-
-            return entry_data
-
-    return None
 
 
 async def async_get_triggers(
@@ -92,8 +70,10 @@ async def async_get_trigger_capabilities(
     if device_entry is None:
         raise DeviceNotFound(f"Device ID {config[CONF_DEVICE_ID]} is not valid")
     if config[CONF_TYPE] in TRIGGER_TYPES_THAT_REPORT_PANEL_ID:
-        if entry := get_entry_data_by_device_id(hass, config[CONF_DEVICE_ID]):
-            if panels := entry.panels:
+        if nanoleaf := get_nanoleaf_connection_by_device_id(
+            hass, config[CONF_DEVICE_ID]
+        ):
+            if panels := nanoleaf.panels:
                 options = [
                     selector.SelectOptionDict(
                         value=str(p.id), label=f"{p.id} - {p.shape.name}"
