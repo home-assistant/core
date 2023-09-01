@@ -11,7 +11,7 @@ astroid==2.15.4
 coverage==7.3.0
 freezegun==1.2.2
 mock-open==1.4.0
-mypy==1.5.0
+mypy==1.5.1
 pre-commit==3.3.3
 pydantic==1.10.12
 pylint==2.17.4
@@ -31,7 +31,7 @@ pytest-xdist==3.3.1
 pytest==7.3.1
 requests_mock==1.11.0
 respx==0.20.2
-syrupy==4.0.8
+syrupy==4.2.1
 tqdm==4.66.1
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6

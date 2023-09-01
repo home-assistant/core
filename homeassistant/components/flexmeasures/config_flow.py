@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .helpers import get_previous_option
@@ -20,28 +21,28 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required("host", description={"suggested_value": "localhost:5000"}): str,
         vol.Required(
-            "host", description={"suggested_value": "https://flexmeasures.seita.nl"}
+            "username", description={"suggested_value": "toy-user@flexmeasures.io"}
         ): str,
-        vol.Required("username"): str,
         vol.Required("password"): str,
+        vol.Required("power_sensor", description={"suggested_value": 1}): int,
+        vol.Required(
+            "consumption_price_sensor", description={"suggested_value": 2}
+        ): int,
+        vol.Required(
+            "production_price_sensor", description={"suggested_value": 2}
+        ): int,
+        vol.Required("soc_sensor", description={"suggested_value": 4}): int,
+        vol.Required("rm_discharge_sensor", description={"suggested_value": 5}): int,
+        vol.Required(
+            "schedule_duration", description={"suggested_value": "PT24H"}
+        ): str,
+        vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
+        vol.Required("soc_min", description={"suggested_value": 0.001}): float,
+        vol.Required("soc_max", description={"suggested_value": 0.002}): float,
     }
 )
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host: str) -> None:
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -53,6 +54,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # Currently used here solely for config validation (i.e. not returned to be stored in the config entry)
     try:
         client = FlexMeasuresClient(
+            session=async_get_clientsession(hass),
             host=data["host"],
             email=data["username"],
             password=data["password"],
@@ -94,12 +96,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
-            if "host" in str(exception):
-                errors["host"] = str(exception)
-            elif "email" in str(exception):
-                errors["username"] = str(exception)
-            elif "password" in str(exception):
-                errors["password"] = str(exception)
+
+            for field in ("host", "email", "password"):
+                if field in str(exception):
+                    errors[field] = str(exception)
+
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
@@ -161,8 +162,51 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     "password",
                     default=get_previous_option(self.config_entry, "password"),
                 ): str,
+                vol.Required(
+                    "power_sensor",
+                    default=get_previous_option(self.config_entry, "power_sensor"),
+                ): int,
+                vol.Required(
+                    "consumption_price_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "consumption_price_sensor"
+                    ),
+                ): int,
+                vol.Required(
+                    "production_price_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "production_price_sensor"
+                    ),
+                ): int,
+                vol.Required(
+                    "soc_sensor",
+                    default=get_previous_option(self.config_entry, "soc_sensor"),
+                ): int,
+                vol.Required(
+                    "rm_discharge_sensor",
+                    default=get_previous_option(
+                        self.config_entry, "rm_discharge_sensor"
+                    ),
+                ): int,
+                vol.Required(
+                    "schedule_duration",
+                    default=get_previous_option(self.config_entry, "schedule_duration"),
+                ): str,
+                vol.Required(
+                    "soc_unit",
+                    default=get_previous_option(self.config_entry, "soc_unit"),
+                ): str,
+                vol.Required(
+                    "soc_min",
+                    default=get_previous_option(self.config_entry, "soc_min"),
+                ): float,
+                vol.Required(
+                    "soc_max",
+                    default=get_previous_option(self.config_entry, "soc_max"),
+                ): float,
             }
         )
+
         return self.async_show_form(
             step_id="init", data_schema=options_schema, errors=errors
         )

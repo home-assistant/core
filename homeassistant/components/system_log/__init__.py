@@ -141,7 +141,7 @@ class LogEntry:
         self.root_cause = None
         if record.exc_info:
             self.exception = "".join(traceback.format_exception(*record.exc_info))
-            _, _, tb = record.exc_info  # pylint: disable=invalid-name
+            _, _, tb = record.exc_info
             # Last line of traceback contains the root cause of the exception
             if traceback.extract_tb(tb):
                 self.root_cause = str(traceback.extract_tb(tb)[-1])
@@ -234,7 +234,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass_path: str = HOMEASSISTANT_PATH[0]
     config_dir = hass.config.config_dir
-    assert config_dir is not None
     paths_re = re.compile(
         r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
     )

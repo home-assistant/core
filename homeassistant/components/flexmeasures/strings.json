@@ -5,7 +5,16 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "power_sensor": "Power sensor",
+          "consumption_price_sensor": "Consumption price sensor",
+          "production_price_sensor": "Production price sensor",
+          "soc_sensor": "SOC sensor",
+          "rm_discharge_sensor": "Resource Manager Discharge Sensor",
+          "schedule_duration": "Schedule Duration",
+          "soc_unit": "SOC unit",
+          "soc_min": "Minimum SOC",
+          "soc_max": "Maximum SOC"
         }
       }
     },
@@ -16,6 +25,28 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "change_control_type": {
+      "name": "Change Control Type",
+      "description": "Change the CEM control type.",
+      "fields": {
+        "control_type": {
+          "name": "Control Type",
+          "description": "CEM control type."
+        }
+      }
+    },
+    "trigger_and_get_schedule": {
+      "name": "Trigger and get schedule",
+      "description": "Trigger a schedule in FlexMeasures and get the results back.",
+      "fields": {
+        "soc_at_start": {
+          "name": "Initial SOC",
+          "description": "Initial state of charge of the energy storage."
+        }
+      }
     }
   }
 }

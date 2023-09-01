@@ -75,9 +75,8 @@ class IPMASensor(SensorEntity, IPMADevice):
         description: IPMASensorEntityDescription,
     ) -> None:
         """Initialize the IPMA Sensor."""
-        IPMADevice.__init__(self, location)
+        IPMADevice.__init__(self, api, location)
         self.entity_description = description
-        self._api = api
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

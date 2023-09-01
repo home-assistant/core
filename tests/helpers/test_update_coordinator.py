@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import requests
 
@@ -329,11 +330,14 @@ async def test_refresh_no_update_method(
 
 
 async def test_update_interval(
-    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test update interval works."""
     # Test we don't update without subscriber
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data is None
 
@@ -342,18 +346,21 @@ async def test_update_interval(
     unsub = crd.async_add_listener(update_callback)
 
     # Test twice we update with subscriber
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data == 1
 
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert crd.data == 2
 
     # Test removing listener
     unsub()
 
-    async_fire_time_changed(hass, utcnow() + crd.update_interval)
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Test we stop updating after we lose last subscriber

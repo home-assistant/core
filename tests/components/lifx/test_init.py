@@ -5,6 +5,8 @@ from datetime import timedelta
 import socket
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN, discovery
 from homeassistant.config_entries import ConfigEntryState
@@ -149,3 +151,23 @@ async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_wrong_serial(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config entry enters setup retry when serial mismatches."""
+    mismatched_serial = f"{SERIAL[:-1]}0"
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=mismatched_serial
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert (
+        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc"
+        in caplog.text
+    )
