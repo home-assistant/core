@@ -360,7 +360,7 @@ aioswitcher==3.3.0
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.5
+aiotractive==0.5.6
 
 # homeassistant.components.unifi
 aiounifi==58
