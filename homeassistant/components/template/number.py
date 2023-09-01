@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     NumberEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -124,8 +124,9 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_attr_native_value",
             self._value_template,
@@ -152,7 +153,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
                 validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""

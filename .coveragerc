@@ -57,6 +57,7 @@ omit =
     homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/__init__.py
     homeassistant/components/ambient_station/binary_sensor.py
+    homeassistant/components/ambient_station/entity.py
     homeassistant/components/ambient_station/sensor.py
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -842,6 +843,7 @@ omit =
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
+    homeassistant/components/octoprint/coordinator.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/ombi/*
@@ -1005,6 +1007,7 @@ omit =
     homeassistant/components/renson/const.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
+    homeassistant/components/renson/binary_sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
@@ -1272,6 +1275,8 @@ omit =
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/__init__.py
     homeassistant/components/tankerkoenig/binary_sensor.py
+    homeassistant/components/tankerkoenig/coordinator.py
+    homeassistant/components/tankerkoenig/entity.py
     homeassistant/components/tankerkoenig/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/__init__.py
@@ -1356,6 +1361,7 @@ omit =
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
+    homeassistant/components/transmission/__init__.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py
     homeassistant/components/travisci/sensor.py
@@ -1438,6 +1444,10 @@ omit =
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/__init__.py
     homeassistant/components/vlc_telnet/media_player.py
+    homeassistant/components/vodafone_station/__init__.py
+    homeassistant/components/vodafone_station/const.py
+    homeassistant/components/vodafone_station/coordinator.py
+    homeassistant/components/vodafone_station/device_tracker.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py

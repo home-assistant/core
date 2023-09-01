@@ -28,7 +28,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORMS,
+    HOME_COMPATIBLE_CATEGORIES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -190,7 +190,7 @@ class FreeboxRouter:
 
         new_device = False
         for home_node in home_nodes:
-            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node

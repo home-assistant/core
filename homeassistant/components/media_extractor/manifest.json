@@ -1,7 +1,7 @@
 {
   "domain": "media_extractor",
   "name": "Media Extractor",
-  "codeowners": [],
+  "codeowners": ["@joostlek"],
   "dependencies": ["media_player"],
   "documentation": "https://www.home-assistant.io/integrations/media_extractor",
   "iot_class": "calculated",
