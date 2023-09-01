@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.3
+AEMET-OpenData==0.4.4
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
@@ -409,7 +409,7 @@ async-upnp-client==0.35.0
 async_interrupt==1.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.5
+asyncsleepiq==1.3.7
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -707,7 +707,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.5
+google-nest-sdm==3.0.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1907,6 +1907,9 @@ ultraheat-api==0.5.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
+
+# homeassistant.components.zha
+universal-silabs-flasher==0.0.13
 
 # homeassistant.components.upb
 upb-lib==0.5.4

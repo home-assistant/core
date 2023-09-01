@@ -354,8 +354,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
-/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
