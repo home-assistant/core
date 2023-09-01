@@ -1,5 +1,4 @@
 """Test MatrixBot._login."""
-from enum import Enum, auto
 
 from pydantic.dataclasses import dataclass
 import pytest
@@ -15,35 +14,27 @@ from tests.components.matrix.conftest import (
 )
 
 
-class ParameterStatus(Enum):
-    """Whether a given parameter is good, bad, or not provided."""
-
-    good = auto()
-    bad = auto()
-    missing = auto()
-
-
 @dataclass
 class LoginTestParameters:
     """Dataclass of parameters representing the login parameters and expected result state."""
 
-    password: ParameterStatus
-    access_token: ParameterStatus
+    valid_password: bool
+    access_token: dict[str, str]
     expected_login_state: bool
     expected_caplog_messages: set[str]
     expected_expection: type(Exception) | None = None
 
 
 good_password_missing_token = LoginTestParameters(
-    password=ParameterStatus.good,
-    access_token=ParameterStatus.missing,
+    password=TEST_PASSWORD,
+    access_token={},
     expected_login_state=True,
     expected_caplog_messages={"Logging in using password"},
 )
 
 good_password_bad_token = LoginTestParameters(
-    password=ParameterStatus.good,
-    access_token=ParameterStatus.bad,
+    password=TEST_PASSWORD,
+    access_token={TEST_MXID: "WrongToken"},
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -53,8 +44,8 @@ good_password_bad_token = LoginTestParameters(
 )
 
 bad_password_good_access_token = LoginTestParameters(
-    password=ParameterStatus.bad,
-    access_token=ParameterStatus.good,
+    password="WrongPassword",
+    access_token={TEST_MXID: TEST_TOKEN},
     expected_login_state=True,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -63,8 +54,8 @@ bad_password_good_access_token = LoginTestParameters(
 )
 
 bad_password_bad_access_token = LoginTestParameters(
-    password=ParameterStatus.bad,
-    access_token=ParameterStatus.bad,
+    password="WrongPassword",
+    access_token={TEST_MXID: "WrongToken"},
     expected_login_state=False,
     expected_caplog_messages={
         "Restoring login from stored access token",
@@ -76,8 +67,8 @@ bad_password_bad_access_token = LoginTestParameters(
 )
 
 bad_password_missing_access_token = LoginTestParameters(
-    password=ParameterStatus.bad,
-    access_token=ParameterStatus.missing,
+    password="WrongPassword",
+    access_token={},
     expected_login_state=False,
     expected_caplog_messages={
         "Logging in using password",
@@ -102,18 +93,13 @@ async def test_login(
 ):
     """Test logging in with the given parameters and expected state."""
     await matrix_bot._client.logout()
-    matrix_bot._password = (
-        TEST_PASSWORD if params.password is ParameterStatus.good else "WrongPassword"
-    )
-    match params.access_token:
-        case ParameterStatus.good:
-            matrix_bot._access_tokens = {TEST_MXID: TEST_TOKEN}
-        case ParameterStatus.bad:
-            matrix_bot._access_tokens = {TEST_MXID: "WrongToken"}
-        case ParameterStatus.missing:
-            matrix_bot._access_tokens = {}
+    password = "WrongPassword"
+    if params.valid_password:
+        password = TEST_PASSWORD
+    matrix_bot._password = password
+    matrix_bot._access_tokens = params.access_token
 
-    if params.expected_expection is not None:
+    if params.expected_expection:
         with pytest.raises(params.expected_expection):
             await matrix_bot._login()
     else:
