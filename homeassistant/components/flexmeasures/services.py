@@ -89,8 +89,9 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "production_price_sensor": get_from_option_or_config(
                 "production_price_sensor", entry
             ),
-            "soc_at_start": call.data.get("soc_at_start"),
         }
+
+        LOGGER.info(input_arguments)
 
         schedule = await client.trigger_and_get_schedule(
             soc_at_start=call.data.get("soc_at_start"), **input_arguments
