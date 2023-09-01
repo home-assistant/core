@@ -1599,15 +1599,11 @@ async def test_trigger_entity_restore_state(
                                 "my_variable": "{{ trigger.event.data.beer + 1 }}"
                             },
                         },
-                        {
-                            "stop": "Stop running",
-                            "response_variable": "my_variable",
-                        },
                     ],
                     "sensor": [
                         {
                             "name": "Hello Name",
-                            "state": "{{ response + 1 }}",
+                            "state": "{{ my_variable + 1 }}",
                         }
                     ],
                 },

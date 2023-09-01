@@ -197,9 +197,9 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     async def _handle_triggered(self, run_variables, context=None):
         if self._script:
-            response = await self._script.async_run(run_variables, context)
-            if response:
-                run_variables["response"] = response
+            script_result = await self._script.async_run(run_variables, context)
+            if script_result:
+                run_variables = script_result.variables
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )
