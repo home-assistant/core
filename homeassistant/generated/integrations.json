@@ -5669,12 +5669,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "template": {
-      "name": "Template",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "tensorflow": {
       "name": "TensorFlow",
       "integration_type": "hub",
@@ -5993,9 +5987,16 @@
     },
     "u_tec": {
       "name": "U-tec",
-      "iot_standards": [
-        "zwave"
-      ]
+      "integrations": {
+        "ultraloq": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "iot_standards": [
+            "zwave"
+          ],
+          "name": "Ultraloq"
+        }
+      }
     },
     "ubiquiti": {
       "name": "Ubiquiti",
@@ -6716,6 +6717,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "template": {
+      "name": "Template",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "threshold": {
       "integration_type": "helper",

@@ -55,7 +55,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
-            entry_data.get(CONF_TOTP_SECRET, None),
+            entry_data.get(CONF_TOTP_SECRET),
         )
 
     async def _async_update_data(

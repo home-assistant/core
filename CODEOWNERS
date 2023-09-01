@@ -354,8 +354,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
-/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
@@ -521,6 +521,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
 /tests/components/homeassistant_alerts/ @home-assistant/core
+/homeassistant/components/homeassistant_green/ @home-assistant/core
+/tests/components/homeassistant_green/ @home-assistant/core
 /homeassistant/components/homeassistant_hardware/ @home-assistant/core
 /tests/components/homeassistant_hardware/ @home-assistant/core
 /homeassistant/components/homeassistant_sky_connect/ @home-assistant/core

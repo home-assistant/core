@@ -37,7 +37,8 @@ async def test_setup_entry(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(mock_get_os_info.mock_calls) == 1
+
+    assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
     if num_entries > 0:
@@ -216,13 +217,17 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries()) == 1
+
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
         return_value={"board": "generic-x86-64"},
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(mock_get_os_info.mock_calls) == 1
+
+    assert len(mock_get_os_info.mock_calls) == 1
+    assert len(hass.config_entries.async_entries()) == 0
 
 
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
@@ -243,8 +248,9 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(mock_get_os_info.mock_calls) == 1
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert len(mock_get_os_info.mock_calls) == 1
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_info_fails(
@@ -269,8 +275,9 @@ async def test_setup_entry_addon_info_fails(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_not_running(
@@ -295,5 +302,6 @@ async def test_setup_entry_addon_not_running(
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
-        start_addon.assert_called_once()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    start_addon.assert_called_once()

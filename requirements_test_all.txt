@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.2
+AEMET-OpenData==0.4.4
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.57
@@ -409,7 +409,7 @@ async-upnp-client==0.35.0
 async_interrupt==1.1.1
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.5
+asyncsleepiq==1.3.7
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -430,7 +430,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.35.9
+bellows==0.36.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -707,7 +707,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==2.2.5
+google-nest-sdm==3.0.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -777,7 +777,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230802.1
+home-assistant-frontend==20230831.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1040,7 +1040,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.32
+opower==0.0.33
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1226,7 +1226,7 @@ pydiscovergy==2.0.3
 pydroid-ipcam==2.0.0
 
 # homeassistant.components.duotecno
-pyduotecno==2023.8.3
+pyduotecno==2023.8.4
 
 # homeassistant.components.econet
 pyeconet==0.1.20
@@ -1370,7 +1370,7 @@ pymeteoclimatic==0.0.6
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.4.1
+pymodbus==3.5.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1518,7 +1518,7 @@ pysml==0.0.12
 pysnmplib==5.0.21
 
 # homeassistant.components.snooz
-pysnooz==0.8.3
+pysnooz==0.8.6
 
 # homeassistant.components.soma
 pysoma==0.0.12
@@ -2039,7 +2039,7 @@ zeroconf==0.88.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.102
+zha-quirks==0.0.103
 
 # homeassistant.components.zha
 zigpy-deconz==0.21.0
@@ -2054,7 +2054,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.56.4
+zigpy==0.57.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.51.0

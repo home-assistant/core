@@ -34,6 +34,7 @@ omit =
     homeassistant/components/agent_dvr/camera.py
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
+    homeassistant/components/airnow/coordinator.py
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airq/__init__.py
     homeassistant/components/airq/coordinator.py
@@ -844,6 +845,7 @@ omit =
     homeassistant/components/obihai/connectivity.py
     homeassistant/components/obihai/sensor.py
     homeassistant/components/octoprint/__init__.py
+    homeassistant/components/octoprint/coordinator.py
     homeassistant/components/oem/climate.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/ombi/*
@@ -1275,6 +1277,8 @@ omit =
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/__init__.py
     homeassistant/components/tankerkoenig/binary_sensor.py
+    homeassistant/components/tankerkoenig/coordinator.py
+    homeassistant/components/tankerkoenig/entity.py
     homeassistant/components/tankerkoenig/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/__init__.py
