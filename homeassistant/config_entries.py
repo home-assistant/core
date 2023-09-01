@@ -148,6 +148,11 @@ EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
 SIGNAL_CONFIG_ENTRY_CHANGED = "config_entry_changed"
 
+NO_RESET_TRIES_STATES = {
+    ConfigEntryState.SETUP_RETRY,
+    ConfigEntryState.SETUP_IN_PROGRESS,
+}
+
 
 class ConfigEntryChange(StrEnum):
     """What was changed in a config entry."""
@@ -610,10 +615,7 @@ class ConfigEntry:
         self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
     ) -> None:
         """Set the state of the config entry."""
-        if state not in {
-            ConfigEntryState.SETUP_RETRY,
-            ConfigEntryState.SETUP_IN_PROGRESS,
-        }:
+        if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
         self.state = state
         self.reason = reason
