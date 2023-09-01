@@ -76,41 +76,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unknown error")
             else:
-                await self.async_set_unique_id(info[KEY_SYS_SERIAL])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info[KEY_SYS_TITLE], data=user_input
-                )
+                if self._reauth_entry is None:
+                    await self.async_set_unique_id(info[KEY_SYS_SERIAL])
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=info[KEY_SYS_TITLE], data=user_input
+                    )
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        assert self._reauth_entry
-        errors = {}
-        if user_input is not None:
-            try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-            else:
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
                 )
@@ -119,16 +93,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="reauth_successful")
 
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={
-                CONF_HOST: self._reauth_entry.data[CONF_HOST],
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
-                CONF_PASSWORD: self._reauth_entry.data[CONF_PASSWORD],
-            },
+        data_schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
         )
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

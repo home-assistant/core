@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext(), patch(
@@ -39,7 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_TITLE
     assert result2["data"] == CONFIG
 
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -82,7 +82,7 @@ async def test_form_user_reauth(hass: HomeAssistant) -> None:
     assert "flow_id" in flows[0]
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext():
@@ -120,7 +120,7 @@ async def test_form_user_reauth_invalid_auth(hass: HomeAssistant) -> None:
     assert "flow_id" in flows[0]
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext(
@@ -136,7 +136,7 @@ async def test_form_user_reauth_invalid_auth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -160,7 +160,7 @@ async def test_form_user_reauth_cannot_connect(hass: HomeAssistant) -> None:
     assert "flow_id" in flows[0]
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext(
@@ -176,7 +176,7 @@ async def test_form_user_reauth_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -200,7 +200,7 @@ async def test_form_user_reauth_general_exception(hass: HomeAssistant) -> None:
     assert "flow_id" in flows[0]
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext(login_mock=AsyncMock(side_effect=Exception)):
@@ -215,7 +215,7 @@ async def test_form_user_reauth_general_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["step_id"] == "reauth_confirm"
+    assert result2["step_id"] == "user"
     assert result2["errors"] == {}
 
 
@@ -233,7 +233,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -270,7 +270,7 @@ async def test_form_unexpected_response(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -279,7 +279,7 @@ async def test_form_cannot_connect_unknown_serial(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with RuckusAjaxApiPatchContext(system_info={}):
@@ -288,7 +288,7 @@ async def test_form_cannot_connect_unknown_serial(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -311,7 +311,7 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == "form"
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {}
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -319,5 +319,5 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
