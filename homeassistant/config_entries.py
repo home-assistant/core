@@ -220,6 +220,9 @@ class ConfigEntry:
         "reload_lock",
         "_tasks",
         "_background_tasks",
+        "_integration",
+        "_tries",
+        "_setup_again_job",
     )
 
     def __init__(
@@ -317,20 +320,32 @@ class ConfigEntry:
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
 
+        self._integration: loader.Integration | None = None
+        self._tries = 0
+        self._setup_again_job: HassJob | None = None
+
     async def async_setup(
         self,
         hass: HomeAssistant,
         *,
         integration: loader.Integration | None = None,
-        tries: int = 0,
+        tries: int | None = None,
     ) -> None:
         """Set up an entry."""
         current_entry.set(self)
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if integration is None:
+        if integration:
+            self._integration = integration
+        elif self._integration:
+            integration = self._integration
+        else:
             integration = await loader.async_get_integration(hass, self.domain)
+            self._integration = integration
+
+        if tries is not None:
+            self._tries = tries
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
@@ -419,13 +434,13 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
-            wait_time = 2 ** min(tries, 4) * 5 + (
+            wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
-            tries += 1
+            self._tries += 1
             message = str(ex)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if tries == 1:
+            if self._tries == 1:
                 _LOGGER.warning(
                     (
                         "Config entry '%s' for %s integration not %s; Retrying in"
@@ -447,22 +462,14 @@ class ConfigEntry:
                     wait_time,
                 )
 
-            async def setup_again(*_: Any) -> None:
-                """Run setup again."""
-                # Check again when we fire in case shutdown
-                # has started so we do not block shutdown
-                if hass.is_stopping:
-                    return
-                self._async_cancel_retry_setup = None
-                await self.async_setup(hass, integration=integration, tries=tries)
-
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
-                    hass, wait_time, setup_again
+                    hass, wait_time, self._async_get_setup_again_job(hass)
                 )
             else:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                    EVENT_HOMEASSISTANT_STARTED,
+                    functools.partial(self._async_setup_again, hass),
                 )
 
             await self._async_process_on_unload(hass)
@@ -482,6 +489,24 @@ class ConfigEntry:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
             self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+
+    async def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
+        """Run setup again."""
+        # Check again when we fire in case shutdown
+        # has started so we do not block shutdown
+        if not hass.is_stopping:
+            self._async_cancel_retry_setup = None
+            await self.async_setup(hass)
+
+    @callback
+    def _async_get_setup_again_job(self, hass: HomeAssistant) -> HassJob:
+        """Get a job that will call setup again."""
+        if self._setup_again_job:
+            return self._setup_again_job
+        self._setup_again_job = HassJob(
+            functools.partial(self._async_setup_again, hass)
+        )
+        return self._setup_again_job
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -592,6 +617,11 @@ class ConfigEntry:
         self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
     ) -> None:
         """Set the state of the config entry."""
+        if state not in {
+            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_IN_PROGRESS,
+        }:
+            self._tries = 0
         self.state = state
         self.reason = reason
         async_dispatcher_send(
