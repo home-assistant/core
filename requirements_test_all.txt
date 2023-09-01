@@ -628,7 +628,7 @@ fivem-api==0.1.2
 fjaraskupan==2.2.0
 
 # homeassistant.components.flexmeasures
-flexmeasures-client==0.1.7
+flexmeasures-client==0.1.8
 
 # homeassistant.components.flipr
 flipr-api==1.5.0

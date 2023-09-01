@@ -4,6 +4,11 @@ from datetime import datetime
 from homeassistant import config_entries
 
 
+def get_from_option_or_config(key: str, entry: config_entries.ConfigEntry):
+    """Get value from the options and, if not found, return the config value."""
+    return entry.options.get(key, entry.data.get(key))
+
+
 def get_previous_option(config: config_entries.ConfigEntry, option: str):
     """Get default from previous options or otherwise from initial config."""
     return config.options.get(option, config.data[option])

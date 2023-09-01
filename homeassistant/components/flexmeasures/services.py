@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RESOLUTION, SERVICE_CHANGE_CONTROL_TYPE
-from .helpers import time_ceil
+from .helpers import get_from_option_or_config, time_ceil
 
 CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
 
@@ -46,8 +46,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Is this the correct way and place to set this?
     client = hass.data[DOMAIN]["fm_client"]
 
-    config_data = dict(entry.data)
-
     ############
     # Services #
     ############
@@ -57,7 +55,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     ):  # pylint: disable=possibly-unused-variable
         """Change control type S2 Protocol."""
         cem: CEM = hass.data[DOMAIN]["cem"]
-
         control_type = cast(str, call.data.get("control_type"))
 
         if not hasattr(ControlType, control_type):
@@ -79,30 +76,24 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         start = time_ceil(datetime.now(tz=tzinfo), resolution)
 
-        # print(
-        #     {
-        #         "sensor_id": config_data["power_sensor"],
-        #         "start": start,
-        #         "duration": config_data["schedule_duration"],
-        #         "soc_unit": "MWh",
-        #         "soc_min": config_data["soc_min"],
-        #         "soc_max": config_data["soc_max"],
-        #         "consumption_price_sensor": config_data["consumption_price_sensor"],
-        #         "production_price_sensor": config_data["production_price_sensor"],
-        #         "soc_at_start": call.data.get("soc_at_start"),
-        #     }
-        # )
+        input_arguments = {
+            "sensor_id": get_from_option_or_config("power_sensor", entry),
+            "start": start,
+            "duration": get_from_option_or_config("schedule_duration", entry),
+            "soc_unit": "MWh",
+            "soc_min": get_from_option_or_config("soc_min", entry),
+            "soc_max": get_from_option_or_config("soc_max", entry),
+            "consumption_price_sensor": get_from_option_or_config(
+                "consumption_price_sensor", entry
+            ),
+            "production_price_sensor": get_from_option_or_config(
+                "production_price_sensor", entry
+            ),
+            "soc_at_start": call.data.get("soc_at_start"),
+        }
 
         schedule = await client.trigger_and_get_schedule(
-            sensor_id=config_data["power_sensor"],
-            start=start,
-            duration=config_data["schedule_duration"],
-            soc_unit=config_data["soc_unit"],
-            soc_min=config_data["soc_min"],
-            soc_max=config_data["soc_max"],
-            consumption_price_sensor=config_data["consumption_price_sensor"],
-            production_price_sensor=config_data["production_price_sensor"],
-            soc_at_start=call.data.get("soc_at_start"),
+            soc_at_start=call.data.get("soc_at_start"), **input_arguments
         )
 
         schedule_state = start.isoformat()
@@ -110,8 +101,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             {"start": start + resolution * i, "value": value}
             for i, value in enumerate(schedule["values"])
         ]
-
-        # print(schedule)
 
         hass.states.async_set(
             f"{DOMAIN}.charge_schedule",
@@ -122,7 +111,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async def post_measurements(
         call: ServiceCall,
     ):  # pylint: disable=possibly-unused-variable
-        # print(call)
         await client.post_measurements(
             sensor_id=call.data.get("sensor_id"),
             start=call.data.get("start"),
@@ -140,10 +128,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if "service_func_name" in service:
             service_func_name = service.pop("service_func_name")
             service["service_func"] = locals()[service_func_name]
+
         hass.services.async_register(DOMAIN, **service)
 
 
 async def async_unload_services(hass: HomeAssistant) -> None:
     """Unload services."""
     for service in SERVICES:
-        hass.services.async_remove(DOMAIN, service["service"])
+        if hass.services.has_service(DOMAIN, service["service"]):
+            hass.services.async_remove(DOMAIN, service["service"])
