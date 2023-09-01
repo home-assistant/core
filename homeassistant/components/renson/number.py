@@ -27,6 +27,7 @@ RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
     native_min_value=0,
     native_max_value=360,
     entity_category=EntityCategory.CONFIG,
+    has_entity_name=True,
 )
 
 
@@ -47,9 +48,6 @@ async def async_setup_entry(
 
 class RensonNumber(RensonEntity, NumberEntity):
     """Representation of the Renson number platform."""
-
-    _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
