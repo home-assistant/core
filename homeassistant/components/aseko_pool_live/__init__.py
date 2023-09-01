@@ -24,11 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     account = MobileAccount(
         async_get_clientsession(hass),
         username=entry.data[CONF_EMAIL],
-        password=entry.data[CONF_PASSWORD]
+        password=entry.data[CONF_PASSWORD],
     )
 
     try:
-        await account.login()
         units = await account.get_units()
     except APIUnavailable as err:
         raise ConfigEntryNotReady from err
