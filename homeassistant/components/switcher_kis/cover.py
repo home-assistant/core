@@ -123,6 +123,7 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
+    # This function return the currect shutter index (based of device type) used for the API Call
     def _get_shutter_index(self) -> int:
         if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER:
             return 1
