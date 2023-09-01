@@ -220,7 +220,7 @@ class ConfigEntry:
         "reload_lock",
         "_tasks",
         "_background_tasks",
-        "_integration",
+        "_integration_for_domain",
         "_tries",
         "_setup_again_job",
     )
@@ -320,7 +320,7 @@ class ConfigEntry:
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
 
-        self._integration: loader.Integration | None = None
+        self._integration_for_domain: loader.Integration | None = None
         self._tries = 0
         self._setup_again_job: HassJob | None = None
 
@@ -336,13 +336,9 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if integration:
-            self._integration = integration
-        elif self._integration:
-            integration = self._integration
-        else:
+        if not integration:
             integration = await loader.async_get_integration(hass, self.domain)
-            self._integration = integration
+            self._integration_for_domain = integration
 
         if tries is not None:
             self._tries = tries
@@ -533,7 +529,7 @@ class ConfigEntry:
         if self.state == ConfigEntryState.NOT_LOADED:
             return True
 
-        if integration is None:
+        if not integration and (integration := self._integration_for_domain) is None:
             try:
                 integration = await loader.async_get_integration(hass, self.domain)
             except loader.IntegrationNotFound:
@@ -591,14 +587,15 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE:
             return
 
-        try:
-            integration = await loader.async_get_integration(hass, self.domain)
-        except loader.IntegrationNotFound:
-            # The integration was likely a custom_component
-            # that was uninstalled, or an integration
-            # that has been renamed without removing the config
-            # entry.
-            return
+        if not (integration := self._integration_for_domain):
+            try:
+                integration = await loader.async_get_integration(hass, self.domain)
+            except loader.IntegrationNotFound:
+                # The integration was likely a custom_component
+                # that was uninstalled, or an integration
+                # that has been renamed without removing the config
+                # entry.
+                return
 
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
@@ -647,7 +644,8 @@ class ConfigEntry:
         if self.version == handler.VERSION:
             return True
 
-        integration = await loader.async_get_integration(hass, self.domain)
+        if not (integration := self._integration_for_domain):
+            integration = await loader.async_get_integration(hass, self.domain)
         component = integration.get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
