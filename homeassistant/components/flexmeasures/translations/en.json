@@ -11,14 +11,18 @@
         "step": {
             "user": {
                 "data": {
+                    "consumption_price_sensor": "Consumption price sensor",
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username",
-                    "power_sensor": "Power Sensor",
-                    "price_sensor": "Price Sensor",
-                    "soc_sensor": "SOC Sensor",
+                    "power_sensor": "Power sensor",
+                    "production_price_sensor": "Production price sensor",
                     "rm_discharge_sensor": "Resource Manager Discharge Sensor",
-                    "schedule_duration": "Schedule Duration (Hours)"
+                    "schedule_duration": "Schedule Duration (Hours)",
+                    "soc_max": "Maximum SOC",
+                    "soc_min": "Minimum SOC",
+                    "soc_sensor": "SOC sensor",
+                    "soc_unit": "SOC unit",
+                    "username": "Username"
                 }
             }
         }

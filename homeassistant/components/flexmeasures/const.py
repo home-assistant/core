@@ -7,4 +7,4 @@ WS_VIEW_NAME = "websocket_custom"
 
 # SERVICES
 SERVICE_CHANGE_CONTROL_TYPE = "change_control_type"
-RESOLUTION = 15
+RESOLUTION = "PT15M"

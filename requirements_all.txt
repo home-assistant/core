@@ -1700,9 +1700,6 @@ pyfibaro==0.7.2
 # homeassistant.components.fido
 pyfido==2.1.2
 
-# homeassistant.components.flexmeasures
-pyfiglet==0.8.post1
-
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.43
 
