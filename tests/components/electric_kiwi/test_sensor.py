@@ -42,7 +42,7 @@ async def test_hop_sensors(
 ) -> None:
     """Test HOP sensors for the Electric Kiwi integration.
 
-    This time (note no day is given, its only a time) is fed from the Electric Kiwi API.
+    This time (note no day is given, it's only a time) is fed from the Electric Kiwi API.
     if the API returns 4:00 PM, the sensor state should be set to today at 4pm or if now is past 4pm, then tomorrow at 4pm
 
     """
