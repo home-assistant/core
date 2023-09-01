@@ -412,12 +412,9 @@ def async_fire_time_changed(
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
-    if utc_datetime.microsecond < event.RANDOM_MICROSECOND_MAX:
-        # Allow up to 500000 microseconds to be added to the time
-        # to handle update_coordinator's and
-        # async_track_time_interval's
-        # staggering to avoid thundering herd.
-        utc_datetime = utc_datetime.replace(microsecond=event.RANDOM_MICROSECOND_MAX)
+    # Increase the mocked time by 0.5 s to account for up to 0.5 s delay
+    # added to events scheduled by update_coordinator and async_track_time_interval
+    utc_datetime += timedelta(microseconds=event.RANDOM_MICROSECOND_MAX)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 

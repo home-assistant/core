@@ -1,4 +1,5 @@
 """The tests for the Modbus cover component."""
+from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -142,14 +143,13 @@ async def test_coil_cover(hass: HomeAssistant, expected, mock_do_cycle) -> None:
     ],
 )
 async def test_lazy_error_cover(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
+    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for given config."""
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 
