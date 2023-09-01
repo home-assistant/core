@@ -81,7 +81,7 @@ class PrivateDevicesCoordinator:
     This class should not be instanced directly - use `async_get_coordinator` to get an instance.
 
     There is a single shared coordinator for all instances of this integration. This is to avoid
-    unneccesary hashing (AES) operations as much as possible.
+    unnecessary hashing (AES) operations as much as possible.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
