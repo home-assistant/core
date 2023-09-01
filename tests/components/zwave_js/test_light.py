@@ -691,7 +691,7 @@ async def test_black_is_off_zdb5100(
     node = logic_group_zdb5100
     state = hass.states.get(ZDB5100_ENTITY)
 
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
 
     # Attempt to turn on the light and ensure it defaults to white
     await hass.services.async_call(
@@ -712,37 +712,6 @@ async def test_black_is_off_zdb5100(
     assert args["value"] == {"red": 255, "green": 255, "blue": 255}
 
     client.async_send_command.reset_mock()
-
-    # Force the light to turn off
-    event = Event(
-        type="value updated",
-        data={
-            "source": "node",
-            "event": "value updated",
-            "nodeId": node.node_id,
-            "args": {
-                "commandClassName": "Color Switch",
-                "commandClass": 51,
-                "endpoint": 0,
-                "property": "currentColor",
-                "newValue": {
-                    "red": 0,
-                    "green": 0,
-                    "blue": 0,
-                },
-                "prevValue": {
-                    "red": 0,
-                    "green": 255,
-                    "blue": 0,
-                },
-                "propertyName": "currentColor",
-            },
-        },
-    )
-    node.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(ZDB5100_ENTITY)
-    assert state.state == STATE_OFF
 
     # Force the light to turn on
     event = Event(
@@ -774,6 +743,37 @@ async def test_black_is_off_zdb5100(
     await hass.async_block_till_done()
     state = hass.states.get(ZDB5100_ENTITY)
     assert state.state == STATE_ON
+
+    # Force the light to turn off
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": {
+                    "red": 0,
+                    "green": 0,
+                    "blue": 0,
+                },
+                "prevValue": {
+                    "red": 0,
+                    "green": 255,
+                    "blue": 0,
+                },
+                "propertyName": "currentColor",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(ZDB5100_ENTITY)
+    assert state.state == STATE_OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
