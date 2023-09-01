@@ -329,7 +329,6 @@ class ConfigEntry:
         hass: HomeAssistant,
         *,
         integration: loader.Integration | None = None,
-        tries: int | None = None,
     ) -> None:
         """Set up an entry."""
         current_entry.set(self)
@@ -339,9 +338,6 @@ class ConfigEntry:
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
-
-        if tries is not None:
-            self._tries = tries
 
         # Only store setup result as state if it was not forwarded.
         if self.domain == integration.domain:
