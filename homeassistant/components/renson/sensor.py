@@ -84,7 +84,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
         options=["good", "bad", "poor"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="AIR_QUALITY_FIELD",
@@ -93,7 +92,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
         options=["good", "bad", "poor"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CO2_FIELD",
@@ -102,7 +100,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
@@ -111,7 +108,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
@@ -120,7 +116,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_EXTRACT_FIELD",
@@ -129,7 +124,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_AIRFLOW_INGOING_FIELD",
@@ -138,7 +132,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="OUTDOOR_TEMP_FIELD",
@@ -148,7 +141,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="INDOOR_TEMP_FIELD",
@@ -158,7 +150,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="FILTER_REMAIN_FIELD",
@@ -168,7 +159,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.DAYS,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="HUMIDITY_FIELD",
@@ -177,7 +167,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="MANUAL_LEVEL_FIELD",
@@ -186,7 +175,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "level1", "level2", "level3", "level4", "breeze", "holiday"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="BREEZE_TEMPERATURE_FIELD",
@@ -196,7 +184,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="BREEZE_LEVEL_FIELD",
@@ -206,7 +193,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "level1", "level2", "level3", "level4", "breeze"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="DAYTIME_FIELD",
@@ -214,7 +200,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=DAYTIME_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="NIGHTTIME_FIELD",
@@ -222,7 +207,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=NIGHTTIME_FIELD,
         raw_format=False,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="DAY_POLLUTION_FIELD",
@@ -232,7 +216,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["level1", "level2", "level3", "level4"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="NIGHT_POLLUTION_FIELD",
@@ -242,7 +225,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["level1", "level2", "level3", "level4"],
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CO2_THRESHOLD_FIELD",
@@ -251,7 +233,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="CO2_HYSTERESIS_FIELD",
@@ -260,7 +241,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="BYPASS_TEMPERATURE_FIELD",
@@ -270,7 +250,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        has_entity_name=True,
     ),
     RensonSensorEntityDescription(
         key="BYPASS_LEVEL_FIELD",
@@ -280,7 +259,6 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        has_entity_name=True,
     ),
 )
 
