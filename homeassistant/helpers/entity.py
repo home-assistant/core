@@ -69,8 +69,6 @@ _T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
-SOURCE_CONFIG_ENTRY: Final = "config_entry"
-SOURCE_PLATFORM_CONFIG: Final = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -195,7 +193,6 @@ class EntityInfo(TypedDict):
 
     domain: str
     custom_component: bool
-    source: Literal["config_entry", "platform_config"]
     config_entry: NotRequired[str]
 
 
@@ -1082,15 +1079,12 @@ class Entity(ABC):
         info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
-            "source": SOURCE_CONFIG_ENTRY
-            if self.platform.config_entry
-            else SOURCE_PLATFORM_CONFIG,
         }
 
         if self.platform.config_entry:
             info["config_entry"] = self.platform.config_entry.entry_id
 
-        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
