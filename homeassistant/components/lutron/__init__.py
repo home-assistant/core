@@ -60,25 +60,25 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 
     if DOMAIN in base_config:
         lutron_configs = base_config[DOMAIN]
-        for config in lutron_configs:
-            _LOGGER.info("Looper2: %s", str(config))
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    # extract the config keys one-by-one just to be explicit
-                    data={
-                        CONF_HOST: config[CONF_HOST],
-                        CONF_PASSWORD: config[CONF_PASSWORD],
-                        CONF_USERNAME: config[CONF_USERNAME],
-                    },
-                )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                # extract the config keys one-by-one just to be explicit
+                data={
+                    CONF_HOST: lutron_configs[CONF_HOST],
+                    CONF_PASSWORD: lutron_configs[CONF_PASSWORD],
+                    CONF_USERNAME: lutron_configs[CONF_USERNAME],
+                },
             )
+        )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
     """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
@@ -125,7 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
-                        (led for led in keypad.leds if led.number == button.number),
+                        (
+                            led
+                            for led in keypad.leds
+                            if led.number == button.number
+                        ),
                         None,
                     )
                     hass.data[LUTRON_DEVICES]["scene"].append(
@@ -139,7 +143,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.data[LUTRON_DEVICES]["binary_sensor"].append(
                 (area.name, area.occupancy_group)
             )
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, PLATFORMS
+    )
 
     return True
 
@@ -201,7 +207,8 @@ class LutronButton:
             name += f" {button.number}"
         self._hass = hass
         self._has_release_event = (
-            button.button_type is not None and "RaiseLower" in button.button_type
+            button.button_type is not None
+            and "RaiseLower" in button.button_type
         )
         self._id = slugify(name)
         self._keypad = keypad
