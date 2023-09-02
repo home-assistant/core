@@ -191,7 +191,6 @@ async def test_diagnostics(
     """Test diagnostics for thread routers."""
     cache = mock_async_zeroconf.zeroconf.cache = DNSCache()
 
-    time.monotonic() * 1000
     cache.async_add_records(
         [
             *TEST_ZEROCONF_RECORD_1.dns_addresses(),
