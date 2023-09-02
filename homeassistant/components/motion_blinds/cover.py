@@ -16,15 +16,9 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
@@ -33,13 +27,12 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
-    KEY_VERSION,
-    MANUFACTURER,
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_DELAY_STOP,
     UPDATE_INTERVAL_MOVING,
     UPDATE_INTERVAL_MOVING_WIFI,
 )
+from .entity import MotionCoordinatorEntity
 from .gateway import device_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +89,6 @@ async def async_setup_entry(
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    sw_version = hass.data[DOMAIN][config_entry.entry_id][KEY_VERSION]
 
     for blind in motion_gateway.device_list.values():
         if blind.type in POSITION_DEVICE_MAP:
@@ -105,7 +97,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -115,7 +106,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -125,7 +115,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_ONLY_DEVICE_MAP[blind.type],
-                    sw_version,
                 )
             )
 
@@ -135,7 +124,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Top",
                 )
             )
@@ -144,7 +132,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Bottom",
                 )
             )
@@ -153,7 +140,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TDBU_DEVICE_MAP[blind.type],
-                    sw_version,
                     "Combined",
                 )
             )
@@ -168,7 +154,6 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     POSITION_DEVICE_MAP[BlindType.RollerBlind],
-                    sw_version,
                 )
             )
 
@@ -182,44 +167,27 @@ async def async_setup_entry(
     )
 
 
-class MotionPositionDevice(CoordinatorEntity, CoverEntity):
+class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
     _restore_tilt = False
 
-    def __init__(self, coordinator, blind, device_class, sw_version):
+    def __init__(self, coordinator, blind, device_class):
         """Initialize the blind."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, blind)
 
-        self._blind = blind
-        self._api_lock = coordinator.api_lock
         self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions = []
 
         if blind.device_type in DEVICE_TYPES_WIFI:
             self._update_interval_moving = UPDATE_INTERVAL_MOVING_WIFI
-            via_device = ()
-            connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
         else:
             self._update_interval_moving = UPDATE_INTERVAL_MOVING
-            via_device = (DOMAIN, blind._gateway.mac)
-            connections = {}
-            sw_version = None
 
         name = device_name(blind)
         self._attr_device_class = device_class
         self._attr_name = name
         self._attr_unique_id = blind.mac
-        self._attr_device_info = DeviceInfo(
-            connections=connections,
-            identifiers={(DOMAIN, blind.mac)},
-            manufacturer=MANUFACTURER,
-            model=blind.blind_type,
-            name=name,
-            via_device=via_device,
-            sw_version=sw_version,
-            hw_version=blind.wireless_name,
-        )
 
     @property
     def available(self) -> bool:
@@ -248,16 +216,6 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if self._blind.position is None:
             return None
         return self._blind.position == 100
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to multicast pushes and register signal handler."""
-        self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe when removed."""
-        self._blind.Remove_callback(self.unique_id)
-        await super().async_will_remove_from_hass()
 
     async def async_scheduled_update_request(self, *_):
         """Request a state update from the blind at a scheduled point in time."""
@@ -439,9 +397,9 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, sw_version, motor):
+    def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
-        super().__init__(coordinator, blind, device_class, sw_version)
+        super().__init__(coordinator, blind, device_class)
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_name = f"{device_name(blind)} {motor}"
