@@ -1,6 +1,8 @@
 """Support for Lutron Powr Savr occupancy sensors."""
 from __future__ import annotations
 
+import logging
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -17,6 +19,8 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -29,11 +33,11 @@ async def async_setup_entry(
     Adds occupancy groups from the Main Repeater associated with the
     config_entry as binary_sensor entities.
     """
-    if discovery_info is None:
-        return
     entities = []
     for area_name, device in hass.data[LUTRON_DEVICES]["binary_sensor"]:
-        entity = LutronOccupancySensor(area_name, device, hass.data[LUTRON_CONTROLLER])
+        entity = LutronOccupancySensor(
+            area_name, device, hass.data[LUTRON_CONTROLLER]
+        )
         entities.append(entity)
     async_add_entities(entities, True)
 
