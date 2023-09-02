@@ -1477,3 +1477,22 @@ async def test_warn_no_platform(
     caplog.clear()
     ent.async_write_ha_state()
     assert error_message not in caplog.text
+
+
+async def test_invalid_state(hass) -> None:
+    """Test the entity helper catches InvalidState and sets state to unknown."""
+    ent = entity.Entity()
+    ent.entity_id = "test.test"
+    ent.hass = hass
+
+    ent._attr_state = "x" * 255
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == "x" * 255
+
+    ent._attr_state = "x" * 256
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+
+    ent._attr_state = "x" * 255
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == "x" * 255
