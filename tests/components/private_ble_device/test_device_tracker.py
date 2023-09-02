@@ -83,6 +83,23 @@ async def test_tracker_arrive_home(hass: HomeAssistant, enable_bluetooth: None) 
     assert state.attributes["current_address"] == "40:01:02:0a:c4:a6"
 
 
+async def test_tracker_isolation(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test creating 2 tracker entities doesn't confuse anything."""
+    await async_mock_config_entry(hass)
+    await async_mock_config_entry(hass, irk="1" * 32)
+
+    # This broadcast should only impact the first entity
+    await async_inject_broadcast(hass, MAC_RPA_VALID_1, b"1")
+
+    state = hass.states.get("device_tracker.private_ble_device_000000")
+    assert state
+    assert state.state == "home"
+
+    state = hass.states.get("device_tracker.private_ble_device_111111")
+    assert state
+    assert state.state == "not_home"
+
+
 async def test_tracker_mac_rotate(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test MAC address rotation."""
     await async_inject_broadcast(hass, MAC_RPA_VALID_1)

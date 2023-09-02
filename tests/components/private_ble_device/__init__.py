@@ -23,14 +23,16 @@ MAC_RPA_VALID_2 = "40:02:03:d2:74:ce"
 MAC_RPA_INVALID = "40:00:00:d2:74:ce"
 MAC_STATIC = "00:01:ff:a0:3a:76"
 
+DUMMY_IRK = "00000000000000000000000000000000"
 
-async def async_mock_config_entry(hass: HomeAssistant) -> None:
+
+async def async_mock_config_entry(hass: HomeAssistant, irk: str = DUMMY_IRK) -> None:
     """Create a test device for a dummy IRK."""
     entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        entry_id="00000000000000000000000000000000",
-        data={"irk": "00000000000000000000000000000000"},
+        entry_id=irk,
+        data={"irk": irk},
         title="Private BLE Device 000000",
     )
     entry.add_to_hass(hass)
