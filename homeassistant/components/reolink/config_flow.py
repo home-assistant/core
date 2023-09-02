@@ -16,7 +16,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from . import ReolinkData
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
