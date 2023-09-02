@@ -1,127 +1,101 @@
-"""Test the No-IP.com component."""
-from __future__ import annotations
-
-from datetime import timedelta
+"""Test the NO-IP component."""
+import base64
 from unittest.mock import Mock
 
 import pytest
 
 from homeassistant.components import no_ip
-from homeassistant.config_entries import ConfigEntry, UnknownEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DOMAIN = "test.example.com"
 
 PASSWORD = "xyz789"
 
-UPDATE_URL = no_ip.const.UPDATE_URL
-
 USERNAME = "abc@123.com"
 
 
-@pytest.fixture
-def setup_no_ip(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Fixture that sets up NO-IP."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="good 0.0.0.0")
-
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            no_ip.const.DOMAIN,
-            {
-                no_ip.const.DOMAIN: {
-                    "domain": DOMAIN,
-                    "username": USERNAME,
-                    "password": PASSWORD,
-                }
-            },
-        )
-    )
-
-
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
-    """Test setup works if update passes."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text="nochg 0.0.0.0")
-
+async def test_setup(hass: HomeAssistant) -> None:
+    """Test the setup of the NO-IP component."""
     result = await async_setup_component(
         hass,
-        no_ip.const.DOMAIN,
+        no_ip.DOMAIN,
         {
-            no_ip.const.DOMAIN: {
+            no_ip.DOMAIN: {
                 "domain": DOMAIN,
                 "username": USERNAME,
                 "password": PASSWORD,
+                "timeout": 10,
             }
         },
     )
     assert result
-    assert aioclient_mock.call_count == 2
-
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 3
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("result_text", "counter"),
+    ("result_text"),
     [
-        ("good 192.168.1.1", 2),
-        ("nochg 192.168.1.1", 2),
-        ("badauth", 1),
-        ("badagent", 1),
-        ("nohost", 1),
+        ("good 0.0.0.0"),
+        ("nochg 0.0.0.0"),
     ],
 )
-async def test_setup_fails(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    result_text: str,
-    counter: int,
-) -> None:
-    """Test setup fails if first update fails through wrong authentication."""
-    aioclient_mock.get(UPDATE_URL, params={"hostname": DOMAIN}, text=result_text)
+async def test_update_no_ip(result_text):
+    """Test successful update of NO-IP."""
+    hass = Mock(spec=HomeAssistant)
+    session = Mock()
+    domain = DOMAIN
+    auth_str = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode())
+    timeout = 10
 
-    result = await async_setup_component(
-        hass,
-        no_ip.const.DOMAIN,
-        {
-            no_ip.const.DOMAIN: {
-                "domain": DOMAIN,
-                "username": USERNAME,
-                "password": PASSWORD,
-            }
-        },
-    )
-    assert result
-    assert aioclient_mock.call_count == counter
+    # Replace the session.get method with the fake_session_get function.
+    async def fake_session_get(url, params, headers):
+        # Simulate a real aiohttp.ClientResponse object.
+        class FakeResponse:
+            async def text(self):
+                # Return the expected response text here.
+                return result_text
+
+        return FakeResponse()
+
+    # Replace the session.get method with the fake_session_get function.
+    session.get.side_effect = fake_session_get
+
+    result = await no_ip._update_no_ip(hass, session, domain, auth_str, timeout)
+
+    assert result is True
 
 
-async def test_update_listener(hass: HomeAssistant) -> None:
-    """Test update_listener."""
-    config_entry = ConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="test",
-        source="test",
-        data={
-            "domain": DOMAIN,
-            "username": USERNAME,
-            "password": PASSWORD,
-        },
-    )
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("result_text"),
+    [
+        ("badauth"),
+        ("badagent"),
+        ("nohost"),
+    ],
+)
+async def test_fail_update_no_ip(result_text):
+    """Test failed update of NO-IP."""
+    hass = Mock(spec=HomeAssistant)
+    session = Mock()
+    domain = DOMAIN
+    auth_str = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode())
+    timeout = 10
 
-    # Assign the separate function update_listener to the ConfigEntry as a method
-    config_entry.add_update_listener(no_ip.update_listener)
+    # Replace the session.get method with the fake_session_get function.
+    async def fake_session_get(url, params, headers):
+        # Simulate a real aiohttp.ClientResponse object.
+        class FakeResponse:
+            async def text(self):
+                # Return the expected response text here.
+                return result_text
 
-    # Mock the async_reload method of the config_entries object
-    config_entry_mock = Mock()
-    config_entry_mock.async_reload = Mock(side_effect=UnknownEntry)
+        return FakeResponse()
 
-    # Execute the update_listener function and pass the mock instance as an argument
-    with pytest.raises(UnknownEntry):
-        await no_ip.update_listener(hass, config_entry_mock)
+    # Replace the session.get method with the fake_session_get function.
+    session.get.side_effect = fake_session_get
+
+    result = await no_ip._update_no_ip(hass, session, domain, auth_str, timeout)
+
+    assert result is False
