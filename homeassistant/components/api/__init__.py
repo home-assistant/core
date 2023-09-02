@@ -9,6 +9,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 import voluptuous as vol
 
+from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView, require_admin
@@ -189,16 +190,20 @@ class APIStatesView(HomeAssistantView):
     name = "api:states"
 
     @ha.callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Get current states."""
-        user = request["hass_user"]
+        user: User = request["hass_user"]
+        hass: HomeAssistant = request.app["hass"]
+        if user.is_admin:
+            return self.json([state.as_dict() for state in hass.states.async_all()])
         entity_perm = user.permissions.check_entity
-        states = [
-            state
-            for state in request.app["hass"].states.async_all()
-            if entity_perm(state.entity_id, "read")
-        ]
-        return self.json(states)
+        return self.json(
+            [
+                state.as_dict()
+                for state in hass.states.async_all()
+                if entity_perm(state.entity_id, "read")
+            ]
+        )
 
 
 class APIEntityStateView(HomeAssistantView):
