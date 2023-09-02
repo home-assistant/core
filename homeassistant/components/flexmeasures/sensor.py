@@ -22,9 +22,7 @@ async def async_setup_entry(
     """Set up sensor."""
     hass.data[DOMAIN]["schedule"] = {"schedule": [], "start": None}
 
-    async_add_entities(
-        [FlexMeasuresScheduleSensor(hass.data[DOMAIN]["schedule"], hass)], True
-    )
+    async_add_entities([FlexMeasuresScheduleSensor()], True)
 
 
 class FlexMeasuresScheduleSensor(SensorEntity):
@@ -33,11 +31,9 @@ class FlexMeasuresScheduleSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.MEGA_WATT_HOUR
 
-    def __init__(self, schedule: dict, hass: HomeAssistant) -> None:
+    def __init__(self) -> None:
         """Sensor to store the schedule created by FlexMeasures."""
-        self.schedule = schedule
         self._attr_unique_id = "flexmeasures_schedule"
-        self._hass = hass
 
     @property
     def name(self) -> str:
@@ -48,7 +44,7 @@ class FlexMeasuresScheduleSensor(SensorEntity):
     def native_value(self) -> float:
         """Average energy."""
 
-        commands = self.schedule["schedule"]
+        commands = self.hass.data[DOMAIN]["schedule"]["schedule"]
         if len(commands) == 0:
             return 0
         return sum(command["value"] for command in commands) / len(commands)
@@ -56,13 +52,13 @@ class FlexMeasuresScheduleSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the FlexMeasures Schedule sensor."""
-        return self.schedule
+        return self.hass.data[DOMAIN]["schedule"]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self._hass, SIGNAL_UPDATE_SCHEDULE, self._update_callback
+                self.hass, SIGNAL_UPDATE_SCHEDULE, self._update_callback
             )
         )
 
