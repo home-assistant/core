@@ -39,7 +39,7 @@ async def test_async_create_certificate_temp_files(
     temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
 
     # Create old file to be able to assert it is removed with auto option
-    def _enuse_old_file_exists() -> None:
+    def _ensure_old_file_exists() -> None:
         if not temp_dir.exists():
             temp_dir.mkdir(0o700)
         temp_file = temp_dir / option
@@ -47,7 +47,7 @@ async def test_async_create_certificate_temp_files(
             old_file.write(b"old content")
             old_file.close()
 
-    await hass.async_add_executor_job(_enuse_old_file_exists)
+    await hass.async_add_executor_job(_ensure_old_file_exists)
     await mqtt.util.async_create_certificate_temp_files(hass, config)
     file_path = await hass.async_add_executor_job(mqtt.util.get_file_path, option)
     assert bool(file_path) is file_created
@@ -59,7 +59,7 @@ async def test_async_create_certificate_temp_files(
     )
 
     # Make sure certificate temp files are recovered
-    await hass.async_add_executor_job(_enuse_old_file_exists)
+    await hass.async_add_executor_job(_ensure_old_file_exists)
 
     await mqtt.util.async_create_certificate_temp_files(hass, config)
     file_path2 = await hass.async_add_executor_job(mqtt.util.get_file_path, option)
