@@ -23,9 +23,8 @@ from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -496,15 +495,8 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
             self._heartbeat_timer = None
             self.async_write_ha_state()
 
-        point_in_time = dt_util.utcnow() + timedelta(hours=25)
-        _LOGGER.debug(
-            "Heartbeat timer starting. Now: %s Then: %s",
-            dt_util.utcnow(),
-            point_in_time,
-        )
-
-        self._heartbeat_timer = async_track_point_in_utc_time(
-            self.hass, timer_elapsed, point_in_time
+        self._heartbeat_timer = async_call_later(
+            self.hass, timedelta(hours=25), timer_elapsed
         )
 
     @callback
