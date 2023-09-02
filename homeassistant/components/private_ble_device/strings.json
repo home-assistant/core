@@ -16,18 +16,5 @@
     "abort": {
       "bluetooth_not_available": "At least one Bluetooth adapter or remote bluetooth proxy must be configured to track Private BLE Devices."
     }
-  },
-  "entity": {
-    "sensor": {
-      "power": {
-        "name": "Power"
-      },
-      "estimated_distance": {
-        "name": "Estimated distance"
-      },
-      "vendor": {
-        "name": "Vendor"
-      }
-    }
   }
 }
