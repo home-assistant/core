@@ -1,7 +1,6 @@
 """Test the thread websocket API."""
 
 import dataclasses
-import time
 from unittest.mock import Mock, patch
 
 import pytest
