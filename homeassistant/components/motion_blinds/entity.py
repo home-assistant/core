@@ -22,6 +22,8 @@ from .gateway import device_name
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):
     """Representation of a Motion Blind entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinatorMotionBlinds,
