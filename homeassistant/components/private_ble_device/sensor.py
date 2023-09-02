@@ -14,7 +14,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfLength
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,7 +45,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,       
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda service_info: service_info.advertisement.rssi,
         state_class=SensorStateClass.MEASUREMENT,
     ),
