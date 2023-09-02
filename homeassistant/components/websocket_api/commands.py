@@ -713,12 +713,12 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    response = await script_obj.async_run(msg.get("variables"), context=context)
+    script_result = await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_result(
         msg["id"],
         {
             "context": context,
-            "response": response,
+            "response": script_result.service_response if script_result else None,
         },
     )
 
