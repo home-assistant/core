@@ -25,7 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER, REFRESH_DEVICE_STATES_INTERVAL, UPDATE_INTERVAL
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -209,3 +209,32 @@ async def on_execution_state_changed(
         ExecutionState.FAILED,
     ]:
         del coordinator.executions[event.exec_id]
+
+
+class OverkizDeviceRefreshCoordinator(DataUpdateCoordinator[None]):
+    """Class to trigger device state refresh for devices on Overkiz platform."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        *,
+        client: OverkizClient,
+        device_url: str,
+    ) -> None:
+        """Initialize data update coordinator."""
+        self.client = client
+        self.device_url = device_url
+        super().__init__(
+            hass,
+            logger,
+            name=f"device refresh for {device_url}",
+            update_interval=REFRESH_DEVICE_STATES_INTERVAL,
+        )
+
+        # Ensure this coordinator runs periodically even though there is no listener needed.
+        self.async_add_listener(lambda: None)
+
+    async def _async_update_data(self) -> None:
+        """Trigger device state refresh on Overkiz platform."""
+        await self.client.refresh_device_states(self.device_url)

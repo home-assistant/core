@@ -27,11 +27,12 @@ from .const import (
     DOMAIN,
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
+    OVERKIZ_REFRESH_DEVICE_STATES_DEVICES,
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
 )
-from .coordinator import OverkizDataUpdateCoordinator
+from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceRefreshCoordinator
 
 
 @dataclass
@@ -39,6 +40,7 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
+    device_refresh_coordinators: list[OverkizDeviceRefreshCoordinator]
     platforms: defaultdict[Platform, list[Device]]
     scenarios: list[Scenario]
 
@@ -96,11 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
+    device_refresh_coordinators: list[OverkizDeviceRefreshCoordinator] = []
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
-        coordinator=coordinator, platforms=platforms, scenarios=scenarios
-    )
 
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
@@ -116,6 +115,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.widget
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
             platforms[platform].append(device)
+
+        if (
+            device.widget in OVERKIZ_REFRESH_DEVICE_STATES_DEVICES
+            or device.ui_class in OVERKIZ_REFRESH_DEVICE_STATES_DEVICES
+        ):
+            device_refresh_coordinator = OverkizDeviceRefreshCoordinator(
+                hass, LOGGER, client=client, device_url=device.device_url
+            )
+            await device_refresh_coordinator.async_request_refresh()
+            device_refresh_coordinators.append(device_refresh_coordinator)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
+        coordinator=coordinator,
+        device_refresh_coordinators=device_refresh_coordinators,
+        platforms=platforms,
+        scenarios=scenarios,
+    )
 
     device_registry = dr.async_get(hass)
 

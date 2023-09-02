@@ -37,6 +37,8 @@ DEFAULT_HUB: Final = "somfy_europe"
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
+REFRESH_DEVICE_STATES_INTERVAL: Final = timedelta(minutes=5)
+
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -57,6 +59,11 @@ PLATFORMS: list[Platform] = [
 IGNORED_OVERKIZ_DEVICES: list[UIClass | UIWidget] = [
     UIClass.PROTOCOL_GATEWAY,
     UIClass.POD,
+]
+
+OVERKIZ_REFRESH_DEVICE_STATES_DEVICES: list[UIClass | UIWidget] = [
+    UIClass.GARAGE_DOOR,
+    UIClass.GATE,
 ]
 
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
