@@ -1162,3 +1162,8 @@ def _lookup_path(hass: HomeAssistant) -> list[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+
+
+def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
+    """Test if a component module is loaded."""
+    return module in hass.data[DATA_COMPONENTS]
