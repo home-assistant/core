@@ -1019,41 +1019,6 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="min_heat_setpo
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossHeatingSetpointScheduled(
-    ZCLTemperatureEntity, id_suffix="occupied_heating_setpoint_scheduled"
-):
-    """Danfoss Has a slow and an aggressive setpoint change."""
-
-    _zcl_attribute: str = "occupied_heating_setpoint_scheduled"
-    _attr_name: str = "Occupied Heating Setpoint Scheduled"
-    _attr_entity_category: EntityCategory | None = None
-    _attr_icon: str = "mdi:thermostat"
-    _attr_native_step: float = 0.5
-
-    def __init__(
-        self,
-        unique_id: str,
-        zha_device: ZHADevice,
-        cluster_handlers: list[ClusterHandler],
-        **kwargs: Any,
-    ) -> None:
-        """Init this number configuration entity."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._thermostat = self._cluster_handler.cluster.endpoint.thermostat
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return self._thermostat.get("min_heat_setpoint_limit") * self._attr_multiplier
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self._thermostat.get("max_heat_setpoint_limit") * self._attr_multiplier
-
-
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossExerciseTriggerTime(
     ZHANumberConfigurationEntity, id_suffix="exercise_trigger_time"
 ):
