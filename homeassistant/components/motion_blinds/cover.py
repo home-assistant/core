@@ -33,7 +33,6 @@ from .const import (
     UPDATE_INTERVAL_MOVING_WIFI,
 )
 from .entity import MotionCoordinatorEntity
-from .gateway import device_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,6 +169,7 @@ async def async_setup_entry(
 class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
     """Representation of a Motion Blind Device."""
 
+    _attr_name = None
     _restore_tilt = False
 
     def __init__(self, coordinator, blind, device_class):
@@ -184,9 +184,7 @@ class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
         else:
             self._update_interval_moving = UPDATE_INTERVAL_MOVING
 
-        name = device_name(blind)
         self._attr_device_class = device_class
-        self._attr_name = name
         self._attr_unique_id = blind.mac
 
     @property
@@ -402,7 +400,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class)
         self._motor = motor
         self._motor_key = motor[0]
-        self._attr_name = f"{device_name(blind)} {motor}"
+        self._attr_translation_key = motor.lower()
         self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:

@@ -1,5 +1,5 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
+from motionblinds import DEVICE_TYPES_WIFI, BlindType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 from .entity import MotionCoordinatorEntity
-from .gateway import device_name
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 
@@ -53,8 +52,6 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
         super().__init__(coordinator, blind)
-
-        self._attr_name = f"{device_name(blind)} battery"
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
@@ -77,7 +74,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
 
         self._motor = motor
         self._attr_unique_id = f"{blind.mac}-{motor}-battery"
-        self._attr_name = f"{device_name(blind)} {motor} battery"
+        self._attr_translation_key = f"{motor.lower()}_battery"
 
     @property
     def native_value(self):
@@ -108,14 +105,7 @@ class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, blind):
         """Initialize the Motion Signal Strength Sensor."""
         super().__init__(coordinator, blind)
-
-        if blind.device_type in DEVICE_TYPES_GATEWAY:
-            name = "Motion gateway signal strength"
-        else:
-            name = f"{device_name(blind)} signal strength"
-
         self._attr_unique_id = f"{blind.mac}-RSSI"
-        self._attr_name = name
 
     @property
     def native_value(self):
