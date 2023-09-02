@@ -8,3 +8,4 @@ WS_VIEW_NAME = "websocket_custom"
 # SERVICES
 SERVICE_CHANGE_CONTROL_TYPE = "change_control_type"
 RESOLUTION = "PT15M"
+SIGNAL_UPDATE_SCHEDULE = "update_schedule"

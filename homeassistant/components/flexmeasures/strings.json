@@ -48,5 +48,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "FM power Sensor"
+      }
+    }
   }
 }

@@ -12,9 +12,15 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, RESOLUTION, SERVICE_CHANGE_CONTROL_TYPE
+from .const import (
+    DOMAIN,
+    RESOLUTION,
+    SERVICE_CHANGE_CONTROL_TYPE,
+    SIGNAL_UPDATE_SCHEDULE,
+)
 from .helpers import get_from_option_or_config, time_ceil
 
 CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
@@ -97,17 +103,15 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             soc_at_start=call.data.get("soc_at_start"), **input_arguments
         )
 
-        schedule_state = start.isoformat()
         schedule = [
             {"start": start + resolution * i, "value": value}
             for i, value in enumerate(schedule["values"])
         ]
 
-        hass.states.async_set(
-            f"{DOMAIN}.charge_schedule",
-            new_state=schedule_state,
-            attributes={"schedule": schedule},
-        )
+        hass.data[DOMAIN]["schedule"]["schedule"] = schedule
+        hass.data[DOMAIN]["schedule"]["start"] = start
+
+        async_dispatcher_send(hass, SIGNAL_UPDATE_SCHEDULE)
 
     async def post_measurements(
         call: ServiceCall,

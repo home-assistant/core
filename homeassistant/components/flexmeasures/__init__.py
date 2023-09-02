@@ -24,16 +24,7 @@ DEFAULT_NAME = "World"
 
 _LOGGER = logging.getLogger(__name__)
 
-
-# def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-#     """Set up is called when Home Assistant is loading our component."""
-
-#     # Return boolean to indicate that initialization was successful.
-#     return True
-
-
-# PLATFORMS: list[Platform] = [Platform.SENSOR]
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -74,6 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN]["cem"] = cem
     hass.http.register_view(WebsocketAPIView(cem))
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_setup_services(hass, entry)
 
