@@ -1,4 +1,4 @@
-"""Config flow for the Reolink camera component."""
+"""utility functions for the Reolink component."""
 from __future__ import annotations
 
 from homeassistant import config_entries
