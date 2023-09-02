@@ -26,6 +26,6 @@ def mock_temp_dir(temp_dir_prefix: str) -> Generator[None, None, str]:
     with patch(
         # Patch temp dir name to avoid tests fail running in parallel
         "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt-" + f"{temp_dir_prefix}-{getrandbits(10):03x}",
+        f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
     ) as mocked_temp_dir:
         yield mocked_temp_dir
