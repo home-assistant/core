@@ -952,9 +952,6 @@ class AqaraThermostatAwayTemp(
     _attr_icon: str = ICONS[0]
 
 
-ZCL_TEMP = 100
-
-
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
     """Common Entity Class for ZCL Temperature input."""
@@ -962,20 +959,39 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
     _attr_native_unit_of_measurement: str = "°C"
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_step: float = 0.01
+    _attr_multiplier: float = 0.01
+
+
+class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
+    """Min or Max Heat Setpoint setting on thermostats.
+    """
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_step: float = 0.5
+
+    min_source = "abs_min_heat_setpoint_limit"
+    max_source = "abs_max_heat_setpoint_limit"
 
     @property
-    def native_value(self) -> float:
-        """Return the current value."""
-        return super().native_value / ZCL_TEMP
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        min_present_value = self._cluster_handler.cluster.get(self.min_source)
+        if min_present_value is None:
+            # This is a 16bit signed integer, which has to be converted to a python integer
+            min_present_value = ctypes.c_short(0x954D).value  # according to spec
+        return min_present_value * self._attr_multiplier
 
-    async def async_set_native_value(self, value: float) -> None:
-        """Update the current value from HA."""
-        return await super().async_set_native_value(int(value * ZCL_TEMP))
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._cluster_handler.cluster.get(self.max_source)
+        if max_present_value is None:
+            max_present_value = 0x7FFF  # according to spec
+        return max_present_value * self._attr_multiplier
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_limit"):
+class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="max_heat_setpoint_limit"):
     """Max Heat Setpoint setting on thermostats.
 
     Optional Thermostat attribute
@@ -983,31 +999,13 @@ class MaxHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="max_heat_setpoint_li
 
     _zcl_attribute: str = "max_heat_setpoint_limit"
     _attr_name: str = "Max Heat Setpoint Limit"
-    _attr_icon: str = "mdi:thermostat"
 
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        min_present_value = self._cluster_handler.cluster.get("min_heat_setpoint_limit")
-        if min_present_value is not None:
-            return min_present_value / ZCL_TEMP
-        # This is a 16bit signed integer, which has to be converted to a python integer
-        return ctypes.c_short(0x954D).value / ZCL_TEMP  # according to spec
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        max_present_value = self._cluster_handler.cluster.get(
-            "abs_max_heat_setpoint_limit"
-        )
-        if max_present_value is not None:
-            return max_present_value / ZCL_TEMP
-        return 0x7FFF / ZCL_TEMP  # according to spec
+    min_source = "min_heat_setpoint_limit"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_limit"):
+class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="min_heat_setpoint_limit"):
     """Min Heat Setpoint setting on thermostats.
 
     Optional Thermostat attribute
@@ -1015,26 +1013,8 @@ class MinHeatSetpointLimit(ZCLTemperatureEntity, id_suffix="min_heat_setpoint_li
 
     _zcl_attribute: str = "min_heat_setpoint_limit"
     _attr_name: str = "Min Heat Setpoint Limit"
-    _attr_icon: str = "mdi:thermostat"
 
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        min_present_value = self._cluster_handler.cluster.get(
-            "abs_min_heat_setpoint_limit"
-        )
-        if min_present_value is not None:
-            return min_present_value / ZCL_TEMP
-        # This is a 16bit signed integer, which has to be converted to a python integer
-        return ctypes.c_short(0x954D).value / ZCL_TEMP  # according to spec
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        max_present_value = self._cluster_handler.cluster.get("max_heat_setpoint_limit")
-        if max_present_value is not None:
-            return max_present_value / ZCL_TEMP
-        return 0x7FFF / ZCL_TEMP  # according to spec
+    max_source = "max_heat_setpoint_limit"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
@@ -1064,12 +1044,12 @@ class DanfossHeatingSetpointScheduled(
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        return self._thermostat.get("min_heat_setpoint_limit") / ZCL_TEMP
+        return self._thermostat.get("min_heat_setpoint_limit") * self._attr_multiplier
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        return self._thermostat.get("max_heat_setpoint_limit") / ZCL_TEMP
+        return self._thermostat.get("max_heat_setpoint_limit") * self._attr_multiplier
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="danfoss_trv_cluster")
