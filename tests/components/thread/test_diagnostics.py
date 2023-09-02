@@ -191,50 +191,50 @@ async def test_diagnostics(
     """Test diagnostics for thread routers."""
     cache = mock_async_zeroconf.zeroconf.cache = DNSCache()
 
-    now = time.monotonic() * 1000
+    time.monotonic() * 1000
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_1.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_1.dns_addresses(),
+            TEST_ZEROCONF_RECORD_1.dns_service(),
+            TEST_ZEROCONF_RECORD_1.dns_text(),
+            TEST_ZEROCONF_RECORD_1.dns_pointer(),
         ]
     )
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_2.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_2.dns_addresses(),
+            TEST_ZEROCONF_RECORD_2.dns_service(),
+            TEST_ZEROCONF_RECORD_2.dns_text(),
+            TEST_ZEROCONF_RECORD_2.dns_pointer(),
         ]
     )
     # Test for invalid cache
-    cache.async_add_records([TEST_ZEROCONF_RECORD_3.dns_pointer(created=now)])
+    cache.async_add_records([TEST_ZEROCONF_RECORD_3.dns_pointer()])
     # Test for invalid record
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_4.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_4.dns_addresses(),
+            TEST_ZEROCONF_RECORD_4.dns_service(),
+            TEST_ZEROCONF_RECORD_4.dns_text(),
+            TEST_ZEROCONF_RECORD_4.dns_pointer(),
         ]
     )
     # Test for record without xa
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_5.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_5.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_5.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_5.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_5.dns_addresses(),
+            TEST_ZEROCONF_RECORD_5.dns_service(),
+            TEST_ZEROCONF_RECORD_5.dns_text(),
+            TEST_ZEROCONF_RECORD_5.dns_pointer(),
         ]
     )
     # Test for record without xp
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_6.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_6.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_6.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_6.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_6.dns_addresses(),
+            TEST_ZEROCONF_RECORD_6.dns_service(),
+            TEST_ZEROCONF_RECORD_6.dns_text(),
+            TEST_ZEROCONF_RECORD_6.dns_pointer(),
         ]
     )
     assert await async_setup_component(hass, DOMAIN, {})
