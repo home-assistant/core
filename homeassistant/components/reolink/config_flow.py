@@ -75,7 +75,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return ReolinkOptionsFlowHandler(config_entry)
 
     def has_connection_problem(self, config_entry: config_entries.ConfigEntry) -> bool:
-        """Check if a existing entry has a connection problem"""
+        """Check if a existing entry has a connection problem."""
         reolink_data: ReolinkData | None = self.hass.data.get(DOMAIN, {}).get(
             config_entry.entry_id
         )
