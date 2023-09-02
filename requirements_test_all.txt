@@ -33,6 +33,7 @@ HATasmota==0.7.0
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
+# homeassistant.components.matrix
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
@@ -898,6 +899,9 @@ lxml==4.9.3
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
+
+# homeassistant.components.matrix
+matrix-nio==0.21.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
