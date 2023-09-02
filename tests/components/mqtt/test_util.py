@@ -79,7 +79,7 @@ async def test_return_default_get_file_path(mock_temp_dir: str) -> None:
     """Test get_file_path returns default."""
     with patch(
         "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt-other" + f"-{getrandbits(10):03x}",
+        f"home-assistant-mqtt-other-{getrandbits(10):03x}",
     ) as mock_temp_dir:
         tempdir = Path(tempfile.gettempdir()) / mock_temp_dir
         assert not tempdir.exists()
