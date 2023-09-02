@@ -213,6 +213,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.mastodon.*
+homeassistant.components.matrix.*
 homeassistant.components.matter.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
