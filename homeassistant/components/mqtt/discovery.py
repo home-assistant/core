@@ -48,7 +48,7 @@ TOPIC_MATCHER = re.compile(
     r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
 )
 
-SUPPORTED_COMPONENTS = [
+SUPPORTED_COMPONENTS = {
     "alarm_control_panel",
     "binary_sensor",
     "button",
@@ -75,7 +75,7 @@ SUPPORTED_COMPONENTS = [
     "update",
     "vacuum",
     "water_heater",
-]
+}
 
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
@@ -275,32 +275,34 @@ async def async_start(  # noqa: C901
 
         _LOGGER.debug("Process discovery payload %s", payload)
         discovery_hash = (component, discovery_id)
-        if discovery_hash in mqtt_data.discovery_already_discovered or payload:
+
+        already_discovered = discovery_hash in mqtt_data.discovery_already_discovered
+        if (
+            already_discovered or payload
+        ) and discovery_hash not in mqtt_data.discovery_pending_discovered:
+            discovery_pending_discovered = mqtt_data.discovery_pending_discovered
 
             @callback
             def discovery_done(_: Any) -> None:
-                pending = mqtt_data.discovery_pending_discovered[discovery_hash][
-                    "pending"
-                ]
+                pending = discovery_pending_discovered[discovery_hash]["pending"]
                 _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
                 if not pending:
-                    mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
-                    mqtt_data.discovery_pending_discovered.pop(discovery_hash)
+                    discovery_pending_discovered[discovery_hash]["unsub"]()
+                    discovery_pending_discovered.pop(discovery_hash)
                 else:
                     payload = pending.pop()
                     async_process_discovery_payload(component, discovery_id, payload)
 
-            if discovery_hash not in mqtt_data.discovery_pending_discovered:
-                mqtt_data.discovery_pending_discovered[discovery_hash] = {
-                    "unsub": async_dispatcher_connect(
-                        hass,
-                        MQTT_DISCOVERY_DONE.format(discovery_hash),
-                        discovery_done,
-                    ),
-                    "pending": deque([]),
-                }
+            discovery_pending_discovered[discovery_hash] = {
+                "unsub": async_dispatcher_connect(
+                    hass,
+                    MQTT_DISCOVERY_DONE.format(discovery_hash),
+                    discovery_done,
+                ),
+                "pending": deque([]),
+            }
 
-        if discovery_hash in mqtt_data.discovery_already_discovered:
+        if already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
             async_log_discovery_origin_info(message, payload)

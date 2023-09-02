@@ -335,7 +335,7 @@ aioswitcher==3.4.0
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.5
+aiotractive==0.5.6
 
 # homeassistant.components.unifi
 aiounifi==58
@@ -460,7 +460,7 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.9.1
+bluetooth-data-tools==1.11.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -777,7 +777,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230831.0
+home-assistant-frontend==20230901.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -924,7 +924,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.2.0
+mill-local==0.3.0
 
 # homeassistant.components.mill
 millheater==0.11.1
