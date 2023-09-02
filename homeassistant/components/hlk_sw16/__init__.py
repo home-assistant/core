@@ -147,12 +147,8 @@ class SW16Device(Entity):
         self._device_port = device_port
         self._is_on = None
         self._client = client
-        self._name = device_port
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._entry_id}_{self._device_port}"
+        self._attr_name = device_port
+        self._attr_unique_id = f"{self._entry_id}_{self._device_port}"
 
     @callback
     def handle_event_callback(self, event):
@@ -160,11 +156,6 @@ class SW16Device(Entity):
         _LOGGER.debug("Relay %s new state callback: %r", self.unique_id, event)
         self._is_on = event
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return a name for the device."""
-        return self._name
 
     @property
     def available(self):
