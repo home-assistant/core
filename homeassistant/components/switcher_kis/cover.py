@@ -61,7 +61,6 @@ class SwitcherCoverEntity(
     """Representation of a Switcher cover entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -70,12 +69,16 @@ class SwitcherCoverEntity(
         | CoverEntityFeature.STOP
     )
 
+    @property
+    def name(self):
+        """Name of the entity."""
+        return self.cover_id.capitalize()
+
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.cover_id = cover_id
 
-        self._attr_name = f"{coordinator.name} {self.cover_id}"
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.cover_id}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -136,8 +139,7 @@ class SwitcherCoverEntity(
                 return 2
             else:
                 return 3
-        else:
-            return 0
+        return 0
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

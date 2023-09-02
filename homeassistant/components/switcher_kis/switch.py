@@ -178,6 +178,13 @@ class SwitcherBaselLightEntity(
 ):
     """Representation of a Switcher light entity."""
 
+    _attr_has_entity_name = True
+
+    @property
+    def name(self):
+        """Name of the entity."""
+        return self.light_id.capitalize()
+
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator, light_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -185,7 +192,6 @@ class SwitcherBaselLightEntity(
         self.light_id = light_id
 
         # Entity class attributes
-        self._attr_name = f"{coordinator.name} {self.light_id}"
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.light_id}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -248,8 +254,7 @@ class SwitcherBaselLightEntity(
                 return 2
         elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
             return 1
-        else:
-            return 0
+        return 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
