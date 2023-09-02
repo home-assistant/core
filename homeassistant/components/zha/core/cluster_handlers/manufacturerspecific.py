@@ -406,7 +406,6 @@ class DanfossTRVChannel(ClusterHandler):
         "regulation_setpoint_offset": True,
         "adaptation_run_control": True,
         "adaptation_run_settings": True,
-        "occupied_heating_setpoint_scheduled": True,
     }
 
 
