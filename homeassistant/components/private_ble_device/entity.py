@@ -24,10 +24,7 @@ class BasePrivateDeviceEntity(Entity):
         """Set up a new BleScanner entity."""
         irk = config_entry.data["irk"]
 
-        if self.translation_key:
-            self._attr_unique_id = f"{irk}_{self.translation_key}"
-        else:
-            self._attr_unique_id = irk
+        self._attr_unique_id = irk
 
         self._attr_device_info = DeviceInfo(
             name=f"Private BLE Device {irk[:6]}",
