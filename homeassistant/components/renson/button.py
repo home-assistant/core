@@ -23,7 +23,13 @@ SYNC_TIME_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     device_class=ButtonDeviceClass.UPDATE,
     entity_category=EntityCategory.CONFIG,
     translation_key="sync_time",
-    has_entity_name=True,
+)
+
+RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
+    key="restart",
+    device_class=ButtonDeviceClass.RESTART,
+    entity_category=EntityCategory.CONFIG,
+    translation_key="restart",
 )
 
 
@@ -39,7 +45,10 @@ async def async_setup_entry(
     entities = [
         RensonButton(
             SYNC_TIME_BUTTON, data.api, data.coordinator, hass, data.api.sync_time
-        )
+        ),
+        RensonButton(
+            RESTART_BUTTON, data.api, data.coordinator, hass, data.api.restart_device
+        ),
     ]
 
     async_add_entities(entities)
@@ -62,8 +71,9 @@ class RensonButton(RensonEntity, ButtonEntity):
         super().__init__(description.key, api, coordinator)
 
         self.entity_description = description
+        self.action = action
 
     async def async_press(self) -> None:
         """Triggers the action."""
-        await self.hass.async_add_executor_job(self.api.sync_time)
+        await self.hass.async_add_executor_job(self.action)
         await self.coordinator.async_request_refresh()
