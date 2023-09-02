@@ -15,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+from .router import NetgearRouter
+from .entity import NetgearDeviceEntity, NetgearRouterEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,8 +167,8 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self.entity_description = entity_description
-        self._name = f"{self.get_device_name()} {self.entity_description.name}"
-        self._unique_id = f"{self._mac}-{self.entity_description.key}"
+        self._attr_name = f"{self.get_device_name()} {self.entity_description.name}"
+        self._attr_unique_id = f"{self._mac}-{self.entity_description.key}"
         self._attr_is_on = None
         self.async_update_device()
 
@@ -206,8 +207,8 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         """Initialize a Netgear device."""
         super().__init__(router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}"
+        self._attr_name = f"{router.device_name} {entity_description.name}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
 
         self._attr_is_on = None
         self._attr_available = False

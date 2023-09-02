@@ -792,6 +792,7 @@ omit =
     homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/button.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/entity.py
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear/switch.py

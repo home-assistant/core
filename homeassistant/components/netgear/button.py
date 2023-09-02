@@ -15,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearRouter, NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
+from .entity import NetgearRouterCoordinatorEntity
 
 
 @dataclass
@@ -69,8 +70,8 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}"
+        self._attr_name = f"{router.device_name} {entity_description.name}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
 
     async def async_press(self) -> None:
         """Triggers the button press service."""

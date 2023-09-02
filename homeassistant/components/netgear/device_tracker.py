@@ -10,7 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER
-from .router import NetgearBaseEntity, NetgearRouter
+from .entity import NetgearDeviceEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ async def async_setup_entry(
     new_device_callback()
 
 
-class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
+class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
     def __init__(
@@ -54,6 +55,7 @@ class NetgearScannerEntity(NetgearBaseEntity, ScannerEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
+        self._attr_name = self.get_device_name()
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
 
