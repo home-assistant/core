@@ -37,6 +37,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
+# homeassistant.components.matrix
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
@@ -360,7 +361,7 @@ aioswitcher==3.3.0
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.5
+aiotractive==0.5.6
 
 # homeassistant.components.unifi
 aiounifi==58
@@ -549,7 +550,8 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.9.1
+# homeassistant.components.private_ble_device
+bluetooth-data-tools==1.11.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1177,7 +1179,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-client==0.4.0
+matrix-nio==0.21.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1210,7 +1212,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.2.0
+mill-local==0.3.0
 
 # homeassistant.components.mill
 millheater==0.11.1
@@ -1547,7 +1549,7 @@ pyRFXtrx==0.30.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.28.0
+pyTibber==0.28.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0

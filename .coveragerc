@@ -705,7 +705,8 @@ omit =
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
-    homeassistant/components/matrix/*
+    homeassistant/components/matrix/__init__.py
+    homeassistant/components/matrix/notify.py
     homeassistant/components/matter/__init__.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
