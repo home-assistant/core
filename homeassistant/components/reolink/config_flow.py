@@ -74,6 +74,18 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
 
+    def has_connection_problem(self, config_entry: config_entries.ConfigEntry) -> bool:
+        """Check if a existing entry has a connection problem"""
+        reolink_data: ReolinkData | None = self.hass.data.get(DOMAIN, {}).get(
+            config_entry.entry_id
+        )
+        connection_problem = (
+            reolink_data
+            and config_entry.state == config_entries.ConfigEntryState.LOADED
+            and reolink_data.device_coordinator.last_update_success
+        )
+        return connection_problem
+
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or no admin privileges."""
         self._host = entry_data[CONF_HOST]
@@ -103,15 +115,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and CONF_PASSWORD in existing_entry.data
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
-            # check the existing entry indeed has a connection problem
-            reolink_data: ReolinkData | None = self.hass.data.get(DOMAIN, {}).get(
-                existing_entry.entry_id
-            )
-            if (
-                reolink_data
-                and existing_entry.state == config_entries.ConfigEntryState.LOADED
-                and reolink_data.device_coordinator.last_update_success
-            ):
+            if self.has_connection_problem(existing_entry):
                 _LOGGER.debug(
                     "Reolink DHCP reported new IP '%s', "
                     "but connection to camera seems to be okay, so sticking to IP '%s'",
