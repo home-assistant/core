@@ -1,7 +1,6 @@
 """Test MQTT utils."""
 
 from collections.abc import Callable
-from random import getrandbits
 from unittest.mock import patch
 
 import pytest
@@ -14,17 +13,6 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
-@pytest.fixture(autouse=True)
-def mock_temp_dir():
-    """Mock the certificate temp directory."""
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt" + f"-{getrandbits(10):03x}",
-    ) as mocked_temp_dir:
-        yield mocked_temp_dir
-
-
 @pytest.mark.parametrize(
     ("option", "content", "file_created"),
     [
@@ -35,7 +23,11 @@ def mock_temp_dir():
     ],
 )
 async def test_async_create_certificate_temp_files(
-    hass: HomeAssistant, mock_temp_dir, option, content, file_created
+    hass: HomeAssistant,
+    mock_temp_dir: str,
+    option: str,
+    content: str,
+    file_created: bool,
 ) -> None:
     """Test creating and reading and recovery certificate files."""
     config = {option: content}
