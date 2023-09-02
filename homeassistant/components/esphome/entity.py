@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import Any, Generic, TypeVar, cast  # pylint: disable=unused-import
+from typing import Any, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
@@ -105,8 +105,8 @@ def esphome_state_property(
         if not self._has_state:
             return None
         val = func(self)
-        if isinstance(val, float) and math.isnan(val):
-            # Home Assistant doesn't use NAN values in state machine
+        if isinstance(val, float) and not math.isfinite(val):
+            # Home Assistant doesn't use NaN or inf values in state machine
             # (not JSON serializable)
             return None
         return val

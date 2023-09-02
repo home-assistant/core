@@ -44,6 +44,7 @@ from .const import (
     TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyData
 
 DEVICE_PARENT_REQUIRED = [
     BinarySensorDeviceClass.OPENING,
@@ -79,7 +80,7 @@ async def async_setup_entry(
         | ISYBinarySensorProgramEntity
     )
 
-    isy_data = hass.data[DOMAIN][entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
     devices: dict[str, DeviceInfo] = isy_data.devices
     for node in isy_data.nodes[Platform.BINARY_SENSOR]:
         assert isinstance(node, Node)
@@ -420,6 +421,8 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
 class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity):
     """Representation of the battery state of an ISY sensor."""
 
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
     def __init__(
         self,
         node: Node,
@@ -520,11 +523,6 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
         parent control event is received.
         """
         return bool(self._computed_state)
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Get the class of this device."""
-        return BinarySensorDeviceClass.BATTERY
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

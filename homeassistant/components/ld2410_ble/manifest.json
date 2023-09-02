@@ -20,5 +20,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ld2410_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["bluetooth-data-tools==1.8.0", "ld2410-ble==0.1.1"]
+  "requirements": ["bluetooth-data-tools==1.11.0", "ld2410-ble==0.1.1"]
 }

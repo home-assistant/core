@@ -17,18 +17,20 @@
     "zigpy_deconz",
     "zigpy_xbee",
     "zigpy_zigate",
-    "zigpy_znp"
+    "zigpy_znp",
+    "universal_silabs_flasher"
   ],
   "requirements": [
-    "bellows==0.35.9",
+    "bellows==0.36.1",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.102",
+    "zha-quirks==0.0.103",
     "zigpy-deconz==0.21.0",
-    "zigpy==0.56.4",
+    "zigpy==0.57.0",
     "zigpy-xbee==0.18.1",
     "zigpy-zigate==0.11.0",
-    "zigpy-znp==0.11.4"
+    "zigpy-znp==0.11.4",
+    "universal-silabs-flasher==0.0.13"
   ],
   "usb": [
     {
@@ -110,6 +112,10 @@
     {
       "type": "_zigstar_gw._tcp.local.",
       "name": "*zigstar*"
+    },
+    {
+      "type": "_uzg-01._tcp.local.",
+      "name": "uzg-01*"
     },
     {
       "type": "_slzb-06._tcp.local.",

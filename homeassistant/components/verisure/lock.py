@@ -20,7 +20,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
-    CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
@@ -71,9 +70,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
         self.serial_number = serial_number
         self._state: str | None = None
-        self._digits = coordinator.entry.options.get(
-            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -112,8 +108,11 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
     @property
     def code_format(self) -> str:
-        """Return the required six digit code."""
-        return "^\\d{%s}$" % self._digits
+        """Return the configured code format."""
+        digits = self.coordinator.entry.options.get(
+            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+        )
+        return "^\\d{%s}$" % digits
 
     @property
     def is_locked(self) -> bool:
@@ -129,25 +128,15 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
-        code = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
-        )
-        if code is None:
-            LOGGER.error("Code required but none provided")
-            return
-
-        await self.async_set_lock_state(code, STATE_UNLOCKED)
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, STATE_UNLOCKED)
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
-        code = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
-        )
-        if code is None:
-            LOGGER.error("Code required but none provided")
-            return
-
-        await self.async_set_lock_state(code, STATE_LOCKED)
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, STATE_LOCKED)
 
     async def async_set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""

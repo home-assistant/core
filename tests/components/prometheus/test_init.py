@@ -232,6 +232,12 @@ async def test_sensor_device_class(client, sensor_entities) -> None:
         'friendly_name="Radio Energy"} 14.0' in body
     )
 
+    assert (
+        'sensor_timestamp_seconds{domain="sensor",'
+        'entity="sensor.timestamp",'
+        'friendly_name="Timestamp"} 1.691445808136036e+09' in body
+    )
+
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_input_number(client, input_number_entities) -> None:
@@ -507,6 +513,23 @@ async def test_cover(client, cover_entities) -> None:
                 f"}} 50.0"
             )
             assert tilt_position_metric in body
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_device_tracker(client, device_tracker_entities) -> None:
+    """Test prometheus metrics for device_tracker."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 1.0' in body
+    )
+    assert (
+        'device_tracker_state{domain="device_tracker",'
+        'entity="device_tracker.watch",'
+        'friendly_name="Watch"} 0.0' in body
+    )
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -1032,6 +1055,16 @@ async def sensor_fixture(
     set_state_with_entry(hass, sensor_11, 50)
     data["sensor_11"] = sensor_11
 
+    sensor_12 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_12",
+        original_device_class=SensorDeviceClass.TIMESTAMP,
+        suggested_object_id="Timestamp",
+        original_name="Timestamp",
+    )
+    set_state_with_entry(hass, sensor_12, "2023-08-07T15:03:28.136036-0700")
+    data["sensor_12"] = sensor_12
     await hass.async_block_till_done()
     return data
 

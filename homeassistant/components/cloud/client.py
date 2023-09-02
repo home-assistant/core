@@ -54,7 +54,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -222,6 +221,7 @@ class CloudClient(Interface):
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
+                "alias": self.cloud.remote.alias,
             },
             "version": HA_VERSION,
         }

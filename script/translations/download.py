@@ -44,7 +44,8 @@ def run_download_docker():
             "json",
             "--unzip-to",
             "/opt/dest",
-        ]
+        ],
+        check=False,
     )
     print()
 

@@ -35,25 +35,14 @@ async def async_setup_entry(
 class PowerViewScene(HDEntity, Scene):
     """Representation of a Powerview scene."""
 
+    _attr_icon = "mdi:blinds"
+
     def __init__(self, coordinator, device_info, room_name, scene):
         """Initialize the scene."""
         super().__init__(coordinator, device_info, room_name, scene.id)
         self._scene = scene
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene.name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:blinds"
+        self._attr_name = scene.name
+        self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""

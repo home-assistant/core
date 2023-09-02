@@ -714,17 +714,18 @@ async def async_setup_entry(
         timeframe,
     )
 
+    # create weather entities:
     entities = [
         BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
         for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities)
-
+    # create weather data:
     data = BrData(hass, coordinates, timeframe, entities)
-    # schedule the first update in 1 minute from now:
-    await data.schedule_update(1)
     hass.data[DOMAIN][entry.entry_id][Platform.SENSOR] = data
+    await data.async_update()
+
+    async_add_entities(entities)
 
 
 class BrSensor(SensorEntity):
@@ -753,9 +754,9 @@ class BrSensor(SensorEntity):
             self._timeframe = None
 
     @callback
-    def data_updated(self, data):
+    def data_updated(self, data: BrData):
         """Update data."""
-        if self.hass and self._load_data(data):
+        if self._load_data(data.data) and self.hass:
             self.async_write_ha_state()
 
     @callback

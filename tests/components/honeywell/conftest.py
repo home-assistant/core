@@ -121,7 +121,7 @@ def device_with_outdoor_sensor():
         "hasFan": False,
     }
     mock_device.system_mode = "off"
-    mock_device.name = "device1"
+    mock_device.name = "device3"
     mock_device.current_temperature = CURRENTTEMPERATURE
     mock_device.mac_address = "macaddress1"
     mock_device.temperature_unit = "C"
