@@ -74,3 +74,5 @@ class RensonNumber(RensonEntity, NumberEntity):
         """Update the current value."""
 
         await self.hass.async_add_executor_job(self.api.set_filter_days, value)
+
+        await self.coordinator.async_request_refresh()
