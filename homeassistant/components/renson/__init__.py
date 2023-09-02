@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from renson_endura_delta.renson import RensonVentilation
+from renson_endura_delta.renson import Level, RensonVentilation
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
