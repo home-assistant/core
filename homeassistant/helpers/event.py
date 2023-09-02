@@ -1440,12 +1440,6 @@ def _run_async_call_action(
 
 
 @callback
-def _cancel_timer_handle(timer_handle: asyncio.TimerHandle) -> None:
-    """Cancel an asyncio.TimerHandle."""
-    timer_handle.cancel()
-
-
-@callback
 @bind_hass
 def async_call_at(
     hass: HomeAssistant,
