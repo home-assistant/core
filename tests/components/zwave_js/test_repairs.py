@@ -77,6 +77,7 @@ async def test_device_config_file_changed(
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
+    assert data["description_placeholders"] == {"device_name": device.name}
 
     # Apply fix
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
