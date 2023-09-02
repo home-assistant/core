@@ -1,6 +1,7 @@
 """Sensor data of the Renson ventilation unit."""
 from __future__ import annotations
 
+from _collections_abc import Callable
 from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.components.button import (
@@ -31,17 +32,21 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Renson sensor platform."""
+    """Set up the Renson button platform."""
 
     data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = [RensonButton(SYNC_TIME_BUTTON, data.api, data.coordinator, hass)]
+    entities = [
+        RensonButton(
+            SYNC_TIME_BUTTON, data.api, data.coordinator, hass, data.api.sync_time
+        )
+    ]
 
     async_add_entities(entities)
 
 
 class RensonButton(RensonEntity, ButtonEntity):
-    """Get a sensor data from the Renson API and store it in the state of the class."""
+    """Representation of a Renson actions."""
 
     def __init__(
         self,
@@ -49,6 +54,7 @@ class RensonButton(RensonEntity, ButtonEntity):
         api: RensonVentilation,
         coordinator: RensonCoordinator,
         hass: HomeAssistant,
+        action: Callable,
     ) -> None:
         """Initialize class."""
         super().__init__(description.key, api, coordinator)
@@ -56,5 +62,6 @@ class RensonButton(RensonEntity, ButtonEntity):
         self.entity_description = description
 
     async def async_press(self) -> None:
-        """Triggers the sync."""
+        """Triggers the action."""
         await self.hass.async_add_executor_job(self.api.sync_time)
+        await self.coordinator.async_request_refresh()
