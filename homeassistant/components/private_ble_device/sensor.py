@@ -51,6 +51,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda service_info: service_info.advertisement.tx_power,
         state_class=SensorStateClass.MEASUREMENT,
     ),
