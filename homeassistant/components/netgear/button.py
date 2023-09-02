@@ -36,7 +36,6 @@ class NetgearButtonEntityDescription(
 BUTTONS = [
     NetgearButtonEntityDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         action=lambda router: router.async_reboot,
@@ -70,7 +69,6 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._attr_name = f"{router.device_name} {entity_description.name}"
         self._attr_unique_id = f"{router.serial_number}-{entity_description.key}"
 
     async def async_press(self) -> None:

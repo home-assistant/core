@@ -41,6 +41,8 @@ from .errors import CannotLoginException
 class NetgearDeviceEntity(CoordinatorEntity):
     """Base class for a device connected to a Netgear router."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
     ) -> None:
@@ -49,7 +51,7 @@ class NetgearDeviceEntity(CoordinatorEntity):
         self._router = router
         self._device = device
         self._mac = device["mac"]
-        self._device_name = self._attr_name
+        self._device_name = self.get_device_name()
         self._active = device["active"]
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
@@ -81,6 +83,8 @@ class NetgearDeviceEntity(CoordinatorEntity):
 
 class NetgearRouterCoordinatorEntity(CoordinatorEntity):
     """Base class for a Netgear router entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, router: NetgearRouter
@@ -119,6 +123,8 @@ class NetgearRouterCoordinatorEntity(CoordinatorEntity):
 
 class NetgearRouterEntity(Entity):
     """Base class for a Netgear router entity without coordinator."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, router: NetgearRouter) -> None:
         """Initialize a Netgear device."""

@@ -50,12 +50,13 @@ async def async_setup_entry(
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, router: NetgearRouter, device: dict
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
-        self._attr_name = self.get_device_name()
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
 

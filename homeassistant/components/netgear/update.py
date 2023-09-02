@@ -45,7 +45,6 @@ class NetgearUpdateEntity(NetgearRouterCoordinatorEntity, UpdateEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
-        self._attr_name = f"{router.device_name} Update"
         self._attr_unique_id = f"{router.serial_number}-update"
 
     @property

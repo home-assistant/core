@@ -381,7 +381,6 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         super().__init__(coordinator, router, device)
         self._attribute = attribute
         self.entity_description = SENSOR_TYPES[self._attribute]
-        self._attr_name = f"{self.get_device_name()} {self.entity_description.name}"
         self._attr_unique_id = f"{self._mac}-{self._attribute}"
         self._state = self._device.get(self._attribute)
 
@@ -414,7 +413,6 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._attr_name = f"{router.device_name} {entity_description.name}"
         self._attr_unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
         self._value: StateType | date | datetime | Decimal = None
