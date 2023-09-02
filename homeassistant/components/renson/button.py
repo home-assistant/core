@@ -48,6 +48,8 @@ async def async_setup_entry(
 class RensonButton(RensonEntity, ButtonEntity):
     """Representation of a Renson actions."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: ButtonEntityDescription,
