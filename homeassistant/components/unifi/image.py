@@ -84,12 +84,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up image platform for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
     controller.register_platform_add_entities(
-        UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
+        UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities, requires_admin=True
     )
 
 

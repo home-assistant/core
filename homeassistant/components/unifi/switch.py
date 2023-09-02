@@ -321,18 +321,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
-    for mac in controller.option_block_clients:
-        if mac not in controller.api.clients and mac in controller.api.clients_all:
-            controller.api.clients.process_raw(
-                [dict(controller.api.clients_all[mac].raw)]
-            )
-
     controller.register_platform_add_entities(
-        UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities
+        UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities, requires_admin=True
     )
 
 
