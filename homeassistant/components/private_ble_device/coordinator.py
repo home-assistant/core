@@ -159,9 +159,7 @@ class PrivateDevicesCoordinator:
 
     def _async_maybe_forget_irk(self, irk: bytes) -> None:
         """If no downstream caller is tracking this irk, lets forget it."""
-        if irk in self._service_info_callbacks:
-            return
-        if irk in self._unavailable_callbacks:
+        if irk in self._service_info_callbacks or irk in self._unavailable_callbacks:
             return
 
         # Ignore availability events for this irk as no
