@@ -37,6 +37,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
+# homeassistant.components.matrix
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
@@ -1177,7 +1178,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-client==0.4.0
+matrix-nio==0.21.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
