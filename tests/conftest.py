@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 import functools
 import gc
 import itertools
 import logging
 import os
+import reprlib
 import sqlite3
 import ssl
 import threading
@@ -302,6 +303,21 @@ def skip_stop_scripts(
         yield
 
 
+@contextmanager
+def long_repr_strings() -> Generator[None, None, None]:
+    """Increase reprlib maxstring and maxother to 300."""
+    arepr = reprlib.aRepr
+    original_maxstring = arepr.maxstring
+    original_maxother = arepr.maxother
+    arepr.maxstring = 300
+    arepr.maxother = 300
+    try:
+        yield
+    finally:
+        arepr.maxstring = original_maxstring
+        arepr.maxother = original_maxother
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(
     event_loop: asyncio.AbstractEventLoop,
@@ -335,13 +351,16 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            if expected_lingering_timers:
-                _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[0], HassJob):
-                pytest.fail(f"Lingering timer after job {repr(job)}")
-            else:
-                pytest.fail(f"Lingering timer after test {repr(handle)}")
-            handle.cancel()
+            with long_repr_strings():
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {repr(job)}")
+                else:
+                    pytest.fail(f"Lingering timer after test {repr(handle)}")
+                handle.cancel()
 
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
@@ -1276,6 +1295,11 @@ def hass_recorder(
     hass = get_test_home_assistant()
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    compile_missing = (
+        recorder.Recorder._schedule_compile_missing_statistics
+        if enable_statistics
+        else None
+    )
     schema_validate = (
         migration._find_schema_errors
         if enable_schema_validation
@@ -1326,6 +1350,10 @@ def hass_recorder(
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
         side_effect=migrate_entity_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        side_effect=compile_missing,
         autospec=True,
     ):
 
@@ -1399,6 +1427,11 @@ async def async_setup_recorder_instance(
         if enable_schema_validation
         else itertools.repeat(set())
     )
+    compile_missing = (
+        recorder.Recorder._schedule_compile_missing_statistics
+        if enable_statistics
+        else None
+    )
     migrate_states_context_ids = (
         recorder.Recorder._migrate_states_context_ids
         if enable_migrate_context_ids
@@ -1444,6 +1477,10 @@ async def async_setup_recorder_instance(
     ), patch(
         "homeassistant.components.recorder.Recorder._migrate_entity_ids",
         side_effect=migrate_entity_ids,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+        side_effect=compile_missing,
         autospec=True,
     ):
 

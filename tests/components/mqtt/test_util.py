@@ -1,7 +1,9 @@
 """Test MQTT utils."""
 
 from collections.abc import Callable
+from pathlib import Path
 from random import getrandbits
+import tempfile
 from unittest.mock import patch
 
 import pytest
@@ -14,17 +16,6 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
-@pytest.fixture(autouse=True)
-def mock_temp_dir():
-    """Mock the certificate temp directory."""
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        "home-assistant-mqtt" + f"-{getrandbits(10):03x}",
-    ) as mocked_temp_dir:
-        yield mocked_temp_dir
-
-
 @pytest.mark.parametrize(
     ("option", "content", "file_created"),
     [
@@ -34,31 +25,50 @@ def mock_temp_dir():
         (mqtt.CONF_CLIENT_KEY, "### PRIVATE KEY ###", True),
     ],
 )
+@pytest.mark.parametrize("temp_dir_prefix", ["create-test"])
 async def test_async_create_certificate_temp_files(
-    hass: HomeAssistant, mock_temp_dir, option, content, file_created
+    hass: HomeAssistant,
+    mock_temp_dir: str,
+    option: str,
+    content: str,
+    file_created: bool,
 ) -> None:
     """Test creating and reading and recovery certificate files."""
     config = {option: content}
-    await mqtt.util.async_create_certificate_temp_files(hass, config)
 
-    file_path = mqtt.util.get_file_path(option)
+    temp_dir = Path(tempfile.gettempdir()) / mock_temp_dir
+
+    # Create old file to be able to assert it is removed with auto option
+    def _ensure_old_file_exists() -> None:
+        if not temp_dir.exists():
+            temp_dir.mkdir(0o700)
+        temp_file = temp_dir / option
+        with open(temp_file, "wb") as old_file:
+            old_file.write(b"old content")
+            old_file.close()
+
+    await hass.async_add_executor_job(_ensure_old_file_exists)
+    await mqtt.util.async_create_certificate_temp_files(hass, config)
+    file_path = await hass.async_add_executor_job(mqtt.util.get_file_path, option)
     assert bool(file_path) is file_created
     assert (
-        mqtt.util.migrate_certificate_file_to_content(file_path or content) == content
+        await hass.async_add_executor_job(
+            mqtt.util.migrate_certificate_file_to_content, file_path or content
+        )
+        == content
     )
 
     # Make sure certificate temp files are recovered
-    if file_path:
-        # Overwrite content of file (except for auto option)
-        file = open(file_path, "wb")
-        file.write(b"invalid")
-        file.close()
+    await hass.async_add_executor_job(_ensure_old_file_exists)
 
     await mqtt.util.async_create_certificate_temp_files(hass, config)
-    file_path2 = mqtt.util.get_file_path(option)
+    file_path2 = await hass.async_add_executor_job(mqtt.util.get_file_path, option)
     assert bool(file_path2) is file_created
     assert (
-        mqtt.util.migrate_certificate_file_to_content(file_path2 or content) == content
+        await hass.async_add_executor_job(
+            mqtt.util.migrate_certificate_file_to_content, file_path2 or content
+        )
+        == content
     )
 
     assert file_path == file_path2
@@ -69,6 +79,26 @@ async def test_reading_non_exitisting_certificate_file() -> None:
     assert (
         mqtt.util.migrate_certificate_file_to_content("/home/file_not_exists") is None
     )
+
+
+@pytest.mark.parametrize("temp_dir_prefix", "unknown")
+async def test_return_default_get_file_path(
+    hass: HomeAssistant, mock_temp_dir: str
+) -> None:
+    """Test get_file_path returns default."""
+
+    def _get_file_path(file_path: Path) -> bool:
+        return (
+            not file_path.exists()
+            and mqtt.util.get_file_path("some_option", "mydefault") == "mydefault"
+        )
+
+    with patch(
+        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
+        f"home-assistant-mqtt-other-{getrandbits(10):03x}",
+    ) as mock_temp_dir:
+        tempdir = Path(tempfile.gettempdir()) / mock_temp_dir
+        assert await hass.async_add_executor_job(_get_file_path, tempdir)
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
