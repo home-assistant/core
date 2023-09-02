@@ -1,7 +1,6 @@
 """Represent the Netgear router and its devices."""
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
@@ -17,14 +16,8 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 from homeassistant.util import dt as dt_util
 
 from .const import (

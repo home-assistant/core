@@ -59,6 +59,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         super().__init__(coordinator, router, device)
         self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
+        self.entity_id = f"device_tracker.{self._device_name}"
 
     def get_hostname(self) -> str | None:
         """Return the hostname of the given device or None if we don't know."""

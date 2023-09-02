@@ -36,8 +36,8 @@ from .const import (
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
-from .router import NetgearRouter
 from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 

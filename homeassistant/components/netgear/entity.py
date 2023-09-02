@@ -2,22 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
-from datetime import timedelta
-import logging
-from typing import Any
 
-from pynetgear import Netgear
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -25,17 +12,9 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_CONSIDER_HOME,
-    DEFAULT_CONSIDER_HOME,
-    DEFAULT_NAME,
-    DOMAIN,
-    MODE_ROUTER,
-    MODELS_V2,
-)
-from .errors import CannotLoginException
+from .const import DOMAIN
+from .router import NetgearRouter
 
 
 class NetgearDeviceEntity(CoordinatorEntity):
@@ -107,7 +86,6 @@ class NetgearRouterCoordinatorEntity(CoordinatorEntity):
             hw_version=router.hardware_version,
             configuration_url=configuration_url,
         )
-
 
     @abstractmethod
     @callback
