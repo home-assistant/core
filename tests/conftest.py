@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 import functools
 import gc
 import itertools
 import logging
 import os
+import reprlib
 import sqlite3
 import ssl
 import threading
@@ -302,6 +303,21 @@ def skip_stop_scripts(
         yield
 
 
+@contextmanager
+def long_repr_strings() -> Generator[None, None, None]:
+    """Increase reprlib maxstring and maxother to 300."""
+    arepr = reprlib.aRepr
+    original_maxstring = arepr.maxstring
+    original_maxother = arepr.maxother
+    arepr.maxstring = 300
+    arepr.maxother = 300
+    try:
+        yield
+    finally:
+        arepr.maxstring = original_maxstring
+        arepr.maxother = original_maxother
+
+
 @pytest.fixture(autouse=True)
 def verify_cleanup(
     event_loop: asyncio.AbstractEventLoop,
@@ -335,13 +351,16 @@ def verify_cleanup(
 
     for handle in event_loop._scheduled:  # type: ignore[attr-defined]
         if not handle.cancelled():
-            if expected_lingering_timers:
-                _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[0], HassJob):
-                pytest.fail(f"Lingering timer after job {repr(job)}")
-            else:
-                pytest.fail(f"Lingering timer after test {repr(handle)}")
-            handle.cancel()
+            with long_repr_strings():
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {repr(job)}")
+                else:
+                    pytest.fail(f"Lingering timer after test {repr(handle)}")
+                handle.cancel()
 
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
