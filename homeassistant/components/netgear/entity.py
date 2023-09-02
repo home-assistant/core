@@ -88,9 +88,20 @@ class NetgearRouterCoordinatorEntity(CoordinatorEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator)
         self._router = router
+
+        configuration_url = None
+        if host := self._router.entry.data[CONF_HOST]:
+            configuration_url = f"http://{host}/"
+
         self._attr_unique_id = router.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._router.unique_id)},
+            manufacturer="Netgear",
+            name=router.device_name,
+            model=router.model,
+            sw_version=router.firmware_version,
+            hw_version=router.hardware_version,
+            configuration_url=configuration_url,
         )
 
 
@@ -112,7 +123,18 @@ class NetgearRouterEntity(Entity):
     def __init__(self, router: NetgearRouter) -> None:
         """Initialize a Netgear device."""
         self._router = router
+
+        configuration_url = None
+        if host := self._router.entry.data[CONF_HOST]:
+            configuration_url = f"http://{host}/"
+
         self._attr_unique_id = router.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._router.unique_id)},
+            manufacturer="Netgear",
+            name=router.device_name,
+            model=router.model,
+            sw_version=router.firmware_version,
+            hw_version=router.hardware_version,
+            configuration_url=configuration_url,
         )
