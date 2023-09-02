@@ -71,10 +71,6 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
         await hass.async_add_executor_job(renson_api.set_timer_level, level, time)
 
-    async def sync_time(call: ServiceCall) -> None:
-        """Sync time of device."""
-        await hass.async_add_executor_job(renson_api.sync_time)
-
     async def set_manual_level(call: ServiceCall) -> None:
         """Set manual level."""
         level_string = call.data.get("manual_level", "Off")
@@ -126,4 +122,3 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
         DOMAIN, "set_pollution_settings", set_pollution_settings
     )
     hass.services.async_register(DOMAIN, "set_timer_level", set_timer_level)
-    hass.services.async_register(DOMAIN, "sync_time", sync_time)

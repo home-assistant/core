@@ -19,10 +19,6 @@ set_manual_level:
             - "Breeze"
             - "Holiday"
 
-sync_time:
-  name: Synchronize time and date
-  description: Synchronize time and date with device
-
 set_timer_level:
   name: Set timer
   description: Set the ventilation timer
