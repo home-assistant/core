@@ -80,7 +80,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             config_entry.entry_id
         )
         connection_problem = (
-            reolink_data
+            reolink_data is not None
             and config_entry.state == config_entries.ConfigEntryState.LOADED
             and reolink_data.device_coordinator.last_update_success
         )
