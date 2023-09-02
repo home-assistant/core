@@ -4,9 +4,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
-from homeassistant.components import sensor
+from homeassistant.components import sensor, template
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -25,12 +26,63 @@ from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
 
 TEST_NAME = "sensor.test_template_sensor"
+
+
+@pytest.mark.parametrize(
+    "config_entry_extra_options",
+    [
+        {},
+        {
+            "device_class": "battery",
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+        },
+    ],
+)
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry_extra_options: dict[str, str],
+) -> None:
+    """Test the config flow."""
+    state_template = "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+    input_entities = ["one", "two"]
+    input_states = {"one": "10", "two": "20"}
+    template_type = sensor.DOMAIN
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}",
+            input_states[input_entity],
+            {},
+        )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": state_template,
+            "template_type": template_type,
+        }
+        | config_entry_extra_options,
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{template_type}.my_template")
+    assert state is not None
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
@@ -725,8 +777,9 @@ async def test_this_variable_early_hass_not_running(
     # Signal hass started
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    # Re-render icon, name, pciture + other templates now rendered
+    # icon, name, picture + other templates now re-rendered
     state = hass.states.get(entity_id)
     assert state.state == "sensor.none_false: sensor.none_false"
     assert state.attributes == {

@@ -294,6 +294,10 @@ class HomeAssistant:
         _hass.hass = hass
         return hass
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<HomeAssistant {self.state}>"
+
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()

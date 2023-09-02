@@ -1,7 +1,7 @@
 """TemplateEntity utility class."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import contextlib
 import itertools
 import logging
@@ -18,7 +18,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -256,6 +263,9 @@ class TemplateEntity(Entity):
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
+        self._preview_callback: Callable[
+            [str | None, dict[str, Any] | None, str | None], None
+        ] | None = None
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
@@ -408,9 +418,14 @@ class TemplateEntity(Entity):
                     event, update.template, update.last_result, update.result
                 )
 
-        self.async_write_ha_state()
+        if not self._preview_callback:
+            self.async_write_ha_state()
+            return
 
-    async def _async_template_startup(self, *_: Any) -> None:
+        self._preview_callback(*self._async_generate_attributes(), None)
+
+    @callback
+    def _async_template_startup(self, *_: Any) -> None:
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
@@ -441,8 +456,9 @@ class TemplateEntity(Entity):
         self._async_update = result_info.async_refresh
         result_info.async_refresh()
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._availability_template is not None:
             self.add_template_attribute(
                 "_attr_available",
@@ -467,8 +483,29 @@ class TemplateEntity(Entity):
         ):
             self.add_template_attribute("_attr_name", self._friendly_name_template)
 
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[
+            [str | None, Mapping[str, Any] | None, str | None], None
+        ],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        self._preview_callback = preview_callback
+        self._async_setup_templates()
+        try:
+            self._async_template_startup()
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            preview_callback(None, None, str(err))
+        return self._call_on_remove_callbacks
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._async_setup_templates()
+
         if self.hass.state == CoreState.running:
-            await self._async_template_startup()
+            self._async_template_startup()
             return
 
         self.hass.bus.async_listen_once(

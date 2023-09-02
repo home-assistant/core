@@ -1,8 +1,6 @@
 """Support for Motion Blinds using their WLAN API."""
 from __future__ import annotations
 
-from typing import TypeVar
-
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
@@ -19,8 +17,6 @@ from .const import (
     MANUFACTURER,
 )
 from .gateway import device_name
-
-_T = TypeVar("_T")
 
 
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):

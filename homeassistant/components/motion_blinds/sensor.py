@@ -1,5 +1,5 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import DEVICE_TYPES_WIFI, BlindType
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,8 +15,6 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 from .entity import MotionCoordinatorEntity
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
-TYPE_BLIND = "blind"
-TYPE_GATEWAY = "gateway"
 
 
 async def async_setup_entry(
@@ -54,7 +52,6 @@ class MotionBatterySensor(MotionCoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
         super().__init__(coordinator, blind)
-
         self._attr_unique_id = f"{blind.mac}-battery"
 
     @property
@@ -108,7 +105,6 @@ class MotionSignalStrengthSensor(MotionCoordinatorEntity, SensorEntity):
     def __init__(self, coordinator, blind):
         """Initialize the Motion Signal Strength Sensor."""
         super().__init__(coordinator, blind)
-
         self._attr_unique_id = f"{blind.mac}-RSSI"
 
     @property

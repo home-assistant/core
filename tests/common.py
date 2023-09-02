@@ -412,12 +412,9 @@ def async_fire_time_changed(
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
-    if utc_datetime.microsecond < event.RANDOM_MICROSECOND_MAX:
-        # Allow up to 500000 microseconds to be added to the time
-        # to handle update_coordinator's and
-        # async_track_time_interval's
-        # staggering to avoid thundering herd.
-        utc_datetime = utc_datetime.replace(microsecond=event.RANDOM_MICROSECOND_MAX)
+    # Increase the mocked time by 0.5 s to account for up to 0.5 s delay
+    # added to events scheduled by update_coordinator and async_track_time_interval
+    utc_datetime += timedelta(microseconds=event.RANDOM_MICROSECOND_MAX)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
@@ -963,16 +960,6 @@ def patch_yaml_files(files_dict, endswith=True):
         raise FileNotFoundError(f"File not found: {fname}")
 
     return patch.object(yaml_loader, "open", mock_open_f, create=True)
-
-
-def mock_coro(return_value=None, exception=None):
-    """Return a coro that returns a value or raise an exception."""
-    fut = asyncio.Future()
-    if exception is not None:
-        fut.set_exception(exception)
-    else:
-        fut.set_result(return_value)
-    return fut
 
 
 @contextmanager
