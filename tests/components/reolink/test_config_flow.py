@@ -380,7 +380,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 
 
 @pytest.mark.parametrize(
-    ("last_update_succes", "attr", "value", "expected"),
+    ("last_update_success", "attr", "value", "expected"),
     [
         (
             False,
