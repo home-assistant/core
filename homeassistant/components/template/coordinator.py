@@ -5,10 +5,11 @@ import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import discovery, trigger as trigger_helper
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self.config = config
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
+        self._script: Script | None = None
 
     @property
     def unique_id(self) -> str | None:
@@ -61,6 +63,14 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     async def _attach_triggers(self, start_event=None) -> None:
         """Attach the triggers."""
+        if CONF_ACTION in self.config:
+            self._script = Script(
+                self.hass,
+                self.config[CONF_ACTION],
+                self.name,
+                DOMAIN,
+            )
+
         if start_event is not None:
             self._unsub_start = None
 
@@ -74,8 +84,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             start_event is not None,
         )
 
-    @callback
-    def _handle_triggered(self, run_variables, context=None):
+    async def _handle_triggered(self, run_variables, context=None):
+        if self._script:
+            script_result = await self._script.async_run(run_variables, context)
+            if script_result:
+                run_variables = script_result.variables
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )
