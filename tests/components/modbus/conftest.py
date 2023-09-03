@@ -149,7 +149,7 @@ async def mock_do_cycle_fixture(
     mock_pymodbus_return,
 ) -> FrozenDateTimeFactory:
     """Trigger update call with time_changed event."""
-    freezer.tick(timedelta(seconds=90))
+    freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     return freezer
