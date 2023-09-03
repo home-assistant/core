@@ -68,7 +68,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 data=config[DOMAIN],
             )
         )
-    return True
+        return True
+    return False
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -94,7 +95,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
-    return True
+        return True
+    return False
 
 
 async def _update_no_ip(

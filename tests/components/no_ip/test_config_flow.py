@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import no_ip
+from homeassistant.components.no_ip import DOMAIN
 from homeassistant.components.no_ip.config_flow import async_validate_no_ip
-from homeassistant.components.no_ip.const import DOMAIN
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_IP_ADDRESS,
@@ -72,20 +73,20 @@ async def test_form_user(
 ) -> None:
     """Test the user step of the No-IP.com config flow."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text=response_text,
     )
     result = await hass.config_entries.flow.async_init(
-        no_ip.const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        no_ip.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == result_type
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_init(
-        no_ip.const.DOMAIN,
+        no_ip.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             "domain": "test.example.com",
@@ -97,19 +98,45 @@ async def test_form_user(
     assert not hasattr(result, "exception")
 
 
+async def test_async_validate_no_ip(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test async_validate_no_ip without socket operations."""
+
+    # Mock aiohttp.ClientSession to return a response
+    async def fake_get(url, **kwargs):
+        response = AsyncMock(spec=aiohttp.ClientResponse)
+        response.status = 200
+        response.text.return_value = "good 1.2.3.4"
+
+        return response
+
+    with patch("aiohttp.ClientSession.get", side_effect=fake_get):
+        result = await async_validate_no_ip(
+            hass,
+            {
+                CONF_IP_ADDRESS: "1.2.3.4",
+                CONF_DOMAIN: "test.example.com",
+                CONF_USERNAME: "abc@123.com",
+                CONF_PASSWORD: "xyz789",
+            },
+        )
+        assert result == {"title": "NO-IP", CONF_IP_ADDRESS: "1.2.3.4"}
+
+
 async def test_timeout_exception(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test capturing a timeout error in async_validate_no_ip."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text="good 1.2.3.4",
         exc=asyncio.TimeoutError,
     )
     result = await hass.config_entries.flow.async_init(
-        no_ip.const.DOMAIN,
+        no_ip.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_IP_ADDRESS: "1.2.3.4",
@@ -128,14 +155,14 @@ async def test_connection_exception(
 ) -> None:
     """Test capturing a connection exception in async_validate_no_ip."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         exc=aiohttp.ClientError,
         status=200,
         text="good 1.2.3.4",
     )
     result = await hass.config_entries.flow.async_init(
-        no_ip.const.DOMAIN,
+        no_ip.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_IP_ADDRESS: "1.2.3.4",
@@ -154,14 +181,14 @@ async def test_unknown_exception(
 ) -> None:
     """Test capturing an "unknown" exception in async_validate_no_ip."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text="unknown",
         exc=HomeAssistantError,
     )
     result = await hass.config_entries.flow.async_init(
-        no_ip.const.DOMAIN,
+        no_ip.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_IP_ADDRESS: "1.2.3.4",
@@ -180,7 +207,7 @@ async def test_cannot_connect_exception(
 ) -> None:
     """Test capturing a cannot_connect error in async_validate_no_ip."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         exc=aiohttp.ClientError,
@@ -202,7 +229,7 @@ async def test_unexpected_status_code(
 ) -> None:
     """Test handling of unexpected status code from No-IP.com."""
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=500,  # Use a status code that is not 200 or 401
         text="server error",
@@ -216,7 +243,7 @@ async def test_unexpected_status_code(
             CONF_PASSWORD: "xyz789",
         },
     )
-    assert result == {"title": no_ip.const.MANUFACTURER, "exception": "unknown"}
+    assert result == {"title": "NO-IP", "exception": "unknown"}
 
 
 async def test_async_step_import(
@@ -246,7 +273,7 @@ async def test_async_step_import(
     # Test case: Import data with no exception, expect transition to async_step_user
     import_data = {}
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text="good 1.2.3.4",
@@ -260,7 +287,7 @@ async def test_async_step_import(
 
     # Test case: Import data with exception, expect async_abort
     aioclient_mock.get(
-        no_ip.const.UPDATE_URL,
+        no_ip.UPDATE_URL,
         params={"hostname": "test.example.com"},
         status=200,
         text="badauth",

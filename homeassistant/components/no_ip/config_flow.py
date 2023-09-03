@@ -20,25 +20,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import (
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    HA_USER_AGENT,
-    MANUFACTURER,
-    NO_IP_ERRORS,
-    UPDATE_URL,
-)
+from . import DEFAULT_TIMEOUT, DOMAIN, HA_USER_AGENT, NO_IP_ERRORS, UPDATE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,20 +72,20 @@ async def async_validate_no_ip(
                 body.startswith("good") or body.startswith("nochg")
             ):
                 ipAddress = body.split(" ")[1]
-                return {"title": MANUFACTURER, CONF_IP_ADDRESS: ipAddress}
+                return {"title": "NO-IP", CONF_IP_ADDRESS: ipAddress}
             no_ip_error = "unknown"
             if body in NO_IP_ERRORS:
                 no_ip_error = NO_IP_ERRORS[body]
-            return {"title": MANUFACTURER, "exception": no_ip_error}
+            return {"title": "NO-IP", "exception": no_ip_error}
     except (aiohttp.ClientError, aiohttp.ClientResponseError) as client_error:
         _LOGGER.warning("Unable to connect to No-IP.com API: %s", client_error)
-        raise aiohttp.ClientError(client_error) from client_error
+        raise client_error
     except asyncio.TimeoutError as timeout_error:
         _LOGGER.warning("Timeout from No-IP.com API for domain: %s", no_ip_domain)
-        raise asyncio.TimeoutError(timeout_error) from timeout_error
+        raise timeout_error
     except Exception as error:  # pylint: disable=broad-except
-        _LOGGER.error("Error updating data from No-IP.com: %s", error)
-        raise Exception(error) from error  # pylint: disable=broad-exception-raised
+        _LOGGER.error("Unexpected error: %s", error)
+        raise error
 
 
 class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -140,7 +129,6 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import No-IP.com config from configuration.yaml."""
         # Check if imported data is available
         if not import_data:
-            async_delete_issue(self.hass, DOMAIN, "deprecated_yaml")
             return await self.async_step_user()
         # Create an issue for the deprecated YAML configuration and display a warning
         async_create_issue(
@@ -160,17 +148,18 @@ class NoIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         # Validate the imported data using async_validate_no_ip
-        result = await async_validate_no_ip(self.hass, import_data)
+        try:
+            result = await async_validate_no_ip(self.hass, import_data)
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="No configuration to import.")
+
         # Check if there is no exception
         if "exception" not in result:
+            # Display a warning that no configuration can be imported
             _LOGGER.debug(
                 "Starting import of sensor from configuration.yaml (deprecated) - %s",
                 import_data,
             )
             # Process the imported configuration data further
             return await self.async_step_user(import_data)
-        # Display a warning that no configuration can be imported
-        _LOGGER.debug(
-            "No configuration (%s) to import. %s", import_data, result["exception"]
-        )
         return self.async_abort(reason="No configuration to import.")
