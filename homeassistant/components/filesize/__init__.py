@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     path = entry.data[CONF_FILE_PATH]
     get_path = await hass.async_add_executor_job(pathlib.Path, path)
-    fullpath = str(get_path.absolute())
+    fullpath = str(await hass.async_add_executor_job(get_path.absolute))
 
     coordinator = FileSizeCoordinator(hass, fullpath)
     await coordinator.async_config_entry_first_refresh()
