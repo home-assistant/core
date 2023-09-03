@@ -5,12 +5,12 @@ from datetime import timedelta
 from http import HTTPStatus
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import CONTENT_TYPE_JSON, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -65,9 +65,12 @@ async def test_wlan_qr_code(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_unifi_websocket,
+    websocket_state,
 ) -> None:
     """Test the update_clients function when no clients are found."""
-    await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, wlans_response=[WLAN]
+    )
     assert len(hass.states.async_entity_ids(IMAGE_DOMAIN)) == 0
 
     ent_reg = er.async_get(hass)
@@ -86,6 +89,8 @@ async def test_wlan_qr_code(
     )
     await hass.async_block_till_done()
 
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     # Validate state object
     image_state_1 = hass.states.get("image.ssid_1_qr_code")
     assert image_state_1.name == "SSID 1 QR Code"
@@ -98,7 +103,7 @@ async def test_wlan_qr_code(
     assert body == snapshot
 
     # Update state object - same password - no change to state
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=WLAN)
+    mock_unifi_websocket(controller, message=MessageKey.WLAN_CONF_UPDATED, data=WLAN)
     await hass.async_block_till_done()
     image_state_2 = hass.states.get("image.ssid_1_qr_code")
     assert image_state_1.state == image_state_2.state
@@ -106,7 +111,7 @@ async def test_wlan_qr_code(
     # Update state object - changed password - new state
     data = deepcopy(WLAN)
     data["x_passphrase"] = "new password"
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=data)
+    mock_unifi_websocket(controller, message=MessageKey.WLAN_CONF_UPDATED, data=data)
     await hass.async_block_till_done()
     image_state_3 = hass.states.get("image.ssid_1_qr_code")
     assert image_state_1.state != image_state_3.state
@@ -119,26 +124,30 @@ async def test_wlan_qr_code(
     assert body == snapshot
 
     # Availability signalling
+    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
 
     # Controller disconnects
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    await websocket_state.disconnect()
     assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
+    await websocket_state.reconnect()
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
     wlan_1["enabled"] = False
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    mock_unifi_websocket(controller, message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
     assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
 
     # WLAN gets re-enabled
     wlan_1["enabled"] = True
-    mock_unifi_websocket(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
+    mock_unifi_websocket(controller, message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE

@@ -1,47 +1,90 @@
 """Fixtures for UniFi Network methods."""
 from __future__ import annotations
 
+import asyncio
+from datetime import timedelta
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketSignal, WebsocketState
 import pytest
 
+from homeassistant.components.unifi.controller import RETRY_TIMER
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+class WebsocketStateManager(asyncio.Event):
+    """Keep an async event that simules websocket context manager.
+
+    Prepares disconnect and reconnect flows.
+    """
+
+    def __init__(self, hass: HomeAssistant):
+        """Store hass object and initialize asyncio.Event."""
+        self.hass = hass
+        super().__init__()
+
+    async def disconnect(self):
+        """Mark future as done to make 'await self.api.start_websocket' return."""
+        self.set()
+        await self.hass.async_block_till_done()
+
+    async def reconnect(self, fail=False):
+        """Set up new future to make 'await self.api.start_websocket' block.
+
+        Fail will make 'await self.api.start_websocket' return immediately.
+        """
+        if not fail:
+            self.clear()
+        new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+        async_fire_time_changed(self.hass, new_time)
+        await self.hass.async_block_till_done()
+
+
+@pytest.fixture(autouse=True, name="websocket_state")
+def websocket_context_manager(hass: HomeAssistant) -> WebsocketStateManager:
+    """Async event representing websocket context manager."""
+    return WebsocketStateManager(hass)
+
+
+@pytest.fixture(autouse=True)
+def websocket_mock(websocket_state):
+    """Mock aiounifi websocket."""
+    with patch("aiounifi.Controller.start_websocket") as ws_mock:
+        # with patch("aiounifi.controller.Connectivity.websocket") as ws_mock:
+        ws_mock.side_effect = websocket_state.wait
+        yield ws_mock
 
 
 @pytest.fixture(autouse=True)
 def mock_unifi_websocket():
     """No real websocket allowed."""
-    with patch("aiounifi.controller.WSClient") as mock:
 
-        def make_websocket_call(
-            *,
-            message: MessageKey | None = None,
-            data: list[dict] | dict | None = None,
-            state: WebsocketState | None = None,
-        ):
-            """Generate a websocket call."""
-            if data and not message:
-                mock.return_value.data = data
-                mock.call_args[1]["callback"](WebsocketSignal.DATA)
-            elif data and message:
-                if not isinstance(data, list):
-                    data = [data]
-                mock.return_value.data = {
+    def make_websocket_call(
+        controller,
+        *,
+        message: MessageKey | None = None,
+        data: list[dict] | dict | None = None,
+    ):
+        """Generate a websocket call."""
+        if data and not message:
+            controller.api.messages.handler(data)
+        elif data and message:
+            if not isinstance(data, list):
+                data = [data]
+            controller.api.messages.handler(
+                {
                     "meta": {"message": message.value},
                     "data": data,
                 }
-                mock.call_args[1]["callback"](WebsocketSignal.DATA)
-            elif state:
-                mock.return_value.state = state
-                mock.call_args[1]["callback"](WebsocketSignal.CONNECTION_STATE)
-            else:
-                raise NotImplementedError
+            )
+        else:
+            raise NotImplementedError
 
-        yield make_websocket_call
+    return make_websocket_call
 
 
 @pytest.fixture(autouse=True)

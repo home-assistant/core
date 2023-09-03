@@ -2,10 +2,9 @@
 from copy import deepcopy
 
 from aiounifi.models.message import MessageKey
-from aiounifi.websocket import WebsocketState
 from yarl import URL
 
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -74,11 +74,12 @@ async def test_device_updates(
 ) -> None:
     """Test the update_items function with some devices."""
     device_1 = deepcopy(DEVICE_1)
-    await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         aioclient_mock,
         devices_response=[device_1, DEVICE_2],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 2
 
@@ -107,7 +108,7 @@ async def test_device_updates(
     # Simulate start of update
 
     device_1["state"] = 4
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_unifi_websocket(controller, message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
@@ -122,7 +123,7 @@ async def test_device_updates(
     device_1["version"] = "4.3.17.11279"
     device_1["upgradable"] = False
     del device_1["upgrade_to_firmware"]
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    mock_unifi_websocket(controller, message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
@@ -185,26 +186,31 @@ async def test_install(
 
 
 async def test_controller_state_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_state
 ) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
-    await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         aioclient_mock,
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     assert hass.states.get("update.device_1").state == STATE_ON
 
-    # Controller unavailable
-    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
-    await hass.async_block_till_done()
+    # Availability signalling
+    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
 
+    # Controller disconnects
+    await websocket_state.disconnect()
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
-    # Controller available
-    mock_unifi_websocket(state=WebsocketState.RUNNING)
-    await hass.async_block_till_done()
-
+    # Controller reconnects
+    await websocket_state.reconnect()
     assert hass.states.get("update.device_1").state == STATE_ON
