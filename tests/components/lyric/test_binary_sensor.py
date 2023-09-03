@@ -1,6 +1,6 @@
 """Test the Honeywell Lyric binary sensor platform."""
 
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -25,7 +25,7 @@ async def test_room_accessories_motion_binary_sensors(hass: HomeAssistant) -> No
 
     state = hass.states.get("binary_sensor.living_room_overall_motion")
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.master_bedroom_overall_motion")
     assert state is not None

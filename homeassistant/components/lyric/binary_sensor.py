@@ -61,10 +61,7 @@ class LyricRoomBinarySensor(LyricRoomEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state."""
         room: LyricRoom = self.room
-        try:
-            return cast(bool, self.entity_description.is_on(room))
-        except TypeError:
-            return None
+        return cast(bool, self.entity_description.is_on(room))
 
 
 async def async_setup_entry(

@@ -292,7 +292,7 @@ PRIORITY_JSON_DATA = {
                 "roomName": "Living Room",
                 "roomAvgTemp": 79,
                 "roomAvgHumidity": 63,
-                "overallMotion": False,
+                "overallMotion": None,
                 "accessories": [
                     {
                         "id": 4,
