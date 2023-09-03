@@ -23,6 +23,7 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as dr_async_get,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -31,6 +32,7 @@ from .const import (
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     ATTR_GENERATION,
+    ATTR_OTA_PROGRESS_PERCENT,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
@@ -44,6 +46,9 @@ from .const import (
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
+    OTA_BEGIN,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
@@ -460,6 +465,24 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                         ATTR_CLICK_TYPE: event["event"],
                         ATTR_GENERATION: 2,
                     },
+                )
+            elif event_type == OTA_BEGIN:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{event_type}_{self.device_id}",
+                    {ATTR_OTA_PROGRESS_PERCENT: 0},
+                )
+            elif event_type == OTA_PROGRESS:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{event_type}_{self.device_id}",
+                    event,
+                )
+            elif event_type == OTA_SUCCESS:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{event_type}_{self.device_id}",
+                    event,
                 )
 
     async def _async_update_data(self) -> None:
