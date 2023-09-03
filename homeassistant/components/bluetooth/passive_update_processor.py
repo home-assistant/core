@@ -548,7 +548,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                     update_callback(data)
 
     @callback
-    def async_handle_update(self, update: _T, was_available: bool) -> None:
+    def async_handle_update(
+        self, update: _T, was_available: bool | None = None
+    ) -> None:
         """Handle a Bluetooth event."""
         try:
             new_data = self.update_method(update)
