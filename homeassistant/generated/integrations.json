@@ -5512,6 +5512,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "switchbot_via_api": {
+      "name": "Switchbot via API",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "switcher_kis": {
       "name": "Switcher",
       "integration_type": "hub",

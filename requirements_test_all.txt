@@ -234,6 +234,9 @@ aiohomekit==3.0.2
 # homeassistant.components.http
 aiohttp-cors==0.7.0
 
+# homeassistant.components.switchbot_via_api
+aiohttp==3.8.4
+
 # homeassistant.components.hue
 aiohue==4.6.2
 
