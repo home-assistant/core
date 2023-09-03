@@ -35,7 +35,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er, start
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    Entity,
+    async_generate_entity_id,
+    entity_sources,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -183,7 +187,10 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
 
         entity_id = entity_id.lower()
         # If entity_id points at a group, expand it
-        if entity_id.startswith(ENTITY_PREFIX):
+        if entity_id.startswith(ENTITY_PREFIX) or (
+            (source := entity_sources(hass).get(entity_id))
+            and source["domain"] == "group"
+        ):
             child_entities = get_entity_ids(hass, entity_id)
             if entity_id in child_entities:
                 child_entities = list(child_entities)

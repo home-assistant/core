@@ -240,6 +240,29 @@ async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> Non
     assert [] == group.expand_entity_ids(hass, [5, True])
 
 
+async def test_expand_entity_ids_domain_group(hass: HomeAssistant) -> None:
+    """Test expand_entity_ids with domain group."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+
+    assert await async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["light.bowl", "light.ceiling"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert sorted(["light.ceiling", "light.bowl"]) == sorted(
+        group.expand_entity_ids(hass, ["light.grouped"])
+    )
+
+
 async def test_get_entity_ids(hass: HomeAssistant) -> None:
     """Test get_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
