@@ -250,7 +250,7 @@ async def test_lazy_error_switch(
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),)],
+    [(State(ENTITY_ID, STATE_ON),), (State(ENTITY_ID, STATE_OFF),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
