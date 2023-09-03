@@ -1,10 +1,6 @@
 set_manual_level:
-  name: Set Manual Level
-  description: Sets manual level
   fields:
     manual_level:
-      name: Manual level
-      description: Manual level setting
       required: true
       advanced: false
       default: "Off"
@@ -20,12 +16,8 @@ set_manual_level:
             - "Holiday"
 
 set_timer_level:
-  name: Set timer
-  description: Set the ventilation timer
   fields:
     timer_level:
-      name: Level
-      description: Level setting
       required: true
       advanced: false
       default: "Level1"
@@ -39,8 +31,6 @@ set_timer_level:
             - "Holiday"
             - "Breeze"
     time:
-      name: Time
-      description: Time of the timer (0 will disable the timer)
       required: true
       advanced: false
       default: 0
@@ -53,12 +43,8 @@ set_timer_level:
           mode: slider
 
 set_breeze:
-  name: Set breeze
-  description: Set the breeze function of the ventilation system
   fields:
     breeze_level:
-      name: Level
-      description: Ventilation level when breeze function is activated
       required: false
       advanced: false
       default: "Level3"
@@ -70,8 +56,6 @@ set_breeze:
             - "Level3"
             - "Level4"
     temperature:
-      name: Temperature
-      description: Temperature when the breeze function should be activated
       required: false
       advanced: false
       default: 18
@@ -83,8 +67,6 @@ set_breeze:
           unit_of_measurement: "°C"
           mode: slider
     activate:
-      name: Activate
-      description: Activate or disable the breeze feature
       required: true
       advanced: false
       default: false
@@ -92,20 +74,14 @@ set_breeze:
         boolean:
 
 set_day_night_time:
-  name: Set day and night time
-  description: Set the day and night time of the system
   fields:
     day:
-      name: Start day
-      description: Start time of the day
       required: true
       advanced: false
       default: false
       selector:
         time:
     night:
-      name: Start night
-      description: Start time of the night
       required: true
       advanced: false
       default: false
@@ -113,12 +89,8 @@ set_day_night_time:
         time:
 
 set_pollution_settings:
-  name: Set pollution settings
-  description: Set all the pollution settings of the ventilation system
   fields:
     day_pollution_level:
-      name: Day pollution Level
-      description: Ventilation level when pollution is detected in the day
       required: false
       advanced: false
       default: "Level3"
@@ -130,8 +102,6 @@ set_pollution_settings:
             - "Level3"
             - "Level4"
     night_pollution_level:
-      name: Night pollution Level
-      description: Ventilation level when pollution is detected in the night
       required: false
       advanced: false
       default: "Level2"
@@ -143,32 +113,24 @@ set_pollution_settings:
             - "Level3"
             - "Level4"
     humidity_control:
-      name: Enable humidity control
-      description: Activate or disable the humidity control
       required: false
       advanced: false
       default: true
       selector:
         boolean:
     airquality_control:
-      name: Enable air quality control
-      description: Activate or disable the air quality control
       required: false
       advanced: false
       default: true
       selector:
         boolean:
     co2_control:
-      name: Enable CO2 control
-      description: Activate or disable the CO2 control
       required: false
       advanced: false
       default: true
       selector:
         boolean:
     co2_threshold:
-      name: co2 threshold
-      description: Sets the CO2 pollution threshold level in ppm
       required: false
       advanced: false
       default: 600
@@ -180,8 +142,6 @@ set_pollution_settings:
           unit_of_measurement: "ppm"
           mode: slider
     co2_hysteresis:
-      name: co2 hysteresis
-      description: Sets the CO2 pollution threshold hysteresis level in ppm
       required: false
       advanced: false
       default: 100
