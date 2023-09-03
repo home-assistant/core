@@ -50,28 +50,40 @@ ENTRY = namedtuple(
         "validate_parm",
     ],
 )
-CONV_PARM = {
-    CONF_COUNT: 0,
-    CONF_STRUCTURE: 1,
-    CONF_SLAVE_COUNT: 2,
-    CONF_SWAP_BYTE: 3,
-    CONF_SWAP_WORD: 4,
-    CONF_SWAP_WORD_BYTE: 4,
-}
+PARM_IS_LEGAL = namedtuple(
+    "PARM_IS_LEGAL",
+    [
+        "count",
+        "structure",
+        "slave_count",
+        "swap_byte",
+        "swap_word",
+    ],
+)
+# PARM_IS_LEGAL defines if the keywords:
+#    count: ..
+#    structure: ..
+#    swap: byte
+#    swap: word
+#    swap: word_byte (identical to swap: word)
+# are legal to use.
+# These keywords are only legal with some datatype: ...
+# As expressed in DEFAULT_STRUCT_FORMAT
+
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT8: ENTRY("b", 1, [False, False, False, False, False]),
-    DataType.UINT8: ENTRY("c", 1, [False, False, False, False, False]),
-    DataType.INT16: ENTRY("h", 1, [False, False, True, True, False]),
-    DataType.UINT16: ENTRY("H", 1, [False, False, True, True, False]),
-    DataType.FLOAT16: ENTRY("e", 1, [False, False, True, True, False]),
-    DataType.INT32: ENTRY("i", 2, [False, False, True, True, True]),
-    DataType.UINT32: ENTRY("I", 2, [False, False, True, True, True]),
-    DataType.FLOAT32: ENTRY("f", 2, [False, False, True, True, True]),
-    DataType.INT64: ENTRY("q", 4, [False, False, True, True, True]),
-    DataType.UINT64: ENTRY("Q", 4, [False, False, True, True, True]),
-    DataType.FLOAT64: ENTRY("d", 4, [False, False, True, True, True]),
-    DataType.STRING: ENTRY("s", 1, [True, False, False, False, False]),
-    DataType.CUSTOM: ENTRY("?", 0, [True, True, False, False, False]),
+    DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
+    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
+    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.STRING: ENTRY("s", 1, PARM_IS_LEGAL(True, False, False, False, False)),
+    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
 
@@ -87,25 +99,31 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     slave_count = config.get(CONF_SLAVE_COUNT, None)
     swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
-    if count and not validator[CONV_PARM[CONF_COUNT]]:
+    if count and not validator.count:
         error = f"{name}: `{CONF_COUNT}: {count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
-    if not count and validator[CONV_PARM[CONF_COUNT]]:
+    if not count and validator.count:
         error = f"{name}: `{CONF_COUNT}:` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
-    if structure and not validator[CONV_PARM[CONF_STRUCTURE]]:
+    if structure and not validator.structure:
         error = f"{name}: `{CONF_STRUCTURE}: {structure}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
-    if not structure and validator[CONV_PARM[CONF_STRUCTURE]]:
+    if not structure and validator.structure:
         error = f"{name}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
-    if slave_count and not validator[CONV_PARM[CONF_SLAVE_COUNT]]:
+    if slave_count and not validator.slave_count:
         error = f"{name}: `{CONF_SLAVE_COUNT}: {slave_count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
         raise vol.Invalid(error)
-    if swap_type != CONF_SWAP_NONE and not validator[CONV_PARM[swap_type]]:
-        error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
-
+    if swap_type != CONF_SWAP_NONE:
+        swap_type_validator = {
+            CONF_SWAP_NONE: False,
+            CONF_SWAP_BYTE: validator.swap_byte,
+            CONF_SWAP_WORD: validator.swap_word,
+            CONF_SWAP_WORD_BYTE: validator.swap_word,
+        }[swap_type]
+        if not swap_type_validator:
+            error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+            raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)
