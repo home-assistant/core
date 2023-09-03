@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -313,7 +314,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         if state := await self.async_get_last_state():
             if state.state == STATE_ON:
                 self._attr_is_on = True
-            else:
+            elif state.state == STATE_OFF:
                 self._attr_is_on = False
 
     async def async_turn(self, command: int) -> None:
