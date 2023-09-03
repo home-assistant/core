@@ -71,6 +71,7 @@ SENSOR_DESCRIPTIONS = (
         ),
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
     ),
 )
 

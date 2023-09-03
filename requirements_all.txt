@@ -232,7 +232,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==16.0.3
+aioesphomeapi==16.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -519,10 +519,10 @@ bimmer-connected==0.14.0
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.1
+bleak-retry-connector==3.1.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.2
+bleak==0.21.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.1.4
@@ -837,7 +837,7 @@ fritzconnection[qr]==1.12.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.3.0
+gardena_bluetooth==1.4.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -2768,7 +2768,7 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.91.1
+zeroconf==0.93.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

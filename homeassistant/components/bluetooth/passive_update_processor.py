@@ -343,7 +343,6 @@ class PassiveBluetoothProcessorCoordinator(
         """Handle a Bluetooth event."""
         was_available = self._available
         self._available = True
-        super()._async_handle_bluetooth_event(service_info, change)
         if self.hass.is_stopping:
             return
 
