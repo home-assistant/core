@@ -1938,6 +1938,7 @@ async def test_async_entity_ids_count(hass: HomeAssistant) -> None:
 
     assert hass.states.async_entity_ids_count() == 5
     assert hass.states.async_entity_ids_count("light") == 3
+    assert hass.states.async_entity_ids_count({"light", "vacuum"}) == 4
 
 
 async def test_hassjob_forbid_coroutine() -> None:
