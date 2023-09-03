@@ -8,10 +8,12 @@ import pytest
 
 from homeassistant.components import no_ip
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 DOMAIN = "test.example.com"
 
@@ -166,4 +168,49 @@ async def test_fail_update_no_ip(result_text):
 
     result = await no_ip._update_no_ip(hass, session, domain, auth_str, timeout)
 
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_update_no_ip_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test failed update timeout of NO-IP."""
+    AUTH_STR = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode())
+    TIMEOUT = 10
+
+    # Mock the aiohttp GET request to simulate a TimeoutError
+    aioclient_mock.get(
+        f"https://dynupdate.no-ip.com/nic/update?hostname={DOMAIN}", exc=TimeoutError()
+    )
+
+    # Call the _update_no_ip function
+    result = await no_ip._update_no_ip(
+        hass, async_get_clientsession(hass), DOMAIN, AUTH_STR, TIMEOUT
+    )
+
+    # Ensure it returns False due to the TimeoutError
+    assert result is False
+
+
+@pytest.mark.asyncio
+async def test_update_no_ip_clienterror(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+):
+    """Test failed update clienterror of NO-IP."""
+    AUTH_STR = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode())
+    TIMEOUT = 10
+
+    # Mock the aiohttp GET request to simulate a TimeoutError
+    aioclient_mock.get(
+        f"https://dynupdate.no-ip.com/nic/update?hostname={DOMAIN}",
+        exc=aiohttp.ClientError(),
+    )
+
+    # Call the _update_no_ip function
+    result = await no_ip._update_no_ip(
+        hass, async_get_clientsession(hass), DOMAIN, AUTH_STR, TIMEOUT
+    )
+
+    # Ensure it returns False due to the TimeoutError
     assert result is False
