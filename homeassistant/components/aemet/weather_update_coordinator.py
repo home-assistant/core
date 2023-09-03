@@ -56,6 +56,7 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
@@ -333,6 +334,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ),
             ATTR_API_FORECAST_TEMP: self._get_temperature(day, hour),
             ATTR_API_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
+            ATTR_API_FORECAST_WIND_MAX_SPEED: self._get_wind_max_speed(day, hour),
             ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
             ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }

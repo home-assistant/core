@@ -254,6 +254,7 @@ MAP_SERVICE_API = {
 }
 
 HARDWARE_INTEGRATIONS = {
+    "green": "homeassistant_green",
     "odroid-c2": "hardkernel",
     "odroid-c4": "hardkernel",
     "odroid-m1": "hardkernel",

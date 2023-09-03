@@ -71,6 +71,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
@@ -264,7 +265,6 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-        vol.Optional("recorder_excluded_attributes"): [str],
     }
 )
 
