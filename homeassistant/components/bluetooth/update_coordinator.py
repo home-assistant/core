@@ -41,9 +41,6 @@ class BasePassiveBluetoothCoordinator(ABC):
         self._last_name = address
         # Subclasses are responsible for setting _available to True
         # when the abstractmethod _async_handle_bluetooth_event is called.
-        #
-        # We do not set it to True here because we want to make sure that
-        # the subclass has a chance to see the value change.
         self._available = async_address_present(hass, address, connectable)
 
     @callback
