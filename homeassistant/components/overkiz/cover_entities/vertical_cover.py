@@ -13,6 +13,7 @@ from pyoverkiz.enums import (
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntityFeature,
 )
@@ -40,6 +41,8 @@ OVERKIZ_DEVICE_TO_DEVICE_CLASS = {
     UIClass.SWINGING_SHUTTER: CoverDeviceClass.SHUTTER,
     UIClass.WINDOW: CoverDeviceClass.WINDOW,
 }
+
+SERVICE_SET_COVER_POSITION = "set_cover_position_and_tilt"
 
 
 class VerticalCover(OverkizGenericCover):
@@ -106,6 +109,17 @@ class VerticalCover(OverkizGenericCover):
         """Close the cover."""
         if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
+
+    async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
+        """Move the cover position and tilt to a specific position."""
+        if command := self.executor.select_command(
+            *[OverkizCommand.SET_CLOSURE_AND_ORIENTATION]
+        ):
+            await self.executor.async_execute_command(
+                command,
+                100 - kwargs[ATTR_POSITION],
+                100 - kwargs[ATTR_TILT_POSITION],
+            )
 
     @property
     def is_opening(self) -> bool | None:

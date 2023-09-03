@@ -128,5 +128,21 @@
         }
       }
     }
+  },
+  "services": {
+    "set_cover_position_and_tilt": {
+      "name": "Set cover position and tilt",
+      "description": "Set cover position and tilt.",
+      "fields": {
+        "position": {
+          "name": "Position",
+          "description": "Position of the cover."
+        },
+        "tilt_position": {
+          "name": "Tilt Position",
+          "description": "Tilt position of the cover."
+        }
+      }
+    }
   }
 }

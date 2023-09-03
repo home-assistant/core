@@ -1,0 +1,26 @@
+set_cover_position_and_tilt:
+  target:
+    entity:
+      integration: overkiz
+      domain: cover
+  fields:
+    position:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+    tilt_position:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
