@@ -1,7 +1,7 @@
 """Define fixtures for electric kiwi tests."""
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from time import time
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -25,6 +25,8 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 
 TZ_NAME = "Pacific/Auckland"
 TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
+YieldFixture = Generator[AsyncMock, None, None]
+ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
@@ -34,14 +36,23 @@ async def request_setup(current_request_with_host) -> None:
 
 
 @pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
+def component_setup(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> ComponentSetup:
+    """Fixture for setting up the integration."""
+
+    async def _setup_func() -> bool:
+        assert await async_setup_component(hass, "application_credentials", {})
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(CLIENT_ID, CLIENT_SECRET),
+            DOMAIN,
+        )
+        config_entry.add_to_hass(hass)
+        return await hass.config_entries.async_setup(config_entry.entry_id)
+
+    return _setup_func
 
 
 @pytest.fixture(name="config_entry")
@@ -63,7 +74,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id=DOMAIN,
     )
-    entry.add_to_hass(hass)
     return entry
 
 
@@ -77,17 +87,17 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="ek_auth")
-def electric_kiwi_auth():
-    """Restrict loaded platforms to list given."""
+def electric_kiwi_auth() -> YieldFixture:
+    """Patch access to electric kiwi access token."""
     with patch(
         "homeassistant.components.electric_kiwi.api.AsyncConfigEntryAuth"
     ) as mock_auth:
         mock_auth.return_value.async_get_access_token = AsyncMock("auth_token")
-        yield
+        yield mock_auth
 
 
 @pytest.fixture(name="ek_api")
-def ek_api() -> Generator[AsyncMock, None, None]:
+def ek_api() -> YieldFixture:
     """Mock ek api and return values."""
     with patch(
         "homeassistant.components.electric_kiwi.ElectricKiwiApi", autospec=True

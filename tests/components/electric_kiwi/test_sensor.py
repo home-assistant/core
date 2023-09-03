@@ -2,15 +2,11 @@
 
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.electric_kiwi import (
-    DOMAIN,
-    ElectricKiwiHOPDataCoordinator,
-)
 from homeassistant.components.electric_kiwi.const import ATTRIBUTION
 from homeassistant.components.electric_kiwi.sensor import _check_and_move_time
 from homeassistant.components.sensor import SensorDeviceClass
@@ -20,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 import homeassistant.util.dt as dt_util
 
-from .conftest import TIMEZONE
+from .conftest import TIMEZONE, ComponentSetup, YieldFixture
 
 from tests.common import MockConfigEntry
 
@@ -35,8 +31,10 @@ from tests.common import MockConfigEntry
 async def test_hop_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    ek_api: AsyncMock,
+    ek_api: YieldFixture,
+    ek_auth: YieldFixture,
     entity_registry: EntityRegistry,
+    component_setup: ComponentSetup,
     sensor: str,
     sensor_state: str,
 ) -> None:
@@ -46,36 +44,28 @@ async def test_hop_sensors(
     if the API returns 4:00 PM, the sensor state should be set to today at 4pm or if now is past 4pm, then tomorrow at 4pm
 
     """
+    assert await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        return_value=AsyncMock(),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    entity = entity_registry.async_get(sensor)
+    assert entity
 
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert entries[0].state is ConfigEntryState.LOADED
+    state = hass.states.get(sensor)
+    assert state
 
-        hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ]
-        assert hop_coordinator
-        entity = entity_registry.async_get(sensor)
-        assert entity
+    api = ek_api(Mock())
+    hop_data = await api.get_hop()
 
-        state = hass.states.get(sensor)
-        assert state
-        value = _check_and_move_time(hop_coordinator.data, sensor_state)
+    value = _check_and_move_time(hop_data, sensor_state)
 
-        value = value.astimezone(UTC)
-        assert state.state == value.isoformat(timespec="seconds")
-        assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-        assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    value = value.astimezone(UTC)
+    assert state.state == value.isoformat(timespec="seconds")
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
 
 
 async def test_check_and_move_time(ek_api: AsyncMock) -> None:
-    """Test correct time is returned for the hop time depending on time of day."""
+    """Test correct time is returned depending on time of day."""
     hop = await ek_api(Mock()).get_hop()
 
     test_time = datetime(2023, 6, 21, 18, 0, 0, tzinfo=TIMEZONE)
