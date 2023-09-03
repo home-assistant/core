@@ -38,9 +38,7 @@ async def async_setup_entry(
     """Set up binary sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     tracked: set = set()
-    new_trackedpir = []
-    new_trackeddws = []
-    new_trackedcover = []
+    binary_entities: list[BinarySensorEntity] = []
 
     _LOGGER.debug("%s - %s - %s raid(s)", router.name, router.mac, len(router.raids))
 
@@ -54,9 +52,9 @@ async def async_setup_entry(
         if nodeid in tracked:
             continue
         if node["category"] == FreeboxHomeCategory.PIR:
-            new_trackedpir.append(FreeboxPirSensor(hass, router, node))
+            binary_entities.append(FreeboxPirSensor(hass, router, node))
         elif node["category"] == FreeboxHomeCategory.DWS:
-            new_trackeddws.append(FreeboxDwsSensor(hass, router, node))
+            binary_entities.append(FreeboxDwsSensor(hass, router, node))
 
         sensor_cover_node = next(
             filter(
@@ -66,18 +64,12 @@ async def async_setup_entry(
             None,
         )
         if sensor_cover_node and sensor_cover_node.get("value") is not None:
-            new_trackedcover.append(FreeboxCoverSensor(hass, router, node))
+            binary_entities.append(FreeboxCoverSensor(hass, router, node))
 
         tracked.add(nodeid)
 
     if binary_entities:
         async_add_entities(binary_entities, True)
-    if new_trackedpir:
-        async_add_entities(new_trackedpir, True)
-    if new_trackeddws:
-        async_add_entities(new_trackeddws, True)
-    if new_trackedcover:
-        async_add_entities(new_trackedcover, True)
 
 
 class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
