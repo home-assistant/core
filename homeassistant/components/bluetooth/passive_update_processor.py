@@ -523,10 +523,21 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         for update_callback in self._listeners:
             update_callback(data)
 
-        # Dispatch to listeners with a filter key
+        if data is not None:
+            # Dispatch to listeners with a filter key
+            # if the key is in the data
+            entity_key_listeners = self._entity_key_listeners
+            for entity_key in data.entity_data:
+                if listeners := entity_key_listeners.get(entity_key):
+                    for update_callback in listeners:
+                        update_callback(data)
+            return
+
+        # When data is None, dispatch to all listeners
+        # as it means the device is unavailable
         for listeners in self._entity_key_listeners.values():
             for update_callback in listeners:
-                update_callback(data)
+                update_callback(None)
 
     @callback
     def async_handle_update(self, update: _T) -> None:
