@@ -86,6 +86,20 @@ async def test_async_setup_entry_failure(hass: HomeAssistant):
     assert not result  # Ensure that async_setup_entry returns False
 
 
+async def test_async_setup_entry_failure_no_data(hass: HomeAssistant):
+    """Test async_setup_entry when _update_no_ip returns False."""
+    with patch("homeassistant.components.no_ip._update_no_ip", return_value=False):
+        entry = MockConfigEntry(
+            domain=no_ip.DOMAIN,
+            data={},
+        )
+        entry.add_to_hass(hass)
+
+        result = await no_ip.async_setup_entry(hass, entry)
+
+    assert not result  # Ensure that async_setup_entry returns False
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("result_text"),
