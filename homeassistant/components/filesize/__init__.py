@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import PLATFORMS
+from .coordinator import FileSizeCoordinator
 
 
 def _check_path(hass: HomeAssistant, path: str) -> None:
@@ -24,6 +25,14 @@ def _check_path(hass: HomeAssistant, path: str) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     await hass.async_add_executor_job(_check_path, hass, entry.data[CONF_FILE_PATH])
+
+    path = entry.data[CONF_FILE_PATH]
+    get_path = await hass.async_add_executor_job(pathlib.Path, path)
+    fullpath = str(get_path.absolute())
+
+    coordinator = FileSizeCoordinator(hass, fullpath)
+    await coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
