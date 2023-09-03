@@ -1479,7 +1479,9 @@ async def test_warn_no_platform(
     assert error_message not in caplog.text
 
 
-async def test_invalid_state(hass) -> None:
+async def test_invalid_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the entity helper catches InvalidState and sets state to unknown."""
     ent = entity.Entity()
     ent.entity_id = "test.test"
@@ -1489,9 +1491,15 @@ async def test_invalid_state(hass) -> None:
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == "x" * 255
 
+    caplog.clear()
     ent._attr_state = "x" * 256
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert (
+        "homeassistant.helpers.entity",
+        logging.ERROR,
+        f"Failed to set state, fall back to {STATE_UNKNOWN}",
+    ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
     ent.async_write_ha_state()
