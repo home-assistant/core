@@ -2,9 +2,10 @@
 import logging
 from typing import Any
 
+from switchbot_api import Device, Remote
+
 from homeassistant.helpers.entity import Entity
 
-from .common import Device, Remote
 from .const import API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

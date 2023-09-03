@@ -1,11 +1,12 @@
 """The Switchbot via API integration."""
 from logging import getLogger
 
+from switchbot_api import Device, Remote, SwitchBotAPI
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .common import Device, Remote, SwitchBotAPI
 from .const import API, DOMAIN, SECRET_KEY, TOKEN
 
 _LOGGER = getLogger(__name__)

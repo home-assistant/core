@@ -256,9 +256,6 @@ aiohomekit==3.0.2
 # homeassistant.components.http
 aiohttp-cors==0.7.0
 
-# homeassistant.components.switchbot_via_api
-aiohttp==3.8.4
-
 # homeassistant.components.hue
 aiohue==4.6.2
 
@@ -2504,6 +2501,9 @@ surepy==0.8.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
+
+# homeassistant.components.switchbot_via_api
+switchbot-api==1.0.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0

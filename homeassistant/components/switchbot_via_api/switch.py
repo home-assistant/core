@@ -2,6 +2,8 @@
 from logging import getLogger
 from typing import Any
 
+from switchbot_api import CommonCommands, Device, PowerState, Remote
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -9,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .common import CommonCommands, Device, PowerState, Remote
 from .const import DOMAIN
 from .entity import SwitchbotViaAPIEntity
 
