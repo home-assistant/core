@@ -267,7 +267,6 @@ async def test_config_wrong_struct_sensor(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -710,7 +709,6 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -935,7 +933,7 @@ async def test_lazy_error_sensor(
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
+    await do_next_cycle(hass, mock_do_cycle, 5)
     assert hass.states.get(ENTITY_ID).state == start_expect
     await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
@@ -1003,7 +1001,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 201,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
