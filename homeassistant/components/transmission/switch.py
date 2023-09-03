@@ -71,7 +71,7 @@ class TransmissionSwitch(CoordinatorEntity[SessionStats], SwitchEntity):
         if self.type == "on_off":
             active = self.coordinator.data.active_torrent_count > 0
         elif self.type == "turtle_mode":
-            active = self.coordinator.api.get_alt_speed_enabled()
+            active = self.coordinator.get_alt_speed_enabled()
 
         return bool(active)
 
@@ -79,11 +79,11 @@ class TransmissionSwitch(CoordinatorEntity[SessionStats], SwitchEntity):
         """Turn the device on."""
         if self.type == "on_off":
             _LOGGING.debug("Starting all torrents")
-            await self.hass.async_add_executor_job(self.coordinator.api.start_torrents)
+            await self.hass.async_add_executor_job(self.coordinator.start_torrents)
         elif self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission on")
             await self.hass.async_add_executor_job(
-                self.coordinator.api.set_alt_speed_enabled, True
+                self.coordinator.set_alt_speed_enabled, True
             )
         await self.coordinator.async_request_refresh()
 
@@ -91,10 +91,10 @@ class TransmissionSwitch(CoordinatorEntity[SessionStats], SwitchEntity):
         """Turn the device off."""
         if self.type == "on_off":
             _LOGGING.debug("Stopping all torrents")
-            await self.hass.async_add_executor_job(self.coordinator.api.stop_torrents)
+            await self.hass.async_add_executor_job(self.coordinator.stop_torrents)
         if self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission off")
             await self.hass.async_add_executor_job(
-                self.coordinator.api.set_alt_speed_enabled, False
+                self.coordinator.set_alt_speed_enabled, False
             )
         await self.coordinator.async_request_refresh()

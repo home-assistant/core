@@ -1,6 +1,7 @@
 """Support for the Transmission BitTorrent client API."""
 from __future__ import annotations
 
+from datetime import timedelta
 from functools import partial
 import logging
 import re
@@ -12,21 +13,32 @@ from transmission_rpc.error import (
     TransmissionConnectError,
     TransmissionError,
 )
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
 
 from .const import (
+    ATTR_DELETE_DATA,
+    ATTR_TORRENT,
+    CONF_ENTRY_ID,
+    DEFAULT_DELETE_DATA,
     DOMAIN,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
@@ -57,6 +69,52 @@ MIGRATION_NAME_TO_KEY = {
     "Turtle Mode": "turtle_mode",
 }
 
+SERVICE_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive(CONF_ENTRY_ID, "identifier"): selector.ConfigEntrySelector(),
+    }
+)
+
+SERVICE_ADD_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend({vol.Required(ATTR_TORRENT): cv.string}),
+)
+
+
+SERVICE_REMOVE_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_ID): cv.positive_int,
+            vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
+        }
+    )
+)
+
+SERVICE_START_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int}),
+)
+
+SERVICE_STOP_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_ID): cv.positive_int,
+        }
+    )
+)
+
+
+def _get_client(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> TransmissionDataUpdateCoordinator | None:
+    """Return client from entry_id."""
+    if (
+        (entry_id := data.get(CONF_ENTRY_ID))
+        and (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.state == ConfigEntryState.LOADED
+    ):
+        return hass.data[DOMAIN][entry_id]
+
+    return None
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
@@ -84,13 +142,85 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except (AuthenticationError, UnknownError) as error:
         raise ConfigEntryAuthFailed from error
 
-    client = TransmissionDataUpdateCoordinator(hass, config_entry, api)
-    await client.async_setup()
-    await client.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
+    coordinator = TransmissionDataUpdateCoordinator(hass, config_entry, api)
+    await hass.async_add_executor_job(coordinator.init_torrent_list)
+
+    await coordinator.async_config_entry_first_refresh()
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    client.register_services()
+    config_entry.add_update_listener(async_options_updated)
+
+    async def add_torrent(service: ServiceCall) -> None:
+        """Add new torrent to download."""
+        if not (tm_client := _get_client(hass, service.data)):
+            raise ValueError("Transmission instance is not found")
+
+        torrent = service.data[ATTR_TORRENT]
+        if torrent.startswith(
+            ("http", "ftp:", "magnet:")
+        ) or hass.config.is_allowed_path(torrent):
+            await hass.async_add_executor_job(tm_client.api.add_torrent, torrent)
+            await tm_client.async_request_refresh()
+        else:
+            _LOGGER.warning("Could not add torrent: unsupported type or no permission")
+
+    async def start_torrent(service: ServiceCall) -> None:
+        """Start torrent."""
+        if not (tm_client := _get_client(hass, service.data)):
+            raise ValueError("Transmission instance is not found")
+
+        torrent_id = service.data[CONF_ID]
+        await hass.async_add_executor_job(tm_client.api.start_torrent, torrent_id)
+        await tm_client.async_request_refresh()
+
+    async def stop_torrent(service: ServiceCall) -> None:
+        """Stop torrent."""
+        if not (tm_client := _get_client(hass, service.data)):
+            raise ValueError("Transmission instance is not found")
+
+        torrent_id = service.data[CONF_ID]
+        await hass.async_add_executor_job(tm_client.api.stop_torrent, torrent_id)
+        await tm_client.async_request_refresh()
+
+    async def remove_torrent(service: ServiceCall) -> None:
+        """Remove torrent."""
+        if not (tm_client := _get_client(hass, service.data)):
+            raise ValueError("Transmission instance is not found")
+
+        torrent_id = service.data[CONF_ID]
+        delete_data = service.data[ATTR_DELETE_DATA]
+        await hass.async_add_executor_job(
+            partial(tm_client.api.remove_torrent, torrent_id, delete_data=delete_data)
+        )
+
+        await tm_client.async_request_refresh()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_TORRENT,
+        remove_torrent,
+        schema=SERVICE_REMOVE_TORRENT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_TORRENT,
+        start_torrent,
+        schema=SERVICE_START_TORRENT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_STOP_TORRENT,
+        stop_torrent,
+        schema=SERVICE_STOP_TORRENT_SCHEMA,
+    )
+
     return True
 
 
@@ -141,3 +271,10 @@ async def get_api(
     except TransmissionError as error:
         _LOGGER.error(error)
         raise UnknownError from error
+
+
+async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Triggered by config entry options updates."""
+    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
+    await coordinator.async_request_refresh()
