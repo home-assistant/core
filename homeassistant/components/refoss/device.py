@@ -2,49 +2,25 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
-from refoss_ha.const import DOMAIN
-from refoss_ha.controller.device import BaseDevice
-from refoss_ha.enums import Namespace
-from refoss_ha.util import calculate_id
-
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
+from .refoss_ha.controller.device import BaseDevice
+from .refoss_ha.enums import Namespace
 
-class RefossDevice(Entity):
+
+class RefossEntity(Entity):
     """RefossDevice."""
 
-    def __init__(
-        self,
-        device: BaseDevice,
-        channel: int,
-        platform: str,
-        supplementary_classifiers: Optional[list[str]] = None,
-    ) -> None:
+    def __init__(self, device: BaseDevice, channel: int) -> None:
         """__init__."""
+        self._attr_unique_id = f"refoss.{device.uuid} {channel}"
+        self._attr_name = f"{device.dev_name}"
+        if channel > 0:
+            self._attr_name = f"{device.dev_name}-{channel}"
         self.device = device
-        self._model = device.device_type
-        self._api_url = device.inner_ip
-        self._device_id = device.uuid
-        self._channel_id = channel
-        self._last_http_state = None
-        base_name = f"{device.dev_name} ({device.device_type})"
-        if supplementary_classifiers is not None:
-            self._id = calculate_id(
-                platform=platform,
-                uuid=device.uuid,
-                channel=channel,
-                supplementary_classifiers=supplementary_classifiers,
-            )
-            base_name += " " + " ".join(supplementary_classifiers)
-        else:
-            self._id = calculate_id(
-                platform=platform, uuid=device.uuid, channel=channel
-            )
-
-        self._entity_name = f"{base_name} - {channel}"
 
     @property
     def should_poll(self) -> bool:
@@ -52,29 +28,18 @@ class RefossDevice(Entity):
         return True
 
     @property
-    def online(self) -> bool:
-        """online."""
+    def available(self) -> bool:
+        """Return if the device is available."""
         return True
-
-    @property
-    def unique_id(self) -> str:
-        """unique_id."""
-        return self._id
-
-    @property
-    def name(self) -> str:
-        """name."""
-        return self._entity_name
 
     @property
     def device_info(self) -> DeviceInfo:
         """device_info."""
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, self.device.uuid)},
             manufacturer="refoss",
-            model=self._model,
+            model=self.device.device_type,
             name=self.device.dev_name,
-            connections={(CONNECTION_NETWORK_MAC, self._device_id)},
             sw_version=self.device.fmware_version,
             hw_version=self.device.hdware_version,
         )
@@ -95,14 +60,21 @@ class RefossDevice(Entity):
         )
         self.async_schedule_update_ha_state(force_refresh=full_update)
 
+    # async def async_added_to_hass(self) -> None:
+    #     """async_added_to_hass."""
+    #     self.device.register_push_notification_handler_coroutine(
+    #         self._async_push_notification_received
+    #     )
+
     async def async_added_to_hass(self) -> None:
-        """async_added_to_hass."""
+        """Call when entity is added to hass."""
         self.device.register_push_notification_handler_coroutine(
             self._async_push_notification_received
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """async_will_remove_from_hass."""
-        self.device.unregister_push_notification_handler_coroutine(
-            self._async_push_notification_received
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{self.device.uuid}",
+                self.async_write_ha_state,
+            )
         )

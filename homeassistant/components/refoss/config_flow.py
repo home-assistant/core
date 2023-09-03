@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from refoss_ha.const import DOMAIN
-from refoss_ha.util import get_mac_address
-
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_MAC
 from homeassistant.data_entry_flow import FlowResult
+
+from .const import DOMAIN
+from .refoss_ha.util import get_mac_address
 
 
 class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -27,6 +27,7 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         data = {
             CONF_MAC: mac,
         }
+
         if entry is not None:
             self._abort_if_unique_id_configured(updates=data, reload_on_update=True)
 

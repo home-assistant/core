@@ -1,96 +1,138 @@
 """Refoss devices platform loader."""
 from __future__ import annotations
 
-from collections.abc import Collection
-from datetime import timedelta
-
-from refoss_ha.const import (
-    DEVICE_LIST_COORDINATOR,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-    SOCKET_DISCOVER_UPDATE_INTERVAL,
-)
-from refoss_ha.http_device import HttpDeviceInfo
+from typing import Final, NamedTuple
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_MAC, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .coordinator import RefossCoordinator
+from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
+from .refoss_ha.controller.device import BaseDevice
+from .refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
+from .refoss_ha.socket_server import SocketServerProtocol
+from .util import get_refoss_socket_server
+
+PLATFORMS: Final = [
+    Platform.SWITCH,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+class HomeAssistantRefossData(NamedTuple):
+    """HomeAssistantRefossData."""
+
+    device_manager: RefossDeviceManager
+    device_listener: RefossDeviceListener
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
-    if not config_entry.data.get(CONF_MAC):
-        LOGGER.warning(
+    if not entry.data.get(CONF_MAC):
+        LOGGER.debug(
             (
                 "The config entry %s probably comes from a custom integration, please"
                 " remove it if you want to use core refoss integration"
             ),
-            config_entry.title,
+            entry.title,
         )
         return False
+
     hass.data.setdefault(DOMAIN, {})
 
-    refoss_coordinator = RefossCoordinator(
-        hass=hass,
-        update_interval=timedelta(seconds=SOCKET_DISCOVER_UPDATE_INTERVAL),
+    device_ids: set[str] = set()
+    socketserver: SocketServerProtocol = await get_refoss_socket_server(hass)
+    device_manager = RefossDeviceManager(socket_server=socketserver)
+    await device_manager.async_start_broadcast_msg()
+    listener = DeviceListener(hass, device_manager, device_ids)
+    device_manager.add_device_listener(listener)
+
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantRefossData(
+        device_listener=listener,
+        device_manager=device_manager,
     )
-    try:
-        await refoss_coordinator.initial_setup()
-    except ValueError as e:
-        LOGGER.warning("Initial_setup failed: %s", e)
-        return False
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        DEVICE_LIST_COORDINATOR: refoss_coordinator,
-        "ADDED_ENTITIES_IDS": set(),
-    }
+    # await hass.async_add_executor_job(device_manager.update_device_caches)
+    await cleanup_device_registry(hass, device_manager)
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    def _poll_discovered_device():
-        # Poll discovered devices.
-        discovered_devices = refoss_coordinator.data
-        known_devices = refoss_coordinator.find_devices()
-
-        if _check_new_discovered_device(known_devices, discovered_devices.values()):
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-            )
-
-    refoss_coordinator.async_add_listener(_poll_discovered_device)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-def _check_new_discovered_device(
-    known: Collection[HttpDeviceInfo], discovered: Collection[HttpDeviceInfo]
-) -> bool:
-    known_devices = {dev.uuid: dev for dev in known}
-    for dev in discovered:
-        if dev.uuid not in known_devices:
-            LOGGER.debug(
-                f"Add new device: device_type:{dev.device_type},ip: {dev.inner_ip}"
-            )
-            return True
-        known_device = known_devices[dev.uuid]
-        if known_device.inner_ip != dev.inner_ip:
-            LOGGER.debug(
-                f"device_type:{known_device.device_type}, update device, ip: {known_device.inner_ip} => {dev.inner_ip}"
-            )
-            return True
-    return False
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_manager: RefossDeviceManager
+) -> None:
+    """Remove deleted device registry entry if there are no remaining entities."""
+    device_registry = dr.async_get(hass)
+    for dev_id, device_entry in list(device_registry.devices.items()):
+        for item in device_entry.identifiers:
+            if item[0] == DOMAIN and item[1] not in device_manager.base_device_map:
+                device_registry.async_remove_device(dev_id)
+                break
 
 
-async def async_unload_entry(hass, entry):
-    """Async unload hass config entry."""
-    refoss_coordinator: RefossCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DEVICE_LIST_COORDINATOR
-    ]
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        refoss_coordinator.socket.stopReveiveMsg()
-        for task in refoss_coordinator.tasks:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unloading the refoss platforms."""
+    unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload:
+        hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
+        hass_data.device_manager.remove_device_listener(hass_data.device_listener)
+        for task in hass_data.device_manager.tasks:
             task.cancel()
+
+        # hass_data.device_manager.socket_server.close()
         hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload
+
+
+class DeviceListener(RefossDeviceListener):
+    """Device Update Listener."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_manager: RefossDeviceManager,
+        device_ids: set[str],
+    ) -> None:
+        """Init DeviceListener."""
+        self.hass = hass
+        self.device_manager = device_manager
+        self.device_ids = device_ids
+
+    def update_device(self, device: BaseDevice) -> None:
+        """Update device status."""
+        if device.uuid in self.device_ids:
+            LOGGER.debug(
+                "Received update for device %s: %s",
+                device.uuid,
+                self.device_manager.base_device_map[device.uuid],
+            )
+            dispatcher_send(
+                self.hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}"
+            )
+
+    def add_device(self, device: BaseDevice) -> None:
+        """Add device."""
+        self.hass.add_job(self.async_remove_device, device.uuid)
+
+        self.device_ids.add(device.uuid)
+        dispatcher_send(self.hass, REFOSS_DISCOVERY_NEW, [device.uuid])
+
+    def remove_device(self, device_id: str) -> None:
+        """Remove device removed listener."""
+        self.hass.add_job(self.async_remove_device, device_id)
+
+    @callback
+    def async_remove_device(self, device_id: str) -> None:
+        """Remove device from Home Assistant."""
+        LOGGER.debug("Remove device: %s", device_id)
+        device_registry = dr.async_get(self.hass)
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        if device_entry is not None:
+            device_registry.async_remove_device(device_entry.id)
+            self.device_ids.discard(device_id)

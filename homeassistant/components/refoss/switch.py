@@ -4,38 +4,36 @@ from __future__ import annotations
 
 from typing import Any
 
-from refoss_ha.const import DEVICE_LIST_COORDINATOR, DOMAIN, HA_SWITCH, LOGGER
-from refoss_ha.controller.device import BaseDevice
-from refoss_ha.controller.toggle import ToggleXMix
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RefossCoordinator
-from .device import RefossDevice
+from . import HomeAssistantRefossData
+from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW
+from .device import RefossEntity
+from .refoss_ha.controller.device import BaseDevice
+from .refoss_ha.controller.toggle import ToggleXMix
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """async_setup_entry."""
+    hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
 
-    def entity_adder_callback():
-        """entity_adder_callback."""
-        entry_id = config_entry.entry_id
-        coordinator: RefossCoordinator = hass.data[DOMAIN][entry_id][
-            DEVICE_LIST_COORDINATOR
-        ]
-
-        devicelist = coordinator.find_devices()
-
+    @callback
+    def entity_add_callback(device_ids: list[str]) -> None:
+        """entity_add_callback."""
         new_entities = []
         try:
-            for device in devicelist:
+            for uuid in device_ids:
+                device = hass_data.device_manager.base_device_map[uuid]
+                if device is None:
+                    continue
                 if not isinstance(device, ToggleXMix):
                     continue
 
@@ -44,43 +42,37 @@ async def async_setup_entry(
 
                 for channel in device.channels:
                     w = SwitchEntityWrapper(device=device, channel=channel)
-                    if (
-                        w.unique_id
-                        not in hass.data[DOMAIN][entry_id]["ADDED_ENTITIES_IDS"]
-                    ):
-                        hass.data[DOMAIN][entry_id]["ADDED_ENTITIES_IDS"].add(
-                            w.unique_id
-                        )
-                        new_entities.append(w)
+                    new_entities.append(w)
+
         except Exception as e:
-            LOGGER.warning(f"setup switch fail,err:{e}")
+            LOGGER.debug(f"setup switch fail,err:{e}")
             raise e
 
         async_add_entities(new_entities, True)
 
-    entity_adder_callback()
+    entity_add_callback([*hass_data.device_manager.base_device_map])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, REFOSS_DISCOVERY_NEW, entity_add_callback)
+    )
 
 
 class SwitchDevice(ToggleXMix, BaseDevice):
     """Switch device."""
 
 
-class SwitchEntityWrapper(RefossDevice, SwitchEntity):
+class SwitchEntityWrapper(RefossEntity, SwitchEntity):
     """Wrapper around SwitchEntity."""
 
     device: SwitchDevice
 
-    def __init__(self, device: SwitchDevice, channel: int) -> None:
+    def __init__(self, device: ToggleXMix, channel: int) -> None:
         """Construct."""
-        super().__init__(device=device, channel=channel, platform=HA_SWITCH)
+        super().__init__(device=device, channel=channel)
+        self._channel_id = channel
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True
-
-    @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """is_on."""
         return self.device.is_on(channel=self._channel_id)
 
