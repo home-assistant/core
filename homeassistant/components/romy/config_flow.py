@@ -72,9 +72,10 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not new_romy.is_unlocked:
                     errors[CONF_PASSWORD] = "invalid_auth"
 
-                return self.async_create_entry(
-                    title=user_input["name"], data=user_input
-                )
+                if not errors:
+	            return self.async_create_entry(
+	                title=user_input["name"], data=user_input
+	            )
 
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
