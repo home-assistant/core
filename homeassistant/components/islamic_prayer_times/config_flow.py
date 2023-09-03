@@ -8,6 +8,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CALC_METHODS, CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, NAME
 
@@ -58,7 +63,13 @@ class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_CALC_METHOD, DEFAULT_CALC_METHOD
                 ),
-            ): vol.In(CALC_METHODS)
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=CALC_METHODS,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_CALC_METHOD,
+                )
+            ),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

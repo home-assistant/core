@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -11,6 +12,7 @@ from .const import (
     DATA_HOME_GET_NODES,
     DATA_LAN_GET_HOSTS_LIST,
     DATA_STORAGE_GET_DISKS,
+    DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
     WIFI_GET_GLOBAL_CONFIG,
 )
@@ -26,9 +28,10 @@ def mock_path():
 
 
 @pytest.fixture
-def mock_device_registry_devices(device_registry):
+def mock_device_registry_devices(hass: HomeAssistant, device_registry):
     """Create device registry devices so the device tracker entities are enabled."""
     config_entry = MockConfigEntry(domain="something_else")
+    config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
         (
@@ -56,6 +59,7 @@ def mock_router(mock_device_registry_devices):
         # sensor
         instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
         instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
+        instance.storage.get_raids = AsyncMock(return_value=DATA_STORAGE_GET_RAIDS)
         # home devices
         instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
         instance.connection.get_status = AsyncMock(

@@ -1,8 +1,6 @@
 # Describes the format for available climate services
 
 set_aux_heat:
-  name: Turn on/off auxiliary heater
-  description: Turn auxiliary heater on/off for climate device.
   target:
     entity:
       domain: climate
@@ -10,15 +8,11 @@ set_aux_heat:
         - climate.ClimateEntityFeature.AUX_HEAT
   fields:
     aux_heat:
-      name: Auxiliary heating
-      description: New value of auxiliary heater.
       required: true
       selector:
         boolean:
 
 set_preset_mode:
-  name: Set preset mode
-  description: Set preset mode for climate device.
   target:
     entity:
       domain: climate
@@ -26,16 +20,12 @@ set_preset_mode:
         - climate.ClimateEntityFeature.PRESET_MODE
   fields:
     preset_mode:
-      name: Preset mode
-      description: New value of preset mode.
       required: true
       example: "away"
       selector:
         text:
 
 set_temperature:
-  name: Set temperature
-  description: Set target temperature of climate device.
   target:
     entity:
       domain: climate
@@ -44,8 +34,6 @@ set_temperature:
         - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
   fields:
     temperature:
-      name: Temperature
-      description: New target temperature for HVAC.
       filter:
         supported_features:
           - climate.ClimateEntityFeature.TARGET_TEMPERATURE
@@ -56,8 +44,6 @@ set_temperature:
           step: 0.1
           mode: box
     target_temp_high:
-      name: Target temperature high
-      description: New target high temperature for HVAC.
       filter:
         supported_features:
           - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -69,8 +55,6 @@ set_temperature:
           step: 0.1
           mode: box
     target_temp_low:
-      name: Target temperature low
-      description: New target low temperature for HVAC.
       filter:
         supported_features:
           - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -82,29 +66,18 @@ set_temperature:
           step: 0.1
           mode: box
     hvac_mode:
-      name: HVAC mode
-      description: HVAC operation mode to set temperature to.
       selector:
         select:
           options:
-            - label: "Off"
-              value: "off"
-            - label: "Auto"
-              value: "auto"
-            - label: "Cool"
-              value: "cool"
-            - label: "Dry"
-              value: "dry"
-            - label: "Fan Only"
-              value: "fan_only"
-            - label: "Heat/Cool"
-              value: "heat_cool"
-            - label: "Heat"
-              value: "heat"
-
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+          translation_key: hvac_mode
 set_humidity:
-  name: Set target humidity
-  description: Set target humidity of climate device.
   target:
     entity:
       domain: climate
@@ -112,8 +85,6 @@ set_humidity:
         - climate.ClimateEntityFeature.TARGET_HUMIDITY
   fields:
     humidity:
-      name: Humidity
-      description: New target humidity for climate device.
       required: true
       selector:
         number:
@@ -122,8 +93,6 @@ set_humidity:
           unit_of_measurement: "%"
 
 set_fan_mode:
-  name: Set fan mode
-  description: Set fan operation for climate device.
   target:
     entity:
       domain: climate
@@ -131,44 +100,29 @@ set_fan_mode:
         - climate.ClimateEntityFeature.FAN_MODE
   fields:
     fan_mode:
-      name: Fan mode
-      description: New value of fan mode.
       required: true
       example: "low"
       selector:
         text:
 
 set_hvac_mode:
-  name: Set HVAC mode
-  description: Set HVAC operation mode for climate device.
   target:
     entity:
       domain: climate
   fields:
     hvac_mode:
-      name: HVAC mode
-      description: New value of operation mode.
       selector:
         select:
           options:
-            - label: "Off"
-              value: "off"
-            - label: "Auto"
-              value: "auto"
-            - label: "Cool"
-              value: "cool"
-            - label: "Dry"
-              value: "dry"
-            - label: "Fan Only"
-              value: "fan_only"
-            - label: "Heat/Cool"
-              value: "heat_cool"
-            - label: "Heat"
-              value: "heat"
-
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+          translation_key: hvac_mode
 set_swing_mode:
-  name: Set swing mode
-  description: Set swing operation for climate device.
   target:
     entity:
       domain: climate
@@ -176,23 +130,17 @@ set_swing_mode:
         - climate.ClimateEntityFeature.SWING_MODE
   fields:
     swing_mode:
-      name: Swing mode
-      description: New value of swing mode.
       required: true
       example: "horizontal"
       selector:
         text:
 
 turn_on:
-  name: Turn on
-  description: Turn climate device on.
   target:
     entity:
       domain: climate
 
 turn_off:
-  name: Turn off
-  description: Turn climate device off.
   target:
     entity:
       domain: climate

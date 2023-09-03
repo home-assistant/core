@@ -17,7 +17,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "wrong_location": "No Airly measuring stations in this area."
+      "wrong_location": "[%key:component::airly::config::error::wrong_location%]"
     }
   },
   "system_health": {
@@ -32,35 +32,8 @@
       "caqi": {
         "name": "Common air quality index"
       },
-      "pm1": {
-        "name": "[%key:component::sensor::entity_component::pm1::name%]"
-      },
-      "pm25": {
-        "name": "[%key:component::sensor::entity_component::pm25::name%]"
-      },
-      "pm10": {
-        "name": "[%key:component::sensor::entity_component::pm10::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
-      "pressure": {
-        "name": "[%key:component::sensor::entity_component::pressure::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
       "co": {
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
-      },
-      "no2": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "so2": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
-      },
-      "o3": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
       }
     }
   }

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
@@ -16,6 +17,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -52,7 +54,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -95,7 +96,9 @@ class CloudClient(Interface):
         if self._alexa_config is None:
             async with self._alexa_config_init_lock:
                 if self._alexa_config is not None:
-                    return self._alexa_config
+                    # This is reachable if the config was set while we waited
+                    # for the lock
+                    return self._alexa_config  # type: ignore[unreachable]
 
                 cloud_user = await self._prefs.get_cloud_user()
 
@@ -132,11 +135,11 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def on_cloud_connected(self) -> None:
+    async def cloud_connected(self) -> None:
         """When cloud is connected."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
-        async def enable_alexa(_):
+        async def enable_alexa(_: Any) -> None:
             """Enable Alexa."""
             aconf = await self.get_alexa_config()
             try:
@@ -156,7 +159,7 @@ class CloudClient(Interface):
 
         enable_alexa_job = HassJob(enable_alexa, cancel_on_shutdown=True)
 
-        async def enable_google(_):
+        async def enable_google(_: datetime) -> None:
             """Enable Google."""
             gconf = await self.get_google_config()
 
@@ -178,6 +181,9 @@ class CloudClient(Interface):
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
+
+    async def cloud_disconnected(self) -> None:
+        """When cloud disconnected."""
 
     async def cloud_started(self) -> None:
         """When cloud is started."""
@@ -206,6 +212,20 @@ class CloudClient(Interface):
         """Process cloud remote message to client."""
         await self._prefs.async_update(remote_enabled=connect)
 
+    async def async_cloud_connection_info(
+        self, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Process cloud connection info message to client."""
+        return {
+            "remote": {
+                "connected": self.cloud.remote.is_connected,
+                "enabled": self._prefs.remote_enabled,
+                "instance_domain": self.cloud.remote.instance_domain,
+                "alias": self.cloud.remote.alias,
+            },
+            "version": HA_VERSION,
+        }
+
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
@@ -223,9 +243,11 @@ class CloudClient(Interface):
         gconf = await self.get_google_config()
 
         if not self._prefs.google_enabled:
-            return ga.api_disabled_response(payload, gconf.agent_user_id)
+            return ga.api_disabled_response(  # type: ignore[no-any-return, no-untyped-call]
+                payload, gconf.agent_user_id
+            )
 
-        return await ga.async_handle_message(
+        return await ga.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
             self._hass, gconf, gconf.cloud_user, payload, google_assistant.SOURCE_CLOUD
         )
 

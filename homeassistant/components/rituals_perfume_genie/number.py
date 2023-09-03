@@ -35,7 +35,7 @@ class RitualsNumberEntityDescription(
 ENTITY_DESCRIPTIONS = (
     RitualsNumberEntityDescription(
         key="perfume_amount",
-        name="Perfume Amount",
+        translation_key="perfume_amount",
         icon="mdi:gauge",
         native_min_value=1,
         native_max_value=3,
@@ -65,15 +65,6 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
     """Representation of a diffuser number entity."""
 
     entity_description: RitualsNumberEntityDescription
-
-    def __init__(
-        self,
-        coordinator: RitualsDataUpdateCoordinator,
-        description: RitualsNumberEntityDescription,
-    ) -> None:
-        """Initialize the diffuser perfume amount number."""
-        super().__init__(coordinator, description)
-        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def native_value(self) -> int:

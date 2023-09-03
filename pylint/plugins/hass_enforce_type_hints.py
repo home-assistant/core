@@ -140,6 +140,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "recorder_mock": "Recorder",
     "requests_mock": "requests_mock.Mocker",
     "snapshot": "SnapshotAssertion",
+    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
 }
@@ -572,7 +573,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", None],
+        return_type=["str", "UndefinedType", None],
     ),
     TypeHintMatch(
         function_name="state",
@@ -1022,15 +1023,15 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="hvac_mode",
-                    return_type=["HVACMode", "str", None],
+                    return_type=["HVACMode", None],
                 ),
                 TypeHintMatch(
                     function_name="hvac_modes",
-                    return_type=["list[HVACMode]", "list[str]"],
+                    return_type="list[HVACMode]",
                 ),
                 TypeHintMatch(
                     function_name="hvac_action",
-                    return_type=["HVACAction", "str", None],
+                    return_type=["HVACAction", None],
                 ),
                 TypeHintMatch(
                     function_name="current_temperature",
@@ -2449,7 +2450,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
-                    arg_types={1: "str", 2: "str", 3: "dict[str, Any] | None"},
+                    arg_types={1: "str", 2: "str", 3: "dict[str, Any]"},
                     return_type="TtsAudioType",
                     has_async_counterpart=True,
                 ),

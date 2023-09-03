@@ -90,6 +90,7 @@ async def test_user_flow_cannot_connect(
 
     host = "1.2.3.4"
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(side_effect=CannotConnect())
 
     result = await hass.config_entries.flow.async_configure(
@@ -101,6 +102,7 @@ async def test_user_flow_cannot_connect(
     assert "host" in result["data_schema"].schema
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -329,6 +331,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
 
     result = await hass.config_entries.flow.async_configure(
@@ -338,6 +341,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -386,6 +390,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
 
     result = await hass.config_entries.flow.async_configure(
@@ -395,6 +400,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -712,6 +718,30 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_zeroconf_flow_abort_if_mac_is_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test when mac is missing in the zeroconf discovery we abort."""
+    host = "1.2.3.4"
+    name = "My Android TV"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=host,
+            addresses=[host],
+            port=6466,
+            hostname=host,
+            type="mock_type",
+            name=name + "._androidtvremote2._tcp.local.",
+            properties={},
+        ),
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -833,3 +863,59 @@ async def test_reauth_flow_cannot_connect(
     await hass.async_block_till_done()
     assert len(mock_unload_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test options flow."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 0
+    assert mock_api.async_connect.call_count == 1
+
+    # Trigger options flow, first time
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"enable_ime"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": False},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": False}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 1
+    assert mock_api.async_connect.call_count == 2
+
+    # Trigger options flow, second time, no change, doesn't reload
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": False},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": False}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 1
+    assert mock_api.async_connect.call_count == 2
+
+    # Trigger options flow, third time, change, reloads
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_ime": True},
+    )
+    assert result["type"] == "create_entry"
+    assert mock_config_entry.options == {"enable_ime": True}
+    await hass.async_block_till_done()
+
+    assert mock_api.disconnect.call_count == 2
+    assert mock_api.async_connect.call_count == 3

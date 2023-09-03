@@ -40,7 +40,6 @@ class RitualsSensorEntityDescription(
 ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="battery_percentage",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda diffuser: diffuser.battery_percentage,
@@ -48,19 +47,19 @@ ENTITY_DESCRIPTIONS = (
     ),
     RitualsSensorEntityDescription(
         key="fill",
-        name="Fill",
+        translation_key="fill",
         icon="mdi:beaker",
         value_fn=lambda diffuser: diffuser.fill,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
-        name="Perfume",
+        translation_key="perfume",
         icon="mdi:tag",
         value_fn=lambda diffuser: diffuser.perfume,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
-        name="Wifi",
+        translation_key="wifi_percentage",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda diffuser: diffuser.wifi_percentage,
@@ -91,15 +90,6 @@ class RitualsSensorEntity(DiffuserEntity, SensorEntity):
 
     entity_description: RitualsSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: RitualsDataUpdateCoordinator,
-        description: RitualsSensorEntityDescription,
-    ) -> None:
-        """Initialize the diffuser sensor."""
-        super().__init__(coordinator, description)
-        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def native_value(self) -> str | int:

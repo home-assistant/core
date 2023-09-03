@@ -1,10 +1,10 @@
 """YoLink DataUpdateCoordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
@@ -20,7 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     """YoLink DataUpdateCoordinator."""
 
-    def __init__(self, hass: HomeAssistant, device: YoLinkDevice) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: YoLinkDevice,
+        paired_device: YoLinkDevice | None = None,
+    ) -> None:
         """Init YoLink DataUpdateCoordinator.
 
         fetch state every 30 minutes base on yolink device heartbeat interval
@@ -31,16 +36,30 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
         )
         self.device = device
+        self.paired_device = paired_device
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 device_state_resp = await self.device.fetch_state()
+                device_state = device_state_resp.data.get(ATTR_DEVICE_STATE)
+                if self.paired_device is not None and device_state is not None:
+                    paried_device_state_resp = await self.paired_device.fetch_state()
+                    paried_device_state = paried_device_state_resp.data.get(
+                        ATTR_DEVICE_STATE
+                    )
+                    if (
+                        paried_device_state is not None
+                        and ATTR_DEVICE_STATE in paried_device_state
+                    ):
+                        device_state[ATTR_DEVICE_STATE] = paried_device_state[
+                            ATTR_DEVICE_STATE
+                        ]
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
             raise UpdateFailed from yl_client_err
-        if ATTR_DEVICE_STATE in device_state_resp.data:
-            return device_state_resp.data[ATTR_DEVICE_STATE]
+        if device_state is not None:
+            return device_state
         return {}

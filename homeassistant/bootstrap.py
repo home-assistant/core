@@ -19,6 +19,7 @@ import yarl
 from . import config as conf_util, config_entries, core, loader
 from .components import http
 from .const import (
+    FORMAT_DATETIME,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -31,6 +32,7 @@ from .helpers import (
     entity_registry,
     issue_registry,
     recorder,
+    restore_state,
     template,
 )
 from .helpers.dispatcher import async_dispatcher_send
@@ -108,8 +110,7 @@ async def async_setup_hass(
     runtime_config: RuntimeConfig,
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
-    hass = core.HomeAssistant()
-    hass.config.config_dir = runtime_config.config_dir
+    hass = core.HomeAssistant(runtime_config.config_dir)
 
     async_enable_logging(
         hass,
@@ -132,6 +133,7 @@ async def async_setup_hass(
 
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
+    loader.async_setup(hass)
     config_dict = None
     basic_setup_success = False
 
@@ -175,14 +177,15 @@ async def async_setup_hass(
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
-        hass = core.HomeAssistant()
+        hass = core.HomeAssistant(old_config.config_dir)
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
         hass.config.skip_pip = old_config.skip_pip
         hass.config.skip_pip_packages = old_config.skip_pip_packages
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
-        hass.config.config_dir = old_config.config_dir
+        # Setup loader cache after the config dir has been set
+        loader.async_setup(hass)
 
     if safe_mode:
         _LOGGER.info("Starting in safe mode")
@@ -247,6 +250,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         issue_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
+        restore_state.async_load(hass),
     )
 
 
@@ -347,7 +351,6 @@ def async_enable_logging(
     fmt = (
         "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
-    datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
         try:
@@ -362,7 +365,7 @@ def async_enable_logging(
             logging.getLogger().handlers[0].setFormatter(
                 ColoredFormatter(
                     colorfmt,
-                    datefmt=datefmt,
+                    datefmt=FORMAT_DATETIME,
                     reset=True,
                     log_colors={
                         "DEBUG": "cyan",
@@ -378,12 +381,18 @@ def async_enable_logging(
 
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
+    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+
+    # Capture warnings.warn(...) and friends messages in logs.
+    # The standard destination for them is stderr, which may end up unnoticed.
+    # This way they're where other messages are, and can be filtered as usual.
+    logging.captureWarnings(True)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore[arg-type]
@@ -430,7 +439,7 @@ def async_enable_logging(
             _LOGGER.error("Error rolling over log file: %s", err)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
         logger = logging.getLogger("")
         logger.addHandler(err_handler)

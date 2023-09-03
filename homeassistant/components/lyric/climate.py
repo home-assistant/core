@@ -21,7 +21,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -113,7 +118,6 @@ async def async_setup_entry(
                     ),
                     location,
                     device,
-                    hass.config.units.temperature_unit,
                 )
             )
 
@@ -134,16 +138,23 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     coordinator: DataUpdateCoordinator[Lyric]
     entity_description: ClimateEntityDescription
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
-        temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._temperature_unit = temperature_unit
+        # Use the native temperature unit from the device settings
+        if device.units == "Fahrenheit":
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_precision = PRECISION_WHOLE
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
         self._attr_hvac_modes = [HVACMode.OFF]
@@ -175,11 +186,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if self.device.changeableValues.thermostatSetpointStatus:
             return SUPPORT_FLAGS_LCC
         return SUPPORT_FLAGS_TCC
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._temperature_unit
 
     @property
     def current_temperature(self) -> float | None:

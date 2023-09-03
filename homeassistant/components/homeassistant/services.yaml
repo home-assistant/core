@@ -1,88 +1,47 @@
 check_config:
-  name: Check configuration
-  description:
-    Check the Home Assistant configuration files for errors. Errors will be
-    displayed in the Home Assistant log.
-
 reload_core_config:
-  name: Reload core configuration
-  description: Reload the core configuration.
-
 restart:
-  name: Restart
-  description: Restart the Home Assistant service.
-
 set_location:
-  name: Set location
-  description: Update the Home Assistant location.
   fields:
     latitude:
-      name: Latitude
-      description: Latitude of your location.
       required: true
       example: 32.87336
       selector:
         text:
     longitude:
-      name: Longitude
-      description: Longitude of your location.
       required: true
       example: 117.22743
       selector:
         text:
 
 stop:
-  name: Stop
-  description: Stop the Home Assistant service.
-
 toggle:
-  name: Generic toggle
-  description: Generic service to toggle devices on/off under any domain
   target:
     entity: {}
 
 turn_on:
-  name: Generic turn on
-  description: Generic service to turn devices on under any domain.
   target:
     entity: {}
 
 turn_off:
-  name: Generic turn off
-  description: Generic service to turn devices off under any domain.
   target:
     entity: {}
 
 update_entity:
-  name: Update entity
-  description: Force one or more entities to update its data
   target:
     entity: {}
 
 reload_custom_templates:
-  name: Reload custom Jinja2 templates
-  description: >-
-    Reload Jinja2 templates found in the custom_templates folder in your config.
-    New values will be applied on the next render of the template.
-
 reload_config_entry:
-  name: Reload config entry
-  description: Reload a config entry that matches a target.
   target:
     entity: {}
     device: {}
   fields:
     entry_id:
       advanced: true
-      name: Config entry id
-      description: A configuration entry id
       required: false
       example: 8955375327824e14ba89e4b29cc3ec9a
       selector:
         text:
 
 save_persistent_states:
-  name: Save Persistent States
-  description:
-    Save the persistent states (for entities derived from RestoreEntity) immediately.
-    Maintain the normal periodic saving interval.

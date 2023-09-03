@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template_entity import CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -111,7 +111,7 @@ async def test_setup_minimum(hass: HomeAssistant) -> None:
     with assert_setup_component(1, SWITCH_DOMAIN):
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -129,7 +129,7 @@ async def test_setup_query_params(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, SWITCH_DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert route.call_count == 1
+    assert route.call_count == 2
 
 
 @respx.mock
@@ -148,7 +148,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -170,7 +170,7 @@ async def test_setup_with_state_resource(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
@@ -195,7 +195,7 @@ async def test_setup_with_templated_headers_params(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
-    assert route.call_count == 1
+    assert route.call_count == 2
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
     assert last_request.headers.get("Accept") == CONTENT_TYPE_JSON
@@ -262,7 +262,7 @@ async def test_turn_on_success(hass: HomeAssistant) -> None:
 
     route = respx.post(RESOURCE) % HTTPStatus.OK
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -282,7 +282,7 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -302,7 +302,7 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -320,7 +320,7 @@ async def test_turn_off_success(hass: HomeAssistant) -> None:
 
     route = respx.post(RESOURCE) % HTTPStatus.OK
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -341,7 +341,7 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},
@@ -362,7 +362,7 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE).mock(side_effect=asyncio.TimeoutError())
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.foo"},

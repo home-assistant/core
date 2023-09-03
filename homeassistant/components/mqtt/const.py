@@ -17,6 +17,7 @@ CONF_COMMAND_TOPIC = "command_topic"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
 CONF_KEEPALIVE = "keepalive"
+CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_SCHEMA = "schema"
@@ -28,11 +29,47 @@ CONF_WS_PATH = "ws_path"
 CONF_WS_HEADERS = "ws_headers"
 CONF_WILL_MESSAGE = "will_message"
 CONF_PAYLOAD_RESET = "payload_reset"
+CONF_SUPPORTED_FEATURES = "supported_features"
+
+CONF_ACTION_TEMPLATE = "action_template"
+CONF_ACTION_TOPIC = "action_topic"
+CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
+CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
+CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
+CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
+CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
+CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
+CONF_MODE_LIST = "modes"
+CONF_MODE_STATE_TEMPLATE = "mode_state_template"
+CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_POWER_COMMAND_TOPIC = "power_command_topic"
+CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
+CONF_PRECISION = "precision"
+CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
+CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
+CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
+CONF_TEMP_STATE_TOPIC = "temperature_state_topic"
+CONF_TEMP_INITIAL = "initial"
+CONF_TEMP_MAX = "max_temp"
+CONF_TEMP_MIN = "min_temp"
 
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
+
+# Device and integration info options
+CONF_IDENTIFIERS = "identifiers"
+CONF_CONNECTIONS = "connections"
+CONF_MANUFACTURER = "manufacturer"
+CONF_HW_VERSION = "hw_version"
+CONF_SW_VERSION = "sw_version"
+CONF_VIA_DEVICE = "via_device"
+CONF_DEPRECATED_VIA_HUB = "via_hub"
+CONF_SUGGESTED_AREA = "suggested_area"
+CONF_CONFIGURATION_URL = "configuration_url"
+CONF_OBJECT_ID = "object_id"
+CONF_SUPPORT_URL = "support_url"
 
 DATA_MQTT = "mqtt"
 DATA_MQTT_AVAILABLE = "mqtt_client_available"
@@ -92,9 +129,12 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
+    Platform.LAWN_MOWER,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -106,6 +146,7 @@ PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 RELOADABLE_PLATFORMS = [
@@ -116,9 +157,12 @@ RELOADABLE_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.IMAGE,
     Platform.LIGHT,
+    Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SCENE,
@@ -129,4 +173,5 @@ RELOADABLE_PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]

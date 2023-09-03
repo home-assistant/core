@@ -5,13 +5,13 @@ from roborock.containers import (
     CleanRecord,
     CleanSummary,
     Consumable,
-    DNDTimer,
+    DnDTimer,
     HomeData,
     NetworkInfo,
-    Status,
+    S7Status,
     UserData,
 )
-from roborock.typing import DeviceProp
+from roborock.roborock_typing import DeviceProp
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
@@ -311,7 +311,7 @@ CONSUMABLE = Consumable.from_dict(
     }
 )
 
-DND_TIMER = DNDTimer.from_dict(
+DND_TIMER = DnDTimer.from_dict(
     {
         "start_hour": 22,
         "start_minute": 0,
@@ -321,7 +321,7 @@ DND_TIMER = DNDTimer.from_dict(
     }
 )
 
-STATUS = Status.from_dict(
+STATUS = S7Status.from_dict(
     {
         "msg_ver": 2,
         "msg_seq": 458,
@@ -367,8 +367,12 @@ STATUS = Status.from_dict(
         "unsave_map_flag": 0,
     }
 )
-
-PROP = DeviceProp(STATUS, DND_TIMER, CLEAN_SUMMARY, CONSUMABLE, CLEAN_RECORD)
+PROP = DeviceProp(
+    status=STATUS,
+    clean_summary=CLEAN_SUMMARY,
+    consumable=CONSUMABLE,
+    last_clean_record=CLEAN_RECORD,
+)
 
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90

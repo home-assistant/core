@@ -28,11 +28,7 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     ICON = "mdi:delete-variant"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} Bin Full"
+    _attr_translation_key = "bin_full"
 
     @property
     def unique_id(self):

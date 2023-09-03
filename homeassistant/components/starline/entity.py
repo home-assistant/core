@@ -12,15 +12,15 @@ class StarlineEntity(Entity):
     """StarLine base entity class."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
-        self, account: StarlineAccount, device: StarlineDevice, key: str, name: str
+        self, account: StarlineAccount, device: StarlineDevice, key: str
     ) -> None:
         """Initialize StarLine entity."""
         self._account = account
         self._device = device
         self._key = key
-        self._name = name
         self._unsubscribe_api: Callable | None = None
 
     @property
@@ -32,11 +32,6 @@ class StarlineEntity(Entity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return f"starline-{self._key}-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return f"{self._device.name} {self._name}"
 
     @property
     def device_info(self):

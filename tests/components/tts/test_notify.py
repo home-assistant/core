@@ -1,7 +1,9 @@
 """The tests for the TTS component."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components import media_player, notify, tts
+from homeassistant.components import notify, tts
 from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
@@ -22,6 +24,16 @@ async def internal_url_mock(hass: HomeAssistant) -> None:
         hass,
         {"internal_url": "http://example.local:8123"},
     )
+
+
+@pytest.fixture(autouse=True)
+async def disable_platforms() -> None:
+    """Disable demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [],
+    ):
+        yield
 
 
 async def test_setup_legacy_platform(hass: HomeAssistant) -> None:
@@ -56,13 +68,27 @@ async def test_setup_platform(hass: HomeAssistant) -> None:
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
 
+async def test_setup_platform_missing_key(hass: HomeAssistant) -> None:
+    """Test platform without required tts_service or entity_id key."""
+    config = {
+        notify.DOMAIN: {
+            "platform": "tts",
+            "name": "tts_test",
+            "media_player": "media_player.demo",
+        }
+    }
+    with assert_setup_component(0, notify.DOMAIN):
+        assert await async_setup_component(hass, notify.DOMAIN, config)
+
+    assert not hass.services.has_service(notify.DOMAIN, "tts_test")
+
+
 async def test_setup_legacy_service(hass: HomeAssistant) -> None:
     """Set up the demo platform and call service."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     config = {
         tts.DOMAIN: {"platform": "demo"},
-        media_player.DOMAIN: {"platform": "demo"},
         notify.DOMAIN: {
             "platform": "tts",
             "name": "tts_test",

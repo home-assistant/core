@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfInformation,
     UnitOfTemperature,
@@ -899,7 +900,7 @@ async def test_update_with_xml_convert_bad_xml(
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
-    assert "Erroneous XML" in caplog.text
+    assert "REST xml result could not be parsed" in caplog.text
     assert "Empty reply" in caplog.text
 
 
@@ -936,7 +937,7 @@ async def test_update_with_failed_get(
     state = hass.states.get("sensor.foo")
 
     assert state.state == STATE_UNKNOWN
-    assert "Erroneous XML" in caplog.text
+    assert "REST xml result could not be parsed" in caplog.text
     assert "Empty reply" in caplog.text
 
 
@@ -1018,3 +1019,27 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "state_class": "measurement",
         "unit_of_measurement": "°C",
     }
+
+
+@respx.mock
+async def test_availability_in_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        SENSOR_DOMAIN: {
+            # REST configuration
+            "platform": DOMAIN,
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "availability": "{{value==1}}",
+            "name": "{{'REST' + ' ' + 'Sensor'}}",
+        },
+    }
+
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, text="123")
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == STATE_UNAVAILABLE

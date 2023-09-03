@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
@@ -60,20 +60,22 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self._from: str = entry.data[CONF_FROM]
         self._to: str = entry.data[CONF_TO]
-        self._time: time | None = dt.parse_time(entry.data[CONF_TIME])
+        self._time: time | None = dt_util.parse_time(entry.data[CONF_TIME])
         self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
 
         departure_day = next_departuredate(self._weekdays)
-        current_time = dt.now()
+        current_time = dt_util.now()
         when = (
             datetime.combine(
-                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
+                departure_day,
+                self._time,
+                dt_util.get_time_zone(self.hass.config.time_zone),
             )
             if self._time
-            else dt.now()
+            else dt_util.now()
         )
         if current_time > when:
             when = current_time

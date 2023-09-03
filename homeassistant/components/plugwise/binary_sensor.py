@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from plugwise.constants import BinarySensorType
+
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -25,6 +27,7 @@ SEVERITIES = ["other", "info", "warning", "error"]
 class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Plugwise binary sensor entity."""
 
+    key: BinarySensorType
     icon_off: str | None = None
 
 
@@ -100,11 +103,10 @@ async def async_setup_entry(
 
     entities: list[PlugwiseBinarySensorEntity] = []
     for device_id, device in coordinator.data.devices.items():
+        if not (binary_sensors := device.get("binary_sensors")):
+            continue
         for description in BINARY_SENSORS:
-            if description.key not in device and (
-                "binary_sensors" not in device
-                or description.key not in device["binary_sensors"]
-            ):
+            if description.key not in binary_sensors:
                 continue
 
             entities.append(
@@ -134,11 +136,9 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        if self.entity_description.key in self.device:
-            return self.device[self.entity_description.key]
-        return self.device["binary_sensors"].get(self.entity_description.key)
+        return self.device["binary_sensors"][self.entity_description.key]
 
     @property
     def icon(self) -> str | None:

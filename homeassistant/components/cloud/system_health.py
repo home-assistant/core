@@ -1,4 +1,6 @@
 """Provide info to system health."""
+from typing import Any
+
 from hass_nabucasa import Cloud
 
 from homeassistant.components import system_health
@@ -16,12 +18,12 @@ def async_register(
     register.async_register_info(system_health_info, "/config/cloud")
 
 
-async def system_health_info(hass):
+async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    cloud: Cloud = hass.data[DOMAIN]
-    client: CloudClient = cloud.client
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    client = cloud.client
 
-    data = {
+    data: dict[str, Any] = {
         "logged_in": cloud.is_logged_in,
     }
 

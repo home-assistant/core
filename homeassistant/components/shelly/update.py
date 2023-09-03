@@ -21,6 +21,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
@@ -282,10 +283,17 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             LOGGER.debug("OTA update call successful")
 
 
-class RpcSleepingUpdateEntity(ShellySleepingRpcAttributeEntity, UpdateEntity):
+class RpcSleepingUpdateEntity(
+    ShellySleepingRpcAttributeEntity, UpdateEntity, RestoreEntity
+):
     """Represent a RPC sleeping update entity."""
 
     entity_description: RpcUpdateDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self.last_state = await self.async_get_last_state()
 
     @property
     def installed_version(self) -> str | None:

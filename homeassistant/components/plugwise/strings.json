@@ -76,6 +76,9 @@
     "number": {
       "maximum_boiler_temperature": {
         "name": "Maximum boiler temperature setpoint"
+      },
+      "max_dhw_temperature": {
+        "name": "Domestic hot water setpoint"
       }
     },
     "select": {
@@ -100,6 +103,146 @@
       },
       "select_schedule": {
         "name": "Thermostat schedule"
+      }
+    },
+    "sensor": {
+      "setpoint": {
+        "name": "Setpoint"
+      },
+      "cooling_setpoint": {
+        "name": "Cooling setpoint"
+      },
+      "heating_setpoint": {
+        "name": "Heating setpoint"
+      },
+      "intended_boiler_temperature": {
+        "name": "Intended boiler temperature"
+      },
+      "temperature_difference": {
+        "name": "Temperature difference"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor air temperature"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "return_temperature": {
+        "name": "Return temperature"
+      },
+      "electricity_consumed": {
+        "name": "Electricity consumed"
+      },
+      "electricity_produced": {
+        "name": "Electricity produced"
+      },
+      "electricity_consumed_interval": {
+        "name": "Electricity consumed interval"
+      },
+      "electricity_consumed_peak_interval": {
+        "name": "Electricity consumed peak interval"
+      },
+      "electricity_consumed_off_peak_interval": {
+        "name": "Electricity consumed off peak interval"
+      },
+      "electricity_produced_interval": {
+        "name": "Electricity produced interval"
+      },
+      "electricity_produced_peak_interval": {
+        "name": "Electricity produced peak interval"
+      },
+      "electricity_produced_off_peak_interval": {
+        "name": "Electricity produced off peak interval"
+      },
+      "electricity_consumed_point": {
+        "name": "Electricity consumed point"
+      },
+      "electricity_consumed_off_peak_point": {
+        "name": "Electricity consumed off peak point"
+      },
+      "electricity_consumed_peak_point": {
+        "name": "Electricity consumed peak point"
+      },
+      "electricity_consumed_off_peak_cumulative": {
+        "name": "Electricity consumed off peak cumulative"
+      },
+      "electricity_consumed_peak_cumulative": {
+        "name": "Electricity consumed peak cumulative"
+      },
+      "electricity_produced_point": {
+        "name": "Electricity produced point"
+      },
+      "electricity_produced_off_peak_point": {
+        "name": "Electricity produced off peak point"
+      },
+      "electricity_produced_peak_point": {
+        "name": "Electricity produced peak point"
+      },
+      "electricity_produced_off_peak_cumulative": {
+        "name": "Electricity produced off peak cumulative"
+      },
+      "electricity_produced_peak_cumulative": {
+        "name": "Electricity produced peak cumulative"
+      },
+      "electricity_phase_one_consumed": {
+        "name": "Electricity phase one consumed"
+      },
+      "electricity_phase_two_consumed": {
+        "name": "Electricity phase two consumed"
+      },
+      "electricity_phase_three_consumed": {
+        "name": "Electricity phase three consumed"
+      },
+      "electricity_phase_one_produced": {
+        "name": "Electricity phase one produced"
+      },
+      "electricity_phase_two_produced": {
+        "name": "Electricity phase two produced"
+      },
+      "electricity_phase_three_produced": {
+        "name": "Electricity phase three produced"
+      },
+      "voltage_phase_one": {
+        "name": "Voltage phase one"
+      },
+      "voltage_phase_two": {
+        "name": "Voltage phase two"
+      },
+      "voltage_phase_three": {
+        "name": "Voltage phase three"
+      },
+      "gas_consumed_interval": {
+        "name": "Gas consumed interval"
+      },
+      "gas_consumed_cumulative": {
+        "name": "Gas consumed cumulative"
+      },
+      "net_electricity_point": {
+        "name": "Net electricity point"
+      },
+      "net_electricity_cumulative": {
+        "name": "Net electricity cumulative"
+      },
+      "modulation_level": {
+        "name": "Modulation level"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "dhw_temperature": {
+        "name": "DHW temperature"
+      },
+      "domestic_hot_water_setpoint": {
+        "name": "DHW setpoint"
+      },
+      "maximum_boiler_temperature": {
+        "name": "Maximum boiler temperature"
       }
     },
     "switch": {

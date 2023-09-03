@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -107,15 +108,20 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 class NZBGetEntity(CoordinatorEntity[NZBGetDataUpdateCoordinator]):
     """Defines a base NZBGet entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
-        self, *, entry_id: str, name: str, coordinator: NZBGetDataUpdateCoordinator
+        self,
+        *,
+        entry_id: str,
+        entry_name: str,
+        coordinator: NZBGetDataUpdateCoordinator,
     ) -> None:
         """Initialize the NZBGet entity."""
         super().__init__(coordinator)
-        self._name = name
         self._entry_id = entry_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=entry_name,
+            entry_type=DeviceEntryType.SERVICE,
+        )

@@ -35,7 +35,7 @@ class RitualsSelectEntityDescription(
 ENTITY_DESCRIPTIONS = (
     RitualsSelectEntityDescription(
         key="room_size_square_meter",
-        name="Room Size",
+        translation_key="room_size_square_meter",
         icon="mdi:ruler-square",
         unit_of_measurement=AREA_SQUARE_METERS,
         entity_category=EntityCategory.CONFIG,
@@ -80,7 +80,6 @@ class RitualsSelectEntity(DiffuserEntity, SelectEntity):
         self._attr_entity_registry_enabled_default = (
             self.coordinator.diffuser.has_battery
         )
-        self._attr_name = f"{coordinator.diffuser.name} {description.name}"
 
     @property
     def current_option(self) -> str:

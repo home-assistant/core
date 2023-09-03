@@ -42,7 +42,6 @@ from tests.components.media_player import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
-# pylint: disable=invalid-name
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
 FakeUUID2 = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")
 FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
@@ -181,7 +180,7 @@ async def async_setup_cast_internal_discovery(hass, config=None):
 
 
 async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInfo):
-    """Set up the cast platform with async_setup_component."""
+    """Set up a cast config entry."""
     browser = MagicMock(devices={}, zc={})
     chromecast = get_fake_chromecast(info)
     zconf = get_fake_zconf(host=info.cast_info.host, port=info.cast_info.port)
@@ -196,9 +195,10 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
         return_value=zconf,
     ):
-        await async_setup_component(
-            hass, "cast", {"cast": {"media_player": {"uuid": info.uuid}}}
-        )
+        data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
+        entry = MockConfigEntry(data=data, domain="cast")
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -1893,7 +1893,7 @@ async def test_failed_cast_other_url(
         assert await async_setup_component(
             hass,
             tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+            {tts.DOMAIN: {"platform": "demo"}},
         )
 
     info = get_fake_chromecast_info()
@@ -1950,7 +1950,7 @@ async def test_failed_cast_external_url(
         assert await async_setup_component(
             hass,
             tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.com:8123"}},
+            {tts.DOMAIN: {"platform": "demo"}},
         )
 
     info = get_fake_chromecast_info()
@@ -1964,33 +1964,6 @@ async def test_failed_cast_external_url(
     media_status_cb(media_status)
     assert (
         "Failed to cast media http://example.com:8123/tts.mp3 from external_url"
-        in caplog.text
-    )
-
-
-async def test_failed_cast_tts_base_url(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test warning when casting from tts.base_url fails."""
-    await async_setup_component(hass, "homeassistant", {})
-    with assert_setup_component(1, tts.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            tts.DOMAIN,
-            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
-        )
-
-    info = get_fake_chromecast_info()
-    chromecast, _ = await async_setup_media_player_cast(hass, info)
-    _, _, media_status_cb = get_status_callbacks(chromecast)
-
-    media_status = MagicMock(images=None)
-    media_status.player_is_idle = True
-    media_status.idle_reason = "ERROR"
-    media_status.content_id = "http://example.local:8123/tts.mp3"
-    media_status_cb(media_status)
-    assert (
-        "Failed to cast media http://example.local:8123/tts.mp3 from tts.base_url"
         in caplog.text
     )
 
@@ -2012,52 +1985,6 @@ async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")
-
-
-async def test_entry_setup_empty_config(hass: HomeAssistant) -> None:
-    """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {"cast": {}})
-    await hass.async_block_till_done()
-
-    config_entry = hass.config_entries.async_entries("cast")[0]
-    assert config_entry.data["uuid"] == []
-    assert config_entry.data["ignore_cec"] == []
-
-
-async def test_entry_setup_single_config(hass: HomeAssistant) -> None:
-    """Test deprecated yaml config with a single config media_player."""
-    await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"uuid": "bla", "ignore_cec": "cast1"}}}
-    )
-    await hass.async_block_till_done()
-
-    config_entry = hass.config_entries.async_entries("cast")[0]
-    assert config_entry.data["uuid"] == ["bla"]
-    assert config_entry.data["ignore_cec"] == ["cast1"]
-
-    assert ["cast1"] == pychromecast.IGNORE_CEC
-
-
-async def test_entry_setup_list_config(hass: HomeAssistant) -> None:
-    """Test deprecated yaml config with multiple media_players."""
-    await async_setup_component(
-        hass,
-        "cast",
-        {
-            "cast": {
-                "media_player": [
-                    {"uuid": "bla", "ignore_cec": "cast1"},
-                    {"uuid": "blu", "ignore_cec": ["cast2", "cast3"]},
-                ]
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    config_entry = hass.config_entries.async_entries("cast")[0]
-    assert set(config_entry.data["uuid"]) == {"bla", "blu"}
-    assert set(config_entry.data["ignore_cec"]) == {"cast1", "cast2", "cast3"}
-    assert set(pychromecast.IGNORE_CEC) == {"cast1", "cast2", "cast3"}
 
 
 async def test_invalid_cast_platform(

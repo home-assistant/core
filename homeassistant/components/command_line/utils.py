@@ -19,7 +19,7 @@ def call_shell_with_timeout(
         _LOGGER.debug("Running command: %s", command)
         subprocess.check_output(
             command,
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S602 # shell by design
             timeout=timeout,
             close_fds=False,  # required for posix_spawn
         )
@@ -45,7 +45,7 @@ def check_output_or_log(command: str, timeout: int) -> str | None:
     try:
         return_value = subprocess.check_output(
             command,
-            shell=True,  # nosec # shell by design
+            shell=True,  # noqa: S602 # shell by design
             timeout=timeout,
             close_fds=False,  # required for posix_spawn
         )

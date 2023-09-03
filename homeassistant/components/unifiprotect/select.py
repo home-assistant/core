@@ -356,15 +356,15 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
+        entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically
         if (
-            self.entity_description.entity_category is not None
-            and self.entity_description.ufp_options_fn is not None
+            entity_description.entity_category is not None
+            and entity_description.ufp_options_fn is not None
         ):
             _LOGGER.debug(
-                "Updating dynamic select options for %s", self.entity_description.name
+                "Updating dynamic select options for %s", entity_description.name
             )
             self._async_set_options()
 

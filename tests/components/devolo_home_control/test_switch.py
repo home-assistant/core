@@ -1,22 +1,26 @@
 """Tests for the devolo Home Control switch platform."""
 from unittest.mock import patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockSwitch
 
 
-async def test_switch(hass: HomeAssistant) -> None:
+async def test_switch(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
     """Test setup and state change of a switch device."""
     entry = configure_integration(hass)
     test_gateway = HomeControlMockSwitch()
@@ -28,8 +32,8 @@ async def test_switch(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{DOMAIN}.test")
-    assert state is not None
-    assert state.state == STATE_OFF
+    assert state == snapshot
+    assert entity_registry.async_get(f"{DOMAIN}.test") == snapshot
 
     # Emulate websocket message: switched on
     test_gateway.devices["Test"].binary_switch_property[

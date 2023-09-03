@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
@@ -40,26 +40,24 @@ class AladdinDevice(CoverEntity):
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, acc: AladdinConnectClient, device: DoorDevice, entry: ConfigEntry
     ) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
-        self._entry_id = entry.entry_id
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._name = device["name"]
         self._serial = device["serial"]
-        self._model = device["model"]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
-            name=self._name,
+            name=device["name"],
             manufacturer="Overhead Door",
-            model=self._model,
+            model=device["model"],
         )
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     async def async_added_to_hass(self) -> None:

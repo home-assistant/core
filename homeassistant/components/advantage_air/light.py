@@ -4,7 +4,7 @@ from typing import Any
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN as ADVANTAGE_AIR_DOMAIN
@@ -41,6 +41,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     """Representation of Advantage Air Light."""
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_name = None
 
     def __init__(self, instance: AdvantageAirData, light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""

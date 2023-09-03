@@ -13,5 +13,33 @@
         }
       }
     }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns the siren on.",
+      "fields": {
+        "tone": {
+          "name": "Tone",
+          "description": "The tone to emit. When `available_tones` property is a map, either the key or the value can be used. Must be supported by the integration."
+        },
+        "volume_level": {
+          "name": "Volume",
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume. Must be supported by the integration."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Number of seconds the sound is played. Must be supported by the integration."
+        }
+      }
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns the siren off."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles the siren on/off."
+    }
   }
 }

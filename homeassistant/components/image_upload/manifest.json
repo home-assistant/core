@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/image_upload",
   "integration_type": "system",
   "quality_scale": "internal",
-  "requirements": ["pillow==9.5.0"]
+  "requirements": ["Pillow==10.0.0"]
 }

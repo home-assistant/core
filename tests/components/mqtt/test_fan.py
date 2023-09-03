@@ -97,10 +97,7 @@ async def test_fail_setup_if_no_command_topic(
     """Test if command fails with command topic."""
     with pytest.raises(AssertionError):
         await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['fan'][0]['command_topic']"
-        in caplog.text
-    )
+    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -2223,7 +2220,11 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

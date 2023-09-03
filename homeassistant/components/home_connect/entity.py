@@ -3,8 +3,9 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .api import HomeConnectDevice
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES

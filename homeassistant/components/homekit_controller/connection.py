@@ -22,12 +22,11 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import normalize_hkid
@@ -96,6 +95,13 @@ class HKDevice:
         # A list of callbacks that turn HK service metadata into entities
         self.listeners: list[AddServiceCb] = []
 
+        # A list of callbacks that turn HK service metadata into triggers
+        self.trigger_factories: list[AddServiceCb] = []
+
+        # Track aid/iid pairs so we know if we already handle triggers for a HK
+        # service.
+        self._triggers: list[tuple[int, int]] = []
+
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
@@ -116,8 +122,6 @@ class HKDevice:
 
         self.available = False
 
-        self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
-
         self.pollable_characteristics: list[tuple[int, int]] = []
 
         # Never allow concurrent polling of the same accessory or bridge
@@ -137,6 +141,9 @@ class HKDevice:
             immediate=False,
             function=self.async_update,
         )
+
+        self._availability_callbacks: set[CALLBACK_TYPE] = set()
+        self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
 
     @property
     def entity_map(self) -> Accessories:
@@ -182,7 +189,8 @@ class HKDevice:
         if self.available == available:
             return
         self.available = available
-        async_dispatcher_send(self.hass, self.signal_state_updated)
+        for callback_ in self._availability_callbacks:
+            callback_()
 
     async def _async_populate_ble_accessory_state(self, event: Event) -> None:
         """Populate the BLE accessory state without blocking startup.
@@ -272,7 +280,7 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
-                    name=f"HomeKit Controller {self.unique_id} BLE availability "
+                    name=f"HomeKit Device {self.unique_id} BLE availability "
                     "check poll",
                 )
             )
@@ -291,7 +299,7 @@ class HKDevice:
                 self.hass,
                 self.async_request_update,
                 self.pairing.poll_interval,
-                name=f"HomeKit Controller {self.unique_id} availability check poll",
+                name=f"HomeKit Device {self.unique_id} availability check poll",
             )
         )
 
@@ -636,11 +644,33 @@ class HKDevice:
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
 
+    def add_trigger_factory(self, add_triggers_cb: AddServiceCb) -> None:
+        """Add a callback to run when discovering new triggers for services."""
+        self.trigger_factories.append(add_triggers_cb)
+        self._add_new_triggers([add_triggers_cb])
+
+    def _add_new_triggers(self, callbacks: list[AddServiceCb]) -> None:
+        for accessory in self.entity_map.accessories:
+            aid = accessory.aid
+            for service in accessory.services:
+                iid = service.iid
+                entity_key = (aid, iid)
+
+                if entity_key in self._triggers:
+                    # Don't add the same trigger again
+                    continue
+
+                for add_trigger_cb in callbacks:
+                    if add_trigger_cb(service):
+                        self._triggers.append(entity_key)
+                        break
+
     def add_entities(self) -> None:
         """Process the entity map and create HA entities."""
         self._add_new_entities(self.listeners)
         self._add_new_entities_for_accessory(self.accessory_factories)
         self._add_new_entities_for_char(self.char_factories)
+        self._add_new_triggers(self.trigger_factories)
 
     def _add_new_entities(self, callbacks) -> None:
         for accessory in self.entity_map.accessories:
@@ -714,7 +744,7 @@ class HKDevice:
             if not self._polling_lock_warned:
                 _LOGGER.warning(
                     (
-                        "HomeKit controller update skipped as previous poll still in"
+                        "HomeKit device update skipped as previous poll still in"
                         " flight: %s"
                     ),
                     self.unique_id,
@@ -725,7 +755,7 @@ class HKDevice:
         if self._polling_lock_warned:
             _LOGGER.info(
                 (
-                    "HomeKit controller no longer detecting back pressure - not"
+                    "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"
                 ),
                 self.unique_id,
@@ -733,7 +763,7 @@ class HKDevice:
             self._polling_lock_warned = False
 
         async with self._polling_lock:
-            _LOGGER.debug("Starting HomeKit controller update: %s", self.unique_id)
+            _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
             try:
                 new_values_dict = await self.get_characteristics(
@@ -755,7 +785,7 @@ class HKDevice:
             self._poll_failures = 0
             self.process_new_events(new_values_dict)
 
-            _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
+            _LOGGER.debug("Finished HomeKit device update: %s", self.unique_id)
 
     def process_new_events(
         self, new_values_dict: dict[tuple[int, int], dict[str, Any]]
@@ -768,7 +798,39 @@ class HKDevice:
 
         self.entity_map.process_changes(new_values_dict)
 
-        async_dispatcher_send(self.hass, self.signal_state_updated)
+        to_callback: set[CALLBACK_TYPE] = set()
+        for aid_iid in new_values_dict:
+            if callbacks := self._subscriptions.get(aid_iid):
+                to_callback.update(callbacks)
+
+        for callback_ in to_callback:
+            callback_()
+
+    @callback
+    def async_subscribe(
+        self, characteristics: Iterable[tuple[int, int]], callback_: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Add characteristics to the watch list."""
+        for aid_iid in characteristics:
+            self._subscriptions.setdefault(aid_iid, set()).add(callback_)
+
+        def _unsub():
+            for aid_iid in characteristics:
+                self._subscriptions[aid_iid].remove(callback_)
+                if not self._subscriptions[aid_iid]:
+                    del self._subscriptions[aid_iid]
+
+        return _unsub
+
+    @callback
+    def async_subscribe_availability(self, callback_: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Add characteristics to the watch list."""
+        self._availability_callbacks.add(callback_)
+
+        def _unsub():
+            self._availability_callbacks.remove(callback_)
+
+        return _unsub
 
     async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Read latest state from homekit accessory."""

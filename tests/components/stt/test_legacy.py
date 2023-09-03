@@ -26,7 +26,7 @@ async def test_invalid_platform(
     )
     await hass.async_block_till_done()
 
-    assert "Unknown speech to text platform specified" in caplog.text
+    assert "Unknown speech-to-text platform specified" in caplog.text
 
 
 async def test_platform_setup_with_error(

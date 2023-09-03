@@ -28,7 +28,7 @@ async def async_setup_entry(
 class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
     """A yale xs ble lock."""
 
-    _attr_has_entity_name = True
+    _attr_name = None
 
     @callback
     def _async_update_state(

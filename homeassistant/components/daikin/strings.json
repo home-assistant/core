@@ -21,5 +21,36 @@
       "api_password": "Invalid authentication, use either API Key or Password.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "compressor_estimated_power_consumption": {
+        "name": "Compressor estimated power consumption"
+      },
+      "cool_energy_consumption": {
+        "name": "Cool energy consumption"
+      },
+      "heat_energy_consumption": {
+        "name": "Heat energy consumption"
+      },
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
+      },
+      "compressor_energy_consumption": {
+        "name": "Compressor energy consumption"
+      }
+    }
   }
 }

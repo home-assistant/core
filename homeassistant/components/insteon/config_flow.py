@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pyinsteon import async_connect
-import voluptuous as vol
+from pyinsteon import async_close, async_connect, devices
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, usb
@@ -44,6 +43,7 @@ from .schemas import (
     build_remove_x10_schema,
     build_x10_schema,
 )
+from .utils import async_get_usb_ports
 
 STEP_PLM = "plm"
 STEP_HUB_V1 = "hubv1"
@@ -55,16 +55,8 @@ STEP_ADD_OVERRIDE = "add_override"
 STEP_REMOVE_OVERRIDE = "remove_override"
 STEP_REMOVE_X10 = "remove_x10"
 MODEM_TYPE = "modem_type"
-PLM = "PowerLinc Modem (PLM)"
-HUB1 = "Hub version 1 (pre-2014)"
-HUB2 = "Hub version 2"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _only_one_selected(*args):
-    """Test if only one item is True."""
-    return sum(args) == 1
 
 
 async def _async_connect(**kwargs):
@@ -128,22 +120,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Init the config flow."""
-        errors = {}
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        if user_input is not None:
-            selection = user_input.get(MODEM_TYPE)
-
-            if selection == PLM:
-                return await self.async_step_plm()
-            if selection == HUB1:
-                return await self.async_step_hubv1()
-            return await self.async_step_hubv2()
-        modem_types = [PLM, HUB1, HUB2]
-        data_schema = vol.Schema({vol.Required(MODEM_TYPE): vol.In(modem_types)})
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
-        )
+        modem_types = [STEP_PLM, STEP_HUB_V1, STEP_HUB_V2]
+        return self.async_show_menu(step_id="user", menu_options=modem_types)
 
     async def async_step_plm(self, user_input=None):
         """Set up the PLM modem type."""
@@ -153,7 +133,8 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
         schema_defaults = user_input if user_input is not None else {}
-        data_schema = build_plm_schema(**schema_defaults)
+        ports = await async_get_usb_ports(self.hass)
+        data_schema = build_plm_schema(ports, **schema_defaults)
         return self.async_show_form(
             step_id=STEP_PLM, data_schema=data_schema, errors=errors
         )
@@ -182,25 +163,14 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_info):
-        """Import a yaml entry as a config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        if not await _async_connect(**import_info):
-            return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title="", data=import_info)
-
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        dev_path = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
-        self._device_path = dev_path
+        self._device_path = discovery_info.device
         self._device_name = usb.human_readable_device_name(
-            dev_path,
+            discovery_info.device,
             discovery_info.serial_number,
             discovery_info.manufacturer,
             discovery_info.description,
@@ -243,57 +213,24 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Init the options config flow."""
-        errors = {}
-        if user_input is not None:
-            change_hub_config = user_input.get(STEP_CHANGE_HUB_CONFIG, False)
-            change_plm_config = user_input.get(STEP_CHANGE_PLM_CONFIG, False)
-            device_override = user_input.get(STEP_ADD_OVERRIDE, False)
-            x10_device = user_input.get(STEP_ADD_X10, False)
-            remove_override = user_input.get(STEP_REMOVE_OVERRIDE, False)
-            remove_x10 = user_input.get(STEP_REMOVE_X10, False)
-            if _only_one_selected(
-                change_hub_config,
-                change_plm_config,
-                device_override,
-                x10_device,
-                remove_override,
-                remove_x10,
-            ):
-                if change_hub_config:
-                    return await self.async_step_change_hub_config()
-                if change_plm_config:
-                    return await self.async_step_change_plm_config()
-                if device_override:
-                    return await self.async_step_add_override()
-                if x10_device:
-                    return await self.async_step_add_x10()
-                if remove_override:
-                    return await self.async_step_remove_override()
-                if remove_x10:
-                    return await self.async_step_remove_x10()
-            errors["base"] = "select_single"
+        menu_options = [STEP_ADD_OVERRIDE, STEP_ADD_X10]
 
-        data_schema = {
-            vol.Optional(STEP_ADD_OVERRIDE): bool,
-            vol.Optional(STEP_ADD_X10): bool,
-        }
         if self.config_entry.data.get(CONF_HOST):
-            data_schema[vol.Optional(STEP_CHANGE_HUB_CONFIG)] = bool
+            menu_options.append(STEP_CHANGE_HUB_CONFIG)
         else:
-            data_schema[vol.Optional(STEP_CHANGE_PLM_CONFIG)] = bool
+            menu_options.append(STEP_CHANGE_PLM_CONFIG)
 
         options = {**self.config_entry.options}
         if options.get(CONF_OVERRIDE):
-            data_schema[vol.Optional(STEP_REMOVE_OVERRIDE)] = bool
+            menu_options.append(STEP_REMOVE_OVERRIDE)
         if options.get(CONF_X10):
-            data_schema[vol.Optional(STEP_REMOVE_X10)] = bool
+            menu_options.append(STEP_REMOVE_X10)
 
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(data_schema), errors=errors
-        )
+        return self.async_show_menu(step_id="init", menu_options=menu_options)
 
     async def async_step_change_hub_config(self, user_input=None) -> FlowResult:
         """Change the Hub configuration."""
+        errors = {}
         if user_input is not None:
             data = {
                 **self.config_entry.data,
@@ -303,31 +240,41 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             if self.config_entry.data[CONF_HUB_VERSION] == 2:
                 data[CONF_USERNAME] = user_input[CONF_USERNAME]
                 data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-            return self.async_create_entry(
-                title="",
-                data={**self.config_entry.options},
-            )
+            if devices.modem:
+                await async_close()
+
+            if await _async_connect(**data):
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=data
+                )
+                return self.async_create_entry(data={**self.config_entry.options})
+            errors["base"] = "cannot_connect"
         data_schema = build_hub_schema(**self.config_entry.data)
         return self.async_show_form(
-            step_id=STEP_CHANGE_HUB_CONFIG, data_schema=data_schema
+            step_id=STEP_CHANGE_HUB_CONFIG, data_schema=data_schema, errors=errors
         )
 
     async def async_step_change_plm_config(self, user_input=None) -> FlowResult:
         """Change the PLM configuration."""
+        errors = {}
         if user_input is not None:
             data = {
                 **self.config_entry.data,
                 CONF_DEVICE: user_input[CONF_DEVICE],
             }
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
-            return self.async_create_entry(
-                title="",
-                data={**self.config_entry.options},
-            )
-        data_schema = build_plm_schema(**self.config_entry.data)
+            if devices.modem:
+                await async_close()
+            if await _async_connect(**data):
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=data
+                )
+                return self.async_create_entry(data={**self.config_entry.options})
+            errors["base"] = "cannot_connect"
+
+        ports = await async_get_usb_ports(self.hass)
+        data_schema = build_plm_schema(ports, **self.config_entry.data)
         return self.async_show_form(
-            step_id=STEP_CHANGE_PLM_CONFIG, data_schema=data_schema
+            step_id=STEP_CHANGE_PLM_CONFIG, data_schema=data_schema, errors=errors
         )
 
     async def async_step_add_override(self, user_input=None) -> FlowResult:
@@ -337,7 +284,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             try:
                 data = add_device_override({**self.config_entry.options}, user_input)
                 async_dispatcher_send(self.hass, SIGNAL_ADD_DEVICE_OVERRIDE, user_input)
-                return self.async_create_entry(title="", data=data)
+                return self.async_create_entry(data=data)
             except ValueError:
                 errors["base"] = "input_error"
         schema_defaults = user_input if user_input is not None else {}
@@ -352,7 +299,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             options = add_x10_device({**self.config_entry.options}, user_input)
             async_dispatcher_send(self.hass, SIGNAL_ADD_X10_DEVICE, user_input)
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(data=options)
         schema_defaults: dict[str, str] = user_input if user_input is not None else {}
         data_schema = build_x10_schema(**schema_defaults)
         return self.async_show_form(
@@ -370,7 +317,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
                 SIGNAL_REMOVE_DEVICE_OVERRIDE,
                 user_input[CONF_ADDRESS],
             )
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(data=options)
 
         data_schema = build_remove_override_schema(options[CONF_OVERRIDE])
         return self.async_show_form(
@@ -386,7 +333,7 @@ class InsteonOptionsFlowHandler(config_entries.OptionsFlow):
             async_dispatcher_send(
                 self.hass, SIGNAL_REMOVE_X10_DEVICE, housecode, unitcode
             )
-            return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(data=options)
 
         data_schema = build_remove_x10_schema(options[CONF_X10])
         return self.async_show_form(

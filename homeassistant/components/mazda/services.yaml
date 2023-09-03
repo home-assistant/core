@@ -1,17 +1,11 @@
 send_poi:
-  name: Send POI
-  description: Send a GPS location to the vehicle's navigation system as a POI (Point of Interest). Requires a navigation SD card installed in the vehicle.
   fields:
     device_id:
-      name: Vehicle
-      description: The vehicle to send the GPS location to
       required: true
       selector:
         device:
           integration: mazda
     latitude:
-      name: Latitude
-      description: The latitude of the location to send
       example: 12.34567
       required: true
       selector:
@@ -21,8 +15,6 @@ send_poi:
           unit_of_measurement: °
           mode: box
     longitude:
-      name: Longitude
-      description: The longitude of the location to send
       example: -34.56789
       required: true
       selector:
@@ -32,8 +24,6 @@ send_poi:
           unit_of_measurement: °
           mode: box
     poi_name:
-      name: POI name
-      description: A friendly name for the location
       example: Work
       required: true
       selector:

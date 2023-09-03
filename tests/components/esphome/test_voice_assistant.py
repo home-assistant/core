@@ -5,11 +5,15 @@ import socket
 from unittest.mock import Mock, patch
 
 from aioesphomeapi import VoiceAssistantEventType
-import async_timeout
 import pytest
 
-from homeassistant.components import esphome
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.assist_pipeline import (
+    PipelineEvent,
+    PipelineEventType,
+    PipelineNotFound,
+    PipelineStage,
+)
+from homeassistant.components.assist_pipeline.error import WakeWordDetectionError
 from homeassistant.components.esphome import DomainData
 from homeassistant.components.esphome.voice_assistant import VoiceAssistantUDPServer
 from homeassistant.core import HomeAssistant
@@ -19,43 +23,47 @@ _TEST_OUTPUT_TEXT = "This is an output test"
 _TEST_OUTPUT_URL = "output.mp3"
 _TEST_MEDIA_ID = "12345"
 
+_ONE_SECOND = 16000 * 2  # 16Khz 16-bit
+
+
+@pytest.fixture
+def voice_assistant_udp_server(
+    hass: HomeAssistant,
+) -> VoiceAssistantUDPServer:
+    """Return the UDP server factory."""
+
+    def _voice_assistant_udp_server(entry):
+        entry_data = DomainData.get(hass).get_entry_data(entry)
+
+        server: VoiceAssistantUDPServer = None
+
+        def handle_finished():
+            nonlocal server
+            assert server is not None
+            server.close()
+
+        server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
+        return server
+
+    return _voice_assistant_udp_server
+
 
 @pytest.fixture
 def voice_assistant_udp_server_v1(
-    hass: HomeAssistant,
+    voice_assistant_udp_server,
     mock_voice_assistant_v1_entry,
 ) -> VoiceAssistantUDPServer:
     """Return the UDP server."""
-    entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v1_entry)
-
-    server: VoiceAssistantUDPServer = None
-
-    def handle_finished():
-        nonlocal server
-        assert server is not None
-        server.close()
-
-    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-    return server
+    return voice_assistant_udp_server(entry=mock_voice_assistant_v1_entry)
 
 
 @pytest.fixture
 def voice_assistant_udp_server_v2(
-    hass: HomeAssistant,
+    voice_assistant_udp_server,
     mock_voice_assistant_v2_entry,
 ) -> VoiceAssistantUDPServer:
     """Return the UDP server."""
-    entry_data = DomainData.get(hass).get_entry_data(mock_voice_assistant_v2_entry)
-
-    server: VoiceAssistantUDPServer = None
-
-    def handle_finished():
-        nonlocal server
-        assert server is not None
-        server.close()
-
-    server = VoiceAssistantUDPServer(hass, entry_data, Mock(), handle_finished)
-    return server
+    return voice_assistant_udp_server(entry=mock_voice_assistant_v2_entry)
 
 
 async def test_pipeline_events(
@@ -64,8 +72,17 @@ async def test_pipeline_events(
 ) -> None:
     """Test that the pipeline function is called."""
 
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        assert device_id == "mock-device-id"
+
         event_callback = kwargs["event_callback"]
+
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.WAKE_WORD_END,
+                data={"wake_word_output": {}},
+            )
+        )
 
         # Fake events
         event_callback(
@@ -97,17 +114,19 @@ async def test_pipeline_events(
         )
 
     def handle_event(
-        event_type: esphome.VoiceAssistantEventType, data: dict[str, str] | None
+        event_type: VoiceAssistantEventType, data: dict[str, str] | None
     ) -> None:
-        if event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert data is not None
             assert data["text"] == _TEST_INPUT_TEXT
-        elif event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert data is not None
             assert data["text"] == _TEST_OUTPUT_TEXT
-        elif event_type == esphome.VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert data is not None
             assert data["url"] == _TEST_OUTPUT_URL
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
+            assert data is None
 
     voice_assistant_udp_server_v1.handle_event = handle_event
 
@@ -117,7 +136,9 @@ async def test_pipeline_events(
     ):
         voice_assistant_udp_server_v1.transport = Mock()
 
-        await voice_assistant_udp_server_v1.run_pipeline()
+        await voice_assistant_udp_server_v1.run_pipeline(
+            device_id="mock-device-id", conversation_id=None
+        )
 
 
 async def test_udp_server(
@@ -141,7 +162,7 @@ async def test_udp_server(
         sock.sendto(b"test", ("127.0.0.1", port))
 
         # Give the socket some time to send/receive the data
-        async with async_timeout.timeout(1):
+        async with asyncio.timeout(1):
             while voice_assistant_udp_server_v1.queue.qsize() == 0:
                 await asyncio.sleep(0.1)
 
@@ -266,7 +287,7 @@ async def test_error_event_type(
         )
     )
 
-    assert voice_assistant_udp_server_v1.handle_event.called_with(
+    voice_assistant_udp_server_v1.handle_event.assert_called_with(
         VoiceAssistantEventType.VOICE_ASSISTANT_ERROR,
         {"code": "code", "message": "message"},
     )
@@ -335,3 +356,92 @@ async def test_send_tts(
         await voice_assistant_udp_server_v2._tts_done.wait()
 
         voice_assistant_udp_server_v2.transport.sendto.assert_called()
+
+
+async def test_wake_word(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, start_stage, **kwargs):
+        assert start_stage == PipelineStage.WAKE_WORD
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+            pipeline_timeout=1,
+        )
+
+
+async def test_wake_word_exception(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        raise WakeWordDetectionError("pipeline-not-found", "Pipeline not found")
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        def handle_event(
+            event_type: VoiceAssistantEventType, data: dict[str, str] | None
+        ) -> None:
+            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+                assert data is not None
+                assert data["code"] == "pipeline-not-found"
+                assert data["message"] == "Pipeline not found"
+
+        voice_assistant_udp_server_v2.handle_event = handle_event
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+            pipeline_timeout=1,
+        )
+
+
+async def test_pipeline_timeout(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test that the pipeline is set to start with Wake word."""
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        raise PipelineNotFound("not-found", "Pipeline not found")
+
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.async_pipeline_from_audio_stream",
+        new=async_pipeline_from_audio_stream,
+    ):
+        voice_assistant_udp_server_v2.transport = Mock()
+
+        def handle_event(
+            event_type: VoiceAssistantEventType, data: dict[str, str] | None
+        ) -> None:
+            if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_ERROR:
+                assert data is not None
+                assert data["code"] == "pipeline not found"
+                assert data["message"] == "Selected pipeline not found"
+
+        voice_assistant_udp_server_v2.handle_event = handle_event
+
+        await voice_assistant_udp_server_v2.run_pipeline(
+            device_id="mock-device-id",
+            conversation_id=None,
+            flags=2,
+            pipeline_timeout=1,
+        )

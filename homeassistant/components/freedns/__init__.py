@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL, CONF_URL
@@ -76,7 +75,7 @@ async def _update_freedns(hass, session, url, auth_token):
         params[auth_token] = ""
 
     try:
-        async with async_timeout.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

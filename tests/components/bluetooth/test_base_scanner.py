@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     HaBluetoothConnector,
     storage,
@@ -84,6 +85,7 @@ async def test_remote_scanner(hass: HomeAssistant, enable_bluetooth: None) -> No
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -158,6 +160,7 @@ async def test_remote_scanner_expires_connectable(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -232,6 +235,7 @@ async def test_remote_scanner_expires_non_connectable(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -329,6 +333,7 @@ async def test_base_scanner_connecting_behavior(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received
@@ -452,6 +457,7 @@ async def test_device_with_ten_minute_advertising_interval(
                 advertisement_data.manufacturer_data,
                 advertisement_data.tx_power,
                 {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
             )
 
     new_info_callback = manager.scanner_adv_received

@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from aiohttp import ClientSession
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.devolo_home_control.diagnostics import TO_REDACT
-from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -14,9 +12,14 @@ from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockBinarySensor
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass: HomeAssistant, hass_client: ClientSession):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test setup and state change of a climate device."""
     entry = configure_integration(hass)
     gateway_1 = HomeControlMockBinarySensor()
@@ -30,36 +33,5 @@ async def test_entry_diagnostics(hass: HomeAssistant, hass_client: ClientSession
 
         assert entry.state == ConfigEntryState.LOADED
 
-        entry_dict = entry.as_dict()
-        for key in TO_REDACT:
-            entry_dict["data"][key] = REDACTED
-
         result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-
-        assert result == {
-            "entry": entry_dict,
-            "device_info": [
-                {
-                    "gateway": {
-                        "local_connection": gateway_1.gateway.local_connection,
-                        "firmware_version": gateway_1.gateway.firmware_version,
-                    },
-                    "devices": [
-                        {
-                            "device_id": device_id,
-                            "device_model_uid": properties.device_model_uid,
-                            "device_type": properties.device_type,
-                            "name": properties.name,
-                        }
-                        for device_id, properties in gateway_1.devices.items()
-                    ],
-                },
-                {
-                    "gateway": {
-                        "local_connection": gateway_2.gateway.local_connection,
-                        "firmware_version": gateway_2.gateway.firmware_version,
-                    },
-                    "devices": [],
-                },
-            ],
-        }
+        assert result == snapshot

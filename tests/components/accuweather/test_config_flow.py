@@ -156,7 +156,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             "accuweather/current_conditions_data.json"
         ),
     ), patch(
-        "homeassistant.components.accuweather.AccuWeather.async_get_forecast"
+        "homeassistant.components.accuweather.AccuWeather.async_get_daily_forecast"
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.requests_remaining",
         new_callable=PropertyMock,

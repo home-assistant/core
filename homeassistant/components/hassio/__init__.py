@@ -32,6 +32,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    async_get_hass,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -41,8 +42,8 @@ from homeassistant.helpers import (
     recorder,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -61,6 +62,7 @@ from .const import (
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
+    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_REPOSITORY,
     ATTR_SLUG,
@@ -148,9 +150,22 @@ SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
 
+def valid_addon(value: Any) -> str:
+    """Validate value is a valid addon slug."""
+    value = cv.slug(value)
+
+    hass: HomeAssistant | None = None
+    with suppress(HomeAssistantError):
+        hass = async_get_hass()
+
+    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
+        raise vol.Invalid("Not a valid add-on slug")
+    return value
+
+
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.string})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
@@ -158,9 +173,14 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
 
 SCHEMA_BACKUP_FULL = vol.Schema(
     {
-        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(
+            ATTR_NAME, default=lambda: utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        ): cv.string,
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_COMPRESSED): cv.boolean,
+        vol.Optional(ATTR_LOCATION): vol.All(
+            cv.string, lambda v: None if v == "/backup" else v
+        ),
     }
 )
 
@@ -168,7 +188,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
     }
 )
 
@@ -183,7 +203,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
     }
 )
 
@@ -234,6 +254,7 @@ MAP_SERVICE_API = {
 }
 
 HARDWARE_INTEGRATIONS = {
+    "green": "homeassistant_green",
     "odroid-c2": "hardkernel",
     "odroid-c4": "hardkernel",
     "odroid-m1": "hardkernel",
@@ -295,7 +316,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 @callback
 @bind_hass
-def get_addons_info(hass):
+def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
     """Return Addons info.
 
     Async friendly.
@@ -361,6 +382,16 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_CORE_INFO)
+
+
+@callback
+@bind_hass
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+    """Return Supervisor issues info.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_KEY_SUPERVISOR_ISSUES)
 
 
 @callback
@@ -519,10 +550,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
 
-        async_track_point_in_utc_time(
+        async_call_later(
             hass,
+            HASSIO_UPDATE_INTERVAL,
             HassJob(update_info_data, cancel_on_shutdown=True),
-            utcnow() + HASSIO_UPDATE_INTERVAL,
         )
 
     # Fetch data
@@ -590,14 +621,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await async_setup_addon_panel(hass, hassio)
 
     # Setup hardware integration for the detected board type
-    async def _async_setup_hardware_integration(_: datetime) -> None:
+    async def _async_setup_hardware_integration(_: datetime | None = None) -> None:
         """Set up hardaware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
-            async_track_point_in_utc_time(
+            async_call_later(
                 hass,
-                _async_setup_hardware_integration,
-                utcnow() + HASSIO_UPDATE_INTERVAL,
+                HASSIO_UPDATE_INTERVAL,
+                async_setup_hardware_integration_job,
             )
             return
         if (board := os_info.get("board")) is None:
@@ -610,7 +641,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             )
         )
 
-    await _async_setup_hardware_integration(datetime.now())
+    async_setup_hardware_integration_job = HassJob(
+        _async_setup_hardware_integration, cancel_on_shutdown=True
+    )
+
+    await _async_setup_hardware_integration()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
@@ -627,8 +662,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
-    hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_config_entry_first_refresh()
+    hass.data[ADDONS_COORDINATOR] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -738,7 +773,7 @@ def async_remove_addons_from_dev_reg(
 ) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
-        if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
+        if dev := dev_reg.async_get_device(identifiers={(DOMAIN, addon_slug)}):
             dev_reg.async_remove_device(dev.id)
 
 
@@ -770,7 +805,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
-        addons_info = get_addons_info(self.hass)
+        addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
         store_data = get_store(self.hass) or {}
@@ -835,7 +870,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
 
         if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device({(DOMAIN, "OS")})
+            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
         ):
             # Remove the OS device if it exists and the installation is not hassos
             self.dev_reg.async_remove_device(dev.id)

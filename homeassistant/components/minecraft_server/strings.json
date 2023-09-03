@@ -18,5 +18,32 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "version": {
+        "name": "Version"
+      },
+      "protocol_version": {
+        "name": "Protocol version"
+      },
+      "latency": {
+        "name": "Latency"
+      },
+      "players_online": {
+        "name": "Players online"
+      },
+      "players_max": {
+        "name": "Players max"
+      },
+      "motd": {
+        "name": "World message"
+      }
+    }
   }
 }

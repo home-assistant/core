@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-import logging
 from typing import Any
 
-from androidtvremote2 import AndroidTVRemote, ConnectionClosed
+from androidtvremote2 import AndroidTVRemote
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -20,17 +19,13 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -43,62 +38,29 @@ async def async_setup_entry(
     async_add_entities([AndroidTVRemoteEntity(api, config_entry)])
 
 
-class AndroidTVRemoteEntity(RemoteEntity):
-    """Representation of an Android TV Remote."""
+class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
+    """Android TV Remote Entity."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = False
+    _attr_supported_features = RemoteEntityFeature.ACTIVITY
 
-    def __init__(self, api: AndroidTVRemote, config_entry: ConfigEntry) -> None:
-        """Initialize device."""
-        self._api = api
-        self._host = config_entry.data[CONF_HOST]
-        self._name = config_entry.data[CONF_NAME]
-        self._attr_unique_id = config_entry.unique_id
-        self._attr_supported_features = RemoteEntityFeature.ACTIVITY
-        self._attr_is_on = api.is_on
-        self._attr_current_activity = api.current_app
-        device_info = api.device_info
-        assert config_entry.unique_id
-        assert device_info
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
-            identifiers={(DOMAIN, config_entry.unique_id)},
-            name=self._name,
-            manufacturer=device_info["manufacturer"],
-            model=device_info["model"],
-        )
+    @callback
+    def _current_app_updated(self, current_app: str) -> None:
+        """Update the state when the current app changes."""
+        self._attr_current_activity = current_app
+        self.async_write_ha_state()
 
-        @callback
-        def is_on_updated(is_on: bool) -> None:
-            self._attr_is_on = is_on
-            self.async_write_ha_state()
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
 
-        @callback
-        def current_app_updated(current_app: str) -> None:
-            self._attr_current_activity = current_app
-            self.async_write_ha_state()
+        self._attr_current_activity = self._api.current_app
+        self._api.add_current_app_updated_callback(self._current_app_updated)
 
-        @callback
-        def is_available_updated(is_available: bool) -> None:
-            if is_available:
-                _LOGGER.info(
-                    "Reconnected to %s at %s",
-                    self._name,
-                    self._host,
-                )
-            else:
-                _LOGGER.warning(
-                    "Disconnected from %s at %s",
-                    self._name,
-                    self._host,
-                )
-            self._attr_available = is_available
-            self.async_write_ha_state()
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await super().async_will_remove_from_hass()
 
-        api.add_is_on_updated_callback(is_on_updated)
-        api.add_current_app_updated_callback(current_app_updated)
-        api.add_is_available_updated_callback(is_available_updated)
+        self._api.remove_current_app_updated_callback(self._current_app_updated)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Android TV on."""
@@ -128,27 +90,3 @@ class AndroidTVRemoteEntity(RemoteEntity):
                 else:
                     self._send_key_command(single_command, "SHORT")
                 await asyncio.sleep(delay_secs)
-
-    def _send_key_command(self, key_code: str, direction: str = "SHORT") -> None:
-        """Send a key press to Android TV.
-
-        This does not block; it buffers the data and arranges for it to be sent out asynchronously.
-        """
-        try:
-            self._api.send_key_command(key_code, direction)
-        except ConnectionClosed as exc:
-            raise HomeAssistantError(
-                "Connection to Android TV device is closed"
-            ) from exc
-
-    def _send_launch_app_command(self, app_link: str) -> None:
-        """Launch an app on Android TV.
-
-        This does not block; it buffers the data and arranges for it to be sent out asynchronously.
-        """
-        try:
-            self._api.send_launch_app_command(app_link)
-        except ConnectionClosed as exc:
-            raise HomeAssistantError(
-                "Connection to Android TV device is closed"
-            ) from exc

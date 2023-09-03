@@ -111,10 +111,6 @@ CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
 CONF_WHITE_COMMAND_TOPIC = "white_command_topic"
 CONF_WHITE_SCALE = "white_scale"
-CONF_WHITE_VALUE_COMMAND_TOPIC = "white_value_command_topic"
-CONF_WHITE_VALUE_SCALE = "white_value_scale"
-CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
@@ -167,7 +163,7 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_BASIC = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
@@ -194,7 +190,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
@@ -228,21 +224,7 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_BASIC.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -260,6 +242,7 @@ async def async_setup_entity_basic(
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _topic: dict[str, str | None]
@@ -500,6 +483,13 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 rgb = convert_color(*color)
                 brightness = max(rgb)
+                if brightness == 0:
+                    _LOGGER.debug(
+                        "Ignoring %s message with zero rgb brightness from '%s'",
+                        color_mode,
+                        msg.topic,
+                    )
+                    return None
                 self._attr_brightness = brightness
                 # Normalize the color to 100% brightness
                 color = tuple(

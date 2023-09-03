@@ -57,7 +57,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
         vol.Optional(CONF_RELEASE_SUMMARY): cv.string,
         vol.Optional(CONF_RELEASE_URL): cv.string,
@@ -107,6 +107,7 @@ async def _async_setup_entity(
 class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     """Representation of the MQTT update entity."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = update.ENTITY_ID_FORMAT
 
     def __init__(

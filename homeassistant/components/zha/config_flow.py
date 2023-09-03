@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -35,6 +35,7 @@ from .core.const import (
 from .radio_manager import (
     HARDWARE_DISCOVERY_SCHEMA,
     RECOMMENDED_RADIOS,
+    ProbeResult,
     ZhaRadioManager,
 )
 
@@ -60,6 +61,8 @@ OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
+REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
+
 DEFAULT_ZHA_ZEROCONF_PORT = 6638
 ESPHOME_API_PORT = 6053
 
@@ -69,7 +72,7 @@ def _format_backup_choice(
 ) -> str:
     """Format network backup info into a short piece of text."""
     if not pan_ids:
-        return dt.as_local(backup.backup_time).strftime("%c")
+        return dt_util.as_local(backup.backup_time).strftime("%c")
 
     identifier = (
         # PAN ID
@@ -78,7 +81,7 @@ def _format_backup_choice(
         f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
     ).lower()
 
-    return f"{dt.as_local(backup.backup_time).strftime('%c')} ({identifier})"
+    return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
 
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
@@ -96,10 +99,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
         yellow_radio.manufacturer = "Nabu Casa"
 
     # Present the multi-PAN addon as a setup option, if it's available
-    addon_manager = silabs_multiprotocol_addon.get_addon_manager(hass)
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
 
     try:
-        addon_info = await addon_manager.async_get_addon_info()
+        addon_info = await multipan_manager.async_get_addon_info()
     except (AddonError, KeyError):
         addon_info = None
 
@@ -185,7 +190,13 @@ class BaseZhaFlow(FlowHandler):
             port = ports[list_of_ports.index(user_selection)]
             self._radio_mgr.device_path = port.device
 
-            if not await self._radio_mgr.detect_radio_type():
+            probe_result = await self._radio_mgr.detect_radio_type()
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
@@ -528,10 +539,17 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         # config flow logic that interacts with hardware.
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             # Probe the radio type if we don't have one yet
-            if (
-                self._radio_mgr.radio_type is None
-                and not await self._radio_mgr.detect_radio_type()
-            ):
+            if self._radio_mgr.radio_type is None:
+                probe_result = await self._radio_mgr.detect_radio_type()
+            else:
+                probe_result = ProbeResult.RADIO_TYPE_DETECTED
+
+            if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
+                return self.async_abort(
+                    reason="wrong_firmware_installed",
+                    description_placeholders={"repair_url": REPAIR_MY_URL},
+                )
+            if probe_result == ProbeResult.PROBING_FAILED:
                 # This path probably will not happen now that we have
                 # more precise USB matching unless there is a problem
                 # with the device
@@ -552,10 +570,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         vid = discovery_info.vid
         pid = discovery_info.pid
         serial_number = discovery_info.serial_number
-        device = discovery_info.device
         manufacturer = discovery_info.manufacturer
         description = discovery_info.description
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
 
         await self._set_unique_id_or_update_path(
             unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",

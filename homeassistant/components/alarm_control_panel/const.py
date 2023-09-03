@@ -1,8 +1,6 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import Final
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "alarm_control_panel"
 

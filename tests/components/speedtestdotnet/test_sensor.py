@@ -3,8 +3,6 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.speedtestdotnet import DOMAIN
-from homeassistant.components.speedtestdotnet.const import DEFAULT_NAME
-from homeassistant.components.speedtestdotnet.sensor import SENSOR_TYPES
 from homeassistant.core import HomeAssistant, State
 
 from . import MOCK_RESULTS, MOCK_SERVERS, MOCK_STATES
@@ -27,10 +25,17 @@ async def test_speedtestdotnet_sensors(
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
-    for description in SENSOR_TYPES:
-        sensor = hass.states.get(f"sensor.{DEFAULT_NAME}_{description.name}")
-        assert sensor
-        assert sensor.state == MOCK_STATES[description.key]
+    sensor = hass.states.get("sensor.speedtest_ping")
+    assert sensor
+    assert sensor.state == MOCK_STATES["ping"]
+
+    sensor = hass.states.get("sensor.speedtest_download")
+    assert sensor
+    assert sensor.state == MOCK_STATES["download"]
+
+    sensor = hass.states.get("sensor.speedtest_ping")
+    assert sensor
+    assert sensor.state == MOCK_STATES["ping"]
 
 
 async def test_restore_last_state(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -50,7 +55,14 @@ async def test_restore_last_state(hass: HomeAssistant, mock_api: MagicMock) -> N
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
-    for description in SENSOR_TYPES:
-        sensor = hass.states.get(f"sensor.speedtest_{description.name}")
-        assert sensor
-        assert sensor.state == MOCK_STATES[description.key]
+    sensor = hass.states.get("sensor.speedtest_ping")
+    assert sensor
+    assert sensor.state == MOCK_STATES["ping"]
+
+    sensor = hass.states.get("sensor.speedtest_download")
+    assert sensor
+    assert sensor.state == MOCK_STATES["download"]
+
+    sensor = hass.states.get("sensor.speedtest_ping")
+    assert sensor
+    assert sensor.state == MOCK_STATES["ping"]

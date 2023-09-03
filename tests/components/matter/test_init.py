@@ -168,7 +168,7 @@ async def test_listen_failure_config_entry_not_loaded(
         matter_client.connect.side_effect = MatterError("Boom")
         raise error
 
-    async def get_nodes() -> list[MagicMock]:
+    def get_nodes() -> list[MagicMock]:
         """Mock the client get_nodes method."""
         listen_block.set()
         return []

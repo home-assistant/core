@@ -8,8 +8,8 @@ from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
@@ -111,17 +111,19 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._battery_level
 
     @property  # type: ignore[misc]
-    def device_info(  # pylint: disable=overridden-final-method
+    def device_info(
         self,
     ) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because
         # it doesn't track IP-based devices.
         # Call Super because ScannerEntity overrode it.
-        return super(ZhaEntity, self).device_info
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return ZhaEntity.device_info.fget(self)  # type: ignore[attr-defined]
 
     @property
     def unique_id(self) -> str:
         """Return unique ID."""
         # Call Super because ScannerEntity overrode it.
-        return super(ZhaEntity, self).unique_id
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return ZhaEntity.unique_id.fget(self)  # type: ignore[attr-defined]

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/norway_air",
   "iot_class": "cloud_polling",
   "loggers": ["metno"],
-  "requirements": ["pyMetno==0.9.0"]
+  "requirements": ["PyMetno==0.11.0"]
 }

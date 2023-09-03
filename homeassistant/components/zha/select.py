@@ -4,9 +4,8 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
@@ -176,6 +175,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         cluster_handler = cluster_handlers[0]
         if (
             cls._select_attr in cluster_handler.cluster.unsupported_attributes
+            or cls._select_attr not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._select_attr) is None
         ):
             _LOGGER.debug(
@@ -210,7 +210,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._cluster_handler.cluster.write_attributes(
+        await self._cluster_handler.write_attributes_safe(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
         )
         self.async_write_ha_state()

@@ -8,5 +8,5 @@
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["hass_nabucasa"],
-  "requirements": ["hass-nabucasa==0.66.2"]
+  "requirements": ["hass-nabucasa==0.70.0"]
 }

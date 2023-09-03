@@ -2,7 +2,7 @@
 
 from pyjuicenet import Charger
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -13,6 +13,8 @@ from .const import DOMAIN
 
 class JuiceNetDevice(CoordinatorEntity):
     """Represent a base JuiceNet device."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self, device: Charger, key: str, coordinator: DataUpdateCoordinator

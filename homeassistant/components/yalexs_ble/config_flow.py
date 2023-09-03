@@ -23,10 +23,11 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,4 +297,47 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> YaleXSBLEOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return YaleXSBLEOptionsFlowHandler(config_entry)
+
+
+class YaleXSBLEOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle YaleXSBLE options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize YaleXSBLE options flow."""
+        self.entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE options."""
+        return await self.async_step_device_options()
+
+    async def async_step_device_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the YaleXSBLE devices options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED]},
+            )
+
+        return self.async_show_form(
+            step_id="device_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALWAYS_CONNECTED,
+                        default=self.entry.options.get(CONF_ALWAYS_CONNECTED, False),
+                    ): bool,
+                }
+            ),
         )

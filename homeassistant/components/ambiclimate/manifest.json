@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ambiclimate",
   "iot_class": "cloud_polling",
   "loggers": ["ambiclimate"],
-  "requirements": ["ambiclimate==0.2.1"]
+  "requirements": ["Ambiclimate==0.2.1"]
 }

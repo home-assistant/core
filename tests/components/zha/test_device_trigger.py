@@ -24,7 +24,12 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 ON = 1
 OFF = 0
@@ -100,7 +105,9 @@ async def test_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -166,7 +173,9 @@ async def test_no_triggers(hass: HomeAssistant, mock_devices) -> None:
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, reg_device.id
@@ -198,7 +207,9 @@ async def test_if_fires_on_event(hass: HomeAssistant, mock_devices, calls) -> No
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     assert await async_setup_component(
         hass,
@@ -307,7 +318,9 @@ async def test_exception_no_triggers(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,
@@ -354,7 +367,9 @@ async def test_exception_bad_trigger(
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = dr.async_get(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
+    reg_device = ha_device_registry.async_get_device(
+        identifiers={("zha", ieee_address)}
+    )
 
     await async_setup_component(
         hass,

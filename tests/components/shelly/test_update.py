@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.shelly.const import DOMAIN
@@ -37,7 +38,7 @@ from tests.common import mock_restore_cache
 
 
 async def test_block_update(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block device update entity."""
     entity_registry = async_get(hass)
@@ -75,7 +76,7 @@ async def test_block_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2")
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     state = hass.states.get("update.test_name_firmware_update")
     assert state.state == STATE_OFF
@@ -85,7 +86,7 @@ async def test_block_update(
 
 
 async def test_block_beta_update(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block device beta update entity."""
     entity_registry = async_get(hass)
@@ -108,7 +109,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
 
     monkeypatch.setitem(mock_block_device.status["update"], "beta_version", "2b")
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_ON
@@ -131,7 +132,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "2b")
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_OFF
@@ -203,6 +204,7 @@ async def test_block_update_auth_error(
         {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
 
@@ -388,7 +390,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
 
 
 async def test_rpc_beta_update(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
 ) -> None:
     """Test RPC device beta update entity."""
     entity_registry = async_get(hass)
@@ -424,7 +426,7 @@ async def test_rpc_beta_update(
             "beta": {"version": "2b"},
         },
     )
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_ON
@@ -447,7 +449,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_IN_PROGRESS] is True
 
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "2b")
-    await mock_rest_update(hass)
+    await mock_rest_update(hass, freezer)
 
     state = hass.states.get("update.test_name_beta_firmware_update")
     assert state.state == STATE_OFF
@@ -541,6 +543,7 @@ async def test_rpc_update_auth_error(
         blocking=True,
     )
 
+    await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()

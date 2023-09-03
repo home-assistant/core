@@ -1,5 +1,8 @@
 """The init tests for the nexia platform."""
+import aiohttp
+
 from homeassistant.components.nexia.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -8,6 +11,12 @@ from homeassistant.setup import async_setup_component
 from .util import async_init_integration
 
 from tests.typing import WebSocketGenerator
+
+
+async def test_setup_retry_client_os_error(hass: HomeAssistant) -> None:
+    """Verify we retry setup on aiohttp.ClientOSError."""
+    config_entry = await async_init_integration(hass, exception=aiohttp.ClientOSError)
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def remove_device(ws_client, device_id, config_entry_id):
@@ -44,7 +53,7 @@ async def test_device_remove_devices(
         is False
     )
 
-    entity = registry.entities["sensor.master_suite_relative_humidity"]
+    entity = registry.entities["sensor.master_suite_humidity"]
     live_thermostat_device_entry = device_registry.async_get(entity.device_id)
     assert (
         await remove_device(

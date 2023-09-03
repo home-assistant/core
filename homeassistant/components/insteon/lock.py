@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 
 async def async_setup_entry(
@@ -30,7 +30,12 @@ async def async_setup_entry(
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.LOCK}"
     async_dispatcher_connect(hass, signal, async_add_insteon_lock_entities)
-    async_add_insteon_lock_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.LOCK,
+        InsteonLockEntity,
+        async_add_entities,
+    )
 
 
 class InsteonLockEntity(InsteonEntity, LockEntity):

@@ -278,7 +278,6 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             return ColorMode.COLOR_TEMP
         return ColorMode.HS
 
-    # pylint: disable=arguments-differ
     @state(False)
     def turn_off(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn off a group."""
@@ -286,7 +285,6 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             pipeline.transition(transition_time, brightness=0.0)
         pipeline.off()
 
-    # pylint: disable=arguments-differ
     @state(True)
     def turn_on(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn on (or adjust property of) a group."""

@@ -1,6 +1,6 @@
 {
   "domain": "tts",
-  "name": "Text-to-Speech (TTS)",
+  "name": "Text-to-speech (TTS)",
   "after_dependencies": ["media_player"],
   "codeowners": ["@home-assistant/core", "@pvizeli"],
   "dependencies": ["http"],

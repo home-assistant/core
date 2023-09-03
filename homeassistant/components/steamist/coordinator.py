@@ -30,6 +30,7 @@ class SteamistDataUpdateCoordinator(DataUpdateCoordinator[SteamistStatus]):
             _LOGGER,
             name=f"Steamist {host}",
             update_interval=timedelta(seconds=5),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> SteamistStatus:

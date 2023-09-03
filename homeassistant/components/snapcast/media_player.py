@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from snapcast.control.server import CONTROL_PORT
+from snapcast.control.server import CONTROL_PORT, Snapserver
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -34,7 +34,6 @@ from .const import (
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
-from .server import HomeAssistantSnapcast
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
-    snapcast_data: HomeAssistantSnapcast = hass.data[DOMAIN][config_entry.entry_id]
+    snapcast_server: Snapserver = hass.data[DOMAIN][config_entry.entry_id].server
 
     register_services()
 
@@ -80,14 +79,18 @@ async def async_setup_entry(
     port = config_entry.data[CONF_PORT]
     hpid = f"{host}:{port}"
 
-    snapcast_data.groups = [
-        SnapcastGroupDevice(group, hpid) for group in snapcast_data.server.groups
+    groups: list[MediaPlayerEntity] = [
+        SnapcastGroupDevice(group, hpid, config_entry.entry_id)
+        for group in snapcast_server.groups
     ]
-    snapcast_data.clients = [
+    clients: list[MediaPlayerEntity] = [
         SnapcastClientDevice(client, hpid, config_entry.entry_id)
-        for client in snapcast_data.server.clients
+        for client in snapcast_server.clients
     ]
-    async_add_entities(snapcast_data.clients + snapcast_data.groups)
+    async_add_entities(clients + groups)
+    hass.data[DOMAIN][
+        config_entry.entry_id
+    ].hass_async_add_entities = async_add_entities
 
 
 async def async_setup_platform(
@@ -99,12 +102,17 @@ async def async_setup_platform(
     """Set up the Snapcast platform."""
     async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.6.0",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Snapcast",
+        },
     )
 
     config[CONF_PORT] = config.get(CONF_PORT, CONTROL_PORT)
@@ -147,18 +155,27 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, group, uid_part):
+    def __init__(self, group, uid_part, entry_id):
         """Initialize the Snapcast group device."""
+        self._attr_available = True
         self._group = group
+        self._entry_id = entry_id
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to group events."""
         self._group.set_callback(self.schedule_update_ha_state)
+        self.hass.data[DOMAIN][self._entry_id].groups.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect group object when removed."""
         self._group.set_callback(None)
+        self.hass.data[DOMAIN][self._entry_id].groups.remove(self)
+
+    def set_availability(self, available: bool) -> None:
+        """Set availability of group."""
+        self._attr_available = available
+        self.schedule_update_ha_state()
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -173,9 +190,14 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         return self._uid
 
     @property
+    def identifier(self):
+        """Return the snapcast identifier."""
+        return self._group.identifier
+
+    @property
     def name(self):
         """Return the name of the device."""
-        return f"{GROUP_PREFIX}{self._group.identifier}"
+        return f"{self._group.friendly_name} {GROUP_SUFFIX}"
 
     @property
     def source(self):
@@ -196,12 +218,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return list(self._group.streams_by_name().keys())
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
-        return {"friendly_name": name}
 
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
@@ -242,6 +258,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     def __init__(self, client, uid_part, entry_id):
         """Initialize the Snapcast client device."""
+        self._attr_available = True
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
         self._entry_id = entry_id
@@ -249,10 +266,17 @@ class SnapcastClientDevice(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to client events."""
         self._client.set_callback(self.schedule_update_ha_state)
+        self.hass.data[DOMAIN][self._entry_id].clients.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
         self._client.set_callback(None)
+        self.hass.data[DOMAIN][self._entry_id].clients.remove(self)
+
+    def set_availability(self, available: bool) -> None:
+        """Set availability of group."""
+        self._attr_available = available
+        self.schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -270,7 +294,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{CLIENT_PREFIX}{self._client.identifier}"
+        return f"{self._client.friendly_name} {CLIENT_SUFFIX}"
 
     @property
     def source(self):
@@ -307,8 +331,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
         state_attrs = {}
         if self.latency is not None:
             state_attrs["latency"] = self.latency
-        name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
-        state_attrs["friendly_name"] = name
         return state_attrs
 
     @property

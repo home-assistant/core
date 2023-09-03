@@ -132,7 +132,7 @@ def session_scope(
             need_rollback = True
             session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err, exc_info=True)
+        _LOGGER.exception("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
         if not exception_filter or not exception_filter(err):
@@ -278,9 +278,11 @@ def basic_sanity_check(cursor: SQLiteCursor) -> bool:
 
     for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
-            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+            cursor.execute(f"SELECT * FROM {table};")  # noqa: S608 # not injection
         else:
-            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+            cursor.execute(
+                f"SELECT * FROM {table} LIMIT 1;"  # noqa: S608 # not injection
+            )
 
     return True
 
@@ -424,7 +426,7 @@ def _datetime_or_none(value: str) -> datetime | None:
 def build_mysqldb_conv() -> dict:
     """Build a MySQLDB conv dict that uses cisco8601 to parse datetimes."""
     # Late imports since we only call this if they are using mysqldb
-    # pylint: disable=import-outside-toplevel,import-error
+    # pylint: disable=import-outside-toplevel
     from MySQLdb.constants import FIELD_TYPE
     from MySQLdb.converters import conversions
 
@@ -528,11 +530,10 @@ def setup_connection_for_dialect(
                         version,
                     )
 
-            else:
-                if not version or version < MIN_VERSION_MYSQL:
-                    _fail_unsupported_version(
-                        version or version_string, "MySQL", MIN_VERSION_MYSQL
-                    )
+            elif not version or version < MIN_VERSION_MYSQL:
+                _fail_unsupported_version(
+                    version or version_string, "MySQL", MIN_VERSION_MYSQL
+                )
 
             slow_range_in_select = bool(
                 not version

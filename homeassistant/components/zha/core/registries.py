@@ -244,7 +244,10 @@ class MatchRule:
             if callable(self.quirk_classes):
                 matches.append(self.quirk_classes(quirk_class))
             else:
-                matches.append(quirk_class in self.quirk_classes)
+                matches.append(
+                    quirk_class.split(".")[-2:]
+                    in [x.split(".")[-2:] for x in self.quirk_classes]
+                )
 
         return matches
 

@@ -20,8 +20,8 @@
       "printer_state": {
         "state": {
           "cancelling": "Cancelling",
-          "idle": "Idle",
-          "paused": "Paused",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
           "pausing": "Pausing",
           "printing": "Printing"
         }

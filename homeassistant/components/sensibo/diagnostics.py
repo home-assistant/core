@@ -33,4 +33,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for Sensibo config entry."""
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    return async_redact_data(coordinator.data.raw, TO_REDACT)
+    diag_data = {}
+    diag_data["raw"] = async_redact_data(coordinator.data.raw, TO_REDACT)
+    for device, device_data in coordinator.data.parsed.items():
+        diag_data[device] = async_redact_data(device_data.__dict__, TO_REDACT)
+    return diag_data

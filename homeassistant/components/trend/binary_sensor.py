@@ -29,9 +29,12 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
@@ -174,9 +177,11 @@ class SensorTrend(BinarySensorEntity):
         """Complete device setup after being added to hass."""
 
         @callback
-        def trend_sensor_state_listener(event):
+        def trend_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle state changes on the observed device."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := event.data["new_state"]) is None:
                 return
             try:
                 if self._attribute:
@@ -184,7 +189,7 @@ class SensorTrend(BinarySensorEntity):
                 else:
                     state = new_state.state
                 if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                    sample = (new_state.last_updated.timestamp(), float(state))
+                    sample = (new_state.last_updated.timestamp(), float(state))  # type: ignore[arg-type]
                     self.samples.append(sample)
                     self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:

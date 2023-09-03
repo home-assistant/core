@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -30,13 +30,13 @@ from .const import (
     ALERTS,
     ERRORS,
     MODE,
-    NEATO_DOMAIN,
     NEATO_LOGIN,
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
 )
+from .entity import NeatoEntity
 from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ async def async_setup_entry(
     )
 
 
-class NeatoConnectedVacuum(StateVacuumEntity):
+class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
     _attr_icon = "mdi:robot-vacuum-variant"
@@ -106,6 +106,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         | VacuumEntityFeature.MAP
         | VacuumEntityFeature.LOCATE
     )
+    _attr_name = None
 
     def __init__(
         self,
@@ -115,10 +116,9 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         persistent_maps: dict[str, Any] | None,
     ) -> None:
         """Initialize the Neato Connected Vacuum."""
-        self.robot = robot
+        super().__init__(robot)
         self._attr_available: bool = neato is not None
         self._mapdata = mapdata
-        self._attr_name: str = self.robot.name
         self._robot_has_map: bool = self.robot.has_persistent_maps
         self._robot_maps = persistent_maps
         self._robot_serial: str = self.robot.serial
@@ -299,14 +299,12 @@ class NeatoConnectedVacuum(StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        stats = self._robot_stats
-        return DeviceInfo(
-            identifiers={(NEATO_DOMAIN, self._robot_serial)},
-            manufacturer=stats["battery"]["vendor"] if stats else None,
-            model=stats["model"] if stats else None,
-            name=self._attr_name,
-            sw_version=stats["firmware"] if stats else None,
-        )
+        device_info = super().device_info
+        if self._robot_stats:
+            device_info["manufacturer"] = self._robot_stats["battery"]["vendor"]
+            device_info["model"] = self._robot_stats["model"]
+            device_info["sw_version"] = self._robot_stats["firmware"]
+        return device_info
 
     def start(self) -> None:
         """Start cleaning or resume cleaning."""

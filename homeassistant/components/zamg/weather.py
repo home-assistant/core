@@ -10,8 +10,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -64,8 +63,16 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         try:
-            return float(self.coordinator.data[self.station_id]["TL"]["data"])
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["TLAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["TL"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -73,7 +80,7 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the pressure."""
         try:
             return float(self.coordinator.data[self.station_id]["P"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
@@ -81,21 +88,37 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
         """Return the humidity."""
         try:
             return float(self.coordinator.data[self.station_id]["RFAM"]["data"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         try:
-            return float(self.coordinator.data[self.station_id]["FFAM"]["data"])
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["FFAM"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["FFX"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None
 
     @property
-    def wind_bearing(self) -> float | str | None:
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         try:
-            return self.coordinator.data[self.station_id]["DD"]["data"]
-        except (KeyError, ValueError):
+            if (
+                value := self.coordinator.data[self.station_id]["DD"]["data"]
+            ) is not None:
+                return float(value)
+            if (
+                value := self.coordinator.data[self.station_id]["DDX"]["data"]
+            ) is not None:
+                return float(value)
+            return None
+        except (KeyError, ValueError, TypeError):
             return None

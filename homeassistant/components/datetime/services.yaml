@@ -1,0 +1,10 @@
+set_value:
+  target:
+    entity:
+      domain: datetime
+  fields:
+    datetime:
+      required: true
+      example: "2022/11/01 22:15"
+      selector:
+        datetime:

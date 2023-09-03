@@ -1,6 +1,7 @@
 """Config flow for fritzbox_callmonitor."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any, cast
 
 from fritzconnection import FritzConnection
@@ -9,7 +10,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,

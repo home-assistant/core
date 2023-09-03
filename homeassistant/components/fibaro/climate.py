@@ -263,7 +263,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         return device.mode
 
     @property
-    def hvac_mode(self) -> HVACMode | str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool, idle."""
         fibaro_operation_mode = self.fibaro_op_mode
         if isinstance(fibaro_operation_mode, str):

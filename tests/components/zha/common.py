@@ -87,10 +87,7 @@ def update_attribute_cache(cluster):
 
 def get_zha_gateway(hass):
     """Return ZHA gateway from hass.data."""
-    try:
-        return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-    except KeyError:
-        return None
+    return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
 
 
 def make_attribute(attrid, value, status=0):
@@ -133,7 +130,7 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     await hass.async_block_till_done()
 
 
-async def find_entity_id(domain, zha_device, hass, qualifier=None):
+def find_entity_id(domain, zha_device, hass, qualifier=None):
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -167,15 +164,11 @@ def find_entity_ids(domain, zha_device, hass):
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = (
-        f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ', '_')}"
-    )
+    entity_id = f"{domain}.coordinator_manufacturer_coordinator_model_{group.name.lower().replace(' ', '_')}"
 
     entity_ids = hass.states.async_entity_ids(domain)
-
-    if entity_id in entity_ids:
-        return entity_id
-    return None
+    assert entity_id in entity_ids
+    return entity_id
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):
