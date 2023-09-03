@@ -68,9 +68,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if not new_romy.is_initialized:
                     errors[CONF_HOST] = "cannot_connect"
-                    return self.async_show_form(
-                        step_id="user", data_schema=data, errors=errors
-                    )
 
                 if not new_romy.is_unlocked:
                     errors[CONF_PASSWORD] = "invalid_auth"
