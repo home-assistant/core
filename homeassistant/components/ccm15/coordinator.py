@@ -64,7 +64,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         try:
             return await self._fetch_data()
         except httpx.RequestError as err:  # pragma: no cover
-            raise UpdateFailed(f"Error communicating with Device: {err}") from err
+            raise UpdateFailed("Error communicating with Device") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Get the current status of all AC devices."""
