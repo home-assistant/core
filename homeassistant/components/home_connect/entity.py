@@ -21,7 +21,6 @@ class HomeConnectEntity(Entity):
     def __init__(self, device: HomeConnectDevice, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
-        self.desc = desc
         self._attr_name = f"{device.appliance.name} {desc}"
         self._attr_unique_id = f"{device.appliance.haId}-{desc}"
         self._attr_device_info = DeviceInfo(
