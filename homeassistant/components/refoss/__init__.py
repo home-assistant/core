@@ -10,9 +10,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
-from .refoss_ha.controller.device import BaseDevice
-from .refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
-from .refoss_ha.socket_server import SocketServerProtocol
+from refoss_ha.controller.device import BaseDevice
+from refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
+from refoss_ha.socket_server import SocketServerProtocol
 from .util import get_refoss_socket_server
 
 PLATFORMS: Final = [
@@ -78,10 +78,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload:
         hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
         hass_data.device_manager.remove_device_listener(hass_data.device_listener)
+        hass_data.device_manager.base_device_map.clear()
         for task in hass_data.device_manager.tasks:
             task.cancel()
 
-        # hass_data.device_manager.socket_server.close()
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)
@@ -120,15 +120,17 @@ class DeviceListener(RefossDeviceListener):
 
         self.device_ids.add(device.uuid)
         dispatcher_send(self.hass, REFOSS_DISCOVERY_NEW, [device.uuid])
+        LOGGER.debug("Add device: %s", device.device_type)
+
 
     def remove_device(self, device_id: str) -> None:
         """Remove device removed listener."""
+        LOGGER.debug("Remove device: %s", device_id)
         self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
-        LOGGER.debug("Remove device: %s", device_id)
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}

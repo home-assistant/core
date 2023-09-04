@@ -7,8 +7,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
-from .refoss_ha.controller.device import BaseDevice
-from .refoss_ha.enums import Namespace
+from refoss_ha.controller.device import BaseDevice
+from refoss_ha.enums import Namespace
 
 
 class RefossEntity(Entity):
@@ -54,27 +54,21 @@ class RefossEntity(Entity):
         self, namespace: Namespace, data: dict, uuid: str
     ):
         """_async_push_notification_received."""
-        full_update = True
         await self.device.async_update_push_state(
             namespace=namespace, data=data, uuid=uuid
         )
-        self.async_schedule_update_ha_state(force_refresh=full_update)
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-    # async def async_added_to_hass(self) -> None:
-    #     """async_added_to_hass."""
-    #     self.device.register_push_notification_handler_coroutine(
-    #         self._async_push_notification_received
-    #     )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.device.register_push_notification_handler_coroutine(
             self._async_push_notification_received
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{self.device.uuid}",
-                self.async_write_ha_state,
-            )
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """async_will_remove_from_hass."""
+        self.device.unregister_push_notification_handler_coroutine(
+            self._async_push_notification_received
         )

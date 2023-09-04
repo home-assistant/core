@@ -5,7 +5,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 
-from .refoss_ha.socket_server import SocketServerProtocol
+from refoss_ha.socket_server import SocketServerProtocol
 
 
 @singleton.singleton("refoss_socket_server")

@@ -9,7 +9,7 @@ from homeassistant.const import CONF_MAC
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .refoss_ha.util import get_mac_address
+from refoss_ha.util import get_mac_address
 
 
 class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,6 +22,7 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """async_step_user for Refoss."""
         mac = get_mac_address()
+
         entry = await self.async_set_unique_id(mac)
 
         data = {

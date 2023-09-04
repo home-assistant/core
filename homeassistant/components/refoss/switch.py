@@ -13,8 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomeAssistantRefossData
 from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW
 from .device import RefossEntity
-from .refoss_ha.controller.device import BaseDevice
-from .refoss_ha.controller.toggle import ToggleXMix
+from refoss_ha.controller.device import BaseDevice
+from refoss_ha.controller.toggle import ToggleXMix
 
 
 async def async_setup_entry(
