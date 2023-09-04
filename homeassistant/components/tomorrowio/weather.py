@@ -24,7 +24,6 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -118,7 +117,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         self._attr_entity_registry_enabled_default = (
             forecast_type == DEFAULT_FORECAST_TYPE
         )
-        self._attr_name = f"{config_entry.data[CONF_NAME]} - {forecast_type.title()}"
+        self._attr_name = forecast_type.title()
         self._attr_unique_id = _calculate_unique_id(
             config_entry.unique_id, forecast_type
         )
