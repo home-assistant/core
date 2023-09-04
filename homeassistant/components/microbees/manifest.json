@@ -5,7 +5,7 @@
   "dependencies": [],
   "config_flow": true,
   "codeowners": [
-    "@microBeesTech"
+    "@microBeesTech", "@marcolettieri","@FedDam"
   ],
   "iot_class": "cloud_polling",
   "version": "0.1.0"
