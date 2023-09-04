@@ -205,7 +205,7 @@ class APIStatesView(HomeAssistantView):
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=f'[{"".join(states)}]', content_type=CONTENT_TYPE_JSON
+            body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
         )
         response.enable_compression()
         return response
