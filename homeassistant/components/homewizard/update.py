@@ -41,7 +41,6 @@ class HomeWizardUpdateEntity(HomeWizardEntity, UpdateEntity):
     _attr_auto_update = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_should_poll = False
     _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
