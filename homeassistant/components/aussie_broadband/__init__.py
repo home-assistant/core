@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB
-from aussiebb.const import FETCH_TYPES
+from aussiebb.const import FETCH_TYPES, NBN_TYPES, PHONE_TYPES
 from aussiebb.exceptions import AuthenticationException, UnrecognisedServiceType
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +23,19 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
+# Backport for the pyaussiebb=0.0.15 validate_service_type method
+def validate_service_type(service: dict[str, Any]) -> None:
+    """Check the service types against known types."""
+
+    if "type" not in service:
+        raise ValueError("Field 'type' not found in service data")
+    if service["type"] not in NBN_TYPES + PHONE_TYPES + ["Hardware"]:
+        raise UnrecognisedServiceType(
+            f"Service type {service['type']=} {service['name']=} - not recognised - ",
+            "please report this at https://github.com/yaleman/aussiebb/issues/new",
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aussie Broadband from a config entry."""
     # Login to the Aussie Broadband API and retrieve the current service list
@@ -30,6 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
         async_get_clientsession(hass),
     )
+    # Overwrite the pyaussiebb=0.0.15 validate_service_type method with backport
+    # Required until pydantic 2.x is supported
+    client.validate_service_type = validate_service_type
     try:
         await client.login()
         services = await client.get_services(drop_types=FETCH_TYPES)

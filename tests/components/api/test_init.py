@@ -9,6 +9,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import const
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers.legacy_api_password import (
     LegacyApiPasswordAuthProvider,
 )
@@ -17,7 +18,7 @@ import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser, async_mock_service
+from tests.common import CLIENT_ID, MockUser, async_mock_service
 from tests.typing import ClientSessionGenerator
 
 
@@ -569,11 +570,41 @@ async def test_event_stream_requires_admin(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_states_view_filters(
+async def test_states(
     hass: HomeAssistant, mock_api_client: TestClient, hass_admin_user: MockUser
 ) -> None:
+    """Test fetching all states as admin."""
+    hass.states.async_set("test.entity", "hello")
+    resp = await mock_api_client.get(const.URL_API_STATES)
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert len(json) == 1
+    assert json[0]["entity_id"] == "test.entity"
+
+
+async def test_states_view_filters(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test filtering only visible states."""
-    hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
+    await async_setup_component(hass, "api", {})
+    read_only_user_credential = Credentials(
+        id="mock-read-only-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    await hass.auth.async_link_user(hass_read_only_user, read_only_user_credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_read_only_user, CLIENT_ID, credential=read_only_user_credential
+    )
+    token = hass.auth.async_create_access_token(refresh_token)
+    mock_api_client = await hass_client(token)
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
     resp = await mock_api_client.get(const.URL_API_STATES)

@@ -22,7 +22,7 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
 )
-from .const import CONF_TRIGGER, DOMAIN
+from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -30,6 +30,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+        vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
         ),

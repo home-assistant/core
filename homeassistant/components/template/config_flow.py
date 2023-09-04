@@ -160,32 +160,43 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
-        units_string = sorted(
-            [str(unit) if unit else "no unit of measurement" for unit in units],
+        sorted_units = sorted(
+            [f"'{str(unit)}'" if unit else "no unit of measurement" for unit in units],
             key=str.casefold,
         )
+        if len(sorted_units) == 1:
+            units_string = sorted_units[0]
+        else:
+            units_string = f"one of {', '.join(sorted_units)}"
 
         raise vol.Invalid(
             f"'{unit}' is not a valid unit for device class '{device_class}'; "
-            f"expected one of {', '.join(units_string)}"
+            f"expected {units_string}"
         )
 
 
 def _validate_state_class(options: dict[str, Any]) -> None:
     """Validate state class."""
     if (
-        (device_class := options.get(CONF_DEVICE_CLASS))
+        (state_class := options.get(CONF_STATE_CLASS))
+        and (device_class := options.get(CONF_DEVICE_CLASS))
         and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
-        and (state_class := options.get(CONF_STATE_CLASS)) not in state_classes
+        and state_class not in state_classes
     ):
-        state_classes_string = sorted(
-            [str(state_class) for state_class in state_classes],
+        sorted_state_classes = sorted(
+            [f"'{str(state_class)}'" for state_class in state_classes],
             key=str.casefold,
         )
+        if len(sorted_state_classes) == 0:
+            state_classes_string = "no state class"
+        elif len(sorted_state_classes) == 1:
+            state_classes_string = sorted_state_classes[0]
+        else:
+            state_classes_string = f"one of {', '.join(sorted_state_classes)}"
 
         raise vol.Invalid(
             f"'{state_class}' is not a valid state class for device class "
-            f"'{device_class}'; expected one of {', '.join(state_classes_string)}"
+            f"'{device_class}'; expected {state_classes_string}"
         )
 
 
