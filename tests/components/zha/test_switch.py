@@ -658,7 +658,7 @@ async def test_switch_tuya_trv_boost(
         )
         assert len(cluster.write_attributes.mock_calls) == 1
         assert cluster.write_attributes.call_args == call(
-            {"boost_duration_seconds": 300}
+            {"boost_duration_seconds": 300}, manufacturer=None
         )
 
     # turn off from HA
@@ -671,7 +671,9 @@ async def test_switch_tuya_trv_boost(
             SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.write_attributes.mock_calls) == 2
-        assert cluster.write_attributes.call_args == call({"boost_duration_seconds": 0})
+        assert cluster.write_attributes.call_args == call(
+            {"boost_duration_seconds": 0}, manufacturer=None
+        )
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device_tuya_trv, [cluster], (0,))
