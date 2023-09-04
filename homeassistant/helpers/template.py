@@ -2497,7 +2497,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state"] = hassfunction(is_state)
         self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.tests["is_state_attr"] = hassfunction(is_state, pass_eval_context)
+        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
