@@ -18,6 +18,6 @@ class CloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the system step."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         return self.async_create_entry(title="Cloud", data={})
