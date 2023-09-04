@@ -8,18 +8,19 @@ from switchbot_api import SwitchBotAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, SECRET_KEY, TOKEN
+from .const import DOMAIN, ENTRY_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(TOKEN): str,
-        vol.Required(SECRET_KEY): str,
+        vol.Required(CONF_API_TOKEN): str,
+        vol.Required(CONF_API_KEY): str,
     }
 )
 
@@ -29,7 +30,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    await SwitchBotAPI(token=data[TOKEN], secret=data[SECRET_KEY]).list_devices()
+    await SwitchBotAPI(
+        token=data[CONF_API_TOKEN], secret=data[CONF_API_KEY]
+    ).list_devices()
     return data
 
 
@@ -57,7 +60,7 @@ class SwitchbotViaAPIConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Switchbot API", data=info)
+                return self.async_create_entry(title=ENTRY_TITLE, data=info)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
