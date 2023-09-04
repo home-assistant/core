@@ -20,16 +20,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    ATTR_OTA_PROGRESS_PERCENT,
-    CONF_SLEEP_PERIOD,
-    OTA_PROGRESS,
-    OTA_SUCCESS,
-)
+from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -238,36 +232,22 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self._ota_in_progress: bool = False
 
     async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{OTA_PROGRESS}_{self.coordinator.device_id}",
-                self.handle_ota_progress,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{OTA_SUCCESS}_{self.coordinator.device_id}",
-                self.handle_ota_success,
-            )
-        )
+        """When entity is added to hass."""
         await super().async_added_to_hass()
+        self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
 
     @callback
-    def handle_ota_progress(self, event: dict[str, Any]) -> None:
-        """Handle OTA progress event."""
+    def _ota_progress_callback(self, event: dict[str, Any]) -> None:
+        """Handle device OTA progress."""
         if self._ota_in_progress:
-            self._attr_in_progress = event[ATTR_OTA_PROGRESS_PERCENT]
-            self.async_write_ha_state()
-
-    @callback
-    def handle_ota_success(self, _: dict[str, Any]) -> None:
-        """Handle OTA success event."""
-        if self._ota_in_progress:
-            self._attr_in_progress = False
-            self._ota_in_progress = False
+            event_type = event["event"]
+            if event_type == OTA_BEGIN:
+                self._attr_in_progress = 0
+            elif event_type == OTA_PROGRESS:
+                self._attr_in_progress = event["progress_percent"]
+            elif event_type in (OTA_ERROR, OTA_SUCCESS):
+                self._attr_in_progress = False
+                self._ota_in_progress = False
             self.async_write_ha_state()
 
     @property

@@ -23,7 +23,6 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as dr_async_get,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -32,7 +31,6 @@ from .const import (
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
     ATTR_GENERATION,
-    ATTR_OTA_PROGRESS_PERCENT,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
@@ -47,6 +45,7 @@ from .const import (
     MAX_PUSH_UPDATE_FAILURES,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
     OTA_BEGIN,
+    OTA_ERROR,
     OTA_PROGRESS,
     OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
@@ -389,6 +388,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -412,6 +412,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
+
+    @callback
+    def async_subscribe_ota_events(
+        self, ota_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to OTA events."""
+
+        def _unsubscribe() -> None:
+            self._ota_event_listeners.remove(ota_event_callback)
+
+        self._event_listeners.append(ota_event_callback)
+
+        return _unsubscribe
 
     @callback
     def async_subscribe_events(
@@ -466,24 +479,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                         ATTR_GENERATION: 2,
                     },
                 )
-            elif event_type == OTA_BEGIN:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{event_type}_{self.device_id}",
-                    {ATTR_OTA_PROGRESS_PERCENT: 0},
-                )
-            elif event_type == OTA_PROGRESS:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{event_type}_{self.device_id}",
-                    event,
-                )
-            elif event_type == OTA_SUCCESS:
-                async_dispatcher_send(
-                    self.hass,
-                    f"{event_type}_{self.device_id}",
-                    event,
-                )
+            elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
+                for event_callback in self._ota_event_listeners:
+                    event_callback(event)
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
