@@ -8,10 +8,7 @@ from homeassistant.components.update import (
     ATTR_RELEASE_URL,
     ATTR_TITLE,
 )
-from homeassistant.const import (
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .generator import get_mock_device
