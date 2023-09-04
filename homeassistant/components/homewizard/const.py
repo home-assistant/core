@@ -9,7 +9,13 @@ from homewizard_energy.models import Data, Device, State, System
 from homeassistant.const import Platform
 
 DOMAIN = "homewizard"
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 # Platform config.
 CONF_API_ENABLED = "api_enabled"
