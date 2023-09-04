@@ -5,34 +5,24 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.freebox import SCAN_INTERVAL
-from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
+from .common import setup_platform
 from .const import (
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
     DATA_STORAGE_GET_DISKS,
-    MOCK_HOST,
-    MOCK_PORT,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 
 async def test_network_speed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test missed call sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_platform(hass, SENSOR_DOMAIN)
 
     assert hass.states.get("sensor.freebox_download_speed").state == "198.9"
     assert hass.states.get("sensor.freebox_upload_speed").state == "1440.0"
@@ -55,14 +45,7 @@ async def test_call(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test missed call sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_platform(hass, SENSOR_DOMAIN)
 
     assert hass.states.get("sensor.freebox_missed_calls").state == "3"
 
@@ -81,14 +64,7 @@ async def test_disk(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test disk sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_platform(hass, SENSOR_DOMAIN)
 
     assert hass.states.get("sensor.freebox_free_space").state == "88.27"
 
@@ -108,14 +84,7 @@ async def test_battery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test battery sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_platform(hass, SENSOR_DOMAIN)
 
     assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "100"
     assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "100"

@@ -4,26 +4,16 @@ from unittest.mock import ANY, Mock, patch
 from pytest_unordered import unordered
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .const import MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry
+from .common import setup_platform
 
 
 async def test_reboot_button(hass: HomeAssistant, router: Mock) -> None:
     """Test reboot button."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-        unique_id=MOCK_HOST,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = await setup_platform(hass, BUTTON_DOMAIN)
+
     assert hass.config_entries.async_entries() == unordered([entry, ANY])
 
     assert router.call_count == 1
