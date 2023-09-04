@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 
-import async_timeout
 from wyoming.client import AsyncTcpClient
 from wyoming.info import Describe, Info
 
@@ -55,9 +54,7 @@ async def load_wyoming_info(
 
     for _ in range(retries + 1):
         try:
-            async with AsyncTcpClient(host, port) as client, async_timeout.timeout(
-                timeout
-            ):
+            async with AsyncTcpClient(host, port) as client, asyncio.timeout(timeout):
                 # Describe -> Info
                 await client.write_event(Describe().event())
                 while True:

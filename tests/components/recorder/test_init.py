@@ -594,7 +594,6 @@ def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) ->
     assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
-# pylint: disable=invalid-name
 def test_saving_state_include_domains(
     hass_recorder: Callable[..., HomeAssistant]
 ) -> None:
@@ -955,7 +954,6 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
-    # pylint: disable=unsubscriptable-object
     assert recorder_config["auto_purge"]
     assert recorder_config["auto_repack"]
     assert recorder_config["purge_keep_days"] == 10

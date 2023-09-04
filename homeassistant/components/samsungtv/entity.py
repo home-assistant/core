@@ -6,7 +6,8 @@ from typing import cast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .bridge import SamsungTVBridge
 from .const import CONF_MANUFACTURER, DOMAIN

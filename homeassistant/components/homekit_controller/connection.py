@@ -26,7 +26,7 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, c
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import normalize_hkid

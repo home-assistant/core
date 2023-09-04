@@ -22,8 +22,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN

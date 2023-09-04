@@ -48,6 +48,14 @@ NUMBER_TYPES = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    PlugwiseNumberEntityDescription(
+        key="max_dhw_temperature",
+        translation_key="max_dhw_temperature",
+        command=lambda api, number, value: api.set_number_setpoint(number, value),
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 )
 
 
@@ -89,7 +97,6 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
-
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
         self._attr_native_step = max(self.device[description.key]["resolution"], 0.5)

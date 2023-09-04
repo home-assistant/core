@@ -17,7 +17,6 @@ from homeassistant.helpers import config_validation as cv, event as evt
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 from . import W800RF32_DEVICE
 
@@ -127,8 +126,8 @@ class W800rf32BinarySensor(BinarySensorEntity):
             self.update_state(is_on)
 
         if self.is_on and self._off_delay is not None and self._delay_listener is None:
-            self._delay_listener = evt.async_track_point_in_time(
-                self.hass, self._off_delay_listener, dt_util.utcnow() + self._off_delay
+            self._delay_listener = evt.async_call_later(
+                self.hass, self._off_delay, self._off_delay_listener
             )
 
     def update_state(self, state):

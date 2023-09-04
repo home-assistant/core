@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -13,7 +14,6 @@ import logging
 from types import MappingProxyType
 from typing import Any, TypedDict, TypeVar, cast
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -402,7 +402,7 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> ServiceResponse:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
@@ -444,7 +444,7 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return response
+        return ScriptRunResult(response, self._variables)
 
     async def _async_step(self, log_exceptions):
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -574,7 +574,7 @@ class _ScriptRun:
         self._changed()
         trace_set_result(delay=delay, done=False)
         try:
-            async with async_timeout.timeout(delay):
+            async with asyncio.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
             trace_set_result(delay=delay, done=True)
@@ -602,9 +602,10 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["completed"] = True
@@ -621,7 +622,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
@@ -971,9 +972,10 @@ class _ScriptRun:
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
+            # pylint: disable=protected-access
             wait_var = self._variables["wait"]
-            if to_context and to_context.deadline:
-                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            if to_context and to_context._when:
+                wait_var["remaining"] = to_context._when - self._hass.loop.time()
             else:
                 wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
@@ -1000,7 +1002,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(timeout) as to_context:
+            async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
@@ -1186,6 +1188,14 @@ class _IfData(TypedDict):
     if_conditions: list[ConditionCheckerType]
     if_then: Script
     if_else: Script | None
+
+
+@dataclass
+class ScriptRunResult:
+    """Container with the result of a script run."""
+
+    service_response: ServiceResponse
+    variables: dict
 
 
 class Script:
@@ -1479,7 +1489,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> ServiceResponse:
+    ) -> ScriptRunResult | None:
         """Run script."""
         if context is None:
             self._log(

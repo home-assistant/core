@@ -19,6 +19,23 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "entity": {
+    "button": {
+      "dismiss_alert": {
+        "name": "Dismiss alert"
+      }
+    },
+    "camera": {
+      "cleaning_map": {
+        "name": "Cleaning map"
+      }
+    },
+    "switch": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    }
+  },
   "services": {
     "custom_cleaning": {
       "name": "Zone cleaning service",

@@ -3,11 +3,7 @@ from unittest import mock
 from unittest.mock import patch
 
 import homeassistant.components.datadog as datadog
-from homeassistant.const import (
-    EVENT_LOGBOOK_ENTRY,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
