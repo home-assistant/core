@@ -38,7 +38,7 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "ccm15.CCM15Device.CCM15Device.get_status_async",
         return_value=device_state,
     ):
-        coordinator = CCM15Coordinator("1.1.1.1", "80", 30, hass)
+        coordinator = CCM15Coordinator(hass, "1.1.1.1", "80")
         await coordinator.async_refresh()
 
     data = coordinator.data
