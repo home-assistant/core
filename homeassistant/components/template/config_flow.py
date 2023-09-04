@@ -208,6 +208,7 @@ def validate_user_input(
 ]:
     """Do post validation of user input.
 
+    For binary sensors: Strip none-sentinels.
     For sensors: Strip none-sentinels and validate unit of measurement.
     For all domaines: Set template type.
     """
@@ -217,8 +218,9 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type == Platform.SENSOR:
+        if template_type in (Platform.BINARY_SENSOR, Platform.SENSOR):
             _strip_sentinel(user_input)
+        if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
         return {"template_type": template_type} | user_input
