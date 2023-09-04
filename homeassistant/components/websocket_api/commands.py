@@ -523,7 +523,9 @@ async def handle_render_template(
 
     @callback
     def _error_listener(template_error: str) -> None:
-        connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, template_error)
+        connection.send_message(
+            messages.event_message(msg["id"], {"error": template_error})
+        )
 
     log_fn = _error_listener if report_errors else None
 
@@ -552,7 +554,9 @@ async def handle_render_template(
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            connection.send_message(
+                messages.event_message(msg["id"], {"error": str(result)})
+            )
             return
 
         connection.send_message(

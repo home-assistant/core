@@ -1240,11 +1240,9 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
             "{{ my_unknown_func() + 1 }}",
             [
                 {
-                    "type": "result",
-                    "success": False,
-                    "error": {
-                        "code": "template_error",
-                        "message": (
+                    "type": "event",
+                    "event": {
+                        "error": (
                             "Template variable error: 'my_unknown_func' is undefined "
                             "when rendering '{{ my_unknown_func() + 1 }}'"
                         ),
@@ -1264,11 +1262,9 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
             "{{ my_unknown_var }}",
             [
                 {
-                    "type": "result",
-                    "success": False,
-                    "error": {
-                        "code": "template_error",
-                        "message": (
+                    "type": "event",
+                    "event": {
+                        "error": (
                             "Template variable warning: 'my_unknown_var' is undefined "
                             "when rendering '{{ my_unknown_var }}'"
                         ),
@@ -1276,11 +1272,9 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
                 },
                 {"success": True},
                 {
-                    "type": "result",
-                    "success": False,
-                    "error": {
-                        "code": "template_error",
-                        "message": (
+                    "type": "event",
+                    "event": {
+                        "error": (
                             "Template variable warning: 'my_unknown_var' is undefined "
                             "when rendering '{{ my_unknown_var }}'"
                         ),
