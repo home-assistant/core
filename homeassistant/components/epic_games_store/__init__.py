@@ -10,7 +10,10 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_LOCALE, DOMAIN
 from .coordinator import EGSUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.CALENDAR,
+    # Platform.SENSOR,
+]
 
 
 def get_country_from_locale(locale: str) -> str:
