@@ -204,7 +204,11 @@ class APIStatesView(HomeAssistantView):
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, "read")
             )
-        return web.Response(body=f'[{"".join(states)}]', content_type=CONTENT_TYPE_JSON)
+        response = web.Response(
+            body=f'[{"".join(states)}]', content_type=CONTENT_TYPE_JSON
+        )
+        response.enable_compression()
+        return response
 
 
 class APIEntityStateView(HomeAssistantView):
