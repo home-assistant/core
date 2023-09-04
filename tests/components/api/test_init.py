@@ -575,11 +575,13 @@ async def test_states(
 ) -> None:
     """Test fetching all states as admin."""
     hass.states.async_set("test.entity", "hello")
+    hass.states.async_set("test.entity2", "hello")
     resp = await mock_api_client.get(const.URL_API_STATES)
     assert resp.status == HTTPStatus.OK
     json = await resp.json()
-    assert len(json) == 1
+    assert len(json) == 2
     assert json[0]["entity_id"] == "test.entity"
+    assert json[1]["entity_id"] == "test.entity2"
 
 
 async def test_states_view_filters(
