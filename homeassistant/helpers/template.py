@@ -484,11 +484,11 @@ class Template:
         wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
         ret: TemplateEnvironment | None = None
         # Bypass cache if a custom log function is specified
-        if self._log_fn is not None:
+        if self._log_fn is None:
             ret = self.hass.data.get(wanted_env)
         if ret is None:
             ret = TemplateEnvironment(self.hass, self._limited, self._log_fn)
-        if self._log_fn is not None:
+        if self._log_fn is None:
             self.hass.data[wanted_env] = ret
         return ret
 
