@@ -1,19 +1,15 @@
 """ Integration microBees """
 
 import logging
-
-from homeassistant.const import (Platform, CONF_DOMAIN, CONF_PLATFORM)
-
+from homeassistant.const import Platform, CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-
 from homeassistant.core import HomeAssistant
-
 from .servicesMicrobees import getBees
-
 
 _LOGGER = logging.getLogger(__name__)
 
 platforms = []
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
