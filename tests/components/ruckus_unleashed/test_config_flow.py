@@ -216,7 +216,7 @@ async def test_form_user_reauth_general_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -251,7 +251,7 @@ async def test_form_general_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_unexpected_response(hass: HomeAssistant) -> None:
@@ -265,24 +265,6 @@ async def test_form_unexpected_response(hass: HomeAssistant) -> None:
             side_effect=ConnectionRefusedError(ERROR_CONNECT_TEMPORARY)
         )
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_cannot_connect_unknown_serial(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error on invalid serial number."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with RuckusAjaxApiPatchContext(system_info={}):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,

@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from aioruckus import AjaxSession, SystemStat
-from aioruckus.exceptions import AuthenticationError
+from aioruckus.exceptions import AuthenticationError, SchemaError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -47,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             mesh_name = mesh_info[API_MESH_NAME]
     except AuthenticationError as autherr:
         raise InvalidAuth from autherr
-    except (ConnectionRefusedError, ConnectionError, KeyError) as connerr:
+    except (ConnectionError, SchemaError) as connerr:
         raise CannotConnect from connerr
 
     return {
@@ -76,7 +76,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unknown error")
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 if self._reauth_entry is None:
                     await self.async_set_unique_id(info[KEY_SYS_SERIAL])

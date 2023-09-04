@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from aioruckus import AjaxSession
-from aioruckus.exceptions import AuthenticationError
+from aioruckus.exceptions import AuthenticationError, SchemaError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -42,5 +42,5 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
             return {KEY_SYS_CLIENTS: await self._fetch_clients()}
         except AuthenticationError as autherror:
             raise ConfigEntryAuthFailed(autherror) from autherror
-        except (ConnectionRefusedError, ConnectionError) as conerr:
+        except (ConnectionError, SchemaError) as conerr:
             raise UpdateFailed(conerr) from conerr
