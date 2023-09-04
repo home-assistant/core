@@ -39,7 +39,6 @@ class NightscoutSensor(SensorEntity):
 
     _attr_native_unit_of_measurement = "mg/dL"
     _attr_icon = "mdi:cloud-question"
-    _attr_available = False
 
     def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
         """Initialize the Nightscout sensor."""
