@@ -13,7 +13,9 @@
       }
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "Device is already configured",
+      "config_errors": "Errors Found in Configuration",
+      "single_instance": "Only a single instance may be configured"
     }
   }
 }

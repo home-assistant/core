@@ -1,9 +1,8 @@
 """Support for Lutron Powr Savr occupancy sensors."""
 from __future__ import annotations
 
-import logging
-
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pylutron import OccupancyGroup
@@ -35,9 +34,7 @@ async def async_setup_entry(
     """
     entities = []
     for area_name, device in hass.data[LUTRON_DEVICES]["binary_sensor"]:
-        entity = LutronOccupancySensor(
-            area_name, device, hass.data[LUTRON_CONTROLLER]
-        )
+        entity = LutronOccupancySensor(area_name, device, hass.data[LUTRON_CONTROLLER])
         entities.append(entity)
     async_add_entities(entities, True)
 

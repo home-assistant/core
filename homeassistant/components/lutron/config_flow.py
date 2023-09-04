@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -31,12 +30,12 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "missing_fields"
             else:
                 # Check if a configuration entry with the same unique ID already exists
-                existing_entries = self.hass.config_entries.async_entries(
-                    DOMAIN
-                )
+                existing_entries = self.hass.config_entries.async_entries(DOMAIN)
                 for entry in existing_entries:
                     if entry.data[CONF_HOST] == ip_address:
                         errors["base"] = "already_configured"
+                    else:
+                        errors["base"] = "single_instance"
 
             if not errors:
                 await self.async_set_unique_id(ip_address.replace(".", "_"))
@@ -46,7 +45,7 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title="Lutron Integration", data=user_input
                 )
 
-            return self.async_abort(reason="Errors Found in Configuration")
+            return self.async_abort(reason="config_errors")
 
         # Show the form to the user
         return self.async_show_form(
