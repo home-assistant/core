@@ -8,12 +8,14 @@ from unittest.mock import patch
 from aiounifi.models.message import MessageKey
 import pytest
 
+from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.controller import RETRY_TIMER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.unifi.test_controller import DEFAULT_CONFIG_ENTRY_ID
 
 
 class WebsocketStateManager(asyncio.Event):
@@ -54,16 +56,16 @@ def websocket_mock(hass):
 
 
 @pytest.fixture(autouse=True)
-def mock_unifi_websocket():
+def mock_unifi_websocket(hass):
     """No real websocket allowed."""
 
     def make_websocket_call(
-        controller,
         *,
         message: MessageKey | None = None,
         data: list[dict] | dict | None = None,
     ):
         """Generate a websocket call."""
+        controller = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         if data and not message:
             controller.api.messages.handler(data)
         elif data and message:

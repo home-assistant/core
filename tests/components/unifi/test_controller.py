@@ -375,10 +375,7 @@ async def test_connection_state_signalling(
         "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
         "mac": "00:00:00:00:00:01",
     }
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, clients_response=[client]
-    )
-    hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    await setup_unifi_integration(hass, aioclient_mock, clients_response=[client])
 
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
