@@ -16,10 +16,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     coordinator = CCM15Coordinator(
+        hass,
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_SCAN_INTERVAL],
-        hass,
     )
     await coordinator.async_config_entry_first_refresh()
 
