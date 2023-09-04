@@ -2055,7 +2055,9 @@ async def _async_get_flow_handler(
     """Get a flow handler for specified domain."""
 
     # First check if there is a handler registered for the domain
-    if domain in hass.config.components and (handler := HANDLERS.get(domain)):
+    if loader.is_component_module_loaded(hass, f"{domain}.config_flow") and (
+        handler := HANDLERS.get(domain)
+    ):
         return handler
 
     await _load_integration(hass, domain, hass_config)
