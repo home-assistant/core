@@ -44,19 +44,13 @@ class WebsocketStateManager(asyncio.Event):
         await self.hass.async_block_till_done()
 
 
-@pytest.fixture(autouse=True, name="websocket_state")
-def websocket_context_manager(hass: HomeAssistant) -> WebsocketStateManager:
-    """Async event representing websocket context manager."""
-    return WebsocketStateManager(hass)
-
-
 @pytest.fixture(autouse=True)
-def websocket_mock(websocket_state):
+def websocket_mock(hass):
     """Mock aiounifi websocket."""
+    websocket_state_manager = WebsocketStateManager(hass)
     with patch("aiounifi.Controller.start_websocket") as ws_mock:
-        # with patch("aiounifi.controller.Connectivity.websocket") as ws_mock:
-        ws_mock.side_effect = websocket_state.wait
-        yield ws_mock
+        ws_mock.side_effect = websocket_state_manager.wait
+        yield websocket_state_manager
 
 
 @pytest.fixture(autouse=True)

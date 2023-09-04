@@ -575,7 +575,7 @@ async def test_poe_port_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
@@ -629,13 +629,13 @@ async def test_poe_port_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert (
         hass.states.get("sensor.mock_name_port_1_poe_power").state == STATE_UNAVAILABLE
     )
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert (
         hass.states.get("sensor.mock_name_port_1_poe_power").state != STATE_UNAVAILABLE
     )
@@ -659,7 +659,7 @@ async def test_wlan_client_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
     wireless_client_1 = {
@@ -752,11 +752,11 @@ async def test_wlan_client_sensors(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("sensor.ssid_1").state == "0"
 
     # WLAN gets disabled

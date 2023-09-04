@@ -365,7 +365,6 @@ async def test_connection_state_signalling(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_device_registry,
-    websocket_state: asyncio.Event,
     websocket_mock,
 ) -> None:
     """Verify connection statesignalling and connection state are working."""
@@ -384,17 +383,17 @@ async def test_connection_state_signalling(
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     # Controller is disconnected
     assert hass.states.get("device_tracker.client").state == "unavailable"
 
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     # Controller is once again connected
     assert hass.states.get("device_tracker.client").state == "home"
 
 
 async def test_reconnect_mechanism(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_state
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Verify reconnect prints only on first reconnection try."""
     await setup_unifi_integration(hass, aioclient_mock)
@@ -402,13 +401,13 @@ async def test_reconnect_mechanism(
     aioclient_mock.clear_requests()
     aioclient_mock.get(f"https://{DEFAULT_HOST}:1234/", status=HTTPStatus.BAD_GATEWAY)
 
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert aioclient_mock.call_count == 0
 
-    await websocket_state.reconnect(fail=True)
+    await websocket_mock.reconnect(fail=True)
     assert aioclient_mock.call_count == 1
 
-    await websocket_state.reconnect(fail=True)
+    await websocket_mock.reconnect(fail=True)
     assert aioclient_mock.call_count == 2
 
 
@@ -422,7 +421,7 @@ async def test_reconnect_mechanism(
     ],
 )
 async def test_reconnect_mechanism_exceptions(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_state, exception
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock, exception
 ) -> None:
     """Verify async_reconnect calls expected methods."""
     await setup_unifi_integration(hass, aioclient_mock)
@@ -430,9 +429,9 @@ async def test_reconnect_mechanism_exceptions(
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
         "homeassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
-        await websocket_state.disconnect()
+        await websocket_mock.disconnect()
 
-        await websocket_state.reconnect()
+        await websocket_mock.reconnect()
         mock_reconnect.assert_called_once()
 
 

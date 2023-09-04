@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_device_button(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_state
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -80,9 +80,9 @@ async def test_restart_device_button(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("button.switch_restart").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("button.switch_restart").state != STATE_UNAVAILABLE

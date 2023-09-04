@@ -186,7 +186,7 @@ async def test_install(
 
 
 async def test_controller_state_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_state
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
     config_entry = await setup_unifi_integration(
@@ -208,9 +208,9 @@ async def test_controller_state_change(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("update.device_1").state == STATE_ON

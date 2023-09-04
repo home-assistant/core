@@ -1011,7 +1011,7 @@ async def test_dpi_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
@@ -1043,11 +1043,11 @@ async def test_dpi_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     # Remove app
@@ -1146,7 +1146,7 @@ async def test_outlet_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
     entity_id: str,
     test_data: any,
     outlet_index: int,
@@ -1217,11 +1217,11 @@ async def test_outlet_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get(f"switch.{entity_id}").state == STATE_OFF
 
     # Device gets disabled
@@ -1347,7 +1347,7 @@ async def test_poe_port_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
@@ -1442,11 +1442,11 @@ async def test_poe_port_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
     # Device gets disabled
@@ -1466,7 +1466,7 @@ async def test_wlan_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test control of UniFi WLAN availability."""
     config_entry = await setup_unifi_integration(
@@ -1529,11 +1529,11 @@ async def test_wlan_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.ssid_1").state == STATE_OFF
 
 
@@ -1541,7 +1541,7 @@ async def test_port_forwarding_switches(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test control of UniFi port forwarding."""
     _data = {
@@ -1618,11 +1618,11 @@ async def test_port_forwarding_switches(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("switch.unifi_network_plex").state == STATE_OFF
 
     # Remove entity on deleted message

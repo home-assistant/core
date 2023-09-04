@@ -65,7 +65,7 @@ async def test_wlan_qr_code(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_unifi_websocket,
-    websocket_state,
+    websocket_mock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
     config_entry = await setup_unifi_integration(
@@ -132,11 +132,11 @@ async def test_wlan_qr_code(
     )
 
     # Controller disconnects
-    await websocket_state.disconnect()
+    await websocket_mock.disconnect()
     assert hass.states.get("image.ssid_1_qr_code").state == STATE_UNAVAILABLE
 
     # Controller reconnects
-    await websocket_state.reconnect()
+    await websocket_mock.reconnect()
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
 
     # WLAN gets disabled
