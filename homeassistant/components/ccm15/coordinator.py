@@ -42,7 +42,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
     def __init__(
-        self, host: str, port: int, interval: int, hass: HomeAssistant
+        self, hass: HomeAssistant, host: str, port: int, interval: int
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
