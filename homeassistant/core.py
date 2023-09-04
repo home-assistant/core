@@ -1261,11 +1261,7 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if len(state) > MAX_LENGTH_STATE_STATE:
-            raise InvalidStateError(
-                f"Invalid state encountered for entity ID: {entity_id}. "
-                "State max length is 255 characters."
-            )
+        validate_state(state)
 
         self.entity_id = entity_id.lower()
         self.state = state
