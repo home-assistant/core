@@ -355,9 +355,7 @@ class UniFiController:
 
         async def _websocket_runner() -> None:
             """Start websocket."""
-            LOGGER.warning("YES YES")
             await self.api.start_websocket()
-            LOGGER.warning("FAIL LALALALALALALA")
             self.available = False
             async_dispatcher_send(self.hass, self.signal_reachable)
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)

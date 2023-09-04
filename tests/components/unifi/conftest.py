@@ -62,7 +62,7 @@ class WebsocketStateManager(asyncio.Event):
 
 @pytest.fixture(autouse=True)
 def websocket_mock(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
-    """Mock aiounifi websocket."""
+    """Mock 'await self.api.start_websocket' in 'UniFiController.start_websocket'."""
     websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
     with patch("aiounifi.Controller.start_websocket") as ws_mock:
         ws_mock.side_effect = websocket_state_manager.wait
