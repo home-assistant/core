@@ -125,6 +125,21 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_has_entity_name = True
         self._attr_name = f"{self._ac_index}"
+        self._attr_target_temperature_step = 1
+        self._attr_hvac_modes = [
+            HVACMode.OFF,
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.DRY,
+            HVACMode.AUTO,
+        ]
+        self._attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+        self._attr_swing_modes = [SWING_OFF, SWING_ON]
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
+        )
 
     @property
     def unique_id(self) -> str:
@@ -148,11 +163,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return None
 
     @property
-    def target_temperature_step(self) -> int:
-        """Return target temperature step."""
-        return 1
-
-    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         if data := self.coordinator.get_ac_data(self._ac_index):
@@ -160,11 +170,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             _LOGGER.debug("hvac_mode[%s]=%s", self._ac_index, mode)
             return CONST_CMD_STATE_MAP[mode]
         return None
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return hvac modes."""
-        return [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.DRY, HVACMode.AUTO]
 
     @property
     def fan_mode(self) -> str | None:
@@ -176,31 +181,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return None
 
     @property
-    def fan_modes(self) -> list[str]:
-        """Return fan modes."""
-        return [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-
-    @property
     def swing_mode(self) -> str | None:
         """Return swing mode."""
         if data := self.coordinator.get_ac_data(self._ac_index):
             _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
             return SWING_ON if data.is_swing_on else SWING_OFF
         return None
-
-    @property
-    def swing_modes(self) -> list[str]:
-        """Return swing modes."""
-        return [SWING_OFF, SWING_ON]
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.SWING_MODE
-        )
 
     @property
     def device_info(self) -> DeviceInfo:
