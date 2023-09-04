@@ -37,12 +37,12 @@ class FlexMeasuresScheduleSensor(SensorEntity):
 
     @property
     def name(self) -> str:
-        """Sensor Name."""
+        """Sensor name."""
         return "FlexMeasures Schedule"
 
     @property
     def native_value(self) -> float:
-        """Average energy."""
+        """Average power."""
 
         commands = self.hass.data[DOMAIN]["schedule"]["schedule"]
         if len(commands) == 0:

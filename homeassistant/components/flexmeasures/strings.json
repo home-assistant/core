@@ -52,7 +52,7 @@
   "entity": {
     "sensor": {
       "power": {
-        "name": "FM power Sensor"
+        "name": "FlexMeasures power sensor"
       }
     }
   }
