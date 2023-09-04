@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-
 import async_timeout
 from iammeter.client import IamMeter
 import voluptuous as vol
@@ -35,19 +34,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce, entity_registry as er, update_coordinator
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEVICE_3080,
-    DEVICE_3080T,
-    DOMAIN,
-)
+from .const import DEVICE_3080, DEVICE_3080T, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
