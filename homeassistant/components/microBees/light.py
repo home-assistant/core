@@ -25,8 +25,7 @@ async def async_setup_entry(
     lights = []
     for bee in bees:
         if bee.get("active"):
-            if (bee.get("productID") == 31
-                or bee.get("productID") == 79 ):
+            if bee.get("productID") == 31 or bee.get("productID") == 79:
                 for light in bee.get("actuators"):
                     lights.append(MBLight(light, token))
 

@@ -1,9 +1,8 @@
 """Config Flow for microBees."""
-from __future__ import annotations
 
+from __future__ import annotations
 import voluptuous as vol
 import logging
-
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -13,9 +12,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_DOMAIN,
 )
-
 from .const import CONFIG_ENTRY_VERSION
-
 import json
 import aiohttp
 import base64
@@ -65,7 +62,7 @@ class microBeesFlowHandler(config_entries.ConfigFlow, domain=CONF_DOMAIN):
                         js = json.loads(data)
                         self.data[CONF_TOKEN] = js.get("access_token")
                     else:
-                        errors["base"] = "invalid_token2"
+                        errors["base"] = "invalid_token"
 
                     if not errors:
                         return self.async_create_entry(

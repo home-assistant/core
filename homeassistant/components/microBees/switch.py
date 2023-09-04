@@ -24,8 +24,8 @@ async def async_setup_entry(
                 for switch in bee.get("actuators"):
                     switches.append(MBSwitch(switch, token))
 
-
     async_add_entities(switches)
+
 
 class MBSwitch(ToggleEntity):
     def __init__(self, act, token):
