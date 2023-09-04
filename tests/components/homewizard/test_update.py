@@ -40,7 +40,7 @@ async def test_update_init(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] is None
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.00"
-    assert state.attributes[ATTR_LATEST_VERSION] == "1.42"
+    assert state.attributes[ATTR_LATEST_VERSION] == "4.18"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
