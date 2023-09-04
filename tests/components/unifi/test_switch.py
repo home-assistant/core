@@ -1328,6 +1328,7 @@ async def test_poe_port_switches(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
@@ -1350,8 +1351,6 @@ async def test_poe_port_switches(
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
-
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     # Validate state object
     switch_1 = hass.states.get("switch.mock_name_port_1_poe")

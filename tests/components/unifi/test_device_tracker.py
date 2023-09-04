@@ -441,14 +441,12 @@ async def test_controller_state_change(
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
-    # Availability signalling
-
-    # Controller disconnects
+    # Controller unavailable
     await websocket_mock.disconnect()
     assert hass.states.get("device_tracker.client").state == STATE_UNAVAILABLE
     assert hass.states.get("device_tracker.device").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller available
     await websocket_mock.reconnect()
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME

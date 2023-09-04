@@ -192,12 +192,10 @@ async def test_controller_state_change(
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     assert hass.states.get("update.device_1").state == STATE_ON
 
-    # Availability signalling
-
-    # Controller disconnects
+    # Controller unavailable
     await websocket_mock.disconnect()
     assert hass.states.get("update.device_1").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller available
     await websocket_mock.reconnect()
     assert hass.states.get("update.device_1").state == STATE_ON
