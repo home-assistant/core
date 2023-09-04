@@ -1232,6 +1232,31 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
 
 EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
 
+ERR_MSG = {"type": "result", "success": False}
+
+VARIABLE_ERROR_UNDEFINED_FUNC = (
+    "Template variable error: 'my_unknown_func' is undefined "
+    "when rendering '{{ my_unknown_func() + 1 }}'"
+)
+TEMPLATE_ERROR_UNDEFINED_FUNC = {
+    "code": "template_error",
+    "message": "UndefinedError: 'my_unknown_func' is undefined",
+}
+
+VARIABLE_ERROR_UNDEFINED_VAR = (
+    "Template variable warning: 'my_unknown_var' is undefined "
+    "when rendering '{{ my_unknown_var }}'"
+)
+TEMPLATE_ERROR_UNDEFINED_VAR = {
+    "code": "template_error",
+    "message": "UndefinedError: 'my_unknown_var' is undefined",
+}
+
+TEMPLATE_ERROR_UNDEFINED_FILTER = {
+    "code": "template_error",
+    "message": "TemplateAssertionError: No filter named 'unknown_filter'.",
+}
+
 
 @pytest.mark.parametrize(
     ("template", "expected_events"),
@@ -1239,47 +1264,16 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
         (
             "{{ my_unknown_func() + 1 }}",
             [
-                {
-                    "type": "event",
-                    "event": {
-                        "error": (
-                            "Template variable error: 'my_unknown_func' is undefined "
-                            "when rendering '{{ my_unknown_func() + 1 }}'"
-                        ),
-                    },
-                },
-                {
-                    "type": "result",
-                    "success": False,
-                    "error": {
-                        "code": "template_error",
-                        "message": "UndefinedError: 'my_unknown_func' is undefined",
-                    },
-                },
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_FUNC}},
+                ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
             ],
         ),
         (
             "{{ my_unknown_var }}",
             [
-                {
-                    "type": "event",
-                    "event": {
-                        "error": (
-                            "Template variable warning: 'my_unknown_var' is undefined "
-                            "when rendering '{{ my_unknown_var }}'"
-                        ),
-                    },
-                },
-                {"success": True},
-                {
-                    "type": "event",
-                    "event": {
-                        "error": (
-                            "Template variable warning: 'my_unknown_var' is undefined "
-                            "when rendering '{{ my_unknown_var }}'"
-                        ),
-                    },
-                },
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
                 {
                     "type": "event",
                     "event": {"result": "", "listeners": EMPTY_LISTENERS},
@@ -1288,27 +1282,11 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
         ),
         (
             "{{ my_unknown_var + 1 }}",
-            [
-                {
-                    "error": {
-                        "code": "template_error",
-                        "message": "UndefinedError: 'my_unknown_var' is undefined",
-                    }
-                },
-            ],
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
         ),
         (
             "{{ now() | unknown_filter }}",
-            [
-                {
-                    "error": {
-                        "code": "template_error",
-                        "message": (
-                            "TemplateAssertionError: No filter named 'unknown_filter'."
-                        ),
-                    }
-                },
-            ],
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
         ),
     ],
 )
@@ -1341,16 +1319,44 @@ async def test_render_template_with_error(
 
 
 @pytest.mark.parametrize(
-    "template",
+    ("template", "expected_events"),
     [
-        "{{ my_unknown_func() + 1 }}",
-        "{{ my_unknown_var }}",
-        "{{ my_unknown_var + 1 }}",
-        "{{ now() | unknown_filter }}",
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_FUNC}},
+                ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {
+                    "type": "event",
+                    "event": {"result": "", "listeners": EMPTY_LISTENERS},
+                },
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
+        ),
     ],
 )
 async def test_render_template_with_timeout_and_error(
-    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture, template
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
 ) -> None:
     """Test a template with an error with a timeout."""
     caplog.set_level(logging.INFO)
@@ -1364,11 +1370,61 @@ async def test_render_template_with_timeout_and_error(
         }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "Template variable error" not in caplog.text
+    assert "TemplateError" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("template", "expected_events"),
+    [
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC}],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
+        ),
+    ],
+)
+async def test_render_template_strict_with_timeout_and_error(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
+    """Test a template with an error with a timeout."""
+    caplog.set_level(logging.INFO)
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "timeout": 5,
+            "strict": True,
+        }
+    )
+
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
     assert "TemplateError" not in caplog.text
@@ -1436,9 +1492,9 @@ async def test_render_template_with_delayed_error(
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {"error": "UndefinedError: 'explode' is undefined"}
 
     assert "TemplateError" not in caplog.text
 

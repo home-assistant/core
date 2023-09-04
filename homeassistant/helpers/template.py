@@ -90,6 +90,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _ENVIRONMENT = "template.environment"
 _ENVIRONMENT_LIMITED = "template.environment_limited"
+_ENVIRONMENT_STRICT = "template.environment_strict"
 _HASS_LOADER = "template.hass_loader"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
@@ -456,6 +457,7 @@ class Template:
         "_compiled",
         "_exc_info",
         "_limited",
+        "_strict",
         "_log_fn",
         "_hash_cache",
         "_renders",
@@ -473,6 +475,7 @@ class Template:
         self.is_static = not is_template_string(template)
         self._exc_info: sys._OptExcInfo | None = None
         self._limited: bool | None = None
+        self._strict: bool | None = None
         self._log_fn: Callable | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
@@ -481,15 +484,22 @@ class Template:
     def _env(self) -> TemplateEnvironment:
         if self.hass is None:
             return _NO_HASS_ENV
-        wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
-        ret: TemplateEnvironment | None = None
         # Bypass cache if a custom log function is specified
-        if self._log_fn is None:
-            ret = self.hass.data.get(wanted_env)
+        if self._log_fn is not None:
+            return TemplateEnvironment(
+                self.hass, self._limited, self._strict, self._log_fn
+            )
+        if self._limited:
+            wanted_env = _ENVIRONMENT_LIMITED
+        elif self._strict:
+            wanted_env = _ENVIRONMENT_STRICT
+        else:
+            wanted_env = _ENVIRONMENT
+        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = TemplateEnvironment(self.hass, self._limited, self._log_fn)
-        if self._log_fn is None:
-            self.hass.data[wanted_env] = ret
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(
+                self.hass, self._limited, self._strict, self._log_fn
+            )
         return ret
 
     def ensure_valid(self) -> None:
@@ -531,6 +541,7 @@ class Template:
         variables: TemplateVarsType = None,
         parse_result: bool = True,
         limited: bool = False,
+        strict: bool = False,
         log_fn: Callable | None = None,
         **kwargs: Any,
     ) -> Any:
@@ -548,7 +559,7 @@ class Template:
                 return self.template
             return self._parse_result(self.template)
 
-        compiled = self._compiled or self._ensure_compiled(limited, log_fn)
+        compiled = self._compiled or self._ensure_compiled(limited, strict, log_fn)
 
         if variables is not None:
             kwargs.update(variables)
@@ -602,6 +613,7 @@ class Template:
         self,
         timeout: float,
         variables: TemplateVarsType = None,
+        strict: bool = False,
         log_fn: Callable | None = None,
         **kwargs: Any,
     ) -> bool:
@@ -623,7 +635,7 @@ class Template:
         if self.is_static:
             return False
 
-        compiled = self._compiled or self._ensure_compiled(log_fn=log_fn)
+        compiled = self._compiled or self._ensure_compiled(strict=strict, log_fn=log_fn)
 
         if variables is not None:
             kwargs.update(variables)
@@ -661,6 +673,7 @@ class Template:
     def async_render_to_info(
         self,
         variables: TemplateVarsType = None,
+        strict: bool = False,
         log_fn: Callable | None = None,
         **kwargs: Any,
     ) -> RenderInfo:
@@ -678,7 +691,9 @@ class Template:
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(variables, log_fn=log_fn, **kwargs)
+            render_info._result = self.async_render(
+                variables, strict=strict, log_fn=log_fn, **kwargs
+            )
         except TemplateError as ex:
             render_info.exception = ex
         finally:
@@ -741,7 +756,10 @@ class Template:
             return value if error_value is _SENTINEL else error_value
 
     def _ensure_compiled(
-        self, limited: bool = False, log_fn: Callable | None = None
+        self,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable | None = None,
     ) -> jinja2.Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
@@ -751,11 +769,16 @@ class Template:
             self._limited is None or self._limited == limited
         ), "can't change between limited and non limited template"
         assert (
+            self._strict is None or self._strict == strict
+        ), "can't change between strict and non strict template"
+        assert not (strict and limited), "can't combine strict and limited template"
+        assert (
             self._log_fn is None or self._log_fn == log_fn
         ), "can't change custom log function"
         assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
+        self._strict = strict
         self._log_fn = log_fn
         env = self._env
 
@@ -2175,8 +2198,13 @@ def _render_with_context(
         return template.render(**kwargs)
 
 
-def make_logging_undefined(log_fn: Callable | None = None) -> type[jinja2.Undefined]:
+def make_logging_undefined(
+    strict: bool | None, log_fn: Callable | None
+) -> type[jinja2.Undefined]:
     """Log on undefined variables."""
+
+    if strict:
+        return jinja2.StrictUndefined
 
     if log_fn is None:
         log_error = _LOGGER.warning
@@ -2289,10 +2317,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self,
         hass: HomeAssistant | None,
         limited: bool | None = False,
+        strict: bool | None = False,
         log_fn: Callable | None = None,
     ) -> None:
         """Initialise template environment."""
-        super().__init__(undefined=make_logging_undefined(log_fn))
+        super().__init__(undefined=make_logging_undefined(strict, log_fn))
         self.hass = hass
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
