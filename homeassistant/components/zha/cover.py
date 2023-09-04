@@ -282,11 +282,27 @@ class ZhaCover(ZhaEntity, CoverEntity):
             raise HomeAssistantError(f"Failed to open cover tilt: {res[1]}")
         self.async_update_state(STATE_OPENING)
 
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        # 0 is open in ZCL
+        res = await self._cover_cluster_handler.go_to_tilt_percentage(0)
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to open cover tilt: {res[1]}")
+        self.async_update_state(STATE_OPENING)
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         res = await self._cover_cluster_handler.down_close()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to close cover: {res[1]}")
+        self.async_update_state(STATE_CLOSING)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        # 100 is closed in ZCL
+        res = await self._cover_cluster_handler.go_to_tilt_percentage(100)
+        if res[1] is not Status.SUCCESS:
+            raise HomeAssistantError(f"Failed to close cover tilt: {res[1]}")
         self.async_update_state(STATE_CLOSING)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
