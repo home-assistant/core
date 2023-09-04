@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,7 +21,8 @@ _DESCRIPTION = BinarySensorEntityDescription(
     name="UPS Online Status",
     icon="mdi:heart",
 )
-_VALUE_ONLINE: Final = 8
+# The bit in STATFLAG that indicates the online status of the APC UPS.
+_VALUE_ONLINE_MASK: Final = 0b1000
 
 
 async def async_setup_entry(
@@ -60,17 +61,9 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
 
-        # Initial update of attributes.
-        self._update_attrs()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attrs()
-        self.async_write_ha_state()
-
-    def _update_attrs(self) -> None:
-        """Update sensor attributes based on coordinator data."""
-        key = self.entity_description.key.upper()
+    @property
+    def is_on(self) -> bool | None:
+        """Returns true if the UPS is online."""
         # Check if _VALUE_ONLINE bit is set in STATFLAG.
-        self._attr_is_on = int(self.coordinator.data[key], 16) & _VALUE_ONLINE > 0
+        key = self.entity_description.key.upper()
+        return int(self.coordinator.data[key], 16) & _VALUE_ONLINE_MASK != 0
