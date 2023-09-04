@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from .generator import get_mock_device
 
 
+@patch("homewizard_energy.const.LATEST_STABLE_FIRMWARE", {"HWE-P1": "1.42"})
 async def test_update_init(
     hass: HomeAssistant, mock_config_entry_data, mock_config_entry
 ) -> None:
@@ -40,7 +41,7 @@ async def test_update_init(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_TITLE] is None
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1.00"
-    assert state.attributes[ATTR_LATEST_VERSION] == "4.18"
+    assert state.attributes[ATTR_LATEST_VERSION] == "1.42"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
