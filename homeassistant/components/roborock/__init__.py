@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.warning(
                 "Failed to connect to get networking information about %s", device.duid
             )
-            _LOGGER.exception(result)
+            _LOGGER.debug(result)
         else:
             network_info[device.duid] = result
     if not network_info:
