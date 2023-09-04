@@ -513,7 +513,11 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = _cached_template(template_str, hass)
+    report_errors: bool = msg["report_errors"]
+    if report_errors:
+        template_obj = template.Template(template_str, hass)
+    else:
+        template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
 
@@ -521,7 +525,7 @@ async def handle_render_template(
     def _error_listener(template_error: str) -> None:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, template_error)
 
-    log_fn = _error_listener if msg["report_errors"] else None
+    log_fn = _error_listener if report_errors else None
 
     if timeout:
         try:

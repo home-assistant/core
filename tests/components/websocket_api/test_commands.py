@@ -1359,13 +1359,14 @@ async def test_render_template_with_timeout_and_error(
     hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture, template
 ) -> None:
     """Test a template with an error with a timeout."""
+    caplog.set_level(logging.INFO)
     await websocket_client.send_json(
         {
             "id": 5,
             "type": "render_template",
             "template": template,
             "timeout": 5,
-            "strict": True,
+            "report_errors": True,
         }
     )
 
