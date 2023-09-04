@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -44,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,6 +149,7 @@ class PrometheusMetrics:
         self._sensor_metric_handlers = [
             self._sensor_override_component_metric,
             self._sensor_override_metric,
+            self._sensor_timestamp_metric,
             self._sensor_attribute_metric,
             self._sensor_default_metric,
             self._sensor_fallback_metric,
@@ -292,7 +295,10 @@ class PrometheusMetrics:
     def state_as_number(state):
         """Return a state casted to a float."""
         try:
-            value = state_helper.state_as_number(state)
+            if state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP:
+                value = as_timestamp(state.state)
+            else:
+                value = state_helper.state_as_number(state)
         except ValueError:
             _LOGGER.debug("Could not convert %s to float", state)
             value = 0
@@ -574,6 +580,14 @@ class PrometheusMetrics:
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
             return f"sensor_{metric}_{unit}"
+        return None
+
+    @staticmethod
+    def _sensor_timestamp_metric(state, unit):
+        """Get metric for timestamp sensors, which have no unit of measurement attribute."""
+        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        if metric == SensorDeviceClass.TIMESTAMP:
+            return f"sensor_{metric}_seconds"
         return None
 
     def _sensor_override_metric(self, state, unit):

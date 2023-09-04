@@ -12,13 +12,14 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
+from . import repairs, websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -134,7 +135,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
+
+    try:
+        await zha_gateway.async_initialize()
+    except Exception:  # pylint: disable=broad-except
+        if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+            try:
+                await repairs.warn_on_wrong_silabs_firmware(
+                    hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+                )
+            except repairs.AlreadyRunningEZSP as exc:
+                # If connecting fails but we somehow probe EZSP (e.g. stuck in the
+                # bootloader), reconnect, it should work
+                raise ConfigEntryNotReady from exc
+
+        raise
+
+    repairs.async_delete_blocking_issues(hass)
 
     config_entry.async_on_unload(zha_gateway.shutdown)
 
