@@ -1,11 +1,10 @@
 """Support for Freebox base features."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import aiohttp.client_exceptions
+from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -89,13 +88,7 @@ class FreeboxHomeEntity(Entity):
             await self._router.home.set_home_endpoint_value(
                 self._id, command_id, {"value": value}
             )
-        except asyncio.TimeoutError as error:
-            _LOGGER.warning("The Freebox API Timeout during a value set %s", error)
-            return False
-        except TimeoutError:
-            _LOGGER.warning("The Freebox Timeout during a value set")
-            return False
-        except aiohttp.client_exceptions.ClientError as error:
+        except HttpRequestError as error:
             _LOGGER.warning("The Freebox API ClientError during value set %s", error)
             return False
         return True
@@ -107,18 +100,10 @@ class FreeboxHomeEntity(Entity):
             return None
         try:
             node = await self._router.home.get_home_endpoint_value(self._id, command_id)
-        except asyncio.TimeoutError as error:
-            _LOGGER.warning(
-                "The Freebox API Timeout during a value retrieval %s", error
-            )
-            return None
-        except aiohttp.client_exceptions.ClientError as error:
+        except HttpRequestError as error:
             _LOGGER.warning(
                 "The Freebox API ClientError during a value retrieval %s", error
             )
-            return None
-        except TimeoutError:
-            _LOGGER.warning("The Freebox Timeout during a value retrieval")
             return None
         return node.get("value")
 
