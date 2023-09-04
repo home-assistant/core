@@ -524,6 +524,8 @@ async def handle_render_template(
 
     @callback
     def _error_listener(template_error: str) -> None:
+        if not report_errors:
+            return
         connection.send_message(
             messages.event_message(msg["id"], {"error": template_error})
         )
@@ -555,6 +557,8 @@ async def handle_render_template(
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
+            if not report_errors:
+                return
             connection.send_message(
                 messages.event_message(msg["id"], {"error": str(result)})
             )

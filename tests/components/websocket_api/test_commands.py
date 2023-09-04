@@ -1463,7 +1463,12 @@ async def test_render_template_with_delayed_error(
     """
 
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": template_str}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template_str,
+            "report_errors": True,
+        }
     )
     await hass.async_block_till_done()
 
@@ -1489,6 +1494,14 @@ async def test_render_template_with_delayed_error(
             "time": False,
         },
     }
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event["error"].startswith(
+        "Template variable warning: 'None' has no attribute 'state'"
+    )
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
