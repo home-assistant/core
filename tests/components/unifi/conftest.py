@@ -10,12 +10,14 @@ import pytest
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.components.unifi.controller import RETRY_TIMER
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.unifi.test_controller import DEFAULT_CONFIG_ENTRY_ID
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 class WebsocketStateManager(asyncio.Event):
@@ -24,9 +26,10 @@ class WebsocketStateManager(asyncio.Event):
     Prepares disconnect and reconnect flows.
     """
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
         """Store hass object and initialize asyncio.Event."""
         self.hass = hass
+        self.aioclient_mock = aioclient_mock
         super().__init__()
 
     async def disconnect(self):
@@ -37,8 +40,19 @@ class WebsocketStateManager(asyncio.Event):
     async def reconnect(self, fail=False):
         """Set up new future to make 'await self.api.start_websocket' block.
 
+        Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
+        controller = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        self.aioclient_mock.get(
+            f"https://{controller.host}:1234", status=302
+        )  # Check UniFi OS
+        self.aioclient_mock.post(
+            f"https://{controller.host}:1234/api/login",
+            json={"data": "login successful", "meta": {"rc": "ok"}},
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
+
         if not fail:
             self.clear()
         new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
@@ -47,9 +61,9 @@ class WebsocketStateManager(asyncio.Event):
 
 
 @pytest.fixture(autouse=True)
-def websocket_mock(hass):
+def websocket_mock(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
     """Mock aiounifi websocket."""
-    websocket_state_manager = WebsocketStateManager(hass)
+    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
     with patch("aiounifi.Controller.start_websocket") as ws_mock:
         ws_mock.side_effect = websocket_state_manager.wait
         yield websocket_state_manager

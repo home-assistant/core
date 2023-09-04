@@ -2,12 +2,7 @@
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    CONTENT_TYPE_JSON,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -72,12 +67,6 @@ async def test_restart_device_button(
     }
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()

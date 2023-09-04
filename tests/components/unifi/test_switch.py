@@ -22,7 +22,6 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -1007,13 +1006,12 @@ async def test_dpi_switches(
     websocket_mock,
 ) -> None:
     """Test the update_items function with some clients."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         dpigroup_response=DPI_GROUPS,
         dpiapp_response=DPI_APPS,
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
@@ -1028,12 +1026,6 @@ async def test_dpi_switches(
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()
@@ -1199,12 +1191,6 @@ async def test_outlet_switches(
     }
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()
@@ -1423,12 +1409,6 @@ async def test_poe_port_switches(
     }
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()
@@ -1510,12 +1490,6 @@ async def test_wlan_switches(
     assert aioclient_mock.mock_calls[1][2] == {"enabled": True}
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()
@@ -1599,12 +1573,6 @@ async def test_port_forwarding_switches(
     assert aioclient_mock.mock_calls[1][2] == _data
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()

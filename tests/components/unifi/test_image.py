@@ -8,9 +8,8 @@ from aiounifi.models.message import MessageKey
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import CONTENT_TYPE_JSON, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -68,9 +67,7 @@ async def test_wlan_qr_code(
     websocket_mock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
-    config_entry = await setup_unifi_integration(
-        hass, aioclient_mock, wlans_response=[WLAN]
-    )
+    await setup_unifi_integration(hass, aioclient_mock, wlans_response=[WLAN])
     assert len(hass.states.async_entity_ids(IMAGE_DOMAIN)) == 0
 
     ent_reg = er.async_get(hass)
@@ -88,8 +85,6 @@ async def test_wlan_qr_code(
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
-
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     # Validate state object
     image_state_1 = hass.states.get("image.ssid_1_qr_code")
@@ -124,12 +119,6 @@ async def test_wlan_qr_code(
     assert body == snapshot
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()

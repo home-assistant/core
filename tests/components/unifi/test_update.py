@@ -4,7 +4,7 @@ from copy import deepcopy
 from aiounifi.models.message import MessageKey
 from yarl import URL
 
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
-    CONTENT_TYPE_JSON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -188,23 +187,12 @@ async def test_controller_state_change(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Verify entities state reflect on controller becoming unavailable."""
-    config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        devices_response=[DEVICE_1],
-    )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
     assert hass.states.get("update.device_1").state == STATE_ON
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()

@@ -16,12 +16,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.const import (
-    CONTENT_TYPE_JSON,
-    STATE_HOME,
-    STATE_NOT_HOME,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
@@ -435,25 +430,18 @@ async def test_controller_state_change(
         "version": "4.0.42.10433",
     }
 
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         clients_response=[client],
         devices_response=[device],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
     # Availability signalling
-    aioclient_mock.get(f"https://{controller.host}:1234", status=302)  # Check UniFi OS
-    aioclient_mock.post(
-        f"https://{controller.host}:1234/api/login",
-        json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": CONTENT_TYPE_JSON},
-    )
 
     # Controller disconnects
     await websocket_mock.disconnect()
