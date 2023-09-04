@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from .generator import get_mock_device
 
 
-@patch("homewizard_energy.const.LATEST_STABLE_FIRMWARE", {"HWE-P1": "1.42"})
 async def test_update_init(
     hass: HomeAssistant, mock_config_entry_data, mock_config_entry
 ) -> None:
@@ -27,7 +26,7 @@ async def test_update_init(
     with patch(
         "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
-    ):
+    ), patch("homewizard_energy.const.LATEST_STABLE_FIRMWARE", {"HWE-P1": "1.42"}):
         entry = mock_config_entry
         entry.data = mock_config_entry_data
         entry.add_to_hass(hass)
