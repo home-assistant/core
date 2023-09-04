@@ -314,7 +314,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert state.attributes[ATTR_REMAINING] == "0:00:15"
 
     with pytest.raises(
@@ -342,14 +342,14 @@ async def test_start_service(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CHANGE,
-        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -3},
+        {CONF_ENTITY_ID: "timer.test1", CONF_DURATION: -7},
         blocking=True,
     )
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
-    assert state.attributes[ATTR_REMAINING] == "0:00:12"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_REMAINING] == "0:00:08"
 
     await hass.services.async_call(
         DOMAIN,
@@ -360,8 +360,8 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
-    assert state.attributes[ATTR_REMAINING] == "0:00:14"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_REMAINING] == "0:00:10"
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CANCEL, {CONF_ENTITY_ID: "timer.test1"}, blocking=True
@@ -370,7 +370,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
     with pytest.raises(
@@ -387,7 +387,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == "0:00:15"
+    assert state.attributes[ATTR_DURATION] == "0:00:10"
     assert ATTR_REMAINING not in state.attributes
 
 

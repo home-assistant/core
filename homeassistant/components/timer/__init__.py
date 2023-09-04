@@ -316,7 +316,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Set remaining to new value if needed
         if duration:
-            self._remaining = self._duration = duration
+            self._remaining = duration
         elif not self._remaining:
             self._remaining = self._duration
 
