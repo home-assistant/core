@@ -2,6 +2,7 @@
 import asyncio
 from copy import deepcopy
 import datetime
+import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
@@ -33,7 +34,11 @@ from tests.common import (
     async_mock_service,
     mock_platform,
 )
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -1225,28 +1230,117 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     }
 
 
+EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
+
+
 @pytest.mark.parametrize(
-    "template",
+    ("template", "expected_events"),
     [
-        "{{ my_unknown_func() + 1 }}",
-        "{{ my_unknown_var }}",
-        "{{ my_unknown_var + 1 }}",
-        "{{ now() | unknown_filter }}",
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {
+                    "type": "result",
+                    "success": False,
+                    "error": {
+                        "code": "template_error",
+                        "message": (
+                            "Template variable error: 'my_unknown_func' is undefined "
+                            "when rendering '{{ my_unknown_func() + 1 }}'"
+                        ),
+                    },
+                },
+                {
+                    "type": "result",
+                    "success": False,
+                    "error": {
+                        "code": "template_error",
+                        "message": "UndefinedError: 'my_unknown_func' is undefined",
+                    },
+                },
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {
+                    "type": "result",
+                    "success": False,
+                    "error": {
+                        "code": "template_error",
+                        "message": (
+                            "Template variable warning: 'my_unknown_var' is undefined "
+                            "when rendering '{{ my_unknown_var }}'"
+                        ),
+                    },
+                },
+                {"success": True},
+                {
+                    "type": "result",
+                    "success": False,
+                    "error": {
+                        "code": "template_error",
+                        "message": (
+                            "Template variable warning: 'my_unknown_var' is undefined "
+                            "when rendering '{{ my_unknown_var }}'"
+                        ),
+                    },
+                },
+                {
+                    "type": "event",
+                    "event": {"result": "", "listeners": EMPTY_LISTENERS},
+                },
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {
+                    "error": {
+                        "code": "template_error",
+                        "message": "UndefinedError: 'my_unknown_var' is undefined",
+                    }
+                },
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {
+                    "error": {
+                        "code": "template_error",
+                        "message": (
+                            "TemplateAssertionError: No filter named 'unknown_filter'."
+                        ),
+                    }
+                },
+            ],
+        ),
     ],
 )
 async def test_render_template_with_error(
-    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture, template
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
 ) -> None:
     """Test a template with an error."""
+    caplog.set_level(logging.INFO)
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": template, "strict": True}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "report_errors": True,
+        }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
     assert "TemplateError" not in caplog.text

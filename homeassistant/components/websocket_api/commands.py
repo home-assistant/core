@@ -504,7 +504,7 @@ def _cached_template(template_str: str, hass: HomeAssistant) -> template.Templat
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
-        vol.Optional("strict", default=False): bool,
+        vol.Optional("report_errors", default=False): bool,
     }
 )
 @decorators.async_response
@@ -517,10 +517,16 @@ async def handle_render_template(
     variables = msg.get("variables")
     timeout = msg.get("timeout")
 
+    @callback
+    def _error_listener(template_error: str) -> None:
+        connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, template_error)
+
+    log_fn = _error_listener if msg["report_errors"] else None
+
     if timeout:
         try:
             timed_out = await template_obj.async_render_will_timeout(
-                timeout, variables, strict=msg["strict"]
+                timeout, variables, log_fn=log_fn
             )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -557,7 +563,7 @@ async def handle_render_template(
             [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
-            strict=msg["strict"],
+            log_fn=log_fn,
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))

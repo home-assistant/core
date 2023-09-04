@@ -915,7 +915,11 @@ class TrackTemplateResultInfo:
         """Return the representation."""
         return f"<TrackTemplateResultInfo {self._info}>"
 
-    def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
+    def async_setup(
+        self,
+        raise_on_template_error: bool,
+        log_fn: Callable[[str], None] | None = None,
+    ) -> None:
         """Activation of template tracking."""
         block_render = False
         super_template = self._track_templates[0] if self._has_super_template else None
@@ -925,7 +929,7 @@ class TrackTemplateResultInfo:
             template = super_template.template
             variables = super_template.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict
+                variables, log_fn=log_fn
             )
 
             # If the super template did not render to True, don't update other templates
@@ -946,7 +950,7 @@ class TrackTemplateResultInfo:
             template = track_template_.template
             variables = track_template_.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict
+                variables, log_fn=log_fn
             )
 
             if info.exception:
@@ -1232,7 +1236,7 @@ def async_track_template_result(
     track_templates: Sequence[TrackTemplate],
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
-    strict: bool = False,
+    log_fn: Callable[[str], None] | None = None,
     has_super_template: bool = False,
 ) -> TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
@@ -1262,8 +1266,9 @@ def async_track_template_result(
         processing the template during setup, the system
         will raise the exception instead of setting up
         tracking.
-    strict
-        When set to True, raise on undefined variables.
+    log_fn
+        If not None, template error messages will logging by calling log_fn
+        instead of the normal logging facility.
     has_super_template
         When set to True, the first template will block rendering of other
         templates if it doesn't render as True.
@@ -1274,7 +1279,7 @@ def async_track_template_result(
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
-    tracker.async_setup(raise_on_template_error, strict=strict)
+    tracker.async_setup(raise_on_template_error, log_fn=log_fn)
     return tracker
 
 
