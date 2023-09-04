@@ -38,23 +38,21 @@ async def async_setup_entry(
 class HomeWizardUpdateEntity(HomeWizardEntity, UpdateEntity):
     """Representation of a HomeWizard update entity."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-    _attr_name = "Firmware"
+    _attr_auto_update = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
+    _attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
 
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         entry: ConfigEntry,
-        release_summary: str | None = None,
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator)
-        self._attr_release_summary = release_summary
         self._attr_unique_id = f"{entry.unique_id}_update"
-        self._attr_auto_update = True
-        self._attr_supported_features |= UpdateEntityFeature.RELEASE_NOTES
 
     @property
     def installed_version(self) -> str | None:

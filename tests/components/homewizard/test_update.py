@@ -34,7 +34,7 @@ async def test_update_init(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("update.product_name_aabbccddeeff_firmware")
+    state = hass.states.get("update.product_name_aabbccddeeff")
     assert state
 
     assert state.state == STATE_ON
@@ -63,7 +63,7 @@ async def test_update_handles_unexpected_product_type(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("update.product_name_aabbccddeeff_firmware")
+    state = hass.states.get("update.product_name_aabbccddeeff")
     assert state
 
     assert state.state == STATE_UNKNOWN
@@ -88,7 +88,7 @@ async def test_update_handles_nonexisting_product_type(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("update.product_name_aabbccddeeff_firmware")
+    state = hass.states.get("update.product_name_aabbccddeeff")
     assert state
 
     assert state.state == STATE_UNKNOWN
