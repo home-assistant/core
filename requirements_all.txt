@@ -510,7 +510,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.1
+bellows==0.36.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -2109,7 +2109,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.2
+python-homewizard-energy==2.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2404,7 +2404,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.1.1
+simplepush==2.2.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==2023.08.0
@@ -2795,7 +2795,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.57.0
+zigpy==0.57.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
