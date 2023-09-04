@@ -108,6 +108,34 @@ async def generate_latest_metrics(client):
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_setup_enumeration(hass, hass_client, entity_registry, namespace):
+    """Test that setup enumerates existing states/entities."""
+
+    # The order of when things are created must be carefully controlled in
+    # this test, so we don't use fixtures.
+
+    sensor_1 = entity_registry.async_get_or_create(
+        domain=sensor.DOMAIN,
+        platform="test",
+        unique_id="sensor_1",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_object_id="outside_temperature",
+        original_name="Outside Temperature",
+    )
+    set_state_with_entry(hass, sensor_1, 12.3, {})
+    assert await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+
+    client = await hass_client()
+    body = await generate_latest_metrics(client)
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 12.3' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_view_empty_namespace(client, sensor_entities) -> None:
     """Test prometheus metrics view."""
     body = await generate_latest_metrics(client)
