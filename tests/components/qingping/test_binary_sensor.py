@@ -7,11 +7,7 @@ from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.components.qingping.const import DOMAIN
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

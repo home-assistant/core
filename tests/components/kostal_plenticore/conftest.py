@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.kostal_plenticore.helper import Plenticore
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from tests.common import MockConfigEntry
 

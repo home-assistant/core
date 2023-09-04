@@ -92,6 +92,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.cover import CoverEntityFeature
     from homeassistant.components.fan import FanEntityFeature
     from homeassistant.components.humidifier import HumidifierEntityFeature
+    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
     from homeassistant.components.light import LightEntityFeature
     from homeassistant.components.lock import LockEntityFeature
     from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -110,6 +111,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "CoverEntityFeature": CoverEntityFeature,
         "FanEntityFeature": FanEntityFeature,
         "HumidifierEntityFeature": HumidifierEntityFeature,
+        "LawnMowerEntityFeature": LawnMowerEntityFeature,
         "LightEntityFeature": LightEntityFeature,
         "LockEntityFeature": LockEntityFeature,
         "MediaPlayerEntityFeature": MediaPlayerEntityFeature,

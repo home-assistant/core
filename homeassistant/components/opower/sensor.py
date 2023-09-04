@@ -15,8 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -188,7 +187,7 @@ async def async_setup_entry(
             sensors = ELEC_SENSORS
         elif (
             forecast.account.meter_type == MeterType.GAS
-            and forecast.unit_of_measure == UnitOfMeasure.THERM
+            and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
             sensors = GAS_SENSORS
         for sensor in sensors:

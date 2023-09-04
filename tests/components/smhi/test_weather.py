@@ -8,10 +8,7 @@ from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecast, SmhiForecastException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smhi.const import ATTR_SMHI_THUNDER_PROBABILITY
-from homeassistant.components.smhi.weather import (
-    CONDITION_CLASSES,
-    RETRY_TIMEOUT,
-)
+from homeassistant.components.smhi.weather import CONDITION_CLASSES, RETRY_TIMEOUT
 from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,

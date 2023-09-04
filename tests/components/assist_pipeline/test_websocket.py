@@ -58,7 +58,7 @@ async def test_text_only_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -148,7 +148,7 @@ async def test_audio_pipeline(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -212,6 +212,12 @@ async def test_audio_pipeline_with_wake_word_timeout(
     # Time out error
     msg = await client.receive_json()
     assert msg["event"]["type"] == "error"
+    assert msg["event"]["data"] == snapshot
+    events.append(msg["event"])
+
+    # run end
+    msg = await client.receive_json()
+    assert msg["event"]["type"] == "run-end"
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
@@ -302,7 +308,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -429,6 +435,12 @@ async def test_intent_timeout(
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
+        # run-end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
         # timeout error
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
@@ -548,6 +560,12 @@ async def test_intent_failed(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
         assert msg["event"]["data"]["code"] == "intent-failed"
+        events.append(msg["event"])
+
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -730,6 +748,12 @@ async def test_stt_stream_failed(
         assert msg["event"]["data"]["code"] == "stt-stream-failed"
         events.append(msg["event"])
 
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_id = list(pipeline_data.pipeline_runs)[0]
     pipeline_run_id = list(pipeline_data.pipeline_runs[pipeline_id])[0]
@@ -790,6 +814,12 @@ async def test_tts_failed(
         msg = await client.receive_json()
         assert msg["event"]["type"] == "error"
         assert msg["event"]["data"]["code"] == "tts-failed"
+        events.append(msg["event"])
+
+        # run end
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-end"
+        assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -1460,7 +1490,7 @@ async def test_audio_pipeline_debug(
     # run end
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
-    assert msg["event"]["data"] is None
+    assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     # Get the id of the pipeline

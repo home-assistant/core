@@ -7,8 +7,14 @@ import contextlib
 from dataclasses import dataclass, field
 from functools import partial
 import logging
+import sys
 from typing import Any, TypeVar, cast
 import uuid
+
+if sys.version_info < (3, 12):
+    from typing_extensions import Buffer
+else:
+    from collections.abc import Buffer
 
 from aioesphomeapi import (
     ESP_CONNECTION_ERROR_DESCRIPTION,
@@ -22,7 +28,6 @@ from aioesphomeapi import (
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 from aioesphomeapi.core import BluetoothGATTAPIError
 from async_interrupt import interrupt
-import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -52,9 +57,7 @@ CCCD_INDICATE_BYTES = b"\x02\x00"
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
-_WrapFuncType = TypeVar(  # pylint: disable=invalid-name
-    "_WrapFuncType", bound=Callable[..., Any]
-)
+_WrapFuncType = TypeVar("_WrapFuncType", bound=Callable[..., Any])
 
 
 def mac_to_int(address: str) -> int:
@@ -402,7 +405,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             await bluetooth_device.wait_for_ble_connections_free()
 
     @property
@@ -623,14 +626,14 @@ class ESPHomeClient(BaseBleakClient):
     @api_error_as_bleak_error
     async def write_gatt_char(
         self,
-        char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID,
-        data: bytes | bytearray | memoryview,
+        characteristic: BleakGATTCharacteristic | int | str | uuid.UUID,
+        data: Buffer,
         response: bool = False,
     ) -> None:
         """Perform a write operation of the specified GATT characteristic.
 
         Args:
-            char_specifier (BleakGATTCharacteristic, int, str or UUID):
+            characteristic (BleakGATTCharacteristic, int, str or UUID):
                 The characteristic to write to, specified by either integer
                 handle, UUID or directly by the BleakGATTCharacteristic object
                 representing it.
@@ -638,16 +641,14 @@ class ESPHomeClient(BaseBleakClient):
             response (bool): If write-with-response operation should be done.
                 Defaults to `False`.
         """
-        characteristic = self._resolve_characteristic(char_specifier)
+        characteristic = self._resolve_characteristic(characteristic)
         await self._client.bluetooth_gatt_write(
             self._address_as_int, characteristic.handle, bytes(data), response
         )
 
     @verify_connected
     @api_error_as_bleak_error
-    async def write_gatt_descriptor(
-        self, handle: int, data: bytes | bytearray | memoryview
-    ) -> None:
+    async def write_gatt_descriptor(self, handle: int, data: Buffer) -> None:
         """Perform a write operation on the specified GATT descriptor.
 
         Args:

@@ -141,7 +141,7 @@ async def async_setup_platform(
     @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
-        remove_interval_update()  # pylint: disable=not-callable
+        remove_interval_update()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
     async_at_start(hass, start_update_interval)
@@ -171,7 +171,7 @@ def async_track_time_interval_backoff(
     def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener
 

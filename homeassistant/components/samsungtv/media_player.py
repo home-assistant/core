@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Coroutine, Sequence
 from typing import Any
 
-import async_timeout
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
@@ -217,7 +216,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
             # enter it unless we have to (Python 3.11 will have zero cost try)
             return
         try:
-            async with async_timeout.timeout(APP_LIST_DELAY):
+            async with asyncio.timeout(APP_LIST_DELAY):
                 await self._app_list_event.wait()
         except asyncio.TimeoutError as err:
             # No need to try again

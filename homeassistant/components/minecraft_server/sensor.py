@@ -89,7 +89,7 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update version."""
-        self._attr_native_value = self._server.version
+        self._attr_native_value = self._server.data.version
 
 
 class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
@@ -107,7 +107,7 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update protocol version."""
-        self._attr_native_value = self._server.protocol_version
+        self._attr_native_value = self._server.data.protocol_version
 
 
 class MinecraftServerLatencySensor(MinecraftServerSensorEntity):
@@ -126,7 +126,7 @@ class MinecraftServerLatencySensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update latency."""
-        self._attr_native_value = self._server.latency
+        self._attr_native_value = self._server.data.latency
 
 
 class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
@@ -145,13 +145,13 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update online players state and device state attributes."""
-        self._attr_native_value = self._server.players_online
+        self._attr_native_value = self._server.data.players_online
 
         extra_state_attributes = {}
-        players_list = self._server.players_list
+        players_list = self._server.data.players_list
 
         if players_list is not None and len(players_list) != 0:
-            extra_state_attributes[ATTR_PLAYERS_LIST] = self._server.players_list
+            extra_state_attributes[ATTR_PLAYERS_LIST] = players_list
 
         self._attr_extra_state_attributes = extra_state_attributes
 
@@ -172,7 +172,7 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update maximum number of players."""
-        self._attr_native_value = self._server.players_max
+        self._attr_native_value = self._server.data.players_max
 
 
 class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
@@ -190,4 +190,4 @@ class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
 
     async def async_update(self) -> None:
         """Update MOTD."""
-        self._attr_native_value = self._server.motd
+        self._attr_native_value = self._server.data.motd

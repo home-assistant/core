@@ -16,10 +16,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 class DeviceTestData(NamedTuple):

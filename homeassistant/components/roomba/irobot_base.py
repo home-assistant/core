@@ -15,7 +15,8 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import STATE_IDLE, STATE_PAUSED
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 

@@ -50,7 +50,6 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Current Consumption",
         emeter_attr="power",
         precision=1,
     ),
@@ -60,7 +59,6 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Total Consumption",
         emeter_attr="total",
         precision=3,
     ),
@@ -70,7 +68,6 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        name="Today's Consumption",
         precision=3,
     ),
     TPLinkSensorEntityDescription(

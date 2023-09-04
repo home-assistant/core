@@ -6,11 +6,7 @@ import logging
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from pyenphase import (
-    AUTH_TOKEN_MIN_VERSION,
-    Envoy,
-    EnvoyError,
-)
+from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
 from homeassistant import config_entries

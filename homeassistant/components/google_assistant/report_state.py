@@ -147,6 +147,6 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
     def unsub_all():
         unsub()
         if unsub_pending:
-            unsub_pending()  # pylint: disable=not-callable
+            unsub_pending()
 
     return unsub_all

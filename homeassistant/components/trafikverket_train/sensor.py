@@ -1,9 +1,10 @@
 """Train information for departures and delays, provided by Trafikverket."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,14 +14,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import TrainData, TVDataUpdateCoordinator
+
+ATTR_PRODUCT_FILTER = "product_filter"
 
 
 @dataclass
@@ -158,3 +160,10 @@ class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes for Trafikverket Train sensor."""
+        if self.coordinator.data.product_filter:
+            return {ATTR_PRODUCT_FILTER: self.coordinator.data.product_filter}
+        return None
