@@ -59,6 +59,7 @@ from homeassistant.helpers import (
     entity,
     entity_platform,
     entity_registry as er,
+    event,
     intent,
     issue_registry as ir,
     recorder as recorder_helper,
@@ -397,9 +398,10 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event.
 
-    This function will add up to 0.5 seconds to the time to ensure that
-    it accounts for the accidental synchronization avoidance code in repeating
-    listeners.
+    If called within the first 500  ms of a second, time will be bumped to exactly
+    500 ms to match the async_track_utc_time_change event listeners and
+    DataUpdateCoordinator which spreads all updates between 0.05..0.50.
+    Background in PR https://github.com/home-assistant/core/pull/82233
 
     As asyncio is cooperative, we can't guarantee that the event loop will
     run an event at the exact time we want. If you need to fire time changed
@@ -410,12 +412,12 @@ def async_fire_time_changed(
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
-    if utc_datetime.microsecond < 500000:
+    if utc_datetime.microsecond < event.RANDOM_MICROSECOND_MAX:
         # Allow up to 500000 microseconds to be added to the time
         # to handle update_coordinator's and
         # async_track_time_interval's
         # staggering to avoid thundering herd.
-        utc_datetime = utc_datetime.replace(microsecond=500000)
+        utc_datetime = utc_datetime.replace(microsecond=event.RANDOM_MICROSECOND_MAX)
 
     _async_fire_time_changed(hass, utc_datetime, fire_all)
 
@@ -961,16 +963,6 @@ def patch_yaml_files(files_dict, endswith=True):
         raise FileNotFoundError(f"File not found: {fname}")
 
     return patch.object(yaml_loader, "open", mock_open_f, create=True)
-
-
-def mock_coro(return_value=None, exception=None):
-    """Return a coro that returns a value or raise an exception."""
-    fut = asyncio.Future()
-    if exception is not None:
-        fut.set_exception(exception)
-    else:
-        fut.set_result(return_value)
-    return fut
 
 
 @contextmanager

@@ -1,5 +1,7 @@
 """The Nextcloud integration."""
 
+import logging
+
 from nextcloudmonitor import (
     NextcloudMonitor,
     NextcloudMonitorAuthorizationError,
@@ -17,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import NextcloudDataUpdateCoordinator
@@ -26,9 +28,24 @@ PLATFORMS = (Platform.SENSOR, Platform.BINARY_SENSOR)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Nextcloud integration."""
+
+    # migrate old entity unique ids
+    entity_reg = er.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        entity_reg, entry.entry_id
+    )
+    for entity in entities:
+        old_uid_start = f"{entry.data[CONF_URL]}#nextcloud_"
+        new_uid_start = f"{entry.data[CONF_URL]}#"
+        if entity.unique_id.startswith(old_uid_start):
+            new_uid = entity.unique_id.replace(old_uid_start, new_uid_start)
+            _LOGGER.debug("migrate unique id '%s' to '%s'", entity.unique_id, new_uid)
+            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
 
     def _connect_nc():
         return NextcloudMonitor(

@@ -9,7 +9,7 @@ from homeassistant.const import STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import ClientSessionGenerator
 
 USER = "greg"
@@ -1303,7 +1303,7 @@ async def test_not_implemented_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
@@ -1314,7 +1314,7 @@ async def test_unsupported_message(hass: HomeAssistant, context) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1393,7 +1393,7 @@ def config_context(hass, setup_comp):
     """Set up the mocked context."""
     patch_load = patch(
         "homeassistant.components.device_tracker.async_load_config",
-        return_value=mock_coro([]),
+        return_value=[],
     )
     patch_load.start()
 

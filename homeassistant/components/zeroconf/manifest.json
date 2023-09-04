@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["zeroconf"],
   "quality_scale": "internal",
-  "requirements": ["zeroconf==0.82.1"]
+  "requirements": ["zeroconf==0.86.0"]
 }

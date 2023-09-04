@@ -52,6 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_pipeline_from_audio_stream(
     hass: HomeAssistant,
+    *,
     context: Context,
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,

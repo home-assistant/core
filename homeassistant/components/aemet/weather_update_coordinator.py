@@ -11,6 +11,7 @@ from aemet_opendata.const import (
     AEMET_ATTR_DAY,
     AEMET_ATTR_DIRECTION,
     AEMET_ATTR_ELABORATED,
+    AEMET_ATTR_FEEL_TEMPERATURE,
     AEMET_ATTR_FORECAST,
     AEMET_ATTR_HUMIDITY,
     AEMET_ATTR_ID,
@@ -32,7 +33,6 @@ from aemet_opendata.const import (
     AEMET_ATTR_STATION_TEMPERATURE,
     AEMET_ATTR_STORM_PROBABILITY,
     AEMET_ATTR_TEMPERATURE,
-    AEMET_ATTR_TEMPERATURE_FEELING,
     AEMET_ATTR_WIND,
     AEMET_ATTR_WIND_GUST,
     ATTR_DATA,
@@ -563,7 +563,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_temperature_feeling(day_data, hour):
         """Get temperature from weather data."""
-        val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE_FEELING], hour)
+        val = get_forecast_hour_value(day_data[AEMET_ATTR_FEEL_TEMPERATURE], hour)
         return format_int(val)
 
     def _get_town_id(self):
