@@ -58,7 +58,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the SmartThings platform."""
-    await setup_smartapp_endpoint(hass)
+    await setup_smartapp_endpoint(hass, False)
     return True
 
 

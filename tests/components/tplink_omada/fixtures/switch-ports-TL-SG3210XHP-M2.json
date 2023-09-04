@@ -1,0 +1,974 @@
+[
+  {
+    "id": "000000000000000000000001",
+    "port": 1,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port1",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 1,
+      "linkStatus": 1,
+      "linkSpeed": 2,
+      "duplex": 2,
+      "poe": true,
+      "poePower": 2.7,
+      "tx": 22265663705,
+      "rx": 6202420396,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000002",
+    "port": 2,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port2",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": true,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 1,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 2,
+      "linkStatus": 1,
+      "linkSpeed": 3,
+      "duplex": 2,
+      "poe": false,
+      "poePower": 0.0,
+      "tx": 2136778000000,
+      "rx": 298419647322,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000003",
+    "port": 3,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port3",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 3,
+      "linkStatus": 1,
+      "linkSpeed": 4,
+      "duplex": 2,
+      "poe": true,
+      "poePower": 10.0,
+      "tx": 2139129000000,
+      "rx": 1241262105432,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000004",
+    "port": 4,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port4",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": false,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 4,
+      "linkStatus": 0,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "poe": false,
+      "poePower": 0.0,
+      "tx": 0,
+      "rx": 0,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000005",
+    "port": 5,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port5",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 5,
+      "linkStatus": 1,
+      "linkSpeed": 3,
+      "duplex": 2,
+      "poe": true,
+      "poePower": 7.7,
+      "tx": 358431854723,
+      "rx": 62202058965,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000006",
+    "port": 6,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port6",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": false,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 6,
+      "linkStatus": 1,
+      "linkSpeed": 3,
+      "duplex": 2,
+      "poe": false,
+      "poePower": 0.0,
+      "tx": 21045680895,
+      "rx": 1266702649,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000007",
+    "port": 7,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port7",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": false,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 7,
+      "linkStatus": 0,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "poe": false,
+      "poePower": 0.0,
+      "tx": 6884938116575,
+      "rx": 3015211000000,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000008",
+    "port": 8,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port8",
+    "disable": false,
+    "type": 1,
+    "maxSpeed": 4,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 0,
+    "duplex": 0,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": false,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 8,
+      "linkStatus": 1,
+      "linkSpeed": 3,
+      "duplex": 2,
+      "poe": true,
+      "poePower": 1.9,
+      "tx": 17983115259,
+      "rx": 2764463784,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 2,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 4,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 1
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 0,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 2,
+        "duplex": 0
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "000000000000000000000009",
+    "port": 9,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port9",
+    "disable": false,
+    "type": 3,
+    "maxSpeed": 5,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 5,
+    "duplex": 2,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 9,
+      "linkStatus": 0,
+      "linkSpeed": 0,
+      "duplex": 0,
+      "poe": false,
+      "tx": 0,
+      "rx": 0,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 5,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  },
+  {
+    "id": "00000000000000000000000a",
+    "port": 10,
+    "switchId": "640934810000000000000000",
+    "switchMac": "54-AF-97-00-00-01",
+    "site": "000000000000000000000000",
+    "name": "Port10",
+    "disable": false,
+    "type": 3,
+    "maxSpeed": 5,
+    "profileId": "00000000",
+    "profileName": "All",
+    "profileOverrideEnable": false,
+    "operation": "switching",
+    "linkSpeed": 5,
+    "duplex": 2,
+    "dot1x": 2,
+    "poe": 1,
+    "bandWidthCtrlType": 0,
+    "bandCtrl": {
+      "egressEnable": false,
+      "egressLimit": 0,
+      "egressUnit": 1,
+      "ingressEnable": false,
+      "ingressLimit": 0,
+      "ingressUnit": 1
+    },
+    "stormCtrl": {
+      "unknownUnicastEnable": false,
+      "unknownUnicast": 0,
+      "multicastEnable": false,
+      "multicast": 0,
+      "broadcastEnable": false,
+      "broadcast": 0,
+      "action": 0,
+      "recoverTime": 3600
+    },
+    "lldpMedEnable": true,
+    "topoNotifyEnable": false,
+    "spanningTreeEnable": false,
+    "loopbackDetectEnable": true,
+    "loopbackDetectVlanBasedEnable": false,
+    "portIsolationEnable": false,
+    "portStatus": {
+      "port": 10,
+      "linkStatus": 1,
+      "linkSpeed": 5,
+      "duplex": 2,
+      "poe": false,
+      "tx": 4621489812572,
+      "rx": 11477190000000,
+      "stpDiscarding": false
+    },
+    "portCap": [
+      {
+        "linkSpeed": 5,
+        "duplex": 2
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 0
+      },
+      {
+        "linkSpeed": 3,
+        "duplex": 2
+      }
+    ],
+    "eeeEnable": false,
+    "flowControlEnable": false,
+    "dhcpL2RelaySettings": {
+      "enable": false,
+      "format": 0
+    }
+  }
+]

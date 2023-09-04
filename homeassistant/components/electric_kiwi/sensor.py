@@ -46,16 +46,18 @@ class ElectricKiwiHOPSensorEntityDescription(
 def _check_and_move_time(hop: Hop, time: str) -> datetime:
     """Return the time a day forward if HOP end_time is in the past."""
     date_time = datetime.combine(
-        datetime.today(),
+        dt_util.start_of_local_day(),
         datetime.strptime(time, "%I:%M %p").time(),
-    ).astimezone(dt_util.DEFAULT_TIME_ZONE)
+        dt_util.DEFAULT_TIME_ZONE,
+    )
 
     end_time = datetime.combine(
-        datetime.today(),
+        dt_util.start_of_local_day(),
         datetime.strptime(hop.end.end_time, "%I:%M %p").time(),
-    ).astimezone(dt_util.DEFAULT_TIME_ZONE)
+        dt_util.DEFAULT_TIME_ZONE,
+    )
 
-    if end_time < datetime.now().astimezone(dt_util.DEFAULT_TIME_ZONE):
+    if end_time < dt_util.now():
         return date_time + timedelta(days=1)
     return date_time
 

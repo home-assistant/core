@@ -406,7 +406,7 @@ async def test_exception_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             raise Exception("Test exception")
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -436,6 +436,7 @@ async def test_exception_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get an exception
@@ -473,7 +474,7 @@ async def test_bad_data_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             return "bad_data"
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -503,6 +504,7 @@ async def test_bad_data_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get bad data

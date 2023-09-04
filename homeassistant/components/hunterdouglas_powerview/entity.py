@@ -25,6 +25,8 @@ from .shade_data import PowerviewShadeData, PowerviewShadePositions
 class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,

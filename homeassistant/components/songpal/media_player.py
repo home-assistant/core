@@ -5,7 +5,6 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-import async_timeout
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -68,7 +67,7 @@ async def async_setup_entry(
 
     device = Device(endpoint)
     try:
-        async with async_timeout.timeout(
+        async with asyncio.timeout(
             10
         ):  # set timeout to avoid blocking the setup process
             await device.get_supported_methods()

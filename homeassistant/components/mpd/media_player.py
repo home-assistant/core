@@ -85,7 +85,6 @@ class MpdDevice(MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
 
-    # pylint: disable=no-member
     def __init__(self, server, port, password, name):
         """Initialize the MPD device."""
         self.server = server

@@ -516,7 +516,6 @@ async def handle_render_template(
     template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
-    info = None
 
     if timeout:
         try:
@@ -540,7 +539,6 @@ async def handle_render_template(
         event: EventType[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
-        nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
@@ -549,7 +547,7 @@ async def handle_render_template(
 
         connection.send_message(
             messages.event_message(
-                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore[attr-defined]
+                msg["id"], {"result": result, "listeners": info.listeners}
             )
         )
 
@@ -713,12 +711,12 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    response = await script_obj.async_run(msg.get("variables"), context=context)
+    script_result = await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_result(
         msg["id"],
         {
             "context": context,
-            "response": response,
+            "response": script_result.service_response if script_result else None,
         },
     )
 

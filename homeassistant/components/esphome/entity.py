@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 import math
-from typing import Any, Generic, TypeVar, cast  # pylint: disable=unused-import
+from typing import Any, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,

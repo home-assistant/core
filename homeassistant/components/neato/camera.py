@@ -12,16 +12,10 @@ from urllib3.response import HTTPResponse
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    NEATO_DOMAIN,
-    NEATO_LOGIN,
-    NEATO_MAP_DATA,
-    NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
-)
+from .const import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
+from .entity import NeatoEntity
 from .hub import NeatoHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,18 +42,17 @@ async def async_setup_entry(
     async_add_entities(dev, True)
 
 
-class NeatoCleaningMap(Camera):
+class NeatoCleaningMap(NeatoEntity, Camera):
     """Neato cleaning map for last clean."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "cleaning_map"
 
     def __init__(
         self, neato: NeatoHub, robot: Robot, mapdata: dict[str, Any] | None
     ) -> None:
         """Initialize Neato cleaning map."""
-        super().__init__()
-        self.robot = robot
+        super().__init__(robot)
+        Camera.__init__(self)
         self.neato = neato
         self._mapdata = mapdata
         self._available = neato is not None
@@ -125,14 +118,6 @@ class NeatoCleaningMap(Camera):
     def available(self) -> bool:
         """Return if the robot is available."""
         return self._available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for neato robot."""
-        return DeviceInfo(
-            identifiers={(NEATO_DOMAIN, self._robot_serial)},
-            name=self.robot.name,
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
