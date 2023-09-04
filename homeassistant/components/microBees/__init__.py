@@ -29,13 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     platforms.append(Platform.SWITCH)
 
         match bee.get("productID"):
-            case 31:
-                platforms.append(Platform.LIGHT)
             case 46:
-
                 platforms.append(Platform.SWITCH)
-            case 79:
-                platforms.append(Platform.LIGHT)
 
     platforms = list(dict.fromkeys(platforms))
 
