@@ -36,7 +36,7 @@ async def test_change_control_type_service(
 async def test_trigger_and_get_schedule(
     hass: HomeAssistant, setup_fm_integration
 ) -> None:
-    """Test that the method activate_control_type is called when calling the service active_control_type."""
+    """Test that the method trigger_and_get_schedule is awaited when calling the service trigger_and_get_schedule."""
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.trigger_and_get_schedule",
         return_value={"values": [0.5, 0.41492, -0.0, -0.0]},
@@ -62,7 +62,7 @@ async def test_trigger_and_get_schedule(
 
 
 async def test_post_measurements(hass: HomeAssistant, setup_fm_integration) -> None:
-    """Test that the method activate_control_type is called when calling the service active_control_type."""
+    """Test that the method post measuresments is called when calling the service post_measurements."""
 
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.post_measurements",
