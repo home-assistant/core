@@ -467,7 +467,7 @@ async def async_setup_entry(
 
         entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def infer_unit(value: str) -> tuple[str, str | None]:

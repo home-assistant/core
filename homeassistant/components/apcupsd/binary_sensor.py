@@ -38,10 +38,7 @@ async def async_setup_entry(
     if _DESCRIPTION.key.upper() not in coordinator.data:
         return
 
-    async_add_entities(
-        [OnlineStatus(coordinator, _DESCRIPTION)],
-        update_before_add=True,
-    )
+    async_add_entities([OnlineStatus(coordinator, _DESCRIPTION)])
 
 
 class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
@@ -64,6 +61,6 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Returns true if the UPS is online."""
-        # Check if _VALUE_ONLINE bit is set in STATFLAG.
+        # Check if ONLINE bit is set in STATFLAG.
         key = self.entity_description.key.upper()
         return int(self.coordinator.data[key], 16) & _VALUE_ONLINE_MASK != 0
