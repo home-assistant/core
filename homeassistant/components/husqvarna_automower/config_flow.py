@@ -6,7 +6,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -31,11 +30,6 @@ class HusqvarnaConfigFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow."""
-        if "amc:api" not in data[CONF_TOKEN]["scope"]:
-            _LOGGER.warning(
-                "The scope of your API-key is `%s`, but should be `iam:read amc:api`",
-                data[CONF_TOKEN]["scope"],
-            )
         return await self.async_step_finish(DOMAIN, data)
 
     async def async_step_finish(self, unique_id, data) -> FlowResult:
