@@ -570,8 +570,6 @@ async def test_switch_configurable(
 class TRVBoostQuirk(CustomDevice):
     """Quirk TRV Boost function attribute."""
 
-    quirk_class = ("zhaquirks.tuya.ts0601_trv.ZonnsmartTV01_ZG",)
-
     class TuyaManufCluster(CustomCluster, ManufacturerSpecificCluster):
         """Tuya manufacturer specific cluster."""
 
