@@ -7,14 +7,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .climate import CCM15Coordinator
-from .const import DEFAULT_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-            vol.Coerce(int), vol.Range(min=10)
-        ),
     }
 )
 
@@ -35,9 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    hub = CCM15Coordinator(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_SCAN_INTERVAL], hass
-    )
+    hub = CCM15Coordinator(hass, data[CONF_HOST], data[CONF_PORT])
     if not await hub.async_test_connection():
         raise CannotConnect
 
@@ -45,7 +40,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {
         CONF_HOST: data[CONF_HOST],
         CONF_PORT: data[CONF_PORT],
-        CONF_SCAN_INTERVAL: data[CONF_SCAN_INTERVAL],
     }
 
 

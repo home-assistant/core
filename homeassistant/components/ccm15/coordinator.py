@@ -31,6 +31,7 @@ from .const import (
     CONST_CMD_STATE_MAP,
     CONST_FAN_CMD_MAP,
     CONST_STATE_CMD_MAP,
+    DEFAULT_INTERVAL,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -41,16 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
-    def __init__(
-        self, hass: HomeAssistant, host: str, port: int, interval: int
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=host,
             update_method=self._async_update_data,
-            update_interval=datetime.timedelta(seconds=interval),
+            update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
         self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT)
         self._host = host
