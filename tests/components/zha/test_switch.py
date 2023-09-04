@@ -39,8 +39,6 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-from tests.common import mock_coro
-
 ON = 1
 OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -652,7 +650,7 @@ async def test_switch_tuya_trv_boost(
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -666,7 +664,7 @@ async def test_switch_tuya_trv_boost(
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
+        return_value=[zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS],
     ):
         # turn off via UI
         await hass.services.async_call(
