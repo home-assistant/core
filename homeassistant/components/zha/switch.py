@@ -600,17 +600,8 @@ class TuyaTRVBoostSwitch(ZHASwitchConfigurationEntity, id_suffix="boost"):
         self, value: int
     ) -> None:
         """Turn the entity on or off."""
-        try:
-            result = await self._cluster_handler.cluster.write_attributes(
-                {self._zcl_attribute: value}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(result, Exception) and all(
-            record.status == Status.SUCCESS for record in result[0]
-        ):
-            self.async_write_ha_state()
+        await self._cluster_handler.write_attributes_safe({self._zcl_attribute: value})
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
