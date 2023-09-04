@@ -1,4 +1,4 @@
-"""Demo platform that offers fake update entities."""
+"""HomeWizard platform that offers update entities."""
 from __future__ import annotations
 
 from homewizard_energy.const import LATEST_STABLE_FIRMWARE
@@ -22,7 +22,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up demo update platform."""
+    """Set up update platform."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 class HomeWizardUpdateEntity(HomeWizardEntity, UpdateEntity):
-    """Representation of a demo update entity."""
+    """Representation of a HomeWizard update entity."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -49,7 +49,7 @@ class HomeWizardUpdateEntity(HomeWizardEntity, UpdateEntity):
         entry: ConfigEntry,
         release_summary: str | None = None,
     ) -> None:
-        """Initialize the Demo select entity."""
+        """Initialize the update entity."""
         super().__init__(coordinator)
         self._attr_release_summary = release_summary
         self._attr_unique_id = f"{entry.unique_id}_update"
@@ -73,7 +73,7 @@ class HomeWizardUpdateEntity(HomeWizardEntity, UpdateEntity):
             return None
 
     def release_notes(self) -> str | None:
-        """Return the release instructions."""
+        """Return the update instructions."""
         return (
             "**To install latest firmware**\n"
             "\n"
