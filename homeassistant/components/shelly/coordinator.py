@@ -422,7 +422,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         def _unsubscribe() -> None:
             self._ota_event_listeners.remove(ota_event_callback)
 
-        self._event_listeners.append(ota_event_callback)
+        self._ota_event_listeners.append(ota_event_callback)
 
         return _unsubscribe
 
