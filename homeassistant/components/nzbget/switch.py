@@ -38,6 +38,8 @@ async def async_setup_entry(
 class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
     """Representation of a NZBGet download switch."""
 
+    _attr_translation_key = "download"
+
     def __init__(
         self,
         coordinator: NZBGetDataUpdateCoordinator,
@@ -50,7 +52,7 @@ class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            name=f"{entry_name} Download",
+            entry_name=entry_name,
         )
 
     @property

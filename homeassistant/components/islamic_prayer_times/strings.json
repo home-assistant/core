@@ -20,6 +20,28 @@
       }
     }
   },
+  "selector": {
+    "calculation_method": {
+      "options": {
+        "jafari": "Shia Ithna-Ansari",
+        "karachi": "University of Islamic Sciences, Karachi",
+        "isna": "Islamic Society of North America",
+        "mwl": "Muslim World League",
+        "makkah": "Umm Al-Qura University, Makkah",
+        "egypt": "Egyptian General Authority of Survey",
+        "tehran": "Institute of Geophysics, University of Tehran",
+        "gulf": "Gulf Region",
+        "kuwait": "Kuwait",
+        "qatar": "Qatar",
+        "singapore": "Majlis Ugama Islam Singapura, Singapore",
+        "france": "Union Organization islamic de France",
+        "turkey": "Diyanet İşleri Başkanlığı, Turkey",
+        "russia": "Spiritual Administration of Muslims of Russia",
+        "moonsighting": "Moonsighting Committee Worldwide",
+        "custom": "Custom"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "fajr": {

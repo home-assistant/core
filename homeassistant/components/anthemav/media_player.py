@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ANTHEMAV_UDATE_SIGNAL, CONF_MODEL, DOMAIN, MANUFACTURER
+from .const import ANTHEMAV_UPDATE_SIGNAL, CONF_MODEL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{ANTHEMAV_UDATE_SIGNAL}_{self._entry_id}",
+                f"{ANTHEMAV_UPDATE_SIGNAL}_{self._entry_id}",
                 self.update_states,
             )
         )
