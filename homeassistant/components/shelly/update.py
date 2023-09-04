@@ -236,6 +236,10 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         await super().async_added_to_hass()
         self.coordinator.async_subscribe_ota_events(self._ota_progress_callback)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        self.coordinator.async_unsubscribe_ota_events(self._ota_progress_callback)
+
     @callback
     def _ota_progress_callback(self, event: dict[str, Any]) -> None:
         """Handle device OTA progress."""

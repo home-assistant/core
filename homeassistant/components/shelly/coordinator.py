@@ -416,15 +416,16 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @callback
     def async_subscribe_ota_events(
         self, ota_event_callback: Callable[[dict[str, Any]], None]
-    ) -> CALLBACK_TYPE:
+    ) -> None:
         """Subscribe to OTA events."""
-
-        def _unsubscribe() -> None:
-            self._ota_event_listeners.remove(ota_event_callback)
-
         self._ota_event_listeners.append(ota_event_callback)
 
-        return _unsubscribe
+    @callback
+    def async_unsubscribe_ota_events(
+        self, ota_event_callback: Callable[[dict[str, Any]], None]
+    ) -> None:
+        """Unsubscribe to OTA events."""
+        self._ota_event_listeners.remove(ota_event_callback)
 
     @callback
     def async_subscribe_events(
