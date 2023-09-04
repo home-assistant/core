@@ -101,7 +101,6 @@ class Life360DeviceTracker(
     _attr_attribution = ATTRIBUTION
     _attr_unique_id: str
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self, coordinator: Life360DataUpdateCoordinator, member_id: str
@@ -113,7 +112,7 @@ class Life360DeviceTracker(
         self._data: Life360Member | None = coordinator.data.members[member_id]
         self._prev_data = self._data
 
-        self._name = self._data.name
+        self._attr_name = self._data.name
         self._attr_entity_picture = self._data.entity_picture
 
         # Server sends a pair of address values on alternate updates. Keep the pair of
@@ -130,7 +129,9 @@ class Life360DeviceTracker(
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return DeviceInfo(identifiers={(DOMAIN, self._attr_unique_id)}, name=self._name)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)}, name=self._attr_name
+        )
 
     @property
     def _options(self) -> Mapping[str, Any]:
