@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-
-from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.enums import Namespace
+
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 
 class RefossEntity(Entity):
@@ -58,7 +58,6 @@ class RefossEntity(Entity):
             namespace=namespace, data=data, uuid=uuid
         )
         self.async_schedule_update_ha_state(force_refresh=True)
-
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

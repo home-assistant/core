@@ -3,6 +3,10 @@ from __future__ import annotations
 
 from typing import Final, NamedTuple
 
+from refoss_ha.controller.device import BaseDevice
+from refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
+from refoss_ha.socket_server import SocketServerProtocol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -10,9 +14,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
-from refoss_ha.controller.device import BaseDevice
-from refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
-from refoss_ha.socket_server import SocketServerProtocol
 from .util import get_refoss_socket_server
 
 PLATFORMS: Final = [
@@ -121,7 +122,6 @@ class DeviceListener(RefossDeviceListener):
         self.device_ids.add(device.uuid)
         dispatcher_send(self.hass, REFOSS_DISCOVERY_NEW, [device.uuid])
         LOGGER.debug("Add device: %s", device.device_type)
-
 
     def remove_device(self, device_id: str) -> None:
         """Remove device removed listener."""
