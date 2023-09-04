@@ -35,7 +35,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        self.cem._control_type = None
+        self.cem.control_type = None
         return await WebSocketHandler(
             request.app["hass"], request, self.cem
         ).async_handle()

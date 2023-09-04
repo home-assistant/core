@@ -19,6 +19,7 @@ from tests.typing import (
 
 @pytest.fixture
 async def setup_fm_integration(hass: HomeAssistant):
+    """FlexMeasures integration setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
