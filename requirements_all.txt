@@ -510,7 +510,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.1
+bellows==0.36.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -996,7 +996,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230901.0
+home-assistant-frontend==20230904.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1676,7 +1676,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.8.1
+pyenphase==1.9.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1993,7 +1993,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.schlage
-pyschlage==2023.8.1
+pyschlage==2023.9.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.33
@@ -2112,7 +2112,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.2
+python-homewizard-energy==2.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2407,7 +2407,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.1.1
+simplepush==2.2.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==2023.08.0
@@ -2798,7 +2798,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.57.0
+zigpy==0.57.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
