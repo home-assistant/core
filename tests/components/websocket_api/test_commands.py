@@ -1332,7 +1332,6 @@ async def test_render_template_with_error(
             "{{ my_unknown_var }}",
             [
                 {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
                 {"type": "result", "success": True, "result": None},
                 {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
                 {

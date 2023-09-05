@@ -524,16 +524,17 @@ async def handle_render_template(
 
     @callback
     def _error_listener(template_error: str) -> None:
-        if not report_errors:
-            return
         connection.send_message(
             messages.event_message(msg["id"], {"error": template_error})
         )
 
-    log_fn = _error_listener if report_errors else None
+    @callback
+    def _thread_safe_error_listener(template_error: str) -> None:
+        hass.loop.call_soon_threadsafe(_error_listener, template_error)
 
     if timeout:
         try:
+            log_fn = _thread_safe_error_listener if report_errors else None
             timed_out = await template_obj.async_render_will_timeout(
                 timeout, variables, strict=msg["strict"], log_fn=log_fn
             )
@@ -571,6 +572,7 @@ async def handle_render_template(
         )
 
     try:
+        log_fn = _error_listener if report_errors else None
         info = async_track_template_result(
             hass,
             [TrackTemplate(template_obj, variables)],
