@@ -77,7 +77,7 @@ def async_dispatcher_connect(
         dispatchers[signal] = {}
 
     dispatchers[signal][target] = None
-    # Use a partial for the disconnect handler since it uses
+    # Use a partial for the remove since it uses
     # less memory than a full closure since a partial copies
     # the body of the function and we don't have to store
     # many different copies of the same function
