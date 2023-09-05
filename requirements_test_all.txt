@@ -921,6 +921,9 @@ mcstatus==11.0.0
 # homeassistant.components.meater
 meater-python==0.0.8
 
+# homeassistant.components.medcom_ble
+medcom-ble==0.1.1
+
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
 

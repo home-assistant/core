@@ -734,6 +734,8 @@ build.json @home-assistant/supervisor
 /tests/components/mazda/ @bdr99
 /homeassistant/components/meater/ @Sotolotl @emontnemery
 /tests/components/meater/ @Sotolotl @emontnemery
+/homeassistant/components/medcom_ble/ @elafargue
+/tests/components/medcom_ble/ @elafargue
 /homeassistant/components/media_extractor/ @joostlek
 /homeassistant/components/media_player/ @home-assistant/core
 /tests/components/media_player/ @home-assistant/core
