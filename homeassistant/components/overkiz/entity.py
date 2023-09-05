@@ -1,6 +1,7 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState
@@ -114,7 +115,12 @@ class OverkizDescriptiveEntity(OverkizEntity):
         """Initialize the device."""
         super().__init__(device_url, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
+
+        # Keep ids stable for pyoverkiz >= 1.10.1 where enums changed to StrEnum.
+        unique_id_ext = self.entity_description.key
+        if isinstance(unique_id_ext, StrEnum):
+            unique_id_ext = f"{unique_id_ext.__class__.__name__}.{unique_id_ext.name}"
+        self._attr_unique_id = f"{super().unique_id}-{unique_id_ext}"
 
         if self.is_sub_device:
             # In case of sub device, use the provided label
