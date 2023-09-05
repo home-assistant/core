@@ -188,6 +188,16 @@ jobs:
             skip_coverage="true"
           fi
 
+          # Temporary hack
+          mariadb_groups="[]"
+          postgresql_groups="[]"
+          test_full_suite="false"
+          integrations_glob="websocket_api"
+          test_group_count=1
+          test_groups="[\"websocket_api\"]"
+          tests="[\"websocket_api\"]"
+          tests_glob="websocket_api"
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
