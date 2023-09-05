@@ -44,6 +44,9 @@ Pillow==10.0.0
 # homeassistant.components.plex
 PlexAPI==4.13.2
 
+# homeassistant.components.progettihwsw
+ProgettiHWSW==0.1.3
+
 # homeassistant.components.cast
 PyChromecast==13.0.7
 
@@ -1101,9 +1104,6 @@ praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer-times-calculator==0.0.6
-
-# homeassistant.components.progettihwsw
-progettihwsw==0.1.3
 
 # homeassistant.components.prometheus
 prometheus-client==0.17.1
