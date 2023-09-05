@@ -17,7 +17,7 @@ class NeatoEntity(Entity):
     def __init__(self, robot: Robot) -> None:
         """Initialize Neato entity."""
         self.robot = robot
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(NEATO_DOMAIN, self.robot.serial)},
             name=self.robot.name,
         )
