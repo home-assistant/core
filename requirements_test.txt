@@ -33,6 +33,7 @@ requests_mock==1.11.0
 respx==0.20.2
 syrupy==4.2.1
 tqdm==4.66.1
+types-aiofiles==22.1.0
 types-atomicwrites==1.4.5.1
 types-croniter==1.0.6
 types-backports==0.1.3
