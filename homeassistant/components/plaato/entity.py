@@ -32,13 +32,15 @@ class PlaatoEntity(entity.Entity):
         self._device_name = data[DEVICE][DEVICE_NAME]
         self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
         self._attr_name = f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}".title()
-        sw_version = self._sensor_data.firmware_version
+        sw_version = None
+        if firmware := self._sensor_data.firmware_version:
+            sw_version = firmware
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             manufacturer="Plaato",
             model=self._device_type,
             name=self._device_name,
-            sw_version=sw_version if sw_version != "" else None,
+            sw_version=sw_version,
         )
 
     @property
