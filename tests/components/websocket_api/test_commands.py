@@ -1315,6 +1315,7 @@ async def test_render_template_with_error(
             assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
@@ -1376,6 +1377,7 @@ async def test_render_template_with_timeout_and_error(
             assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
@@ -1426,6 +1428,7 @@ async def test_render_template_strict_with_timeout_and_error(
             assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
@@ -1443,13 +1446,19 @@ async def test_render_template_error_in_template_code(
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
 
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
 async def test_render_template_with_delayed_error(
     hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test a template with an error that only happens after a state change."""
+    """Test a template with an error that only happens after a state change.
+
+    In this test report_errors is enabled.
+    """
+    caplog.set_level(logging.INFO)
     hass.states.async_set("sensor.test", "on")
     await hass.async_block_till_done()
 
@@ -1472,7 +1481,6 @@ async def test_render_template_with_delayed_error(
     await hass.async_block_till_done()
 
     msg = await websocket_client.receive_json()
-
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -1508,7 +1516,62 @@ async def test_render_template_with_delayed_error(
     event = msg["event"]
     assert event == {"error": "UndefinedError: 'explode' is undefined"}
 
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_with_delayed_error_2(
+    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a template with an error that only happens after a state change.
+
+    In this test report_errors is disabled.
+    """
+    hass.states.async_set("sensor.test", "on")
+    await hass.async_block_till_done()
+
+    template_str = """
+{% if states.sensor.test.state %}
+   on
+{% else %}
+   {{ explode + 1 }}
+{% endif %}
+    """
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template_str,
+            "report_errors": False,
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "on",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["sensor.test"],
+            "time": False,
+        },
+    }
+
+    assert "Template variable warning" in caplog.text
 
 
 async def test_render_template_with_timeout(
