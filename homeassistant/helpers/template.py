@@ -758,8 +758,6 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-        render_result = render_result.strip()
-
         if not parse_result or self.hass and self.hass.config.legacy_templates:
             return render_result
 
