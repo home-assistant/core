@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Awesome Light platform."""
     # Add devices
-    add_entities(
+    async_add_entities(
         [
             SwitchBotViaAPISwitch(device)
             for device in hass.data[DOMAIN][Platform.SWITCH]
