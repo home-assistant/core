@@ -2,12 +2,16 @@
 import asyncio
 from copy import deepcopy
 import datetime
+import logging
+import threading
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, loader
+from homeassistant.components import websocket_api
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
@@ -33,7 +37,11 @@ from tests.common import (
     async_mock_service,
     mock_platform,
 )
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -2159,3 +2167,42 @@ async def test_integration_descriptions(
 
     assert response["success"]
     assert response["result"]
+
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def test_unsafe_websocket_write(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a template with an error with a timeout."""
+    hass.loop.set_debug(True)
+    caplog.set_level(logging.DEBUG)
+
+    @websocket_api.decorators.websocket_command(
+        {
+            vol.Required("type"): "boom",
+        }
+    )
+    @websocket_api.decorators.async_response
+    async def handle_boom(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        class NaughtyThread(threading.Thread):
+            def run(self):
+                try:
+                    connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, "boom")
+                except Exception:
+                    _LOGGER.exception("Error")
+
+        worker = NaughtyThread()
+        worker.start()
+        worker.join()
+
+    websocket_api.async_register_command(hass, handle_boom)
+    await websocket_client.send_json({"id": 5, "type": "boom"})
+    await websocket_client.receive_json(timeout=2)
