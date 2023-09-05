@@ -1432,6 +1432,13 @@ def async_track_point_in_utc_time(
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
 
 
+def _run_async_call_action(
+    hass: HomeAssistant, job: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+) -> None:
+    """Run action."""
+    hass.async_run_hass_job(job, time_tracker_utcnow())
+
+
 @callback
 @bind_hass
 def async_call_at(
@@ -1441,26 +1448,12 @@ def async_call_at(
     loop_time: float,
 ) -> CALLBACK_TYPE:
     """Add a listener that is called at <loop_time>."""
-
-    @callback
-    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
-        """Call the action."""
-        hass.async_run_hass_job(job, time_tracker_utcnow())
-
     job = (
         action
         if isinstance(action, HassJob)
         else HassJob(action, f"call_at {loop_time}")
     )
-    cancel_callback = hass.loop.call_at(loop_time, run_action, job)
-
-    @callback
-    def unsub_call_later_listener() -> None:
-        """Cancel the call_later."""
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_call_later_listener
+    return hass.loop.call_at(loop_time, _run_async_call_action, hass, job).cancel
 
 
 @callback
@@ -1474,26 +1467,13 @@ def async_call_later(
     """Add a listener that is called in <delay>."""
     if isinstance(delay, timedelta):
         delay = delay.total_seconds()
-
-    @callback
-    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
-        """Call the action."""
-        hass.async_run_hass_job(job, time_tracker_utcnow())
-
     job = (
         action
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
-    cancel_callback = hass.loop.call_at(hass.loop.time() + delay, run_action, job)
-
-    @callback
-    def unsub_call_later_listener() -> None:
-        """Cancel the call_later."""
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_call_later_listener
+    loop = hass.loop
+    return loop.call_at(loop.time() + delay, _run_async_call_action, hass, job).cancel
 
 
 call_later = threaded_listener_factory(async_call_later)
