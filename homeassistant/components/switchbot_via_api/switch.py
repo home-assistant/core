@@ -47,11 +47,6 @@ class SwitchBotViaAPISwitch(SwitchbotViaAPIEntity, SwitchEntity):
         if isinstance(device, Device) and device.device_type.startswith("Plug"):
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._attr_is_on
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_command(CommonCommands.ON)
