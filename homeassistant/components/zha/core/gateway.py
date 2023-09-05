@@ -149,6 +149,12 @@ class ZHAGateway:
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
 
+        discovery.PROBE.initialize(self._hass)
+        discovery.GROUP_PROBE.initialize(self._hass)
+
+        self.ha_device_registry = dr.async_get(self._hass)
+        self.ha_entity_registry = er.async_get(self._hass)
+
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
@@ -191,12 +197,6 @@ class ZHAGateway:
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
-        discovery.PROBE.initialize(self._hass)
-        discovery.GROUP_PROBE.initialize(self._hass)
-
-        self.ha_device_registry = dr.async_get(self._hass)
-        self.ha_entity_registry = er.async_get(self._hass)
-
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
             config=app_config,
