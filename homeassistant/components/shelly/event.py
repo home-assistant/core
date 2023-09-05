@@ -1,6 +1,7 @@
 """Event for Shelly."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -18,7 +19,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import RPC_INPUTS_EVENTS_TYPES
 from .coordinator import ShellyRpcCoordinator, get_entry_data
-from .entity import RpcEntityDescription
 from .utils import (
     async_remove_shelly_entity,
     get_device_entry_gen,
@@ -29,14 +29,14 @@ from .utils import (
 
 
 @dataclass
-class RpcEventDescription(RpcEntityDescription, EventEntityDescription):
+class RpcEventDescription(EventEntityDescription):
     """Class to describe a RPC event."""
+
+    removal_condition: Callable[[dict, dict, str], bool] | None = None
 
 
 RPC_EVENT: Final = RpcEventDescription(
     key="input",
-    sub_key="state",
-    name="Input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
     removal_condition=lambda config, status, key: not is_rpc_momentary_input(
@@ -94,6 +94,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.coordinator.async_subscribe_input_events(self._async_handle_event)
 
     async def async_will_remove_from_hass(self) -> None:
