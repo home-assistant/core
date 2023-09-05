@@ -10,7 +10,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import Host
 from reolink_aio.enums import SubType
-from reolink_aio.exceptions import ReolinkError, SubscriptionError
+from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -97,7 +97,7 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
-        #self._onvif_supported = self._api.supported(None, "ONVIF")
+        self._onvif_supported = self._api.supported(None, "ONVIF")
 
         enable_rtsp = None
         enable_onvif = None
@@ -158,22 +158,27 @@ class ReolinkHost:
         self._unique_id = format_mac(self._api.mac_address)
 
         if self._onvif_supported:
-            await self.subscribe()
-
-            if self._api.supported(None, "initial_ONVIF_state"):
-                _LOGGER.debug(
-                    "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
-                )
+            try:
+                await self.subscribe()
+            except NotSupportedError:
+                self._onvif_supported = False
+                self.unregister_webhook()
+                await self._api.unsubscribe()
             else:
-                _LOGGER.debug(
-                    "Camera model %s most likely does not push its initial state"
-                    " upon ONVIF subscription, do not check",
-                    self._api.model,
+                if self._api.supported(None, "initial_ONVIF_state"):
+                    _LOGGER.debug(
+                        "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Camera model %s most likely does not push its initial state"
+                        " upon ONVIF subscription, do not check",
+                        self._api.model,
+                    )
+                self._cancel_onvif_check = async_call_later(
+                    self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
                 )
-            self._cancel_onvif_check = async_call_later(
-                self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
-            )
-        else:
+        if not self._onvif_supported:
             _LOGGER.debug(
                 "Camera model %s does not support ONVIF, using fast polling instead",
                 self._api.model,
