@@ -18,7 +18,7 @@ from . import init_integration, inject_rpc_device_event
 async def test_rpc_button(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
     """Test RPC device event."""
     await init_integration(hass, 2)
-    entity_id = "event.test_switch_0"
+    entity_id = "event.test_name_input_0"
     registry = async_get(hass)
 
     state = hass.states.get(entity_id)
