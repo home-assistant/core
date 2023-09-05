@@ -96,11 +96,9 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.coordinator.async_subscribe_input_events(self._async_handle_event)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """When entity will be removed from hass."""
-        self.coordinator.async_unsubscribe_input_events(self._async_handle_event)
+        self.async_on_remove(
+            self.coordinator.async_subscribe_input_events(self._async_handle_event)
+        )
 
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:

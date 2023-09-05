@@ -429,16 +429,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @callback
     def async_subscribe_input_events(
         self, input_event_callback: Callable[[dict[str, Any]], None]
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
         self._input_event_listeners.append(input_event_callback)
 
-    @callback
-    def async_unsubscribe_input_events(
-        self, input_event_callback: Callable[[dict[str, Any]], None]
-    ) -> None:
-        """Unsubscribe to input events."""
-        self._input_event_listeners.remove(input_event_callback)
+        return _unsubscribe
 
     @callback
     def async_subscribe_events(
