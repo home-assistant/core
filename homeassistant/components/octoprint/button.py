@@ -31,6 +31,8 @@ async def async_setup_entry(
             OctoprintResumeJobButton(coordinator, device_id, client),
             OctoprintPauseJobButton(coordinator, device_id, client),
             OctoprintStopJobButton(coordinator, device_id, client),
+            OctoprintConnectButton(coordinator, device_id, client),
+            OctoprintDisconnectButton(coordinator, device_id, client),
         ]
     )
 
@@ -39,6 +41,7 @@ class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonE
     """Represent an OctoPrint binary sensor."""
 
     client: OctoprintClient
+    ignore_state: bool | None
 
     def __init__(
         self,
@@ -46,10 +49,12 @@ class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonE
         button_type: str,
         device_id: str,
         client: OctoprintClient,
+        ignore_state: bool | None = None,
     ) -> None:
         """Initialize a new OctoPrint button."""
         super().__init__(coordinator)
         self.client = client
+        self.ignore_state = ignore_state
         self._device_id = device_id
         self._attr_name = f"OctoPrint {button_type}"
         self._attr_unique_id = f"{button_type}-{device_id}"
@@ -62,7 +67,9 @@ class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonE
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+        return self.ignore_state is True or (
+            self.coordinator.last_update_success and self.coordinator.data["printer"]
+        )
 
 
 class OctoprintPauseJobButton(OctoprintButton):
@@ -127,6 +134,42 @@ class OctoprintStopJobButton(OctoprintButton):
 
         if printer.state.flags.printing or printer.state.flags.paused:
             await self.client.cancel_job()
+
+
+class OctoprintConnectButton(OctoprintButton):
+    """Connect to printer."""
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(coordinator, "Connect to printer", device_id, client, True)
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.client.connect()
+
+
+class OctoprintDisconnectButton(OctoprintButton):
+    """Disconnect from printer."""
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(
+            coordinator, "Disconnect from printer", device_id, client, True
+        )
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        await self.client.disconnect()
 
 
 class InvalidPrinterState(HomeAssistantError):

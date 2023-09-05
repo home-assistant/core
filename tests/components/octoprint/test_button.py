@@ -192,3 +192,39 @@ async def test_stop_job(hass: HomeAssistant) -> None:
         )
 
         assert len(stop_command.mock_calls) == 0
+
+
+async def test_connect(hass: HomeAssistant) -> None:
+    """Test the connect button."""
+    await init_integration(hass, BUTTON_DOMAIN)
+
+    # Test connecting to the printer
+    with patch("pyoctoprintapi.OctoprintClient.connect") as connect_command:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.octoprint_connect_to_printer",
+            },
+            blocking=True,
+        )
+
+        assert len(connect_command.mock_calls) == 1
+
+
+async def test_disconnect(hass: HomeAssistant) -> None:
+    """Test the disconnect button."""
+    await init_integration(hass, BUTTON_DOMAIN)
+
+    # Test disconnecting the printer
+    with patch("pyoctoprintapi.OctoprintClient.disconnect") as disconnect_command:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.octoprint_disconnect_from_printer",
+            },
+            blocking=True,
+        )
+
+        assert len(disconnect_command.mock_calls) == 1
