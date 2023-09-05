@@ -310,6 +310,9 @@ class Thermostat(ClimateEntity):
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_min_humidity = DEFAULT_MIN_HUMIDITY
+    _attr_max_humidity = DEFAULT_MAX_HUMIDITY
+    _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
 
@@ -324,20 +327,19 @@ class Thermostat(ClimateEntity):
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
 
-        self._operation_list = []
+        self._attr_hvac_modes = []
         if self.settings["heatStages"] or self.settings["hasHeatPump"]:
-            self._operation_list.append(HVACMode.HEAT)
+            self._attr_hvac_modes.append(HVACMode.HEAT)
         if self.settings["coolStages"]:
-            self._operation_list.append(HVACMode.COOL)
-        if len(self._operation_list) == 2:
-            self._operation_list.insert(0, HVACMode.HEAT_COOL)
-        self._operation_list.append(HVACMode.OFF)
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        if len(self._attr_hvac_modes) == 2:
+            self._attr_hvac_modes.insert(0, HVACMode.HEAT_COOL)
+        self._attr_hvac_modes.append(HVACMode.OFF)
 
         self._preset_modes = {
             comfort["climateRef"]: comfort["name"]
             for comfort in self.thermostat["program"]["climates"]
         }
-        self._fan_modes = [FAN_AUTO, FAN_ON]
         self.update_without_throttle = False
 
     async def async_update(self) -> None:
@@ -433,16 +435,6 @@ class Thermostat(ClimateEntity):
         return None
 
     @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return DEFAULT_MIN_HUMIDITY
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return DEFAULT_MAX_HUMIDITY
-
-    @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -464,11 +456,6 @@ class Thermostat(ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         return self.thermostat["runtime"]["desiredFanMode"]
-
-    @property
-    def fan_modes(self):
-        """Return the available fan modes."""
-        return self._fan_modes
 
     @property
     def preset_mode(self):
@@ -497,11 +484,6 @@ class Thermostat(ClimateEntity):
     def hvac_mode(self):
         """Return current operation."""
         return ECOBEE_HVAC_TO_HASS[self.settings["hvacMode"]]
-
-    @property
-    def hvac_modes(self):
-        """Return the operation modes list."""
-        return self._operation_list
 
     @property
     def current_humidity(self) -> int | None:

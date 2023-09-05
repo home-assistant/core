@@ -35,7 +35,11 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    InvalidStateError,
+    NoEntitySpecifiedError,
+)
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
@@ -848,7 +852,15 @@ class Entity(ABC):
             self._context = None
             self._context_set = None
 
-        hass.states.async_set(entity_id, state, attr, self.force_update, self._context)
+        try:
+            hass.states.async_set(
+                entity_id, state, attr, self.force_update, self._context
+            )
+        except InvalidStateError:
+            _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
+            hass.states.async_set(
+                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
+            )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
