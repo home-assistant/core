@@ -643,35 +643,25 @@ class Template:
         self._exc_info = None
         finish_event = asyncio.Event()
 
-        # pylint: disable=hass-logger-capital, unnecessary-pass
-
         def _render_template() -> None:
-            _LOGGER.info("_render_template enter")
             assert self.hass is not None, "hass variable not set on template"
             try:
                 _render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
-                _LOGGER.exception("_render_template timeout")
                 pass
             except Exception:  # pylint: disable=broad-except
                 self._exc_info = sys.exc_info()
-                _LOGGER.exception("_render_template exception")
             finally:
                 run_callback_threadsafe(self.hass.loop, finish_event.set)
-            _LOGGER.info("_render_template leave")
 
         try:
-            _LOGGER.info("start render thread")
             template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
             async with asyncio.timeout(timeout):
-                _LOGGER.info("wait render thread")
                 await finish_event.wait()
-            _LOGGER.info("render thread done")
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except asyncio.TimeoutError:
-            _LOGGER.info("kill render thread")
             template_render_thread.raise_exc(TimeoutError)
             return True
         finally:

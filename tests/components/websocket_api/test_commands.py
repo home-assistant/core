@@ -1358,7 +1358,7 @@ async def test_render_template_with_timeout_and_error(
     expected_events: list[dict[str, str]],
 ) -> None:
     """Test a template with an error with a timeout."""
-    caplog.set_level(logging.DEBUG)
+    caplog.set_level(logging.INFO)
     await websocket_client.send_json(
         {
             "id": 5,
@@ -1370,13 +1370,13 @@ async def test_render_template_with_timeout_and_error(
     )
 
     for expected_event in expected_events:
-        msg = await websocket_client.receive_json(timeout=8)
+        msg = await websocket_client.receive_json()
         assert msg["id"] == 5
         for key, value in expected_event.items():
             assert msg[key] == value
 
-    # assert "Template variable error" not in caplog.text
-    # assert "TemplateError" not in caplog.text
+    assert "Template variable error" not in caplog.text
+    assert "TemplateError" not in caplog.text
 
 
 @pytest.mark.parametrize(

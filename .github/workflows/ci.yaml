@@ -188,16 +188,6 @@ jobs:
             skip_coverage="true"
           fi
 
-          # Temporary hack
-          mariadb_groups="[]"
-          postgresql_groups="[]"
-          test_full_suite="false"
-          integrations_glob="websocket_api"
-          test_group_count=1
-          test_groups="[\"websocket_api\"]"
-          tests="[\"websocket_api\"]"
-          tests_glob="websocket_api"
-
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
@@ -786,7 +776,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Run pytest (partially)
         if: needs.info.outputs.test_full_suite == 'false'
-        timeout-minutes: 1
+        timeout-minutes: 10
         id: pytest-partial
         shell: bash
         env:
@@ -809,8 +799,9 @@ jobs:
           fi
 
           python3 -X dev -m pytest \
-            -svv \
+            -qq \
             --timeout=9 \
+            -n auto \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
