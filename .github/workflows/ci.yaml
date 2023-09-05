@@ -786,7 +786,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Run pytest (partially)
         if: needs.info.outputs.test_full_suite == 'false'
-        timeout-minutes: 10
+        timeout-minutes: 1
         id: pytest-partial
         shell: bash
         env:
@@ -809,9 +809,8 @@ jobs:
           fi
 
           python3 -X dev -m pytest \
-            -vv \
+            -svv \
             --timeout=9 \
-            -n auto \
             ${cov_params[@]} \
             -o console_output_style=count \
             --durations=0 \
