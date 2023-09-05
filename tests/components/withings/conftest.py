@@ -49,8 +49,8 @@ TITLE = "henk"
 WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
 PERSON0 = new_profile_config(
-    "12345",
-    12345,
+    profile="12345",
+    user_id=12345,
     api_response_measure_get_meas=MeasureGetMeasResponse(
         measuregrps=(
             MeasureGetMeasGroup(

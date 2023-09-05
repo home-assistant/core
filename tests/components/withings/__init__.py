@@ -34,7 +34,7 @@ async def call_webhook(
     # Wait for remaining tasks to complete.
     await hass.async_block_till_done()
 
-    data = await resp.json()
+    data: dict[str, Any] = await resp.json()
     resp.close()
 
     return WebhookResponse(message=data["message"], message_code=data["code"])
