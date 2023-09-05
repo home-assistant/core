@@ -133,7 +133,7 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                     entity_id="select.homew_current_mode",
                     friendly_name="HomeW Current Mode",
                     unique_id="00:00:00:00:00:00_1_16_33",
-                    capabilities={"options": ["home", "sleep", "away"]},
+                    capabilities={"options": ["home", "sleep", "away", "vacation"]},
                     state="home",
                 ),
             ],

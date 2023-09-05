@@ -78,6 +78,14 @@ async def test_read_current_mode(hass: HomeAssistant, utcnow) -> None:
     )
     assert state.state == "away"
 
+    state = await ecobee_mode.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.VENDOR_ECOBEE_CURRENT_MODE: 3,
+        },
+    )
+    assert state.state == "vacation"
+
 
 async def test_write_current_mode(hass: HomeAssistant, utcnow) -> None:
     """Test can set a specific mode."""
