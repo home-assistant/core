@@ -23,20 +23,12 @@ class JuiceNetDevice(CoordinatorEntity):
         super().__init__(coordinator)
         self.device = device
         self.key = key
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self.device.id}-{self.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this JuiceNet Device."""
-        return DeviceInfo(
+        self._attr_unique_id = f"{device.id}-{key}"
+        self._attr_device_info = DeviceInfo(
             configuration_url=(
-                f"https://home.juice.net/Portal/Details?unitID={self.device.id}"
+                f"https://home.juice.net/Portal/Details?unitID={device.id}"
             ),
-            identifiers={(DOMAIN, self.device.id)},
+            identifiers={(DOMAIN, device.id)},
             manufacturer="JuiceNet",
-            name=self.device.name,
+            name=device.name,
         )
