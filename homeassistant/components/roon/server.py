@@ -39,10 +39,6 @@ class RoonServer:
         self._roon_name_by_id = {}
         self._id_by_roon_name = {}
 
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(self.update_listener)
-        )
-
     async def async_setup(self, tries=0):
         """Set up a roon server based on config parameters."""
 
@@ -96,21 +92,6 @@ class RoonServer:
         """
         self.stop_roon()
         return True
-
-    async def update_listener(self, hass, config_entry):
-        """Handle options update."""
-        volume_hook = self.config_entry.options.get(CONF_ENABLE_VOLUME_HOOKS, False)
-
-        if self.volume_hook == volume_hook:
-            return
-
-        self.volume_hook = volume_hook
-
-        if self.volume_hook:
-            _LOGGER.error("Enable hook %s", self.volume_hook)
-
-        else:
-            _LOGGER.error("Disable hook %s", self.volume_hook)
 
     @property
     def zones(self):
