@@ -100,7 +100,8 @@
         "state": {
           "away": "[%key:common::state::not_home%]",
           "home": "[%key:common::state::home%]",
-          "sleep": "Sleep"
+          "sleep": "Sleep",
+          "vacation": "Vacation"
         }
       }
     },

@@ -17,6 +17,7 @@ _ECOBEE_MODE_TO_TEXT = {
     0: "home",
     1: "sleep",
     2: "away",
+    3: "vacation",
 }
 _ECOBEE_MODE_TO_NUMBERS = {v: k for (k, v) in _ECOBEE_MODE_TO_TEXT.items()}
 
@@ -24,7 +25,7 @@ _ECOBEE_MODE_TO_NUMBERS = {v: k for (k, v) in _ECOBEE_MODE_TO_TEXT.items()}
 class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     """Represents a ecobee mode select entity."""
 
-    _attr_options = ["home", "sleep", "away"]
+    _attr_options = list(_ECOBEE_MODE_TO_TEXT.values())
     _attr_translation_key = "ecobee_mode"
 
     @property
