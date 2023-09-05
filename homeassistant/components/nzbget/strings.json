@@ -32,6 +32,48 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "article_cache": {
+        "name": "Article cache"
+      },
+      "average_speed": {
+        "name": "Average speed"
+      },
+      "download_paused": {
+        "name": "Download paused"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "size": {
+        "name": "Size"
+      },
+      "disk_free": {
+        "name": "Disk free"
+      },
+      "post_processing_jobs": {
+        "name": "Post processing jobs"
+      },
+      "post_processing_paused": {
+        "name": "Post processing paused"
+      },
+      "queue_size": {
+        "name": "Queue size"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "speed_limit": {
+        "name": "Speed limit"
+      }
+    },
+    "switch": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  },
   "services": {
     "pause": {
       "name": "[%key:common::action::pause%]",

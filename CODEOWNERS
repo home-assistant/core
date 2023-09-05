@@ -293,8 +293,6 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
 /tests/components/dsmr_reader/ @depl0y @glodenox
-/homeassistant/components/dunehd/ @bieniu
-/tests/components/dunehd/ @bieniu
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -356,8 +354,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
-/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
@@ -523,6 +521,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
 /tests/components/homeassistant_alerts/ @home-assistant/core
+/homeassistant/components/homeassistant_green/ @home-assistant/core
+/tests/components/homeassistant_green/ @home-assistant/core
 /homeassistant/components/homeassistant_hardware/ @home-assistant/core
 /tests/components/homeassistant_hardware/ @home-assistant/core
 /homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
@@ -707,6 +707,7 @@ build.json @home-assistant/supervisor
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
 /tests/components/logi_circle/ @evanjd
+/homeassistant/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
@@ -723,6 +724,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
+/homeassistant/components/matrix/ @PaarthShah
+/tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
 /homeassistant/components/mazda/ @bdr99
@@ -949,6 +952,8 @@ build.json @home-assistant/supervisor
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/private_ble_device/ @Jc2k
+/tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/profiler/ @bdraco
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet
@@ -1058,8 +1063,8 @@ build.json @home-assistant/supervisor
 /tests/components/rss_feed_template/ @home-assistant/core
 /homeassistant/components/rtsp_to_webrtc/ @allenporter
 /tests/components/rtsp_to_webrtc/ @allenporter
-/homeassistant/components/ruckus_unleashed/ @gabe565
-/tests/components/ruckus_unleashed/ @gabe565
+/homeassistant/components/ruckus_unleashed/ @gabe565 @lanrat
+/tests/components/ruckus_unleashed/ @gabe565 @lanrat
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1369,6 +1374,8 @@ build.json @home-assistant/supervisor
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
+/homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
+/tests/components/vodafone_station/ @paoloantinori @chemelli74
 /homeassistant/components/voip/ @balloob @synesthesiam
 /tests/components/voip/ @balloob @synesthesiam
 /homeassistant/components/volumio/ @OnFreund
