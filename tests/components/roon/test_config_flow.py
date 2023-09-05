@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.roon.const import DOMAIN
+from homeassistant.components.roon.const import CONF_ENABLE_VOLUME_HOOKS, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -252,3 +252,23 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_volume_hook_config_flag(hass: HomeAssistant) -> None:
+    """Test volume hook flag."""
+
+    CONFIG = {CONF_ENABLE_VOLUME_HOOKS: False}
+
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG)
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ENABLE_VOLUME_HOOKS: True}
+    )
+    assert result2["type"] == "create_entry"
+
+    assert config_entry.options[CONF_ENABLE_VOLUME_HOOKS]
