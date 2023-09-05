@@ -69,7 +69,6 @@ class RoonServer:
         self.volume_hook = self.config_entry.options.get(
             CONF_ENABLE_VOLUME_HOOKS, False
         )
-        _LOGGER.error("Volume_hook=%s", self.volume_hook)
 
         self.roonapi = await self.hass.async_add_executor_job(get_roon_api)
 
