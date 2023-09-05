@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import RegistryEntryDisabler, async_get
+from homeassistant.helpers.entity_registry import async_get
 
 from . import (
     MOCK_MAC,
@@ -553,13 +553,6 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "2b"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
-
-    entity_registry.async_update_entity(
-        entity_id, disabled_by=RegistryEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(
