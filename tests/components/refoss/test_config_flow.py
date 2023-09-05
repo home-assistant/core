@@ -1,32 +1,59 @@
 """Tests for the Refoss config flow."""
 from __future__ import annotations
 
-import pytest
-from refoss_ha.const import DOMAIN
-from refoss_ha.util import get_mac_address
+from typing import Final
+from unittest.mock import patch
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
+
+from tests.common import MockConfigEntry
+from tests.components.refoss.socket_server import SocketServerProtocol
+
+DOMAIN: Final = "refoss"
 
 
-@pytest.mark.skip
-async def test_user_flow(hass: HomeAssistant) -> None:
-    """Test  configuration if refoss not configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
+async def test_configured(hass: HomeAssistant):
+    """Test a successful config flow."""
+    with patch(
+        "homeassistant.components.refoss.config_flow.get_mac_address",
+        return_value="00:11:22:33:44:55",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-    )
-    await hass.async_block_till_done()
-    mac = get_mac_address()
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Refoss"
-    assert result2["data"] == {
-        CONF_MAC: mac,
-    }
+        with patch(
+            "homeassistant.components.refoss.util.SocketServerProtocol"
+        ) as mocksocketServerProtocol:
+            mocksocketServerProtocol.return_value = SocketServerProtocol()
+
+
+async def test_already_configured_abort(hass: HomeAssistant) -> None:
+    """test_already_configured_abort."""
+    with patch(
+        "homeassistant.components.refoss.config_flow.get_mac_address",
+        return_value="00:11:22:33:44:55",
+    ) as mock_mac:
+        mac = mock_mac.return_value
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=format_mac(mac),
+            data={
+                CONF_MAC: mac,
+            },
+            title="Refoss",
+        )
+        config_entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "already_configured"

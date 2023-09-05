@@ -29,7 +29,7 @@ class HomeAssistantRefossData(NamedTuple):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Async setup hass config entry."""
+    """Async setup  entry."""
     if not entry.data.get(CONF_MAC):
         LOGGER.debug(
             (
@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_manager=device_manager,
     )
 
-    # await hass.async_add_executor_job(device_manager.update_device_caches)
     await cleanup_device_registry(hass, device_manager)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
