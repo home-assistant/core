@@ -44,7 +44,6 @@ class Life360UpdateLocationButton(
     ) -> None:
         """Initialize a new Life360 Update Location button."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self._circle_id = circle_id
         self._member_id = member_id
         self._attr_unique_id = f"{member_id}-update-location"
