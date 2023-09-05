@@ -256,9 +256,15 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self.entity_description = description
 
         self.entity_id = f"sensor.picnic_{description.key}"
-        self._service_unique_id = config_entry.unique_id
 
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, cast(str, config_entry.unique_id))},
+            manufacturer="Picnic",
+            model=config_entry.unique_id,
+            name=f"Picnic: {coordinator.data[ADDRESS]}",
+        )
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -269,14 +275,3 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             else {}
         )
         return self.entity_description.value_fn(data_set)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, cast(str, self._service_unique_id))},
-            manufacturer="Picnic",
-            model=self._service_unique_id,
-            name=f"Picnic: {self.coordinator.data[ADDRESS]}",
-        )
