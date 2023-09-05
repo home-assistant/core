@@ -294,7 +294,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
         device_info = self._attr_device_info
-        assert device_info
         if self._robot_stats:
             device_info["manufacturer"] = self._robot_stats["battery"]["vendor"]
             device_info["model"] = self._robot_stats["model"]
