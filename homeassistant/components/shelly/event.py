@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -18,7 +19,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import RPC_INPUTS_EVENTS_TYPES
 from .coordinator import ShellyRpcCoordinator, get_entry_data
 from .entity import RpcEntityDescription
-from .utils import get_device_entry_gen, get_rpc_entity_name, get_rpc_key_instances
+from .utils import (
+    async_remove_shelly_entity,
+    get_device_entry_gen,
+    get_rpc_entity_name,
+    get_rpc_key_instances,
+    is_rpc_momentary_input,
+)
 
 
 @dataclass
@@ -32,6 +39,9 @@ RPC_EVENT: Final = RpcEventDescription(
     name="Input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
+    removal_condition=lambda config, status, key: not is_rpc_momentary_input(
+        config, status, key
+    ),
 )
 
 
@@ -49,7 +59,13 @@ async def async_setup_entry(
         key_instances = get_rpc_key_instances(coordinator.device.status, RPC_EVENT.key)
 
         for key in key_instances:
-            entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
+            if RPC_EVENT.removal_condition and RPC_EVENT.removal_condition(
+                coordinator.device.config, coordinator.device.status, key
+            ):
+                unique_id = f"{coordinator.mac}-{key}"
+                async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
+            else:
+                entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
 
         async_add_entities(entities)
 
