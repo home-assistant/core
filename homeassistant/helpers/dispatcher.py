@@ -121,17 +121,8 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     if (target_list := dispatchers.get(signal)) is None:
         return
 
-    run: list[HassJob[..., None | Coroutine[Any, Any, None]]] = []
-    for target, job in target_list.items():
+    for target, job in list(target_list.items()):
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-
-        # Run the jobs all at the end
-        # to ensure no jobs add more dispatchers
-        # which can result in the target_list
-        # changing size during iteration
-        run.append(job)
-
-    for job in run:
         hass.async_run_hass_job(job, *args)
