@@ -68,7 +68,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
-        self.key = key
+        self.input_index = int(key.split(":")[-1])
         self._attr_device_info = {
             "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
         }
@@ -87,6 +87,6 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
-        if event["component"] == self.key:
+        if event["id"] == self.input_index:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
