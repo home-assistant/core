@@ -77,8 +77,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         self.unit = pypck.lcn_defs.VarUnit.parse(
             config[CONF_DOMAIN_DATA][CONF_UNIT_OF_MEASUREMENT]
         )
-
-        self._value = None
+        self._attr_native_unit_of_measurement = cast(str, self.unit.value)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -92,16 +91,6 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.variable)
 
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the entity."""
-        return self._value
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return cast(str, self.unit.value)
-
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if (
@@ -110,7 +99,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         ):
             return
 
-        self._value = input_obj.get_value().to_var_unit(self.unit)
+        self._attr_native_value = input_obj.get_value().to_var_unit(self.unit)
         self.async_write_ha_state()
 
 
@@ -130,8 +119,6 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
                 config[CONF_DOMAIN_DATA][CONF_SOURCE]
             ]
 
-        self._value = None
-
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -144,19 +131,18 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.source)
 
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the entity."""
-        return self._value
-
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusLedsAndLogicOps):
             return
 
         if self.source in pypck.lcn_defs.LedPort:
-            self._value = input_obj.get_led_state(self.source.value).name.lower()
+            self._attr_native_value = input_obj.get_led_state(
+                self.source.value
+            ).name.lower()
         elif self.source in pypck.lcn_defs.LogicOpPort:
-            self._value = input_obj.get_logic_op_state(self.source.value).name.lower()
+            self._attr_native_value = input_obj.get_logic_op_state(
+                self.source.value
+            ).name.lower()
 
         self.async_write_ha_state()

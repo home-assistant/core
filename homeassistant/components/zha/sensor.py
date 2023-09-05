@@ -4,7 +4,6 @@ from __future__ import annotations
 import enum
 import functools
 import numbers
-import sys
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
@@ -229,7 +228,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> int | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -485,7 +484,7 @@ class SmartEnergyMetering(Sensor):
         if self._cluster_handler.device_type is not None:
             attrs["device_type"] = self._cluster_handler.device_type
         if (status := self._cluster_handler.status) is not None:
-            if isinstance(status, enum.IntFlag) and sys.version_info >= (3, 11):
+            if isinstance(status, enum.IntFlag):
                 attrs["status"] = str(
                     status.name if status.name is not None else status.value
                 )

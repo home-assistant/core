@@ -427,9 +427,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
         except json.JSONDecodeError as err:
-            _LOGGER.error(
-                "Error parsing response from dashboard: %s", err, exc_info=True
-            )
+            _LOGGER.exception("Error parsing response from dashboard: %s", err)
             return False
 
         self._noise_psk = noise_psk

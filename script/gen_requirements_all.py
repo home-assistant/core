@@ -9,9 +9,8 @@ from pathlib import Path
 import pkgutil
 import re
 import sys
-from typing import Any
-
 import tomllib
+from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration

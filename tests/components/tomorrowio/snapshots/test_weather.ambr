@@ -4,6 +4,8 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-03-07T11:00:00+00:00',
+      'dew_point': 12.8,
+      'humidity': 58,
       'precipitation': 0.0,
       'precipitation_probability': 0,
       'temperature': 45.9,
@@ -148,6 +150,8 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-03-07T11:00:00+00:00',
+      'dew_point': 12.8,
+      'humidity': 58,
       'precipitation': 0.0,
       'precipitation_probability': 0,
       'temperature': 45.9,
@@ -292,6 +296,8 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-03-07T17:48:00+00:00',
+      'dew_point': 12.8,
+      'humidity': 58,
       'precipitation': 0.0,
       'precipitation_probability': 0,
       'temperature': 44.1,
@@ -512,6 +518,8 @@
     dict({
       'condition': 'sunny',
       'datetime': '2021-03-07T17:48:00+00:00',
+      'dew_point': 12.8,
+      'humidity': 58,
       'precipitation': 0.0,
       'precipitation_probability': 0,
       'temperature': 44.1,
@@ -733,6 +741,8 @@
       dict({
         'condition': 'sunny',
         'datetime': '2021-03-07T11:00:00+00:00',
+        'dew_point': 12.8,
+        'humidity': 58,
         'precipitation': 0.0,
         'precipitation_probability': 0,
         'temperature': 45.9,
@@ -879,6 +889,8 @@
       dict({
         'condition': 'sunny',
         'datetime': '2021-03-07T17:48:00+00:00',
+        'dew_point': 12.8,
+        'humidity': 58,
         'precipitation': 0.0,
         'precipitation_probability': 0,
         'temperature': 44.1,
