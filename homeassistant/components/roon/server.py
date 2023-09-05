@@ -165,13 +165,13 @@ class RoonServer:
             return
 
         if value > 0:
-            roon_event = ROON_EVENT_VOLUME_UP
+            roon_event_type = ROON_EVENT_VOLUME_UP
         else:
-            roon_event = ROON_EVENT_VOLUME_DOWN
+            roon_event_type = ROON_EVENT_VOLUME_DOWN
 
         event_data = {
             "entity_id": control_key,
-            "type": roon_event,
+            "type": roon_event_type,
         }
         _LOGGER.error("Publishing Roon Event %s", event_data)
         self.hass.bus.async_fire(ROON_EVENT, event_data)
