@@ -90,7 +90,7 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         """Send disarm command."""
         try:
             await self.sync.async_arm(False)
-            await self.sync.refresh()
+            await self.sync.refresh(force=True)
             self.async_write_ha_state()
         except asyncio.TimeoutError:
             self._attr_available = False
@@ -99,7 +99,7 @@ class BlinkSyncModuleHA(AlarmControlPanelEntity):
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
-            await self.sync.refresh()
+            await self.sync.refresh(force=True)
             self.async_write_ha_state()
         except asyncio.TimeoutError:
             self._attr_available = False
