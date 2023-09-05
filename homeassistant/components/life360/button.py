@@ -48,16 +48,11 @@ class Life360UpdateLocationButton(
         self._circle_id = circle_id
         self._member_id = member_id
         self._attr_unique_id = f"{member_id}-update-location"
-
-        self._device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._member_id)},
             name=coordinator.data.members[member_id].name,
         )
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     async def async_press(self) -> None:
         """Handle the button press."""
