@@ -20,7 +20,7 @@ _LOGGER = getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Awesome Light platform."""
