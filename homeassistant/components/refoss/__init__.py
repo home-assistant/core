@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW
 from .util import get_refoss_socket_server
 
 PLATFORMS: Final = [
@@ -101,18 +101,6 @@ class DeviceListener(RefossDeviceListener):
         self.hass = hass
         self.device_manager = device_manager
         self.device_ids = device_ids
-
-    def update_device(self, device: BaseDevice) -> None:
-        """Update device status."""
-        if device.uuid in self.device_ids:
-            LOGGER.debug(
-                "Received update for device %s: %s",
-                device.uuid,
-                self.device_manager.base_device_map[device.uuid],
-            )
-            dispatcher_send(
-                self.hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}"
-            )
 
     def add_device(self, device: BaseDevice) -> None:
         """Add device."""
