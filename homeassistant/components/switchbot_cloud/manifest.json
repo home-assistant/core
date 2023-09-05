@@ -1,13 +1,13 @@
 {
-  "domain": "switchbot_via_api",
-  "name": "Switchbot via API",
+  "domain": "switchbot_cloud",
+  "name": "SwitchBot Cloud",
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.home-assistant.io/integrations/switchbot_via_api",
+  "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "loggers": ["switchbot_via_api"],
+  "loggers": ["switchbot_cloud"],
   "requirements": ["switchbot-api==1.0.1"],
   "ssdp": [],
   "zeroconf": []

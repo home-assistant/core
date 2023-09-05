@@ -1,14 +1,14 @@
-"""Test the Switchbot via API config flow."""
+"""Test the SwitchBot via API config flow."""
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.switchbot_via_api.config_flow import (
+from homeassistant.components.switchbot_cloud.config_flow import (
     CannotConnect,
     InvalidAuth,
 )
-from homeassistant.components.switchbot_via_api.const import DOMAIN, ENTRY_TITLE
+from homeassistant.components.switchbot_cloud.const import DOMAIN, ENTRY_TITLE
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.switchbot_via_api.config_flow.SwitchBotAPI.list_devices",
+        "homeassistant.components.switchbot_cloud.config_flow.SwitchBotAPI.list_devices",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.switchbot_via_api.config_flow.SwitchBotAPI.list_devices",
+        "homeassistant.components.switchbot_cloud.config_flow.SwitchBotAPI.list_devices",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -75,7 +75,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.switchbot_via_api.config_flow.SwitchBotAPI.list_devices",
+        "homeassistant.components.switchbot_cloud.config_flow.SwitchBotAPI.list_devices",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

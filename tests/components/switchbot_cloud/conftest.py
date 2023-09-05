@@ -1,4 +1,4 @@
-"""Common fixtures for the Switchbot via API tests."""
+"""Common fixtures for the SwitchBot via API tests."""
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -9,7 +9,7 @@ import pytest
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.switchbot_via_api.async_setup_entry",
+        "homeassistant.components.switchbot_cloud.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
