@@ -14,6 +14,7 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import (
+    CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
     URL_API,
@@ -195,15 +196,19 @@ class APIStatesView(HomeAssistantView):
         user: User = request["hass_user"]
         hass: HomeAssistant = request.app["hass"]
         if user.is_admin:
-            return self.json([state.as_dict() for state in hass.states.async_all()])
-        entity_perm = user.permissions.check_entity
-        return self.json(
-            [
-                state.as_dict()
+            states = (state.as_dict_json() for state in hass.states.async_all())
+        else:
+            entity_perm = user.permissions.check_entity
+            states = (
+                state.as_dict_json()
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, "read")
-            ]
+            )
+        response = web.Response(
+            body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
         )
+        response.enable_compression()
+        return response
 
 
 class APIEntityStateView(HomeAssistantView):
@@ -213,14 +218,18 @@ class APIEntityStateView(HomeAssistantView):
     name = "api:entity-state"
 
     @ha.callback
-    def get(self, request, entity_id):
+    def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Retrieve state of entity."""
-        user = request["hass_user"]
+        user: User = request["hass_user"]
+        hass: HomeAssistant = request.app["hass"]
         if not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized(entity_id=entity_id)
 
-        if state := request.app["hass"].states.get(entity_id):
-            return self.json(state)
+        if state := hass.states.get(entity_id):
+            return web.Response(
+                body=state.as_dict_json(),
+                content_type=CONTENT_TYPE_JSON,
+            )
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
     async def post(self, request, entity_id):

@@ -17,7 +17,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
@@ -44,7 +43,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
-from .util import attribute_equal, reduce_attribute
+from .util import reduce_attribute
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -116,7 +115,6 @@ class CoverGroup(GroupEntity, CoverEntity):
     _attr_is_opening: bool | None = False
     _attr_is_closing: bool | None = False
     _attr_current_cover_position: int | None = 100
-    _attr_assumed_state: bool = True
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a CoverGroup entity."""
@@ -251,8 +249,6 @@ class CoverGroup(GroupEntity, CoverEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
-        self._attr_assumed_state = False
-
         states = [
             state.state
             for entity_id in self._entity_ids
@@ -293,17 +289,11 @@ class CoverGroup(GroupEntity, CoverEntity):
         self._attr_current_cover_position = reduce_attribute(
             position_states, ATTR_CURRENT_POSITION
         )
-        self._attr_assumed_state |= not attribute_equal(
-            position_states, ATTR_CURRENT_POSITION
-        )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, ATTR_CURRENT_TILT_POSITION
-        )
-        self._attr_assumed_state |= not attribute_equal(
             tilt_states, ATTR_CURRENT_TILT_POSITION
         )
 
@@ -322,11 +312,3 @@ class CoverGroup(GroupEntity, CoverEntity):
         if self._tilts[KEY_POSITION]:
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
-
-        if not self._attr_assumed_state:
-            for entity_id in self._entity_ids:
-                if (state := self.hass.states.get(entity_id)) is None:
-                    continue
-                if state and state.attributes.get(ATTR_ASSUMED_STATE):
-                    self._attr_assumed_state = True
-                    break
