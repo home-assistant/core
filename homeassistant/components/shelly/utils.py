@@ -290,9 +290,9 @@ def get_rpc_input_name(device: RpcDevice, key: str) -> str:
     input_config = device.config[key]
 
     if input_name := input_config.get("name"):
-        return cast(str, input_name)
+        return f"{device.name} {input_name}"
 
-    return key.replace(":", " ").capitalize()
+    return f"{device.name} {key.replace(':', ' ').capitalize()}"
 
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:

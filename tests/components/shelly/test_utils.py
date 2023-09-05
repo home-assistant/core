@@ -213,14 +213,14 @@ async def test_get_rpc_channel_name(mock_rpc_device) -> None:
 
 async def test_get_rpc_input_name(mock_rpc_device, monkeypatch) -> None:
     """Test get RPC input name."""
-    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Input 0"
+    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Test name Input 0"
 
     monkeypatch.setitem(
         mock_rpc_device.config,
         "input:0",
-        {"id": 0, "type": "button", "name": "Test name"},
+        {"id": 0, "type": "button", "name": "Input name"},
     )
-    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Test name"
+    assert get_rpc_input_name(mock_rpc_device, "input:0") == "Test name Input name"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:
