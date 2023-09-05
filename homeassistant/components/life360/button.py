@@ -52,7 +52,6 @@ class Life360UpdateLocationButton(
             name=coordinator.data.members[member_id].name,
         )
 
-
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.coordinator.update_location(self._circle_id, self._member_id)
