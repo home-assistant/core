@@ -158,10 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 get_device_automation_triggers(dev),
             )
 
-    # Re-use the gateway object between ZHA reloads
-    if (zha_gateway := zha_data.get(DATA_ZHA_GATEWAY)) is None:
-        zha_gateway = ZHAGateway(hass, config, config_entry)
-
+    zha_gateway = ZHAGateway(hass, config, config_entry)
     config_entry.async_on_unload(zha_gateway.shutdown)
 
     try:
