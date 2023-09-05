@@ -162,6 +162,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if (zha_gateway := zha_data.get(DATA_ZHA_GATEWAY)) is None:
         zha_gateway = ZHAGateway(hass, config, config_entry)
 
+    config_entry.async_on_unload(zha_gateway.shutdown)
+
     try:
         await zha_gateway.async_initialize()
     except Exception:  # pylint: disable=broad-except
@@ -178,8 +180,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise
 
     repairs.async_delete_blocking_issues(hass)
-
-    config_entry.async_on_unload(zha_gateway.shutdown)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
