@@ -2038,7 +2038,7 @@ youless-api==1.0.1
 youtubeaio==1.1.5
 
 # homeassistant.components.zamg
-zamg==0.2.4
+zamg==0.3.0
 
 # homeassistant.components.zeroconf
 zeroconf==0.97.0
