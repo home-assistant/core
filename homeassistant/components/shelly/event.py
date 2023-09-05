@@ -29,13 +29,13 @@ from .utils import (
 
 
 @dataclass
-class RpcEventDescription(EventEntityDescription):
-    """Class to describe a RPC event."""
+class ShellyEventDescription(EventEntityDescription):
+    """Class to describe Shelly event."""
 
     removal_condition: Callable[[dict, dict, str], bool] | None = None
 
 
-RPC_EVENT: Final = RpcEventDescription(
+RPC_EVENT: Final = ShellyEventDescription(
     key="input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
@@ -71,16 +71,16 @@ async def async_setup_entry(
 
 
 class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
-    """Represent a RPC binary sensor entity."""
+    """Represent RPC event entity."""
 
     _attr_should_poll = False
-    entity_description: RpcEventDescription
+    entity_description: ShellyEventDescription
 
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
         key: str,
-        description: RpcEventDescription,
+        description: ShellyEventDescription,
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
