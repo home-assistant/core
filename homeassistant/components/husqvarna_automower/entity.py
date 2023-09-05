@@ -17,6 +17,7 @@ class AutomowerEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     """Defining the Automower Basic Entity."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, coordinator, idx) -> None:
         """Initialize AutomowerEntity."""
@@ -69,18 +70,3 @@ class AutomowerEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
             configuration_url=HUSQVARNA_URL,
             suggested_area="Garden",
         )
-
-    @property
-    def is_home(self):
-        """Return True if the mower is located at the charging station."""
-        if self.get_mower_attributes()["mower"]["activity"] in [
-            "PARKED_IN_CS",
-            "CHARGING",
-        ]:
-            return True
-        return False
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if the device is available."""
-        return False
