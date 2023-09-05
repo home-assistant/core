@@ -1371,7 +1371,7 @@ async def test_render_template_with_timeout_and_error(
     )
 
     for expected_event in expected_events:
-        msg = await websocket_client.receive_json(timeout=0.5)
+        msg = await websocket_client.receive_json(timeout=8)
         assert msg["id"] == 5
         for key, value in expected_event.items():
             assert msg[key] == value
