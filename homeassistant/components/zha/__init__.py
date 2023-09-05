@@ -176,6 +176,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.async_on_unload(async_zha_shutdown)
 
+    config_entry.async_on_unload(zha_gateway.shutdown)
+
     try:
         await zha_gateway.async_initialize()
     except Exception:  # pylint: disable=broad-except
