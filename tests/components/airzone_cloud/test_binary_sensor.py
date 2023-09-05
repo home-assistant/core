@@ -1,5 +1,7 @@
 """The binary sensor tests for the Airzone Cloud platform."""
 
+from aioairzone_cloud.const import API_OLD_ID
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -19,6 +21,16 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.bron_running")
     assert state.state == STATE_OFF
+
+    # Systems
+    state = hass.states.get("binary_sensor.system_1_problem")
+    assert state.state == STATE_ON
+    assert state.attributes.get("errors") == [
+        {
+            API_OLD_ID: "error-id",
+        },
+    ]
+    assert state.attributes.get("warnings") is None
 
     # Zones
     state = hass.states.get("binary_sensor.dormitorio_problem")

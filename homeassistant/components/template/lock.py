@@ -133,12 +133,13 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""

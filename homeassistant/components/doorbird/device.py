@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from doorbirdpy import DoorBird
 
@@ -131,7 +131,7 @@ class ConfiguredDoorBird:
 
         for fav_id in favs["http"]:
             if favs["http"][fav_id]["value"] == url:
-                return fav_id
+                return cast(str, fav_id)
 
         return None
 

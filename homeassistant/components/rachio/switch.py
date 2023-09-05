@@ -109,7 +109,6 @@ async def async_setup_entry(
             has_flex_sched = True
 
     async_add_entities(entities)
-    _LOGGER.debug("%d Rachio switch(es) added", len(entities))
 
     def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
@@ -173,7 +172,6 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
             entities.append(RachioZone(person, controller, zone, current_schedule))
         for sched in schedules + flex_schedules:
             entities.append(RachioSchedule(person, controller, sched, current_schedule))
-    _LOGGER.debug("Added %s", entities)
     return entities
 
 
@@ -184,11 +182,6 @@ class RachioSwitch(RachioDevice, SwitchEntity):
         """Initialize a new Rachio switch."""
         super().__init__(controller)
         self._state = None
-
-    @property
-    def name(self) -> str:
-        """Get a name for this switch."""
-        return f"Switch on {self._controller.name}"
 
     @property
     def is_on(self) -> bool:
@@ -213,20 +206,14 @@ class RachioSwitch(RachioDevice, SwitchEntity):
 class RachioStandbySwitch(RachioSwitch):
     """Representation of a standby status/button."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the standby switch."""
-        return f"{self._controller.name} in standby mode"
+    _attr_has_entity_name = True
+    _attr_translation_key = "standby"
+    _attr_icon = "mdi:power"
 
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and purpose."""
         return f"{self._controller.controller_id}-standby"
-
-    @property
-    def icon(self) -> str:
-        """Return an icon for the standby switch."""
-        return "mdi:power"
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -263,25 +250,19 @@ class RachioStandbySwitch(RachioSwitch):
 class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "rain_delay"
+    _attr_icon = "mdi:camera-timer"
+
     def __init__(self, controller):
         """Set up a Rachio rain delay switch."""
         self._cancel_update = None
         super().__init__(controller)
 
     @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._controller.name} rain delay"
-
-    @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and purpose."""
         return f"{self._controller.controller_id}-delay"
-
-    @property
-    def icon(self) -> str:
-        """Return an icon for rain delay."""
-        return "mdi:camera-timer"
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:

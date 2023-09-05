@@ -5,13 +5,12 @@ import logging
 from socket import timeout
 from typing import TYPE_CHECKING, Any
 
-from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
+from motionblinds import AsyncMotionMulticast, ParseException
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -27,8 +26,6 @@ from .const import (
     KEY_MULTICAST_LISTENER,
     KEY_SETUP_LOCK,
     KEY_UNSUB_STOP,
-    KEY_VERSION,
-    MANUFACTURER,
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_FAST,
@@ -183,31 +180,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    if motion_gateway.firmware is not None:
-        version = f"{motion_gateway.firmware}, protocol: {motion_gateway.protocol}"
-    else:
-        version = f"Protocol: {motion_gateway.protocol}"
-
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_GATEWAY: motion_gateway,
         KEY_COORDINATOR: coordinator,
-        KEY_VERSION: version,
     }
 
     if TYPE_CHECKING:
         assert entry.unique_id is not None
-
-    if motion_gateway.device_type not in DEVICE_TYPES_WIFI:
-        device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, motion_gateway.mac)},
-            identifiers={(DOMAIN, motion_gateway.mac)},
-            manufacturer=MANUFACTURER,
-            name=entry.title,
-            model="Wi-Fi bridge",
-            sw_version=version,
-        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -62,6 +62,7 @@ def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
+        entry_id="08d821dc059cf4f645cb024d32c8e708",
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.2",
