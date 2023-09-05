@@ -38,7 +38,6 @@ class Switch(CoilEntity, SwitchEntity):
     def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
-        self._attr_is_on = None
 
     def _async_read_coil(self, data: CoilData) -> None:
         self._attr_is_on = data.value == "ON"
