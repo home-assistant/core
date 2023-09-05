@@ -19,7 +19,6 @@ from .const import (
     CONF_ENABLE_VOLUME_HOOKS,
     CONF_ROON_ID,
     CONF_ROON_NAME,
-    CONF_VOLUME_HOOK_OFF,
     DEFAULT_NAME,
     DOMAIN,
     ROON_APPINFO,
@@ -36,7 +35,7 @@ DATA_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ENABLE_VOLUME_HOOKS, default=CONF_VOLUME_HOOK_OFF): bool,
+        vol.Optional(CONF_ENABLE_VOLUME_HOOKS, default=False): bool,
     }
 )
 
