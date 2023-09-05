@@ -1269,7 +1269,7 @@ def async_track_template_result(
         will raise the exception instead of setting up
         tracking.
     strict
-        When set to True, raise on undefined variables
+        When set to True, raise on undefined variables.
     log_fn
         If not None, template error messages will logging by calling log_fn
         instead of the normal logging facility.
