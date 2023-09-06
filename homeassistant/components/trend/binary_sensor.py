@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Mapping
 import logging
 import math
+from typing import Any
 
 import numpy as np
 import voluptuous as vol
@@ -152,7 +154,7 @@ class SensorTrend(BinarySensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
