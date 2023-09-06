@@ -96,9 +96,6 @@ class AlexaUnsupportedThermostatTargetStateError(AlexaError):
     namespace = "Alexa.ThermostatController"
     error_type = "INVALID_TARGET_STATE"
 
-    def __init__(self, msg: str) -> None:
-        """Initialize AlexaUnsupportedThermostatTargetStateError error."""
-        AlexaError.__init__(self, msg)
 
 
 class AlexaTempRangeError(AlexaError):
