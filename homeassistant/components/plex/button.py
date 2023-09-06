@@ -39,7 +39,7 @@ class PlexScanClientsButton(ButtonEntity):
         self._attr_name = f"Scan Clients ({server_name})"
         self._attr_unique_id = f"plex-scan_clients-{self.server_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.server_id)},
+            identifiers={(DOMAIN, server_id)},
             manufacturer="Plex",
         )
 
