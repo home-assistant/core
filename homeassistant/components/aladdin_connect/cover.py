@@ -10,7 +10,7 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError,PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
