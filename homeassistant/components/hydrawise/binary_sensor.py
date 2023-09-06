@@ -39,8 +39,8 @@ BINARY_SENSOR_KEYS: list[str] = [
     desc.key for desc in (BINARY_SENSOR_STATUS, *BINARY_SENSOR_TYPES)
 ]
 
-# Deprecated since Home Assistant 2023.9.0
-# Can be removed completely in 2024.3.0
+# Deprecated since Home Assistant 2023.10.0
+# Can be removed completely in 2024.4.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSOR_KEYS): vol.All(
