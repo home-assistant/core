@@ -7,8 +7,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     DOMAIN as WEATHER_DOMAIN,
-    CoordinatorWeatherEntity,
     Forecast,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -75,7 +75,7 @@ def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> st
 
 
 class MetEireannWeather(
-    CoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
+    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
 ):
     """Implementation of a Met Éireann weather condition."""
 
@@ -182,11 +182,13 @@ class MetEireannWeather(
         """Return the forecast array."""
         return self._forecast(self._hourly)
 
-    async def async_forecast_daily(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
-    async def async_forecast_hourly(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(True)
 

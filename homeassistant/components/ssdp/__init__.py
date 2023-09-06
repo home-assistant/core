@@ -153,7 +153,7 @@ async def async_register_callback(
 
 
 @bind_hass
-async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
+async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
 ) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
@@ -162,7 +162,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 
 
 @bind_hass
-async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
+async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
 ) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
@@ -575,7 +575,7 @@ class Scanner:
         info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(headers, info_desc)
 
-    async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
+    async def async_get_discovery_info_by_udn_st(
         self, udn: str, st: str
     ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
@@ -583,9 +583,7 @@ class Scanner:
             return await self._async_headers_to_discovery_info(headers)
         return None
 
-    async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
-        self, st: str
-    ) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(headers)

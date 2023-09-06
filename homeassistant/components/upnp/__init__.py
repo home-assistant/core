@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     udn = entry.data[CONFIG_ENTRY_UDN]
-    st = entry.data[CONFIG_ENTRY_ST]  # pylint: disable=invalid-name
+    st = entry.data[CONFIG_ENTRY_ST]
     usn = f"{udn}::{st}"
 
     # Register device discovered-callback.

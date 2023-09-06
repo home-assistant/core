@@ -6,13 +6,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
-    CoordinatorWeatherEntity,
     Forecast,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +23,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,6 +36,7 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
@@ -69,6 +71,7 @@ FORECAST_MAP = {
         ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
         ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
         ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+        ATTR_API_FORECAST_WIND_MAX_SPEED: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
         ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
     },
 }
@@ -110,7 +113,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorWeatherEntity[WeatherUpdateCoordinator]):
+class AemetWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -160,11 +163,13 @@ class AemetWeather(CoordinatorWeatherEntity[WeatherUpdateCoordinator]):
         """Return the forecast array."""
         return self._forecast(self._forecast_mode)
 
-    async def async_forecast_daily(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(FORECAST_MODE_DAILY)
 
-    async def async_forecast_hourly(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(FORECAST_MODE_HOURLY)
 

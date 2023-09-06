@@ -25,6 +25,7 @@ from aioairzone_cloud.const import (
     API_LOCAL_TEMP,
     API_META,
     API_NAME,
+    API_OLD_ID,
     API_STAT_AP_MAC,
     API_STAT_CHANNEL,
     API_STAT_QUALITY,
@@ -175,7 +176,11 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         }
     if device.get_id() == "system1":
         return {
-            API_ERRORS: [],
+            API_ERRORS: [
+                {
+                    API_OLD_ID: "error-id",
+                },
+            ],
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
             API_WARNINGS: [],

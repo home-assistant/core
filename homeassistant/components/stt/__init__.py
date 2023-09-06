@@ -40,12 +40,11 @@ from .const import (
 )
 from .legacy import (
     Provider,
-    SpeechMetadata,
-    SpeechResult,
     async_default_provider,
     async_get_provider,
     async_setup_legacy,
 )
+from .models import SpeechMetadata, SpeechResult
 
 __all__ = [
     "async_get_provider",
