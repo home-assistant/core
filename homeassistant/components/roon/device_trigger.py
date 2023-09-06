@@ -48,11 +48,6 @@ async def async_get_triggers(
     # Get all the integrations entities for this device
 
     for entry in er.async_entries_for_device(registry, device_id):
-        # I needed to change this from entry.domain - because the domain was 'media_player'
-        # Does this mean something else is being set wrongly in the roon integration?
-        # if entry.platform != DOMAIN:
-        #     continue
-
         base_trigger = {
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
