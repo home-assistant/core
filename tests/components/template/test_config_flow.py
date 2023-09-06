@@ -3,6 +3,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
@@ -257,6 +258,7 @@ async def test_options(
         "input_states",
         "template_states",
         "extra_attributes",
+        "listeners",
     ),
     (
         (
@@ -266,6 +268,7 @@ async def test_options(
             {"one": "on", "two": "off"},
             ["off", "on"],
             [{}, {}],
+            [["one", "two"], ["one"]],
         ),
         (
             "sensor",
@@ -274,6 +277,7 @@ async def test_options(
             {"one": "30.0", "two": "20.0"},
             ["unavailable", "50.0"],
             [{}, {}],
+            [["one"], ["one", "two"]],
         ),
     ),
 )
@@ -286,6 +290,7 @@ async def test_config_flow_preview(
     input_states: list[str],
     template_states: str,
     extra_attributes: list[dict[str, Any]],
+    listeners: list[list[str]],
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
@@ -323,6 +328,12 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
+            "time": False,
+        },
         "state": template_states[0],
     }
 
@@ -336,6 +347,12 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[1]]),
+            "time": False,
+        },
         "state": template_states[1],
     }
     assert len(hass.states.async_all()) == 2
@@ -526,6 +543,7 @@ async def test_config_flow_preview_bad_state(
         "input_states",
         "template_state",
         "extra_attributes",
+        "listeners",
     ),
     [
         (
@@ -537,6 +555,7 @@ async def test_config_flow_preview_bad_state(
             {"one": "on", "two": "off"},
             "off",
             {},
+            ["one", "two"],
         ),
         (
             "sensor",
@@ -547,6 +566,7 @@ async def test_config_flow_preview_bad_state(
             {"one": "30.0", "two": "20.0"},
             "10.0",
             {},
+            ["one", "two"],
         ),
     ],
 )
@@ -561,6 +581,7 @@ async def test_option_flow_preview(
     input_states: list[str],
     template_state: str,
     extra_attributes: dict[str, Any],
+    listeners: list[str],
 ) -> None:
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
@@ -608,6 +629,12 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": unordered([f"{template_type}.{_id}" for _id in listeners]),
+            "time": False,
+        },
         "state": template_state,
     }
     assert len(hass.states.async_all()) == 3
