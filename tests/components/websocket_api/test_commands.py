@@ -1235,10 +1235,7 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
 ERR_MSG = {"type": "result", "success": False}
 
 VARIABLE_ERROR_UNDEFINED_FUNC = {
-    "error": (
-        "Template variable error: 'my_unknown_func' is undefined "
-        "when rendering '{{ my_unknown_func() + 1 }}'"
-    ),
+    "error": "'my_unknown_func' is undefined",
     "level": "ERROR",
 }
 TEMPLATE_ERROR_UNDEFINED_FUNC = {
@@ -1247,10 +1244,7 @@ TEMPLATE_ERROR_UNDEFINED_FUNC = {
 }
 
 VARIABLE_WARNING_UNDEFINED_VAR = {
-    "error": (
-        "Template variable warning: 'my_unknown_var' is undefined "
-        "when rendering '{{ my_unknown_var }}'"
-    ),
+    "error": "'my_unknown_var' is undefined",
     "level": "WARNING",
 }
 TEMPLATE_ERROR_UNDEFINED_VAR = {
@@ -1512,9 +1506,7 @@ async def test_render_template_with_delayed_error(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event["error"].startswith(
-        "Template variable warning: 'None' has no attribute 'state'"
-    )
+    assert event["error"] == "'None' has no attribute 'state'"
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5

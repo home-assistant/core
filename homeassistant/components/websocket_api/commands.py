@@ -524,7 +524,7 @@ async def handle_render_template(
     timeout = msg.get("timeout")
 
     @callback
-    def _error_listener(template_error: str, level: int) -> None:
+    def _error_listener(level: int, template_error: str) -> None:
         connection.send_message(
             messages.event_message(
                 msg["id"],
@@ -533,8 +533,8 @@ async def handle_render_template(
         )
 
     @callback
-    def _thread_safe_error_listener(template_error: str, level: int) -> None:
-        hass.loop.call_soon_threadsafe(_error_listener, template_error, level)
+    def _thread_safe_error_listener(level: int, template_error: str) -> None:
+        hass.loop.call_soon_threadsafe(_error_listener, level, template_error)
 
     if timeout:
         try:

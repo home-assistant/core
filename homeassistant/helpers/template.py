@@ -476,7 +476,7 @@ class Template:
         self._exc_info: sys._OptExcInfo | None = None
         self._limited: bool | None = None
         self._strict: bool | None = None
-        self._log_fn: Callable[[str, int], None] | None = None
+        self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
 
@@ -542,7 +542,7 @@ class Template:
         parse_result: bool = True,
         limited: bool = False,
         strict: bool = False,
-        log_fn: Callable[[str, int], None] | None = None,
+        log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> Any:
         """Render given template.
@@ -614,7 +614,7 @@ class Template:
         timeout: float,
         variables: TemplateVarsType = None,
         strict: bool = False,
-        log_fn: Callable[[str, int], None] | None = None,
+        log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> bool:
         """Check to see if rendering a template will timeout during render.
@@ -674,7 +674,7 @@ class Template:
         self,
         variables: TemplateVarsType = None,
         strict: bool = False,
-        log_fn: Callable[[str, int], None] | None = None,
+        log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
@@ -759,7 +759,7 @@ class Template:
         self,
         limited: bool = False,
         strict: bool = False,
-        log_fn: Callable[[str, int], None] | None = None,
+        log_fn: Callable[[int, str], None] | None = None,
     ) -> jinja2.Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
@@ -2199,44 +2199,37 @@ def _render_with_context(
 
 
 def make_logging_undefined(
-    strict: bool | None, log_fn: Callable[[str, int], None] | None
+    strict: bool | None, log_fn: Callable[[int, str], None] | None
 ) -> type[jinja2.Undefined]:
     """Log on undefined variables."""
 
     if strict:
         return jinja2.StrictUndefined
 
-    if log_fn is None:
-        log_error = _LOGGER.error
-        log_warning = _LOGGER.warning
-    else:
-        # Mypy does not agree log_fn is not None here
-        log_error = lambda msg, *args: log_fn(msg % args, logging.ERROR)  # type: ignore[misc]
-        log_warning = lambda msg, *args: log_fn(msg % args, logging.WARNING)  # type: ignore[misc]
+    def _log_with_logger(level: int, msg: str) -> None:
+        template, action = template_cv.get() or ("", "rendering or compiling")
+        _LOGGER.log(
+            level,
+            "Template variable %s: %s when %s '%s'",
+            logging.getLevelName(level).lower(),
+            msg,
+            action,
+            template,
+        )
+
+    _log_fn = log_fn or _log_with_logger
 
     class LoggingUndefined(jinja2.Undefined):
         """Log on undefined variables."""
 
         def _log_message(self) -> None:
-            template, action = template_cv.get() or ("", "rendering or compiling")
-            log_warning(
-                "Template variable warning: %s when %s '%s'",
-                self._undefined_message,
-                action,
-                template,
-            )
+            _log_fn(logging.WARNING, self._undefined_message)
 
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
             except self._undefined_exception as ex:
-                template, action = template_cv.get() or ("", "rendering or compiling")
-                log_error(
-                    "Template variable error: %s when %s '%s'",
-                    self._undefined_message,
-                    action,
-                    template,
-                )
+                _log_fn(logging.ERROR, self._undefined_message)
                 raise ex
 
         def __str__(self) -> str:
@@ -2319,7 +2312,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         hass: HomeAssistant | None,
         limited: bool | None = False,
         strict: bool | None = False,
-        log_fn: Callable[[str, int], None] | None = None,
+        log_fn: Callable[[int, str], None] | None = None,
     ) -> None:
         """Initialise template environment."""
         super().__init__(undefined=make_logging_undefined(strict, log_fn))
