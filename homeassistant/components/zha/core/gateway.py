@@ -204,23 +204,6 @@ class ZHAGateway:
             start_radio=False,
         )
 
-        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-
-        self.async_load_devices()
-
-        # Groups are attached to the coordinator device so we need to load it early
-        coordinator = self._find_coordinator_device()
-        loaded_groups = False
-
-        # We can only load groups early if the coordinator's model info has been stored
-        # in the zigpy database
-        if coordinator.model is not None:
-            self.coordinator_zha_device = self._async_get_or_create_device(
-                coordinator, restored=True
-            )
-            self.async_load_groups()
-            loaded_groups = True
-
         for attempt in range(STARTUP_RETRIES):
             try:
                 await self.application_controller.startup(auto_form=True)
@@ -242,14 +225,15 @@ class ZHAGateway:
             else:
                 break
 
+        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
+        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
+
         self.coordinator_zha_device = self._async_get_or_create_device(
             self._find_coordinator_device(), restored=True
         )
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
 
-        # If ZHA groups could not load early, we can safely load them now
-        if not loaded_groups:
-            self.async_load_groups()
+        self.async_load_devices()
+        self.async_load_groups()
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
