@@ -60,16 +60,13 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = AutomowerEntity.get_mower_attributes(self)
-        if mower_attributes["mower"]["state"] in ["PAUSED"]:
-            activity = LawnMowerActivity.PAUSED
         if mower_attributes["mower"]["state"] in [
+            "PAUSED",
             "WAIT_UPDATING",
             "WAIT_POWER_UP",
         ]:
             activity = LawnMowerActivity.PAUSED
-        if mower_attributes["mower"]["activity"] in ["MOWING", "LEAVING"]:
-            activity = LawnMowerActivity.MOWING
-        if mower_attributes["mower"]["activity"] == "GOING_HOME":
+        if mower_attributes["mower"]["activity"] in ["MOWING", "LEAVING", "GOING_HOME"]:
             activity = LawnMowerActivity.MOWING
         if (mower_attributes["mower"]["state"] == "RESTRICTED") or (
             mower_attributes["mower"]["activity"] in ["PARKED_IN_CS", "CHARGING"]

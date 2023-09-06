@@ -2,16 +2,15 @@
 from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 import contextlib
 import logging
+from typing import cast
 
 import aioautomower
 
+from homeassistant.components.application_credentials import DATA_STORAGE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    async_get_config_entry_implementation,
-)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -23,15 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Husqvarna data."""
 
-    def __init__(self, hass: HomeAssistant, implementation, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
         )
-
-        api_key = implementation.client_id
+        api_key = None
+        ap_storage: dict = cast(dict, hass.data.get("application_credentials"))
+        ap_storage_data: dict = ap_storage[DATA_STORAGE].__dict__["data"]
+        for k in ap_storage_data:
+            api_key = ap_storage_data[k]["client_id"]
         entry_dict = entry.as_dict()
         access_token = entry_dict["data"]["token"]
         scope = entry_dict["data"]["token"]["scope"]
@@ -69,10 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    # implementation = await async_get_config_entry_implementation(hass, entry)
     coordinator = AutomowerDataUpdateCoordinator(
         hass,
-        implementation,
+        # implementation,
         entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
