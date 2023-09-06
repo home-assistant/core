@@ -272,12 +272,12 @@ async def test_options(
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["unavailable", "50.0"],
+            ["", "50.0"],
             [{}, {}],
-            [["one"], ["one", "two"]],
+            [["one", "two"], ["one", "two"]],
         ),
     ),
 )
