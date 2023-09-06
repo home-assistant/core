@@ -40,11 +40,11 @@ from .template_entity import TemplateEntity
 NONE_SENTINEL = "none"
 
 
-def generate_schema(domain: str) -> dict[vol.Marker, Any]:
+def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
 
-    if domain == Platform.BINARY_SENSOR:
+    if domain == Platform.BINARY_SENSOR and flow_type == "config":
         schema = {
             vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -124,7 +124,7 @@ def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
         {vol.Required(CONF_STATE): selector.TemplateSelector()}
-        | generate_schema(domain),
+        | generate_schema(domain, "option"),
     )
 
 
@@ -135,7 +135,7 @@ def config_schema(domain: str) -> vol.Schema:
             vol.Required(CONF_NAME): selector.TextSelector(),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
         }
-        | generate_schema(domain),
+        | generate_schema(domain, "config"),
     )
 
 
