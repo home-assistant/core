@@ -170,7 +170,7 @@ class ZhaRadioManager:
         try:
             yield app
         finally:
-            await app.disconnect()
+            await app.shutdown()
             await asyncio.sleep(CONNECT_DELAY_S)
 
     async def restore_backup(
