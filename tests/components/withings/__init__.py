@@ -1,5 +1,6 @@
 """Tests for the withings component."""
 from collections.abc import Iterable
+import json
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -17,7 +18,9 @@ from withings_api.common import (
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.core import HomeAssistant
 
-from .common import ProfileConfig, WebhookResponse
+from .common import WebhookResponse
+
+from tests.common import load_fixture
 
 
 async def call_webhook(
@@ -43,19 +46,21 @@ async def call_webhook(
 class MockWithings:
     """Mock object for Withings."""
 
-    def __init__(self, user_profile: ProfileConfig):
+    def __init__(
+        self,
+        device_fixture: str = "person0_get_device.json",
+        measurement_fixture: str = "person0_get_meas.json",
+        sleep_fixture: str = "person0_get_sleep.json",
+    ):
         """Initialize mock."""
-        self.api_response_user_get_device = user_profile.api_response_user_get_device
-        self.api_response_measure_get_meas = user_profile.api_response_measure_get_meas
-        self.api_response_sleep_get_summary = (
-            user_profile.api_response_sleep_get_summary
-        )
+        self.device_fixture = device_fixture
+        self.measurement_fixture = measurement_fixture
+        self.sleep_fixture = sleep_fixture
 
     def user_get_device(self) -> UserGetDeviceResponse:
         """Get devices."""
-        if isinstance(self.api_response_user_get_device, Exception):
-            raise self.api_response_user_get_device
-        return self.api_response_user_get_device
+        fixture = json.loads(load_fixture(f"withings/{self.device_fixture}"))
+        return UserGetDeviceResponse(**fixture)
 
     def measure_get_meas(
         self,
@@ -67,9 +72,8 @@ class MockWithings:
         lastupdate: DateType | None = None,
     ) -> MeasureGetMeasResponse:
         """Get measurements."""
-        if isinstance(self.api_response_measure_get_meas, Exception):
-            raise self.api_response_measure_get_meas
-        return self.api_response_measure_get_meas
+        fixture = json.loads(load_fixture(f"withings/{self.measurement_fixture}"))
+        return MeasureGetMeasResponse(**fixture)
 
     def sleep_get_summary(
         self,
@@ -80,6 +84,5 @@ class MockWithings:
         lastupdate: Optional[DateType] = arrow.utcnow(),
     ) -> SleepGetSummaryResponse:
         """Get sleep."""
-        if isinstance(self.api_response_sleep_get_summary, Exception):
-            raise self.api_response_sleep_get_summary
-        return self.api_response_sleep_get_summary
+        fixture = json.loads(load_fixture(f"withings/{self.sleep_fixture}"))
+        return SleepGetSummaryResponse(**fixture)
