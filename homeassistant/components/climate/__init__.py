@@ -242,7 +242,7 @@ class ClimateEntity(Entity):
         hvac_mode = self.hvac_mode
         if hvac_mode is None:
             return None
-        # Support hvac_mode as string for custom component backwards compatibility
+        # Support hvac_mode as string for custom integration backwards compatibility
         if not isinstance(hvac_mode, HVACMode):
             return HVACMode(hvac_mode).value  # type: ignore[unreachable]
         return hvac_mode.value
