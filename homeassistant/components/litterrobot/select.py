@@ -48,7 +48,7 @@ class RobotSelectEntityDescription(
 
 
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
-    LitterRobot: RobotSelectEntityDescription[LitterRobot, int](
+    LitterRobot: RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
         key="cycle_delay",
         translation_key="cycle_delay",
         icon="mdi:timer-outline",

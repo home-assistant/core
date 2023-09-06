@@ -45,13 +45,16 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         super().__init__(unit, coordinator)
         self._variable = variable
 
-        variable_name = {
-            "Air temp.": "Air Temperature",
-            "Cl free": "Free Chlorine",
-            "Water temp.": "Water Temperature",
-        }.get(self._variable.name, self._variable.name)
+        translation_key = {
+            "Air temp.": "air_temperature",
+            "Cl free": "free_chlorine",
+            "Water temp.": "water_temperature",
+        }.get(self._variable.name)
+        if translation_key is not None:
+            self._attr_translation_key = translation_key
+        else:
+            self._attr_name = self._variable.name
 
-        self._attr_name = f"{self._device_name} {variable_name}"
         self._attr_unique_id = f"{self._unit.serial_number}{self._variable.type}"
         self._attr_native_unit_of_measurement = self._variable.unit
 

@@ -43,6 +43,7 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
     """Shows if a station is open or closed."""
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
+    _attr_translation_key = "status"
 
     def __init__(
         self,
@@ -53,9 +54,6 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         """Initialize the sensor."""
         super().__init__(coordinator, station)
         self._station_id = station["id"]
-        self._attr_name = (
-            f"{station['brand']} {station['street']} {station['houseNumber']} status"
-        )
         self._attr_unique_id = f"{station['id']}_status"
         if show_on_map:
             self._attr_extra_state_attributes = {

@@ -97,6 +97,14 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("device", "neutralCurrent"): BlockSensorDescription(
+        key="device|neutralCurrent",
+        name="Neutral current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     ("light", "power"): BlockSensorDescription(
         key="light|power",
         name="Power",
@@ -303,6 +311,24 @@ SENSORS: Final = {
         icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
+    ),
+    ("valve", "valve"): BlockSensorDescription(
+        key="valve|valve",
+        name="Valve status",
+        translation_key="valve_status",
+        icon="mdi:valve",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "checking",
+            "closed",
+            "closing",
+            "failure",
+            "opened",
+            "opening",
+            "unknown",
+        ],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, block: block.valve == "not_connected",
     ),
 }
 

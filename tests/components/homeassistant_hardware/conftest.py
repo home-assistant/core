@@ -147,3 +147,21 @@ def start_addon_fixture():
         "homeassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon
+
+
+@pytest.fixture(name="stop_addon")
+def stop_addon_fixture():
+    """Mock stop add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_stop_addon"
+    ) as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def uninstall_addon_fixture():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon

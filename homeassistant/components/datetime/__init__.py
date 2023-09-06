@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import final
 
@@ -110,7 +110,7 @@ class DateTimeEntity(Entity):
                 "which is missing timezone information"
             )
 
-        return value.astimezone(timezone.utc).isoformat(timespec="seconds")
+        return value.astimezone(UTC).isoformat(timespec="seconds")
 
     @property
     def native_value(self) -> datetime | None:

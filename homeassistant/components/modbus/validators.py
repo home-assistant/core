@@ -155,6 +155,20 @@ def number_validator(value: Any) -> int | float:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
+def nan_validator(value: Any) -> int:
+    """Convert nan string to number (can be hex string or int)."""
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        pass
+    try:
+        return int(value, 16)
+    except (TypeError, ValueError) as err:
+        raise vol.Invalid(f"invalid number {value}") from err
+
+
 def scan_interval_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub in config:

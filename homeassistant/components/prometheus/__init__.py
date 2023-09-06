@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -44,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +54,7 @@ API_ENDPOINT = "/api/prometheus"
 
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
+CONF_REQUIRES_AUTH = "requires_auth"
 CONF_PROM_NAMESPACE = "namespace"
 CONF_COMPONENT_CONFIG = "component_config"
 CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
@@ -70,6 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
                 vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
+                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
                 vol.Optional(CONF_DEFAULT_METRIC): cv.string,
                 vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
                 vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
@@ -90,7 +94,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
-    hass.http.register_view(PrometheusView(prometheus_client))
+    hass.http.register_view(
+        PrometheusView(prometheus_client, config[DOMAIN][CONF_REQUIRES_AUTH])
+    )
 
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
@@ -114,10 +120,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         default_metric,
     )
 
-    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed)
+    hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_state_changed_event)
     hass.bus.listen(
         EVENT_ENTITY_REGISTRY_UPDATED, metrics.handle_entity_registry_updated
     )
+
+    for state in hass.states.all():
+        if entity_filter(state.entity_id):
+            metrics.handle_state(state)
+
     return True
 
 
@@ -143,6 +154,7 @@ class PrometheusMetrics:
         self._sensor_metric_handlers = [
             self._sensor_override_component_metric,
             self._sensor_override_metric,
+            self._sensor_timestamp_metric,
             self._sensor_attribute_metric,
             self._sensor_default_metric,
             self._sensor_fallback_metric,
@@ -155,22 +167,27 @@ class PrometheusMetrics:
         self._metrics = {}
         self._climate_units = climate_units
 
-    def handle_state_changed(self, event):
-        """Listen for new messages on the bus, and add them to Prometheus."""
+    def handle_state_changed_event(self, event):
+        """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
             return
 
-        entity_id = state.entity_id
-        _LOGGER.debug("Handling state update for %s", entity_id)
-        domain, _ = hacore.split_entity_id(entity_id)
-
         if not self._filter(state.entity_id):
+            _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
 
         if (old_state := event.data.get("old_state")) is not None and (
             old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
         ) != state.attributes.get(ATTR_FRIENDLY_NAME):
             self._remove_labelsets(old_state.entity_id, old_friendly_name)
+
+        self.handle_state(state)
+
+    def handle_state(self, state):
+        """Add/update a state in Prometheus."""
+        entity_id = state.entity_id
+        _LOGGER.debug("Handling state update for %s", entity_id)
+        domain, _ = hacore.split_entity_id(entity_id)
 
         ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
@@ -288,7 +305,10 @@ class PrometheusMetrics:
     def state_as_number(state):
         """Return a state casted to a float."""
         try:
-            value = state_helper.state_as_number(state)
+            if state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP:
+                value = as_timestamp(state.state)
+            else:
+                value = state_helper.state_as_number(state)
         except ValueError:
             _LOGGER.debug("Could not convert %s to float", state)
             value = 0
@@ -572,6 +592,14 @@ class PrometheusMetrics:
             return f"sensor_{metric}_{unit}"
         return None
 
+    @staticmethod
+    def _sensor_timestamp_metric(state, unit):
+        """Get metric for timestamp sensors, which have no unit of measurement attribute."""
+        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        if metric == SensorDeviceClass.TIMESTAMP:
+            return f"sensor_{metric}_seconds"
+        return None
+
     def _sensor_override_metric(self, state, unit):
         """Get metric from override in configuration."""
         if self._override_metric:
@@ -650,8 +678,9 @@ class PrometheusView(HomeAssistantView):
     url = API_ENDPOINT
     name = "api:prometheus"
 
-    def __init__(self, prometheus_cli):
+    def __init__(self, prometheus_cli, requires_auth: bool) -> None:
         """Initialize Prometheus view."""
+        self.requires_auth = requires_auth
         self.prometheus_cli = prometheus_cli
 
     async def get(self, request):
