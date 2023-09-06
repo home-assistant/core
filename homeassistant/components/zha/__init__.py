@@ -1,5 +1,6 @@
 """Support for Zigbee Home Automation devices."""
 import asyncio
+import contextlib
 import copy
 import logging
 import os
@@ -159,7 +160,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             )
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
-    config_entry.async_on_unload(zha_gateway.shutdown)
+
+    async def async_zha_shutdown():
+        """Handle shutdown tasks."""
+        await zha_gateway.shutdown()
+        # clean up any remaining entity metadata
+        # (entities that have been discovered but not yet added to HA)
+        # suppress KeyError because we don't know what state we may
+        # be in when we get here in failure cases
+        with contextlib.suppress(KeyError):
+            for platform in PLATFORMS:
+                del hass.data[DATA_ZHA][platform]
+
+    config_entry.async_on_unload(async_zha_shutdown)
 
     try:
         await zha_gateway.async_initialize()
