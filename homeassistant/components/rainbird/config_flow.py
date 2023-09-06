@@ -125,8 +125,9 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         options: dict[str, Any],
     ) -> FlowResult:
         """Create the config entry."""
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+        if serial_number:
+            await self.async_set_unique_id(serial_number)
+            self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=data[CONF_HOST],
             data=data,
