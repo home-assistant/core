@@ -29,7 +29,7 @@ MOCK_HOST = "fake_host"
 MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
-MOCK_FIRMWARE_AVAILABLE = "256.07.50"
+MOCK_FIRMWARE_AVAILABLE = "7.50"
 MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )
@@ -52,27 +52,8 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         },
     },
     "Hosts1": {
-        "GetGenericHostEntry": [
-            {
-                "NewIPAddress": MOCK_IPS["fritz.box"],
-                "NewAddressSource": "Static",
-                "NewLeaseTimeRemaining": 0,
-                "NewMACAddress": MOCK_MESH_MASTER_MAC,
-                "NewInterfaceType": "",
-                "NewActive": True,
-                "NewHostName": "fritz.box",
-            },
-            {
-                "NewIPAddress": MOCK_IPS["printer"],
-                "NewAddressSource": "DHCP",
-                "NewLeaseTimeRemaining": 0,
-                "NewMACAddress": "AA:BB:CC:00:11:22",
-                "NewInterfaceType": "Ethernet",
-                "NewActive": True,
-                "NewHostName": "printer",
-            },
-        ],
         "X_AVM-DE_GetMeshListPath": {},
+        "X_AVM-DE_GetHostListPath": {},
     },
     "LANEthernetInterfaceConfig1": {
         "GetStatistics": {
@@ -138,6 +119,7 @@ MOCK_FB_SERVICES: dict[str, dict] = {
             "NewUptime": 35307,
         },
         "GetExternalIPAddress": {"NewExternalIPAddress": "1.2.3.4"},
+        "X_AVM_DE_GetExternalIPv6Address": {"NewExternalIPv6Address": "fec0::1"},
     },
     "WANPPPConnection1": {
         "GetInfo": {
@@ -193,7 +175,6 @@ MOCK_FB_SERVICES: dict[str, dict] = {
         }
     },
 }
-
 
 MOCK_MESH_DATA = {
     "schema_version": "1.9",
@@ -783,6 +764,58 @@ MOCK_MESH_DATA = {
     ],
 }
 
+MOCK_HOST_ATTRIBUTES_DATA = [
+    {
+        "Index": 1,
+        "IPAddress": MOCK_IPS["printer"],
+        "MACAddress": "AA:BB:CC:00:11:22",
+        "Active": True,
+        "HostName": "printer",
+        "InterfaceType": "Ethernet",
+        "X_AVM-DE_Port": 1,
+        "X_AVM-DE_Speed": 1000,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": None,
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['printer']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "0",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "printer",
+        "X_AVM-DE_FriendlyNameIsWriteable": "1",
+    },
+    {
+        "Index": 2,
+        "IPAddress": MOCK_IPS["fritz.box"],
+        "MACAddress": MOCK_MESH_MASTER_MAC,
+        "Active": True,
+        "HostName": "fritz.box",
+        "InterfaceType": None,
+        "X_AVM-DE_Port": 0,
+        "X_AVM-DE_Speed": 0,
+        "X_AVM-DE_UpdateAvailable": False,
+        "X_AVM-DE_UpdateSuccessful": "unknown",
+        "X_AVM-DE_InfoURL": None,
+        "X_AVM-DE_MACAddressList": f"{MOCK_MESH_MASTER_MAC},{MOCK_MESH_MASTER_WIFI1_MAC}",
+        "X_AVM-DE_Model": None,
+        "X_AVM-DE_URL": f"http://{MOCK_IPS['fritz.box']}",
+        "X_AVM-DE_Guest": False,
+        "X_AVM-DE_RequestClient": "0",
+        "X_AVM-DE_VPN": False,
+        "X_AVM-DE_WANAccess": "granted",
+        "X_AVM-DE_Disallow": False,
+        "X_AVM-DE_IsMeshable": "1",
+        "X_AVM-DE_Priority": "0",
+        "X_AVM-DE_FriendlyName": "fritz.box",
+        "X_AVM-DE_FriendlyNameIsWriteable": "0",
+    },
+]
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_DEVICE_INFO = {

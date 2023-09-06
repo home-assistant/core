@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -42,7 +42,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the brunt platform."""
     bapi: BruntClientAsync = hass.data[DOMAIN][entry.entry_id][DATA_BAPI]
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][DATA_COOR]
+    coordinator: DataUpdateCoordinator[dict[str | None, Thing]] = hass.data[DOMAIN][
+        entry.entry_id
+    ][DATA_COOR]
 
     async_add_entities(
         BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
@@ -50,13 +52,18 @@ async def async_setup_entry(
     )
 
 
-class BruntDevice(CoordinatorEntity, CoverEntity):
-    """
-    Representation of a Brunt cover device.
+class BruntDevice(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str | None, Thing]]], CoverEntity
+):
+    """Representation of a Brunt cover device.
 
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = CoverDeviceClass.BLIND
+    _attr_attribution = ATTRIBUTION
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -65,8 +72,8 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        serial: str,
+        coordinator: DataUpdateCoordinator[dict[str | None, Thing]],
+        serial: str | None,
         thing: Thing,
         bapi: BruntClientAsync,
         entry_id: str,
@@ -80,12 +87,9 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         self._remove_update_listener = None
 
-        self._attr_name = self._thing.name
-        self._attr_device_class = CoverDeviceClass.BLIND
-        self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=self._attr_name,
+            identifiers={(DOMAIN, self._attr_unique_id)},  # type: ignore[arg-type]
+            name=self._thing.name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
             sw_version=self._thing.fw_version,
@@ -101,8 +105,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
+        """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
@@ -110,8 +113,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     @property
     def request_cover_position(self) -> int | None:
-        """
-        Return request position of cover.
+        """Return request position of cover.
 
         The request position is the position of the last request
         to Brunt, at times there is a diff of 1 to current
@@ -121,8 +123,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     @property
     def move_state(self) -> int | None:
-        """
-        Return current moving state of cover.
+        """Return current moving state of cover.
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """

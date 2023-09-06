@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | None:
     """Validate the configuration and return a Bbox scanner."""
     scanner = BboxDeviceScanner(config[DOMAIN])
 
@@ -42,7 +42,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 class BboxDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to the bbox."""
+    """Scanner for devices connected to the bbox."""
 
     def __init__(self, config):
         """Get host from config."""

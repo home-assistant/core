@@ -210,9 +210,10 @@ class AmcrestChecker(ApiWrapper):
         self, *args: Any, **kwargs: Any
     ) -> AsyncIterator[httpx.Response]:
         """amcrest.ApiWrapper.command wrapper to catch errors."""
-        async with self._async_command_wrapper():
-            async with super().async_stream_command(*args, **kwargs) as ret:
-                yield ret
+        async with self._async_command_wrapper(), super().async_stream_command(
+            *args, **kwargs
+        ) as ret:
+            yield ret
 
     @asynccontextmanager
     async def _async_command_wrapper(self) -> AsyncIterator[None]:
@@ -370,11 +371,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
             event_codes = {
-                sensor.event_code
+                event_code
                 for sensor in BINARY_SENSORS
                 if sensor.key in binary_sensors
                 and not sensor.should_poll
-                and sensor.event_code is not None
+                and sensor.event_codes is not None
+                for event_code in sensor.event_codes
             }
 
         _start_event_monitor(hass, name, api, event_codes)

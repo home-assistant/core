@@ -1,16 +1,16 @@
 {
   "domain": "wilight",
   "name": "WiLight",
+  "codeowners": ["@leofig-rj"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wilight",
-  "requirements": ["pywilight==0.0.70"],
+  "iot_class": "local_polling",
+  "loggers": ["pywilight"],
+  "quality_scale": "silver",
+  "requirements": ["pywilight==0.0.74"],
   "ssdp": [
     {
       "manufacturer": "All Automacao Ltda"
     }
-  ],
-  "codeowners": ["@leofig-rj"],
-  "quality_scale": "silver",
-  "iot_class": "local_polling",
-  "loggers": ["pywilight"]
+  ]
 }

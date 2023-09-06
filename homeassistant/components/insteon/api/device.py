@@ -1,5 +1,7 @@
 """API interface to get an Insteon device."""
 
+from typing import Any
+
 from pyinsteon import devices
 from pyinsteon.constants import DeviceAction
 import voluptuous as vol
@@ -41,9 +43,7 @@ def get_insteon_device_from_ha_device(ha_device):
 
 async def async_device_name(dev_registry, address):
     """Get the Insteon device name from a device registry id."""
-    ha_device = dev_registry.async_get_device(
-        identifiers={(DOMAIN, str(address))}, connections=set()
-    )
+    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
     if not ha_device:
         if device := devices[address]:
             return f"{device.description} ({device.model})"
@@ -66,7 +66,7 @@ def notify_device_not_found(connection, msg, text):
 async def websocket_get_device(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Get an Insteon device."""
     dev_registry = dr.async_get(hass)
@@ -98,7 +98,7 @@ async def websocket_get_device(
 async def websocket_add_device(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Add one or more Insteon devices."""
 
@@ -134,7 +134,7 @@ async def websocket_add_device(
 async def websocket_cancel_add_device(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Cancel the Insteon all-linking process."""
     await devices.async_cancel_all_linking()

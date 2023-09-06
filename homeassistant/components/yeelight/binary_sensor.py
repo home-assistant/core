@@ -28,7 +28,9 @@ async def async_setup_entry(
 class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
     """Representation of a Yeelight nightlight mode sensor."""
 
-    async def async_added_to_hass(self):
+    _attr_translation_key = "nightlight"
+
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -43,11 +45,6 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._unique_id}-nightlight_sensor"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._device.name} nightlight"
 
     @property
     def is_on(self):

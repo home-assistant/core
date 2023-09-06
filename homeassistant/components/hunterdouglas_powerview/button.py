@@ -7,10 +7,14 @@ from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ROOM_ID_IN_SHADE, ROOM_NAME_UNICODE
@@ -36,17 +40,23 @@ class PowerviewButtonDescription(
 BUTTONS: Final = [
     PowerviewButtonDescription(
         key="calibrate",
-        name="Calibrate",
+        translation_key="calibrate",
         icon="mdi:swap-vertical-circle-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.calibrate(),
     ),
     PowerviewButtonDescription(
         key="identify",
-        name="Identify",
-        icon="mdi:crosshairs-question",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.jog(),
+    ),
+    PowerviewButtonDescription(
+        key="favorite",
+        translation_key="favorite",
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade: shade.favorite(),
     ),
 ]
 
@@ -97,7 +107,6 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
         """Initialize the button entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description: PowerviewButtonDescription = description
-        self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     async def async_press(self) -> None:

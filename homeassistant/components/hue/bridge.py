@@ -10,7 +10,6 @@ import aiohttp
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
 from aiohue.errors import AiohueException, BridgeBusy
-import async_timeout
 
 from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -29,6 +28,7 @@ HUB_BUSY_SLEEP = 0.5
 PLATFORMS_v1 = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR]
 PLATFORMS_v2 = [
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SENSOR,
@@ -72,7 +72,7 @@ class HueBridge:
     async def async_initialize_bridge(self) -> bool:
         """Initialize Connection with the Hue API."""
         try:
-            with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 await self.api.initialize()
 
         except (LinkButtonNotPressed, Unauthorized):
@@ -100,7 +100,7 @@ class HueBridge:
         if self.api_version == 1:
             if self.api.sensors is not None:
                 self.sensor_manager = SensorManager(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v1
             )
 
@@ -108,7 +108,7 @@ class HueBridge:
         else:
             await async_setup_devices(self)
             await async_setup_hue_events(self)
-            self.hass.config_entries.async_setup_platforms(
+            await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v2
             )
 

@@ -1,28 +1,23 @@
-"""Support for ISY994 lights."""
+"""Support for ISY lights."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import Node
 
-from homeassistant.components.light import DOMAIN as LIGHT, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    _LOGGER,
-    CONF_RESTORE_LIGHT_STATE,
-    DOMAIN as ISY994_DOMAIN,
-    ISY994_NODES,
-    UOM_PERCENTAGE,
-)
+from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, UOM_PERCENTAGE
 from .entity import ISYNodeEntity
-from .helpers import migrate_old_unique_ids
-from .services import async_setup_light_services
+from .models import IsyData
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -30,58 +25,64 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the ISY994 light platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    """Set up the ISY light platform."""
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
     isy_options = entry.options
     restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
     entities = []
-    for node in hass_isy_data[ISY994_NODES][LIGHT]:
-        entities.append(ISYLightEntity(node, restore_light_state))
+    for node in isy_data.nodes[Platform.LIGHT]:
+        entities.append(
+            ISYLightEntity(node, restore_light_state, devices.get(node.primary_node))
+        )
 
-    await migrate_old_unique_ids(hass, LIGHT, entities)
     async_add_entities(entities)
-    async_setup_light_services(hass)
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
-    """Representation of an ISY994 light device."""
+    """Representation of an ISY light device."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, node: Node, restore_light_state: bool) -> None:
-        """Initialize the ISY994 light device."""
-        super().__init__(node)
+    def __init__(
+        self,
+        node: Node,
+        restore_light_state: bool,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
+        """Initialize the ISY light device."""
+        super().__init__(node, device_info=device_info)
         self._last_brightness: int | None = None
         self._restore_light_state = restore_light_state
 
     @property
     def is_on(self) -> bool:
-        """Get whether the ISY994 light is on."""
+        """Get whether the ISY light is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return False
         return int(self._node.status) != 0
 
     @property
     def brightness(self) -> int | None:
-        """Get the brightness of the ISY994 light."""
+        """Get the brightness of the ISY light."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if self._node.uom == UOM_PERCENTAGE:
-            return round(self._node.status * 255.0 / 100.0)
+            return round(cast(float, self._node.status) * 255.0 / 100.0)
         return int(self._node.status)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Send the turn off command to the ISY994 light device."""
+        """Send the turn off command to the ISY light device."""
         self._last_brightness = self.brightness
         if not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off light")
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
-        """Save brightness in the update event from the ISY994 Node."""
+        """Save brightness in the update event from the ISY Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
             self._last_brightness = self._node.status
             if self._node.uom == UOM_PERCENTAGE:
@@ -91,7 +92,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         super().async_on_update(event)
 
     async def async_turn_on(self, brightness: int | None = None, **kwargs: Any) -> None:
-        """Send the turn on command to the ISY994 light device."""
+        """Send the turn on command to the ISY light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:
             brightness = self._last_brightness
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
@@ -120,11 +121,3 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             and last_state.attributes[ATTR_LAST_BRIGHTNESS]
         ):
             self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]
-
-    async def async_set_on_level(self, value: int) -> None:
-        """Set the ON Level for a device."""
-        await self._node.set_on_level(value)
-
-    async def async_set_ramp_rate(self, value: int) -> None:
-        """Set the Ramp Rate for a device."""
-        await self._node.set_ramp_rate(value)

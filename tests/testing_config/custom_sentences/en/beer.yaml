@@ -1,0 +1,11 @@
+language: "en"
+intents:
+  OrderBeer:
+    data:
+      - sentences:
+          - "I'd like to order a {beer_style} [please]"
+lists:
+  beer_style:
+    values:
+      - "stout"
+      - "lager"

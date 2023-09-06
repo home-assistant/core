@@ -2,27 +2,24 @@
 
 from unittest.mock import patch
 
-from aiohttp import ClientSession
-
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    MOCK_FIRMWARE,
-    MOCK_FIRMWARE_AVAILABLE,
-    MOCK_FIRMWARE_RELEASE_URL,
-    MOCK_USER_DATA,
-)
+from .const import MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_update_entities_initialized(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
     """Test update entities."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -37,8 +34,11 @@ async def test_update_entities_initialized(
 
 
 async def test_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
     """Test update entities."""
 
     with patch(
@@ -55,14 +55,17 @@ async def test_update_available(
         update = hass.states.get("update.mock_title_fritz_os")
         assert update is not None
         assert update.state == "on"
-        assert update.attributes.get("installed_version") == MOCK_FIRMWARE
+        assert update.attributes.get("installed_version") == "7.29"
         assert update.attributes.get("latest_version") == MOCK_FIRMWARE_AVAILABLE
         assert update.attributes.get("release_url") == MOCK_FIRMWARE_RELEASE_URL
 
 
 async def test_no_update_available(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
     """Test update entities."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -75,13 +78,16 @@ async def test_no_update_available(
     update = hass.states.get("update.mock_title_fritz_os")
     assert update is not None
     assert update.state == "off"
-    assert update.attributes.get("installed_version") == MOCK_FIRMWARE
-    assert update.attributes.get("latest_version") == MOCK_FIRMWARE
+    assert update.attributes.get("installed_version") == "7.29"
+    assert update.attributes.get("latest_version") == "7.29"
 
 
 async def test_available_update_can_be_installed(
-    hass: HomeAssistant, hass_client: ClientSession, fc_class_mock, fh_class_mock
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
     """Test update entities."""
 
     with patch(
@@ -102,7 +108,7 @@ async def test_available_update_can_be_installed(
         assert update is not None
         assert update.state == "on"
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.mock_title_fritz_os"},

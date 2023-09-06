@@ -1,21 +1,21 @@
 """Tests for the diagnostics data provided by the Plugwise integration."""
 from unittest.mock import MagicMock
 
-from aiohttp import ClientSession
-
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_smile_adam: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""
+
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
@@ -40,10 +40,14 @@ async def test_diagnostics(
                 "name": "Zone Lisa Bios",
                 "zigbee_mac_address": "ABCD012345670A06",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 99.9,
-                "resolution": 0.01,
-                "preset_modes": ["home", "asleep", "away", "no_frost"],
+                "thermostat": {
+                    "setpoint": 13.0,
+                    "lower_bound": 0.0,
+                    "upper_bound": 99.9,
+                    "resolution": 0.01,
+                },
+                "available": True,
+                "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "away",
                 "available_schedules": [
                     "CV Roan",
@@ -52,7 +56,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "None",
+                "select_schedule": "None",
                 "last_used": "Badkamer Schema",
                 "mode": "heat",
                 "sensors": {"temperature": 16.5, "setpoint": 13.0, "battery": 67},
@@ -66,9 +70,7 @@ async def test_diagnostics(
                 "name": "Floor kraan",
                 "zigbee_mac_address": "ABCD012345670A02",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 100.0,
-                "resolution": 0.01,
+                "available": True,
                 "sensors": {
                     "temperature": 26.0,
                     "setpoint": 21.5,
@@ -85,9 +87,7 @@ async def test_diagnostics(
                 "name": "Bios Cv Thermostatic Radiator ",
                 "zigbee_mac_address": "ABCD012345670A09",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 100.0,
-                "resolution": 0.01,
+                "available": True,
                 "sensors": {
                     "temperature": 17.2,
                     "setpoint": 13.0,
@@ -105,10 +105,14 @@ async def test_diagnostics(
                 "name": "Zone Lisa WK",
                 "zigbee_mac_address": "ABCD012345670A07",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 99.9,
-                "resolution": 0.01,
-                "preset_modes": ["home", "asleep", "away", "no_frost"],
+                "thermostat": {
+                    "setpoint": 21.5,
+                    "lower_bound": 0.0,
+                    "upper_bound": 99.9,
+                    "resolution": 0.01,
+                },
+                "available": True,
+                "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "home",
                 "available_schedules": [
                     "CV Roan",
@@ -117,7 +121,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "GF7  Woonkamer",
+                "select_schedule": "GF7  Woonkamer",
                 "last_used": "GF7  Woonkamer",
                 "mode": "auto",
                 "sensors": {"temperature": 20.9, "setpoint": 21.5, "battery": 34},
@@ -128,12 +132,11 @@ async def test_diagnostics(
                 "hardware": "AME Smile 2.0 board",
                 "location": "1f9dcf83fd4e4b66b72ff787957bfe5d",
                 "mac_address": "012345670001",
-                "model": "Adam",
+                "model": "Gateway",
                 "name": "Adam",
                 "zigbee_mac_address": "ABCD012345670101",
-                "vendor": "Plugwise B.V.",
-                "regulation_mode": "heating",
-                "regulation_modes": [],
+                "vendor": "Plugwise",
+                "select_regulation_mode": "heating",
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },
@@ -146,9 +149,7 @@ async def test_diagnostics(
                 "name": "Thermostatic Radiator Jessie",
                 "zigbee_mac_address": "ABCD012345670A10",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 100.0,
-                "resolution": 0.01,
+                "available": True,
                 "sensors": {
                     "temperature": 17.1,
                     "setpoint": 15.0,
@@ -165,6 +166,7 @@ async def test_diagnostics(
                 "name": "Playstation Smart Plug",
                 "zigbee_mac_address": "ABCD012345670A12",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 82.6,
                     "electricity_consumed_interval": 8.6,
@@ -181,6 +183,7 @@ async def test_diagnostics(
                 "name": "CV Pomp",
                 "zigbee_mac_address": "ABCD012345670A05",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 35.6,
                     "electricity_consumed_interval": 7.37,
@@ -209,6 +212,7 @@ async def test_diagnostics(
                 "name": "NAS",
                 "zigbee_mac_address": "ABCD012345670A14",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 16.5,
                     "electricity_consumed_interval": 0.5,
@@ -225,6 +229,7 @@ async def test_diagnostics(
                 "name": "USG Smart Plug",
                 "zigbee_mac_address": "ABCD012345670A16",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 8.5,
                     "electricity_consumed_interval": 0.0,
@@ -241,6 +246,7 @@ async def test_diagnostics(
                 "name": "NVR",
                 "zigbee_mac_address": "ABCD012345670A15",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 34.0,
                     "electricity_consumed_interval": 9.15,
@@ -257,6 +263,7 @@ async def test_diagnostics(
                 "name": "Fibaro HC2",
                 "zigbee_mac_address": "ABCD012345670A13",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 12.5,
                     "electricity_consumed_interval": 3.8,
@@ -274,10 +281,14 @@ async def test_diagnostics(
                 "name": "Zone Thermostat Jessie",
                 "zigbee_mac_address": "ABCD012345670A03",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 99.9,
-                "resolution": 0.01,
-                "preset_modes": ["home", "asleep", "away", "no_frost"],
+                "thermostat": {
+                    "setpoint": 15.0,
+                    "lower_bound": 0.0,
+                    "upper_bound": 99.9,
+                    "resolution": 0.01,
+                },
+                "available": True,
+                "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "asleep",
                 "available_schedules": [
                     "CV Roan",
@@ -286,7 +297,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "CV Jessie",
+                "select_schedule": "CV Jessie",
                 "last_used": "CV Jessie",
                 "mode": "auto",
                 "sensors": {"temperature": 17.2, "setpoint": 15.0, "battery": 37},
@@ -300,9 +311,7 @@ async def test_diagnostics(
                 "name": "Thermostatic Radiator Badkamer",
                 "zigbee_mac_address": "ABCD012345670A17",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 100.0,
-                "resolution": 0.01,
+                "available": True,
                 "sensors": {
                     "temperature": 19.1,
                     "setpoint": 14.0,
@@ -320,10 +329,14 @@ async def test_diagnostics(
                 "name": "Zone Thermostat Badkamer",
                 "zigbee_mac_address": "ABCD012345670A08",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 99.9,
-                "resolution": 0.01,
-                "preset_modes": ["home", "asleep", "away", "no_frost"],
+                "thermostat": {
+                    "setpoint": 14.0,
+                    "lower_bound": 0.0,
+                    "upper_bound": 99.9,
+                    "resolution": 0.01,
+                },
+                "available": True,
+                "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "away",
                 "available_schedules": [
                     "CV Roan",
@@ -332,7 +345,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "Badkamer Schema",
+                "select_schedule": "Badkamer Schema",
                 "last_used": "Badkamer Schema",
                 "mode": "auto",
                 "sensors": {"temperature": 18.9, "setpoint": 14.0, "battery": 92},
@@ -345,6 +358,7 @@ async def test_diagnostics(
                 "name": "Ziggo Modem",
                 "zigbee_mac_address": "ABCD012345670A01",
                 "vendor": "Plugwise",
+                "available": True,
                 "sensors": {
                     "electricity_consumed": 12.2,
                     "electricity_consumed_interval": 2.97,
@@ -362,10 +376,14 @@ async def test_diagnostics(
                 "name": "CV Kraan Garage",
                 "zigbee_mac_address": "ABCD012345670A11",
                 "vendor": "Plugwise",
-                "lower_bound": 0.0,
-                "upper_bound": 100.0,
-                "resolution": 0.01,
-                "preset_modes": ["home", "asleep", "away", "no_frost"],
+                "thermostat": {
+                    "setpoint": 5.5,
+                    "lower_bound": 0.0,
+                    "upper_bound": 100.0,
+                    "resolution": 0.01,
+                },
+                "available": True,
+                "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
                 "active_preset": "no_frost",
                 "available_schedules": [
                     "CV Roan",
@@ -374,7 +392,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "None",
+                "select_schedule": "None",
                 "last_used": "Badkamer Schema",
                 "mode": "heat",
                 "sensors": {

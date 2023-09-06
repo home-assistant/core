@@ -13,10 +13,17 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .connection import HKDevice
+from .entity import HomeKitEntity
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
 # its consistent with homeassistant.components.homekit.
@@ -49,12 +56,31 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(self.on_characteristic) == 1
 
     @property
+    def _speed_range(self) -> tuple[int, int]:
+        """Return the speed range."""
+        return (self._min_speed, self._max_speed)
+
+    @property
+    def _min_speed(self) -> int:
+        """Return the minimum speed."""
+        return (
+            round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1
+        )
+
+    @property
+    def _max_speed(self) -> int:
+        """Return the minimum speed."""
+        return round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100)
+
+    @property
     def percentage(self) -> int:
         """Return the current speed percentage."""
         if not self.is_on:
             return 0
 
-        return self.service.value(CharacteristicsTypes.ROTATION_SPEED)
+        return ranged_value_to_percentage(
+            self._speed_range, self.service.value(CharacteristicsTypes.ROTATION_SPEED)
+        )
 
     @property
     def current_direction(self) -> str:
@@ -69,9 +95,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return oscillating == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = 0
+        features = FanEntityFeature(0)
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -88,7 +114,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     def speed_count(self) -> int:
         """Speed count for the fan."""
         return round(
-            min(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100, 100)
+            min(self._max_speed, 100)
             / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
         )
 
@@ -104,7 +130,11 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             return await self.async_turn_off()
 
         await self.async_put_characteristics(
-            {CharacteristicsTypes.ROTATION_SPEED: percentage}
+            {
+                CharacteristicsTypes.ROTATION_SPEED: round(
+                    percentage_to_ranged_value(self._speed_range, percentage)
+                )
+            }
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -129,7 +159,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             percentage is not None
             and self.supported_features & FanEntityFeature.SET_SPEED
         ):
-            characteristics[CharacteristicsTypes.ROTATION_SPEED] = percentage
+            characteristics[CharacteristicsTypes.ROTATION_SPEED] = round(
+                percentage_to_ranged_value(self._speed_range, percentage)
+            )
 
         if characteristics:
             await self.async_put_characteristics(characteristics)
@@ -163,15 +195,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit fans."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitEntity = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.FAN
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)

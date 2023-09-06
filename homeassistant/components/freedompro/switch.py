@@ -1,5 +1,6 @@
 """Support for Freedompro switch."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
@@ -8,43 +9,52 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Freedompro switch."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
-        if device["type"] == "switch" or device["type"] == "outlet"
+        if device["type"] in ("switch", "outlet")
     )
 
 
-class Device(CoordinatorEntity, SwitchEntity):
-    """Representation of an Freedompro switch."""
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SwitchEntity):
+    """Representation of a Freedompro switch."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro switch."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_is_on = False
 
@@ -70,26 +80,24 @@ class Device(CoordinatorEntity, SwitchEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to switch."""
         payload = {"on": True}
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to set off to switch."""
         payload = {"on": False}
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

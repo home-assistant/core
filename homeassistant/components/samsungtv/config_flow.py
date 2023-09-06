@@ -35,12 +35,9 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_MANUFACTURER,
     DOMAIN,
-    ENCRYPTED_WEBSOCKET_PORT,
-    LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_INVALID_PIN,
@@ -50,7 +47,6 @@ from .const import (
     SUCCESSFUL_RESULTS,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
-    WEBSOCKET_PORTS,
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
@@ -188,7 +184,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow(result)
         assert method is not None
         self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
-        return
 
     async def _async_get_device_info_and_method(
         self,
@@ -230,25 +225,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             self._mac = mac
         return True
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle configuration by yaml file."""
-        # We need to import even if we cannot validate
-        # since the TV may be off at startup
-        await self._async_set_name_host_from_input(user_input)
-        self._async_abort_entries_match({CONF_HOST: self._host})
-        port = user_input.get(CONF_PORT)
-        if port in WEBSOCKET_PORTS:
-            user_input[CONF_METHOD] = METHOD_WEBSOCKET
-        elif port == ENCRYPTED_WEBSOCKET_PORT:
-            user_input[CONF_METHOD] = METHOD_ENCRYPTED_WEBSOCKET
-        elif port == LEGACY_PORT:
-            user_input[CONF_METHOD] = METHOD_LEGACY
-        user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
-        return self.async_create_entry(
-            title=self._title,
-            data=user_input,
-        )
 
     async def _async_set_name_host_from_input(self, user_input: dict[str, Any]) -> None:
         try:
@@ -458,7 +434,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
+        self._manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
         self._abort_if_manufacturer_is_not_samsung()
 
         # Set defaults, in case they cannot be extracted from device_info
@@ -467,7 +443,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_get_and_check_device_info()
 
         # The UDN provided by the ssdp discovery doesn't always match the UDN
-        # from the device_info, used by the the other methods so we need to
+        # from the device_info, used by the other methods so we need to
         # ensure the device_info is loaded before setting the unique_id
         await self._async_set_unique_id_from_udn()
         self._async_update_and_abort_for_matching_unique_id()

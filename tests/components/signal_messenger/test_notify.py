@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.components.signal_messenger.conftest import (
+from .conftest import (
     CONTENT,
     MESSAGE,
     NUMBER_FROM,
@@ -72,9 +72,8 @@ def test_send_message_to_api_with_bad_data_throws_error(
     signal_requests_mock = signal_requests_mock_factory(False)
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ):
-        with pytest.raises(SignalCliRestApiError) as exc:
-            signal_notification_service.send_message(MESSAGE)
+    ), pytest.raises(SignalCliRestApiError) as exc:
+        signal_notification_service.send_message(MESSAGE)
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
@@ -90,10 +89,9 @@ def test_send_message_with_bad_data_throws_vol_error(
     """Test sending a message with bad data throws an error."""
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ):
-        with pytest.raises(vol.Invalid) as exc:
-            data = {"test": "test"}
-            signal_notification_service.send_message(MESSAGE, **{"data": data})
+    ), pytest.raises(vol.Invalid) as exc:
+        data = {"test": "test"}
+        signal_notification_service.send_message(MESSAGE, **{"data": data})
 
     assert "Sending signal message" in caplog.text
     assert "extra keys not allowed" in str(exc.value)
@@ -108,13 +106,12 @@ def test_send_message_with_attachment(
     signal_requests_mock = signal_requests_mock_factory()
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ):
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".png", prefix=os.path.basename(__file__)
-        ) as temp_file:
-            temp_file.write("attachment_data")
-            data = {"attachments": [temp_file.name]}
-            signal_notification_service.send_message(MESSAGE, **{"data": data})
+    ), tempfile.NamedTemporaryFile(
+        mode="w", suffix=".png", prefix=os.path.basename(__file__)
+    ) as temp_file:
+        temp_file.write("attachment_data")
+        data = {"attachments": [temp_file.name]}
+        signal_notification_service.send_message(MESSAGE, **{"data": data})
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called

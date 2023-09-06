@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from aioslimproto.client import PlayerState, SlimClient
 from aioslimproto.const import EventType, SlimEvent
@@ -13,23 +14,24 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
-    PlayerState.IDLE: STATE_IDLE,
-    PlayerState.PLAYING: STATE_PLAYING,
-    PlayerState.PAUSED: STATE_PAUSED,
+    PlayerState.STOPPED: MediaPlayerState.IDLE,
+    PlayerState.PLAYING: MediaPlayerState.PLAYING,
+    PlayerState.BUFFER_READY: MediaPlayerState.PLAYING,
+    PlayerState.BUFFERING: MediaPlayerState.PLAYING,
+    PlayerState.PAUSED: MediaPlayerState.PAUSED,
 }
 
 
@@ -45,9 +47,9 @@ async def async_setup_entry(
     async def async_add_player(player: SlimClient) -> None:
         """Add MediaPlayerEntity from SlimClient."""
         # we delay adding the player a small bit because the player name may be received
-        # just a bit after connect. This way we can create a device reg entry with the correct name
-        # the name will either be available within a few milliseconds after connect or not at all
-        # (its an optional data packet)
+        # just a bit after connect. This way we can create a device reg entry with the
+        # correct name the name will either be available within a few milliseconds after
+        # connect or not at all (its an optional data packet)
         for _ in range(10):
             if player.player_id not in player.name:
                 break
@@ -74,6 +76,7 @@ async def async_setup_entry(
 class SlimProtoPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from SlimProto Player."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -87,6 +90,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_name = None
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""
@@ -130,16 +134,15 @@ class SlimProtoPlayer(MediaPlayerEntity):
         return self.player.connected
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """Return current state."""
         if not self.player.powered:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         return STATE_MAPPING[self.player.state]
 
     @callback
     def update_attributes(self) -> None:
         """Handle player updates."""
-        self._attr_name = self.player.name
         self._attr_volume_level = self.player.volume_level / 100
         self._attr_media_position = self.player.elapsed_seconds
         self._attr_media_position_updated_at = utcnow()
@@ -175,7 +178,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         """Turn off device."""
         await self.player.power(False)
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs) -> None:
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         to_send_media_type: str | None = media_type
         # Handle media_source
@@ -193,7 +198,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         await self.player.play_url(media_id, mime_type=to_send_media_type)
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(

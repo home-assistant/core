@@ -1,15 +1,16 @@
 """Test zha siren."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
 import zigpy.profiles.zha as zha
+import zigpy.zcl
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.siren.const import (
+from homeassistant.components.siren import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
@@ -20,17 +21,18 @@ from homeassistant.components.zha.core.const import (
     WARNING_DEVICE_SOUND_MEDIUM,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
 def siren_platform_only():
-    """Only setup the siren and required base platforms to speed up tests."""
+    """Only set up the siren and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -63,12 +65,12 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
     return zha_device, zigpy_device.endpoints[1].ias_wd
 
 
-async def test_siren(hass, siren):
+async def test_siren(hass: HomeAssistant, siren) -> None:
     """Test zha siren platform."""
 
     zha_device, cluster = siren
     assert cluster is not None
-    entity_id = await find_entity_id(Platform.SIREN, zha_device, hass)
+    entity_id = find_entity_id(Platform.SIREN, zha_device, hass)
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -84,48 +86,76 @@ async def test_siren(hass, siren):
 
     # turn on from HA
     with patch(
+        "zigpy.device.Device.request",
+        return_value=[0x00, zcl_f.Status.SUCCESS],
+    ), patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        side_effect=zigpy.zcl.Cluster.request,
+        autospec=True,
     ):
         # turn on via UI
         await hass.services.async_call(
             SIREN_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
-        assert len(cluster.request.mock_calls) == 1
-        assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == 0
-        assert cluster.request.call_args[0][3] == 50  # bitmask for default args
-        assert cluster.request.call_args[0][4] == 5  # duration in seconds
-        assert cluster.request.call_args[0][5] == 0
-        assert cluster.request.call_args[0][6] == 2
+        assert cluster.request.mock_calls == [
+            call(
+                cluster,
+                False,
+                0,
+                ANY,
+                50,  # bitmask for default args
+                5,  # duration in seconds
+                0,
+                2,
+                manufacturer=None,
+                expect_reply=True,
+                tsn=None,
+            )
+        ]
 
     # test that the state has changed to on
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off from HA
     with patch(
+        "zigpy.device.Device.request",
+        return_value=[0x01, zcl_f.Status.SUCCESS],
+    ), patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),
+        side_effect=zigpy.zcl.Cluster.request,
+        autospec=True,
     ):
         # turn off via UI
         await hass.services.async_call(
             SIREN_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
-        assert len(cluster.request.mock_calls) == 1
-        assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == 0
-        assert cluster.request.call_args[0][3] == 2  # bitmask for default args
-        assert cluster.request.call_args[0][4] == 5  # duration in seconds
-        assert cluster.request.call_args[0][5] == 0
-        assert cluster.request.call_args[0][6] == 2
+        assert cluster.request.mock_calls == [
+            call(
+                cluster,
+                False,
+                0,
+                ANY,
+                2,  # bitmask for default args
+                5,  # duration in seconds
+                0,
+                2,
+                manufacturer=None,
+                expect_reply=True,
+                tsn=None,
+            )
+        ]
 
     # test that the state has changed to off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
     with patch(
+        "zigpy.device.Device.request",
+        return_value=[0x00, zcl_f.Status.SUCCESS],
+    ), patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        side_effect=zigpy.zcl.Cluster.request,
+        autospec=True,
     ):
         # turn on via UI
         await hass.services.async_call(
@@ -139,14 +169,21 @@ async def test_siren(hass, siren):
             },
             blocking=True,
         )
-        assert len(cluster.request.mock_calls) == 1
-        assert cluster.request.call_args[0][0] is False
-        assert cluster.request.call_args[0][1] == 0
-        assert cluster.request.call_args[0][3] == 97  # bitmask for passed args
-        assert cluster.request.call_args[0][4] == 10  # duration in seconds
-        assert cluster.request.call_args[0][5] == 0
-        assert cluster.request.call_args[0][6] == 2
-
+        assert cluster.request.mock_calls == [
+            call(
+                cluster,
+                False,
+                0,
+                ANY,
+                97,  # bitmask for passed args
+                10,  # duration in seconds
+                0,
+                2,
+                manufacturer=None,
+                expect_reply=True,
+                tsn=None,
+            )
+        ]
         # test that the state has changed to on
     assert hass.states.get(entity_id).state == STATE_ON
 

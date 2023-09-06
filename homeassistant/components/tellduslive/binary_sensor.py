@@ -1,11 +1,12 @@
 """Support for binary sensors using Tellstick Net."""
-from homeassistant.components import binary_sensor, tellduslive
+from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import tellduslive
 from .entry import TelldusLiveEntity
 
 
@@ -32,6 +33,8 @@ async def async_setup_entry(
 
 class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     """Representation of a Tellstick sensor."""
+
+    _attr_name = None
 
     @property
     def is_on(self):

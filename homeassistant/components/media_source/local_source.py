@@ -5,16 +5,16 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.http import require_admin
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
@@ -38,7 +38,7 @@ def async_setup(hass: HomeAssistant) -> None:
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
-    name: str = "Local Media"
+    name: str = "My media"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize local source."""
@@ -48,7 +48,10 @@ class LocalSource(MediaSource):
     @callback
     def async_full_path(self, source_dir_id: str, location: str) -> Path:
         """Return full path."""
-        return Path(self.hass.config.media_dirs[source_dir_id], location)
+        base_path = self.hass.config.media_dirs[source_dir_id]
+        full_path = Path(base_path, location)
+        full_path.relative_to(base_path)
+        return full_path
 
     @callback
     def async_parse_identifier(self, item: MediaSourceItem) -> tuple[str, str]:
@@ -64,6 +67,9 @@ class LocalSource(MediaSource):
             raise_if_invalid_path(location)
         except ValueError as err:
             raise Unresolvable("Invalid path.") from err
+
+        if Path(location).is_absolute():
+            raise Unresolvable("Invalid path.")
 
         return source_dir_id, location
 
@@ -109,12 +115,12 @@ class LocalSource(MediaSource):
             base = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier="",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_type=None,
                 title=self.name,
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_DIRECTORY,
+                children_media_class=MediaClass.DIRECTORY,
             )
 
             base.children = [
@@ -158,10 +164,10 @@ class LocalSource(MediaSource):
 
         title = path.name
 
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         if mime_type:
             media_class = MEDIA_CLASS_MAP.get(
-                mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+                mime_type.split("/")[0], MediaClass.DIRECTORY
             )
 
         media = BrowseMediaSource(
@@ -192,8 +198,7 @@ class LocalSource(MediaSource):
 
 
 class LocalMediaView(http.HomeAssistantView):
-    """
-    Local Media Finder View.
+    """Local Media Finder View.
 
     Returns media files in config/media.
     """
@@ -249,11 +254,9 @@ class UploadMediaView(http.HomeAssistantView):
             }
         )
 
+    @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         # Increase max payload
         request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
 
@@ -324,7 +327,7 @@ class UploadMediaView(http.HomeAssistantView):
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_remove_media(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Remove media."""
     try:

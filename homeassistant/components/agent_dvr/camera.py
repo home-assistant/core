@@ -7,9 +7,8 @@ from agent import AgentError
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -70,13 +69,16 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
         self._removed = False
-        self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
         super().__init__(
             name=device.name,
@@ -87,11 +89,11 @@ class AgentCamera(MjpegCamera):
             identifiers={(AGENT_DOMAIN, self.unique_id)},
             manufacturer="Agent",
             model="Camera",
-            name=self.name,
+            name=f"{device.client.name} {device.name}",
             sw_version=device.client.version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update our state from the Agent API."""
         try:
             await self.device.update()
@@ -108,7 +110,6 @@ class AgentCamera(MjpegCamera):
             self._attr_icon = "mdi:camcorder"
         self._attr_available = self.device.client.is_available
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
             "enabled": self.is_on,
             "connected": self.connected,
@@ -117,11 +118,6 @@ class AgentCamera(MjpegCamera):
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }
-
-    @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
 
     @property
     def is_recording(self) -> bool:
@@ -149,7 +145,7 @@ class AgentCamera(MjpegCamera):
         return self.device.online
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self.device.detector_active
 
@@ -161,11 +157,11 @@ class AgentCamera(MjpegCamera):
         """Disable alerts."""
         await self.device.alerts_off()
 
-    async def async_enable_motion_detection(self):
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection."""
         await self.device.detector_on()
 
-    async def async_disable_motion_detection(self):
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection."""
         await self.device.detector_off()
 
@@ -177,7 +173,7 @@ class AgentCamera(MjpegCamera):
         """Stop recording."""
         await self.device.record_stop()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Enable the camera."""
         await self.device.enable()
 
@@ -185,6 +181,6 @@ class AgentCamera(MjpegCamera):
         """Take a snapshot."""
         await self.device.snapshot()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Disable the camera."""
         await self.device.disable()

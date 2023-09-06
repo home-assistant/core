@@ -1,0 +1,6 @@
+{
+  "domain": "digital_loggers",
+  "name": "Digital Loggers",
+  "integration_type": "virtual",
+  "supported_by": "wemo"
+}

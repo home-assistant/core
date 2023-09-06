@@ -1,7 +1,8 @@
 {
   "domain": "climate",
   "name": "Climate",
-  "documentation": "https://www.home-assistant.io/integrations/climate",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/climate",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

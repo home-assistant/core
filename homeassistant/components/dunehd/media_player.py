@@ -8,18 +8,18 @@ from pdunehd import DuneHDPlayer
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
 CONF_SOURCES: Final = "sources"
 
-DUNEHD_PLAYER_SUPPORT: Final[int] = (
+DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
@@ -35,7 +35,7 @@ async def async_setup_entry(
     """Add Dune HD entities from a config_entry."""
     unique_id = entry.entry_id
 
-    player: str = hass.data[DOMAIN][entry.entry_id]
+    player: DuneHDPlayer = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([DuneHDPlayerEntity(player, DEFAULT_NAME, unique_id)], True)
 
@@ -43,13 +43,20 @@ async def async_setup_entry(
 class DuneHDPlayerEntity(MediaPlayerEntity):
     """Implementation of the Dune HD player."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, player: DuneHDPlayer, name: str, unique_id: str) -> None:
         """Initialize entity to control Dune HD."""
         self._player = player
-        self._name = name
         self._media_title: str | None = None
         self._state: dict[str, Any] = {}
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=name,
+        )
 
     def update(self) -> None:
         """Update internal status of the entity."""
@@ -57,42 +64,23 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         self.__update_title()
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState:
         """Return player state."""
-        state = STATE_OFF
+        state = MediaPlayerState.OFF
         if "playback_position" in self._state:
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if self._state.get("player_state") in ("playing", "buffering", "photo_viewer"):
-            state = STATE_PLAYING
+            state = MediaPlayerState.PLAYING
         if int(self._state.get("playback_speed", 1234)) == 0:
-            state = STATE_PAUSED
+            state = MediaPlayerState.PAUSED
         if self._state.get("player_state") == "navigator":
-            state = STATE_ON
+            state = MediaPlayerState.ON
         return state
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return len(self._state) > 0
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
-            manufacturer=ATTR_MANUFACTURER,
-            name=DEFAULT_NAME,
-        )
 
     @property
     def volume_level(self) -> float:
@@ -105,7 +93,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         return int(self._state.get("playback_mute", 0)) == 1
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
 

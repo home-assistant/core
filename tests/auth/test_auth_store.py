@@ -1,11 +1,15 @@
 """Tests for the auth store."""
 import asyncio
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.auth import auth_store
+from homeassistant.core import HomeAssistant
 
 
-async def test_loading_no_group_data_format(hass, hass_storage):
+async def test_loading_no_group_data_format(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test we correctly load old data without any groups."""
     hass_storage[auth_store.STORAGE_KEY] = {
         "version": 1,
@@ -98,7 +102,9 @@ async def test_loading_no_group_data_format(hass, hass_storage):
     assert system_token.version is None
 
 
-async def test_loading_all_access_group_data_format(hass, hass_storage):
+async def test_loading_all_access_group_data_format(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test we correctly load old data with single group."""
     hass_storage[auth_store.STORAGE_KEY] = {
         "version": 1,
@@ -194,7 +200,9 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
     assert system_token.version is None
 
 
-async def test_loading_empty_data(hass, hass_storage):
+async def test_loading_empty_data(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test we correctly load with no existing data."""
     store = auth_store.AuthStore(hass)
     groups = await store.async_get_groups()
@@ -216,7 +224,9 @@ async def test_loading_empty_data(hass, hass_storage):
     assert len(users) == 0
 
 
-async def test_system_groups_store_id_and_name(hass, hass_storage):
+async def test_system_groups_store_id_and_name(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that for system groups we store the ID and name.
 
     Name is stored so that we remain backwards compat with < 0.82.
@@ -232,7 +242,7 @@ async def test_system_groups_store_id_and_name(hass, hass_storage):
     ]
 
 
-async def test_loading_race_condition(hass):
+async def test_loading_race_condition(hass: HomeAssistant) -> None:
     """Test only one storage load called when concurrent loading occurred ."""
     store = auth_store.AuthStore(hass)
     with patch(

@@ -1,10 +1,12 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from typing import Any
+
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -13,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, AtagEntity
 
@@ -50,14 +53,12 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
-            return self.coordinator.data.climate.hvac_mode
-        return None
+        return try_parse_enum(HVACMode, self.coordinator.data.climate.hvac_mode)
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
         return HVACAction.HEATING if is_active else HVACAction.IDLE
@@ -78,12 +79,12 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         preset = self.coordinator.data.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.coordinator.data.climate.set_temp(kwargs.get(ATTR_TEMPERATURE))
         self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.coordinator.data.climate.set_hvac_mode(hvac_mode)
         self.async_write_ha_state()

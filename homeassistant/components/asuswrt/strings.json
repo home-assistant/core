@@ -11,7 +11,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "ssh_key": "Path to your SSH key file (instead of password)",
           "protocol": "Communication protocol to use",
-          "port": "[%key:common::config_flow::data::port%] (leave empty for protocol default)",
+          "port": "Port (leave empty for protocol default)",
           "mode": "[%key:common::config_flow::data::mode%]"
         }
       }
@@ -36,10 +36,47 @@
         "data": {
           "consider_home": "Seconds to wait before considering a device away",
           "track_unknown": "Track unknown / unnamed devices",
-          "interface": "The interface that you want statistics from (e.g. eth0,eth1 etc)",
+          "interface": "The interface that you want statistics from (e.g. eth0, eth1 etc)",
           "dnsmasq": "The location in the router of the dnsmasq.leases files",
           "require_ip": "Devices must have IP (for access point mode)"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices_connected": {
+        "name": "Devices connected"
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
+      "download": {
+        "name": "Download"
+      },
+      "upload": {
+        "name": "Upload"
+      },
+      "load_avg_1m": {
+        "name": "Average load (1m)"
+      },
+      "load_avg_5m": {
+        "name": "Average load (5m)"
+      },
+      "load_avg_15m": {
+        "name": "Average load (15m)"
+      },
+      "24ghz_temperature": {
+        "name": "2.4GHz Temperature"
+      },
+      "5ghz_temperature": {
+        "name": "5GHz Temperature"
+      },
+      "cpu_temperature": {
+        "name": "CPU Temperature"
       }
     }
   }

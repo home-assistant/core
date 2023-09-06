@@ -6,14 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -114,8 +114,9 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         self._attr_options = []
         self._attr_current_option = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute(
             "_attr_current_option",
             self._value_template,
@@ -128,7 +129,7 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             validator=vol.All(cv.ensure_list, [cv.string]),
             none_on_template_error=True,
         )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

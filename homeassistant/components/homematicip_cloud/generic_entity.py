@@ -10,7 +10,8 @@ from homematicip.aio.group import AsyncGroup
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import AsyncHome, HomematicipHAP
@@ -71,6 +72,8 @@ GROUP_ATTRIBUTES = {
 
 class HomematicipGenericEntity(Entity):
     """Representation of the HomematicIP generic entity."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -159,7 +162,7 @@ class HomematicipGenericEntity(Entity):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
-        else:
+        else:  # noqa: PLR5501
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
             if entity_id := self.registry_entry.entity_id:
@@ -183,9 +186,8 @@ class HomematicipGenericEntity(Entity):
         if hasattr(self._device, "functionalChannels"):
             if self._is_multi_channel:
                 name = self._device.functionalChannels[self._channel].label
-            else:
-                if len(self._device.functionalChannels) > 1:
-                    name = self._device.functionalChannels[1].label
+            elif len(self._device.functionalChannels) > 1:
+                name = self._device.functionalChannels[1].label
 
         # Use device label, if name is not defined by channel label.
         if not name:
@@ -200,11 +202,6 @@ class HomematicipGenericEntity(Entity):
             name = f"{self._home.name} {name}"
 
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

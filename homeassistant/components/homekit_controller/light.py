@@ -14,10 +14,13 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .connection import HKDevice
+from .entity import HomeKitEntity
 
 
 async def async_setup_entry(
@@ -26,15 +29,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit lightbulb."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if service.type != ServicesTypes.LIGHTBULB:
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([HomeKitLight(conn, info)], True)
+        entity = HomeKitLight(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.LIGHT
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -72,6 +79,18 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
+    def min_mireds(self) -> int:
+        """Return minimum supported color temperature."""
+        min_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
+        return int(min_value) if min_value else super().min_mireds
+
+    @property
+    def max_mireds(self) -> int:
+        """Return the maximum color temperature."""
+        max_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
+        return int(max_value) if max_value else super().max_mireds
+
+    @property
     def color_temp(self) -> int:
         """Return the color temperature."""
         return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
@@ -95,9 +114,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        color_modes: set[ColorMode | str] = set()
+        color_modes: set[ColorMode] = set()
 
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION

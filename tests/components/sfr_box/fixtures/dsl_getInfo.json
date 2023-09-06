@@ -1,0 +1,15 @@
+{
+  "linemode": "ADSL2+",
+  "uptime": 450796,
+  "counter": 16,
+  "crc": 0,
+  "status": "up",
+  "noise_down": 5.8,
+  "noise_up": 6.0,
+  "attenuation_down": 28.5,
+  "attenuation_up": 20.8,
+  "rate_down": 5549,
+  "rate_up": 187,
+  "line_status": "No Defect",
+  "training": "Showtime"
+}

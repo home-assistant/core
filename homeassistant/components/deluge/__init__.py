@@ -17,8 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_WEB_PORT, DEFAULT_NAME, DOMAIN
@@ -57,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DelugeDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -73,12 +72,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
     """Representation of a Deluge entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize a Deluge entity."""
         super().__init__(coordinator)
         self._server_unique_id = coordinator.config_entry.entry_id
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.api.host}:{coordinator.api.web_port}",
+            configuration_url=(
+                f"http://{coordinator.api.host}:{coordinator.api.web_port}"
+            ),
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,

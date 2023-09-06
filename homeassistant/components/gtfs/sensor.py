@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -341,13 +341,15 @@ def get_next_departure(
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """
-    result = schedule.engine.execute(
+        """  # noqa: S608
+    result = schedule.engine.connect().execute(
         text(sql_query),
-        origin_station_id=start_station_id,
-        end_station_id=end_station_id,
-        today=now_date,
-        limit=limit,
+        {
+            "origin_station_id": start_station_id,
+            "end_station_id": end_station_id,
+            "today": now_date,
+            "limit": limit,
+        },
     )
 
     # Create lookup timetable for today and possibly tomorrow, taking into
@@ -357,7 +359,8 @@ def get_next_departure(
     yesterday_start = today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row in result:
+    for row_cursor in result:
+        row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
             if yesterday_start is None:
@@ -427,16 +430,14 @@ def get_next_departure(
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += datetime.timedelta(days=1)
     dest_arrival_time = (
-        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_arrival_time']}"
+        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
         dest_depart += datetime.timedelta(days=1)
     dest_depart_time = (
-        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} "
-        f"{item['dest_depart_time']}"
+        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_depart_time']}"
     )
 
     depart_time = dt_util.parse_datetime(origin_depart_time)
@@ -504,7 +505,6 @@ def setup_platform(
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
-    # pylint: disable=no-member
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
@@ -567,7 +567,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._attributes
 
@@ -609,14 +609,6 @@ class GTFSDepartureSensor(SensorEntity):
                 self._include_tomorrow,
             )
 
-            # Define the state as a UTC timestamp with ISO 8601 format
-            if not self._departure:
-                self._state = None
-            else:
-                self._state = self._departure["departure_time"].replace(
-                    tzinfo=dt_util.UTC
-                )
-
             # Fetch trip and route details once, unless updated
             if not self._departure:
                 self._trip = None
@@ -638,15 +630,34 @@ class GTFSDepartureSensor(SensorEntity):
                     self._agency = self._pygtfs.agencies_by_id(self._route.agency_id)[0]
                 except IndexError:
                     _LOGGER.warning(
-                        "Agency ID '%s' was not found in agency table, "
-                        "you may want to update the routes database table "
-                        "to fix this missing reference",
+                        (
+                            "Agency ID '%s' was not found in agency table, "
+                            "you may want to update the routes database table "
+                            "to fix this missing reference"
+                        ),
                         self._route.agency_id,
                     )
                     self._agency = False
 
+            # Define the state as a UTC timestamp with ISO 8601 format
+            if not self._departure:
+                self._state = None
+            elif self._agency:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.get_time_zone(self._agency.agency_timezone)
+                )
+            else:
+                self._state = self._departure["departure_time"].replace(
+                    tzinfo=dt_util.UTC
+                )
+
             # Assign attributes, icon and name
             self.update_attributes()
+
+            if self._agency:
+                self._attr_attribution = self._agency.agency_name
+            else:
+                self._attr_attribution = None
 
             if self._route:
                 self._icon = ICONS.get(self._route.route_type, ICON)
@@ -701,11 +712,6 @@ class GTFSDepartureSensor(SensorEntity):
             )
         elif ATTR_INFO in self._attributes:
             del self._attributes[ATTR_INFO]
-
-        if self._agency:
-            self._attributes[ATTR_ATTRIBUTION] = self._agency.agency_name
-        elif ATTR_ATTRIBUTION in self._attributes:
-            del self._attributes[ATTR_ATTRIBUTION]
 
         # Add extra metadata
         key = "agency_id"
@@ -800,9 +806,10 @@ class GTFSDepartureSensor(SensorEntity):
     @staticmethod
     def dict_for_table(resource: Any) -> dict:
         """Return a dictionary for the SQLAlchemy resource given."""
-        return {
-            col: getattr(resource, col) for col in resource.__table__.columns.keys()
-        }
+        _dict = {}
+        for column in resource.__table__.columns:
+            _dict[column.name] = str(getattr(resource, column.name))
+        return _dict
 
     def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""

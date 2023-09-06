@@ -1,10 +1,8 @@
 """The Sonarr component."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from typing import Any
 
-from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
@@ -19,24 +17,29 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
-    DATA_HOST_CONFIG,
-    DATA_SONARR,
-    DATA_SYSTEM_STATUS,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
+    LOGGER,
+)
+from .coordinator import (
+    CalendarDataUpdateCoordinator,
+    CommandsDataUpdateCoordinator,
+    DiskSpaceDataUpdateCoordinator,
+    QueueDataUpdateCoordinator,
+    SeriesDataUpdateCoordinator,
+    SonarrDataUpdateCoordinator,
+    StatusDataUpdateCoordinator,
+    WantedDataUpdateCoordinator,
 )
 
 PLATFORMS = [Platform.SENSOR]
-SCAN_INTERVAL = timedelta(seconds=30)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,38 +60,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         url=entry.data[CONF_URL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
     )
-
     sonarr = SonarrClient(
         host_configuration=host_configuration,
         session=async_get_clientsession(hass),
     )
-
-    try:
-        system_status = await sonarr.async_get_system_status()
-    except ArrAuthenticationException as err:
-        raise ConfigEntryAuthFailed(
-            "API Key is no longer valid. Please reauthenticate"
-        ) from err
-    except ArrException as err:
-        raise ConfigEntryNotReady from err
-
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_HOST_CONFIG: host_configuration,
-        DATA_SONARR: sonarr,
-        DATA_SYSTEM_STATUS: system_status,
+    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = {
+        "upcoming": CalendarDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "commands": CommandsDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "diskspace": DiskSpaceDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "queue": QueueDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "series": SeriesDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "status": StatusDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "wanted": WantedDataUpdateCoordinator(hass, host_configuration, sonarr),
     }
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # Temporary, until we add diagnostic entities
+    _version = None
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+        if isinstance(coordinator, StatusDataUpdateCoordinator):
+            _version = coordinator.data.version
+        coordinator.system_version = _version
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", entry.version)
+    LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
         new_proto = "https" if entry.data[CONF_SSL] else "http"
@@ -106,7 +107,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data=data)
         entry.version = 2
 
-    _LOGGER.info("Migration to version %s successful", entry.version)
+    LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
 

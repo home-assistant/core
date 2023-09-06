@@ -7,13 +7,14 @@ import contextlib
 from datetime import datetime, timedelta
 import logging
 import statistics
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -25,12 +26,12 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Event,
     HomeAssistant,
     State,
     callback,
@@ -39,13 +40,20 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    EventType,
+    StateType,
+)
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, PLATFORMS
 
@@ -76,21 +84,15 @@ STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
-STAT_QUANTILES = "quantiles"
+STAT_PERCENTILE = "percentile"
 STAT_STANDARD_DEVIATION = "standard_deviation"
+STAT_SUM = "sum"
+STAT_SUM_DIFFERENCES = "sum_differences"
+STAT_SUM_DIFFERENCES_NONNEGATIVE = "sum_differences_nonnegative"
 STAT_TOTAL = "total"
 STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
-
-DEPRECATION_WARNING_CHARACTERISTIC = (
-    "The configuration parameter 'state_characteristic' will become "
-    "mandatory in a future release of the statistics integration. "
-    "Please add 'state_characteristic: %s' to the configuration of "
-    "sensor '%s' to keep the current behavior. Read the documentation "
-    "for further details: "
-    "https://www.home-assistant.io/integrations/statistics/"
-)
 
 # Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = {
@@ -111,8 +113,11 @@ STATS_NUMERIC_SUPPORT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
-    STAT_QUANTILES,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
+    STAT_SUM,
+    STAT_SUM_DIFFERENCES,
+    STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
@@ -136,7 +141,6 @@ STATS_NOT_A_NUMBER = {
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_VALUE_MAX,
     STAT_DATETIME_VALUE_MIN,
-    STAT_QUANTILES,
 }
 
 STATS_DATETIME = {
@@ -147,7 +151,7 @@ STATS_DATETIME = {
 }
 
 # Statistics which retain the unit of the source entity
-STAT_NUMERIC_RETAIN_UNIT = {
+STATS_NUMERIC_RETAIN_UNIT = {
     STAT_AVERAGE_LINEAR,
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
@@ -158,14 +162,18 @@ STAT_NUMERIC_RETAIN_UNIT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
+    STAT_PERCENTILE,
     STAT_STANDARD_DEVIATION,
+    STAT_SUM,
+    STAT_SUM_DIFFERENCES,
+    STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
 }
 
 # Statistics which produce percentage ratio from binary_sensor source entity
-STAT_BINARY_PERCENTAGE = {
+STATS_BINARY_PERCENTAGE = {
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
     STAT_MEAN,
@@ -175,37 +183,36 @@ CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
-CONF_QUANTILE_INTERVALS = "quantile_intervals"
-CONF_QUANTILE_METHOD = "quantile_method"
+CONF_PERCENTILE = "percentile"
 
-DEFAULT_NAME = "Stats"
-DEFAULT_BUFFER_SIZE = 20
+DEFAULT_NAME = "Statistical characteristic"
 DEFAULT_PRECISION = 2
-DEFAULT_QUANTILE_INTERVALS = 4
-DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
-
-    if config.get(CONF_STATE_CHARACTERISTIC) is None:
-        config[CONF_STATE_CHARACTERISTIC] = STAT_COUNT if is_binary else STAT_MEAN
-        _LOGGER.warning(
-            DEPRECATION_WARNING_CHARACTERISTIC,
-            config[CONF_STATE_CHARACTERISTIC],
-            config[CONF_NAME],
-        )
-
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
     ):
         raise vol.ValueInvalid(
-            "The configured characteristic '{}' is not supported for the configured source sensor".format(
-                characteristic
-            )
+            "The configured characteristic '{}' is not supported for the configured"
+            " source sensor".format(characteristic)
+        )
+    return config
+
+
+def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that max_age, sampling_size, or both are provided."""
+
+    if (
+        config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None
+        and config.get(CONF_MAX_AGE) is None
+    ):
+        raise vol.RequiredFieldInvalid(
+            "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
         )
     return config
 
@@ -215,23 +222,21 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
-        vol.Optional(
-            CONF_SAMPLES_MAX_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE
-        ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Required(CONF_STATE_CHARACTERISTIC): cv.string,
+        vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
+        ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(
-            CONF_QUANTILE_INTERVALS, default=DEFAULT_QUANTILE_INTERVALS
-        ): vol.All(vol.Coerce(int), vol.Range(min=2)),
-        vol.Optional(CONF_QUANTILE_METHOD, default=DEFAULT_QUANTILE_METHOD): vol.In(
-            ["exclusive", "inclusive"]
+        vol.Optional(CONF_PERCENTILE, default=50): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=99)
         ),
     }
 )
 PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_state_characteristic_configuration,
+    valid_boundary_configuration,
 )
 
 
@@ -252,11 +257,10 @@ async def async_setup_platform(
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
-                samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
+                samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
-                quantile_intervals=config[CONF_QUANTILE_INTERVALS],
-                quantile_method=config[CONF_QUANTILE_METHOD],
+                percentile=config[CONF_PERCENTILE],
             )
         ],
         update_before_add=True,
@@ -272,11 +276,10 @@ class StatisticsSensor(SensorEntity):
         name: str,
         unique_id: str | None,
         state_characteristic: str,
-        samples_max_buffer_size: int,
+        samples_max_buffer_size: int | None,
         samples_max_age: timedelta | None,
         precision: int,
-        quantile_intervals: int,
-        quantile_method: Literal["exclusive", "inclusive"],
+        percentile: int,
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -288,31 +291,21 @@ class StatisticsSensor(SensorEntity):
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
         self._state_characteristic: str = state_characteristic
-        self._samples_max_buffer_size: int = samples_max_buffer_size
+        self._samples_max_buffer_size: int | None = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
-        self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
+        self._percentile: int = percentile
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
+
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
-        self.attributes: dict[str, StateType] = {
-            STAT_AGE_COVERAGE_RATIO: None,
-            STAT_BUFFER_USAGE_RATIO: None,
-            STAT_SOURCE_VALUE_VALID: None,
-        }
+        self.attributes: dict[str, StateType] = {}
 
-        self._state_characteristic_fn: Callable[[], StateType | datetime]
-        if self.is_binary:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_binary_{self._state_characteristic}"
-            )
-        else:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_{self._state_characteristic}"
-            )
+        self._state_characteristic_fn: Callable[
+            [], StateType | datetime
+        ] = self._callable_characteristic_fn(self._state_characteristic)
 
         self._update_listener: CALLBACK_TYPE | None = None
 
@@ -320,9 +313,11 @@ class StatisticsSensor(SensorEntity):
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(event: Event) -> None:
+        def async_stats_sensor_state_listener(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Handle the sensor state changes."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := event.data["new_state"]) is None:
                 return
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
@@ -376,11 +371,11 @@ class StatisticsSensor(SensorEntity):
     def _derive_unit_of_measurement(self, new_state: State) -> str | None:
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         unit: str | None
-        if self.is_binary and self._state_characteristic in STAT_BINARY_PERCENTAGE:
-            unit = "%"
+        if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
+            unit = PERCENTAGE
         elif not base_unit:
             unit = None
-        elif self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
+        elif self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             unit = base_unit
         elif self._state_characteristic in STATS_NOT_A_NUMBER:
             unit = None
@@ -401,15 +396,28 @@ class StatisticsSensor(SensorEntity):
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device."""
-        if self._state_characteristic in STAT_NUMERIC_RETAIN_UNIT:
-            _state = self.hass.states.get(self._source_entity_id)
-            return None if _state is None else _state.attributes.get(ATTR_DEVICE_CLASS)
         if self._state_characteristic in STATS_DATETIME:
             return SensorDeviceClass.TIMESTAMP
+        if self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
+            source_state = self.hass.states.get(self._source_entity_id)
+            if source_state is None:
+                return None
+            source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
+            if source_device_class is None:
+                return None
+            sensor_device_class = try_parse_enum(SensorDeviceClass, source_device_class)
+            if sensor_device_class is None:
+                return None
+            sensor_state_classes = DEVICE_CLASS_STATE_CLASSES.get(
+                sensor_device_class, set()
+            )
+            if SensorStateClass.MEASUREMENT not in sensor_state_classes:
+                return None
+            return sensor_device_class
         return None
 
     @property
-    def state_class(self) -> Literal[SensorStateClass.MEASUREMENT] | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
@@ -477,11 +485,8 @@ class StatisticsSensor(SensorEntity):
         self._update_value()
 
         # If max_age is set, ensure to update again after the defined interval.
-        next_to_purge_timestamp = self._next_to_purge_timestamp()
-        if next_to_purge_timestamp:
-            _LOGGER.debug(
-                "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
-            )
+        if timestamp := self._next_to_purge_timestamp():
+            _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
             if self._update_listener:
                 self._update_listener()
                 self._update_listener = None
@@ -494,7 +499,7 @@ class StatisticsSensor(SensorEntity):
                 self._update_listener = None
 
             self._update_listener = async_track_point_in_utc_time(
-                self.hass, _scheduled_update, next_to_purge_timestamp
+                self.hass, _scheduled_update, timestamp
             )
 
     def _fetch_states_from_database(self) -> list[State]:
@@ -544,18 +549,20 @@ class StatisticsSensor(SensorEntity):
 
     def _update_attributes(self) -> None:
         """Calculate and update the various attributes."""
-        self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
-            len(self.states) / self._samples_max_buffer_size, 2
-        )
-
-        if len(self.states) >= 1 and self._samples_max_age is not None:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
-                (self.ages[-1] - self.ages[0]).total_seconds()
-                / self._samples_max_age.total_seconds(),
-                2,
+        if self._samples_max_buffer_size is not None:
+            self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
+                len(self.states) / self._samples_max_buffer_size, 2
             )
-        else:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = None
+
+        if self._samples_max_age is not None:
+            if len(self.states) >= 1:
+                self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
+                    (self.ages[-1] - self.ages[0]).total_seconds()
+                    / self._samples_max_age.total_seconds(),
+                    2,
+                )
+            else:
+                self.attributes[STAT_AGE_COVERAGE_RATIO] = None
 
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
@@ -571,6 +578,18 @@ class StatisticsSensor(SensorEntity):
                 if self._precision == 0:
                     value = int(value)
         self._value = value
+
+    def _callable_characteristic_fn(
+        self, characteristic: str
+    ) -> Callable[[], StateType | datetime]:
+        """Return the function callable of one characteristic function."""
+        function: Callable[[], StateType | datetime] = getattr(
+            self,
+            f"_stat_binary_{characteristic}"
+            if self.is_binary
+            else f"_stat_{characteristic}",
+        )
+        return function
 
     # Statistics for numeric sensor
 
@@ -669,24 +688,13 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_noisiness(self) -> StateType:
         if len(self.states) >= 2:
-            diff_sum = sum(
-                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
-            )
-            return diff_sum / (len(self.states) - 1)
+            return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
-    def _stat_quantiles(self) -> StateType:
-        if len(self.states) > self._quantile_intervals:
-            return str(
-                [
-                    round(quantile, self._precision)
-                    for quantile in statistics.quantiles(
-                        self.states,
-                        n=self._quantile_intervals,
-                        method=self._quantile_method,
-                    )
-                ]
-            )
+    def _stat_percentile(self) -> StateType:
+        if len(self.states) >= 2:
+            percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
+            return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
@@ -694,10 +702,30 @@ class StatisticsSensor(SensorEntity):
             return statistics.stdev(self.states)
         return None
 
-    def _stat_total(self) -> StateType:
+    def _stat_sum(self) -> StateType:
         if len(self.states) > 0:
             return sum(self.states)
         return None
+
+    def _stat_sum_differences(self) -> StateType:
+        if len(self.states) >= 2:
+            diff_sum = sum(
+                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
+            )
+            return diff_sum
+        return None
+
+    def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) >= 2:
+            diff_sum_nn = sum(
+                (j - i if j >= i else j - 0)
+                for i, j in zip(list(self.states), list(self.states)[1:])
+            )
+            return diff_sum_nn
+        return None
+
+    def _stat_total(self) -> StateType:
+        return self._stat_sum()
 
     def _stat_value_max(self) -> StateType:
         if len(self.states) > 0:

@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -25,8 +23,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
-    LENGTH_FEET,
-    LENGTH_METERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -36,7 +33,9 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import distance, location
+from homeassistant.util import location
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +139,7 @@ async def async_citybikes_request(hass, uri, schema):
     try:
         session = async_get_clientsession(hass)
 
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await session.get(DEFAULT_ENDPOINT.format(uri=uri))
 
         json_response = await req.json()
@@ -170,8 +169,10 @@ async def async_setup_platform(
     stations_list = set(config.get(CONF_STATIONS_LIST, []))
     radius = config.get(CONF_RADIUS, 0)
     name = config[CONF_NAME]
-    if not hass.config.units.is_metric:
-        radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.FEET, UnitOfLength.METERS
+        )
 
     # Create a single instance of CityBikesNetworks.
     networks = hass.data.setdefault(CITYBIKES_NETWORKS, CityBikesNetworks(hass))
@@ -275,6 +276,7 @@ class CityBikesNetwork:
 class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
 
+    _attr_attribution = CITYBIKES_ATTRIBUTION
     _attr_native_unit_of_measurement = "bikes"
     _attr_icon = "mdi:bike"
 
@@ -284,7 +286,7 @@ class CityBikesStation(SensorEntity):
         self._station_id = station_id
         self.entity_id = entity_id
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update station state."""
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:
@@ -292,15 +294,10 @@ class CityBikesStation(SensorEntity):
                 break
         self._attr_name = station_data.get(ATTR_NAME)
         self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
-        self._attr_extra_state_attributes = (
-            {
-                ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,
-                ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
-                ATTR_LATITUDE: station_data[ATTR_LATITUDE],
-                ATTR_LONGITUDE: station_data[ATTR_LONGITUDE],
-                ATTR_EMPTY_SLOTS: station_data[ATTR_EMPTY_SLOTS],
-                ATTR_TIMESTAMP: station_data[ATTR_TIMESTAMP],
-            }
-            if station_data
-            else {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}
-        )
+        self._attr_extra_state_attributes = {
+            ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
+            ATTR_LATITUDE: station_data.get(ATTR_LATITUDE),
+            ATTR_LONGITUDE: station_data.get(ATTR_LONGITUDE),
+            ATTR_EMPTY_SLOTS: station_data.get(ATTR_EMPTY_SLOTS),
+            ATTR_TIMESTAMP: station_data.get(ATTR_TIMESTAMP),
+        }

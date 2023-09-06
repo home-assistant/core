@@ -1,13 +1,16 @@
 """Support for Adax wifi-enabled home heaters."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -16,11 +19,11 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_UNIQUE_ID,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
@@ -66,7 +69,7 @@ class AdaxDevice(ClimateEntity):
     _attr_min_temp = 5
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
         """Initialize the heater."""
@@ -76,11 +79,14 @@ class AdaxDevice(ClimateEntity):
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater_data["id"])},
-            name=self.name,
+            # Instead of setting the device name to the entity name, adax
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="Adax",
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
@@ -129,7 +135,7 @@ class LocalAdaxDevice(ClimateEntity):
     _attr_min_temp = 5
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, adax_data_handler, unique_id):
         """Initialize the heater."""
@@ -140,7 +146,7 @@ class LocalAdaxDevice(ClimateEntity):
             manufacturer="Adax",
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return

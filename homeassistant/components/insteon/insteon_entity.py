@@ -5,11 +5,12 @@ import logging
 from pyinsteon import devices
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     DOMAIN,
@@ -28,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""
         self._insteon_device_group = device.groups[group]
@@ -36,11 +39,6 @@ class InsteonEntity(Entity):
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def address(self):
@@ -86,9 +84,15 @@ class InsteonEntity(Entity):
         return DeviceInfo(
             identifiers={(DOMAIN, str(self._insteon_device.address))},
             manufacturer="SmartLabs, Inc",
-            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            model=(
+                f"{self._insteon_device.model} ({self._insteon_device.cat!r},"
+                f" 0x{self._insteon_device.subcat:02x})"
+            ),
             name=f"{self._insteon_device.description} {self._insteon_device.address}",
-            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
+            sw_version=(
+                f"{self._insteon_device.firmware:02x} Engine Version:"
+                f" {self._insteon_device.engine_version}"
+            ),
             via_device=(DOMAIN, str(devices.modem.address)),
         )
 

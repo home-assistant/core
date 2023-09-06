@@ -1,0 +1,89 @@
+{
+  "domain": "govee_ble",
+  "name": "Govee Bluetooth",
+  "bluetooth": [
+    {
+      "local_name": "Govee*",
+      "connectable": false
+    },
+    {
+      "local_name": "GVH5*",
+      "connectable": false
+    },
+    {
+      "local_name": "B5178*",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 6966,
+      "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 63391,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 26589,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 57391,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 18994,
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 818,
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 53579,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 43682,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 59970,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 63585,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 14474,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 10032,
+      "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 19506,
+      "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    }
+  ],
+  "codeowners": ["@bdraco", "@PierreAronnax"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/govee_ble",
+  "iot_class": "local_push",
+  "requirements": ["govee-ble==0.23.0"]
+}

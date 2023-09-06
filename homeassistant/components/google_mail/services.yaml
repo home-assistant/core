@@ -1,0 +1,35 @@
+set_vacation:
+  target:
+    device:
+      integration: google_mail
+    entity:
+      integration: google_mail
+  fields:
+    enabled:
+      required: true
+      default: true
+      selector:
+        boolean:
+    title:
+      selector:
+        text:
+    message:
+      required: true
+      selector:
+        text:
+    plain_text:
+      default: true
+      selector:
+        boolean:
+    restrict_contacts:
+      selector:
+        boolean:
+    restrict_domain:
+      selector:
+        boolean:
+    start:
+      selector:
+        date:
+    end:
+      selector:
+        date:

@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.button.const import DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.button import DOMAIN, SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -13,8 +13,18 @@ from homeassistant.util import dt as dt_util
 ENTITY_PUSH = "button.push"
 
 
+@pytest.fixture
+async def button_only() -> None:
+    """Enable only the button platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.BUTTON],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_button(hass: HomeAssistant) -> None:
+async def setup_demo_button(hass: HomeAssistant, button_only) -> None:
     """Initialize setup demo button entity."""
     assert await async_setup_component(hass, DOMAIN, {"button": {"platform": "demo"}})
     await hass.async_block_till_done()

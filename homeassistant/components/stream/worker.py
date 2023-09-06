@@ -5,14 +5,16 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 import datetime
-from io import BytesIO
+from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
+import attr
 import av
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import redact_credentials
 from .const import (
@@ -24,11 +26,20 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
+from .core import (
+    STREAM_SETTINGS_NON_LL_HLS,
+    KeyFrameConverter,
+    Part,
+    Segment,
+    StreamOutput,
+    StreamSettings,
+)
 from .diagnostics import Diagnostics
+from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
+NEGATIVE_INF = float("-inf")
 
 
 class StreamWorkerError(Exception):
@@ -108,7 +119,7 @@ class StreamMuxer:
         hass: HomeAssistant,
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.stream.AudioStream | None,
-        audio_bsf: av.BitStreamFilterContext | None,
+        audio_bsf: av.BitStreamFilter | None,
         stream_state: StreamState,
         stream_settings: StreamSettings,
     ) -> None:
@@ -120,6 +131,7 @@ class StreamMuxer:
         self._input_video_stream: av.video.VideoStream = video_stream
         self._input_audio_stream: av.audio.stream.AudioStream | None = audio_stream
         self._audio_bsf = audio_bsf
+        self._audio_bsf_context: av.BitStreamFilterContext = None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: av.audio.stream.AudioStream | None = None
         self._segment: Segment | None = None
@@ -129,7 +141,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,
@@ -149,12 +161,16 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options={
                 **{
-                    # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-                    # "cmaf" flag replaces several of the movflags used, but too recent to use for now
-                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
-                    # Sometimes the first segment begins with negative timestamps, and this setting just
-                    # adjusts the timestamps in the output from that segment to start from 0. Helps from
-                    # having to make some adjustments in test_durations
+                    # Removed skip_sidx - see:
+                    # https://github.com/home-assistant/core/pull/39970
+                    # "cmaf" flag replaces several of the movflags used,
+                    # but too recent to use for now
+                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                    # Sometimes the first segment begins with negative timestamps,
+                    # and this setting just
+                    # adjusts the timestamps in the output from that segment to start
+                    # from 0. Helps from having to make some adjustments
+                    # in test_durations
                     "avoid_negative_ts": "make_non_negative",
                     "fragment_index": str(sequence + 1),
                     "video_track_timescale": str(int(1 / input_vstream.time_base)),
@@ -164,25 +180,34 @@ class StreamMuxer:
                 # Fragment durations may exceed the 15% allowed variance but it seems ok
                 **(
                     {
-                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
-                        # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
-                        # a "Part" that can be combined with the data from all the other "Part"s, plus an init
-                        # section, to reconstitute the data in a "Segment".
-                        # The LL-HLS spec allows for a fragment's duration to be within the range [0.85x,1.0x]
-                        # of the part target duration. We use the frag_duration option to tell ffmpeg to try to
-                        # cut the fragments when they reach frag_duration. However, the resulting fragments can
-                        # have variability in their durations and can end up being too short or too long. With a
-                        # video track with no audio, the discrete nature of frames means that the frame at the
-                        # end of a fragment will sometimes extend slightly beyond the desired frag_duration.
-                        # If there are two tracks, as in the case of a video feed with audio, there is an added
-                        # wrinkle as the fragment cut seems to be done on the first track that crosses the desired
-                        # threshold, and cutting on the audio track may also result in a shorter video fragment
-                        # than desired.
-                        # Given this, our approach is to give ffmpeg a frag_duration somewhere in the middle
-                        # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
-                        # durations a bit in the hls metadata so that everything "looks" ok.
+                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                        # Create a fragment every TARGET_PART_DURATION. The data from
+                        # each fragment is stored in a "Part" that can be combined with
+                        # the data from all the other "Part"s, plus an init section,
+                        # to reconstitute the data in a "Segment".
+                        #
+                        # The LL-HLS spec allows for a fragment's duration to be within
+                        # the range [0.85x,1.0x] of the part target duration. We use the
+                        # frag_duration option to tell ffmpeg to try to cut the
+                        # fragments when they reach frag_duration. However,
+                        # the resulting fragments can have variability in their
+                        # durations and can end up being too short or too long. With a
+                        # video track with no audio, the discrete nature of frames means
+                        # that the frame at the end of a fragment will sometimes extend
+                        # slightly beyond the desired frag_duration.
+                        #
+                        # If there are two tracks, as in the case of a video feed with
+                        # audio, there is an added wrinkle as the fragment cut seems to
+                        # be done on the first track that crosses the desired threshold,
+                        # and cutting on the audio track may also result in a shorter
+                        # video fragment than desired.
+                        #
+                        # Given this, our approach is to give ffmpeg a frag_duration
+                        # somewhere in the middle of the range, hoping that the parts
+                        # stay pretty well bounded, and we adjust the part durations
+                        # a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
-                            self._stream_settings.part_target_duration * 9e5
+                            int(self._stream_settings.part_target_duration * 9e5)
                         ),
                     }
                     if self._stream_settings.ll_hls
@@ -194,8 +219,11 @@ class StreamMuxer:
         # Check if audio is requested
         output_astream = None
         if input_astream:
+            if self._audio_bsf:
+                self._audio_bsf_context = self._audio_bsf.create()
+                self._audio_bsf_context.set_input_stream(input_astream)
             output_astream = container.add_stream(
-                template=self._audio_bsf or input_astream
+                template=self._audio_bsf_context or input_astream
             )
         return container, output_vstream, output_astream
 
@@ -238,14 +266,28 @@ class StreamMuxer:
             self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
-            if self._audio_bsf:
-                self._audio_bsf.send(packet)
-                while packet := self._audio_bsf.recv():
+            if self._audio_bsf_context:
+                self._audio_bsf_context.send(packet)
+                while packet := self._audio_bsf_context.recv():
                     packet.stream = self._output_audio_stream
                     self._av_output.mux(packet)
                 return
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
+
+    def create_segment(self) -> None:
+        """Create a segment when the moov is ready."""
+        self._segment = Segment(
+            sequence=self._stream_state.sequence,
+            stream_id=self._stream_state.stream_id,
+            init=read_init(self._memory_file),
+            # Fetch the latest StreamOutputs, which may have changed since the
+            # worker started.
+            stream_outputs=self._stream_state.outputs,
+            start_time=self._start_time,
+        )
+        self._memory_file_pos = self._memory_file.tell()
+        self._memory_file.seek(0, SEEK_END)
 
     def check_flush_part(self, packet: av.Packet) -> None:
         """Check for and mark a part segment boundary and record its duration."""
@@ -254,16 +296,10 @@ class StreamMuxer:
         if self._segment is None:
             # We have our first non-zero byte position. This means the init has just
             # been written. Create a Segment and put it to the queue of each output.
-            self._segment = Segment(
-                sequence=self._stream_state.sequence,
-                stream_id=self._stream_state.stream_id,
-                init=self._memory_file.getvalue(),
-                # Fetch the latest StreamOutputs, which may have changed since the
-                # worker started.
-                stream_outputs=self._stream_state.outputs,
-                start_time=self._start_time,
-            )
-            self._memory_file_pos = self._memory_file.tell()
+            self.create_segment()
+            # When using delay_moov, the moov is not written until a moof is also ready
+            # Flush the moof
+            self.flush(packet, last_part=False)
         else:  # These are the ends of the part segments
             self.flush(packet, last_part=False)
 
@@ -297,6 +333,10 @@ class StreamMuxer:
             # Closing the av_output will write the remaining buffered data to the
             # memory_file as a new moof/mdat.
             self._av_output.close()
+            # With delay_moov, this may be the first time the file pointer has
+            # moved, so the segment may not yet have been created
+            if not self._segment:
+                self.create_segment()
         elif not self._part_has_keyframe:
             # Parts which are not the last part or an independent part should
             # not have durations below 0.85 of the part target duration.
@@ -305,6 +345,9 @@ class StreamMuxer:
                 self._part_start_dts
                 + 0.85 * self._stream_settings.part_target_duration / packet.time_base,
             )
+        # Undo dts adjustments if we don't have ll_hls
+        if not self._stream_settings.ll_hls:
+            adjusted_dts = packet.dts
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
         self._hass.loop.call_soon_threadsafe(
@@ -357,7 +400,7 @@ class PeekIterator(Iterator):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 
@@ -388,14 +431,21 @@ class PeekIterator(Iterator):
 class TimestampValidator:
     """Validate ordering of timestamps for packets in a stream."""
 
-    def __init__(self) -> None:
+    def __init__(self, inv_video_time_base: int, inv_audio_time_base: int) -> None:
         """Initialize the TimestampValidator."""
         # Decompression timestamp of last packet in each stream
         self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
-            lambda: float("-inf")
+            lambda: NEGATIVE_INF
         )
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
+        # For the bounds, just use the larger of the two values. If the error
+        # is not flagged by one stream, it should just get flagged by the other
+        # stream. Either value should result in a value which is much less than
+        # a 32 bit INT_MAX, which helps avoid the assertion error from FFmpeg.
+        self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
+            inv_video_time_base, inv_audio_time_base
+        )
 
     def is_valid(self, packet: av.Packet) -> bool:
         """Validate the packet timestamp based on ordering within the stream."""
@@ -410,12 +460,12 @@ class TimestampValidator:
         self._missing_dts = 0
         # Discard when dts is not monotonic. Terminate if gap is too wide.
         prev_dts = self._last_dts[packet.stream]
+        if abs(prev_dts - packet.dts) > self._max_dts_gap and prev_dts != NEGATIVE_INF:
+            raise StreamWorkerError(
+                f"Timestamp discontinuity detected: last dts = {prev_dts}, dts ="
+                f" {packet.dts}"
+            )
         if packet.dts <= prev_dts:
-            gap = packet.time_base * (prev_dts - packet.dts)
-            if gap > MAX_TIMESTAMP_GAP:
-                raise StreamWorkerError(
-                    f"Timestamp overflow detected: last dts = {prev_dts}, dts = {packet.dts}"
-                )
             return False
         self._last_dts[packet.stream] = packet.dts
         return True
@@ -445,10 +495,7 @@ def get_audio_bitstream_filter(
                         _LOGGER.debug(
                             "ADTS AAC detected. Adding aac_adtstoaac bitstream filter"
                         )
-                        bsf = av.BitStreamFilter("aac_adtstoasc")
-                        bsf_context = bsf.create()
-                        bsf_context.set_input_stream(audio_stream)
-                        return bsf_context
+                        return av.BitStreamFilter("aac_adtstoasc")
             break
     return None
 
@@ -471,7 +518,8 @@ def stream_worker(
         container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
+            f"Error opening stream ({err.type}, {err.strerror})"
+            f" {redact_credentials(str(source))}"
         ) from err
     try:
         video_stream = container.streams.video[0]
@@ -489,13 +537,21 @@ def stream_worker(
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        stream_settings.ll_hls = False
+        for field in attr.fields(StreamSettings):
+            setattr(
+                stream_settings,
+                field.name,
+                getattr(STREAM_SETTINGS_NON_LL_HLS, field.name),
+            )
     stream_state.diagnostics.set_value("container_format", container.format.name)
     stream_state.diagnostics.set_value("video_codec", video_stream.name)
     if audio_stream:
         stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
-    dts_validator = TimestampValidator()
+    dts_validator = TimestampValidator(
+        int(1 / video_stream.time_base),
+        1 / audio_stream.time_base if audio_stream else 1,
+    )
     container_packets = PeekIterator(
         filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
     )
@@ -568,4 +624,4 @@ def stream_worker(
             muxer.mux_packet(packet)
 
             if packet.is_keyframe and is_video(packet):
-                keyframe_converter.packet = packet
+                keyframe_converter.stash_keyframe_packet(packet)

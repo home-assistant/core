@@ -1,6 +1,8 @@
 """Constants for the Tomorrow.io integration."""
 from __future__ import annotations
 
+import logging
+
 from pytomorrowio.const import DAILY, HOURLY, NOWCAST, WeatherCode
 
 from homeassistant.components.weather import (
@@ -8,7 +10,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
@@ -18,12 +20,13 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 
+LOGGER = logging.getLogger(__package__)
+
 CONF_TIMESTEP = "timestep"
 FORECAST_TYPES = [DAILY, HOURLY, NOWCAST]
 
-DEFAULT_TIMESTEP = 15
+DEFAULT_TIMESTEP = 60
 DEFAULT_FORECAST_TYPE = DAILY
-CC_DOMAIN = "climacell"
 DOMAIN = "tomorrowio"
 INTEGRATION_NAME = "Tomorrow.io"
 DEFAULT_NAME = INTEGRATION_NAME
@@ -60,9 +63,9 @@ CONDITIONS = {
     WeatherCode.HEAVY_SNOW: ATTR_CONDITION_SNOWY,
     WeatherCode.LIGHT_SNOW: ATTR_CONDITION_SNOWY,
     WeatherCode.FLURRIES: ATTR_CONDITION_SNOWY,
-    WeatherCode.THUNDERSTORM: ATTR_CONDITION_LIGHTNING,
-    WeatherCode.RAIN: ATTR_CONDITION_POURING,
-    WeatherCode.HEAVY_RAIN: ATTR_CONDITION_RAINY,
+    WeatherCode.THUNDERSTORM: ATTR_CONDITION_LIGHTNING_RAINY,
+    WeatherCode.HEAVY_RAIN: ATTR_CONDITION_POURING,
+    WeatherCode.RAIN: ATTR_CONDITION_RAINY,
     WeatherCode.LIGHT_RAIN: ATTR_CONDITION_RAINY,
     WeatherCode.DRIZZLE: ATTR_CONDITION_RAINY,
     WeatherCode.FOG: ATTR_CONDITION_FOG,
@@ -112,32 +115,5 @@ TMRW_ATTR_PRESSURE_SURFACE_LEVEL = "pressureSurfaceLevel"
 TMRW_ATTR_SOLAR_GHI = "solarGHI"
 TMRW_ATTR_CLOUD_BASE = "cloudBase"
 TMRW_ATTR_CLOUD_CEILING = "cloudCeiling"
-
-MANUAL_MIGRATION_MESSAGE = (
-    "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
-    "we will migrate your existing ClimaCell config entry (or config "
-    "entries) to the new Tomorrow.io integration, but because **the "
-    " V3 API is now deprecated**, you will need to get a new V4 API "
-    "key from [Tomorrow.io](https://app.tomorrow.io/development/keys)."
-    " Once that is done, visit the "
-    "[Integrations Configuration](/config/integrations) page and "
-    "click Configure on the Tomorrow.io card(s) to submit the new "
-    "key. Once your key has been validated, your config entry will "
-    "automatically be migrated. The new integration is a drop in "
-    "replacement and your existing entities will be migrated over, "
-    "just note that the location of the integration card on the "
-    "[Integrations Configuration](/config/integrations) page has changed "
-    "since the integration name has changed."
-)
-
-AUTO_MIGRATION_MESSAGE = (
-    "As part of [ClimaCell's rebranding to Tomorrow.io](https://www.tomorrow.io/blog/my-last-day-as-ceo-of-climacell/) "
-    "we have automatically migrated your existing ClimaCell config entry "
-    "(or as many of your ClimaCell config entries as we could) to the new "
-    "Tomorrow.io integration. There is nothing you need to do since the "
-    "new integration is a drop in replacement and your existing entities "
-    "have been migrated over, just note that the location of the "
-    "integration card on the "
-    "[Integrations Configuration](/config/integrations) page has changed "
-    "since the integration name has changed."
-)
+TMRW_ATTR_UV_INDEX = "uvIndex"
+TMRW_ATTR_UV_HEALTH_CONCERN = "uvHealthConcern"

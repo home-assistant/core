@@ -1,5 +1,4 @@
 """Test the Life360 config flow."""
-
 from unittest.mock import patch
 
 from life360 import Life360Error, LoginError
@@ -16,6 +15,7 @@ from homeassistant.components.life360.const import (
     SHOW_DRIVING,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -76,7 +76,9 @@ def life360_fixture():
 @pytest.fixture
 def life360_api():
     """Mock Life360 api."""
-    with patch("homeassistant.components.life360.config_flow.Life360") as mock:
+    with patch(
+        "homeassistant.components.life360.config_flow.Life360", autospec=True
+    ) as mock:
         yield mock.return_value
 
 
@@ -97,7 +99,7 @@ def create_config_entry(hass, state=None):
 # ========== User Flow Tests ===========================================================
 
 
-async def test_user_show_form(hass, life360_api):
+async def test_user_show_form(hass: HomeAssistant, life360_api) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,7 +108,7 @@ async def test_user_show_form(hass, life360_api):
 
     life360_api.get_authorization.assert_not_called()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -118,7 +120,7 @@ async def test_user_show_form(hass, life360_api):
         assert keys[keys.index(key)].default == vol.UNDEFINED
 
 
-async def test_user_config_flow_success(hass, life360_api):
+async def test_user_config_flow_success(hass: HomeAssistant, life360_api) -> None:
     """Test a successful user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -134,16 +136,19 @@ async def test_user_config_flow_success(hass, life360_api):
 
     life360_api.get_authorization.assert_called_once()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER.lower()
     assert result["data"] == TEST_CONFIG_DATA
     assert result["options"] == DEFAULT_OPTIONS
 
 
 @pytest.mark.parametrize(
-    "exception,error", [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")]
+    ("exception", "error"),
+    [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")],
 )
-async def test_user_config_flow_error(hass, life360_api, caplog, exception, error):
+async def test_user_config_flow_error(
+    hass: HomeAssistant, life360_api, caplog: pytest.LogCaptureFixture, exception, error
+) -> None:
     """Test a user config flow with an error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -159,7 +164,7 @@ async def test_user_config_flow_error(hass, life360_api, caplog, exception, erro
 
     life360_api.get_authorization.assert_called_once()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]
     assert result["errors"]["base"] == error
@@ -176,7 +181,9 @@ async def test_user_config_flow_error(hass, life360_api, caplog, exception, erro
         assert default() == val
 
 
-async def test_user_config_flow_already_configured(hass, life360_api):
+async def test_user_config_flow_already_configured(
+    hass: HomeAssistant, life360_api
+) -> None:
     """Test a user config flow with an account already configured."""
     create_config_entry(hass)
 
@@ -190,7 +197,7 @@ async def test_user_config_flow_already_configured(hass, life360_api):
 
     life360_api.get_authorization.assert_not_called()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -198,7 +205,9 @@ async def test_user_config_flow_already_configured(hass, life360_api):
 
 
 @pytest.mark.parametrize("state", [None, config_entries.ConfigEntryState.LOADED])
-async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
+async def test_reauth_config_flow_success(
+    hass: HomeAssistant, life360_api, caplog: pytest.LogCaptureFixture, state
+) -> None:
     """Test a successful reauthorization config flow."""
     config_entry = create_config_entry(hass, state=state)
 
@@ -220,7 +229,7 @@ async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
 
     life360_api.get_authorization.assert_called_once()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert "Reauthorization successful" in caplog.text
@@ -228,7 +237,9 @@ async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
     assert config_entry.data == TEST_CONFIG_DATA_2
 
 
-async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
+async def test_reauth_config_flow_login_error(
+    hass: HomeAssistant, life360_api, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a reauthorization config flow with a login error."""
     config_entry = create_config_entry(hass)
 
@@ -250,7 +261,7 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
 
     life360_api.get_authorization.assert_called_once()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_auth"
@@ -263,6 +274,15 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
     key = list(schema)[0]
     assert key.default() == TEST_PW
 
+    # Simulate hitting RECONFIGURE button.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]
+    assert result["errors"]["base"] == "invalid_auth"
+
     # Simulate getting a new, valid password.
     life360_api.get_authorization.reset_mock(side_effect=True)
     life360_api.get_authorization.return_value = TEST_AUTHORIZATION_3
@@ -274,7 +294,7 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
 
     life360_api.get_authorization.assert_called_once()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert "Reauthorization successful" in caplog.text
@@ -285,14 +305,14 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
 # ========== Option flow Tests =========================================================
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test an options flow."""
     config_entry = create_config_entry(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert not result["errors"]
 
@@ -303,7 +323,7 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_configure(flow_id, USER_OPTIONS)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == TEST_OPTIONS
 
     assert config_entry.options == TEST_OPTIONS

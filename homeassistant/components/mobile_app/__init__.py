@@ -1,5 +1,6 @@
 """Integrates Native Apps to Home Assistant."""
 from contextlib import suppress
+from typing import Any
 
 from homeassistant.components import cloud, notify as hass_notify
 from homeassistant.components.webhook import (
@@ -9,7 +10,11 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,10 +40,12 @@ from .webhook import handle_webhook
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):
@@ -96,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await hass_notify.async_reload(hass, DOMAIN)
 

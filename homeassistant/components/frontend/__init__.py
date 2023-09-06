@@ -146,7 +146,9 @@ class Manifest:
 MANIFEST_JSON = Manifest(
     {
         "background_color": "#FFFFFF",
-        "description": "Home automation platform that puts local control and privacy first.",
+        "description": (
+            "Home automation platform that puts local control and privacy first."
+        ),
         "dir": "ltr",
         "display": "standalone",
         "icons": [
@@ -220,6 +222,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel is a configuration panel for a integration
+    config_panel_domain: str | None = None
+
     def __init__(
         self,
         component_name: str,
@@ -228,6 +233,7 @@ class Panel:
         frontend_url_path: str | None,
         config: dict[str, Any] | None,
         require_admin: bool,
+        config_panel_domain: str | None,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -236,6 +242,7 @@ class Panel:
         self.frontend_url_path = frontend_url_path or component_name
         self.config = config
         self.require_admin = require_admin
+        self.config_panel_domain = config_panel_domain
 
     @callback
     def to_response(self) -> PanelRespons:
@@ -247,6 +254,7 @@ class Panel:
             "config": self.config,
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
+            "config_panel_domain": self.config_panel_domain,
         }
 
 
@@ -262,6 +270,7 @@ def async_register_built_in_panel(
     require_admin: bool = False,
     *,
     update: bool = False,
+    config_panel_domain: str | None = None,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -271,6 +280,7 @@ def async_register_built_in_panel(
         frontend_url_path,
         config,
         require_admin,
+        config_panel_domain,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -311,7 +321,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import hass_frontend
 
     return hass_frontend.where()
@@ -528,8 +538,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """
         if (
             request.path != "/"
-            and len(request.url.parts) > 1
-            and request.url.parts[1] not in self.hass.data[DATA_PANELS]
+            and (parts := request.rel_url.parts)
+            and len(parts) > 1
+            and parts[1] not in self.hass.data[DATA_PANELS]
         ):
             return None, set()
 
@@ -548,11 +559,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return a dict with additional info useful for introspection."""
         return {"panels": list(self.hass.data[DATA_PANELS])}
 
-    def freeze(self) -> None:
-        """Freeze the resource."""
-
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
+        return False
 
     def get_template(self) -> jinja2.Template:
         """Get template."""
@@ -616,7 +625,7 @@ class ManifestJSONView(HomeAssistantView):
 @callback
 @websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
@@ -632,7 +641,7 @@ def websocket_get_panels(
 @callback
 @websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
     if hass.config.safe_mode:
@@ -675,7 +684,7 @@ def websocket_get_themes(
 )
 @websocket_api.async_response
 async def websocket_get_translations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command."""
     resources = await async_get_translations(
@@ -693,7 +702,7 @@ async def websocket_get_translations(
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
 async def websocket_get_version(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get version command."""
     integration = await async_get_integration(hass, "frontend")
@@ -702,7 +711,7 @@ async def websocket_get_version(
 
     for req in integration.requirements:
         if req.startswith("home-assistant-frontend=="):
-            frontend = req.split("==", 1)[1]
+            frontend = req.removeprefix("home-assistant-frontend==")
 
     if frontend is None:
         connection.send_error(msg["id"], "unknown_version", "Version not found")
@@ -719,3 +728,4 @@ class PanelRespons(TypedDict):
     config: dict[str, Any] | None
     url_path: str | None
     require_admin: bool
+    config_panel_domain: str | None

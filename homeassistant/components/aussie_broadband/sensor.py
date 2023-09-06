@@ -3,18 +3,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import re
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
+from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -33,87 +34,94 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     # Internet Services sensors
     SensorValueEntityDescription(
         key="usedMb",
-        name="Data Used",
+        translation_key="data_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:network",
     ),
     SensorValueEntityDescription(
         key="downloadedMb",
-        name="Downloaded",
+        translation_key="downloaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download-network",
     ),
     SensorValueEntityDescription(
         key="uploadedMb",
-        name="Uploaded",
+        translation_key="uploaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_MEGABYTES,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload-network",
     ),
     # Mobile Phone Services sensors
     SensorValueEntityDescription(
         key="national",
-        name="National Calls",
+        translation_key="national_calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="mobile",
-        name="Mobile Calls",
+        translation_key="mobile_calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="international",
-        name="International Calls",
+        translation_key="international_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone-plus",
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="sms",
-        name="SMS Sent",
+        translation_key="sms_sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:message-processing",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="internet",
-        name="Data Used",
+        translation_key="data_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_KILOBYTES,
+        native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:network",
         value=lambda x: x.get("kbytes"),
     ),
     SensorValueEntityDescription(
         key="voicemail",
-        name="Voicemail Calls",
+        translation_key="voicemail_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
+        value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="other",
-        name="Other Calls",
+        translation_key="other_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
+        value=lambda x: x.get("calls"),
     ),
     # Generic sensors
     SensorValueEntityDescription(
         key="daysTotal",
-        name="Billing Cycle Length",
-        native_unit_of_measurement=TIME_DAYS,
+        translation_key="billing_cycle_length",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-range",
     ),
     SensorValueEntityDescription(
         key="daysRemaining",
-        name="Billing Cycle Remaining",
-        native_unit_of_measurement=TIME_DAYS,
+        translation_key="billing_cycle_remaining",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-clock",
     ),
 )
@@ -137,6 +145,7 @@ async def async_setup_entry(
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     """Base class for Aussie Broadband metric sensors."""
 
+    _attr_has_entity_name = True
     entity_description: SensorValueEntityDescription
 
     def __init__(
@@ -146,13 +155,12 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(service["coordinator"])
         self.entity_description = description
         self._attr_unique_id = f"{service[SERVICE_ID]}:{description.key}"
-        self._attr_name = f"{service['name']} {description.name}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, service[SERVICE_ID])},
             manufacturer="Aussie Broadband",
             configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name'].lower()}/{service[SERVICE_ID]}/",
-            name=service["description"],
+            name=re.sub(r" - AVC\d+$", "", service["description"]),
             model=service["name"],
         )
 

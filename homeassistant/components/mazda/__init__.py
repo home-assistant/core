@@ -1,11 +1,11 @@
 """The Mazda Connected Services integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 from pymazda import (
     Client as MazdaAPI,
     MazdaAccountLockedException,
@@ -24,22 +24,26 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import aiohttp_client, device_registry
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN
+from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_REGION, DATA_VEHICLES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
@@ -47,9 +51,9 @@ PLATFORMS = [
 ]
 
 
-async def with_timeout(task, timeout_seconds=10):
+async def with_timeout(task, timeout_seconds=30):
     """Run an async task with a timeout."""
-    async with async_timeout.timeout(timeout_seconds):
+    async with asyncio.timeout(timeout_seconds):
         return await task
 
 
@@ -80,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_handle_service_call(service_call: ServiceCall) -> None:
         """Handle a service call."""
         # Get device entry from device registry
-        dev_reg = device_registry.async_get(hass)
+        dev_reg = dr.async_get(hass)
         device_id = service_call.data["device_id"]
         device_entry = dev_reg.async_get(device_id)
         if TYPE_CHECKING:
@@ -120,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
-        dev_reg = device_registry.async_get(hass)
+        dev_reg = dr.async_get(hass)
 
         if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")
@@ -161,6 +165,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     vehicle["evStatus"] = await with_timeout(
                         mazda_client.get_ev_vehicle_status(vehicle["id"])
                     )
+                    vehicle["hvacSetting"] = await with_timeout(
+                        mazda_client.get_hvac_setting(vehicle["id"])
+                    )
 
             hass.data[DOMAIN][entry.entry_id][DATA_VEHICLES] = vehicles
 
@@ -185,6 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: mazda_client,
         DATA_COORDINATOR: coordinator,
+        DATA_REGION: region,
         DATA_VEHICLES: [],
     }
 
@@ -192,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services
     hass.services.async_register(
@@ -221,6 +229,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class MazdaEntity(CoordinatorEntity):
     """Defines a base Mazda entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, client, coordinator, index):
         """Initialize the Mazda entity."""

@@ -1,17 +1,28 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Optional, TypedDict, Union, cast
+from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
-from aiohttp.typedefs import StrOrURL
+from aiohttp.abc import AbstractStreamWriter
+from aiohttp.http_parser import RawRequestMessage
+from aiohttp.streams import StreamReader
+from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
+from aiohttp.web_log import AccessLogger
+from aiohttp.web_protocol import RequestHandler
+from aiohttp.web_urldispatcher import (
+    AbstractResource,
+    UrlDispatcher,
+    UrlMappingMatchInfo,
+)
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -29,13 +40,21 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-from homeassistant.util import ssl as ssl_util
+from homeassistant.util import dt as dt_util, ssl as ssl_util
+from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+)
 from .cors import setup_cors
+from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
+from .headers import setup_headers
 from .request_context import current_request, setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
@@ -52,6 +71,7 @@ CONF_SSL_PEER_CERTIFICATE: Final = "ssl_peer_certificate"
 CONF_SSL_KEY: Final = "ssl_key"
 CONF_CORS_ORIGINS: Final = "cors_allowed_origins"
 CONF_USE_X_FORWARDED_FOR: Final = "use_x_forwarded_for"
+CONF_USE_X_FRAME_OPTIONS: Final = "use_x_frame_options"
 CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
@@ -69,6 +89,7 @@ DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
+MAX_LINE_SIZE: Final = 24570
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -100,6 +121,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
         }
     ),
 )
@@ -118,6 +140,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
+    use_x_frame_options: bool
     trusted_proxies: list[IPv4Network | IPv6Network]
     login_attempts_threshold: int
     ip_ban_enabled: bool
@@ -125,10 +148,10 @@ class ConfData(TypedDict, total=False):
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> dict | None:
+async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    return cast(Optional[dict], await store.async_load())
+    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    return await store.async_load()
 
 
 class ApiConfig:
@@ -162,6 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
+    use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
@@ -182,6 +206,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_forwarded_for=use_x_forwarded_for,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        use_x_frame_options=use_x_frame_options,
     )
 
     async def stop_server(event: Event) -> None:
@@ -214,6 +239,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class HomeAssistantAccessLogger(AccessLogger):
+    """Access logger for Home Assistant that does not log when disabled."""
+
+    def log(
+        self, request: web.BaseRequest, response: web.StreamResponse, time: float
+    ) -> None:
+        """Log the request.
+
+        The default implementation logs the request to the logger
+        with the INFO level and than throws it away if the logger
+        is not enabled for the INFO level. This implementation
+        does not log the request if the logger is not enabled for
+        the INFO level.
+        """
+        if not self.logger.isEnabledFor(logging.INFO):
+            return
+        super().log(request, response, time)
+
+
+class HomeAssistantRequest(web.Request):
+    """Home Assistant request object."""
+
+    async def json(self, *, loads: JSONDecoder = json_loads) -> Any:
+        """Return body as JSON."""
+        # json_loads is a wrapper around orjson.loads that handles
+        # bytes and str. We can pass the bytes directly to json_loads.
+        return json_loads(await self.read())
+
+
+class HomeAssistantApplication(web.Application):
+    """Home Assistant application."""
+
+    def _make_request(
+        self,
+        message: RawRequestMessage,
+        payload: StreamReader,
+        protocol: RequestHandler,
+        writer: AbstractStreamWriter,
+        task: asyncio.Task[None],
+        _cls: type[web.Request] = HomeAssistantRequest,
+    ) -> web.Request:
+        """Create request instance."""
+        return _cls(
+            message,
+            payload,
+            protocol,
+            writer,
+            task,
+            loop=self._loop,
+            client_max_size=self._client_max_size,
+        )
+
+
 class HomeAssistantHTTP:
     """HTTP server for Home Assistant."""
 
@@ -229,7 +307,18 @@ class HomeAssistantHTTP:
         ssl_profile: str,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
-        self.app = web.Application(middlewares=[], client_max_size=MAX_CLIENT_SIZE)
+        self.app = HomeAssistantApplication(
+            middlewares=[],
+            client_max_size=MAX_CLIENT_SIZE,
+            handler_args={
+                "max_line_size": MAX_LINE_SIZE,
+                "max_field_size": MAX_LINE_SIZE,
+            },
+        )
+        # By default aiohttp does a linear search for routing rules,
+        # we have a lot of routes, so use a dict lookup with a fallback
+        # to the linear search.
+        self.app._router = FastUrlDispatcher()
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -249,6 +338,7 @@ class HomeAssistantHTTP:
         use_x_forwarded_for: bool,
         login_threshold: int,
         is_ban_enabled: bool,
+        use_x_frame_options: bool,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -266,6 +356,7 @@ class HomeAssistantHTTP:
 
         await async_setup_auth(self.hass, self.app)
 
+        setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
 
         if self.ssl_certificate:
@@ -292,7 +383,7 @@ class HomeAssistantHTTP:
             class_name = view.__class__.__name__
             raise AttributeError(f'{class_name} missing required attribute "name"')
 
-        view.register(self.app, self.app.router)
+        view.register(self.hass, self.app, self.app.router)
 
     def register_redirect(
         self,
@@ -356,7 +447,8 @@ class HomeAssistantHTTP:
         except OSError as error:
             if not self.hass.config.safe_mode:
                 raise HomeAssistantError(
-                    f"Could not use SSL certificate from {self.ssl_certificate}: {error}"
+                    f"Could not use SSL certificate from {self.ssl_certificate}:"
+                    f" {error}"
                 ) from error
             _LOGGER.error(
                 "Could not read SSL certificate from %s: %s",
@@ -373,14 +465,17 @@ class HomeAssistantHTTP:
                 context = None
             else:
                 _LOGGER.critical(
-                    "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+                    "Home Assistant is running in safe mode with an emergency self"
+                    " signed ssl certificate because the configured SSL certificate was"
+                    " not usable"
                 )
                 return context
 
         if self.ssl_peer_certificate:
             if context is None:
                 raise HomeAssistantError(
-                    "Failed to create ssl context, no fallback available because a peer certificate is required."
+                    "Failed to create ssl context, no fallback available because a peer"
+                    " certificate is required."
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED
@@ -408,14 +503,15 @@ class HomeAssistantHTTP:
                 x509.NameAttribute(NameOID.COMMON_NAME, host),
             ]
         )
+        now = dt_util.utcnow()
         cert = (
             x509.CertificateBuilder()
             .subject_name(subject)
             .issuer_name(issuer)
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.datetime.utcnow())
-            .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=30))
+            .not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,
@@ -442,10 +538,12 @@ class HomeAssistantHTTP:
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable=protected-access
-        self.app._router.freeze = lambda: None  # type: ignore[assignment]
+        # pylint: disable-next=protected-access
+        self.app._router.freeze = lambda: None  # type: ignore[method-assign]
 
-        self.runner = web.AppRunner(self.app)
+        self.runner = web.AppRunner(
+            self.app, access_log_class=HomeAssistantAccessLogger
+        )
         await self.runner.setup()
 
         self.site = HomeAssistantTCPSite(
@@ -475,12 +573,51 @@ async def start_http_server_and_save_config(
     await server.start()
 
     # If we are set up successful, we store the HTTP settings for safe mode.
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store: storage.Store[dict[str, Any]] = storage.Store(
+        hass, STORAGE_VERSION, STORAGE_KEY
+    )
 
     if CONF_TRUSTED_PROXIES in conf:
         conf[CONF_TRUSTED_PROXIES] = [
-            str(cast(Union[IPv4Network, IPv6Network], ip).network_address)
+            str(cast(IPv4Network | IPv6Network, ip).network_address)
             for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
+
+
+class FastUrlDispatcher(UrlDispatcher):
+    """UrlDispatcher that uses a dict lookup for resolving."""
+
+    def __init__(self) -> None:
+        """Initialize the dispatcher."""
+        super().__init__()
+        self._resource_index: dict[str, list[AbstractResource]] = {}
+
+    def register_resource(self, resource: AbstractResource) -> None:
+        """Register a resource."""
+        super().register_resource(resource)
+        canonical = resource.canonical
+        if "{" in canonical:  # strip at the first { to allow for variables
+            canonical = canonical.split("{")[0].rstrip("/")
+        # There may be multiple resources for a canonical path
+        # so we use a list to avoid falling back to a full linear search
+        self._resource_index.setdefault(canonical, []).append(resource)
+
+    async def resolve(self, request: web.Request) -> UrlMappingMatchInfo:
+        """Resolve a request."""
+        url_parts = request.rel_url.raw_parts
+        resource_index = self._resource_index
+
+        # Walk the url parts looking for candidates
+        for i in range(len(url_parts), 0, -1):
+            url_part = "/" + "/".join(url_parts[1:i])
+            if (resource_candidates := resource_index.get(url_part)) is not None:
+                for candidate in resource_candidates:
+                    if (
+                        match_dict := (await candidate.resolve(request))[0]
+                    ) is not None:
+                        return match_dict
+
+        # Finally, fallback to the linear search
+        return await super().resolve(request)

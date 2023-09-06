@@ -6,7 +6,9 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -23,17 +25,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a new SoundTouch config flow."""
         self.host = None
         self.name = None
-
-    async def async_step_import(self, import_data):
-        """Handle a flow initiated by configuration file."""
-        self.host = import_data[CONF_HOST]
-
-        try:
-            await self._async_get_device_id()
-        except RequestException:
-            return self.async_abort(reason="cannot_connect")
-
-        return await self._async_create_soundtouch_entry()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -60,7 +51,9 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initiated by a zeroconf discovery."""
         self.host = discovery_info.host
 

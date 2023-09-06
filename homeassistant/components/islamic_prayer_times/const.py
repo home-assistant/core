@@ -1,21 +1,27 @@
 """Constants for the Islamic Prayer component."""
-DOMAIN = "islamic_prayer_times"
-NAME = "Islamic Prayer Times"
-PRAYER_TIMES_ICON = "mdi:calendar-clock"
+from typing import Final
 
-SENSOR_TYPES = {
-    "Fajr": "prayer",
-    "Sunrise": "time",
-    "Dhuhr": "prayer",
-    "Asr": "prayer",
-    "Maghrib": "prayer",
-    "Isha": "prayer",
-    "Midnight": "time",
-}
+DOMAIN: Final = "islamic_prayer_times"
+NAME: Final = "Islamic Prayer Times"
 
-CONF_CALC_METHOD = "calculation_method"
+CONF_CALC_METHOD: Final = "calculation_method"
 
-CALC_METHODS = ["isna", "karachi", "mwl", "makkah"]
-DEFAULT_CALC_METHOD = "isna"
-
-DATA_UPDATED = "Islamic_prayer_data_updated"
+CALC_METHODS: Final = [
+    "jafari",
+    "karachi",
+    "isna",
+    "mwl",
+    "makkah",
+    "egypt",
+    "tehran",
+    "gulf",
+    "kuwait",
+    "qatar",
+    "singapore",
+    "france",
+    "turkey",
+    "russia",
+    "moonsighting",
+    "custom",
+]
+DEFAULT_CALC_METHOD: Final = "isna"

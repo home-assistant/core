@@ -1,9 +1,9 @@
 """Button for Shelly."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -11,79 +11,102 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SHELLY_GAS_MODELS
-from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
+from .const import LOGGER, SHELLY_GAS_MODELS
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .utils import get_device_entry_gen
+
+_ShellyCoordinatorT = TypeVar(
+    "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
+)
 
 
 @dataclass
-class ShellyButtonDescriptionMixin:
+class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
     """Mixin to describe a Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
 
 
 @dataclass
-class ShellyButtonDescription(ButtonEntityDescription, ShellyButtonDescriptionMixin):
+class ShellyButtonDescription(
+    ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
+):
     """Class to describe a Button entity."""
 
-    supported: Callable = lambda _: True
+    supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
 
-BUTTONS: Final = [
-    ShellyButtonDescription(
-        key="ota_update",
-        name="OTA Update",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.async_trigger_ota_update(),
-    ),
-    ShellyButtonDescription(
-        key="ota_update_beta",
-        name="OTA Update Beta",
-        device_class=ButtonDeviceClass.UPDATE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
-    ),
-    ShellyButtonDescription(
+BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
+    ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.device.trigger_reboot(),
+        press_action=lambda coordinator: coordinator.device.trigger_reboot(),
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self Test",
+        name="Self test",
         icon="mdi:progress-wrench",
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_self_test(),
-        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
+        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),
+        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
         name="Mute",
         icon="mdi:volume-mute",
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_mute(),
-        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
+        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_mute(),
+        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
         name="Unmute",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_unmute(),
-        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
+        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_unmute(),
+        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
 ]
+
+
+@callback
+def async_migrate_unique_ids(
+    entity_entry: er.RegistryEntry,
+    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
+) -> dict[str, Any] | None:
+    """Migrate button unique IDs."""
+    if not entity_entry.entity_id.startswith("button"):
+        return None
+
+    device_name = slugify(coordinator.device.name)
+
+    for key in ("reboot", "self_test", "mute", "unmute"):
+        old_unique_id = f"{device_name}_{key}"
+        if entity_entry.unique_id == old_unique_id:
+            new_unique_id = f"{coordinator.mac}_{key}"
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    old_unique_id, new_unique_id
+                )
+            }
+
+    return None
 
 
 async def async_setup_entry(
@@ -92,54 +115,63 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    wrapper: RpcDeviceWrapper | BlockDeviceWrapper | None = None
-    if get_device_entry_gen(config_entry) == 2:
-        if rpc_wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(RPC):
-            wrapper = cast(RpcDeviceWrapper, rpc_wrapper)
-    else:
-        if block_wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(BLOCK):
-            wrapper = cast(BlockDeviceWrapper, block_wrapper)
 
-    if wrapper is not None:
-        entities = []
+    @callback
+    def _async_migrate_unique_ids(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        """Migrate button unique IDs."""
+        if TYPE_CHECKING:
+            assert coordinator is not None
+        return async_migrate_unique_ids(entity_entry, coordinator)
+
+    coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
+    if get_device_entry_gen(config_entry) == 2:
+        coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    else:
+        coordinator = get_entry_data(hass)[config_entry.entry_id].block
+
+    if coordinator is not None:
+        await er.async_migrate_entries(
+            hass, config_entry.entry_id, _async_migrate_unique_ids
+        )
+
+        entities: list[ShellyButton] = []
 
         for button in BUTTONS:
-            if not button.supported(wrapper):
+            if not button.supported(coordinator):
                 continue
-            entities.append(ShellyButton(wrapper, button))
+            entities.append(ShellyButton(coordinator, button))
 
         async_add_entities(entities)
 
 
-class ShellyButton(ButtonEntity):
+class ShellyButton(
+    CoordinatorEntity[ShellyRpcCoordinator | ShellyBlockCoordinator], ButtonEntity
+):
     """Defines a Shelly base button."""
 
-    entity_description: ShellyButtonDescription
+    entity_description: ShellyButtonDescription[
+        ShellyRpcCoordinator | ShellyBlockCoordinator
+    ]
 
     def __init__(
         self,
-        wrapper: RpcDeviceWrapper | BlockDeviceWrapper,
-        description: ShellyButtonDescription,
+        coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
+        description: ShellyButtonDescription[
+            ShellyRpcCoordinator | ShellyBlockCoordinator
+        ],
     ) -> None:
         """Initialize Shelly button."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.wrapper = wrapper
 
-        if isinstance(wrapper, RpcDeviceWrapper):
-            device_name = get_rpc_device_name(wrapper.device)
-        else:
-            device_name = get_block_device_name(wrapper.device)
-
-        self._attr_name = f"{device_name} {description.name}"
-        self._attr_unique_id = slugify(self._attr_name)
+        self._attr_name = f"{coordinator.device.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, wrapper.mac)}
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
 
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
-        await self.entity_description.press_action(self.wrapper)
+        await self.entity_description.press_action(self.coordinator)

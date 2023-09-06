@@ -10,13 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DOMAIN
+from .entity import AmbientWeatherEntity
 
 TYPE_BATT1 = "batt1"
 TYPE_BATT10 = "batt10"
@@ -31,6 +30,10 @@ TYPE_BATT9 = "batt9"
 TYPE_BATTIN = "battin"
 TYPE_BATTOUT = "battout"
 TYPE_BATT_CO2 = "batt_co2"
+TYPE_BATT_LEAK1 = "batleak1"
+TYPE_BATT_LEAK2 = "batleak2"
+TYPE_BATT_LEAK3 = "batleak3"
+TYPE_BATT_LEAK4 = "batleak4"
 TYPE_BATT_LIGHTNING = "batt_lightning"
 TYPE_BATT_SM1 = "battsm1"
 TYPE_BATT_SM10 = "battsm10"
@@ -42,6 +45,10 @@ TYPE_BATT_SM6 = "battsm6"
 TYPE_BATT_SM7 = "battsm7"
 TYPE_BATT_SM8 = "battsm8"
 TYPE_BATT_SM9 = "battsm9"
+TYPE_LEAK1 = "leak1"
+TYPE_LEAK2 = "leak2"
+TYPE_LEAK3 = "leak3"
+TYPE_LEAK4 = "leak4"
 TYPE_PM25IN_BATT = "batt_25in"
 TYPE_PM25_BATT = "batt_25"
 TYPE_RELAY1 = "relay1"
@@ -73,252 +80,303 @@ class AmbientBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = (
     AmbientBinarySensorDescription(
         key=TYPE_BATTOUT,
-        name="Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT1,
-        name="Battery 1",
+        translation_key="battery_1",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT2,
-        name="Battery 2",
+        translation_key="battery_2",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT3,
-        name="Battery 3",
+        translation_key="battery_3",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT4,
-        name="Battery 4",
+        translation_key="battery_4",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT5,
-        name="Battery 5",
+        translation_key="battery_5",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT6,
-        name="Battery 6",
+        translation_key="battery_6",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT7,
-        name="Battery 7",
+        translation_key="battery_7",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT8,
-        name="Battery 8",
+        translation_key="battery_8",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT9,
-        name="Battery 9",
+        translation_key="battery_9",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATTIN,
-        name="Interior Battery",
+        translation_key="interior_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT10,
-        name="Soil Monitor Battery 10",
+        translation_key="battery_10",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK1,
+        translation_key="leak_detector_battery_1",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK2,
+        translation_key="leak_detector_battery_2",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK3,
+        translation_key="leak_detector_battery_3",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LEAK4,
+        translation_key="leak_detector_battery_4",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
         key=TYPE_BATT_SM1,
-        name="Soil Monitor Battery 1",
+        translation_key="soil_monitor_battery_1",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM2,
-        name="Soil Monitor Battery 2",
+        translation_key="soil_monitor_battery_2",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM3,
-        name="Soil Monitor Battery 3",
+        translation_key="soil_monitor_battery_3",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM4,
-        name="Soil Monitor Battery 4",
+        translation_key="soil_monitor_battery_4",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM5,
-        name="Soil Monitor Battery 5",
+        translation_key="soil_monitor_battery_5",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM6,
-        name="Soil Monitor Battery 6",
+        translation_key="soil_monitor_battery_6",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM7,
-        name="Soil Monitor Battery 7",
+        translation_key="soil_monitor_battery_7",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM8,
-        name="Soil Monitor Battery 8",
+        translation_key="soil_monitor_battery_8",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM9,
-        name="Soil Monitor Battery 9",
+        translation_key="soil_monitor_battery_9",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_SM10,
-        name="Soil Monitor Battery 10",
+        translation_key="soil_monitor_battery_10",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_CO2,
-        name="CO2 Battery",
+        translation_key="co2_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_BATT_LIGHTNING,
-        name="Lightning Detector Battery",
+        translation_key="lightning_detector_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        on_state=0,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK1,
+        translation_key="leak_detector_1",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK2,
+        translation_key="leak_detector_2",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK3,
+        translation_key="leak_detector_3",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_LEAK4,
+        translation_key="leak_detector_4",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_PM25IN_BATT,
-        name="PM25 Indoor Battery",
+        translation_key="pm25_indoor_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_PM25_BATT,
-        name="PM25 Battery",
+        translation_key="pm25_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY1,
-        name="Relay 1",
+        translation_key="relay_1",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY2,
-        name="Relay 2",
+        translation_key="relay_2",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY3,
-        name="Relay 3",
+        translation_key="relay_3",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY4,
-        name="Relay 4",
+        translation_key="relay_4",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY5,
-        name="Relay 5",
+        translation_key="relay_5",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY6,
-        name="Relay 6",
+        translation_key="relay_6",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY7,
-        name="Relay 7",
+        translation_key="relay_7",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY8,
-        name="Relay 8",
+        translation_key="relay_8",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY9,
-        name="Relay 9",
+        translation_key="relay_9",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_RELAY10,
-        name="Relay 10",
+        translation_key="relay_10",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=1,
@@ -333,14 +391,12 @@ async def async_setup_entry(
     ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            AmbientWeatherBinarySensor(
-                ambient, mac_address, station[ATTR_NAME], description
-            )
-            for mac_address, station in ambient.stations.items()
-            for description in BINARY_SENSOR_DESCRIPTIONS
-            if description.key in station[ATTR_LAST_DATA]
-        ]
+        AmbientWeatherBinarySensor(
+            ambient, mac_address, station[ATTR_NAME], description
+        )
+        for mac_address, station in ambient.stations.items()
+        for description in BINARY_SENSOR_DESCRIPTIONS
+        if description.key in station[ATTR_LAST_DATA]
     )
 
 
@@ -352,9 +408,6 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the entity."""
-        self._attr_is_on = (
-            self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-                self.entity_description.key
-            ]
-            == self.entity_description.on_state
-        )
+        description = self.entity_description
+        last_data = self._ambient.stations[self._mac_address][ATTR_LAST_DATA]
+        self._attr_is_on = last_data[description.key] == description.on_state

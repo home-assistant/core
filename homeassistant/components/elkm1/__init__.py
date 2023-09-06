@@ -7,11 +7,10 @@ import logging
 import re
 from types import MappingProxyType
 from typing import Any, cast
-from urllib.parse import urlparse
 
-import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
+from elkm1_lib.util import parse_url
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -25,15 +24,14 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
     CONF_ZONE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -74,6 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
     Platform.SCENE,
@@ -93,6 +92,11 @@ SET_TIME_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("prefix", default=""): cv.string,
     }
 )
+
+
+def hostname_from_url(url: str) -> str:
+    """Return the hostname from a url."""
+    return parse_url(url)[1]
 
 
 def _host_validator(config: dict[str, str]) -> dict[str, str]:
@@ -182,8 +186,10 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    asyncio.create_task(_async_discovery())
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    hass.async_create_background_task(_async_discovery(), "elkm1 setup discovery")
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     if DOMAIN not in hass_config:
         return True
@@ -230,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
     conf: MappingProxyType[str, Any] = entry.data
 
-    host = urlparse(entry.data[CONF_HOST]).hostname
+    host = hostname_from_url(entry.data[CONF_HOST])
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
 
@@ -292,7 +298,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
-    temperature_unit = TEMP_CELSIUS if elk_temp_unit == "C" else TEMP_FAHRENHEIT
+    if elk_temp_unit == "C":
+        temperature_unit = UnitOfTemperature.CELSIUS
+    else:
+        temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
@@ -303,7 +312,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "keypads": {},
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -372,7 +381,7 @@ async def async_wait_for_elk_to_sync(
     ):
         _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)
@@ -442,13 +451,15 @@ def create_elk_entities(
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
         self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
-        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit: str = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
@@ -463,21 +474,12 @@ class ElkEntity(Entity):
         else:
             uid_start = "elkm1"
         self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
-
-    @property
-    def name(self) -> str:
-        """Name of the element."""
-        return f"{self._name_prefix}{self._element.name}"
+        self._attr_name = element.name
 
     @property
     def unique_id(self) -> str:
         """Return unique id of the element."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

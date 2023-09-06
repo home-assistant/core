@@ -1,5 +1,5 @@
 """Provides the constants needed for component."""
-from enum import IntEnum
+from enum import IntFlag, StrEnum
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -38,6 +38,46 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
 DOMAIN = "media_player"
 
+
+class MediaPlayerState(StrEnum):
+    """State of media player entities."""
+
+    OFF = "off"
+    ON = "on"
+    IDLE = "idle"
+    PLAYING = "playing"
+    PAUSED = "paused"
+    STANDBY = "standby"
+    BUFFERING = "buffering"
+
+
+class MediaClass(StrEnum):
+    """Media class for media player entities."""
+
+    ALBUM = "album"
+    APP = "app"
+    ARTIST = "artist"
+    CHANNEL = "channel"
+    COMPOSER = "composer"
+    CONTRIBUTING_ARTIST = "contributing_artist"
+    DIRECTORY = "directory"
+    EPISODE = "episode"
+    GAME = "game"
+    GENRE = "genre"
+    IMAGE = "image"
+    MOVIE = "movie"
+    MUSIC = "music"
+    PLAYLIST = "playlist"
+    PODCAST = "podcast"
+    SEASON = "season"
+    TRACK = "track"
+    TV_SHOW = "tv_show"
+    URL = "url"
+    VIDEO = "video"
+
+
+# These MEDIA_CLASS_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the MediaClass enum instead.
 MEDIA_CLASS_ALBUM = "album"
 MEDIA_CLASS_APP = "app"
 MEDIA_CLASS_ARTIST = "artist"
@@ -59,6 +99,35 @@ MEDIA_CLASS_TV_SHOW = "tv_show"
 MEDIA_CLASS_URL = "url"
 MEDIA_CLASS_VIDEO = "video"
 
+
+class MediaType(StrEnum):
+    """Media type for media player entities."""
+
+    ALBUM = "album"
+    APP = "app"
+    APPS = "apps"
+    ARTIST = "artist"
+    CHANNEL = "channel"
+    CHANNELS = "channels"
+    COMPOSER = "composer"
+    CONTRIBUTING_ARTIST = "contributing_artist"
+    EPISODE = "episode"
+    GAME = "game"
+    GENRE = "genre"
+    IMAGE = "image"
+    MOVIE = "movie"
+    MUSIC = "music"
+    PLAYLIST = "playlist"
+    PODCAST = "podcast"
+    SEASON = "season"
+    TRACK = "track"
+    TVSHOW = "tvshow"
+    URL = "url"
+    VIDEO = "video"
+
+
+# These MEDIA_TYPE_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the MediaType enum instead.
 MEDIA_TYPE_ALBUM = "album"
 MEDIA_TYPE_APP = "app"
 MEDIA_TYPE_APPS = "apps"
@@ -88,13 +157,24 @@ SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
 
+
+class RepeatMode(StrEnum):
+    """Repeat mode for media player entities."""
+
+    ALL = "all"
+    OFF = "off"
+    ONE = "one"
+
+
+# These REPEAT_MODE_* constants are deprecated as of Home Assistant 2022.10.
+# Please use the RepeatMode enum instead.
 REPEAT_MODE_ALL = "all"
 REPEAT_MODE_OFF = "off"
 REPEAT_MODE_ONE = "one"
 REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 
 
-class MediaPlayerEntityFeature(IntEnum):
+class MediaPlayerEntityFeature(IntFlag):
     """Supported features of the media player entity."""
 
     PAUSE = 1
@@ -117,6 +197,8 @@ class MediaPlayerEntityFeature(IntEnum):
     BROWSE_MEDIA = 131072
     REPEAT_SET = 262144
     GROUPING = 524288
+    MEDIA_ANNOUNCE = 1048576
+    MEDIA_ENQUEUE = 2097152
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

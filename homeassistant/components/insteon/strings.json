@@ -4,8 +4,10 @@
     "step": {
       "user": {
         "description": "Select the Insteon modem type.",
-        "data": {
-          "modem_type": "Modem type."
+        "menu_options": {
+          "plm": "PowerLink Modem (PLM)",
+          "hubv1": "Hub version 1 (pre 2014)",
+          "hubv2": "Hub version 2"
         }
       },
       "plm": {
@@ -34,12 +36,11 @@
         }
       },
       "confirm_usb": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "select_single": "Select one option."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -50,8 +51,9 @@
   "options": {
     "step": {
       "init": {
-        "data": {
+        "menu_options": {
           "change_hub_config": "Change the Hub configuration.",
+          "change_plm_config": "Change the PLM configuration.",
           "add_override": "Add a device override.",
           "add_x10": "Add an X10 device.",
           "remove_override": "Remove a device override.",
@@ -59,7 +61,7 @@
         }
       },
       "change_hub_config": {
-        "description": "Change the Insteon Hub connection information. You must restart Home Assistant after making this change. This does not change the configuration of the Hub itself. To change the configuration in the Hub use the Hub app.",
+        "description": "Change the Insteon Hub connection information.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -67,8 +69,14 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
+      "change_plm_config": {
+        "description": "Change the Insteon PLM connection information.",
+        "data": {
+          "device": "[%key:common::config_flow::data::usb_path%]"
+        }
+      },
       "add_override": {
-        "description": "Add a device override.",
+        "description": "[%key:component::insteon::options::step::init::menu_options::add_override%]",
         "data": {
           "address": "Device address (i.e. 1a2b3c)",
           "cat": "Device category (i.e. 0x10)",
@@ -93,14 +101,127 @@
       "remove_x10": {
         "description": "Remove an X10 device",
         "data": {
-          "address": "Select a device address to remove"
+          "address": "[%key:component::insteon::options::step::remove_override::data::address%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "select_single": "Select one option.",
       "input_error": "Invalid entries, please check your values."
+    }
+  },
+  "services": {
+    "add_all_link": {
+      "name": "Add all link",
+      "description": "Tells the Insteom Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "All-Link group number."
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "Linking mode   controller - IM is controller   responder - IM is responder."
+        }
+      }
+    },
+    "delete_all_link": {
+      "name": "Delete all link",
+      "description": "Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "[%key:component::insteon::services::add_all_link::fields::group::description%]"
+        }
+      }
+    },
+    "load_all_link_database": {
+      "name": "Load all link database",
+      "description": "Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of the device to load. Use \"all\" to load the database of all devices."
+        },
+        "reload": {
+          "name": "[%key:common::action::reload%]",
+          "description": "Reloads all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false."
+        }
+      }
+    },
+    "print_all_link_database": {
+      "name": "Print all link database",
+      "description": "Prints the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of the device to print."
+        }
+      }
+    },
+    "print_im_all_link_database": {
+      "name": "Print IM all link database",
+      "description": "Prints the All-Link Database for the INSTEON Modem (IM)."
+    },
+    "x10_all_units_off": {
+      "name": "X10 all units off",
+      "description": "[%key:component::insteon::services::add_all_link::description%]",
+      "fields": {
+        "housecode": {
+          "name": "Housecode",
+          "description": "X10 house code."
+        }
+      }
+    },
+    "x10_all_lights_on": {
+      "name": "X10 all lights on",
+      "description": "Sends X10 All Lights On command.",
+      "fields": {
+        "housecode": {
+          "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
+          "description": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::description%]"
+        }
+      }
+    },
+    "x10_all_lights_off": {
+      "name": "X10 all lights off",
+      "description": "Sends X10 All Lights Off command.",
+      "fields": {
+        "housecode": {
+          "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
+          "description": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::description%]"
+        }
+      }
+    },
+    "scene_on": {
+      "name": "Scene on",
+      "description": "Triggers an INSTEON scene to turn ON.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "INSTEON group or scene number."
+        }
+      }
+    },
+    "scene_off": {
+      "name": "Scene off",
+      "description": "Triggers an INSTEON scene to turn OFF.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "[%key:component::insteon::services::scene_on::fields::group::description%]"
+        }
+      }
+    },
+    "add_default_links": {
+      "name": "Add default links",
+      "description": "Adds the default links between the device and the Insteon Modem (IM).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::insteon::services::load_all_link_database::fields::entity_id::description%]"
+        }
+      }
     }
   }
 }

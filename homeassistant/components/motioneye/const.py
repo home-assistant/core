@@ -89,8 +89,8 @@ SERVICE_SET_TEXT_OVERLAY: Final = "set_text_overlay"
 SERVICE_ACTION: Final = "action"
 SERVICE_SNAPSHOT: Final = "snapshot"
 
-SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal." "{}"
-SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal." "{}"
+SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal.{{}}"
+SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal.{{}}"
 
 TYPE_MOTIONEYE_ACTION_SENSOR = f"{DOMAIN}_action_sensor"
 TYPE_MOTIONEYE_MJPEG_CAMERA: Final = "motioneye_mjpeg_camera"

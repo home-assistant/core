@@ -1,9 +1,9 @@
 {
   "domain": "eddystone_temperature",
   "name": "Eddystone",
-  "documentation": "https://www.home-assistant.io/integrations/eddystone_temperature",
-  "requirements": ["beacontools[scan]==1.2.3", "construct==2.10.56"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/eddystone_temperature",
   "iot_class": "local_polling",
-  "loggers": ["beacontools"]
+  "loggers": ["beacontools"],
+  "requirements": ["beacontools[scan]==2.1.0"]
 }

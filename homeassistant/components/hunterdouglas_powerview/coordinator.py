@@ -1,11 +1,11 @@
 """Coordinate data for powerview devices."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
 from aiopvapi.shades import Shades
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,7 +25,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         shades: Shades,
         hub_address: str,
     ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
+        """Initialize DataUpdateCoordinator to gather data for specific Powerview Hub."""
         self.shades = shades
         super().__init__(
             hass,
@@ -37,7 +37,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     async def _async_update_data(self) -> PowerviewShadeData:
         """Fetch data from shade endpoint."""
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             shade_entries = await self.shades.get_resources()
 
         if isinstance(shade_entries, bool):

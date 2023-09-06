@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from . import MinecraftServer, helpers
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
@@ -18,7 +19,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -29,7 +30,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             address_left, separator, address_right = user_input[CONF_HOST].rpartition(
                 ":"
             )
-            # If no separator is found, 'rpartition' return ('', '', original_string).
+            # If no separator is found, 'rpartition' returns ('', '', original_string).
             if separator == "":
                 host = address_right
             else:
@@ -85,9 +86,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     unique_id = ""
                     title = f"{host}:{port}"
                     if ip_address is not None:
-                        # Since IP addresses can change and therefore are not allowed in a
-                        # unique_id, fall back to the MAC address and port (to support
-                        # servers with same MAC address but different ports).
+                        # Since IP addresses can change and therefore are not allowed
+                        # in a unique_id, fall back to the MAC address and port (to
+                        # support servers with same MAC address but different ports).
                         unique_id = f"{mac_address}-{port}"
                         if ip_address.version == 6:
                             title = f"[{host}]:{port}"
@@ -101,22 +102,23 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                             unique_id = f"{host}-srv"
                             title = host
                         else:
-                            # Use host name and port in unique_id (to support servers with
-                            # same host name but different ports).
+                            # Use host name and port in unique_id (to support servers
+                            # with same host name but different ports).
                             unique_id = f"{host}-{port}"
 
                     # Abort in case the host was already configured before.
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
 
-                    # Configuration data are available and no error was detected, create configuration entry.
+                    # Configuration data are available and no error was detected,
+                    # create configuration entry.
                     return self.async_create_entry(title=title, data=config_data)
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
         return self._show_config_form(user_input, errors)
 
-    def _show_config_form(self, user_input=None, errors=None):
+    def _show_config_form(self, user_input=None, errors=None) -> FlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}

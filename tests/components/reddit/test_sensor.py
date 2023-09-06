@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {
@@ -149,7 +150,7 @@ class MockSubreddit:
 
 
 @patch("praw.Reddit", new=MockPraw)
-async def test_setup_with_valid_config(hass):
+async def test_setup_with_valid_config(hass: HomeAssistant) -> None:
     """Test the platform setup with Reddit configuration."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)
     await hass.async_block_till_done()
@@ -176,7 +177,7 @@ async def test_setup_with_valid_config(hass):
 
 
 @patch("praw.Reddit", new=MockPraw)
-async def test_setup_with_invalid_config(hass):
+async def test_setup_with_invalid_config(hass: HomeAssistant) -> None:
     """Test the platform setup with invalid Reddit configuration."""
     assert await async_setup_component(hass, "sensor", INVALID_SORT_BY_CONFIG)
     await hass.async_block_till_done()

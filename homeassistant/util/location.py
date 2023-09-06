@@ -1,5 +1,4 @@
-"""
-Module with location helpers.
+"""Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
@@ -79,8 +78,7 @@ def distance(
 def vincenty(
     point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
 ) -> float | None:
-    """
-    Vincenty formula (inverse method) to calculate the distance.
+    """Vincenty formula (inverse method) to calculate the distance.
 
     Result in kilometers or miles between two points on the surface of a
     spheroid.
@@ -91,7 +89,6 @@ def vincenty(
     if point1[0] == point2[0] and point1[1] == point2[1]:
         return 0.0
 
-    # pylint: disable=invalid-name
     U1 = math.atan((1 - FLATTENING) * math.tan(math.radians(point1[0])))
     U2 = math.atan((1 - FLATTENING) * math.tan(math.radians(point2[0])))
     L = math.radians(point2[1] - point1[1])

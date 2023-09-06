@@ -4,54 +4,37 @@ import contextlib
 import logging
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_SEASON,
-    MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_TVSHOW,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
 
 PLAYABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_TRACK,
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.TRACK,
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
-    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
-    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+    MediaType.ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
+    MediaType.SEASON: MediaClass.SEASON,
+    MediaType.TVSHOW: MediaClass.TV_SHOW,
 }
 
 CHILD_TYPE_MEDIA_CLASS = {
-    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
-    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
-    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
-    MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
-    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
+    MediaType.SEASON: MediaClass.SEASON,
+    MediaType.ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
+    MediaType.MOVIE: MediaClass.MOVIE,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
+    MediaType.TRACK: MediaClass.TRACK,
+    MediaType.TVSHOW: MediaClass.TV_SHOW,
+    MediaType.CHANNEL: MediaClass.CHANNEL,
+    MediaType.EPISODE: MediaClass.EPISODE,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,12 +59,12 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
         *(item_payload(item, get_thumbnail_url) for item in media)
     )
 
-    if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
+    if search_type in (MediaType.TVSHOW, MediaType.MOVIE) and search_id == "":
         children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
 
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-            search_type, MEDIA_CLASS_DIRECTORY
+            search_type, MediaClass.DIRECTORY
         ),
         media_content_id=search_id,
         media_content_type=search_type,
@@ -93,7 +76,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     )
 
     if search_type == "library_music":
-        response.children_media_class = MEDIA_CLASS_MUSIC
+        response.children_media_class = MediaClass.MUSIC
     else:
         response.calculate_children_class()
 
@@ -101,8 +84,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
 
 
 async def item_payload(item, get_thumbnail_url=None):
-    """
-    Create response payload for a single media item.
+    """Create response payload for a single media item.
 
     Used by async_browse_media.
     """
@@ -111,42 +93,42 @@ async def item_payload(item, get_thumbnail_url=None):
     media_class = None
 
     if "songid" in item:
-        media_content_type = MEDIA_TYPE_TRACK
+        media_content_type = MediaType.TRACK
         media_content_id = f"{item['songid']}"
         can_play = True
         can_expand = False
     elif "albumid" in item:
-        media_content_type = MEDIA_TYPE_ALBUM
+        media_content_type = MediaType.ALBUM
         media_content_id = f"{item['albumid']}"
         can_play = True
         can_expand = True
     elif "artistid" in item:
-        media_content_type = MEDIA_TYPE_ARTIST
+        media_content_type = MediaType.ARTIST
         media_content_id = f"{item['artistid']}"
         can_play = True
         can_expand = True
     elif "movieid" in item:
-        media_content_type = MEDIA_TYPE_MOVIE
+        media_content_type = MediaType.MOVIE
         media_content_id = f"{item['movieid']}"
         can_play = True
         can_expand = False
     elif "episodeid" in item:
-        media_content_type = MEDIA_TYPE_EPISODE
+        media_content_type = MediaType.EPISODE
         media_content_id = f"{item['episodeid']}"
         can_play = True
         can_expand = False
     elif "seasonid" in item:
-        media_content_type = MEDIA_TYPE_SEASON
+        media_content_type = MediaType.SEASON
         media_content_id = f"{item['tvshowid']}/{item['season']}"
         can_play = False
         can_expand = True
     elif "tvshowid" in item:
-        media_content_type = MEDIA_TYPE_TVSHOW
+        media_content_type = MediaType.TVSHOW
         media_content_id = f"{item['tvshowid']}"
         can_play = False
         can_expand = True
     elif "channelid" in item:
-        media_content_type = MEDIA_TYPE_CHANNEL
+        media_content_type = MediaType.CHANNEL
         media_content_id = f"{item['channelid']}"
         if broadcasting := item.get("broadcastnow"):
             show = broadcasting.get("title")
@@ -156,7 +138,7 @@ async def item_payload(item, get_thumbnail_url=None):
     else:
         # this case is for the top folder of each type
         # possible content types: album, artist, movie, library_music, tvshow, channel
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         media_content_type = item["type"]
         media_content_id = ""
         can_play = False
@@ -196,13 +178,12 @@ def media_source_content_filter(item: BrowseMedia) -> bool:
 
 
 async def library_payload(hass):
-    """
-    Create response payload to describe contents of a specific library.
+    """Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
     library_info = BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         title="Media Library",
@@ -213,9 +194,9 @@ async def library_payload(hass):
 
     library = {
         "library_music": "Music",
-        MEDIA_TYPE_MOVIE: "Movies",
-        MEDIA_TYPE_TVSHOW: "TV shows",
-        MEDIA_TYPE_CHANNEL: "Channels",
+        MediaType.MOVIE: "Movies",
+        MediaType.TVSHOW: "TV shows",
+        MediaType.CHANNEL: "Channels",
     }
 
     library_info.children = await asyncio.gather(
@@ -256,7 +237,7 @@ async def get_media_info(media_library, search_id, search_type):
     media = None
 
     properties = ["thumbnail"]
-    if search_type == MEDIA_TYPE_ALBUM:
+    if search_type == MediaType.ALBUM:
         if search_id:
             album = await media_library.get_album_details(
                 album_id=int(search_id), properties=properties
@@ -282,7 +263,7 @@ async def get_media_info(media_library, search_id, search_type):
             media = media.get("albums")
             title = "Albums"
 
-    elif search_type == MEDIA_TYPE_ARTIST:
+    elif search_type == MediaType.ARTIST:
         if search_id:
             media = await media_library.get_albums(
                 artist_id=int(search_id), properties=properties
@@ -301,11 +282,11 @@ async def get_media_info(media_library, search_id, search_type):
             title = "Artists"
 
     elif search_type == "library_music":
-        library = {MEDIA_TYPE_ALBUM: "Albums", MEDIA_TYPE_ARTIST: "Artists"}
+        library = {MediaType.ALBUM: "Albums", MediaType.ARTIST: "Artists"}
         media = [{"label": name, "type": type_} for type_, name in library.items()]
         title = "Music Library"
 
-    elif search_type == MEDIA_TYPE_MOVIE:
+    elif search_type == MediaType.MOVIE:
         if search_id:
             movie = await media_library.get_movie_details(
                 movie_id=int(search_id), properties=properties
@@ -319,7 +300,7 @@ async def get_media_info(media_library, search_id, search_type):
             media = media.get("movies")
             title = "Movies"
 
-    elif search_type == MEDIA_TYPE_TVSHOW:
+    elif search_type == MediaType.TVSHOW:
         if search_id:
             media = await media_library.get_seasons(
                 tv_show_id=int(search_id),
@@ -338,7 +319,7 @@ async def get_media_info(media_library, search_id, search_type):
             media = media.get("tvshows")
             title = "TV Shows"
 
-    elif search_type == MEDIA_TYPE_SEASON:
+    elif search_type == MediaType.SEASON:
         tv_show_id, season_id = search_id.split("/", 1)
         media = await media_library.get_episodes(
             tv_show_id=int(tv_show_id),
@@ -355,7 +336,7 @@ async def get_media_info(media_library, search_id, search_type):
             )
             title = season["seasondetails"]["label"]
 
-    elif search_type == MEDIA_TYPE_CHANNEL:
+    elif search_type == MediaType.CHANNEL:
         media = await media_library.get_channels(
             channel_group_id="alltv",
             properties=["thumbnail", "channeltype", "channel", "broadcastnow"],

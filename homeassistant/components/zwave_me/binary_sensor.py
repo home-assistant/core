@@ -4,7 +4,7 @@ from __future__ import annotations
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -22,7 +22,7 @@ BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
     ),
     "motion": BinarySensorEntityDescription(
         key="motion",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 }
 DEVICE_NAME = ZWaveMePlatform.BINARY_SENSOR

@@ -7,16 +7,18 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SET_TEMPERATURE_SCHEMA,
     ClimateEntity,
+    HVACMode,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_set_temp_schema_no_req(hass, caplog):
+async def test_set_temp_schema_no_req(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -31,7 +33,9 @@ async def test_set_temp_schema_no_req(hass, caplog):
     assert len(calls) == 0
 
 
-async def test_set_temp_schema(hass, caplog):
+async def test_set_temp_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with ok required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -50,20 +54,20 @@ class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
-        Need to be one of HVAC_MODE_*.
+        Need to be one of HVACMode.*.
         """
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+        return [HVACMode.OFF, HVACMode.HEAT]
 
     def turn_on(self) -> None:
         """Turn on."""
@@ -72,7 +76,7 @@ class MockClimateEntity(ClimateEntity):
         """Turn off."""
 
 
-async def test_sync_turn_on(hass):
+async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
     climate = MockClimateEntity()
     climate.hass = hass
@@ -83,7 +87,7 @@ async def test_sync_turn_on(hass):
     assert climate.turn_on.called
 
 
-async def test_sync_turn_off(hass):
+async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
     climate = MockClimateEntity()
     climate.hass = hass

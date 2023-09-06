@@ -1,10 +1,15 @@
 """Support for XS1 climate devices."""
 from __future__ import annotations
 
+from typing import Any
+
 from xs1_api_client.api_constants import ActuatorType
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,7 +74,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         return self.sensor.value()
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self.device.unit()
 
@@ -88,7 +93,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         """Return the maximum temperature."""
         return MAX_TEMP
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
@@ -100,7 +105,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Also update the sensor when available."""
         await super().async_update()
         if self.sensor is not None:

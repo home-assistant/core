@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN
@@ -41,6 +41,7 @@ async def async_setup_entry(
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -108,7 +109,10 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
             self.async_write_ha_state()
         else:
             _LOGGER.debug(
-                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled",
+                (
+                    "Device Changed Event for %s (Alarm Control Panel) not fired."
+                    " Entity is disabled"
+                ),
                 self.name,
             )
 
@@ -119,11 +123,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         if self._home.name:
             name = f"{self._home.name} {name}"
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

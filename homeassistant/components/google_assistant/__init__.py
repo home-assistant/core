@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     CONF_ALIASES,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
@@ -28,9 +28,10 @@ from .const import (
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
+    EVENT_QUERY_RECEIVED,  # noqa: F401
     SERVICE_REQUEST_SYNC,
+    SOURCE_CLOUD,
 )
-from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import GoogleAssistantView, GoogleConfig
 
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
@@ -152,7 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if agent_user_id is None:
             _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id"
+                "No agent_user_id supplied for request_sync. Call as a user or pass in"
+                " user id as agent_user_id"
             )
             return
 
@@ -164,6 +166,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

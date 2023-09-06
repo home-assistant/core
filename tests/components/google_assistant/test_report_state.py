@@ -2,7 +2,10 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.google_assistant import error, report_state
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -11,7 +14,9 @@ from . import BASIC_CONFIG
 from tests.common import async_fire_time_changed
 
 
-async def test_report_state(hass, caplog):
+async def test_report_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test report state works."""
     assert await async_setup_component(hass, "switch", {})
     hass.states.async_set("light.ceiling", "off")
@@ -64,7 +69,7 @@ async def test_report_state(hass, caplog):
 
     # Test that if serialize returns same value, we don't send
     with patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
         return_value={"same": "info"},
     ), patch.object(BASIC_CONFIG, "async_report_state_all", AsyncMock()) as mock_report:
         # New state, so reported
@@ -99,7 +104,7 @@ async def test_report_state(hass, caplog):
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report, patch(
-        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.query_serialize",
         side_effect=error.SmartHomeError("mock-error", "mock-msg"),
     ):
         hass.states.async_set("light.kitchen", "off")

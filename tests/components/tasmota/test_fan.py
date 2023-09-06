@@ -14,6 +14,7 @@ from voluptuous import MultipleInvalid
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -30,9 +31,12 @@ from .test_common import (
 
 from tests.common import async_fire_mqtt_message
 from tests.components.fan import common
+from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
-async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+async def test_controlling_state_via_mqtt(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["if"] = 1
@@ -88,7 +92,9 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.attributes["percentage"] == 0
 
 
-async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
+async def test_sending_mqtt_commands(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test the sending MQTT commands."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["if"] = 1
@@ -154,8 +160,37 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
         "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
     )
 
+    # Test the last known fan speed is restored
+    # First, get a fan speed update
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":3}')
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_ON
+    assert state.attributes["percentage"] == 100
+    mqtt_mock.async_publish.reset_mock()
 
-async def test_invalid_fan_speed_percentage(hass, mqtt_mock, setup_tasmota):
+    # Then turn the fan off and get a fan state update
+    await common.async_turn_off(hass, "fan.tasmota")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":0}')
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_OFF
+    assert state.attributes["percentage"] == 0
+    mqtt_mock.async_publish.reset_mock()
+
+    # Finally, turn the fan on again and verify MQTT message is sent with last known speed
+    await common.async_turn_on(hass, "fan.tasmota")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+
+async def test_invalid_fan_speed_percentage(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test the sending MQTT commands."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["if"] = 1
@@ -184,36 +219,47 @@ async def test_invalid_fan_speed_percentage(hass, mqtt_mock, setup_tasmota):
 
 
 async def test_availability_when_connection_lost(
-    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test availability after MQTT disconnection."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
     await help_test_availability_when_connection_lost(
-        hass, mqtt_client_mock, mqtt_mock, Platform.FAN, config
+        hass, mqtt_client_mock, mqtt_mock, Platform.FAN, config, object_id="tasmota"
     )
 
 
-async def test_availability(hass, mqtt_mock, setup_tasmota):
+async def test_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test availability."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
-    await help_test_availability(hass, mqtt_mock, Platform.FAN, config)
+    await help_test_availability(
+        hass, mqtt_mock, Platform.FAN, config, object_id="tasmota"
+    )
 
 
-async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
+async def test_availability_discovery_update(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test availability discovery update."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
-    await help_test_availability_discovery_update(hass, mqtt_mock, Platform.FAN, config)
+    await help_test_availability_discovery_update(
+        hass, mqtt_mock, Platform.FAN, config, object_id="tasmota"
+    )
 
 
 async def test_availability_poll_state(
-    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
-):
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
     """Test polling after MQTT connection (re)established."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["if"] = 1
@@ -223,37 +269,59 @@ async def test_availability_poll_state(
     )
 
 
-async def test_discovery_removal_fan(hass, mqtt_mock, caplog, setup_tasmota):
+async def test_discovery_removal_fan(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    setup_tasmota,
+) -> None:
     """Test removal of discovered fan."""
     config1 = copy.deepcopy(DEFAULT_CONFIG)
-    config1["dn"] = "Test"
     config1["if"] = 1
     config2 = copy.deepcopy(DEFAULT_CONFIG)
-    config2["dn"] = "Test"
     config2["if"] = 0
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, Platform.FAN, config1, config2
+        hass,
+        mqtt_mock,
+        caplog,
+        Platform.FAN,
+        config1,
+        config2,
+        object_id="tasmota",
+        name="Tasmota",
     )
 
 
-async def test_discovery_update_unchanged_fan(hass, mqtt_mock, caplog, setup_tasmota):
+async def test_discovery_update_unchanged_fan(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,
+    setup_tasmota,
+) -> None:
     """Test update of discovered fan."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
     with patch(
         "homeassistant.components.tasmota.fan.TasmotaFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, Platform.FAN, config, discovery_update
+            hass,
+            mqtt_mock,
+            caplog,
+            Platform.FAN,
+            config,
+            discovery_update,
+            object_id="tasmota",
+            name="Tasmota",
         )
 
 
-async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
+async def test_discovery_device_remove(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test device registry remove."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
     unique_id = f"{DEFAULT_CONFIG['mac']}_fan_fan_ifan"
     await help_test_discovery_device_remove(
@@ -261,10 +329,11 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
+async def test_entity_id_update_subscriptions(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
     topics = [
         get_topic_stat_result(config),
@@ -272,15 +341,16 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, Platform.FAN, config, topics
+        hass, mqtt_mock, Platform.FAN, config, topics, object_id="tasmota"
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota):
+async def test_entity_id_update_discovery_update(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
     """Test MQTT discovery update when entity_id is updated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["dn"] = "Test"
     config["if"] = 1
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, Platform.FAN, config
+        hass, mqtt_mock, Platform.FAN, config, object_id="tasmota"
     )

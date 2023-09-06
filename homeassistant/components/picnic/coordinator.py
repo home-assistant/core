@@ -1,9 +1,10 @@
 """Coordinator to fetch data from the Picnic API."""
+import asyncio
+from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
 
-import async_timeout
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
 
@@ -43,7 +44,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
             # Update the auth token in the config entry if applicable
@@ -120,13 +121,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         #  Get the next order's position details if there is an undelivered order
         delivery_position = {}
         if next_delivery and not next_delivery.get("delivery_time"):
-            try:
+            # ValueError: If no information yet can mean an empty response
+            with suppress(ValueError):
                 delivery_position = self.picnic_api_client.get_delivery_position(
                     next_delivery["delivery_id"]
                 )
-            except ValueError:
-                # No information yet can mean an empty response
-                pass
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
         # but, it's only available shortly before the actual delivery.

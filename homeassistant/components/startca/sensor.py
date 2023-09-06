@@ -1,17 +1,18 @@
 """Support for Start.ca Bandwidth Monitor."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
-import async_timeout
 import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -19,8 +20,8 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
-    DATA_GIGABYTES,
     PERCENTAGE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -47,67 +48,78 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="usage_gb",
         name="Usage",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="limit",
         name="Data limit",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="used_download",
         name="Used Download",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="used_upload",
         name="Used Upload",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="used_total",
         name="Used Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="grace_download",
         name="Grace Download",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="grace_upload",
         name="Grace Upload",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="grace_total",
         name="Grace Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="total_download",
         name="Total Download",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="total_upload",
         name="Total Upload",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="used_remaining",
         name="Remaining",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
 )
@@ -145,6 +157,13 @@ async def async_setup_platform(
 
     name = config[CONF_NAME]
     monitored_variables = config[CONF_MONITORED_VARIABLES]
+    if bandwidthcap <= 0:
+        monitored_variables = list(
+            filter(
+                lambda itm: itm not in {"limit", "usage", "used_remaining"},
+                monitored_variables,
+            )
+        )
     entities = [
         StartcaSensor(ts_data, name, description)
         for description in SENSOR_TYPES
@@ -156,14 +175,14 @@ async def async_setup_platform(
 class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
-    def __init__(self, startcadata, name, description: SensorEntityDescription):
+    def __init__(self, startcadata, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.startcadata = startcadata
 
         self._attr_name = f"{name} {description.name}"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Start.ca and update the state."""
         await self.startcadata.async_update()
         sensor_type = self.entity_description.key
@@ -181,11 +200,9 @@ class StartcaData:
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
         # Set unlimited users to infinite, otherwise the cap.
-        self.data = (
-            {"limit": self.bandwidth_cap}
-            if self.bandwidth_cap > 0
-            else {"limit": float("inf")}
-        )
+        self.data = {}
+        if self.bandwidth_cap > 0:
+            self.data["limit"] = self.bandwidth_cap
 
     @staticmethod
     def bytes_to_gb(value):
@@ -201,7 +218,7 @@ class StartcaData:
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)
@@ -220,11 +237,9 @@ class StartcaData:
         total_dl = self.bytes_to_gb(xml_data["usage"]["total"]["download"])
         total_ul = self.bytes_to_gb(xml_data["usage"]["total"]["upload"])
 
-        limit = self.data["limit"]
         if self.bandwidth_cap > 0:
             self.data["usage"] = 100 * used_dl / self.bandwidth_cap
-        else:
-            self.data["usage"] = 0
+            self.data["used_remaining"] = self.data["limit"] - used_dl
         self.data["usage_gb"] = used_dl
         self.data["used_download"] = used_dl
         self.data["used_upload"] = used_ul
@@ -234,6 +249,5 @@ class StartcaData:
         self.data["grace_total"] = grace_dl + grace_ul
         self.data["total_download"] = total_dl
         self.data["total_upload"] = total_ul
-        self.data["used_remaining"] = limit - used_dl
 
         return True

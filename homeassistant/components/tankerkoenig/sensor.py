@@ -5,16 +5,10 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CURRENCY_EURO,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TankerkoenigCoordinatorEntity, TankerkoenigDataUpdateCoordinator
 from .const import (
     ATTR_BRAND,
     ATTR_CITY,
@@ -25,8 +19,9 @@ from .const import (
     ATTR_STREET,
     ATTRIBUTION,
     DOMAIN,
-    FUEL_TYPES,
 )
+from .coordinator import TankerkoenigDataUpdateCoordinator
+from .entity import TankerkoenigCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +57,9 @@ async def async_setup_entry(
 class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = CURRENCY_EURO
     _attr_icon = "mdi:gas-station"
 
     def __init__(self, fuel_type, station, coordinator, show_on_map):
@@ -70,11 +67,9 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         super().__init__(coordinator, station)
         self._station_id = station["id"]
         self._fuel_type = fuel_type
-        self._attr_name = f"{station['brand']} {station['street']} {station['houseNumber']} {FUEL_TYPES[fuel_type]}"
-        self._attr_native_unit_of_measurement = CURRENCY_EURO
+        self._attr_translation_key = fuel_type
         self._attr_unique_id = f"{station['id']}_{fuel_type}"
         attrs = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BRAND: station["brand"],
             ATTR_FUEL_TYPE: fuel_type,
             ATTR_STATION_NAME: station["name"],
@@ -92,5 +87,6 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        # key Fuel_type is not available when the fuel station is closed, use "get" instead of "[]" to avoid exceptions
+        # key Fuel_type is not available when the fuel station is closed,
+        # use "get" instead of "[]" to avoid exceptions
         return self.coordinator.data[self._station_id].get(self._fuel_type)

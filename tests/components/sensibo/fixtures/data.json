@@ -110,6 +110,7 @@
         {
           "id": "11",
           "isEnabled": false,
+          "name": null,
           "acState": {
             "on": false,
             "targetTemperature": 21,
@@ -520,6 +521,163 @@
           }
         }
       },
+      "remote": {
+        "toggle": false,
+        "window": false
+      },
+      "remoteFlavor": "Eccentric Eagle",
+      "remoteAlternatives": [],
+      "smartMode": null,
+      "measurements": {
+        "time": {
+          "time": "2022-04-30T11:23:20.642798Z",
+          "secondsAgo": 9
+        },
+        "rssi": -58,
+        "pm25": 1,
+        "motion": false,
+        "roomIsOccupied": null
+      },
+      "accessPoint": {
+        "ssid": "Sensibo-09876",
+        "password": null
+      },
+      "macAddress": "00:01:00:01:00:01",
+      "autoOffMinutes": null,
+      "autoOffEnabled": false,
+      "antiMoldTimer": null,
+      "antiMoldConfig": null
+    },
+    {
+      "isGeofenceOnEnterEnabledForThisUser": false,
+      "isClimateReactGeofenceOnEnterEnabledForThisUser": false,
+      "isMotionGeofenceOnEnterEnabled": false,
+      "isOwner": true,
+      "id": "BBZZBBZZ",
+      "qrId": "AAAAAAAACC",
+      "temperatureUnit": "C",
+      "room": {
+        "uid": "99YY99YY",
+        "name": "Bedroom",
+        "icon": "Diningroom"
+      },
+      "acState": {
+        "timestamp": {
+          "time": "2022-04-30T11:23:30.067312Z",
+          "secondsAgo": -1
+        },
+        "on": false
+      },
+      "lastStateChange": {
+        "time": "2022-04-30T11:21:41Z",
+        "secondsAgo": 108
+      },
+      "lastStateChangeToOn": {
+        "time": "2022-04-30T09:43:26Z",
+        "secondsAgo": 6003
+      },
+      "lastStateChangeToOff": {
+        "time": "2022-04-30T11:21:37Z",
+        "secondsAgo": 112
+      },
+      "location": {
+        "id": "ZZZZZZZZZZYY",
+        "name": "Home",
+        "latLon": [58.9806976, 20.5864297],
+        "address": ["Sealand 99", "Some county"],
+        "country": "United Country",
+        "createTime": {
+          "time": "2020-03-21T15:44:15Z",
+          "secondsAgo": 66543240
+        }
+      },
+      "connectionStatus": {
+        "isAlive": true,
+        "lastSeen": {
+          "time": "2022-04-30T11:23:20.642798Z",
+          "secondsAgo": 9
+        }
+      },
+      "firmwareVersion": "PUR00111",
+      "firmwareType": "pure-esp32",
+      "productModel": "pure",
+      "configGroup": "stable",
+      "currentlyAvailableFirmwareVersion": "PUR00111",
+      "cleanFiltersNotificationEnabled": false,
+      "shouldShowFilterCleaningNotification": false,
+      "isGeofenceOnExitEnabled": false,
+      "isClimateReactGeofenceOnExitEnabled": false,
+      "isMotionGeofenceOnExitEnabled": false,
+      "serial": "0987654321",
+      "sensorsCalibration": {
+        "temperature": 0.0,
+        "humidity": 0.0
+      },
+      "motionSensors": [],
+      "tags": [],
+      "timer": null,
+      "schedules": [],
+      "motionConfig": null,
+      "filtersCleaning": {
+        "acOnSecondsSinceLastFiltersClean": 415560,
+        "filtersCleanSecondsThreshold": 14256000,
+        "lastFiltersCleanTime": {
+          "time": "2022-04-23T15:58:45Z",
+          "secondsAgo": 588284
+        },
+        "shouldCleanFilters": false
+      },
+      "serviceSubscriptions": [],
+      "roomIsOccupied": null,
+      "mainMeasurementsSensor": null,
+      "pureBoostConfig": null,
+      "warrantyEligible": "no",
+      "warrantyEligibleUntil": {
+        "time": "2022-04-10T09:58:58Z",
+        "secondsAgo": 1733071
+      },
+      "features": ["optimusTrial", "softShowPlus"],
+      "runningHealthcheck": null,
+      "lastHealthcheck": null,
+      "lastACStateChange": {
+        "id": "AA22",
+        "time": {
+          "time": "2022-04-30T11:21:37Z",
+          "secondsAgo": 112
+        },
+        "status": "Success",
+        "acState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.090144Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "low",
+          "light": "on"
+        },
+        "resultingAcState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.090185Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "low",
+          "light": "on"
+        },
+        "changedProperties": ["on"],
+        "reason": "UserRequest",
+        "failureReason": null,
+        "resolveTime": {
+          "time": "2022-04-30T11:21:37Z",
+          "secondsAgo": 112
+        },
+        "causedByScheduleId": null,
+        "causedByScheduleType": null
+      },
+      "homekitSupported": true,
+      "remoteCapabilities": null,
       "remote": {
         "toggle": false,
         "window": false

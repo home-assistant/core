@@ -1,9 +1,10 @@
 """Make sure that existing VOCOlinc VP3 support isn't broken."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -13,8 +14,23 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_vocolinc_vp3_setup(hass):
+async def test_vocolinc_vp3_setup(hass: HomeAssistant) -> None:
     """Test that a VOCOlinc VP3 can be correctly setup in HA."""
+
+    entity_registry = er.async_get(hass)
+    outlet = entity_registry.async_get_or_create(
+        "switch",
+        "homekit_controller",
+        "homekit-EU0121203xxxxx07-48",
+        suggested_object_id="original_vocolinc_vp3_outlet",
+    )
+    sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "homekit_controller",
+        "homekit-EU0121203xxxxx07-aid:1-sid:48-cid:97",
+        suggested_object_id="original_vocolinc_vp3_power",
+    )
+
     accessories = await setup_accessories_from_file(hass, "vocolinc_vp3.json")
     await setup_test_accessories(hass, accessories)
 
@@ -31,19 +47,28 @@ async def test_vocolinc_vp3_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.vocolinc_vp3_123456",
-                    friendly_name="VOCOlinc-VP3-123456",
-                    unique_id="homekit-EU0121203xxxxx07-48",
+                    entity_id="switch.original_vocolinc_vp3_outlet",
+                    friendly_name="VOCOlinc-VP3-123456 Outlet",
+                    unique_id="00:00:00:00:00:00_1_48",
                     state="on",
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.vocolinc_vp3_123456_power",
+                    entity_id="sensor.original_vocolinc_vp3_power",
                     friendly_name="VOCOlinc-VP3-123456 Power",
-                    unique_id="homekit-EU0121203xxxxx07-aid:1-sid:48-cid:97",
+                    unique_id="00:00:00:00:00:00_1_48_97",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="0",
                 ),
             ],
         ),
+    )
+
+    assert (
+        entity_registry.async_get(outlet.entity_id).unique_id
+        == "00:00:00:00:00:00_1_48"
+    )
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id
+        == "00:00:00:00:00:00_1_48_97"
     )

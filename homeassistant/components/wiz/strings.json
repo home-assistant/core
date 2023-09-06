@@ -9,11 +9,11 @@
         "description": "If you leave the IP Address empty, discovery will be used to find devices."
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name} ({host})?"
+        "description": "Do you want to set up {name} ({host})?"
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       }
     },
@@ -21,13 +21,23 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
-      "no_wiz_light": "The bulb can not be connected via WiZ Platform integration.",
+      "no_wiz_light": "The bulb cannot be connected via WiZ Platform integration.",
       "no_ip": "Not a valid IP address."
     },
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "effect_speed": {
+        "name": "Effect speed"
+      },
+      "dual_head_ratio": {
+        "name": "Dual head ratio"
+      }
     }
   }
 }

@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -71,8 +71,7 @@ async def async_setup_entry(
                         device_id,
                     )
                 )
-        if new_tools:
-            async_add_entities(new_tools)
+        async_add_entities(new_tools)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
 
@@ -105,11 +104,7 @@ class OctoPrintSensorBase(
         self._device_id = device_id
         self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):
@@ -225,7 +220,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
 

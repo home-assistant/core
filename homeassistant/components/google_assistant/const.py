@@ -161,6 +161,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
@@ -169,6 +170,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
@@ -185,4 +187,22 @@ STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
-NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK, TYPE_THERMOSTAT}
+
+FAN_SPEEDS = {
+    "5/5": ["High", "Max", "Fast", "5"],
+    "4/5": ["Medium High", "4"],
+    "3/5": ["Medium", "3"],
+    "2/5": ["Medium Low", "2"],
+    "1/5": ["Low", "Min", "Slow", "1"],
+    "4/4": ["High", "Max", "Fast", "4"],
+    "3/4": ["Medium High", "3"],
+    "2/4": ["Medium Low", "2"],
+    "1/4": ["Low", "Min", "Slow", "1"],
+    "3/3": ["High", "Max", "Fast", "3"],
+    "2/3": ["Medium", "2"],
+    "1/3": ["Low", "Min", "Slow", "1"],
+    "2/2": ["High", "Max", "Fast", "2"],
+    "1/2": ["Low", "Min", "Slow", "1"],
+    "1/1": ["Normal", "1"],
+}

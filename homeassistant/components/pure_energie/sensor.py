@@ -12,9 +12,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -39,24 +39,24 @@ class PureEnergieSensorEntityDescription(
 SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
     PureEnergieSensorEntityDescription(
         key="power_flow",
-        name="Power Flow",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="power_flow",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.smartbridge.power_flow,
     ),
     PureEnergieSensorEntityDescription(
         key="energy_consumption_total",
-        name="Energy Consumption",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="energy_consumption_total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.smartbridge.energy_consumption_total,
     ),
     PureEnergieSensorEntityDescription(
         key="energy_production_total",
-        name="Energy Production",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="energy_production_total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.smartbridge.energy_production_total,
@@ -83,6 +83,7 @@ class PureEnergieSensorEntity(
 ):
     """Defines an Pure Energie sensor."""
 
+    _attr_has_entity_name = True
     entity_description: PureEnergieSensorEntityDescription
 
     def __init__(

@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PLATFORM,
-    DATA_GIGABYTES,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 
@@ -33,7 +33,7 @@ CONFIGS = [
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_sensor(hass: HomeAssistant):
+def test_sensor(hass: HomeAssistant) -> None:
     """Test the Vultr sensor class and methods."""
     hass_devices = []
 
@@ -51,14 +51,15 @@ def test_sensor(hass: HomeAssistant):
     tested = 0
 
     for device in hass_devices:
-
         # Test pre update
         if device.subscription == "576965":
-            assert vultr.DEFAULT_NAME == device.name
+            assert device.name == vultr.DEFAULT_NAME
 
         device.update()
 
-        if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
+        if (
+            device.unit_of_measurement == UnitOfInformation.GIGABYTES
+        ):  # Test Bandwidth Used
             if device.subscription == "576965":
                 assert device.name == "Vultr my new server Current Bandwidth Used"
                 assert device.icon == "mdi:chart-histogram"
@@ -72,7 +73,6 @@ def test_sensor(hass: HomeAssistant):
                 tested += 1
 
         elif device.unit_of_measurement == "US$":  # Test Pending Charges
-
             if device.subscription == "576965":  # Default 'Vultr {} {}'
                 assert device.name == "Vultr my new server Pending Charges"
                 assert device.icon == "mdi:currency-usd"
@@ -82,7 +82,7 @@ def test_sensor(hass: HomeAssistant):
 
             elif device.subscription == "123456":  # Custom name with 1 {}
                 assert device.name == "Server Pending Charges"
-                assert device.state == "not a number"
+                assert device.state == 3.72
                 tested += 1
 
             elif device.subscription == "555555":  # No {} in name
@@ -93,7 +93,7 @@ def test_sensor(hass: HomeAssistant):
     assert tested == 5
 
 
-def test_invalid_sensor_config():
+def test_invalid_sensor_config() -> None:
     """Test config type failures."""
     with pytest.raises(vol.Invalid):  # No subscription
         vultr.PLATFORM_SCHEMA(
@@ -113,7 +113,7 @@ def test_invalid_sensor_config():
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_invalid_sensors(hass: HomeAssistant):
+def test_invalid_sensors(hass: HomeAssistant) -> None:
     """Test the VultrSensor fails."""
     hass_devices = []
 

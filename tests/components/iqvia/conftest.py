@@ -11,9 +11,14 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, unique_id):
+def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=config[CONF_ZIP_CODE],
+        data=config,
+        entry_id="690ac4b7e99855fc5ee7b987a758d5cb",
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -26,43 +31,43 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_allergy_forecast", scope="session")
+@pytest.fixture(name="data_allergy_forecast", scope="package")
 def data_allergy_forecast_fixture():
     """Define allergy forecast data."""
     return json.loads(load_fixture("allergy_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_allergy_index", scope="session")
+@pytest.fixture(name="data_allergy_index", scope="package")
 def data_allergy_index_fixture():
     """Define allergy index data."""
     return json.loads(load_fixture("allergy_index_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_allergy_outlook", scope="session")
+@pytest.fixture(name="data_allergy_outlook", scope="package")
 def data_allergy_outlook_fixture():
     """Define allergy outlook data."""
     return json.loads(load_fixture("allergy_outlook_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_asthma_forecast", scope="session")
+@pytest.fixture(name="data_asthma_forecast", scope="package")
 def data_asthma_forecast_fixture():
     """Define asthma forecast data."""
     return json.loads(load_fixture("asthma_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_asthma_index", scope="session")
+@pytest.fixture(name="data_asthma_index", scope="package")
 def data_asthma_index_fixture():
     """Define asthma index data."""
     return json.loads(load_fixture("asthma_index_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_disease_forecast", scope="session")
+@pytest.fixture(name="data_disease_forecast", scope="package")
 def data_disease_forecast_fixture():
     """Define disease forecast data."""
     return json.loads(load_fixture("disease_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_disease_index", scope="session")
+@pytest.fixture(name="data_disease_index", scope="package")
 def data_disease_index_fixture():
     """Define disease index data."""
     return json.loads(load_fixture("disease_index_data.json", "iqvia"))
@@ -101,9 +106,3 @@ async def setup_iqvia_fixture(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "12345"

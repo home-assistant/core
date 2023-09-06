@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import StrEnum
 import functools
 from typing import Any, TypeVar, cast
 
@@ -15,10 +16,9 @@ from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, U
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 
-from homeassistant.backports.enum import StrEnum
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import ssdp
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -518,7 +518,7 @@ class DmsDeviceSource:
         media_source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.SEARCH, query),
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title="Search results",
             can_play=False,
@@ -620,7 +620,7 @@ class DmsDeviceSource:
         """Make an identifier for BrowseMediaSource."""
         return f"{self.source_id}/{action}{object_id}"
 
-    @functools.cached_property
+    @cached_property
     def _sort_criteria(self) -> list[str]:
         """Return criteria to be used for sorting results.
 

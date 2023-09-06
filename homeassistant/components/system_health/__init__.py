@@ -6,14 +6,18 @@ from collections.abc import Awaitable, Callable
 import dataclasses
 from datetime import datetime
 import logging
+from typing import Any
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, integration_platform
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    integration_platform,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -23,20 +27,23 @@ DOMAIN = "system_health"
 
 INFO_CALLBACK_TIMEOUT = 5
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 @bind_hass
 @callback
 def async_register_info(
     hass: HomeAssistant,
     domain: str,
-    info_callback: Callable[[HomeAssistant], dict],
+    info_callback: Callable[[HomeAssistant], Awaitable[dict]],
 ):
     """Register an info callback.
 
     Deprecated.
     """
     _LOGGER.warning(
-        "Calling system_health.async_register_info is deprecated; Add a system_health platform instead"
+        "Calling system_health.async_register_info is deprecated; Add a system_health"
+        " platform instead"
     )
     hass.data.setdefault(DOMAIN, {})
     SystemHealthRegistration(hass, domain).async_register_info(info_callback)
@@ -61,10 +68,11 @@ async def _register_system_health_platform(hass, integration_domain, platform):
 
 async def get_integration_info(
     hass: HomeAssistant, registration: SystemHealthRegistration
-):
+) -> dict[str, Any]:
     """Get integration system health."""
     try:
-        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+        assert registration.info_callback
+        async with asyncio.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
     except asyncio.TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}
@@ -72,7 +80,7 @@ async def get_integration_info(
         _LOGGER.exception("Error fetching info")
         data = {"error": {"type": "failed", "error": "unknown"}}
 
-    result = {"info": data}
+    result: dict[str, Any] = {"info": data}
 
     if registration.manage_url:
         result["manage_url"] = registration.manage_url
@@ -88,15 +96,15 @@ def _format_value(val):
     return val
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "system_health/info"})
+@websocket_api.async_response
 async def handle_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle an info request via a subscription."""
     registrations: dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
     data = {}
-    pending_info = {}
+    pending_info: dict[tuple[str, str], asyncio.Task] = {}
 
     for domain, domain_data in zip(
         registrations,
@@ -138,7 +146,10 @@ async def handle_info(
         )
         return
 
-    tasks = [asyncio.create_task(stop_event.wait()), *pending_info.values()]
+    tasks: set[asyncio.Task] = {
+        asyncio.create_task(stop_event.wait()),
+        *pending_info.values(),
+    }
     pending_lookup = {val: key for key, val in pending_info.items()}
 
     # One task is the stop_event.wait() and is always there
@@ -160,8 +171,7 @@ async def handle_info(
                 "key": key,
             }
 
-            if result.exception():
-                exception = result.exception()
+            if exception := result.exception():
                 _LOGGER.error(
                     "Error fetching system info for %s - %s",
                     domain,
@@ -183,7 +193,7 @@ async def handle_info(
     )
 
 
-@dataclasses.dataclass()
+@dataclasses.dataclass(slots=True)
 class SystemHealthRegistration:
     """Helper class to track platform registration."""
 
@@ -206,7 +216,7 @@ class SystemHealthRegistration:
 
 async def async_check_can_reach_url(
     hass: HomeAssistant, url: str, more_info: str | None = None
-) -> str:
+) -> str | dict[str, str]:
     """Test if the url can be reached."""
     session = aiohttp_client.async_get_clientsession(hass)
 

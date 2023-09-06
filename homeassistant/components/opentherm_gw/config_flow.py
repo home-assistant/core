@@ -26,6 +26,7 @@ from .const import (
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
+    CONNECTION_TIMEOUT,
 )
 
 
@@ -59,18 +60,22 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             async def test_connection():
                 """Try to connect to the OpenTherm Gateway."""
-                otgw = pyotgw.pyotgw()
-                status = await otgw.connect(self.hass.loop, device)
+                otgw = pyotgw.OpenThermGateway()
+                status = await otgw.connect(device)
                 await otgw.disconnect()
+                if not status:
+                    raise ConnectionError
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
-                res = await asyncio.wait_for(test_connection(), timeout=10)
-            except (asyncio.TimeoutError, SerialException):
+                async with asyncio.timeout(CONNECTION_TIMEOUT):
+                    await test_connection()
+            except asyncio.TimeoutError:
+                return self._show_form({"base": "timeout_connect"})
+            except (ConnectionError, SerialException):
                 return self._show_form({"base": "cannot_connect"})
 
-            if res:
-                return self._create_entry(gw_id, name, device)
+            return self._create_entry(gw_id, name, device)
 
         return self._show_form()
 
@@ -79,8 +84,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
-        """
-        Import an OpenTherm Gateway device as a config entry.
+        """Import an OpenTherm Gateway device as a config entry.
 
         This flow is triggered by `async_setup` for configured devices.
         """

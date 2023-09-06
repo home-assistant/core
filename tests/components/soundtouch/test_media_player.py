@@ -4,7 +4,7 @@ from typing import Any
 
 from requests_mock import Mocker
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -31,7 +31,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
 
@@ -66,7 +66,7 @@ async def test_playing_media(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
-):
+) -> None:
     """Test playing media info."""
     await setup_soundtouch(hass, device1_config)
 
@@ -83,7 +83,7 @@ async def test_playing_radio(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_radio,
-):
+) -> None:
     """Test playing radio info."""
     await setup_soundtouch(hass, device1_config)
 
@@ -96,7 +96,7 @@ async def test_playing_aux(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_aux,
-):
+) -> None:
     """Test playing AUX info."""
     await setup_soundtouch(hass, device1_config)
 
@@ -109,7 +109,7 @@ async def test_playing_bluetooth(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_bluetooth,
-):
+) -> None:
     """Test playing Bluetooth info."""
     await setup_soundtouch(hass, device1_config)
 
@@ -125,7 +125,7 @@ async def test_get_volume_level(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
-):
+) -> None:
     """Test volume level."""
     await setup_soundtouch(hass, device1_config)
 
@@ -137,7 +137,7 @@ async def test_get_state_off(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
-):
+) -> None:
     """Test state device is off."""
     await setup_soundtouch(hass, device1_config)
 
@@ -149,7 +149,7 @@ async def test_get_state_pause(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp_paused,
-):
+) -> None:
     """Test state device is paused."""
     await setup_soundtouch(hass, device1_config)
 
@@ -162,7 +162,7 @@ async def test_is_muted(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_volume_muted: str,
-):
+) -> None:
     """Test device volume is muted."""
     with Mocker(real_http=True) as mocker:
         mocker.get("/volume", text=device1_volume_muted)
@@ -178,7 +178,7 @@ async def test_should_turn_off(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test device is turned off."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -195,7 +195,7 @@ async def test_should_turn_on(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_key,
-):
+) -> None:
     """Test device is turned on."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -212,7 +212,7 @@ async def test_volume_up(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test volume up."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -229,7 +229,7 @@ async def test_volume_down(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test volume down."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -246,7 +246,7 @@ async def test_set_volume_level(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_volume,
-):
+) -> None:
     """Test set volume level."""
     await setup_soundtouch(hass, device1_config)
 
@@ -266,7 +266,7 @@ async def test_mute(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test mute volume."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -283,7 +283,7 @@ async def test_play(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp_paused,
     device1_requests_mock_key,
-):
+) -> None:
     """Test play command."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -300,7 +300,7 @@ async def test_pause(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test pause command."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -317,7 +317,7 @@ async def test_play_pause(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test play/pause."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -334,7 +334,7 @@ async def test_next_previous_track(
     device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
-):
+) -> None:
     """Test next/previous track."""
     await setup_soundtouch(hass, device1_config)
     await _test_key_service(
@@ -359,7 +359,7 @@ async def test_play_media(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
-):
+) -> None:
     """Test play preset 1."""
     await setup_soundtouch(hass, device1_config)
 
@@ -399,7 +399,7 @@ async def test_play_media_url(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_dlna,
-):
+) -> None:
     """Test play preset 1."""
     await setup_soundtouch(hass, device1_config)
 
@@ -423,7 +423,7 @@ async def test_select_source_aux(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
-):
+) -> None:
     """Test select AUX."""
     await setup_soundtouch(hass, device1_config)
 
@@ -443,7 +443,7 @@ async def test_select_source_bluetooth(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
-):
+) -> None:
     """Test select Bluetooth."""
     await setup_soundtouch(hass, device1_config)
 
@@ -463,7 +463,7 @@ async def test_select_source_invalid_source(
     device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
-):
+) -> None:
     """Test select unsupported source."""
     await setup_soundtouch(hass, device1_config)
 
@@ -487,7 +487,7 @@ async def test_play_everywhere(
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_set_zone,
-):
+) -> None:
     """Test play everywhere."""
     await setup_soundtouch(hass, device1_config)
 
@@ -528,7 +528,7 @@ async def test_create_zone(
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_set_zone,
-):
+) -> None:
     """Test creating a zone."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
@@ -572,7 +572,7 @@ async def test_remove_zone_slave(
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_remove_zone_slave,
-):
+) -> None:
     """Test removing a slave from an existing zone."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
@@ -614,7 +614,7 @@ async def test_add_zone_slave(
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_add_zone_slave,
-):
+) -> None:
     """Test adding a slave to a zone."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
@@ -655,14 +655,14 @@ async def test_zone_attributes(
     device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
-):
+) -> None:
     """Test zone attributes."""
     await setup_soundtouch(hass, device1_config, device2_config)
 
     # Fast-forward time to allow all entities to be set up and updated again
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

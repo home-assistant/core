@@ -18,12 +18,13 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import (
+from . import (
     authorisation_response,
     authorisation_response_unauthorised,
-    entry,
     setup_integration,
 )
+
+from tests.common import MockConfigEntry
 
 test_response = json.loads(
     json.dumps(
@@ -45,7 +46,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
     flow.hass = hass
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -139,9 +140,9 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
     assert result2["data"]["station"] == "12345"
 
 
-async def test_form_reauth(hass: HomeAssistant) -> None:
+async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test we handle reauth flow."""
-    await setup_integration(hass)
+    await setup_integration(hass, entry)
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
     with requests_mock.Mocker() as mock_request:
@@ -179,9 +180,9 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_form_reauth_invalid(hass: HomeAssistant) -> None:
+async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test we handle reauth invalid flow."""
-    await setup_integration(hass)
+    await setup_integration(hass, entry)
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
     with requests_mock.Mocker() as mock_request:

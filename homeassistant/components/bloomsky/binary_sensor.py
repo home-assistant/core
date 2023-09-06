@@ -49,7 +49,7 @@ def setup_platform(
 class BloomSkySensor(BinarySensorEntity):
     """Representation of a single binary sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
+    def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
@@ -58,7 +58,7 @@ class BloomSkySensor(BinarySensorEntity):
         self._attr_unique_id = f"{self._device_id}-{sensor_name}"
         self._attr_device_class = SENSOR_TYPES.get(sensor_name)
 
-    def update(self):
+    def update(self) -> None:
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 

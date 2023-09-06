@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -38,7 +38,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
     _channel: VelbusBlind
 
     def __init__(self, channel: VelbusBlind) -> None:
-        """Initialize the dimmer."""
+        """Initialize the cover."""
         super().__init__(channel)
         if self._channel.support_position():
             self._attr_supported_features = (
@@ -60,26 +60,43 @@ class VelbusCover(VelbusEntity, CoverEntity):
         return self._channel.is_closed()
 
     @property
+    def is_opening(self) -> bool:
+        """Return if the cover is opening."""
+        return self._channel.is_opening()
+
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is closing."""
+        return self._channel.is_closing()
+
+    @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        return 100 - self._channel.get_position()
+        pos = self._channel.get_position()
+        if pos is not None:
+            return 100 - pos
+        return None
 
+    @api_call
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._channel.open()
 
+    @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._channel.close()
 
+    @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._channel.stop()
 
+    @api_call
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._channel.set_position(100 - kwargs[ATTR_POSITION])

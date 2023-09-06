@@ -23,8 +23,63 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "watching_count": {
+        "name": "Watching"
+      },
+      "stream_count_direct_play": {
+        "name": "Direct plays"
+      },
+      "stream_count_direct_stream": {
+        "name": "Direct streams"
+      },
+      "stream_count_transcode": {
+        "name": "Transcodes"
+      },
+      "total_bandwidth": {
+        "name": "Total bandwidth"
+      },
+      "lan_bandwidth": {
+        "name": "LAN bandwidth"
+      },
+      "wan_bandwidth": {
+        "name": "WAN bandwidth"
+      },
+      "top_movies": {
+        "name": "Top movie"
+      },
+      "top_tv": {
+        "name": "Top TV show"
+      },
+      "top_user": {
+        "name": "Top user"
+      },
+      "state": {
+        "name": "State"
+      },
+      "full_title": {
+        "name": "Full title"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "stream_resolution": {
+        "name": "Stream resolution"
+      },
+      "transcode_decision": {
+        "name": "Transcode decision"
+      },
+      "session_thumb": {
+        "name": "Session thumbnail"
+      },
+      "video_resolution": {
+        "name": "Video resolution"
+      }
     }
   }
 }

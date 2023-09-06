@@ -5,11 +5,13 @@ from datetime import timedelta
 import logging
 from unittest import mock
 
+from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -82,7 +84,7 @@ async def mock_modbus_fixture(
 ):
     """Load integration modbus using mocked pymodbus."""
     conf = copy.deepcopy(do_config)
-    for key in conf.keys():
+    for key in conf:
         if config_addon:
             conf[key][0].update(config_addon)
         for entity in conf[key]:
@@ -140,26 +142,26 @@ async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
 
 
 @pytest.fixture(name="mock_do_cycle")
-async def mock_do_cycle_fixture(hass, mock_pymodbus_exception, mock_pymodbus_return):
+async def mock_do_cycle_fixture(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_pymodbus_exception,
+    mock_pymodbus_return,
+) -> FrozenDateTimeFactory:
     """Trigger update call with time_changed event."""
-    now = dt_util.utcnow() + timedelta(seconds=90)
-    with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        return now
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    return freezer
 
 
-async def do_next_cycle(hass, now, cycle):
+async def do_next_cycle(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, cycle: int
+) -> None:
     """Trigger update call with time_changed event."""
-    now += timedelta(seconds=cycle)
-    with mock.patch(
-        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-        return now
+    freezer.tick(timedelta(seconds=cycle))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="mock_test_state")
@@ -179,4 +181,4 @@ async def mock_ha_fixture(hass, mock_pymodbus_return):
 @pytest.fixture(name="caplog_setup_text")
 async def caplog_setup_text_fixture(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text

@@ -33,7 +33,7 @@ def run(args):
     # Disable logging
     logging.getLogger("homeassistant.core").setLevel(logging.CRITICAL)
 
-    parser = argparse.ArgumentParser(description=("Run a Home Assistant benchmark."))
+    parser = argparse.ArgumentParser(description="Run a Home Assistant benchmark.")
     parser.add_argument("name", choices=BENCHMARKS)
     parser.add_argument("--script", choices=["benchmark"])
 
@@ -49,7 +49,7 @@ def run(args):
 
 async def run_benchmark(bench):
     """Run a benchmark."""
-    hass = core.HomeAssistant()
+    hass = core.HomeAssistant("")
     runtime = await bench(hass)
     print(f"Benchmark {bench.__name__} done in {runtime}s")
     await hass.async_stop()
@@ -191,7 +191,10 @@ async def state_changed_event_helper(hass):
 
 @benchmark
 async def state_changed_event_filter_helper(hass):
-    """Run a million events through state changed event helper with 1000 entities that all get filtered."""
+    """Run a million events through state changed event helper.
+
+    With 1000 entities that all get filtered.
+    """
     count = 0
     entity_id = "light.kitchen"
     events_to_fire = 10**6
@@ -350,7 +353,7 @@ def _create_state_changed_event_from_old_new(
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
 
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import logbook
 
     return logbook.LazyEventPartialState(row, {})

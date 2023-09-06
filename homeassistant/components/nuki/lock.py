@@ -1,11 +1,13 @@
 """Nuki.io lock platform."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Any
+from abc import abstractmethod
+from typing import Any, TypeVar
 
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
+from pynuki.device import NukiDevice
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
@@ -14,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NukiEntity
+from . import NukiCoordinator, NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
@@ -26,6 +28,9 @@ from .const import (
     DOMAIN as NUKI_DOMAIN,
     ERROR_STATES,
 )
+from .helpers import CannotConnect
+
+_NukiDeviceT = TypeVar("_NukiDeviceT", bound=NukiDevice)
 
 
 async def async_setup_entry(
@@ -33,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nuki lock platform."""
     data = hass.data[NUKI_DOMAIN][entry.entry_id]
-    coordinator = data[DATA_COORDINATOR]
+    coordinator: NukiCoordinator = data[DATA_COORDINATOR]
 
     entities: list[NukiDeviceEntity] = [
         NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
@@ -61,15 +66,13 @@ async def async_setup_entry(
     )
 
 
-class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
     """Representation of a Nuki device."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = LockEntityFeature.OPEN
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the lock."""
-        return self._nuki_device.name
+    _attr_translation_key = "nuki_lock"
+    _attr_name = None
 
     @property
     def unique_id(self) -> str | None:
@@ -102,10 +105,8 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         """Open the door latch."""
 
 
-class NukiLockEntity(NukiDeviceEntity):
+class NukiLockEntity(NukiDeviceEntity[NukiLock]):
     """Representation of a Nuki lock."""
-
-    _nuki_device: NukiLock
 
     @property
     def is_locked(self) -> bool:
@@ -114,15 +115,24 @@ class NukiLockEntity(NukiDeviceEntity):
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        self._nuki_device.lock()
+        try:
+            self._nuki_device.lock()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self._nuki_device.unlock()
+        try:
+            self._nuki_device.unlock()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        self._nuki_device.unlatch()
+        try:
+            self._nuki_device.unlatch()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def lock_n_go(self, unlatch: bool) -> None:
         """Lock and go.
@@ -130,13 +140,14 @@ class NukiLockEntity(NukiDeviceEntity):
         This will first unlock the door, then wait for 20 seconds (or another
         amount of time depending on the lock settings) and relock.
         """
-        self._nuki_device.lock_n_go(unlatch)
+        try:
+            self._nuki_device.lock_n_go(unlatch)
+        except RequestException as err:
+            raise CannotConnect from err
 
 
-class NukiOpenerEntity(NukiDeviceEntity):
+class NukiOpenerEntity(NukiDeviceEntity[NukiOpener]):
     """Representation of a Nuki opener."""
-
-    _nuki_device: NukiOpener
 
     @property
     def is_locked(self) -> bool:
@@ -148,15 +159,24 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     def lock(self, **kwargs: Any) -> None:
         """Disable ring-to-open."""
-        self._nuki_device.deactivate_rto()
+        try:
+            self._nuki_device.deactivate_rto()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def unlock(self, **kwargs: Any) -> None:
         """Enable ring-to-open."""
-        self._nuki_device.activate_rto()
+        try:
+            self._nuki_device.activate_rto()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def open(self, **kwargs: Any) -> None:
         """Buzz open the door."""
-        self._nuki_device.electric_strike_actuation()
+        try:
+            self._nuki_device.electric_strike_actuation()
+        except RequestException as err:
+            raise CannotConnect from err
 
     def lock_n_go(self, unlatch: bool) -> None:
         """Stub service."""
@@ -168,7 +188,10 @@ class NukiOpenerEntity(NukiDeviceEntity):
         rings the bell. This is similar to ring-to-open, except that it does
         not automatically deactivate
         """
-        if enable:
-            self._nuki_device.activate_continuous_mode()
-        else:
-            self._nuki_device.deactivate_continuous_mode()
+        try:
+            if enable:
+                self._nuki_device.activate_continuous_mode()
+            else:
+                self._nuki_device.deactivate_continuous_mode()
+        except RequestException as err:
+            raise CannotConnect from err

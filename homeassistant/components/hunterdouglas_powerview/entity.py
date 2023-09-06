@@ -4,7 +4,7 @@ from aiopvapi.resources.shade import ATTR_TYPE, BaseShade
 
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -24,6 +24,8 @@ from .shade_data import PowerviewShadeData, PowerviewShadePositions
 
 class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     """Base class for hunter douglas entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -95,7 +97,9 @@ class ShadeEntity(HDEntity):
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
             via_device=(DOMAIN, self._device_info.serial_number),
-            configuration_url=f"http://{self._device_info.hub_address}/api/shades/{self._shade.id}",
+            configuration_url=(
+                f"http://{self._device_info.hub_address}/api/shades/{self._shade.id}"
+            ),
         )
 
         for shade in self._shade.shade_types:

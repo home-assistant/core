@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components import ads
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -11,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
+from .. import ads
 from . import (
     ADS_TYPEMAP,
     CONF_ADS_FACTOR,
@@ -70,7 +70,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._ads_type = ads_type
         self._factor = factor
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(
             self._ads_var,

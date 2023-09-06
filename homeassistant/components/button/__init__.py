@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 from typing import final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -35,16 +35,19 @@ _LOGGER = logging.getLogger(__name__)
 class ButtonDeviceClass(StrEnum):
     """Device class for buttons."""
 
+    IDENTIFY = "identify"
     RESTART = "restart"
     UPDATE = "update"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Button entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ButtonEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -60,13 +63,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -85,6 +88,13 @@ class ButtonEntity(RestoreEntity):
     _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
     __last_pressed: datetime | None = None
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For buttons this is True if the entity has a device class.
+        """
+        return self.device_class is not None
 
     @property
     def device_class(self) -> ButtonDeviceClass | None:

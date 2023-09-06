@@ -10,6 +10,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
@@ -24,6 +27,58 @@
         "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
           "timestep": "Min. Between NowCast Forecasts"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "health_concern": {
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy_for_sensitive_groups": "Unhealthy for Sensitive Groups",
+          "unhealthy": "Unhealthy",
+          "very_unhealthy": "Very Unhealthy",
+          "hazardous": "Hazardous"
+        }
+      },
+      "pollen_index": {
+        "state": {
+          "none": "None",
+          "very_low": "Very Low",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "very_high": "Very High"
+        }
+      },
+      "precipitation_type": {
+        "state": {
+          "none": "None",
+          "rain": "Rain",
+          "snow": "Snow",
+          "freezing_rain": "Freezing Rain",
+          "ice_pellets": "Ice Pellets"
+        }
+      },
+      "primary_pollutant": {
+        "state": {
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
+      "uv_index": {
+        "state": {
+          "low": "Low",
+          "moderate": "Moderate",
+          "high": "High",
+          "very_high": "Very high",
+          "extreme": "Extreme"
         }
       }
     }

@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
+import os
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device
@@ -25,6 +27,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_TOKEN_FILENAME = "vicare_token.save"
 
 
 @dataclass()
@@ -32,6 +35,14 @@ class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_getter: Callable[[Device], bool]
+
+
+@dataclass()
+class ViCareRequiredKeysMixinWithSet:
+    """Mixin for required keys with setter."""
+
+    value_getter: Callable[[Device], bool]
+    value_setter: Callable[[Device], bool]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.async_add_executor_job(setup_vicare_api, hass, entry)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -56,7 +67,7 @@ def vicare_login(hass, entry_data):
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, "vicare_token.save"),
+        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
     )
     return vicare_api
 
@@ -84,5 +95,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    with suppress(FileNotFoundError):
+        await hass.async_add_executor_job(
+            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+        )
 
     return unload_ok

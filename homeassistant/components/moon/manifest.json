@@ -1,9 +1,10 @@
 {
   "domain": "moon",
   "name": "Moon",
-  "documentation": "https://www.home-assistant.io/integrations/moon",
   "codeowners": ["@fabaff", "@frenck"],
-  "quality_scale": "internal",
-  "iot_class": "local_polling",
-  "config_flow": true
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/moon",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

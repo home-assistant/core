@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -38,14 +37,14 @@ def setup_product_mock(category, feature_mocks, path=None):
     return product_mock
 
 
-def mock_only_feature(spec, **kwargs):
+def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     """Mock just the feature, without the product setup."""
-    return mock.create_autospec(spec, True, True, **kwargs)
+    return mock.create_autospec(spec, set_spec, True, **kwargs)
 
 
-def mock_feature(category, spec, **kwargs):
+def mock_feature(category, spec, set_spec: bool = True, **kwargs):
     """Mock a feature along with whole product setup."""
-    feature_mock = mock_only_feature(spec, **kwargs)
+    feature_mock = mock_only_feature(spec, set_spec, **kwargs)
     feature_mock.async_update = AsyncMock()
     product = setup_product_mock(category, [feature_mock])
 
@@ -76,18 +75,20 @@ def feature_fixture(request):
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entities(hass, config, entity_ids):
+async def async_setup_entities(hass, entity_ids):
     """Return configured entries with the given entity ids."""
 
     config_entry = mock_config()
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
     entity_registry = er.async_get(hass)
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 
-async def async_setup_entity(hass, config, entity_id):
+async def async_setup_entity(hass, entity_id):
     """Return a configured entry with the given entity_id."""
 
-    return (await async_setup_entities(hass, config, [entity_id]))[0]
+    return (await async_setup_entities(hass, [entity_id]))[0]

@@ -18,14 +18,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -73,29 +73,27 @@ def ha_dev_type(device):
 
 
 FILTER_LIFE_SUPPORTED = ["LV-PUR131S", "Core200S", "Core300S", "Core400S", "Core600S"]
-AIR_QUALITY_SUPPORTED = ["LV-PUR131S", "Core400S", "Core600S"]
-PM25_SUPPORTED = ["Core400S", "Core600S"]
+AIR_QUALITY_SUPPORTED = ["LV-PUR131S", "Core300S", "Core400S", "Core600S"]
+PM25_SUPPORTED = ["Core300S", "Core400S", "Core600S"]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
-        name="Filter Life",
+        translation_key="filter_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: device.details["filter_life"],
+        value_fn=lambda device: device.filter_life,
         exists_fn=lambda device: sku_supported(device, FILTER_LIFE_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="air-quality",
-        name="Air Quality",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_quality",
         value_fn=lambda device: device.details["air_quality"],
         exists_fn=lambda device: sku_supported(device, AIR_QUALITY_SUPPORTED),
     ),
     VeSyncSensorEntityDescription(
         key="pm25",
-        name="PM2.5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -104,9 +102,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="power",
-        name="current power",
+        translation_key="current_power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["power"],
         update_fn=update_energy,
@@ -114,9 +112,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="energy",
-        name="energy use today",
+        translation_key="energy_today",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.energy_today,
         update_fn=update_energy,
@@ -124,9 +122,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="energy-weekly",
-        name="energy use weekly",
+        translation_key="energy_week",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.weekly_energy_total,
         update_fn=update_energy,
@@ -134,9 +132,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="energy-monthly",
-        name="energy use monthly",
+        translation_key="energy_month",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.monthly_energy_total,
         update_fn=update_energy,
@@ -144,9 +142,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="energy-yearly",
-        name="energy use yearly",
+        translation_key="energy_year",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.yearly_energy_total,
         update_fn=update_energy,
@@ -154,9 +152,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="voltage",
-        name="current voltage",
+        translation_key="current_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
@@ -208,7 +206,6 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         """Initialize the VeSync outlet device."""
         super().__init__(device)
         self.entity_description = description
-        self._attr_name = f"{super().name} {description.name}"
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property

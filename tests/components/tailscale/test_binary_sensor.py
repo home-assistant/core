@@ -5,10 +5,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +47,7 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_OFF
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "frencks-iphone Supports Hairpinning"
+        == "frencks-iphone Supports hairpinning"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes

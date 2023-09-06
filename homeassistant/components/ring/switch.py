@@ -1,6 +1,7 @@
-"""This component provides HA switch support for Ring Door Bell/Chimes."""
+"""Component providing HA switch support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 import requests
 
@@ -52,11 +53,6 @@ class BaseRingSwitch(RingEntityMixin, SwitchEntity):
         self._unique_id = f"{self._device.id}-{self._device_type}"
 
     @property
-    def name(self):
-        """Name of the device."""
-        return f"{self._device.name} {self._device_type}"
-
-    @property
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
@@ -64,6 +60,8 @@ class BaseRingSwitch(RingEntityMixin, SwitchEntity):
 
 class SirenSwitch(BaseRingSwitch):
     """Creates a switch to turn the ring cameras siren on and off."""
+
+    _attr_translation_key = "siren"
 
     def __init__(self, config_entry_id, device):
         """Initialize the switch for a device with a siren."""
@@ -97,11 +95,11 @@ class SirenSwitch(BaseRingSwitch):
         """If the switch is currently on or off."""
         return self._siren_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
         self._set_switch(1)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
         self._set_switch(0)
 

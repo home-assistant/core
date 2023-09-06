@@ -4,6 +4,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_ferry.const import (
@@ -14,11 +15,7 @@ from homeassistant.components.trafikverket_ferry.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -50,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Ekerö to Slagsta at 10:00"
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -67,36 +64,36 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message,base_error",
+    ("side_effect", "base_error"),
     [
         (
-            "Source: Security, message: Invalid authentication",
+            InvalidAuthentication,
             "invalid_auth",
         ),
         (
-            "No FerryAnnouncement found",
+            NoFerryFound,
             "invalid_route",
         ),
         (
-            "Unknown",
+            Exception,
             "cannot_connect",
         ),
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, error_message: str, base_error: str
+    hass: HomeAssistant, side_effect: str, base_error: str
 ) -> None:
     """Test config flow errors."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == RESULT_TYPE_FORM
+    assert result4["type"] == FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
         "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
-        side_effect=ValueError(error_message),
+        side_effect=side_effect(),
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
@@ -137,7 +134,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -152,7 +149,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",
@@ -165,24 +162,24 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("side_effect", "p_error"),
     [
         (
-            ValueError("Source: Security, message: Invalid authentication"),
+            InvalidAuthentication,
             "invalid_auth",
         ),
         (
-            ValueError("No FerryAnnouncement found"),
+            NoFerryFound,
             "invalid_route",
         ),
         (
-            ValueError("Unknown"),
+            Exception,
             "cannot_connect",
         ),
     ],
 )
 async def test_reauth_flow_error(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str
+    hass: HomeAssistant, side_effect: Exception, p_error: str
 ) -> None:
     """Test a reauthentication flow with error."""
     entry = MockConfigEntry(
@@ -211,7 +208,7 @@ async def test_reauth_flow_error(
 
     with patch(
         "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
-        side_effect=sideeffect,
+        side_effect=side_effect(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -220,7 +217,7 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with patch(
@@ -235,7 +232,7 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "api_key": "1234567891",

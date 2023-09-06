@@ -2,7 +2,6 @@
 import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError
-import async_timeout
 from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
@@ -35,11 +34,11 @@ from .const import (
     DOMAIN,
     LED_MODE_KEY,
     RECORDING_MODE_KEY,
-    SENSOR_TYPES,
     SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD,
     SIGNAL_LOGI_CIRCLE_SNAPSHOT,
 )
+from .sensor import SENSOR_TYPES
 
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
@@ -144,8 +143,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         persistent_notification.create(
             hass,
             (
-                f"Error: The cached access tokens are missing from {DEFAULT_CACHEDB}.<br />"
-                f"Please unload then re-add the Logi Circle integration to resolve."
+                "Error: The cached access tokens are missing from"
+                f" {DEFAULT_CACHEDB}.<br />Please unload then re-add the Logi Circle"
+                " integration to resolve."
             ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
@@ -153,17 +153,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     try:
-        async with async_timeout.timeout(_TIMEOUT):
+        async with asyncio.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()
     except AuthorizationFailed:
         persistent_notification.create(
             hass,
-            "Error: Failed to obtain an access token from the cached "
-            "refresh token.<br />"
-            "Token may have expired or been revoked.<br />"
-            "Please unload then re-add the Logi Circle integration to resolve",
+            (
+                "Error: Failed to obtain an access token from the cached "
+                "refresh token.<br />"
+                "Token may have expired or been revoked.<br />"
+                "Please unload then re-add the Logi Circle integration to resolve"
+            ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -190,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DATA_LOGI] = logi_circle
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def service_handler(service: ServiceCall) -> None:
         """Dispatch service calls to target entities."""

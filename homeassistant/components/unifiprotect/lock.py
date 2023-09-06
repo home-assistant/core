@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from pyunifiprotect.data import (
     Doorlock,
     LockStatusType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
 )
@@ -34,9 +35,6 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not device.is_adopted_by_us:
-            return
-
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
@@ -45,10 +43,8 @@ async def async_setup_entry(
     )
 
     entities = []
-    for device in data.api.bootstrap.doorlocks.values():
-        if not device.is_adopted_by_us:
-            continue
-
+    for device in data.get_by_types({ModelType.DOORLOCK}):
+        device = cast(Doorlock, device)
         entities.append(ProtectLock(data, device))
 
     async_add_entities(entities)
@@ -77,18 +73,19 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
+        lock_status = self.device.lock_status
 
         self._attr_is_locked = False
         self._attr_is_locking = False
         self._attr_is_unlocking = False
         self._attr_is_jammed = False
-        if self.device.lock_status == LockStatusType.CLOSED:
+        if lock_status == LockStatusType.CLOSED:
             self._attr_is_locked = True
-        elif self.device.lock_status == LockStatusType.CLOSING:
+        elif lock_status == LockStatusType.CLOSING:
             self._attr_is_locking = True
-        elif self.device.lock_status == LockStatusType.OPENING:
+        elif lock_status == LockStatusType.OPENING:
             self._attr_is_unlocking = True
-        elif self.device.lock_status in (
+        elif lock_status in (
             LockStatusType.FAILED_WHILE_CLOSING,
             LockStatusType.FAILED_WHILE_OPENING,
             LockStatusType.JAMMED_WHILE_CLOSING,
@@ -96,7 +93,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         ):
             self._attr_is_jammed = True
         # lock is not fully initialized yet
-        elif self.device.lock_status != LockStatusType.OPEN:
+        elif lock_status != LockStatusType.OPEN:
             self._attr_available = False
 
     async def async_unlock(self, **kwargs: Any) -> None:

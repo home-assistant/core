@@ -1,6 +1,7 @@
 """Support for the Fitbit API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import datetime
 import logging
 import os
@@ -17,21 +18,27 @@ from homeassistant.components import configurator
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
+    PERCENTAGE,
+    UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json_object
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     ATTR_ACCESS_TOKEN,
@@ -48,10 +55,6 @@ from .const import (
     FITBIT_CONFIG_FILE,
     FITBIT_DEFAULT_RESOURCES,
     FITBIT_MEASUREMENTS,
-    FITBIT_RESOURCE_BATTERY,
-    FITBIT_RESOURCES_KEYS,
-    FITBIT_RESOURCES_LIST,
-    FitbitSensorEntityDescription,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -59,6 +62,246 @@ _LOGGER: Final = logging.getLogger(__name__)
 _CONFIGURING: dict[str, str] = {}
 
 SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
+
+
+@dataclass
+class FitbitSensorEntityDescription(SensorEntityDescription):
+    """Describes Fitbit sensor entity."""
+
+    unit_type: str | None = None
+
+
+FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
+    FitbitSensorEntityDescription(
+        key="activities/activityCalories",
+        name="Activity Calories",
+        native_unit_of_measurement="cal",
+        icon="mdi:fire",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/calories",
+        name="Calories",
+        native_unit_of_measurement="cal",
+        icon="mdi:fire",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/caloriesBMR",
+        name="Calories BMR",
+        native_unit_of_measurement="cal",
+        icon="mdi:fire",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/distance",
+        name="Distance",
+        unit_type="distance",
+        icon="mdi:map-marker",
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/elevation",
+        name="Elevation",
+        unit_type="elevation",
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/floors",
+        name="Floors",
+        native_unit_of_measurement="floors",
+        icon="mdi:walk",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/heart",
+        name="Resting Heart Rate",
+        native_unit_of_measurement="bpm",
+        icon="mdi:heart-pulse",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/minutesFairlyActive",
+        name="Minutes Fairly Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/minutesLightlyActive",
+        name="Minutes Lightly Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/minutesSedentary",
+        name="Minutes Sedentary",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:seat-recline-normal",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/minutesVeryActive",
+        name="Minutes Very Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:run",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/steps",
+        name="Steps",
+        native_unit_of_measurement="steps",
+        icon="mdi:walk",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/activityCalories",
+        name="Tracker Activity Calories",
+        native_unit_of_measurement="cal",
+        icon="mdi:fire",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/calories",
+        name="Tracker Calories",
+        native_unit_of_measurement="cal",
+        icon="mdi:fire",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/distance",
+        name="Tracker Distance",
+        unit_type="distance",
+        icon="mdi:map-marker",
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/elevation",
+        name="Tracker Elevation",
+        unit_type="elevation",
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/floors",
+        name="Tracker Floors",
+        native_unit_of_measurement="floors",
+        icon="mdi:walk",
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/minutesFairlyActive",
+        name="Tracker Minutes Fairly Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/minutesLightlyActive",
+        name="Tracker Minutes Lightly Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:walk",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/minutesSedentary",
+        name="Tracker Minutes Sedentary",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:seat-recline-normal",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/minutesVeryActive",
+        name="Tracker Minutes Very Active",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:run",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="activities/tracker/steps",
+        name="Tracker Steps",
+        native_unit_of_measurement="steps",
+        icon="mdi:walk",
+    ),
+    FitbitSensorEntityDescription(
+        key="body/bmi",
+        name="BMI",
+        native_unit_of_measurement="BMI",
+        icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FitbitSensorEntityDescription(
+        key="body/fat",
+        name="Body Fat",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FitbitSensorEntityDescription(
+        key="body/weight",
+        name="Weight",
+        unit_type="weight",
+        icon="mdi:human",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WEIGHT,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/awakeningsCount",
+        name="Awakenings Count",
+        native_unit_of_measurement="times awaken",
+        icon="mdi:sleep",
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/efficiency",
+        name="Sleep Efficiency",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:sleep",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/minutesAfterWakeup",
+        name="Minutes After Wakeup",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/minutesAsleep",
+        name="Sleep Minutes Asleep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/minutesAwake",
+        name="Sleep Minutes Awake",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/minutesToFallAsleep",
+        name="Sleep Minutes to Fall Asleep",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:sleep",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/startTime",
+        name="Sleep Start Time",
+        icon="mdi:clock",
+    ),
+    FitbitSensorEntityDescription(
+        key="sleep/timeInBed",
+        name="Sleep Time in Bed",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:hotel",
+        device_class=SensorDeviceClass.DURATION,
+    ),
+)
+
+FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
+    key="devices/battery",
+    name="Battery",
+    icon="mdi:battery",
+)
+
+FITBIT_RESOURCES_KEYS: Final[list[str]] = [
+    desc.key for desc in (*FITBIT_RESOURCES_LIST, FITBIT_RESOURCE_BATTERY)
+]
 
 PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -88,9 +331,12 @@ def request_app_setup(
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
-            config_file = load_json(config_path)
+            config_file = load_json_object(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = "You didn't correctly modify fitbit.conf, please try again."
+                error_msg = (
+                    f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try"
+                    " again."
+                )
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -115,7 +361,7 @@ def request_app_setup(
         )
         return
 
-    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
+    submit = f"I have saved my Client ID and Client Secret into {FITBIT_CONFIG_FILE}."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
         hass,
@@ -161,7 +407,7 @@ def setup_platform(
     """Set up the Fitbit sensor."""
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
     if os.path.isfile(config_path):
-        config_file: ConfigType = cast(ConfigType, load_json(config_path))
+        config_file = load_json_object(config_path)
         if config_file == DEFAULT_CONFIG:
             request_app_setup(
                 hass, config, add_entities, config_path, discovery_info=None
@@ -175,13 +421,10 @@ def setup_platform(
     if "fitbit" in _CONFIGURING:
         configurator.request_done(hass, _CONFIGURING.pop("fitbit"))
 
-    access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
-    refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
-    expires_at: int | None = config_file.get(ATTR_LAST_SAVED_AT)
     if (
-        access_token is not None
-        and refresh_token is not None
-        and expires_at is not None
+        (access_token := config_file.get(ATTR_ACCESS_TOKEN)) is not None
+        and (refresh_token := config_file.get(ATTR_REFRESH_TOKEN)) is not None
+        and (expires_at := config_file.get(ATTR_LAST_SAVED_AT)) is not None
     ):
         authd_client = Fitbit(
             config_file.get(CONF_CLIENT_ID),
@@ -192,13 +435,14 @@ def setup_platform(
             refresh_cb=lambda x: None,
         )
 
-        if int(time.time()) - expires_at > 3600:
+        if int(time.time()) - cast(int, expires_at) > 3600:
             authd_client.client.refresh_token()
 
+        user_profile = authd_client.user_profile_get()["user"]
         if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
-            authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+            authd_client.system = user_profile["locale"]
             if authd_client.system != "en_GB":
-                if hass.config.units.is_metric:
+                if hass.config.units is METRIC_SYSTEM:
                     authd_client.system = "metric"
                 else:
                     authd_client.system = "en_US"
@@ -211,9 +455,10 @@ def setup_platform(
         entities = [
             FitbitSensor(
                 authd_client,
+                user_profile,
                 config_path,
                 description,
-                hass.config.units.is_metric,
+                hass.config.units is METRIC_SYSTEM,
                 clock_format,
             )
             for description in FITBIT_RESOURCES_LIST
@@ -224,9 +469,10 @@ def setup_platform(
                 [
                     FitbitSensor(
                         authd_client,
+                        user_profile,
                         config_path,
                         FITBIT_RESOURCE_BATTERY,
-                        hass.config.units.is_metric,
+                        hass.config.units is METRIC_SYSTEM,
                         clock_format,
                         dev_extra,
                     )
@@ -279,7 +525,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.add_entities = add_entities
         self.oauth = oauth
 
-    @callback
     async def get(self, request: Request) -> str:
         """Finish OAuth callback request."""
         hass: HomeAssistant = request.app["hass"]
@@ -342,10 +587,12 @@ class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
         client: Fitbit,
+        user_profile: dict[str, Any],
         config_path: str,
         description: FitbitSensorEntityDescription,
         is_metric: bool,
@@ -359,10 +606,13 @@ class FitbitSensor(SensorEntity):
         self.is_metric = is_metric
         self.clock_format = clock_format
         self.extra = extra
+
+        self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if self.extra is not None:
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
-        if (unit_type := description.unit_type) == "":
-            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
+            self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
+
+        if description.unit_type:
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
@@ -370,8 +620,9 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
+            split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             unit_type = measurement_system[split_resource]
-        self._attr_native_unit_of_measurement = unit_type
+            self._attr_native_unit_of_measurement = unit_type
 
     @property
     def icon(self) -> str | None:
@@ -388,7 +639,7 @@ class FitbitSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict[str, str | None] = {}
 
         if self.extra is not None:
             attrs["model"] = self.extra.get("deviceVersion")
@@ -437,14 +688,13 @@ class FitbitSensor(SensorEntity):
                     self._attr_native_value = f"{hours}:{minutes:02d} {setting}"
                 else:
                     self._attr_native_value = raw_state
+            elif self.is_metric:
+                self._attr_native_value = raw_state
             else:
-                if self.is_metric:
+                try:
+                    self._attr_native_value = int(raw_state)
+                except TypeError:
                     self._attr_native_value = raw_state
-                else:
-                    try:
-                        self._attr_native_value = f"{int(raw_state):,}"
-                    except TypeError:
-                        self._attr_native_value = raw_state
 
         if resource_type == "activities/heart":
             self._attr_native_value = (

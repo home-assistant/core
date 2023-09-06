@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from aioqsw.const import (
     QSD_FIRMWARE,
     QSD_FIRMWARE_INFO,
+    QSD_LACP_PORTS,
     QSD_MAC,
+    QSD_PORTS,
     QSD_PRODUCT,
     QSD_SYSTEM_BOARD,
 )
@@ -15,12 +18,19 @@ from aioqsw.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER
 from .coordinator import QswDataCoordinator, QswFirmwareCoordinator
+
+
+class QswEntityType(StrEnum):
+    """QNAP QSW Entity Type."""
+
+    LACP_PORT = QSD_LACP_PORTS
+    PORT = QSD_PORTS
 
 
 class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
@@ -30,10 +40,12 @@ class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
         self,
         coordinator: QswDataCoordinator,
         entry: ConfigEntry,
+        type_id: int | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
+        self.type_id = type_id
         self.product = self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)
         self._attr_device_info = DeviceInfo(
             configuration_url=entry.data[CONF_URL],
@@ -49,12 +61,24 @@ class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
             sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
         )
 
-    def get_device_value(self, key: str, subkey: str) -> Any:
+    def get_device_value(
+        self,
+        key: str,
+        subkey: str,
+        qsw_type: QswEntityType | None = None,
+    ) -> Any:
         """Return device value by key."""
         value = None
         if key in self.coordinator.data:
             data = self.coordinator.data[key]
-            if subkey in data:
+            if qsw_type is not None and self.type_id is not None:
+                if (
+                    qsw_type in data
+                    and self.type_id in data[qsw_type]
+                    and subkey in data[qsw_type][self.type_id]
+                ):
+                    value = data[qsw_type][self.type_id][subkey]
+            elif subkey in data:
                 value = data[subkey]
         return value
 
@@ -96,6 +120,8 @@ class QswSensorEntity(QswDataEntity):
 class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     """Define a QNAP QSW firmware entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: QswFirmwareCoordinator,
@@ -121,7 +147,7 @@ class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     def get_device_value(self, key: str, subkey: str) -> Any:
         """Return device value by key."""
         value = None
-        if key in self.coordinator.data:
+        if self.coordinator.data is not None and key in self.coordinator.data:
             data = self.coordinator.data[key]
             if subkey in data:
                 value = data[subkey]

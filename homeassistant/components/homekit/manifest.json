@@ -1,18 +1,18 @@
 {
   "domain": "homekit",
-  "name": "HomeKit",
+  "name": "HomeKit Bridge",
+  "after_dependencies": ["camera", "zeroconf"],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["ffmpeg", "http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/homekit",
+  "iot_class": "local_push",
+  "loggers": ["pyhap"],
   "requirements": [
-    "HAP-python==4.5.0",
-    "fnvhash==0.1.0",
+    "HAP-python==4.7.1",
+    "fnv-hash-fast==0.4.1",
     "PyQRCode==1.2.1",
     "base36==0.1.1"
   ],
-  "dependencies": ["ffmpeg", "http", "network"],
-  "after_dependencies": ["camera", "zeroconf"],
-  "codeowners": ["@bdraco"],
-  "zeroconf": ["_homekit._tcp.local."],
-  "config_flow": true,
-  "iot_class": "local_push",
-  "loggers": ["pyhap"]
+  "zeroconf": ["_homekit._tcp.local."]
 }

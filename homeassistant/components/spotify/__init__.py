@@ -3,33 +3,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 from typing import Any
 
 import aiohttp
 import requests
 from spotipy import Spotify, SpotifyException
-import voluptuous as vol
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CREDENTIALS,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .browse_media import async_browse_media
@@ -38,23 +25,6 @@ from .util import (
     is_spotify_media_type,
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
-                    vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -75,33 +45,8 @@ class HomeAssistantSpotifyData:
 
     client: Spotify
     current_user: dict[str, Any]
-    devices: DataUpdateCoordinator
+    devices: DataUpdateCoordinator[list[dict[str, Any]]]
     session: OAuth2Session
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Spotify integration."""
-    if DOMAIN not in config:
-        return True
-
-    if CONF_CLIENT_ID in config[DOMAIN]:
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                config[DOMAIN][CONF_CLIENT_ID],
-                config[DOMAIN][CONF_CLIENT_SECRET],
-            ),
-        )
-        _LOGGER.warning(
-            "Configuration of Spotify integration in YAML is deprecated and "
-            "will be removed in a future release; Your existing OAuth "
-            "Application Credentials have been imported into the UI "
-            "automatically and can be safely removed from your "
-            "configuration.yaml file"
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -165,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         raise ConfigEntryAuthFailed
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

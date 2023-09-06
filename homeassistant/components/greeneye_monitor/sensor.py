@@ -1,7 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 import greeneye
 
@@ -10,11 +10,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
-    ELECTRIC_POTENTIAL_VOLT,
-    POWER_WATT,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -37,8 +35,6 @@ from .const import (
 
 DATA_PULSES = "pulses"
 DATA_WATT_SECONDS = "watt_seconds"
-
-UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
 
@@ -120,12 +116,12 @@ async def async_setup_platform(
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = Union[
-    greeneye.monitor.Channel,
-    greeneye.monitor.PulseCounter,
-    greeneye.monitor.TemperatureSensor,
-    greeneye.monitor.VoltageSensor,
-]
+UnderlyingSensorType = (
+    greeneye.monitor.Channel
+    | greeneye.monitor.PulseCounter
+    | greeneye.monitor.TemperatureSensor
+    | greeneye.monitor.VoltageSensor
+)
 
 
 class GEMSensor(SensorEntity):
@@ -165,7 +161,7 @@ class GEMSensor(SensorEntity):
 class CurrentSensor(GEMSensor):
     """Entity showing power usage on one channel of the monitor."""
 
-    _attr_native_unit_of_measurement = UNIT_WATTS
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_device_class = SensorDeviceClass.POWER
 
     def __init__(
@@ -235,16 +231,17 @@ class PulseCounter(GEMSensor):
     @property
     def _seconds_per_time_unit(self) -> int:
         """Return the number of seconds in the given display time unit."""
-        if self._time_unit == TIME_SECONDS:
+        if self._time_unit == UnitOfTime.SECONDS:
             return 1
-        if self._time_unit == TIME_MINUTES:
+        if self._time_unit == UnitOfTime.MINUTES:
             return 60
-        if self._time_unit == TIME_HOURS:
+        if self._time_unit == UnitOfTime.HOURS:
             return 3600
 
         # Config schema should have ensured it is one of the above values
-        raise Exception(
-            f"Invalid value for time unit: {self._time_unit}. Expected one of {TIME_SECONDS}, {TIME_MINUTES}, or {TIME_HOURS}"
+        raise RuntimeError(
+            f"Invalid value for time unit: {self._time_unit}. Expected one of"
+            f" {UnitOfTime.SECONDS}, {UnitOfTime.MINUTES}, or {UnitOfTime.HOURS}"
         )
 
     @property
@@ -277,7 +274,7 @@ class TemperatureSensor(GEMSensor):
 class VoltageSensor(GEMSensor):
     """Entity showing voltage."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
 
     def __init__(

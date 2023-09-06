@@ -1,13 +1,14 @@
 """Support for Tellstick covers using Tellstick Net."""
 from typing import Any
 
-from homeassistant.components import cover, tellduslive
+from homeassistant.components import cover
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import tellduslive
 from . import TelldusLiveClient
 from .entry import TelldusLiveEntity
 
@@ -33,6 +34,8 @@ async def async_setup_entry(
 
 class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
     """Representation of a cover."""
+
+    _attr_name = None
 
     @property
     def is_closed(self) -> bool:

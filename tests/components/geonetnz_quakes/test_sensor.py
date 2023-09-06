@@ -20,16 +20,18 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from . import _generate_mock_feed_entry
+
 from tests.common import async_fire_time_changed
-from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -39,7 +41,7 @@ async def test_setup(hass):
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,

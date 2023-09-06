@@ -11,7 +11,12 @@ CONF_ELMAX_PANEL_NAME = "panel_name"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_ENDPOINT_ID = "endpoint_id"
 
-ELMAX_PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
+ELMAX_PLATFORMS = [
+    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.COVER,
+]
 
 POLLING_SECONDS = 30
 DEFAULT_TIMEOUT = 10.0

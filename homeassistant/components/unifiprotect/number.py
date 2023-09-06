@@ -1,4 +1,4 @@
-"""This component provides number entities for UniFi Protect."""
+"""Component providing number entities for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,10 +14,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TIME_SECONDS
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -31,9 +30,9 @@ from .utils import async_dispatch_id as _ufpd
 class NumberKeysMixin:
     """Mixin for required keys."""
 
-    ufp_max: int
-    ufp_min: int
-    ufp_step: int
+    ufp_max: int | float
+    ufp_min: int | float
+    ufp_step: int | float
 
 
 @dataclass
@@ -59,6 +58,10 @@ async def _set_auto_close(obj: Doorlock, value: float) -> None:
     await obj.set_auto_close_time(timedelta(seconds=value))
 
 
+def _get_chime_duration(obj: Camera) -> int:
+    return int(obj.chime_duration.total_seconds())
+
+
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="wdr_value",
@@ -82,8 +85,9 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field="feature_flags.has_mic",
+        ufp_required_field="has_mic",
         ufp_value="mic_volume",
+        ufp_enabled="feature_flags.has_mic",
         ufp_set_method="set_mic_volume",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -99,6 +103,21 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_required_field="feature_flags.can_optical_zoom",
         ufp_value="isp_settings.zoom_position",
         ufp_set_method="set_camera_zoom",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
+        key="chime_duration",
+        name="Chime Duration",
+        icon="mdi:bell",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        ufp_min=1,
+        ufp_max=10,
+        ufp_step=0.1,
+        ufp_required_field="feature_flags.has_chime",
+        ufp_enabled="is_digital_chime",
+        ufp_value_fn=_get_chime_duration,
+        ufp_set_method="set_chime_duration",
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -123,7 +142,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
@@ -157,7 +176,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-lock Timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=0,
         ufp_max=3600,
         ufp_step=15,

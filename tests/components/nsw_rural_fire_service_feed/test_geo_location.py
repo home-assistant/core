@@ -31,8 +31,9 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -89,7 +90,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -100,9 +101,7 @@ async def test_setup(hass):
         category="Category 1",
         location="Location 1",
         attribution="Attribution 1",
-        publication_date=datetime.datetime(
-            2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-        ),
+        publication_date=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         council_area="Council Area 1",
         status="Status 1",
         entry_type="Type 1",
@@ -147,7 +146,7 @@ async def test_setup(hass):
                 ATTR_LOCATION: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_FIRE: True,
                 ATTR_COUNCIL_AREA: "Council Area 1",
@@ -155,7 +154,7 @@ async def test_setup(hass):
                 ATTR_TYPE: "Type 1",
                 ATTR_SIZE: "Size 1",
                 ATTR_RESPONSIBLE_AGENCY: "Agency 1",
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }
@@ -170,7 +169,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_FIRE: False,
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:alarm-light",
             }
@@ -185,7 +184,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_FIRE: True,
-                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }
@@ -226,7 +225,7 @@ async def test_setup(hass):
             await hass.async_block_till_done()
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))

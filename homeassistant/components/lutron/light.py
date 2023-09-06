@@ -1,6 +1,8 @@
 """Support for Lutron lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,7 +19,7 @@ def setup_platform(
 ) -> None:
     """Set up the Lutron lights."""
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["light"]:
+    for area_name, device in hass.data[LUTRON_DEVICES]["light"]:
         dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
@@ -53,7 +55,7 @@ class LutronLight(LutronDevice, LightEntity):
             self._prev_brightness = new_brightness
         return new_brightness
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -64,7 +66,7 @@ class LutronLight(LutronDevice, LightEntity):
         self._prev_brightness = brightness
         self._lutron_device.level = to_lutron_level(brightness)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._lutron_device.level = 0
 
@@ -78,7 +80,7 @@ class LutronLight(LutronDevice, LightEntity):
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
 
-    def update(self):
+    def update(self) -> None:
         """Call when forcing a refresh of the device."""
         if self._prev_brightness is None:
             self._prev_brightness = to_hass_level(self._lutron_device.level)

@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -41,13 +40,13 @@ class RDWBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
-        name="Liability Insured",
+        translation_key="liability_insured",
         icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
         key="pending_recall",
-        name="Pending Recall",
+        translation_key="pending_recall",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),
@@ -71,15 +70,18 @@ async def async_setup_entry(
     )
 
 
-class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+class RDWBinarySensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
+):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
@@ -91,7 +93,7 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.license_plate)},
             manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
+            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
             model=coordinator.data.model,
             configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
         )

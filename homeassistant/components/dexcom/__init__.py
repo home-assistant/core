@@ -50,23 +50,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SessionError as error:
             raise UpdateFailed(error) from error
 
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=async_update_data,
+        update_interval=SCAN_INTERVAL,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=async_update_data,
-            update_interval=SCAN_INTERVAL,
-        ),
+        COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: entry.add_update_listener(update_listener),
     }
 
-    await hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ].async_config_entry_first_refresh()
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, cast
 
@@ -11,7 +11,7 @@ from pytradfri.device import Device
 from pytradfri.error import RequestError
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
@@ -20,7 +20,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 def handle_error(
     func: Callable[[Command | list[Command]], Any]
-) -> Callable[[str], Any]:
+) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 
     @wraps(func)
@@ -37,6 +37,8 @@ def handle_error(
 class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
     """Base Tradfri device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
@@ -52,7 +54,6 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
 
         self._device_id = self._device.id
         self._api = handle_error(api)
-        self._attr_name = self._device.name
 
         self._attr_unique_id = f"{self._gateway_id}-{self._device.id}"
 
@@ -63,8 +64,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """
-        Handle updated data from the coordinator.
+        """Handle updated data from the coordinator.
 
         Tests fails without this method.
         """

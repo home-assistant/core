@@ -1,17 +1,27 @@
 """Support for SolarEdge Monitoring API."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from solaredge import Solaredge
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, SENSOR_TYPES
+from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN
 from .coordinator import (
     SolarEdgeDataService,
     SolarEdgeDetailsDataService,
@@ -20,7 +30,186 @@ from .coordinator import (
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
 )
-from .models import SolarEdgeSensorEntityDescription
+
+
+@dataclass
+class SolarEdgeSensorEntityRequiredKeyMixin:
+    """Sensor entity description with json_key for SolarEdge."""
+
+    json_key: str
+
+
+@dataclass
+class SolarEdgeSensorEntityDescription(
+    SensorEntityDescription, SolarEdgeSensorEntityRequiredKeyMixin
+):
+    """Sensor entity description for SolarEdge."""
+
+
+SENSOR_TYPES = [
+    SolarEdgeSensorEntityDescription(
+        key="lifetime_energy",
+        json_key="lifeTimeData",
+        name="Lifetime energy",
+        icon="mdi:solar-power",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="energy_this_year",
+        json_key="lastYearData",
+        name="Energy this year",
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="energy_this_month",
+        json_key="lastMonthData",
+        name="Energy this month",
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="energy_today",
+        json_key="lastDayData",
+        name="Energy today",
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="current_power",
+        json_key="currentPower",
+        name="Current Power",
+        icon="mdi:solar-power",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="site_details",
+        json_key="status",
+        name="Site details",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="meters",
+        json_key="meters",
+        name="Meters",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="sensors",
+        json_key="sensors",
+        name="Sensors",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="gateways",
+        json_key="gateways",
+        name="Gateways",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="batteries",
+        json_key="batteries",
+        name="Batteries",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="inverters",
+        json_key="inverters",
+        name="Inverters",
+        entity_registry_enabled_default=False,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="power_consumption",
+        json_key="LOAD",
+        name="Power Consumption",
+        entity_registry_enabled_default=False,
+        icon="mdi:flash",
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="solar_power",
+        json_key="PV",
+        name="Solar Power",
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="grid_power",
+        json_key="GRID",
+        name="Grid Power",
+        entity_registry_enabled_default=False,
+        icon="mdi:power-plug",
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="storage_power",
+        json_key="STORAGE",
+        name="Storage Power",
+        entity_registry_enabled_default=False,
+        icon="mdi:car-battery",
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="purchased_energy",
+        json_key="Purchased",
+        name="Imported Energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="production_energy",
+        json_key="Production",
+        name="Production Energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="consumption_energy",
+        json_key="Consumption",
+        name="Consumption Energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="selfconsumption_energy",
+        json_key="SelfConsumption",
+        name="SelfConsumption Energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="feedin_energy",
+        json_key="FeedIn",
+        name="Exported Energy",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="storage_level",
+        json_key="STORAGE",
+        name="Storage Level",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -101,14 +290,16 @@ class SolarEdgeSensorFactory:
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
-    ) -> SolarEdgeSensorEntityDescription:
+    ) -> SolarEdgeSensorEntity:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_type.key]
 
         return sensor_class(self.platform_name, sensor_type, service)
 
 
-class SolarEdgeSensorEntity(CoordinatorEntity, SensorEntity):
+class SolarEdgeSensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[None]], SensorEntity
+):
     """Abstract class for a solaredge sensor."""
 
     entity_description: SolarEdgeSensorEntityDescription
@@ -155,7 +346,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data
+        return self.data_service.data.get(self.entity_description.json_key)
 
     @property
     def unique_id(self) -> str | None:
@@ -169,7 +360,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API inventory sensor."""
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
@@ -182,14 +373,19 @@ class SolarEdgeInventorySensor(SolarEdgeSensorEntity):
 class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    def __init__(self, platform_name, sensor_type, data_service):
+    def __init__(
+        self,
+        platform_name: str,
+        sensor_type: SolarEdgeSensorEntityDescription,
+        data_service: SolarEdgeEnergyDetailsService,
+    ) -> None:
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_type, data_service)
 
         self._attr_native_unit_of_measurement = data_service.unit
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 
@@ -208,7 +404,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         self,
         platform_name: str,
         description: SolarEdgeSensorEntityDescription,
-        data_service: SolarEdgeDataService,
+        data_service: SolarEdgePowerFlowDataService,
     ) -> None:
         """Initialize the power flow sensor."""
         super().__init__(platform_name, description, data_service)
@@ -216,7 +412,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         self._attr_native_unit_of_measurement = data_service.unit
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self.data_service.attributes.get(self.entity_description.json_key)
 

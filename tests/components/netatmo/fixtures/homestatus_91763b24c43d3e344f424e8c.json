@@ -1,12 +1,20 @@
 {
   "status": "ok",
-  "time_server": 1559292041,
+  "time_server": 1642952130,
   "body": {
     "home": {
-      "modules": [],
-      "rooms": [],
-      "id": "91763b24c43d3e344f424e8c",
-      "persons": []
+      "persons": [
+        {
+          "id": "abcdef12-1111-0000-0000-000111222333",
+          "last_seen": 1489050910,
+          "out_of_sight": true
+        },
+        {
+          "id": "abcdef12-2222-0000-0000-000111222333",
+          "last_seen": 1489078776,
+          "out_of_sight": true
+        }
+      ]
     }
   }
 }

@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, cast
 
-from abodepy.devices import CONST, AbodeDevice as AbodeDev
-from abodepy.devices.camera import AbodeCamera as AbodeCam
-import abodepy.helpers.timeline as TIMELINE
+from jaraco.abode.devices.base import Device as AbodeDev
+from jaraco.abode.devices.camera import Camera as AbodeCam
+from jaraco.abode.helpers import constants as CONST, timeline as TIMELINE
 import requests
 from requests.models import Response
 
@@ -28,18 +28,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Abode camera devices."""
     data: AbodeSystem = hass.data[DOMAIN]
-    entities = []
 
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        entities.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA)
+    )
 
 
 class AbodeCamera(AbodeDevice, Camera):
     """Representation of an Abode camera."""
 
     _device: AbodeCam
+    _attr_name = None
 
     def __init__(self, data: AbodeSystem, device: AbodeDev, event: Event) -> None:
         """Initialize the Abode device."""
@@ -75,7 +75,9 @@ class AbodeCamera(AbodeDevice, Camera):
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
-                self._response = requests.get(self._device.image_url, stream=True)
+                self._response = requests.get(
+                    self._device.image_url, stream=True, timeout=10
+                )
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:

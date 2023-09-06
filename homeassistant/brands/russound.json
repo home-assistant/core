@@ -1,0 +1,5 @@
+{
+  "domain": "russound",
+  "name": "Russound",
+  "integrations": ["russound_rio", "russound_rnet"]
+}

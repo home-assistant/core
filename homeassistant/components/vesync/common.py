@@ -1,6 +1,10 @@
 """Common utilities for VeSync Component."""
 import logging
+from typing import Any
 
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
 from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
@@ -48,11 +52,12 @@ async def async_process_devices(hass, manager):
 class VeSyncBaseEntity(Entity):
     """Base class for VeSync Entity Representations."""
 
-    def __init__(self, device):
+    _attr_has_entity_name = True
+
+    def __init__(self, device: VeSyncBaseDevice) -> None:
         """Initialize the VeSync device."""
         self.device = device
         self._attr_unique_id = self.base_unique_id
-        self._attr_name = self.base_name
 
     @property
     def base_unique_id(self):
@@ -65,28 +70,22 @@ class VeSyncBaseEntity(Entity):
         return self.device.cid
 
     @property
-    def base_name(self):
-        """Return the name of the device."""
-        # Same story here as `base_unique_id` above
-        return self.device.device_name
-
-    @property
     def available(self) -> bool:
         """Return True if device is available."""
         return self.device.connection_status == "online"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.base_unique_id)},
-            "name": self.base_name,
-            "model": self.device.device_type,
-            "default_manufacturer": "VeSync",
-            "sw_version": self.device.current_firm_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.base_unique_id)},
+            name=self.device.device_name,
+            model=self.device.device_type,
+            manufacturer="VeSync",
+            sw_version=self.device.current_firm_version,
+        )
 
-    def update(self):
+    def update(self) -> None:
         """Update vesync device."""
         self.device.update()
 
@@ -100,10 +99,10 @@ class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
         return self.device.details
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.device_status == "on"
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()

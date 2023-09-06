@@ -10,16 +10,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import CanaryDataUpdateCoordinator
-from .model import SensorTypeItem
+
+SensorTypeItem = tuple[str, str | None, str | None, SensorDeviceClass | None, list[str]]
 
 SENSOR_VALUE_PRECISION: Final = 2
 ATTR_AIR_QUALITY: Final = "air_quality"
@@ -34,7 +35,13 @@ CANARY_FLEX: Final = "Canary Flex"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES: Final[list[SensorTypeItem]] = [
-    ("temperature", TEMP_CELSIUS, None, SensorDeviceClass.TEMPERATURE, [CANARY_PRO]),
+    (
+        "temperature",
+        UnitOfTemperature.CELSIUS,
+        None,
+        SensorDeviceClass.TEMPERATURE,
+        [CANARY_PRO],
+    ),
     ("humidity", PERCENTAGE, None, SensorDeviceClass.HUMIDITY, [CANARY_PRO]),
     ("air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]),
     (

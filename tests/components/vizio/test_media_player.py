@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
-from pytest import raises
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import (
     APPS,
@@ -21,6 +20,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -37,7 +37,6 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
 )
-from homeassistant.components.media_player.const import ATTR_INPUT_SOURCE_LIST
 from homeassistant.components.vizio import validate_apps
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
@@ -457,6 +456,7 @@ async def test_options_update(
         options=new_options,
     )
     assert config_entry.options == updated_options
+    await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )
@@ -509,7 +509,7 @@ async def test_update_unavailable_to_available(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device becomes available after being unavailable."""
     await _test_update_availability_switch(hass, None, True, caplog)
@@ -519,7 +519,7 @@ async def test_update_available_to_unavailable(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device becomes unavailable after being available."""
     await _test_update_availability_switch(hass, True, None, caplog)
@@ -529,7 +529,7 @@ async def test_setup_with_apps(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -557,7 +557,7 @@ async def test_setup_with_apps_include(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["include"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -575,7 +575,7 @@ async def test_setup_with_apps_exclude(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["exclude"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -593,7 +593,7 @@ async def test_setup_with_apps_additional_apps_config(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps and apps["additional_configs"] in config."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -656,12 +656,12 @@ async def test_setup_with_apps_additional_apps_config(
         assert not service_call2.called
 
 
-def test_invalid_apps_config(hass: HomeAssistant):
+def test_invalid_apps_config(hass: HomeAssistant) -> None:
     """Test that schema validation fails on certain conditions."""
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_TV_APPS_FAILURE)
 
-    with raises(vol.Invalid):
+    with pytest.raises(vol.Invalid):
         vol.Schema(vol.All(VIZIO_SCHEMA, validate_apps))(MOCK_SPEAKER_APPS_FAILURE)
 
 
@@ -669,7 +669,7 @@ async def test_setup_with_unknown_app_config(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where app config returned is unknown."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -686,7 +686,7 @@ async def test_setup_with_no_running_app(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where no app is running."""
     async with _cm_for_test_setup_tv_with_apps(
@@ -727,7 +727,7 @@ async def test_apps_update(
     hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_update_with_apps: pytest.fixture,
-    caplog: pytest.fixture,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device setup with apps where no app is running."""
     with patch(
@@ -747,6 +747,8 @@ async def test_apps_update(
                 "homeassistant.components.vizio.gen_apps_list_from_url",
                 return_value=APP_LIST,
             ):
+                async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
+                await hass.async_block_till_done()
                 async_fire_time_changed(hass, dt_util.now() + timedelta(days=2))
                 await hass.async_block_till_done()
                 # Check source list, remove TV inputs, and verify that the integration is

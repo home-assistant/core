@@ -2,29 +2,29 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import CancelledError
+from asyncio import CancelledError, timeout
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 from urllib import parse
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
-import async_timeout
 import voluptuous as vol
 import xmltodict
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -33,14 +33,11 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -66,7 +63,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
 UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
@@ -203,6 +199,8 @@ async def async_setup_platform(
 class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
+    _attr_media_content_type = MediaType.MUSIC
+
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
         self.host = host
@@ -212,7 +210,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_task = None  # The actual polling task.
         self._name = name
         self._id = None
-        self._icon = None
         self._capture_items = []
         self._services_items = []
         self._preset_items = []
@@ -260,8 +257,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
-        if not self._icon:
-            self._icon = self._sync_status.get("@icon", self.host)
 
         if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
@@ -333,7 +328,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             )
             raise
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update internal status of the entity."""
         if not self._is_online:
             return
@@ -359,7 +354,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         try:
             websession = async_get_clientsession(self._hass)
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 response = await websession.get(url)
 
             if response.status == HTTPStatus.OK:
@@ -400,8 +395,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Calling URL: %s", url)
 
         try:
-
-            async with async_timeout.timeout(125):
+            async with timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )
@@ -450,6 +444,11 @@ class BluesoundPlayer(MediaPlayerEntity):
             self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return f"{format_mac(self._sync_status['@mac'])}-{self.port}"
 
     async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
@@ -550,25 +549,20 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._services_items
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._status is None:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self.is_grouped and not self.is_master:
-            return STATE_GROUPED
+            return MediaPlayerState.IDLE
 
         status = self._status.get("state")
         if status in ("pause", "stop"):
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if status in ("stream", "play"):
-            return STATE_PLAYING
-        return STATE_IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
     @property
     def media_title(self):
@@ -621,14 +615,14 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         mediastate = self.state
-        if self._last_status_update is None or mediastate == STATE_IDLE:
+        if self._last_status_update is None or mediastate == MediaPlayerState.IDLE:
             return None
 
         if (position := self._status.get("secs")) is None:
             return None
 
         position = float(position)
-        if mediastate == STATE_PLAYING:
+        if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()
 
         return position
@@ -686,11 +680,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._bluesound_device_name
 
     @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
-
-    @property
     def source_list(self):
         """List of available input sources."""
         if self._status is None or (self.is_grouped and not self.is_master):
@@ -704,7 +693,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         for source in [
             x
             for x in self._services_items
-            if x["type"] == "LocalMusic" or x["type"] == "RadioService"
+            if x["type"] in ("LocalMusic", "RadioService")
         ]:
             sources.append(source["title"])
 
@@ -784,10 +773,10 @@ class BluesoundPlayer(MediaPlayerEntity):
         return None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag of media commands that are supported."""
         if self._status is None:
-            return 0
+            return MediaPlayerEntityFeature(0)
 
         if self.is_grouped and not self.is_master:
             return (
@@ -930,12 +919,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         while sleep > 0:
             sleep = await self.async_increase_timer()
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         value = "1" if shuffle else "0"
         return await self.send_bluesound_command(f"/Shuffle?state={value}")
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if self.is_grouped and not self.is_master:
             return
@@ -958,14 +947,14 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(url)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Clear")
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -978,7 +967,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(cmd)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -991,35 +980,37 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(cmd)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Play")
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Pause")
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command("Pause")
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -1036,21 +1027,21 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return await self.send_bluesound_command(url)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol >= 1:
             return
         return await self.async_set_volume_level(current_vol + 0.01)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol <= 0:
             return
         return await self.async_set_volume_level(current_vol - 0.01)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
         if volume < 0:
             volume = 0
@@ -1058,13 +1049,17 @@ class BluesoundPlayer(MediaPlayerEntity):
             volume = 1
         return await self.send_bluesound_command(f"Volume?level={float(volume) * 100}")
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command to media player."""
         if mute:
             return await self.send_bluesound_command("Volume?mute=1")
         return await self.send_bluesound_command("Volume?mute=0")
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(
             self.hass,

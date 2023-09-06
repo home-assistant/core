@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     )
 
     try:
-        heaters = incomfort_data["heaters"] = list(await client.heaters)
+        heaters = incomfort_data["heaters"] = list(await client.heaters())
     except ClientResponseError as err:
         _LOGGER.warning("Setup failed, check your configuration, message is: %s", err)
         return False
@@ -91,6 +91,8 @@ class IncomfortEntity(Entity):
 class IncomfortChild(IncomfortEntity):
     """Base class for all InComfort entities (excluding the boiler)."""
 
+    _attr_should_poll = False
+
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
@@ -98,8 +100,3 @@ class IncomfortChild(IncomfortEntity):
     @callback
     def _refresh(self) -> None:
         self.async_schedule_update_ha_state(force_refresh=True)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as this device should never be polled."""
-        return False

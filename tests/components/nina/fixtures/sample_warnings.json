@@ -40,5 +40,50 @@
     "onset": "2021-11-01T05:20:00+01:00",
     "sent": "2021-10-11T05:20:00+01:00",
     "expires": "3021-11-22T05:19:00+01:00"
+  },
+  {
+    "id": "mow.DE-NW-BN-SE030-20201014-30-011",
+    "payload": {
+      "version": 1,
+      "type": "ALERT",
+      "id": "mow.DE-NW-BN-SE030-20201014-30-011",
+      "hash": "551db820a43be7e4f39283e1dfb71b212cd520c3ee478d44f43519e9c42fde1c",
+      "data": {
+        "headline": "Ausfall Notruf 112",
+        "provider": "MOWAS",
+        "severity": "Minor",
+        "msgType": "Update",
+        "transKeys": { "event": "BBK-EVC-040" },
+        "area": { "type": "ZGEM", "data": "1+11057,100001" }
+      }
+    },
+    "i18nTitle": { "de": "Ausfall Notruf 112" },
+    "onset": "2021-11-01T05:20:00+01:00",
+    "sent": "2021-10-11T05:21:00+01:00",
+    "expires": "3021-11-22T05:19:00+01:00"
+  },
+  {
+    "id": "biw.BIWAPP-69634",
+    "payload": {
+      "version": 2,
+      "type": "ALERT",
+      "id": "biw.BIWAPP-69634",
+      "hash": "fdbafb6b164f549ff60b9adfa5b1c707069cdd178bf55f025066f319451660ad",
+      "data": {
+        "headline": "Geflügelpest im Landkreis Cuxhaven - Teile des Landkreises Osterholz zur Überwachungszone erklärt",
+        "provider": "BIWAPP",
+        "severity": "Minor",
+        "msgType": "Alert",
+        "area": {
+          "type": "GRID",
+          "data": "101346,101954+7,102566+9,103177+13,103774,103790+13,104387+1,104403+13,105000+1,105016+15,105612+2,105630+15,106225+2,106241+18,106838+2,106853+18,107451+1,107464+22,108064+9,108075+23,108677+34,109290+34,109903+35,110516+35,111129+35,111742+35,112355,112357+34,112971+33,113587+30,114200+30,114814,114818+26,115432,115436+22,116050+21,116669+15,117283+5,117290+7,117897+3,117904+6,500001"
+        }
+      }
+    },
+    "i18nTitle": {
+      "de": "Geflügelpest im Landkreis Cuxhaven - Teile des Landkreises Osterholz zur Überwachungszone erklärt"
+    },
+    "sent": "1999-08-07T10:59:00+02:00",
+    "expires": "2002-08-07T10:59:00+02:00"
   }
 ]

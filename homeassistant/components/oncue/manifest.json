@@ -1,6 +1,7 @@
 {
   "domain": "oncue",
   "name": "Oncue by Kohler",
+  "codeowners": ["@bdraco", "@peterager"],
   "config_flow": true,
   "dhcp": [
     {
@@ -9,8 +10,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/oncue",
-  "requirements": ["aiooncue==0.3.4"],
-  "codeowners": ["@bdraco"],
   "iot_class": "cloud_polling",
-  "loggers": ["aiooncue"]
+  "loggers": ["aiooncue"],
+  "requirements": ["aiooncue==0.3.5"]
 }

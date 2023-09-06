@@ -15,14 +15,12 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.humidifier import (
-    HumidifierDeviceClass,
-    HumidifierEntity,
-    HumidifierEntityDescription,
-)
-from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -177,7 +175,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         else:
             return
 
-        await self.info.node.async_set_value(self._current_mode, new_mode)
+        await self._async_set_value(self._current_mode, new_mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off device."""
@@ -194,7 +192,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         else:
             return
 
-        await self.info.node.async_set_value(self._current_mode, new_mode)
+        await self._async_set_value(self._current_mode, new_mode)
 
     @property
     def target_humidity(self) -> int | None:
@@ -206,7 +204,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._setpoint:
-            await self.info.node.async_set_value(self._setpoint, humidity)
+            await self._async_set_value(self._setpoint, humidity)
 
     @property
     def min_humidity(self) -> int:

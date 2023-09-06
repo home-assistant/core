@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_REFRESH_DELAY: Final = 2.0
 
 
-class FluxLedUpdateCoordinator(DataUpdateCoordinator):
+class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
     def __init__(
@@ -41,6 +41,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> None:

@@ -35,6 +35,10 @@ class BondButtonEntityDescription(
 ):
     """Class to describe a Bond Button entity."""
 
+    # BondEntity does not support UNDEFINED,
+    # restrict the type to str | None
+    name: str | None = None
+
 
 STOP_BUTTON = BondButtonEntityDescription(
     key=Action.STOP,
@@ -86,6 +90,13 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         name="Toggle Down Light",
         icon="mdi:lightbulb",
         mutually_exclusive=Action.TURN_DOWN_LIGHT_ON,
+        argument=None,
+    ),
+    BondButtonEntityDescription(
+        key=Action.START_DIMMER,
+        name="Start Dimmer",
+        icon="mdi:brightness-percent",
+        mutually_exclusive=Action.SET_BRIGHTNESS,
         argument=None,
     ),
     BondButtonEntityDescription(
@@ -267,8 +278,7 @@ async def async_setup_entry(
             )
         entities.extend(device_entities)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class BondButtonEntity(BondEntity, ButtonEntity):

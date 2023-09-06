@@ -18,7 +18,7 @@ from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,8 +31,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
+            # Retrieve today through to 35 days in the future, to get
+            # coverage across a full two months boundary so that no
+            # upcoming pickups are missed. The api.recollect.net base API
+            # call returns only the current month when no dates are passed.
+            # This ensures that data about when the next pickup is will be
+            # returned when the next pickup is the first day of the next month.
+            # Ex: Today is August 31st, tomorrow is a pickup on September 1st.
+            today = date.today()
             return await client.async_get_pickup_events(
-                start_date=date.today(), end_date=date.today() + timedelta(weeks=4)
+                start_date=today,
+                end_date=today + timedelta(days=35),
             )
         except RecollectError as err:
             raise UpdateFailed(
@@ -42,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
-        name=f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}",
+        name=(
+            f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}"
+        ),
         update_interval=DEFAULT_UPDATE_INTERVAL,
         update_method=async_get_pickup_events,
     )
@@ -51,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

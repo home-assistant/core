@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
@@ -15,8 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -101,17 +101,17 @@ class AtenSwitch(SwitchEntity):
         self._attr_unique_id = f"{mac}-{outlet}"
         self._attr_name = name or f"Outlet {outlet}"
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.setOutletStatus(self._outlet, "on")
         self._attr_is_on = True
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.setOutletStatus(self._outlet, "off")
         self._attr_is_on = False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Process update from entity."""
         status = await self._device.displayOutletStatus(self._outlet)
         if status == "on":

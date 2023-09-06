@@ -2,18 +2,27 @@
 import asyncio
 from http import HTTPStatus
 import os
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
 
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
+from tests.common import (
+    CLIENT_ID,
+    CLIENT_REDIRECT_URI,
+    MockUser,
+    register_auth_provider,
+)
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -57,6 +66,19 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/resolution/info",
+        json={
+            "result": "ok",
+            "data": {
+                "unsupported": [],
+                "unhealthy": [],
+                "suggestions": [],
+                "issues": [],
+                "checks": [],
+            },
+        },
+    )
     with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value=True,
@@ -95,11 +117,17 @@ def mock_default_integrations():
         "homeassistant.components.met.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.radio_browser.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
     ):
         yield
 
 
-async def test_onboarding_progress(hass, hass_storage, hass_client_no_auth):
+async def test_onboarding_progress(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test fetching progress."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
@@ -118,7 +146,11 @@ async def test_onboarding_progress(hass, hass_storage, hass_client_no_auth):
     assert data[1] == {"step": "world", "done": False}
 
 
-async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_auth):
+async def test_onboarding_user_already_done(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test creating a new user when user step already done."""
     mock_storage(hass_storage, {"done": [views.STEP_USER]})
 
@@ -142,7 +174,11 @@ async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_a
     assert resp.status == HTTPStatus.FORBIDDEN
 
 
-async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
+async def test_onboarding_user(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test creating a new user."""
     area_registry = ar.async_get(hass)
 
@@ -208,7 +244,11 @@ async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     ]
 
 
-async def test_onboarding_user_invalid_name(hass, hass_storage, hass_client_no_auth):
+async def test_onboarding_user_invalid_name(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test not providing name."""
     mock_storage(hass_storage, {"done": []})
 
@@ -230,7 +270,11 @@ async def test_onboarding_user_invalid_name(hass, hass_storage, hass_client_no_a
     assert resp.status == 400
 
 
-async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
+async def test_onboarding_user_race(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test race condition on creating new user."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
@@ -265,7 +309,12 @@ async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
     assert sorted([res1.status, res2.status]) == [HTTPStatus.OK, HTTPStatus.FORBIDDEN]
 
 
-async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
+async def test_onboarding_integration(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -307,8 +356,11 @@ async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admi
 
 
 async def test_onboarding_integration_missing_credential(
-    hass, hass_storage, hass_client, hass_access_token
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
     """Test that we fail integration step if user is missing credentials."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -329,8 +381,10 @@ async def test_onboarding_integration_missing_credential(
 
 
 async def test_onboarding_integration_invalid_redirect_uri(
-    hass, hass_storage, hass_client
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -361,8 +415,10 @@ async def test_onboarding_integration_invalid_redirect_uri(
 
 
 async def test_onboarding_integration_requires_auth(
-    hass, hass_storage, hass_client_no_auth
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -379,8 +435,11 @@ async def test_onboarding_integration_requires_auth(
 
 
 async def test_onboarding_core_sets_up_met(
-    hass, hass_storage, hass_client, mock_default_integrations
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
     """Test finishing the core step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -396,9 +455,54 @@ async def test_onboarding_core_sets_up_met(
     assert len(hass.config_entries.async_entries("met")) == 1
 
 
+async def test_onboarding_core_sets_up_shopping_list(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step set up the shopping list."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("shopping_list")) == 1
+
+
+async def test_onboarding_core_sets_up_google_translate(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step sets up google translate."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("google_translate")) == 1
+
+
 async def test_onboarding_core_sets_up_radio_browser(
-    hass, hass_storage, hass_client, mock_default_integrations
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
     """Test finishing the core step set up the radio browser."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -415,8 +519,13 @@ async def test_onboarding_core_sets_up_radio_browser(
 
 
 async def test_onboarding_core_sets_up_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_default_integrations
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    rpi,
+    mock_default_integrations,
+) -> None:
     """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -436,8 +545,13 @@ async def test_onboarding_core_sets_up_rpi_power(
 
 
 async def test_onboarding_core_no_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_default_integrations
-):
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    no_rpi,
+    mock_default_integrations,
+) -> None:
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -456,7 +570,12 @@ async def test_onboarding_core_no_rpi_power(
     assert not rpi_power_state
 
 
-async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_user):
+async def test_onboarding_analytics(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
     """Test finishing analytics step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -475,7 +594,11 @@ async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_
     assert resp.status == 403
 
 
-async def test_onboarding_installation_type(hass, hass_storage, hass_client):
+async def test_onboarding_installation_type(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test returning installation type during onboarding."""
     mock_storage(hass_storage, {"done": []})
 
@@ -496,7 +619,11 @@ async def test_onboarding_installation_type(hass, hass_storage, hass_client):
         assert resp_content["installation_type"] == "Home Assistant Core"
 
 
-async def test_onboarding_installation_type_after_done(hass, hass_storage, hass_client):
+async def test_onboarding_installation_type_after_done(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test raising for installation type after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 

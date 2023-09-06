@@ -1,5 +1,6 @@
 """Constants for ZWaveMe."""
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
+
 from homeassistant.const import Platform
 
 # Base component constants
@@ -10,6 +11,7 @@ class ZWaveMePlatform(StrEnum):
     """Included ZWaveMe platforms."""
 
     BINARY_SENSOR = "sensorBinary"
+    BRIGHTNESS_LIGHT = "lightMultilevel"
     BUTTON = "toggleButton"
     CLIMATE = "thermostat"
     COVER = "motor"

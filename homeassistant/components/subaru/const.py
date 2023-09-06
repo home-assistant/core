@@ -19,6 +19,8 @@ COORDINATOR_NAME = "subaru_data"
 
 # info fields
 VEHICLE_VIN = "vin"
+VEHICLE_MODEL_NAME = "model_name"
+VEHICLE_MODEL_YEAR = "model_year"
 VEHICLE_NAME = "display_name"
 VEHICLE_HAS_EV = "is_ev"
 VEHICLE_API_GEN = "api_gen"
@@ -26,14 +28,16 @@ VEHICLE_HAS_REMOTE_START = "has_res"
 VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
 VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
 VEHICLE_LAST_UPDATE = "last_update"
-VEHICLE_STATUS = "status"
+VEHICLE_STATUS = "vehicle_status"
 
 
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
-MANUFACTURER = "Subaru Corp."
+API_GEN_3 = "g3"
+MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]

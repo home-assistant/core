@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import SynoApi
 from .const import ATTRIBUTION, DOMAIN
+from .coordinator import (
+    SynologyDSMCentralUpdateCoordinator,
+    SynologyDSMUpdateCoordinator,
+)
+
+_CoordinatorT = TypeVar("_CoordinatorT", bound=SynologyDSMUpdateCoordinator[Any])
 
 
 @dataclass
@@ -26,19 +30,18 @@ class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMix
     """Generic Synology DSM entity description."""
 
 
-class SynologyDSMBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]]
-):
+class SynologyDSMBaseEntity(CoordinatorEntity[_CoordinatorT]):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: _CoordinatorT,
         description: SynologyDSMEntityDescription,
     ) -> None:
         """Initialize the Synology DSM entity."""
@@ -46,7 +49,6 @@ class SynologyDSMBaseEntity(
         self.entity_description = description
 
         self._api = api
-        self._attr_name = f"{api.network.hostname} {description.name}"
         self._attr_unique_id: str = (
             f"{api.information.serial}_{description.api_key}:{description.key}"
         )
@@ -67,13 +69,15 @@ class SynologyDSMBaseEntity(
         await super().async_added_to_hass()
 
 
-class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
+class SynologyDSMDeviceEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator]
+):
     """Representation of a Synology NAS disk or volume entry."""
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMEntityDescription,
         device_id: str | None = None,
     ) -> None:
@@ -107,9 +111,6 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
 
-        self._attr_name = (
-            f"{self._api.network.hostname} ({self._device_name}) {description.name}"
-        )
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},

@@ -11,8 +11,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -34,9 +34,9 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "aabbccddeeff_energy_consumption_total"
     assert state.state == "17762.1"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home Energy consumption"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -46,9 +46,9 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "aabbccddeeff_energy_production_total"
     assert state.state == "21214.6"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home Energy production"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
@@ -58,9 +58,9 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "aabbccddeeff_power_flow"
     assert state.state == "338"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Flow"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home Power flow"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
 

@@ -3,20 +3,30 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import sys
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
+from homeassistant.util.ssl import (
+    SSLCipherList,
+    client_context,
+    create_no_verify_ssl_context,
+)
 
 from .frame import warn_use
 
+# We have a lot of integrations that poll every 10-30 seconds
+# and we want to keep the connection open for a while so we
+# don't have to reconnect every time so we use 15s to match aiohttp.
+KEEP_ALIVE_TIMEOUT = 15
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} httpx/{1} Python/{2[0]}.{2[1]}".format(
-    __version__, httpx.__version__, sys.version_info
+DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
+SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
+    APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
 USER_AGENT = "User-Agent"
 
@@ -41,7 +51,7 @@ def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.Asyn
 class HassHttpXAsyncClient(httpx.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
-    async def __aenter__(self: HassHttpXAsyncClient) -> HassHttpXAsyncClient:
+    async def __aenter__(self) -> Self:
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
@@ -54,6 +64,7 @@ def create_async_httpx_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
@@ -63,15 +74,21 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
+    ssl_context = (
+        client_context(ssl_cipher_list)
+        if verify_ssl
+        else create_no_verify_ssl_context(ssl_cipher_list)
+    )
     client = HassHttpXAsyncClient(
-        verify=verify_ssl,
+        verify=ssl_context,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        limits=DEFAULT_LIMITS,
         **kwargs,
     )
 
     original_aclose = client.aclose
 
-    client.aclose = warn_use(  # type: ignore[assignment]
+    client.aclose = warn_use(  # type: ignore[method-assign]
         client.aclose, "closes the Home Assistant httpx client"
     )
 

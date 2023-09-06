@@ -1,10 +1,11 @@
 {
   "domain": "pvoutput",
   "name": "PVOutput",
-  "documentation": "https://www.home-assistant.io/integrations/pvoutput",
-  "config_flow": true,
   "codeowners": ["@frenck"],
-  "requirements": ["pvo==0.2.2"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pvoutput",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "requirements": ["pvo==1.0.0"]
 }

@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.str
 
 async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
-) -> DeviceScanner | None:
+) -> SkyHubDeviceScanner | None:
     """Return a Sky Hub scanner if successful."""
     host = config[DOMAIN].get(CONF_HOST, "192.168.1.254")
     websession = async_get_clientsession(hass)
@@ -33,14 +33,13 @@ async def async_get_scanner(
     _LOGGER.debug("Initialising Sky Hub")
     await hub.async_connect()
     if hub.success_init:
-        scanner = SkyHubDeviceScanner(hub)
-        return scanner
+        return SkyHubDeviceScanner(hub)
 
     return None
 
 
 class SkyHubDeviceScanner(DeviceScanner):
-    """This class queries a Sky Hub router."""
+    """Class which queries a Sky Hub router."""
 
     def __init__(self, hub):
         """Initialise the scanner."""

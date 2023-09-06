@@ -8,8 +8,7 @@ import logging
 from typing import Any, NamedTuple, cast
 from uuid import UUID
 
-from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox
-from vallox_websocket_api.exceptions import ValloxApiException
+from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox, ValloxApiException
 from vallox_websocket_api.vallox import (
     get_model as _api_get_model,
     get_next_filter_change_date as _api_get_next_filter_change_date,
@@ -18,12 +17,12 @@ from vallox_websocket_api.vallox import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -63,6 +62,8 @@ PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
 ]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
@@ -141,7 +142,7 @@ class ValloxState:
         """Return cached UUID value."""
         uuid = _api_get_uuid(self.metric_cache)
         if not isinstance(uuid, UUID):
-            raise ValueError
+            raise TypeError
         return uuid
 
     def get_next_filter_change_date(self) -> date | None:
@@ -156,22 +157,6 @@ class ValloxState:
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator[ValloxState]):
     """The DataUpdateCoordinator for Vallox."""
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the integration from configuration.yaml (DEPRECATED)."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -189,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             metric_cache = await client.fetch_metrics()
             profile = await client.get_profile()
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             raise UpdateFailed("Error during state cache update") from err
 
         return ValloxState(metric_cache, profile)
@@ -219,7 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "name": name,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -260,7 +245,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
 
@@ -276,7 +261,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
 
@@ -292,7 +277,7 @@ class ValloxServiceHandler:
             )
             return True
 
-        except (OSError, ValloxApiException) as err:
+        except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
             return False
 
@@ -318,6 +303,8 @@ class ValloxServiceHandler:
 
 class ValloxEntity(CoordinatorEntity[ValloxDataUpdateCoordinator]):
     """Representation of a Vallox entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, name: str, coordinator: ValloxDataUpdateCoordinator) -> None:
         """Initialize a Vallox entity."""

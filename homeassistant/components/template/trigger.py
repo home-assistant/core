@@ -1,25 +1,24 @@
 """Offer template automation rules."""
+from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
+    TrackTemplateResult,
     async_call_later,
     async_track_template_result,
 )
 from homeassistant.helpers.template import Template, result_as_boolean
-from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType, EventType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +34,13 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "template",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
@@ -53,18 +52,21 @@ async def async_attach_trigger(
     # Arm at setup if the template is already false.
     try:
         if not result_as_boolean(
-            value_template.async_render(automation_info["variables"])
+            value_template.async_render(trigger_info["variables"])
         ):
             armed = True
     except exceptions.TemplateError as ex:
         _LOGGER.warning(
             "Error initializing 'template' trigger for '%s': %s",
-            automation_info["name"],
+            trigger_info["name"],
             ex,
         )
 
     @callback
-    def template_listener(event, updates):
+    def template_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         """Listen for state changes and calls action."""
         nonlocal delay_cancel, armed
         result = updates.pop().result
@@ -72,13 +74,12 @@ async def async_attach_trigger(
         if isinstance(result, exceptions.TemplateError):
             _LOGGER.warning(
                 "Error evaluating 'template' trigger for '%s': %s",
-                automation_info["name"],
+                trigger_info["name"],
                 result,
             )
             return
 
         if delay_cancel:
-            # pylint: disable=not-callable
             delay_cancel()
             delay_cancel = None
 
@@ -93,9 +94,9 @@ async def async_attach_trigger(
         # Fire!
         armed = False
 
-        entity_id = event and event.data.get("entity_id")
-        from_s = event and event.data.get("old_state")
-        to_s = event and event.data.get("new_state")
+        entity_id = event and event.data["entity_id"]
+        from_s = event and event.data["old_state"]
+        to_s = event and event.data["new_state"]
 
         if entity_id is not None:
             description = f"{entity_id} via template"
@@ -115,7 +116,7 @@ async def async_attach_trigger(
         }
 
         @callback
-        def call_action(*_):
+        def call_action(*_: Any) -> None:
             """Call action with right context."""
             nonlocal trigger_variables
             hass.async_run_hass_job(
@@ -129,12 +130,12 @@ async def async_attach_trigger(
             return
 
         try:
-            period = cv.positive_time_period(
+            period: timedelta = cv.positive_time_period(
                 template.render_complex(time_delta, {"trigger": template_variables})
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
-                "Error rendering '%s' for template: %s", automation_info["name"], ex
+                "Error rendering '%s' for template: %s", trigger_info["name"], ex
             )
             return
 
@@ -144,7 +145,7 @@ async def async_attach_trigger(
 
     info = async_track_template_result(
         hass,
-        [TrackTemplate(value_template, automation_info["variables"])],
+        [TrackTemplate(value_template, trigger_info["variables"])],
         template_listener,
     )
     unsub = info.async_remove
@@ -154,7 +155,6 @@ async def async_attach_trigger(
         """Remove state listeners async."""
         unsub()
         if delay_cancel:
-            # pylint: disable=not-callable
             delay_cancel()
 
     return async_remove

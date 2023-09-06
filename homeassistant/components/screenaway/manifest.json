@@ -1,0 +1,6 @@
+{
+  "domain": "screenaway",
+  "name": "ScreenAway",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

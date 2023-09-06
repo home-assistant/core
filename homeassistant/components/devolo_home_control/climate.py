@@ -8,12 +8,12 @@ from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +34,7 @@ async def async_setup_entry(
                     "devolo.model.Thermostat:Valve",
                     "devolo.model.Room:Thermostat",
                     "devolo.model.Eurotronic:Spirit:Device",
+                    "unk.model.Danfoss:Thermostat",
                 ):
                     entities.append(
                         DevoloClimateDeviceEntity(
@@ -49,6 +50,13 @@ async def async_setup_entry(
 class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntity):
     """Representation of a climate/thermostat device within devolo Home Control."""
 
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = PRECISION_HALVES
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_precision = PRECISION_TENTHS
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -59,14 +67,8 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
             element_uid=element_uid,
         )
 
-        self._attr_hvac_mode = HVACMode.HEAT
-        self._attr_hvac_modes = [HVACMode.HEAT]
         self._attr_min_temp = self._multi_level_switch_property.min
         self._attr_max_temp = self._multi_level_switch_property.max
-        self._attr_precision = PRECISION_TENTHS
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_target_temperature_step = PRECISION_HALVES
-        self._attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def current_temperature(self) -> float | None:
@@ -88,7 +90,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         """Return the target temperature."""
         return self._value
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs: Any) -> None:

@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
+import pytest
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -28,7 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import init_integration
+from . import init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -52,7 +54,9 @@ async def test_fan_state(
 
 
 async def test_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of state of the Modern Forms fan."""
     await init_integration(hass, aioclient_mock)
@@ -84,7 +88,9 @@ async def test_change_state(
 
 
 async def test_sleep_timer_services(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -111,7 +117,9 @@ async def test_sleep_timer_services(
 
 
 async def test_change_direction(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -133,7 +141,9 @@ async def test_change_direction(
 
 
 async def test_set_percentage(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of percentage for the Modern Forms fan."""
     await init_integration(hass, aioclient_mock)
@@ -169,7 +179,9 @@ async def test_set_percentage(
 
 
 async def test_fan_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Modern Forms fans."""
 

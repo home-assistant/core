@@ -1,16 +1,24 @@
 """Support for the GIOS service."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import Any, cast
 
-from homeassistant.components.sensor import DOMAIN as PLATFORM, SensorEntity
+from gios.model import GiosSensors
+
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME, CONF_NAME
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,19 +26,149 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import GiosDataUpdateCoordinator
 from .const import (
     ATTR_AQI,
-    ATTR_INDEX,
+    ATTR_C6H6,
+    ATTR_CO,
+    ATTR_NO2,
+    ATTR_O3,
+    ATTR_PM10,
     ATTR_PM25,
-    ATTR_STATION,
+    ATTR_SO2,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
-    SENSOR_TYPES,
     URL,
 )
-from .model import GiosSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class GiosSensorRequiredKeysMixin:
+    """Class for GIOS entity required keys."""
+
+    value: Callable[[GiosSensors], StateType]
+
+
+@dataclass
+class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
+    """Class describing GIOS sensor entities."""
+
+    subkey: str | None = None
+
+
+SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
+    GiosSensorEntityDescription(
+        key=ATTR_AQI,
+        value=lambda sensors: sensors.aqi.value if sensors.aqi else None,
+        icon="mdi:air-filter",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="aqi",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_C6H6,
+        value=lambda sensors: sensors.c6h6.value if sensors.c6h6 else None,
+        suggested_display_precision=0,
+        icon="mdi:molecule",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="c6h6",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_CO,
+        value=lambda sensors: sensors.co.value if sensors.co else None,
+        suggested_display_precision=0,
+        icon="mdi:molecule",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="co",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NO2,
+        value=lambda sensors: sensors.no2.value if sensors.no2 else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NO2,
+        subkey="index",
+        value=lambda sensors: sensors.no2.index if sensors.no2 else None,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="no2_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_O3,
+        value=lambda sensors: sensors.o3.value if sensors.o3 else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.OZONE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_O3,
+        subkey="index",
+        value=lambda sensors: sensors.o3.index if sensors.o3 else None,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="o3_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM10,
+        value=lambda sensors: sensors.pm10.value if sensors.pm10 else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM10,
+        subkey="index",
+        value=lambda sensors: sensors.pm10.index if sensors.pm10 else None,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="pm10_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM25,
+        value=lambda sensors: sensors.pm25.value if sensors.pm25 else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM25,
+        subkey="index",
+        value=lambda sensors: sensors.pm25.index if sensors.pm25 else None,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="pm25_index",
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_SO2,
+        value=lambda sensors: sensors.so2.value if sensors.so2 else None,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_SO2,
+        subkey="index",
+        value=lambda sensors: sensors.so2.index if sensors.so2 else None,
+        icon="mdi:molecule",
+        device_class=SensorDeviceClass.ENUM,
+        options=["very_bad", "bad", "sufficient", "moderate", "good", "very_good"],
+        translation_key="so2_index",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -57,21 +195,21 @@ async def async_setup_entry(
         )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
-    sensors: list[GiosSensor | GiosAqiSensor] = []
+    sensors: list[GiosSensor] = []
 
     for description in SENSOR_TYPES:
         if getattr(coordinator.data, description.key) is None:
             continue
-        if description.key == ATTR_AQI:
-            sensors.append(GiosAqiSensor(name, coordinator, description))
-        else:
-            sensors.append(GiosSensor(name, coordinator, description))
+        sensors.append(GiosSensor(name, coordinator, description))
+
     async_add_entities(sensors)
 
 
 class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     """Define an GIOS sensor."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     entity_description: GiosSensorEntityDescription
 
     def __init__(
@@ -86,50 +224,30 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(coordinator.gios.station_id))},
             manufacturer=MANUFACTURER,
-            name=DEFAULT_NAME,
+            name=name,
             configuration_url=URL.format(station_id=coordinator.gios.station_id),
         )
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
-        self._attrs: dict[str, Any] = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STATION: self.coordinator.gios.station_name,
-        }
+        if description.subkey:
+            self._attr_unique_id = (
+                f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"
+            )
+        else:
+            self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self.entity_description = description
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        self._attrs[ATTR_NAME] = getattr(
-            self.coordinator.data, self.entity_description.key
-        ).name
-        self._attrs[ATTR_INDEX] = getattr(
-            self.coordinator.data, self.entity_description.key
-        ).index
-        return self._attrs
-
-    @property
     def native_value(self) -> StateType:
         """Return the state."""
-        state = getattr(self.coordinator.data, self.entity_description.key).value
-        assert self.entity_description.value is not None
-        return cast(StateType, self.entity_description.value(state))
-
-
-class GiosAqiSensor(GiosSensor):
-    """Define an GIOS AQI sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state."""
-        return cast(
-            StateType, getattr(self.coordinator.data, self.entity_description.key).value
-        )
+        return self.entity_description.value(self.coordinator.data)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
-        return available and bool(
-            getattr(self.coordinator.data, self.entity_description.key)
-        )
+        sensor_data = getattr(self.coordinator.data, self.entity_description.key)
+
+        # Sometimes the API returns sensor data without indexes
+        if self.entity_description.subkey:
+            return available and bool(sensor_data.index)
+
+        return available and bool(sensor_data)

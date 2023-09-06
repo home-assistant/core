@@ -33,7 +33,10 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         secret = secrets.token_hex(16)
 
         if supports_encryption():
-            secret_desc = f"The encryption key is {secret} (on Android under preferences -> advanced)"
+            secret_desc = (
+                f"The encryption key is {secret} (on Android under Preferences >"
+                " Advanced)"
+            )
         else:
             secret_desc = "Encryption is not supported because nacl is not installed."
 

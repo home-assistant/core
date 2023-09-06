@@ -1,16 +1,20 @@
 """The tests for the Media group platform."""
-from unittest.mock import patch
+import asyncio
+from unittest.mock import Mock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_SEEK,
     SERVICE_PLAY_MEDIA,
@@ -18,20 +22,7 @@ from homeassistant.components.media_player import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_MUTED,
-    SERVICE_CLEAR_PLAYLIST,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -52,6 +43,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -66,7 +58,7 @@ def media_player_media_seek_fixture():
         yield seek
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test media group default state."""
     hass.states.async_set("media_player.player_1", "on")
     await async_setup_component(
@@ -100,7 +92,7 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
+async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting.
 
     The group state is unavailable if all group members are unavailable.
@@ -179,6 +171,12 @@ async def test_state_reporting(hass):
         await hass.async_block_till_done()
         assert hass.states.get("media_player.media_group").state == STATE_OFF
 
+    # All group members in same invalid state -> unknown
+    hass.states.async_set("media_player.player_1", "invalid_state")
+    hass.states.async_set("media_player.player_2", "invalid_state")
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+
     # All group members removed from the state machine -> unavailable
     hass.states.async_remove("media_player.player_1")
     hass.states.async_remove("media_player.player_2")
@@ -186,11 +184,23 @@ async def test_state_reporting(hass):
     assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
 
 
-async def test_supported_features(hass):
+async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features reporting."""
-    pause_play_stop = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-    play_media = SUPPORT_PLAY_MEDIA
-    volume = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+    pause_play_stop = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+    )
+    play_media = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    )
+    volume = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
 
     await async_setup_component(
         hass,
@@ -242,7 +252,7 @@ async def test_supported_features(hass):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == pause_play_stop | play_media
 
 
-async def test_service_calls(hass, mock_media_seek):
+async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,
@@ -352,7 +362,7 @@ async def test_service_calls(hass, mock_media_seek):
     )
 
     state = hass.states.get("media_player.media_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_SEEK
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
     await hass.services.async_call(
@@ -534,7 +544,7 @@ async def test_service_calls(hass, mock_media_seek):
     assert hass.states.get("media_player.living_room").state == STATE_OFF
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested media group."""
     await async_setup_component(
         hass,
@@ -573,7 +583,7 @@ async def test_nested_group(hass):
     assert state.attributes.get(ATTR_ENTITY_ID) == ["media_player.group_1"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             MEDIA_DOMAIN,
             SERVICE_TURN_OFF,

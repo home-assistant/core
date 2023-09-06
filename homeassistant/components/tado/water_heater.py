@@ -1,5 +1,6 @@
 """Support for Tado hot water zones."""
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -8,7 +9,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -74,8 +75,7 @@ async def async_setup_entry(
         "set_timer",
     )
 
-    if entities:
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 def _generate_entities(tado):
@@ -119,6 +119,8 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
 class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     """Representation of a Tado water heater."""
 
+    _attr_name = None
+
     def __init__(
         self,
         tado,
@@ -152,7 +154,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
         self._tado_zone_data = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
 
         self.async_on_remove(
@@ -165,11 +167,6 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             )
         )
         self._async_update_data()
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.zone_name
 
     @property
     def unique_id(self):
@@ -199,7 +196,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def min_temp(self):
@@ -211,7 +208,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         """Return the maximum temperature."""
         return self._max_temperature
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = None
 
@@ -233,7 +230,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
         )
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if not self._supports_temperature_control or temperature is None:

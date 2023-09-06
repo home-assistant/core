@@ -62,7 +62,93 @@
   "endpoints": [
     {
       "nodeId": 8,
-      "index": 0
+      "index": 0,
+      "commandClasses": [
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 66,
+          "name": "Thermostat Operating State",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 68,
+          "name": "Thermostat Fan Mode",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 69,
+          "name": "Thermostat Fan State",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 129,
+          "name": "Clock",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
     },
     {
       "nodeId": 8,
@@ -741,91 +827,5 @@
     "mandatorySupportedCCs": [32, 114, 64, 67, 134],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 49,
-      "name": "Multilevel Sensor",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 64,
-      "name": "Thermostat Mode",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 66,
-      "name": "Thermostat Operating State",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 67,
-      "name": "Thermostat Setpoint",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 68,
-      "name": "Thermostat Fan Mode",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 69,
-      "name": "Thermostat Fan State",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 96,
-      "name": "Multi Channel",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 128,
-      "name": "Battery",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 129,
-      "name": "Clock",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 135,
-      "name": "Indicator",
-      "version": 1,
-      "isSecure": false
-    }
-  ],
   "isControllerNode": false
 }

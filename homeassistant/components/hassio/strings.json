@@ -15,5 +15,363 @@
       "update_channel": "Update Channel",
       "version_api": "Version API"
     }
+  },
+  "issues": {
+    "issue_mount_mount_failed": {
+      "title": "Network storage device failed",
+      "fix_flow": {
+        "step": {
+          "fix_menu": {
+            "description": "Could not connect to `{reference}`. Check host logs for errors from the mount service for more details.\n\nUse reload to try to connect again. If you need to update `{reference}`, go to [storage]({storage_url}).",
+            "menu_options": {
+              "mount_execute_reload": "[%key:common::action::reload%]",
+              "mount_execute_remove": "Remove"
+            }
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_docker_config": {
+      "title": "Restart(s) required",
+      "fix_flow": {
+        "step": {
+          "system_execute_rebuild": {
+            "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "One or more of the restarts failed. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_multiple_data_disks": {
+      "title": "Multiple data disks detected",
+      "fix_flow": {
+        "step": {
+          "system_rename_data_disk": {
+            "description": "`{reference}` is a filesystem with the name hassos-data and is not the active data disk. This can cause Home Assistant to choose the wrong data disk at system reboot.\n\nUse the fix option to rename the filesystem to prevent this. Alternatively you can move the data disk to the drive (overwriting its contents) or remove the drive from the system."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not rename the filesystem. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "issue_system_reboot_required": {
+      "title": "Reboot required",
+      "fix_flow": {
+        "step": {
+          "system_execute_reboot": {
+            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period."
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not reboot the system. Check the Supervisor logs for more details."
+        }
+      }
+    },
+    "unhealthy": {
+      "title": "Unhealthy system - {reason}",
+      "description": "System is currently unhealthy due to {reason}. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_docker": {
+      "title": "Unhealthy system - Docker misconfigured",
+      "description": "System is currently unhealthy because Docker is configured incorrectly. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_supervisor": {
+      "title": "Unhealthy system - Supervisor update failed",
+      "description": "System is currently unhealthy because an attempt to update Supervisor to the latest version has failed. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_setup": {
+      "title": "Unhealthy system - Setup failed",
+      "description": "System is currently unhealthy because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this."
+    },
+    "unhealthy_privileged": {
+      "title": "Unhealthy system - Not privileged",
+      "description": "System is currently unhealthy because it does not have privileged access to the docker runtime. Use the link to learn more and how to fix this."
+    },
+    "unhealthy_untrusted": {
+      "title": "Unhealthy system - Untrusted code",
+      "description": "System is currently unhealthy because it has detected untrusted code or images in use. Use the link to learn more and how to fix this."
+    },
+    "unsupported": {
+      "title": "Unsupported system - {reason}",
+      "description": "System is unsupported due to {reason}. Use the link to learn more and how to fix this."
+    },
+    "unsupported_apparmor": {
+      "title": "Unsupported system - AppArmor issues",
+      "description": "System is unsupported because AppArmor is working incorrectly and add-ons are running in an unprotected and insecure way. Use the link to learn more and how to fix this."
+    },
+    "unsupported_cgroup_version": {
+      "title": "Unsupported system - CGroup version",
+      "description": "System is unsupported because the wrong version of Docker CGroup is in use. Use the link to learn the correct version and how to fix this."
+    },
+    "unsupported_connectivity_check": {
+      "title": "Unsupported system - Connectivity check disabled",
+      "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this."
+    },
+    "unsupported_content_trust": {
+      "title": "Unsupported system - Content-trust check disabled",
+      "description": "System is unsupported because Home Assistant cannot verify content being run is trusted and not modified by attackers. Use the link to learn more and how to fix this."
+    },
+    "unsupported_dbus": {
+      "title": "Unsupported system - D-Bus issues",
+      "description": "System is unsupported because D-Bus is working incorrectly. Many things fail without this as Supervisor cannot communicate with the host. Use the link to learn more and how to fix this."
+    },
+    "unsupported_dns_server": {
+      "title": "Unsupported system - DNS server issues",
+      "description": "System is unsupported because the provided DNS server does not work correctly and the fallback DNS option has been disabled. Use the link to learn more and how to fix this."
+    },
+    "unsupported_docker_configuration": {
+      "title": "Unsupported system - Docker misconfigured",
+      "description": "System is unsupported because the Docker daemon is running in an unexpected way. Use the link to learn more and how to fix this."
+    },
+    "unsupported_docker_version": {
+      "title": "Unsupported system - Docker version",
+      "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this."
+    },
+    "unsupported_job_conditions": {
+      "title": "Unsupported system - Protections disabled",
+      "description": "System is unsupported because one or more job conditions have been disabled which protect from unexpected failures and breakages. Use the link to learn more and how to fix this."
+    },
+    "unsupported_lxc": {
+      "title": "Unsupported system - LXC detected",
+      "description": "System is unsupported because it is being run in an LXC virtual machine. Use the link to learn more and how to fix this."
+    },
+    "unsupported_network_manager": {
+      "title": "Unsupported system - Network Manager issues",
+      "description": "System is unsupported because Network Manager is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_os": {
+      "title": "Unsupported system - Operating System",
+      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this."
+    },
+    "unsupported_os_agent": {
+      "title": "Unsupported system - OS-Agent issues",
+      "description": "System is unsupported because OS-Agent is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_restart_policy": {
+      "title": "Unsupported system - Container restart policy",
+      "description": "System is unsupported because a Docker container has a restart policy set which could cause issues on startup. Use the link to learn more and how to fix this."
+    },
+    "unsupported_software": {
+      "title": "Unsupported system - Unsupported software",
+      "description": "System is unsupported because additional software outside the Home Assistant ecosystem has been detected. Use the link to learn more and how to fix this."
+    },
+    "unsupported_source_mods": {
+      "title": "Unsupported system - Supervisor source modifications",
+      "description": "System is unsupported because Supervisor source code has been modified. Use the link to learn more and how to fix this."
+    },
+    "unsupported_supervisor_version": {
+      "title": "Unsupported system - Supervisor version",
+      "description": "System is unsupported because an out-of-date version of Supervisor is in use and auto-update has been disabled. Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd": {
+      "title": "Unsupported system - Systemd issues",
+      "description": "System is unsupported because Systemd is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd_journal": {
+      "title": "Unsupported system - Systemd Journal issues",
+      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this."
+    },
+    "unsupported_systemd_resolved": {
+      "title": "Unsupported system - Systemd-Resolved issues",
+      "description": "System is unsupported because Systemd Resolved is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "state": {
+        "name": "Running"
+      }
+    },
+    "sensor": {
+      "agent_version": {
+        "name": "OS Agent version"
+      },
+      "apparmor_version": {
+        "name": "Apparmor version"
+      },
+      "cpu_percent": {
+        "name": "CPU percent"
+      },
+      "disk_free": {
+        "name": "Disk free"
+      },
+      "disk_total": {
+        "name": "Disk total"
+      },
+      "disk_used": {
+        "name": "Disk used"
+      },
+      "memory_percent": {
+        "name": "Memory percent"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "version_latest": {
+        "name": "Newest version"
+      }
+    }
+  },
+  "services": {
+    "addon_start": {
+      "name": "Start add-on",
+      "description": "Starts an add-on.",
+      "fields": {
+        "addon": {
+          "name": "Add-on",
+          "description": "The add-on slug."
+        }
+      }
+    },
+    "addon_restart": {
+      "name": "Restart add-on.",
+      "description": "Restarts an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_stdin": {
+      "name": "Write data to add-on stdin.",
+      "description": "Writes data to add-on stdin.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_stop": {
+      "name": "Stop add-on.",
+      "description": "Stops an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "addon_update": {
+      "name": "Update add-on.",
+      "description": "Updates an add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
+      "fields": {
+        "addon": {
+          "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
+          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+        }
+      }
+    },
+    "host_reboot": {
+      "name": "Reboot the host system.",
+      "description": "Reboots the host system."
+    },
+    "host_shutdown": {
+      "name": "Power off the host system.",
+      "description": "Powers off the host system."
+    },
+    "backup_full": {
+      "name": "Create a full backup.",
+      "description": "Creates a full backup.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "Optional (default = current date and time)."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "Password to protect the backup with."
+        },
+        "compressed": {
+          "name": "Compressed",
+          "description": "Compresses the backup files."
+        },
+        "location": {
+          "name": "[%key:common::config_flow::data::location%]",
+          "description": "Name of a backup network storage to host backups."
+        }
+      }
+    },
+    "backup_partial": {
+      "name": "Create a partial backup.",
+      "description": "Creates a partial backup.",
+      "fields": {
+        "homeassistant": {
+          "name": "Home Assistant settings",
+          "description": "Includes Home Assistant settings in the backup."
+        },
+        "addons": {
+          "name": "Add-ons",
+          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+        },
+        "folders": {
+          "name": "Folders",
+          "description": "List of directories to include in the backup."
+        },
+        "name": {
+          "name": "[%key:component::hassio::services::backup_full::fields::name::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::name::description%]"
+        },
+        "password": {
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::password::description%]"
+        },
+        "compressed": {
+          "name": "[%key:component::hassio::services::backup_full::fields::compressed::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]"
+        },
+        "location": {
+          "name": "[%key:component::hassio::services::backup_full::fields::location::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
+        }
+      }
+    },
+    "restore_full": {
+      "name": "Restore from full backup.",
+      "description": "Restores from full backup.",
+      "fields": {
+        "slug": {
+          "name": "Slug",
+          "description": "Slug of backup to restore from."
+        },
+        "password": {
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "description": "Optional password."
+        }
+      }
+    },
+    "restore_partial": {
+      "name": "Restore from partial backup.",
+      "description": "Restores from a partial backup.",
+      "fields": {
+        "slug": {
+          "name": "[%key:component::hassio::services::restore_full::fields::slug::name%]",
+          "description": "[%key:component::hassio::services::restore_full::fields::slug::description%]"
+        },
+        "homeassistant": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::homeassistant::name%]",
+          "description": "Restores Home Assistant."
+        },
+        "folders": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
+          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+        },
+        "addons": {
+          "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
+          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+        },
+        "password": {
+          "name": "[%key:component::hassio::services::backup_full::fields::password::name%]",
+          "description": "[%key:component::hassio::services::restore_full::fields::password::description%]"
+        }
+      }
+    }
   }
 }

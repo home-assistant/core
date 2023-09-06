@@ -13,8 +13,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_DATA, QSW_REBOOT
@@ -39,7 +39,6 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         key=QSW_REBOOT,
-        name="Reboot",
         press_action=lambda qsw: qsw.reboot(),
     ),
 )
@@ -58,6 +57,8 @@ async def async_setup_entry(
 class QswButton(QswDataEntity, ButtonEntity):
     """Define a QNAP QSW button."""
 
+    _attr_has_entity_name = True
+
     entity_description: QswButtonDescription
 
     def __init__(
@@ -68,7 +69,6 @@ class QswButton(QswDataEntity, ButtonEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = f"{self.product} {description.name}"
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 

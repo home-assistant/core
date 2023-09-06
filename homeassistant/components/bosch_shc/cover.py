@@ -36,13 +36,13 @@ async def async_setup_entry(
             )
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
     _attr_supported_features = (
         CoverEntityFeature.OPEN

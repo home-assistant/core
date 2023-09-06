@@ -4,9 +4,9 @@ from __future__ import annotations
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import Any
 
-import aiohttp
-import async_timeout
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -17,7 +17,9 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
+    CONF_ICON,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_RESOURCE,
@@ -27,12 +29,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,
-    TemplateEntity,
+    ManualTriggerEntity,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -41,6 +46,14 @@ CONF_BODY_OFF = "body_off"
 CONF_BODY_ON = "body_on"
 CONF_IS_ON_TEMPLATE = "is_on_template"
 CONF_STATE_RESOURCE = "state_resource"
+
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+)
 
 DEFAULT_METHOD = "post"
 DEFAULT_BODY_OFF = "OFF"
@@ -69,6 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
 )
 
@@ -80,15 +94,22 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the RESTful switch."""
-    resource = config.get(CONF_RESOURCE)
-    unique_id = config.get(CONF_UNIQUE_ID)
+    resource: str = config[CONF_RESOURCE]
+    name = config.get(CONF_NAME) or template.Template(DEFAULT_NAME, hass)
+
+    trigger_entity_config = {CONF_NAME: name}
+
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in config:
+            continue
+        trigger_entity_config[key] = config[key]
 
     try:
-        switch = RestSwitch(hass, config, unique_id)
+        switch = RestSwitch(hass, config, trigger_entity_config)
 
         req = await switch.get_device_state(hass)
-        if req.status >= HTTPStatus.BAD_REQUEST:
-            _LOGGER.error("Got non-ok response from resource: %s", req.status)
+        if req.status_code >= HTTPStatus.BAD_REQUEST:
+            _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
             async_add_entities([switch])
     except (TypeError, ValueError):
@@ -96,135 +117,130 @@ async def async_setup_platform(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
         )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
+    except (asyncio.TimeoutError, httpx.RequestError) as exc:
+        raise PlatformNotReady(f"No route to resource/endpoint: {resource}") from exc
 
 
-class RestSwitch(TemplateEntity, SwitchEntity):
+class RestSwitch(ManualTriggerEntity, SwitchEntity):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(
         self,
-        hass,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        trigger_entity_config: ConfigType,
+    ) -> None:
         """Initialize the REST switch."""
-        TemplateEntity.__init__(
-            self,
-            hass,
-            config=config,
-            fallback_name=DEFAULT_NAME,
-            unique_id=unique_id,
-        )
+        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
 
-        self._state = None
-
-        auth = None
+        auth: httpx.BasicAuth | None = None
+        username: str | None = None
         if username := config.get(CONF_USERNAME):
-            auth = aiohttp.BasicAuth(username, password=config[CONF_PASSWORD])
+            password: str = config[CONF_PASSWORD]
+            auth = httpx.BasicAuth(username, password=password)
 
-        self._resource = config.get(CONF_RESOURCE)
-        self._state_resource = config.get(CONF_STATE_RESOURCE) or self._resource
-        self._method = config.get(CONF_METHOD)
-        self._headers = config.get(CONF_HEADERS)
-        self._params = config.get(CONF_PARAMS)
+        self._resource: str = config[CONF_RESOURCE]
+        self._state_resource: str = config.get(CONF_STATE_RESOURCE) or self._resource
+        self._method: str = config[CONF_METHOD]
+        self._headers: dict[str, template.Template] | None = config.get(CONF_HEADERS)
+        self._params: dict[str, template.Template] | None = config.get(CONF_PARAMS)
         self._auth = auth
-        self._body_on = config.get(CONF_BODY_ON)
-        self._body_off = config.get(CONF_BODY_OFF)
-        self._is_on_template = config.get(CONF_IS_ON_TEMPLATE)
-        self._timeout = config.get(CONF_TIMEOUT)
-        self._verify_ssl = config.get(CONF_VERIFY_SSL)
+        self._body_on: template.Template = config[CONF_BODY_ON]
+        self._body_off: template.Template = config[CONF_BODY_OFF]
+        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._timeout: int = config[CONF_TIMEOUT]
+        self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
+        self._body_on.hass = hass
+        self._body_off.hass = hass
         if (is_on_template := self._is_on_template) is not None:
             is_on_template.hass = hass
-        if (body_on := self._body_on) is not None:
-            body_on.hass = hass
-        if (body_off := self._body_off) is not None:
-            body_off.hass = hass
 
         template.attach(hass, self._headers)
         template.attach(hass, self._params)
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
+    async def async_added_to_hass(self) -> None:
+        """Handle adding to Home Assistant."""
+        await super().async_added_to_hass()
+        await self.async_update()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         body_on_t = self._body_on.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status == HTTPStatus.OK:
-                self._state = True
+            if req.status_code == HTTPStatus.OK:
+                self._attr_is_on = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (asyncio.TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching on %s", self._resource)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         body_off_t = self._body_off.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status == HTTPStatus.OK:
-                self._state = False
+            if req.status_code == HTTPStatus.OK:
+                self._attr_is_on = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (asyncio.TimeoutError, httpx.RequestError):
             _LOGGER.error("Error while switching off %s", self._resource)
 
-    async def set_device_state(self, body):
+    async def set_device_state(self, body: Any) -> httpx.Response:
         """Send a state update to the device."""
-        websession = async_get_clientsession(self.hass, self._verify_ssl)
+        websession = get_async_client(self.hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with async_timeout.timeout(self._timeout):
-            req = await getattr(websession, self._method)(
+        async with asyncio.timeout(self._timeout):
+            req: httpx.Response = await getattr(websession, self._method)(
                 self._resource,
                 auth=self._auth,
-                data=bytes(body, "utf-8"),
+                content=bytes(body, "utf-8"),
                 headers=rendered_headers,
                 params=rendered_params,
             )
             return req
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the current state, catching errors."""
+        req = None
         try:
-            await self.get_device_state(self.hass)
+            req = await self.get_device_state(self.hass)
         except asyncio.TimeoutError:
             _LOGGER.exception("Timed out while fetching data")
-        except aiohttp.ClientError as err:
+        except httpx.RequestError as err:
             _LOGGER.exception("Error while fetching data: %s", err)
 
-    async def get_device_state(self, hass):
+        if req:
+            self._process_manual_data(req.text)
+            self.async_write_ha_state()
+
+    async def get_device_state(self, hass: HomeAssistant) -> httpx.Response:
         """Get the latest data from REST API and update the state."""
-        websession = async_get_clientsession(hass, self._verify_ssl)
+        websession = get_async_client(hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        async with async_timeout.timeout(self._timeout):
+        async with asyncio.timeout(self._timeout):
             req = await websession.get(
                 self._state_resource,
                 auth=self._auth,
                 headers=rendered_headers,
                 params=rendered_params,
             )
-            text = await req.text()
+            text = req.text
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(
@@ -232,17 +248,16 @@ class RestSwitch(TemplateEntity, SwitchEntity):
             )
             text = text.lower()
             if text == "true":
-                self._state = True
+                self._attr_is_on = True
             elif text == "false":
-                self._state = False
+                self._attr_is_on = False
             else:
-                self._state = None
+                self._attr_is_on = None
+        elif text == self._body_on.template:
+            self._attr_is_on = True
+        elif text == self._body_off.template:
+            self._attr_is_on = False
         else:
-            if text == self._body_on.template:
-                self._state = True
-            elif text == self._body_off.template:
-                self._state = False
-            else:
-                self._state = None
+            self._attr_is_on = None
 
         return req

@@ -4,10 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_ATTRIBUTE,
@@ -28,10 +24,8 @@ from homeassistant.helpers.event import (
     async_track_same_state,
     async_track_state_change_event,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
 
 
 def validate_above_below(value):
@@ -47,7 +41,10 @@ def validate_above_below(value):
 
     if above > below:
         raise vol.Invalid(
-            f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
+            (
+                f"A value can never be above {above} and below {below} at the same"
+                " time. You probably want two different triggers."
+            ),
         )
 
     return value
@@ -87,8 +84,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "numeric_state",
 ) -> CALLBACK_TYPE:
@@ -103,10 +100,10 @@ async def async_attach_trigger(
     armed_entities = set()
     period: dict = {}
     attribute = config.get(CONF_ATTRIBUTE)
-    job = HassJob(action)
+    job = HassJob(action, f"numeric state trigger {trigger_info}")
 
-    trigger_data = automation_info["trigger_data"]
-    _variables = automation_info["variables"] or {}
+    trigger_data = trigger_info["trigger_data"]
+    _variables = trigger_info["variables"] or {}
 
     if value_template is not None:
         value_template.hass = hass
@@ -139,7 +136,7 @@ async def async_attach_trigger(
         except exceptions.ConditionError as ex:
             _LOGGER.warning(
                 "Error initializing '%s' trigger: %s",
-                automation_info["name"],
+                trigger_info["name"],
                 ex,
             )
 
@@ -185,7 +182,7 @@ async def async_attach_trigger(
         try:
             matching = check_numeric_state(entity_id, from_s, to_s)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in '%s' trigger: %s", automation_info["name"], ex)
+            _LOGGER.warning("Error in '%s' trigger: %s", trigger_info["name"], ex)
             return
 
         if not matching:
@@ -201,7 +198,7 @@ async def async_attach_trigger(
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
                         "Error rendering '%s' for template: %s",
-                        automation_info["name"],
+                        trigger_info["name"],
                         ex,
                     )
                     return

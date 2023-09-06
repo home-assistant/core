@@ -1,8 +1,8 @@
 """Base class for yale_smart_alarm entity."""
 
 from homeassistant.const import CONF_NAME, CONF_USERNAME
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
@@ -12,13 +12,14 @@ from .coordinator import YaleDataUpdateCoordinator
 class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     """Base implementation for Yale device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: YaleDataUpdateCoordinator, data: dict) -> None:
         """Initialize an Yale device."""
         super().__init__(coordinator)
-        self._attr_name: str = data["name"]
         self._attr_unique_id: str = data["address"]
         self._attr_device_info: DeviceInfo = DeviceInfo(
-            name=self._attr_name,
+            name=data["name"],
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, data["address"])},
@@ -28,6 +29,8 @@ class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
 
 class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     """Base implementation for Yale Alarm device."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize an Yale device."""

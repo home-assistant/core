@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "mdns_missing_mac": "Missing MAC address in MDNS properties.",
+      "service_received": "Service received"
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address",
@@ -29,13 +31,13 @@
         "data": {
           "noise_psk": "Encryption key"
         },
-        "description": "Please enter the encryption key you set in your configuration for {name}."
+        "description": "Please enter the encryption key for {name}. You can find it in the ESPHome Dashboard or in your device configuration."
       },
       "reauth_confirm": {
         "data": {
-          "noise_psk": "Encryption key"
+          "noise_psk": "[%key:component::esphome::config::step::encryption_key::data::noise_psk%]"
         },
-        "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key."
+        "description": "The ESPHome device {name} enabled transport encryption or changed the encryption key. Please enter the updated key. You can find it in the ESPHome Dashboard or in your device configuration."
       },
       "discovery_confirm": {
         "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
@@ -43,5 +45,62 @@
       }
     },
     "flow_title": "{name}"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "allow_service_calls": "Allow the device to make Home Assistant service calls."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "ble_firmware_outdated": {
+      "title": "Update {name} with ESPHome {version} or later",
+      "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome {version} or later. When updating the device from ESPHome earlier than 2022.12.0, it is recommended to use a serial cable instead of an over-the-air update to take advantage of the new partition scheme."
+    },
+    "api_password_deprecated": {
+      "title": "API Password deprecated on {name}",
+      "description": "The API password for ESPHome is deprecated and the use of an API encryption key is recommended instead.\n\nRemove the API password and add an encryption key to your ESPHome device to resolve this issue."
+    },
+    "service_calls_not_allowed": {
+      "title": "{name} is not permitted to call Home Assistant services",
+      "description": "The ESPHome device attempted to make a Home Assistant service call, but this functionality is not enabled.\n\nIf you trust this device and want to allow it to make Home Assistant service calls, you can enable this functionality in the options flow."
+    }
   }
 }

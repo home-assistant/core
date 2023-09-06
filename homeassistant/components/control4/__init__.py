@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -35,7 +35,6 @@ from .const import (
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
-    CONF_DIRECTOR_TOKEN_EXPIRATION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -60,7 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from exception
     except BadCredentials as exception:
         _LOGGER.error(
-            "Error authenticating with Control4 account API, incorrect username or password: %s",
+            (
+                "Error authenticating with Control4 account API, incorrect username or"
+                " password: %s"
+            ),
             exception,
         )
         return False
@@ -76,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
     entry_data[CONF_DIRECTOR] = director
-    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
 
     # Add Control4 controller to device registry
     controller_href = (await account.getAccountControllers())["href"]
@@ -110,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

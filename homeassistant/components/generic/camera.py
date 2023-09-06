@@ -80,12 +80,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up a generic IP Camera."""
 
-    _LOGGER.warning(
-        "Loading generic IP camera via configuration.yaml is deprecated, "
-        "it will be automatically imported.  Once you have confirmed correct "
-        "operation, please remove 'generic' (IP camera) section(s) from "
-        "configuration.yaml"
-    )
     image = config.get(CONF_STILL_IMAGE_URL)
     stream = config.get(CONF_STREAM_SOURCE)
     config_new = {
@@ -165,9 +159,8 @@ class GenericCamera(Camera):
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        self._attr_supported_features = (
-            CameraEntityFeature.STREAM if self._stream_source else 0
-        )
+        if self._stream_source:
+            self._attr_supported_features = CameraEntityFeature.STREAM
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):
@@ -179,15 +172,16 @@ class GenericCamera(Camera):
         self._last_url = None
         self._last_image = None
 
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return not self._still_image_url
+
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:
-            if not self.stream:
-                await self.async_create_stream()
-            if self.stream:
-                return await self.stream.async_get_image(width, height)
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
@@ -201,7 +195,7 @@ class GenericCamera(Camera):
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
-                url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
+                url, auth=self._auth, follow_redirects=True, timeout=GET_IMAGE_TIMEOUT
             )
             response.raise_for_status()
             self._last_image = response.content
@@ -228,7 +222,13 @@ class GenericCamera(Camera):
         try:
             stream_url = self._stream_source.async_render(parse_result=False)
             url = yarl.URL(stream_url)
-            if not url.user and not url.password and self._username and self._password:
+            if (
+                not url.user
+                and not url.password
+                and self._username
+                and self._password
+                and url.is_absolute()
+            ):
                 url = url.with_user(self._username).with_password(self._password)
             return str(url)
         except TemplateError as err:

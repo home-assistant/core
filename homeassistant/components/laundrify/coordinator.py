@@ -1,8 +1,8 @@
 """Custom DataUpdateCoordinator for the laundrify integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from laundrify_aio import LaundrifyAPI
 from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
@@ -16,7 +16,7 @@ from .model import LaundrifyDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
+class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice]]):
     """Class to manage fetching laundrify API data."""
 
     def __init__(
@@ -36,7 +36,7 @@ class LaundrifyUpdateCoordinator(DataUpdateCoordinator):
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(REQUEST_TIMEOUT):
+            async with asyncio.timeout(REQUEST_TIMEOUT):
                 return {m["_id"]: m for m in await self.laundrify_api.get_machines()}
         except UnauthorizedException as err:
             # Raising ConfigEntryAuthFailed will cancel future updates

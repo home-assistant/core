@@ -6,7 +6,7 @@ from PyTado.interface import Tado
 from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -25,6 +25,7 @@ from .const import (
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
+    PRESET_AUTO,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UPDATE_LISTENER: update_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -151,6 +152,7 @@ class TadoConnector:
         self.data = {
             "device": {},
             "weather": {},
+            "geofence": {},
             "zone": {},
         }
 
@@ -175,11 +177,7 @@ class TadoConnector:
         """Update the registered zones."""
         self.update_devices()
         self.update_zones()
-        self.data["weather"] = self.tado.getWeather()
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
-        )
+        self.update_home()
 
     def update_devices(self):
         """Update the device data from Tado."""
@@ -250,9 +248,28 @@ class TadoConnector:
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone_id),
         )
 
+    def update_home(self):
+        """Update the home data from Tado."""
+        try:
+            self.data["weather"] = self.tado.getWeather()
+            self.data["geofence"] = self.tado.getHomeState()
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "home", "data"),
+            )
+        except RuntimeError:
+            _LOGGER.error(
+                "Unable to connect to Tado while updating weather and geofence data"
+            )
+            return
+
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""
         return self.tado.getCapabilities(zone_id)
+
+    def get_auto_geofencing_supported(self):
+        """Return whether the Tado Home supports auto geofencing."""
+        return self.tado.getAutoGeofencingSupported()
 
     def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
@@ -263,11 +280,17 @@ class TadoConnector:
         self,
         presence=PRESET_HOME,
     ):
-        """Set the presence to home or away."""
+        """Set the presence to home, away or auto."""
         if presence == PRESET_AWAY:
             self.tado.setAway()
         elif presence == PRESET_HOME:
             self.tado.setHome()
+        elif presence == PRESET_AUTO:
+            self.tado.setAuto()
+
+        # Update everything when changing modes
+        self.update_zones()
+        self.update_home()
 
     def set_zone_overlay(
         self,
@@ -282,7 +305,10 @@ class TadoConnector:
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            (
+                "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s,"
+                " type=%s, mode=%s fan_speed=%s swing=%s"
+            ),
             zone_id,
             overlay_mode,
             temperature,

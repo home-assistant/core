@@ -12,10 +12,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -47,7 +47,7 @@ from .const import (
 from .sab import get_client
 from .sensor import OLD_SENSOR_KEYS
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 SERVICES = (
@@ -79,7 +79,6 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_API_KEY): str,
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Optional(CONF_PATH): str,
                     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_SENSORS): vol.All(
@@ -128,7 +127,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
 def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry):
     """Update device identifiers to new identifiers."""
     device_registry = async_get(hass)
-    device_entry = device_registry.async_get_device({(DOMAIN, DOMAIN)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, DOMAIN)})
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_identifiers = {(DOMAIN, entry.entry_id)}
         _LOGGER.debug(
@@ -146,8 +145,7 @@ async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """
-        Define a callback to migrate appropriate SabnzbdSensor entities to new unique IDs.
+        """Define a callback to migrate appropriate SabnzbdSensor entities to new unique IDs.
 
         Old: description.key
         New: {entry_id}_description.key
@@ -226,7 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         (SERVICE_RESUME, async_resume_queue, SERVICE_BASE_SCHEMA),
         (SERVICE_SET_SPEED, async_set_queue_speed, SERVICE_SPEED_SCHEMA),
     ):
-
         if hass.services.has_service(DOMAIN, service):
             continue
 
@@ -240,9 +237,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except SabnzbdApiException as err:
             _LOGGER.error(err)
 
-    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

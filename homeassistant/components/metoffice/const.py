@@ -33,11 +33,9 @@ METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
 MODE_3HOURLY = "3hourly"
-MODE_3HOURLY_LABEL = "3-Hourly"
 MODE_DAILY = "daily"
-MODE_DAILY_LABEL = "Daily"
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLEAR_NIGHT: ["0"],
     ATTR_CONDITION_CLOUDY: ["7", "8"],
     ATTR_CONDITION_FOG: ["5", "6"],
@@ -53,6 +51,11 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_WINDY: [],
     ATTR_CONDITION_WINDY_VARIANT: [],
     ATTR_CONDITION_EXCEPTIONAL: [],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }
 
 VISIBILITY_CLASSES = {

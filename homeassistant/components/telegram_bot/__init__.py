@@ -19,6 +19,7 @@ from telegram import (
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
+    User,
 )
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
@@ -61,6 +62,8 @@ ATTR_FILE = "file"
 ATTR_FROM_FIRST = "from_first"
 ATTR_FROM_LAST = "from_last"
 ATTR_KEYBOARD = "keyboard"
+ATTR_RESIZE_KEYBOARD = "resize_keyboard"
+ATTR_ONE_TIME_KEYBOARD = "one_time_keyboard"
 ATTR_KEYBOARD_INLINE = "inline_keyboard"
 ATTR_MESSAGEID = "message_id"
 ATTR_MSG = "message"
@@ -156,6 +159,8 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_PARSER): cv.string,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+        vol.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
+        vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
@@ -524,17 +529,24 @@ class TelegramNotificationService:
                 (text_b2, data_callback_b2), ...]
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
+              - also supports urls instead of callback commands
             """
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
                     if ":/" in key:
-                        # commands like: 'Label:/cmd' become ('Label', '/cmd')
-                        label = key.split(":/")[0]
-                        command = key[len(label) + 1 :]
-                        buttons.append(
-                            InlineKeyboardButton(label, callback_data=command)
-                        )
+                        # check if command or URL
+                        if key.startswith("https://"):
+                            label = key.split(",")[0]
+                            url = key[len(label) + 1 :]
+                            buttons.append(InlineKeyboardButton(label, url=url))
+                        else:
+                            # commands like: 'Label:/cmd' become ('Label', '/cmd')
+                            label = key.split(":/")[0]
+                            command = key[len(label) + 1 :]
+                            buttons.append(
+                                InlineKeyboardButton(label, callback_data=command)
+                            )
                     else:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
@@ -542,11 +554,14 @@ class TelegramNotificationService:
             elif isinstance(row_keyboard, list):
                 for entry in row_keyboard:
                     text_btn, data_btn = entry
-                    buttons.append(
-                        InlineKeyboardButton(text_btn, callback_data=data_btn)
-                    )
+                    if data_btn.startswith("https://"):
+                        buttons.append(InlineKeyboardButton(text_btn, url=data_btn))
+                    else:
+                        buttons.append(
+                            InlineKeyboardButton(text_btn, callback_data=data_btn)
+                        )
             else:
-                raise ValueError(str(row_keyboard))
+                raise TypeError(str(row_keyboard))
             return buttons
 
         # Defaults
@@ -580,7 +595,13 @@ class TelegramNotificationService:
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                        [[key.strip() for key in row.split(",")] for row in keys]
+                        [[key.strip() for key in row.split(",")] for row in keys],
+                        resize_keyboard=data[ATTR_RESIZE_KEYBOARD]
+                        if ATTR_RESIZE_KEYBOARD in data
+                        else False,
+                        one_time_keyboard=data[ATTR_ONE_TIME_KEYBOARD]
+                        if ATTR_ONE_TIME_KEYBOARD in data
+                        else False,
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
@@ -966,15 +987,16 @@ class BaseTelegramBotEntity:
             event_data[ATTR_TEXT] = message.text
 
         if message.from_user:
-            event_data.update(
-                {
-                    ATTR_USER_ID: message.from_user.id,
-                    ATTR_FROM_FIRST: message.from_user.first_name,
-                    ATTR_FROM_LAST: message.from_user.last_name,
-                }
-            )
+            event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_user_event_data(self, user: User) -> dict[str, Any]:
+        return {
+            ATTR_USER_ID: user.id,
+            ATTR_FROM_FIRST: user.first_name,
+            ATTR_FROM_LAST: user.last_name,
+        }
 
     def _get_callback_query_event_data(
         self, callback_query: CallbackQuery
@@ -991,6 +1013,9 @@ class BaseTelegramBotEntity:
             event_data[ATTR_MSG] = callback_query.message.to_dict()
             event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
 
+        if callback_query.from_user:
+            event_data.update(self._get_user_event_data(callback_query.from_user))
+
         # Split data into command and args if possible
         event_data.update(self._get_command_event_data(callback_query.data))
 
@@ -1003,7 +1028,10 @@ class BaseTelegramBotEntity:
         if from_user in self.allowed_chat_ids or from_chat in self.allowed_chat_ids:
             return True
         _LOGGER.error(
-            "Unauthorized update - neither user id %s nor chat id %s is in allowed chats: %s",
+            (
+                "Unauthorized update - neither user id %s nor chat id %s is in allowed"
+                " chats: %s"
+            ),
             from_user,
             from_chat,
             self.allowed_chat_ids,

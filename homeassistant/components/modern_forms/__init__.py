@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -121,12 +121,13 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        name: str,
         icon: str | None = None,
         enabled_default: bool = True,
     ) -> None:
@@ -135,7 +136,6 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         self._attr_enabled_default = enabled_default
         self._entry_id = entry_id
         self._attr_icon = icon
-        self._attr_name = name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -145,5 +145,8 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
             name=self.coordinator.data.info.device_name,
             manufacturer="Modern Forms",
             model=self.coordinator.data.info.fan_type,
-            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+            sw_version=(
+                f"{self.coordinator.data.info.firmware_version} /"
+                f" {self.coordinator.data.info.main_mcu_firmware_version}"
+            ),
         )

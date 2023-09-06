@@ -155,7 +155,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
 
         for entity_entry in hass_entities:
             state = hass.states.get(entity_entry.entity_id)
-            state_dict = None
+            state_dict: dict[str, Any] | None = None
             if state:
                 state_dict = dict(state.as_dict())
 

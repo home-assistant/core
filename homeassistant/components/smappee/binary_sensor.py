@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -91,7 +91,7 @@ class SmappeePresence(BinarySensorEntity):
             sw_version=self._service_location.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Smappee and update the state."""
         await self._smappee_base.async_update()
 
@@ -174,7 +174,7 @@ class SmappeeAppliance(BinarySensorEntity):
             sw_version=self._service_location.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Smappee and update the state."""
         await self._smappee_base.async_update()
 

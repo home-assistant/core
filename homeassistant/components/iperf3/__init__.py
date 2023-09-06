@@ -9,7 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
-    DATA_RATE_MEGABITS_PER_SECOND,
+    UnitOfDataRate,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -51,12 +53,18 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_DOWNLOAD,
         name=ATTR_DOWNLOAD.capitalize(),
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:download",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
     SensorEntityDescription(
         key=ATTR_UPLOAD,
         name=ATTR_UPLOAD.capitalize(),
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]

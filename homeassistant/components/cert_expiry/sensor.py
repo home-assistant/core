@@ -14,11 +14,13 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import CertExpiryDataUpdateCoordinator
 from .const import DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -57,10 +59,12 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add cert-expiry entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CertExpiryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         SSLCertificateTimestamp(coordinator),
@@ -69,10 +73,11 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CertExpiryEntity(CoordinatorEntity):
+class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
     _attr_icon = "mdi:certificate"
+    _attr_has_entity_name = True
 
     @property
     def extra_state_attributes(self):
@@ -87,12 +92,20 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "certificate_expiry"
 
-    def __init__(self, coordinator) -> None:
+    def __init__(
+        self,
+        coordinator: CertExpiryDataUpdateCoordinator,
+    ) -> None:
         """Initialize a Cert Expiry timestamp sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"
         self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.host}:{coordinator.port}")},
+            name=coordinator.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> datetime | None:

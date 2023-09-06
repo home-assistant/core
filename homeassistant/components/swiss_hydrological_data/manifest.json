@@ -1,9 +1,9 @@
 {
   "domain": "swiss_hydrological_data",
   "name": "Swiss Hydrological Data",
-  "documentation": "https://www.home-assistant.io/integrations/swiss_hydrological_data",
-  "requirements": ["swisshydrodata==0.1.0"],
   "codeowners": ["@fabaff"],
+  "documentation": "https://www.home-assistant.io/integrations/swiss_hydrological_data",
   "iot_class": "cloud_polling",
-  "loggers": ["swisshydrodata"]
+  "loggers": ["swisshydrodata"],
+  "requirements": ["swisshydrodata==0.1.0"]
 }

@@ -23,7 +23,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 
@@ -43,7 +43,7 @@ class AdbDeviceTcpAsyncFake:
 class ClientAsyncFakeSuccess:
     """A fake of the `ClientAsync` class when the connection and shell commands succeed."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeSuccess` instance."""
         self._devices = []
 
@@ -57,7 +57,7 @@ class ClientAsyncFakeSuccess:
 class ClientAsyncFakeFail:
     """A fake of the `ClientAsync` class when the connection and shell commands fail."""
 
-    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT):
+    def __init__(self, host=ADB_SERVER_HOST, port=DEFAULT_ADB_SERVER_PORT) -> None:
         """Initialize a `ClientAsyncFakeFail` instance."""
         self._devices = []
 
@@ -70,7 +70,7 @@ class ClientAsyncFakeFail:
 class DeviceAsyncFake:
     """A fake of the `DeviceAsync` class."""
 
-    def __init__(self, host):
+    def __init__(self, host) -> None:
         """Initialize a `DeviceAsyncFake` instance."""
         self.host = host
 
@@ -111,7 +111,7 @@ def patch_connect(success):
     }
 
 
-def patch_shell(response=None, error=False, mac_eth=False):
+def patch_shell(response=None, error=False, mac_eth=False, exc=None):
     """Mock the `AdbDeviceTcpAsyncFake.shell` and `DeviceAsyncFake.shell` methods."""
 
     async def shell_success(self, cmd, *args, **kwargs):
@@ -128,7 +128,7 @@ def patch_shell(response=None, error=False, mac_eth=False):
     async def shell_fail_python(self, cmd, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.shell` method when it fails."""
         self.shell_cmd = cmd
-        raise ValueError
+        raise exc or ValueError
 
     async def shell_fail_server(self, cmd):
         """Mock the `DeviceAsyncFake.shell` method when it fails."""
@@ -185,6 +185,10 @@ def isfile(filepath):
     return filepath.endswith("adbkey")
 
 
+PATCH_SCREENCAP = patch(
+    "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+    return_value=b"image",
+)
 PATCH_SETUP_ENTRY = patch(
     "homeassistant.components.androidtv.async_setup_entry",
     return_value=True,

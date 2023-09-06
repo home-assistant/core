@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> ArubaDeviceScanner | None:
     """Validate the configuration and return a Aruba scanner."""
     scanner = ArubaDeviceScanner(config[DOMAIN])
 
@@ -42,7 +42,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class ArubaDeviceScanner(DeviceScanner):
-    """This class queries a Aruba Access Point for connected devices."""
+    """Class which queries a Aruba Access Point for connected devices."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -87,7 +87,7 @@ class ArubaDeviceScanner(DeviceScanner):
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
 
-        connect = f"ssh {self.username}@{self.host}"
+        connect = f"ssh {self.username}@{self.host} -o HostKeyAlgorithms=ssh-rsa"
         ssh = pexpect.spawn(connect)
         query = ssh.expect(
             [

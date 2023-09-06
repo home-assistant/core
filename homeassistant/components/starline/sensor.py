@@ -1,8 +1,6 @@
 """Reads vehicle status from StarLine API."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -10,11 +8,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    VOLUME_LITERS,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,63 +22,50 @@ from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-
-@dataclass
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    name_: str
-
-
-@dataclass
-class StarlineSensorEntityDescription(
-    SensorEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline binary_sensor entity."""
-
-
-SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
-    StarlineSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="battery",
-        name_="Battery",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        translation_key="battery",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="balance",
-        name_="Balance",
+        translation_key="balance",
         icon="mdi:cash-multiple",
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="ctemp",
-        name_="Interior Temperature",
+        translation_key="interior_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="etemp",
-        name_="Engine Temperature",
+        translation_key="engine_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="gsm_lvl",
-        name_="GSM Signal",
+        translation_key="gsm_signal",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="fuel",
-        name_="Fuel Volume",
+        translation_key="fuel",
         icon="mdi:fuel",
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="errors",
-        name_="OBD Errors",
+        translation_key="errors",
         icon="mdi:alert-octagon",
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="mileage",
-        name_="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        translation_key="mileage",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:counter",
     ),
 )
@@ -104,16 +89,14 @@ async def async_setup_entry(
 class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
-    entity_description: StarlineSensorEntityDescription
-
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize StarLine sensor."""
-        super().__init__(account, device, description.key, description.name_)
+        super().__init__(account, device, description.key)
         self.entity_description = description
 
     @property
@@ -159,7 +142,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             if type_value == "percents":
                 return PERCENTAGE
             if type_value == "litres":
-                return VOLUME_LITERS
+                return UnitOfVolume.LITERS
         return self.entity_description.native_unit_of_measurement
 
     @property

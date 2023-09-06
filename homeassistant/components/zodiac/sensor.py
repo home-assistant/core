@@ -1,15 +1,17 @@
 """Support for tracking the zodiac sign."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import as_local, utcnow
 
 from .const import (
     ATTR_ELEMENT,
     ATTR_MODALITY,
+    DEFAULT_NAME,
     DOMAIN,
     ELEMENT_AIR,
     ELEMENT_EARTH,
@@ -159,68 +161,56 @@ ZODIAC_ICONS = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Zodiac sensor platform."""
-    if discovery_info is None:
-        return
+    """Initialize the entries."""
 
-    async_add_entities([ZodiacSensor()], True)
+    async_add_entities([ZodiacSensor(entry_id=entry.entry_id)], True)
 
 
 class ZodiacSensor(SensorEntity):
     """Representation of a Zodiac sensor."""
 
-    def __init__(self) -> None:
-        """Initialize the zodiac sensor."""
-        self._attrs: dict[str, str] = {}
-        self._state: str = ""
+    _attr_name = None
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [
+        SIGN_AQUARIUS,
+        SIGN_ARIES,
+        SIGN_CANCER,
+        SIGN_CAPRICORN,
+        SIGN_GEMINI,
+        SIGN_LEO,
+        SIGN_LIBRA,
+        SIGN_PISCES,
+        SIGN_SAGITTARIUS,
+        SIGN_SCORPIO,
+        SIGN_TAURUS,
+        SIGN_VIRGO,
+    ]
+    _attr_translation_key = "sign"
+    _attr_unique_id = DOMAIN
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return DOMAIN
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Zodiac"
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the entity."""
-        return "zodiac__sign"
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self) -> str | None:
-        """Icon to use in the frontend."""
-        return ZODIAC_ICONS.get(self._state)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        return self._attrs
+    def __init__(self, entry_id: str) -> None:
+        """Initialize Zodiac sensor."""
+        self._attr_device_info = DeviceInfo(
+            name=DEFAULT_NAME,
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     async def async_update(self) -> None:
         """Get the time and updates the state."""
         today = as_local(utcnow()).date()
 
-        month = int(today.month)
-        day = int(today.day)
-
         for sign in ZODIAC_BY_DATE:
-            if (month == sign[0][1] and day >= sign[0][0]) or (
-                month == sign[1][1] and day <= sign[1][0]
+            if (today.month == sign[0][1] and today.day >= sign[0][0]) or (
+                today.month == sign[1][1] and today.day <= sign[1][0]
             ):
-                self._state = sign[2]
-                self._attrs = sign[3]
+                self._attr_native_value = sign[2]
+                self._attr_icon = ZODIAC_ICONS.get(sign[2])
+                self._attr_extra_state_attributes = sign[3]
                 break

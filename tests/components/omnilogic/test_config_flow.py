@@ -5,13 +5,14 @@ from omnilogic import LoginException, OmniLogicException
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.omnilogic.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -39,7 +40,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_already_configured(hass):
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test config flow when Omnilogic component is already setup."""
     MockConfigEntry(domain="omnilogic", data=DATA).add_to_hass(hass)
 
@@ -51,7 +52,7 @@ async def test_already_configured(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_with_invalid_credentials(hass):
+async def test_with_invalid_credentials(hass: HomeAssistant) -> None:
     """Test with invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
@@ -72,7 +73,7 @@ async def test_with_invalid_credentials(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test if invalid response or no connection returned from Hayward."""
 
     result = await hass.config_entries.flow.async_init(
@@ -93,7 +94,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_with_unknown_error(hass):
+async def test_with_unknown_error(hass: HomeAssistant) -> None:
     """Test with unknown error response from Hayward."""
 
     result = await hass.config_entries.flow.async_init(
@@ -114,7 +115,7 @@ async def test_with_unknown_error(hass):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test option flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=DATA)
     entry.add_to_hass(hass)
@@ -129,7 +130,7 @@ async def test_option_flow(hass):
             data=None,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -137,6 +138,6 @@ async def test_option_flow(hass):
         user_input={"polling_interval": 9},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"]["polling_interval"] == 9

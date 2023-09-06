@@ -4,85 +4,44 @@ from __future__ import annotations
 from functools import partial
 import logging
 import re
+from typing import Any
 
 from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_START,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 MAP_STATUS = {
-    "PLAY_STATE": STATE_PLAYING,
-    "BUFFERING_STATE": STATE_PLAYING,
-    "PAUSE_STATE": STATE_PAUSED,
-    "STOP_STATE": STATE_OFF,
+    "PLAY_STATE": MediaPlayerState.PLAYING,
+    "BUFFERING_STATE": MediaPlayerState.PLAYING,
+    "PAUSE_STATE": MediaPlayerState.PAUSED,
+    "STOP_STATE": MediaPlayerState.OFF,
 }
 
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=""): cv.string,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Bose SoundTouch platform."""
-    _LOGGER.warning(
-        "Configuration of the Bose SoundTouch platform in YAML is deprecated and will be "
-        "removed in a future release; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -117,6 +76,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
@@ -124,7 +85,6 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._device = device
 
         self._attr_unique_id = self._device.config.device_id
-        self._attr_name = self._device.config.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.config.device_id)},
             connections={
@@ -144,7 +104,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Return SoundTouch device."""
         return self._device
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data."""
         self._status = self._device.status()
         self._volume = self._device.volume()
@@ -156,15 +116,15 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return self._volume.actual / 100
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._status is None or self._status.source == "STANDBY":
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self._status.source == "INVALID_SOURCE":
-            return STATE_UNKNOWN
+            return None
 
-        return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
+        return MAP_STATUS.get(self._status.play_status)
 
     @property
     def source(self):
@@ -184,47 +144,47 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._volume.muted
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self._device.power_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on media player."""
         self._device.power_on()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self._device.volume_up()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self._device.volume_down()
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._device.set_volume(int(volume * 100))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._device.mute()
 
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self._device.play_pause()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._device.play()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._device.pause()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._device.next_track()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._device.previous_track()
 
@@ -263,7 +223,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Album name of current playing media."""
         return self._status.album
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Populate zone info which requires entity_id."""
 
         @callback
@@ -275,7 +235,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             EVENT_HOMEASSISTANT_START, async_update_on_start
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
             play_item = await media_source.async_resolve_media(
@@ -287,7 +249,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r"http?://", str(media_id)):
@@ -309,7 +273,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             else:
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         if source == Source.AUX.value:
             _LOGGER.debug("Selecting source AUX")
@@ -321,8 +285,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Source %s is not supported", source)
 
     def create_zone(self, slaves):
-        """
-        Create a zone (multi-room)  and play on selected devices.
+        """Create a zone (multi-room)  and play on selected devices.
 
         :param slaves: slaves on which to play
 
@@ -334,10 +297,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
-        """
-        Remove slave(s) from and existing zone (multi-room).
+        """Remove slave(s) from and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
         Note: If removing last slave, the zone will be deleted and you'll have
         to create a new one. You will not be able to add a new slave anymore
 
@@ -359,10 +321,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                     self._device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
-        """
-        Add slave(s) to and existing zone (multi-room).
+        """Add slave(s) to and existing zone (multi-room).
 
-        Zone must already exist and slaves array can not be empty.
+        Zone must already exist and slaves array cannot be empty.
 
         :param slaves:slaves to add
 
@@ -389,7 +350,11 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
         return attributes
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await media_source.async_browse_media(self.hass, media_content_id)
 
@@ -400,16 +365,19 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             return None
 
         # Client devices do NOT return their siblings as part of the "slaves" list.
-        # Only the master has the full list of slaves. To compensate for this shortcoming
-        # we have to fetch the zone info from the master when the current device is a slave.
+        # Only the master has the full list of slaves. To compensate for this
+        # shortcoming we have to fetch the zone info from the master when the current
+        # device is a slave.
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
-        # property wrong on some slaves, so the only reliable way to detect if the current
-        # devices is the master, is by comparing the master_id of the zone with the device_id.
+        # property wrong on some slaves, so the only reliable way to detect
+        # if the current devices is the master, is by comparing the master_id
+        # of the zone with the device_id.
         if zone_status.master_id == self._device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
-        # The master device has to be searched by it's ID and not IP since libsoundtouch / BOSE API
-        # do not return the IP of the master for some slave objects/responses
+        # The master device has to be searched by it's ID and not IP since
+        # libsoundtouch / BOSE API do not return the IP of the master
+        # for some slave objects/responses
         master_instance = self._get_instance_by_id(zone_status.master_id)
         if master_instance is not None:
             master_zone_status = master_instance.device.zone_status()
@@ -417,8 +385,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
                 master_instance.entity_id, master_zone_status.slaves
             )
 
-        # We should never end up here since this means we haven't found a master device to get the
-        # correct zone info from. In this case, assume current device is master
+        # We should never end up here since this means we haven't found a master
+        # device to get the correct zone info from. In this case,
+        # assume current device is master
         return self._build_zone_info(self.entity_id, zone_status.slaves)
 
     def _get_instance_by_ip(self, ip_address):

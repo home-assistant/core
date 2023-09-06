@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
@@ -26,7 +25,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
-from . import async_wait_for_elk_to_sync
+from . import async_wait_for_elk_to_sync, hostname_from_url
 from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN, LOGIN_TIMEOUT
 from .discovery import (
     _short_mac,
@@ -170,7 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.unique_id == mac
-                or urlparse(entry.data[CONF_HOST]).hostname == host
+                or hostname_from_url(entry.data[CONF_HOST]) == host
             ):
                 if async_update_entry_from_discovery(self.hass, entry, device):
                     self.hass.async_create_task(
@@ -214,7 +213,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
-            urlparse(entry.data[CONF_HOST]).hostname
+            hostname_from_url(entry.data[CONF_HOST])
             for entry in self._async_current_entries(include_ignore=False)
         }
         discovered_devices = await async_discover_devices(
@@ -344,7 +343,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._url_already_configured(url):
             return self.async_abort(reason="address_already_configured")
 
-        host = urlparse(url).hostname
+        host = hostname_from_url(url)
         _LOGGER.debug(
             "Importing is trying to fill unique id from discovery for %s", host
         )
@@ -367,10 +366,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _url_already_configured(self, url: str) -> bool:
         """See if we already have a elkm1 matching user input configured."""
         existing_hosts = {
-            urlparse(entry.data[CONF_HOST]).hostname
+            hostname_from_url(entry.data[CONF_HOST])
             for entry in self._async_current_entries()
         }
-        return urlparse(url).hostname in existing_hosts
+        return hostname_from_url(url) in existing_hosts
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

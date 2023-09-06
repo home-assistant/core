@@ -6,7 +6,7 @@ from abc import abstractmethod
 from surepy.entities import SurepyEntity
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SurePetcareDataCoordinator
@@ -26,7 +26,7 @@ class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
 
         self._id = surepetcare_id
 
-        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
+        surepy_entity = coordinator.data[surepetcare_id]
 
         if surepy_entity.name:
             self._device_name = surepy_entity.name.capitalize()

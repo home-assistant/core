@@ -1,21 +1,34 @@
 {
   "domain": "isy994",
-  "name": "Universal Devices ISY994",
-  "documentation": "https://www.home-assistant.io/integrations/isy994",
-  "requirements": ["pyisy==3.0.7"],
+  "name": "Universal Devices ISY/IoX",
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "isy*",
+      "macaddress": "0021B9*"
+    },
+    {
+      "hostname": "eisy*",
+      "macaddress": "0021B9*"
+    },
+    {
+      "hostname": "polisy*",
+      "macaddress": "000DB9*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/isy994",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["pyisy"],
+  "requirements": ["pyisy==3.1.14"],
   "ssdp": [
     {
       "manufacturer": "Universal Devices Inc.",
       "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1"
     }
-  ],
-  "dhcp": [
-    { "registered_devices": true },
-    { "hostname": "isy*", "macaddress": "0021B9*" },
-    { "hostname": "polisy*", "macaddress": "000DB9*" }
-  ],
-  "iot_class": "local_push",
-  "loggers": ["pyisy"]
+  ]
 }

@@ -1,7 +1,6 @@
 """Constants for Camera component."""
+from enum import StrEnum
 from typing import Final
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "camera"
 
@@ -9,6 +8,7 @@ DATA_CAMERA_PREFS: Final = "camera_prefs"
 DATA_RTSP_TO_WEB_RTC: Final = "rtsp_to_web_rtc"
 
 PREF_PRELOAD_STREAM: Final = "preload_stream"
+PREF_ORIENTATION: Final = "orientation"
 
 SERVICE_RECORD: Final = "record"
 

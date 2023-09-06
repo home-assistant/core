@@ -2,19 +2,20 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import astuple, dataclass
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ConfigurationValueType
+from zwave_js_server.const import CommandClass, ConfigurationValueType
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    ValueDataType,
+    get_value_id_str,
 )
 
 from homeassistant.components.group import expand_entity_ids
@@ -30,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -54,10 +56,44 @@ class ZwaveValueID:
     property_key: str | int | None = None
 
 
-@callback
+@dataclass
+class ZwaveValueMatcher:
+    """Class to allow matching a Z-Wave Value."""
+
+    property_: str | int | None = None
+    command_class: int | None = None
+    endpoint: int | None = None
+    property_key: str | int | None = None
+
+    def __post_init__(self) -> None:
+        """Post initialization check."""
+        if all(val is None for val in astuple(self)):
+            raise ValueError("At least one of the fields must be set.")
+
+
+def value_matches_matcher(
+    matcher: ZwaveValueMatcher, value_data: ValueDataType
+) -> bool:
+    """Return whether value matches matcher."""
+    command_class = None
+    if "commandClass" in value_data:
+        command_class = CommandClass(value_data["commandClass"])
+    zwave_value_id = ZwaveValueMatcher(
+        property_=value_data.get("property"),
+        command_class=command_class,
+        endpoint=value_data.get("endpoint"),
+        property_key=value_data.get("propertyKey"),
+    )
+    return all(
+        redacted_field_val is None or redacted_field_val == zwave_value_field_val
+        for redacted_field_val, zwave_value_field_val in zip(
+            astuple(matcher), astuple(zwave_value_id)
+        )
+    )
+
+
 def get_value_id_from_unique_id(unique_id: str) -> str | None:
-    """
-    Get the value ID and optional state key from a unique ID.
+    """Get the value ID and optional state key from a unique ID.
 
     Raises ValueError
     """
@@ -69,7 +105,6 @@ def get_value_id_from_unique_id(unique_id: str) -> str | None:
     return None
 
 
-@callback
 def get_state_key_from_unique_id(unique_id: str) -> int | None:
     """Get the state key from a unique ID."""
     # If the unique ID has more than two parts, it's a special unique ID. If the last
@@ -82,7 +117,6 @@ def get_state_key_from_unique_id(unique_id: str) -> int | None:
     return None
 
 
-@callback
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     """Return the value of a ZwaveValue."""
     return value.value if value else None
@@ -95,7 +129,7 @@ async def async_enable_statistics(driver: Driver) -> None:
 
 
 @callback
-def update_data_collection_preference(
+def async_update_data_collection_preference(
     hass: HomeAssistant, entry: ConfigEntry, preference: bool
 ) -> None:
     """Update data collection preference on config entry."""
@@ -104,7 +138,6 @@ def update_data_collection_preference(
     hass.config_entries.async_update_entry(entry, data=new_data)
 
 
-@callback
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
     """Return the base unique ID for an entity that is not based on a value."""
     return f"{driver.controller.home_id}.{node.node_id}"
@@ -115,13 +148,11 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-@callback
 def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
     return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
-@callback
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
@@ -134,12 +165,10 @@ def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None
     )
 
 
-@callback
 def get_home_and_node_id_from_device_entry(
     device_entry: dr.DeviceEntry,
 ) -> tuple[str, int] | None:
-    """
-    Get home ID and node ID for Z-Wave device registry entry.
+    """Get home ID and node ID for Z-Wave device registry entry.
 
     Returns (home_id, node_id) or None if not found.
     """
@@ -161,8 +190,7 @@ def get_home_and_node_id_from_device_entry(
 def async_get_node_from_device_id(
     hass: HomeAssistant, device_id: str, dev_reg: dr.DeviceRegistry | None = None
 ) -> ZwaveNode:
-    """
-    Get node from a device ID.
+    """Get node from a device ID.
 
     Raises ValueError if device is invalid or node can't be found.
     """
@@ -215,8 +243,7 @@ def async_get_node_from_entity_id(
     ent_reg: er.EntityRegistry | None = None,
     dev_reg: dr.DeviceRegistry | None = None,
 ) -> ZwaveNode:
-    """
-    Get node from an entity ID.
+    """Get node from an entity ID.
 
     Raises ValueError if entity is invalid.
     """
@@ -225,7 +252,7 @@ def async_get_node_from_entity_id(
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
-        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity.")
+        raise ValueError(f"Entity {entity_id} is not a valid {DOMAIN} entity")
 
     # Assert for mypy, safe because we know that zwave_js entities are always
     # tied to a device
@@ -281,8 +308,7 @@ def async_get_nodes_from_targets(
     dev_reg: dr.DeviceRegistry | None = None,
     logger: logging.Logger = LOGGER,
 ) -> set[ZwaveNode]:
-    """
-    Get nodes for all targets.
+    """Get nodes for all targets.
 
     Supports entity_id with group expansion, area_id, and device_id.
     """
@@ -316,7 +342,7 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     property_key = None
     if config.get(ATTR_PROPERTY_KEY):
         property_key = config[ATTR_PROPERTY_KEY]
-    value_id = get_value_id(
+    value_id = get_value_id_str(
         node,
         config[ATTR_COMMAND_CLASS],
         config[ATTR_PROPERTY],
@@ -388,9 +414,7 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(
-    value: ZwaveValue,
-) -> vol.Schema | None:
+def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min
@@ -400,6 +424,9 @@ def get_value_state_schema(
             ConfigurationValueType.MANUAL_ENTRY,
         ):
             return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+        if value.configuration_value_type == ConfigurationValueType.BOOLEAN:
+            return vol.Coerce(bool)
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             return vol.In({int(k): v for k, v in value.metadata.states.items()})
@@ -412,4 +439,16 @@ def get_value_state_schema(
     return vol.All(
         vol.Coerce(int),
         vol.Range(min=value.metadata.min, max=value.metadata.max),
+    )
+
+
+def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
+    """Get DeviceInfo for node."""
+    return DeviceInfo(
+        identifiers={get_device_id(driver, node)},
+        sw_version=node.firmware_version,
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
+        suggested_area=node.location if node.location else None,
     )

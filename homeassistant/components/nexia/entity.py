@@ -9,11 +9,11 @@ from homeassistant.const import (
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -31,21 +31,20 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(
-        self, coordinator: NexiaDataUpdateCoordinator, name: str, unique_id: str
-    ) -> None:
+    def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = unique_id
-        self._attr_name = name
 
 
 class NexiaThermostatEntity(NexiaEntity):
     """Base class for nexia devices attached to a thermostat."""
 
-    def __init__(self, coordinator, thermostat, name, unique_id):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, thermostat, unique_id):
         """Initialize the entity."""
-        super().__init__(coordinator, name, unique_id)
+        super().__init__(coordinator, unique_id)
         self._thermostat: NexiaThermostat = thermostat
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
@@ -80,13 +79,18 @@ class NexiaThermostatEntity(NexiaEntity):
             self.hass, f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}"
         )
 
+    @property
+    def available(self) -> bool:
+        """Return True if thermostat is available and data is available."""
+        return super().available and self._thermostat.is_online
+
 
 class NexiaThermostatZoneEntity(NexiaThermostatEntity):
     """Base class for nexia devices attached to a thermostat."""
 
-    def __init__(self, coordinator, zone, name, unique_id):
+    def __init__(self, coordinator, zone, unique_id):
         """Initialize the entity."""
-        super().__init__(coordinator, zone.thermostat, name, unique_id)
+        super().__init__(coordinator, zone.thermostat, unique_id)
         self._zone: NexiaThermostatZone = zone
         zone_name = self._zone.get_name()
         self._attr_device_info |= {

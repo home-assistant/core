@@ -7,9 +7,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -28,18 +29,13 @@ async def async_setup_entry(
     sensors: list[Entity] = [
         VerisureThermometer(coordinator, serial_number)
         for serial_number, values in coordinator.data["climate"].items()
-        if "temperature" in values
+        if "temperatureValue" in values
     ]
 
     sensors.extend(
         VerisureHygrometer(coordinator, serial_number)
         for serial_number, values in coordinator.data["climate"].items()
-        if "humidity" in values
-    )
-
-    sensors.extend(
-        VerisureMouseDetection(coordinator, serial_number)
-        for serial_number in coordinator.data["mice"]
+        if values.get("humidityEnabled")
     )
 
     async_add_entities(sensors)
@@ -51,7 +47,8 @@ class VerisureThermometer(
     """Representation of a Verisure thermometer."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -63,18 +60,12 @@ class VerisureThermometer(
         self.serial_number = serial_number
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return f"{name} Temperature"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        device_type = self.coordinator.data["climate"][self.serial_number].get(
-            "deviceType"
-        )
-        area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
+        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
+            "gui"
+        ]["label"]
+        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
             suggested_area=area,
@@ -88,7 +79,7 @@ class VerisureThermometer(
     @property
     def native_value(self) -> str | None:
         """Return the state of the entity."""
-        return self.coordinator.data["climate"][self.serial_number]["temperature"]
+        return self.coordinator.data["climate"][self.serial_number]["temperatureValue"]
 
     @property
     def available(self) -> bool:
@@ -96,7 +87,8 @@ class VerisureThermometer(
         return (
             super().available
             and self.serial_number in self.coordinator.data["climate"]
-            and "temperature" in self.coordinator.data["climate"][self.serial_number]
+            and "temperatureValue"
+            in self.coordinator.data["climate"][self.serial_number]
         )
 
 
@@ -106,6 +98,7 @@ class VerisureHygrometer(
     """Representation of a Verisure hygrometer."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -118,18 +111,12 @@ class VerisureHygrometer(
         self.serial_number = serial_number
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
-        return f"{name} Humidity"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        device_type = self.coordinator.data["climate"][self.serial_number].get(
-            "deviceType"
-        )
-        area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
+        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
+            "gui"
+        ]["label"]
+        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
             suggested_area=area,
@@ -143,7 +130,7 @@ class VerisureHygrometer(
     @property
     def native_value(self) -> str | None:
         """Return the state of the entity."""
-        return self.coordinator.data["climate"][self.serial_number]["humidity"]
+        return self.coordinator.data["climate"][self.serial_number]["humidityValue"]
 
     @property
     def available(self) -> bool:
@@ -151,55 +138,5 @@ class VerisureHygrometer(
         return (
             super().available
             and self.serial_number in self.coordinator.data["climate"]
-            and "humidity" in self.coordinator.data["climate"][self.serial_number]
-        )
-
-
-class VerisureMouseDetection(
-    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
-):
-    """Representation of a Verisure mouse detector."""
-
-    _attr_native_unit_of_measurement = "Mice"
-
-    def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{serial_number}_mice"
-        self.serial_number = serial_number
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name = self.coordinator.data["mice"][self.serial_number]["area"]
-        return f"{name} Mouse"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["mice"][self.serial_number]["area"]
-        return DeviceInfo(
-            name=area,
-            suggested_area=area,
-            manufacturer="Verisure",
-            model="Mouse detector",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-            configuration_url="https://mypages.verisure.com",
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the entity."""
-        return self.coordinator.data["mice"][self.serial_number]["detections"]
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and self.serial_number in self.coordinator.data["mice"]
-            and "detections" in self.coordinator.data["mice"][self.serial_number]
+            and "humidityValue" in self.coordinator.data["climate"][self.serial_number]
         )

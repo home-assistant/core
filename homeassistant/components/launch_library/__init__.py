@@ -40,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update() -> LaunchLibraryData:
         try:
             return LaunchLibraryData(
-                upcoming_launches=await launches.upcoming_launches(),
+                upcoming_launches=await launches.upcoming_launches(
+                    filters={"limit": 1, "hide_recent_previous": "True"},
+                ),
                 starship_events=await launches.starship_events(),
             )
         except PyLaunchesException as ex:
@@ -58,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

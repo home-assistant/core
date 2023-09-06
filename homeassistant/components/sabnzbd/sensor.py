@@ -4,20 +4,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
-from ...config_entries import ConfigEntry
-from ...const import DATA_GIGABYTES, DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
-from ...core import HomeAssistant
-from ...helpers.device_registry import DeviceEntryType
-from ...helpers.entity import DeviceInfo
-from ...helpers.entity_platform import AddEntitiesCallback
-from .const import DEFAULT_NAME, KEY_API_DATA, KEY_NAME
+from .const import DEFAULT_NAME, KEY_API_DATA
 
 
 @dataclass
@@ -37,68 +37,77 @@ SPEED_KEY = "kbpersec"
 SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key="status",
-        name="Status",
+        translation_key="status",
     ),
     SabnzbdSensorEntityDescription(
         key=SPEED_KEY,
-        name="Speed",
-        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        translation_key="speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mb",
-        name="Queue",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        translation_key="queue",
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="mbleft",
-        name="Left",
-        native_unit_of_measurement=DATA_MEGABYTES,
+        translation_key="left",
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspacetotal1",
-        name="Disk",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="total_disk_space",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="diskspace1",
-        name="Disk Free",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="free_disk_space",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SabnzbdSensorEntityDescription(
         key="noofslots_total",
-        name="Queue Count",
+        translation_key="queue_count",
         state_class=SensorStateClass.TOTAL,
     ),
     SabnzbdSensorEntityDescription(
         key="day_size",
-        name="Daily Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="daily_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="week_size",
-        name="Weekly Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="weekly_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="month_size",
-        name="Monthly Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="monthly_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SabnzbdSensorEntityDescription(
         key="total_size",
-        name="Total",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        translation_key="overall_total",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -128,13 +137,9 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
 
     sab_api_data = hass.data[DOMAIN][entry_id][KEY_API_DATA]
-    client_name = hass.data[DOMAIN][entry_id][KEY_NAME]
 
     async_add_entities(
-        [
-            SabnzbdSensor(sab_api_data, client_name, sensor, entry_id)
-            for sensor in SENSOR_TYPES
-        ]
+        [SabnzbdSensor(sab_api_data, sensor, entry_id) for sensor in SENSOR_TYPES]
     )
 
 
@@ -143,27 +148,26 @@ class SabnzbdSensor(SensorEntity):
 
     entity_description: SabnzbdSensorEntityDescription
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         sabnzbd_api_data,
-        client_name,
         description: SabnzbdSensorEntityDescription,
         entry_id,
-    ):
+    ) -> None:
         """Initialize the sensor."""
 
         self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
         self._sabnzbd_api = sabnzbd_api_data
-        self._attr_name = f"{client_name} {description.name}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             name=DEFAULT_NAME,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(

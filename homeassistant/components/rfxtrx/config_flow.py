@@ -1,17 +1,19 @@
 """Config flow for RFXCOM RFXtrx integration."""
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 import copy
 import itertools
 import os
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import RFXtrx as rfxtrxmod
 import serial
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries, data_entry_flow, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
@@ -23,12 +25,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.event import async_track_state_change
 
 from . import (
     DOMAIN,
@@ -64,7 +67,7 @@ class DeviceData(TypedDict):
     device_id: DeviceTuple
 
 
-def none_or_int(value, base):
+def none_or_int(value: str | None, base: int) -> int | None:
     """Check if strin is one otherwise convert to int."""
     if value is None:
         return None
@@ -80,17 +83,21 @@ class OptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize rfxtrx options flow."""
         self._config_entry = config_entry
-        self._global_options = None
-        self._selected_device = None
+        self._global_options: dict[str, Any] = {}
+        self._selected_device: dict[str, Any] = {}
         self._selected_device_entry_id: str | None = None
         self._selected_device_event_code: str | None = None
         self._selected_device_object: rfxtrxmod.RFXtrxEvent | None = None
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Manage the options."""
         return await self.async_step_prompt_options()
 
-    async def async_step_prompt_options(self, user_input=None):
+    async def async_step_prompt_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Prompt for options."""
         errors = {}
 
@@ -103,7 +110,8 @@ class OptionsFlow(config_entries.OptionsFlow):
                 entry_id = user_input[CONF_DEVICE]
                 device_data = self._get_device_data(entry_id)
                 self._selected_device_entry_id = entry_id
-                event_code = device_data[CONF_EVENT_CODE]
+                event_code = device_data["event_code"]
+                assert event_code
                 self._selected_device_event_code = event_code
                 self._selected_device = self._config_entry.data[CONF_DEVICES][
                     event_code
@@ -111,7 +119,9 @@ class OptionsFlow(config_entries.OptionsFlow):
                 self._selected_device_object = get_rfx_object(event_code)
                 return await self.async_step_set_device_options()
             if CONF_EVENT_CODE in user_input:
-                self._selected_device_event_code = user_input[CONF_EVENT_CODE]
+                self._selected_device_event_code = cast(
+                    str, user_input[CONF_EVENT_CODE]
+                )
                 self._selected_device = {}
                 selected_device_object = get_rfx_object(
                     self._selected_device_event_code
@@ -159,13 +169,17 @@ class OptionsFlow(config_entries.OptionsFlow):
             step_id="prompt_options", data_schema=vol.Schema(options), errors=errors
         )
 
-    async def async_step_set_device_options(self, user_input=None):
+    async def async_step_set_device_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Manage device options."""
         errors = {}
+        assert self._selected_device_object
+        assert self._selected_device_event_code
 
         if user_input is not None:
-            assert self._selected_device_object
-            assert self._selected_device_event_code
+            devices: dict[str, dict[str, Any] | None] = {}
+            device: dict[str, Any]
             device_id = get_device_id(
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
@@ -199,7 +213,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 devices = {}
                 device = {
-                    CONF_DEVICE_ID: device_id,
+                    CONF_DEVICE_ID: list(device_id),
                 }
 
                 devices[self._selected_device_event_code] = device
@@ -278,16 +292,16 @@ class OptionsFlow(config_entries.OptionsFlow):
                     ),
                 }
             )
-        devices = {
+        replace_devices = {
             entry.id: entry.name_by_user if entry.name_by_user else entry.name
             for entry in self._device_entries
             if self._can_replace_device(entry.id)
         }
 
-        if devices:
+        if replace_devices:
             data_schema.update(
                 {
-                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices),
+                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(replace_devices),
                 }
             )
 
@@ -297,11 +311,13 @@ class OptionsFlow(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def _async_replace_device(self, replace_device):
+    async def _async_replace_device(self, replace_device: str) -> None:
         """Migrate properties of a device into another."""
         device_registry = self._device_registry
         old_device = self._selected_device_entry_id
+        assert old_device
         old_entry = device_registry.async_get(old_device)
+        assert old_entry
         device_registry.async_update_device(
             replace_device,
             area_id=old_entry.area_id,
@@ -330,8 +346,57 @@ class OptionsFlow(config_entries.OptionsFlow):
             if new_entity_id is not None:
                 entity_migration_map[new_entity_id] = entry
 
+        @callback
+        def _handle_state_removed(
+            entity_id: str, old_state: State | None, new_state: State | None
+        ) -> None:
+            # Wait for entities to finish cleanup
+            if new_state is None and entity_id in entities_to_be_removed:
+                entities_to_be_removed.remove(entity_id)
+            if not entities_to_be_removed:
+                wait_for_entities.set()
+
+        # Create a set with entities to be removed which are currently in the state
+        # machine
+        entities_to_be_removed = {
+            entry.entity_id
+            for entry in entity_migration_map.values()
+            if not self.hass.states.async_available(entry.entity_id)
+        }
+        wait_for_entities = asyncio.Event()
+        remove_track_state_changes = async_track_state_change(
+            self.hass, entities_to_be_removed, _handle_state_removed
+        )
+
         for entry in entity_migration_map.values():
             entity_registry.async_remove(entry.entity_id)
+
+        # Wait for entities to finish cleanup
+        with suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(10):
+                await wait_for_entities.wait()
+        remove_track_state_changes()
+
+        @callback
+        def _handle_state_added(
+            entity_id: str, old_state: State | None, new_state: State | None
+        ) -> None:
+            # Wait for entities to be added
+            if old_state is None and entity_id in entities_to_be_added:
+                entities_to_be_added.remove(entity_id)
+            if not entities_to_be_added:
+                wait_for_entities.set()
+
+        # Create a set with entities to be added to the state machine
+        entities_to_be_added = {
+            entry.entity_id
+            for entry in entity_migration_map.values()
+            if self.hass.states.async_available(entry.entity_id)
+        }
+        wait_for_entities = asyncio.Event()
+        remove_track_state_changes = async_track_state_change(
+            self.hass, entities_to_be_added, _handle_state_added
+        )
 
         for entity_id, entry in entity_migration_map.items():
             entity_registry.async_update_entity(
@@ -341,25 +406,37 @@ class OptionsFlow(config_entries.OptionsFlow):
                 icon=entry.icon,
             )
 
+        # Wait for entities to finish renaming
+        with suppress(asyncio.TimeoutError):
+            async with asyncio.timeout(10):
+                await wait_for_entities.wait()
+        remove_track_state_changes()
+
         device_registry.async_remove_device(old_device)
 
-    def _can_add_device(self, new_rfx_obj):
+    def _can_add_device(self, new_rfx_obj: rfxtrxmod.RFXtrxEvent) -> bool:
         """Check if device does not already exist."""
         new_device_id = get_device_id(new_rfx_obj.device)
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             rfx_obj = get_rfx_object(packet_id)
+            assert rfx_obj
+
             device_id = get_device_id(rfx_obj.device, entity_info.get(CONF_DATA_BITS))
             if new_device_id == device_id:
                 return False
 
         return True
 
-    def _can_replace_device(self, entry_id):
+    def _can_replace_device(self, entry_id: str) -> bool:
         """Check if device can be replaced with selected device."""
+        assert self._selected_device_object
+
         device_data = self._get_device_data(entry_id)
 
-        if (event_code := device_data[CONF_EVENT_CODE]) is not None:
+        if (event_code := device_data["event_code"]) is not None:
             rfx_obj = get_rfx_object(event_code)
+            assert rfx_obj
+
             if (
                 rfx_obj.device.packettype
                 == self._selected_device_object.device.packettype
@@ -371,12 +448,12 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return False
 
-    def _get_device_event_code(self, entry_id):
+    def _get_device_event_code(self, entry_id: str) -> str | None:
         data = self._get_device_data(entry_id)
 
-        return data[CONF_EVENT_CODE]
+        return data["event_code"]
 
-    def _get_device_data(self, entry_id) -> DeviceData:
+    def _get_device_data(self, entry_id: str) -> DeviceData:
         """Get event code based on device identifier."""
         event_code: str | None = None
         entry = self._device_registry.async_get(entry_id)
@@ -390,7 +467,11 @@ class OptionsFlow(config_entries.OptionsFlow):
         return DeviceData(event_code=event_code, device_id=device_id)
 
     @callback
-    def update_config_data(self, global_options=None, devices=None):
+    def update_config_data(
+        self,
+        global_options: dict[str, Any] | None = None,
+        devices: dict[str, Any] | None = None,
+    ) -> None:
         """Update data in ConfigEntry."""
         entry_data = self._config_entry.data.copy()
         entry_data[CONF_DEVICES] = copy.deepcopy(self._config_entry.data[CONF_DEVICES])
@@ -413,12 +494,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Step when user initializes a integration."""
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_TYPE] == "Serial":
                 return await self.async_step_setup_serial()
@@ -430,9 +513,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_setup_network(self, user_input=None):
+    async def async_step_setup_network(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Step when setting up network configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -455,9 +540,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_setup_serial(self, user_input=None):
+    async def async_step_setup_serial(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Step when setting up serial configuration."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE]
@@ -493,9 +580,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_setup_serial_manual_path(self, user_input=None):
+    async def async_step_setup_serial_manual_path(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Select path manually."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             device = user_input[CONF_DEVICE]
@@ -514,7 +603,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_validate_rfx(self, host=None, port=None, device=None):
+    async def async_validate_rfx(
+        self,
+        host: str | None = None,
+        port: int | None = None,
+        device: str | None = None,
+    ) -> dict[str, Any]:
         """Create data for rfxtrx entry."""
         success = await self.hass.async_add_executor_job(
             _test_transport, host, port, device
@@ -522,7 +616,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not success:
             raise CannotConnect
 
-        data = {
+        data: dict[str, Any] = {
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_DEVICE: device,
@@ -538,7 +632,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlow(config_entry)
 
 
-def _test_transport(host, port, device):
+def _test_transport(host: str | None, port: int | None, device: str | None) -> bool:
     """Construct a rfx object based on config."""
     if port is not None:
         try:

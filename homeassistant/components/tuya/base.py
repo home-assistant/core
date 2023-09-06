@@ -5,12 +5,13 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Literal, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
@@ -112,12 +113,12 @@ class ElectricityTypeData:
     voltage: str | None = None
 
     @classmethod
-    def from_json(cls, data: str) -> ElectricityTypeData:
+    def from_json(cls, data: str) -> Self:
         """Load JSON string and return a ElectricityTypeData object."""
         return cls(**json.loads(data.lower()))
 
     @classmethod
-    def from_raw(cls, data: str) -> ElectricityTypeData:
+    def from_raw(cls, data: str) -> Self:
         """Decode base64 string and return a ElectricityTypeData object."""
         raw = base64.b64decode(data)
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
@@ -131,6 +132,7 @@ class ElectricityTypeData:
 class TuyaEntity(Entity):
     """Tuya base device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
@@ -138,16 +140,6 @@ class TuyaEntity(Entity):
         self._attr_unique_id = f"tuya.{device.id}"
         self.device = device
         self.device_manager = device_manager
-
-    @property
-    def name(self) -> str | None:
-        """Return Tuya device name."""
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.name is not None
-        ):
-            return f"{self.device.name} {self.entity_description.name}"
-        return self.device.name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -198,7 +190,7 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-        dptype: DPType = None,
+        dptype: DPType | None = None,
     ) -> DPCode | EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:

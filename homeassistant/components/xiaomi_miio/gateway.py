@@ -7,7 +7,8 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -92,8 +93,10 @@ class ConnectXiaomiGateway:
                 self._gateway_device.discover_devices()
             except DeviceException as error:
                 _LOGGER.info(
-                    "DeviceException during getting subdevices of xiaomi gateway"
-                    " with host %s, trying cloud to obtain subdevices: %s",
+                    (
+                        "DeviceException during getting subdevices of xiaomi gateway"
+                        " with host %s, trying cloud to obtain subdevices: %s"
+                    ),
                     self._host,
                     error,
                 )
@@ -114,8 +117,10 @@ class ConnectXiaomiGateway:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
                 if not miio_cloud.login():
                     raise SetupException(
-                        "Failed to login to Xiaomi Miio Cloud during setup of Xiaomi"
-                        f" gateway with host {self._host}",
+                        (
+                            "Failed to login to Xiaomi Miio Cloud during setup of"
+                            f" Xiaomi gateway with host {self._host}"
+                        ),
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
@@ -125,7 +130,8 @@ class ConnectXiaomiGateway:
                 ) from error
             except DeviceException as error:
                 raise SetupException(
-                    f"DeviceException during setup of xiaomi gateway with host {self._host}"
+                    "DeviceException during setup of xiaomi gateway with host"
+                    f" {self._host}"
                 ) from error
 
 

@@ -8,12 +8,13 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass, COVER_DOMAIN, {COVER_DOMAIN: {"platform": HMIPC_DOMAIN}}
@@ -21,7 +22,9 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
+async def test_hmip_cover_shutter(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipCoverShutte."""
     entity_id = "cover.broll_1"
     entity_name = "BROLL_1"
@@ -86,7 +89,7 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_cover_slats(hass, default_mock_hap_factory):
+async def test_hmip_cover_slats(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipCoverSlats."""
     entity_id = "cover.sofa_links"
     entity_name = "Sofa links"
@@ -160,7 +163,9 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
+async def test_hmip_multi_cover_slats(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipCoverSlats."""
     entity_id = "cover.wohnzimmer_fenster"
     entity_name = "Wohnzimmer Fenster"
@@ -238,7 +243,7 @@ async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_blind_module(hass, default_mock_hap_factory):
+async def test_hmip_blind_module(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test HomematicipBlindModule."""
     entity_id = "cover.sonnenschutz_balkontur"
     entity_name = "Sonnenschutz Balkontür"
@@ -348,7 +353,9 @@ async def test_hmip_blind_module(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_garage_door_tormatic(hass, default_mock_hap_factory):
+async def test_hmip_garage_door_tormatic(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipCoverShutte."""
     entity_id = "cover.garage_door_module"
     entity_name = "Garage Door Module"
@@ -395,7 +402,9 @@ async def test_hmip_garage_door_tormatic(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == (DoorCommand.STOP,)
 
 
-async def test_hmip_garage_door_hoermann(hass, default_mock_hap_factory):
+async def test_hmip_garage_door_hoermann(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipCoverShutte."""
     entity_id = "cover.garage_door"
     entity_name = "Garage door"
@@ -442,7 +451,9 @@ async def test_hmip_garage_door_hoermann(hass, default_mock_hap_factory):
     assert hmip_device.mock_calls[-1][1] == (DoorCommand.STOP,)
 
 
-async def test_hmip_cover_shutter_group(hass, default_mock_hap_factory):
+async def test_hmip_cover_shutter_group(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipCoverShutteGroup."""
     entity_id = "cover.rollos_shuttergroup"
     entity_name = "Rollos ShutterGroup"
@@ -505,7 +516,9 @@ async def test_hmip_cover_shutter_group(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_cover_slats_group(hass, default_mock_hap_factory):
+async def test_hmip_cover_slats_group(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test slats with HomematicipCoverShutteGroup."""
     entity_id = "cover.rollos_shuttergroup"
     entity_name = "Rollos ShutterGroup"

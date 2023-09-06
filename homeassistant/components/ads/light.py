@@ -1,6 +1,8 @@
 """Support for ADS light sources."""
 from __future__ import annotations
 
+from typing import Any
+
 import pyads
 import voluptuous as vol
 
@@ -66,7 +68,7 @@ class AdsLight(AdsEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
             self._attr_supported_color_modes = {ColorMode.ONOFF}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
@@ -87,7 +89,7 @@ class AdsLight(AdsEntity, LightEntity):
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on or set a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
@@ -97,6 +99,6 @@ class AdsLight(AdsEntity, LightEntity):
                 self._ads_var_brightness, brightness, pyads.PLCTYPE_UINT
             )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

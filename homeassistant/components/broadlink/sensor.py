@@ -9,12 +9,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,63 +25,57 @@ from .entity import BroadlinkEntity
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="air_quality",
-        name="Air Quality",
+        device_class=SensorDeviceClass.AQI,
     ),
     SensorEntityDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="light",
-        name="Light",
-        device_class=SensorDeviceClass.ILLUMINANCE,
+        translation_key="light",
     ),
     SensorEntityDescription(
         key="noise",
-        name="Noise",
+        translation_key="noise",
     ),
     SensorEntityDescription(
         key="power",
-        name="Current power",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="volt",
-        name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="current",
-        name="Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="overload",
-        name="Overload",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        translation_key="overload",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="totalconsum",
-        name="Total consumption",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="total_consumption",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -113,12 +107,13 @@ async def async_setup_entry(
 class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     """Representation of a Broadlink sensor."""
 
-    def __init__(self, device, description: SensorEntityDescription):
+    _attr_has_entity_name = True
+
+    def __init__(self, device, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         super().__init__(device)
         self.entity_description = description
 
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_native_value = self._coordinator.data[description.key]
         self._attr_unique_id = f"{device.unique_id}-{description.key}"
 

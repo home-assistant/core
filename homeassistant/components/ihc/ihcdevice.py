@@ -18,6 +18,8 @@ class IHCDevice(Entity):
     Derived classes must implement the on_ihc_change method
     """
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         ihc_controller: IHCController,
@@ -55,11 +57,6 @@ class IHCDevice(Entity):
         """Add callback for IHC changes."""
         _LOGGER.debug("Adding IHC entity notify event: %s", self.ihc_id)
         self.ihc_controller.add_notify_event(self.ihc_id, self.on_ihc_change, True)
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for IHC devices."""
-        return False
 
     @property
     def name(self):

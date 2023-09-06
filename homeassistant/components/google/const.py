@@ -10,6 +10,7 @@ CONF_CALENDAR_ACCESS = "calendar_access"
 DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
+DATA_STORE = "store"
 
 
 class FeatureAccess(Enum):
@@ -37,6 +38,7 @@ EVENT_END_DATETIME = "end_date_time"
 EVENT_IN = "in"
 EVENT_IN_DAYS = "days"
 EVENT_IN_WEEKS = "weeks"
+EVENT_LOCATION = "location"
 EVENT_START_DATE = "start_date"
 EVENT_START_DATETIME = "start_date_time"
 EVENT_SUMMARY = "summary"

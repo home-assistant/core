@@ -2,14 +2,15 @@
 
 from collections.abc import Generator
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from forecast_solar import models
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -23,11 +24,21 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="Green House",
         unique_id="unique",
+        version=2,
         domain=DOMAIN,
         data={
             CONF_LATITUDE: 52.42,
@@ -38,7 +49,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DECLINATION: 30,
             CONF_AZIMUTH: 190,
             CONF_MODULES_POWER: 5100,
-            CONF_DAMPING: 0.5,
+            CONF_DAMPING_MORNING: 0.5,
+            CONF_DAMPING_EVENING: 0.5,
             CONF_INVERTER_SIZE: 2000,
         },
     )
@@ -51,7 +63,8 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
     hass fixture included because it sets the time zone.
     """
     with patch(
-        "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
+        "homeassistant.components.forecast_solar.coordinator.ForecastSolar",
+        autospec=True,
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
         now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
@@ -62,6 +75,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
         estimate.api_rate_limit = 60
         estimate.account_type.value = "public"
         estimate.energy_production_today = 100000
+        estimate.energy_production_today_remaining = 50000
         estimate.energy_production_tomorrow = 200000
         estimate.power_production_now = 300000
         estimate.power_highest_peak_time_today = datetime(
@@ -89,7 +103,7 @@ def mock_forecast_solar(hass) -> Generator[None, MagicMock, None]:
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 20,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 200,
         }
-        estimate.wh_hours = {
+        estimate.wh_period = {
             datetime(2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 30,
             datetime(2022, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE): 300,
         }

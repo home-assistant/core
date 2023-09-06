@@ -6,8 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
@@ -18,10 +18,9 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities = []
-    for channel in cntrl.get_all("binary_sensor"):
-        entities.append(VelbusBinarySensor(channel))
-    async_add_entities(entities)
+    async_add_entities(
+        VelbusBinarySensor(channel) for channel in cntrl.get_all("binary_sensor")
+    )
 
 
 class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):

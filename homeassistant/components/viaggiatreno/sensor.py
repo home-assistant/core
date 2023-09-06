@@ -7,11 +7,10 @@ import logging
 import time
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -19,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Powered by ViaggiaTreno Data"
 
 VIAGGIATRENO_ENDPOINT = (
     "http://www.viaggiatreno.it/infomobilita/"
@@ -81,7 +78,7 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = async_get_clientsession(hass)
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != HTTPStatus.OK:
             return {"error": req.status}
@@ -95,6 +92,8 @@ async def async_http_request(hass, uri):
 
 class ViaggiaTrenoSensor(SensorEntity):
     """Implementation of a ViaggiaTreno sensor."""
+
+    _attr_attribution = "Powered by ViaggiaTreno Data"
 
     def __init__(self, train_id, station_id, name):
         """Initialize the sensor."""
@@ -132,7 +131,6 @@ class ViaggiaTrenoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes
 
     @staticmethod
@@ -161,7 +159,7 @@ class ViaggiaTrenoSensor(SensorEntity):
             return True
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         uri = self.uri
         res = await async_http_request(self.hass, uri)
@@ -188,5 +186,5 @@ class ViaggiaTrenoSensor(SensorEntity):
                 self._unit = ""
             else:
                 self._state = res.get("ritardo")
-                self._unit = TIME_MINUTES
+                self._unit = UnitOfTime.MINUTES
                 self._icon = ICON

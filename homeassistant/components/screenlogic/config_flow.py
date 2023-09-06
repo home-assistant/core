@@ -129,7 +129,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(GATEWAY_SELECT_KEY): vol.In(
                         {
                             **unconfigured_gateways,
-                            GATEWAY_MANUAL_ENTRY: "Manually configure a ScreenLogic gateway",
+                            GATEWAY_MANUAL_ENTRY: (
+                                "Manually configure a ScreenLogic gateway"
+                            ),
                         }
                     )
                 }

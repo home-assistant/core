@@ -26,11 +26,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -67,17 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
-    async def setup_platforms():
-        """Set up platforms and initiate connection."""
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        await manager.init()
-
-    hass.async_create_task(setup_platforms())
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await manager.init()
 
     return True
 
@@ -97,14 +89,18 @@ class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name, identifier, manager):
         """Initialize device."""
         self.atv = None
         self.manager = manager
-        self._attr_name = name
         self._attr_unique_id = identifier
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            name=name,
+        )
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
@@ -122,6 +118,10 @@ class AppleTVEntity(Entity):
             self.async_device_disconnected()
             self.atv = None
             self.async_write_ha_state()
+
+        if self.manager.atv:
+            # ATV is already connected
+            _async_connected(self.manager.atv)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -227,7 +227,7 @@ class AppleTVManager:
                 await self._connect(conf, raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
-            asyncio.create_task(self.disconnect())
+            await self.disconnect()
             _LOGGER.exception(
                 "Authentication failed for %s, try reconfiguring device",
                 self.config_entry.data[CONF_NAME],
@@ -314,7 +314,8 @@ class AppleTVManager:
             missing_protocols_str = ", ".join(missing_protocols)
             if raise_missing_credentials:
                 raise ConfigEntryNotReady(
-                    f"Protocol(s) {missing_protocols_str} not yet found for {name}, waiting for discovery."
+                    f"Protocol(s) {missing_protocols_str} not yet found for {name},"
+                    " waiting for discovery."
                 )
             _LOGGER.info(
                 "Protocol(s) %s not yet found for %s, trying later",
@@ -348,12 +349,7 @@ class AppleTVManager:
             ATTR_MANUFACTURER: "Apple",
             ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
-
-        area = attrs[ATTR_NAME]
-        name_trailer = f" {DEFAULT_NAME}"
-        if area.endswith(name_trailer):
-            area = area[: -len(name_trailer)]
-        attrs[ATTR_SUGGESTED_AREA] = area
+        attrs[ATTR_SUGGESTED_AREA] = attrs[ATTR_NAME].removesuffix(f" {DEFAULT_NAME}")
 
         if self.atv:
             dev_info = self.atv.device_info

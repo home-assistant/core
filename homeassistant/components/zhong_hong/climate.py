@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -18,7 +20,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -124,9 +126,11 @@ class ZhongHongClimate(ClimateEntity):
         HVACMode.FAN_ONLY,
         HVACMode.OFF,
     ]
+    _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
@@ -139,7 +143,7 @@ class ZhongHongClimate(ClimateEntity):
         self._current_fan_mode = None
         self.is_initialized = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
         self.is_initialized = True
@@ -161,11 +165,6 @@ class ZhongHongClimate(ClimateEntity):
         self.schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the thermostat, if any."""
         return self.unique_id
@@ -174,11 +173,6 @@ class ZhongHongClimate(ClimateEntity):
     def unique_id(self):
         """Return the unique ID of the HVAC."""
         return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -227,15 +221,15 @@ class ZhongHongClimate(ClimateEntity):
         """Return the maximum temperature."""
         return self._device.max_temp
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on ac."""
         return self._device.turn_on()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off ac."""
         return self._device.turn_off()
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._device.set_temperature(temperature)
@@ -255,6 +249,6 @@ class ZhongHongClimate(ClimateEntity):
 
         self._device.set_operation_mode(hvac_mode.upper())
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         self._device.set_fan_mode(fan_mode)

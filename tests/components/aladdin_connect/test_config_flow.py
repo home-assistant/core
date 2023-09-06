@@ -1,17 +1,14 @@
 """Test the Aladdin Connect config flow."""
 from unittest.mock import MagicMock, patch
 
+from AIOAladdinConnect.session_manager import InvalidPasswordError
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +19,7 @@ async def test_form(hass: HomeAssistant, mock_aladdinconnect_api: MagicMock) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -40,7 +37,7 @@ async def test_form(hass: HomeAssistant, mock_aladdinconnect_api: MagicMock) -> 
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aladdin Connect"
     assert result2["data"] == {
         CONF_USERNAME: "test-username",
@@ -58,6 +55,7 @@ async def test_form_failed_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -70,7 +68,7 @@ async def test_form_failed_auth(
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -94,13 +92,13 @@ async def test_form_connection_timeout(
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_already_configured(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-):
+) -> None:
     """Test we handle already configured error."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -133,35 +131,6 @@ async def test_form_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-) -> None:
-    """Test a successful import of yaml."""
-    with patch(
-        "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ), patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: "test-user",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Aladdin Connect"
-    assert result2["data"] == {
-        CONF_USERNAME: "test-user",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_reauth_flow(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
 ) -> None:
@@ -185,7 +154,7 @@ async def test_reauth_flow(
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -201,7 +170,7 @@ async def test_reauth_flow(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_USERNAME: "test-username",
@@ -232,9 +201,10 @@ async def test_reauth_flow_auth_error(
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     mock_aladdinconnect_api.login.return_value = False
+    mock_aladdinconnect_api.login.side_effect = InvalidPasswordError
     with patch(
         "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -251,7 +221,7 @@ async def test_reauth_flow_auth_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -278,7 +248,7 @@ async def test_reauth_flow_connnection_error(
     )
 
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
     mock_aladdinconnect_api.login.side_effect = ClientConnectionError
 
@@ -292,5 +262,5 @@ async def test_reauth_flow_connnection_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

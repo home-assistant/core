@@ -7,12 +7,10 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
-from homeassistant.components.camera.const import DOMAIN
+from homeassistant.components.camera import DOMAIN, PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -75,7 +73,7 @@ async def async_setup_platform(
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook POST with image files."""
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             data = dict(await request.post())
     except (asyncio.TimeoutError, aiohttp.web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
@@ -109,7 +107,7 @@ class PushCamera(Camera):
         self.webhook_id = webhook_id
         self.webhook_url = webhook.async_generate_url(hass, webhook_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
 

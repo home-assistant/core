@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_load_unload_config_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: AsyncMock
 ) -> None:

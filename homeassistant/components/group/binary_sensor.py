@@ -1,5 +1,7 @@
-"""This platform allows several binary sensor to be grouped into one binary sensor."""
+"""Platform allowing several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -7,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -20,10 +23,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
@@ -85,6 +87,20 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_binary_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> BinarySensorGroup:
+    """Create a preview sensor."""
+    return BinarySensorGroup(
+        None,
+        name,
+        None,
+        validated_config[CONF_ENTITIES],
+        validated_config[CONF_ALL],
+    )
+
+
 class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     """Representation of a BinarySensorGroup."""
 
@@ -94,9 +110,9 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self,
         unique_id: str | None,
         name: str,
-        device_class: str | None,
+        device_class: BinarySensorDeviceClass | None,
         entity_ids: list[str],
-        mode: str | None,
+        mode: bool | None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
@@ -108,23 +124,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self.mode = any
         if mode:
             self.mode = all
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(event: Event) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:
@@ -149,6 +148,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
             self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class

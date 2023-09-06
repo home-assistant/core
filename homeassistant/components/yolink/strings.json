@@ -21,5 +21,68 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "button_1_short_press": "Button_1 (short press)",
+      "button_1_long_press": "Button_1 (long press)",
+      "button_2_short_press": "Button_2 (short press)",
+      "button_2_long_press": "Button_2 (long press)",
+      "button_3_short_press": "Button_3 (short press)",
+      "button_3_long_press": "Button_3 (long press)",
+      "button_4_short_press": "Button_4 (short press)",
+      "button_4_long_press": "Button_4 (long press)"
+    }
+  },
+  "entity": {
+    "switch": {
+      "usb_ports": {
+        "name": "USB ports"
+      },
+      "plug_1": {
+        "name": "Plug 1"
+      },
+      "plug_2": {
+        "name": "Plug 2"
+      },
+      "plug_3": {
+        "name": "Plug 3"
+      },
+      "plug_4": {
+        "name": "Plug 4"
+      }
+    },
+    "sensor": {
+      "power_failure_alarm": {
+        "name": "Power failure alarm",
+        "state": {
+          "normal": "Normal",
+          "alert": "Alert",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "power_failure_alarm_mute": {
+        "name": "Power failure alarm mute",
+        "state": {
+          "muted": "Muted",
+          "unmuted": "Unmuted"
+        }
+      },
+      "power_failure_alarm_volume": {
+        "name": "Power failure alarm volume",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "power_failure_alarm_beep": {
+        "name": "Power failure alarm beep",
+        "state": {
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]"
+        }
+      }
+    }
   }
 }

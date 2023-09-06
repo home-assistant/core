@@ -20,10 +20,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import TotalConnectDataUpdateCoordinator
 from .const import DOMAIN
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
@@ -36,7 +37,7 @@ async def async_setup_entry(
     """Set up TotalConnect alarm panels based on a config entry."""
     alarms = []
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for location_id, location in coordinator.client.locations.items():
         location_name = location.location_name
@@ -50,7 +51,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(alarms, True)
+    async_add_entities(alarms)
 
     # Set up services
     platform = entity_platform.async_get_current_platform()
@@ -68,7 +69,9 @@ async def async_setup_entry(
     )
 
 
-class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
+class TotalConnectAlarm(
+    CoordinatorEntity[TotalConnectDataUpdateCoordinator], alarm.AlarmControlPanelEntity
+):
     """Represent an TotalConnect status."""
 
     _attr_supported_features = (
@@ -77,7 +80,13 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
-    def __init__(self, coordinator, name, location_id, partition_id):
+    def __init__(
+        self,
+        coordinator: TotalConnectDataUpdateCoordinator,
+        name,
+        location_id,
+        partition_id,
+    ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator)
         self._location_id = location_id
@@ -85,7 +94,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         self._partition_id = partition_id
         self._partition = self._location.partitions[partition_id]
         self._device = self._location.devices[self._location.security_device_id]
-        self._state = None
+        self._state: str | None = None
         self._attr_extra_state_attributes = {}
 
         """
@@ -122,7 +131,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             "triggered_zone": None,
         }
 
-        state = None
+        state: str | None = None
         if self._partition.arming_state.is_disarmed():
             state = STATE_ALARM_DISARMED
         elif self._partition.arming_state.is_armed_night():

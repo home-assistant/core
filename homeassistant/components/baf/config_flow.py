@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 import logging
 from typing import Any
 
@@ -26,7 +27,8 @@ async def async_try_connect(ip_address: str) -> Device:
     device = Device(Service(ip_addresses=[ip_address], port=PORT))
     run_future = device.async_run()
     try:
-        await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
+        async with timeout(RUN_TIMEOUT):
+            await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         raise CannotConnect from ex
     finally:

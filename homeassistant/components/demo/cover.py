@@ -1,6 +1,7 @@
 """Demo platform for the cover component."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -11,22 +12,20 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo covers."""
+    """Set up the demo cover platform."""
     async_add_entities(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
@@ -55,74 +54,55 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoCover(CoverEntity):
     """Representation of a demo cover."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
+
     def __init__(
         self,
-        hass,
-        unique_id,
-        name,
-        position=None,
-        tilt_position=None,
-        device_class=None,
-        supported_features=None,
-    ):
+        hass: HomeAssistant,
+        unique_id: str,
+        device_name: str,
+        position: int | None = None,
+        tilt_position: int | None = None,
+        device_class: CoverDeviceClass | None = None,
+        supported_features: CoverEntityFeature | None = None,
+    ) -> None:
         """Initialize the cover."""
         self.hass = hass
         self._unique_id = unique_id
-        self._name = name
         self._position = position
-        self._device_class = device_class
-        self._supported_features = supported_features
-        self._set_position = None
-        self._set_tilt_position = None
+        self._attr_device_class = device_class
+        self._attr_supported_features = supported_features
+        self._set_position: int | None = None
+        self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
         self._requested_closing = True
         self._requested_closing_tilt = True
-        self._unsub_listener_cover = None
-        self._unsub_listener_cover_tilt = None
+        self._unsub_listener_cover: CALLBACK_TYPE | None = None
+        self._unsub_listener_cover_tilt: CALLBACK_TYPE | None = None
         self._is_opening = False
         self._is_closing = False
         if position is None:
             self._closed = True
         else:
-            self._closed = self.current_cover_position <= 0
+            self._closed = position <= 0
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            name=self.name,
+            name=device_name,
         )
 
     @property
     def unique_id(self) -> str:
         """Return unique ID for cover."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo cover."""
-        return False
 
     @property
     def current_cover_position(self) -> int | None:
@@ -148,18 +128,6 @@ class DemoCover(CoverEntity):
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._supported_features is not None:
-            return self._supported_features
-        return super().supported_features
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -213,7 +181,9 @@ class DemoCover(CoverEntity):
             return
 
         self._listen_cover()
-        self._requested_closing = position < self._position
+        self._requested_closing = (
+            self._position is not None and position < self._position
+        )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
@@ -223,7 +193,9 @@ class DemoCover(CoverEntity):
             return
 
         self._listen_cover_tilt()
-        self._requested_closing_tilt = tilt_position < self._tilt_position
+        self._requested_closing_tilt = (
+            self._tilt_position is not None and tilt_position < self._tilt_position
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -247,15 +219,17 @@ class DemoCover(CoverEntity):
             self._set_tilt_position = None
 
     @callback
-    def _listen_cover(self):
+    def _listen_cover(self) -> None:
         """Listen for changes in cover."""
         if self._unsub_listener_cover is None:
             self._unsub_listener_cover = async_track_utc_time_change(
                 self.hass, self._time_changed_cover
             )
 
-    async def _time_changed_cover(self, now):
+    async def _time_changed_cover(self, now: datetime) -> None:
         """Track time changes."""
+        if self._position is None:
+            return
         if self._requested_closing:
             self._position -= 10
         else:
@@ -264,19 +238,23 @@ class DemoCover(CoverEntity):
         if self._position in (100, 0, self._set_position):
             await self.async_stop_cover()
 
-        self._closed = self.current_cover_position <= 0
+        self._closed = (
+            self.current_cover_position is not None and self.current_cover_position <= 0
+        )
         self.async_write_ha_state()
 
     @callback
-    def _listen_cover_tilt(self):
+    def _listen_cover_tilt(self) -> None:
         """Listen for changes in cover tilt."""
         if self._unsub_listener_cover_tilt is None:
             self._unsub_listener_cover_tilt = async_track_utc_time_change(
                 self.hass, self._time_changed_cover_tilt
             )
 
-    async def _time_changed_cover_tilt(self, now):
+    async def _time_changed_cover_tilt(self, now: datetime) -> None:
         """Track time changes."""
+        if self._tilt_position is None:
+            return
         if self._requested_closing_tilt:
             self._tilt_position -= 10
         else:

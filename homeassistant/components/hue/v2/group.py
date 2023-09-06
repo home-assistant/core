@@ -21,8 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
@@ -120,7 +119,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         scenes = {
             x.metadata.name for x in self.api.scenes if x.group.rid == self.group.id
         }
-        lights = {x.metadata.name for x in self.controller.get_lights(self.resource.id)}
+        lights = {
+            self.controller.get_device(x.id).metadata.name
+            for x in self.controller.get_lights(self.resource.id)
+        }
         return {
             "is_hue_group": True,
             "hue_scenes": scenes,
@@ -174,7 +176,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash can not be sent with other commands at the same time
+            # flash cannot be sent with other commands at the same time
             return
 
         await self.bridge.async_request_call(

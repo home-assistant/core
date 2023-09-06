@@ -1,22 +1,46 @@
 """Test the Z-Wave JS cover platform."""
+import logging
+
+from zwave_js_server.const import (
+    CURRENT_STATE_PROPERTY,
+    CURRENT_VALUE_PROPERTY,
+    CommandClass,
+)
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
+from homeassistant.components.zwave_js.const import LOGGER
+from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+
+from .common import replace_value_of_zwave_value
 
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
@@ -24,9 +48,12 @@ BLIND_COVER_ENTITY = "cover.window_blind_controller"
 SHUTTER_COVER_ENTITY = "cover.flush_shutter"
 AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
 FIBARO_SHUTTER_COVER_ENTITY = "cover.fgr_222_test_cover"
+LOGGER.setLevel(logging.DEBUG)
 
 
-async def test_window_cover(hass, client, chain_actuator_zws12, integration):
+async def test_window_cover(
+    hass: HomeAssistant, client, chain_actuator_zws12, integration
+) -> None:
     """Test the cover entity."""
     node = chain_actuator_zws12
     state = hass.states.get(WINDOW_COVER_ENTITY)
@@ -34,14 +61,14 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == "closed"
+    assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test setting position
     await hass.services.async_call(
-        "cover",
-        "set_cover_position",
-        {"entity_id": WINDOW_COVER_ENTITY, "position": 50},
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 50},
         blocking=True,
     )
 
@@ -50,20 +77,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 50
 
@@ -71,9 +87,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
 
     # Test setting position
     await hass.services.async_call(
-        "cover",
-        "set_cover_position",
-        {"entity_id": WINDOW_COVER_ENTITY, "position": 0},
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 0},
         blocking=True,
     )
 
@@ -82,20 +98,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -103,9 +108,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
 
     # Test opening
     await hass.services.async_call(
-        "cover",
-        "open_cover",
-        {"entity_id": WINDOW_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
@@ -114,70 +119,32 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"]
 
     client.async_send_command.reset_mock()
+
     # Test stop after opening
     await hass.services.async_call(
-        "cover",
-        "stop_cover",
-        {"entity_id": WINDOW_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Open",
-        "propertyName": "Open",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Open)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 6
-    assert close_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Close",
-        "propertyName": "Close",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Close)",
-            "ccSpecific": {"switchType": 3},
-        },
-    }
-    assert not close_args["value"]
 
     # Test position update from value updated event
     event = Event(
@@ -201,13 +168,13 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     client.async_send_command.reset_mock()
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == "open"
+    assert state.state == STATE_OPEN
 
     # Test closing
     await hass.services.async_call(
-        "cover",
-        "close_cover",
-        {"entity_id": WINDOW_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -215,20 +182,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -236,50 +192,22 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
 
     # Test stop after closing
     await hass.services.async_call(
-        "cover",
-        "stop_cover",
-        {"entity_id": WINDOW_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Open",
-        "propertyName": "Open",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Open)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 6
-    assert close_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Close",
-        "propertyName": "Close",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Close)",
-            "ccSpecific": {"switchType": 3},
-        },
-    }
-    assert not close_args["value"]
 
     client.async_send_command.reset_mock()
 
@@ -303,25 +231,25 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     node.receive_event(event)
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == "closed"
+    assert state.state == STATE_CLOSED
 
 
-async def test_fibaro_FGR222_shutter_cover(
-    hass, client, fibaro_fgr222_shutter, integration
-):
+async def test_fibaro_fgr222_shutter_cover(
+    hass: HomeAssistant, client, fibaro_fgr222_shutter, integration
+) -> None:
     """Test tilt function of the Fibaro Shutter devices."""
     state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
-    assert state.state == "open"
+    assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Test opening tilts
     await hass.services.async_call(
-        "cover",
-        "open_cover_tilt",
-        {"entity_id": FIBARO_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: FIBARO_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -332,30 +260,18 @@ async def test_fibaro_FGR222_shutter_cover(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 145,
-        "commandClassName": "Manufacturer Proprietary",
         "property": "fibaro",
         "propertyKey": "venetianBlindsTilt",
-        "propertyName": "fibaro",
-        "propertyKeyName": "venetianBlindsTilt",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Venetian blinds tilt",
-            "min": 0,
-            "max": 99,
-        },
-        "value": 0,
     }
     assert args["value"] == 99
 
     client.async_send_command.reset_mock()
+
     # Test closing tilts
     await hass.services.async_call(
-        "cover",
-        "close_cover_tilt",
-        {"entity_id": FIBARO_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: FIBARO_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -366,28 +282,62 @@ async def test_fibaro_FGR222_shutter_cover(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 145,
-        "commandClassName": "Manufacturer Proprietary",
         "property": "fibaro",
         "propertyKey": "venetianBlindsTilt",
-        "propertyName": "fibaro",
-        "propertyKeyName": "venetianBlindsTilt",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Venetian blinds tilt",
-            "min": 0,
-            "max": 99,
-        },
-        "value": 0,
     }
     assert args["value"] == 0
 
+    client.async_send_command.reset_mock()
+
+    # Test setting tilt position
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: FIBARO_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 42
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 145,
+        "property": "fibaro",
+        "propertyKey": "venetianBlindsTilt",
+    }
+    assert args["value"] == 12
+
+    # Test some tilt
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 42,
+            "args": {
+                "commandClassName": "Manufacturer Proprietary",
+                "commandClass": 145,
+                "endpoint": 0,
+                "property": "fibaro",
+                "propertyKey": "venetianBlindsTilt",
+                "newValue": 99,
+                "prevValue": 0,
+                "propertyName": "fibaro",
+                "propertyKeyName": "venetianBlindsTilt",
+            },
+        },
+    )
+    fibaro_fgr222_shutter.receive_event(event)
+    state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
 
 async def test_aeotec_nano_shutter_cover(
-    hass, client, aeotec_nano_shutter, integration
-):
+    hass: HomeAssistant, client, aeotec_nano_shutter, integration
+) -> None:
     """Test movement of an Aeotec Nano Shutter cover entity. Useful to make sure the stop command logic is handled properly."""
     node = aeotec_nano_shutter
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
@@ -395,14 +345,14 @@ async def test_aeotec_nano_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == "closed"
+    assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test opening
     await hass.services.async_call(
-        "cover",
-        "open_cover",
-        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
@@ -411,77 +361,32 @@ async def test_aeotec_nano_shutter_cover(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 3
     assert args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "value": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "valueChangeOptions": ["transitionDuration"],
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"]
 
     client.async_send_command.reset_mock()
+
     # Test stop after opening
     await hass.services.async_call(
-        "cover",
-        "stop_cover",
-        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
     assert open_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "On",
-        "propertyName": "On",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (On)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not open_args["value"]
-
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 3
-    assert close_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Off",
-        "propertyName": "Off",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Off)",
-            "ccSpecific": {"switchType": 1},
-        },
-    }
-    assert not close_args["value"]
 
     # Test position update from value updated event
     event = Event(
@@ -506,13 +411,13 @@ async def test_aeotec_nano_shutter_cover(
     client.async_send_command.reset_mock()
 
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
-    assert state.state == "open"
+    assert state.state == STATE_OPEN
 
     # Test closing
     await hass.services.async_call(
-        "cover",
-        "close_cover",
-        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -520,23 +425,9 @@ async def test_aeotec_nano_shutter_cover(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 3
     assert args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "value": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -544,57 +435,27 @@ async def test_aeotec_nano_shutter_cover(
 
     # Test stop after closing
     await hass.services.async_call(
-        "cover",
-        "stop_cover",
-        {"entity_id": AEOTEC_SHUTTER_COVER_ENTITY},
+        DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
     assert open_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "On",
-        "propertyName": "On",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (On)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not open_args["value"]
 
-    close_args = client.async_send_command.call_args_list[1][0][0]
-    assert close_args["command"] == "node.set_value"
-    assert close_args["nodeId"] == 3
-    assert close_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
-        "commandClass": 38,
-        "endpoint": 0,
-        "property": "Off",
-        "propertyName": "Off",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Off)",
-            "ccSpecific": {"switchType": 1},
-        },
-    }
-    assert not close_args["value"]
 
-
-async def test_blind_cover(hass, client, iblinds_v2, integration):
+async def test_blind_cover(
+    hass: HomeAssistant, client, iblinds_v2, integration
+) -> None:
     """Test a blind cover entity."""
     state = hass.states.get(BLIND_COVER_ENTITY)
 
@@ -602,7 +463,9 @@ async def test_blind_cover(hass, client, iblinds_v2, integration):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.BLIND
 
 
-async def test_shutter_cover(hass, client, qubino_shutter, integration):
+async def test_shutter_cover(
+    hass: HomeAssistant, client, qubino_shutter, integration
+) -> None:
     """Test a shutter cover entity."""
     state = hass.states.get(SHUTTER_COVER_ENTITY)
 
@@ -610,7 +473,9 @@ async def test_shutter_cover(hass, client, qubino_shutter, integration):
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
 
-async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
+async def test_motor_barrier_cover(
+    hass: HomeAssistant, client, gdc_zw062, integration
+) -> None:
     """Test the cover entity."""
     node = gdc_zw062
 
@@ -622,7 +487,7 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
     # Test open
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {"entity_id": GDC_COVER_ENTITY}, blocking=True
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: GDC_COVER_ENTITY}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -631,21 +496,9 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     assert args["nodeId"] == 12
     assert args["value"] == 255
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Target Barrier State",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Closed", "255": "Open"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "targetState",
-        "propertyName": "targetState",
     }
 
     # state doesn't change until currentState value update is received
@@ -656,7 +509,7 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
     # Test close
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": GDC_COVER_ENTITY}, blocking=True
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: GDC_COVER_ENTITY}, blocking=True
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -665,21 +518,9 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     assert args["nodeId"] == 12
     assert args["value"] == 0
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Target Barrier State",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Closed", "255": "Open"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "targetState",
-        "propertyName": "targetState",
     }
 
     # state doesn't change until currentState value update is received
@@ -802,3 +643,223 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
     state = hass.states.get(GDC_COVER_ENTITY)
     assert state.state == STATE_UNKNOWN
+
+
+async def test_motor_barrier_cover_no_primary_value(
+    hass: HomeAssistant, client, gdc_zw062_state, integration
+) -> None:
+    """Test the cover entity where primary value value is None."""
+    node_state = replace_value_of_zwave_value(
+        gdc_zw062_state,
+        [
+            ZwaveValueMatcher(
+                property_=CURRENT_STATE_PROPERTY,
+                command_class=CommandClass.BARRIER_OPERATOR,
+            )
+        ],
+        None,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(GDC_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GARAGE
+
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_CURRENT_POSITION not in state.attributes
+
+
+async def test_fibaro_fgr222_shutter_cover_no_tilt(
+    hass: HomeAssistant, client, fibaro_fgr222_shutter_state, integration
+) -> None:
+    """Test tilt function of the Fibaro Shutter devices with tilt value is None."""
+    node_state = replace_value_of_zwave_value(
+        fibaro_fgr222_shutter_state,
+        [
+            ZwaveValueMatcher(
+                property_="fibaro",
+                command_class=CommandClass.MANUFACTURER_PROPRIETARY,
+                property_key="venetianBlindsTilt",
+            ),
+            ZwaveValueMatcher(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+            ),
+        ],
+        None,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FIBARO_SHUTTER_COVER_ENTITY)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+
+async def test_iblinds_v3_cover(
+    hass: HomeAssistant, client, iblinds_v3, integration
+) -> None:
+    """Test iBlinds v3 cover which uses Window Covering CC."""
+    entity_id = "cover.window_blind_controller_horizontal_slats_angle"
+    state = hass.states.get(entity_id)
+    assert state
+    # This device has no state because there is no position value
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+        | CoverEntityFeature.STOP_TILT
+    )
+    assert ATTR_CURRENT_POSITION not in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION in state.attributes
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 12
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 106,
+        "property": "targetValue",
+        "propertyKey": 23,
+    }
+    assert args["value"] == 0
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 12
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 106,
+        "property": "targetValue",
+        "propertyKey": 23,
+    }
+    assert args["value"] == 50
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 12},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 12
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 106,
+        "property": "targetValue",
+        "propertyKey": 23,
+    }
+    assert args["value"] == 12
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 12
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 106,
+        "property": "open",
+        "propertyKey": 23,
+    }
+    assert args["value"] is False
+
+    client.async_send_command.reset_mock()
+
+
+async def test_nice_ibt4zwave_cover(
+    hass: HomeAssistant, client, nice_ibt4zwave, integration
+) -> None:
+    """Test Nice IBT4ZWAVE cover."""
+    entity_id = "cover.portail"
+    state = hass.states.get(entity_id)
+    assert state
+    # This device has no state because there is no position value
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        CoverEntityFeature.CLOSE
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+    )
+    assert ATTR_CURRENT_POSITION in state.attributes
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 72
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 38,
+        "property": "targetValue",
+    }
+    assert args["value"] == 0
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 72
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 38,
+        "property": "targetValue",
+    }
+    assert args["value"] == 99
+
+    client.async_send_command.reset_mock()

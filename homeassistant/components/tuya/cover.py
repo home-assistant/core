@@ -44,7 +44,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "cl": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
-            name="Curtain",
+            translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
             current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
@@ -52,21 +52,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            name="Curtain 2",
+            translation_key="curtain_2",
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
-            name="Curtain 3",
+            translation_key="curtain_3",
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.MACH_OPERATE,
-            name="Curtain",
+            translation_key="curtain",
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
@@ -78,7 +78,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         # It is used by the Kogan Smart Blinds Driver
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
-            name="Blind",
+            translation_key="blind",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
@@ -89,21 +89,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "ckmkzq": (
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
-            name="Door",
+            translation_key="door",
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
-            name="Door 2",
+            translation_key="door_2",
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
-            name="Door 3",
+            translation_key="door_3",
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
@@ -114,14 +114,14 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "clkg": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
-            name="Curtain",
+            translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            name="Curtain 2",
+            translation_key="curtain_2",
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
@@ -132,6 +132,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
     "jdcljqr": (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
+            translation_key="curtain",
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
@@ -191,7 +192,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = 0
+        self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
         if self.find_dpcode(description.key, prefer_function=True):

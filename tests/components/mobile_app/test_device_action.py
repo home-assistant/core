@@ -1,12 +1,13 @@
 """The tests for Mobile App device actions."""
 from homeassistant.components import automation, device_automation
 from homeassistant.components.mobile_app import DATA_DEVICES, DOMAIN, util
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, patch
 
 
-async def test_get_actions(hass, push_registration):
+async def test_get_actions(hass: HomeAssistant, push_registration) -> None:
     """Test we get the expected actions from a mobile_app."""
     webhook_id = push_registration["webhook_id"]
     device_id = hass.data[DOMAIN][DATA_DEVICES][webhook_id].id
@@ -23,7 +24,7 @@ async def test_get_actions(hass, push_registration):
     assert "extra_fields" in capabilitites
 
 
-async def test_action(hass, push_registration):
+async def test_action(hass: HomeAssistant, push_registration) -> None:
     """Test for turn_on and turn_off actions."""
     webhook_id = push_registration["webhook_id"]
 

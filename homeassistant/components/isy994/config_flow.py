@@ -1,13 +1,13 @@
-"""Config flow for Universal Devices ISY994 integration."""
+"""Config flow for Universal Devices ISY/IoX integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
-import async_timeout
 from pyisy import ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.configuration import Configuration
 from pyisy.connection import Connection
@@ -34,6 +34,8 @@ from .const import (
     DOMAIN,
     HTTP_PORT,
     HTTPS_PORT,
+    ISY_CONF_NAME,
+    ISY_CONF_UUID,
     ISY_URL_POSTFIX,
     SCHEME_HTTP,
     SCHEME_HTTPS,
@@ -79,7 +81,7 @@ async def validate_input(
         port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        _LOGGER.error("The ISY/IoX host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.
@@ -95,7 +97,7 @@ async def validate_input(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(30):
             isy_conf_xml = await isy_conn.test_connection()
     except ISYInvalidAuthError as error:
         raise InvalidAuth from error
@@ -106,20 +108,23 @@ async def validate_input(
         isy_conf = Configuration(xml=isy_conf_xml)
     except ISYResponseParseError as error:
         raise CannotConnect from error
-    if not isy_conf or "name" not in isy_conf or not isy_conf["name"]:
+    if not isy_conf or ISY_CONF_NAME not in isy_conf or not isy_conf[ISY_CONF_NAME]:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{isy_conf['name']} ({host.hostname})", "uuid": isy_conf["uuid"]}
+    return {
+        "title": f"{isy_conf[ISY_CONF_NAME]} ({host.hostname})",
+        ISY_CONF_UUID: isy_conf[ISY_CONF_UUID],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Universal Devices ISY994."""
+    """Handle a config flow for Universal Devices ISY/IoX."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the isy994 config flow."""
+        """Initialize the ISY/IoX config flow."""
         self.discovered_conf: dict[str, str] = {}
         self._existing_entry: config_entries.ConfigEntry | None = None
 
@@ -151,7 +156,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info[ISY_CONF_UUID], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -160,10 +167,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=_data_schema(self.discovered_conf),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
     async def _async_set_unique_id_or_update(
         self, isy_mac: str, ip_address: str, port: int | None
@@ -200,9 +203,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raise AbortFlow("already_configured")
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
-        """Handle a discovered isy994 via dhcp."""
+        """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy"):
+        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"
@@ -221,16 +224,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
-        """Handle a discovered isy994."""
+        """Handle a discovered ISY/IoX Device."""
         friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
         parsed_url = urlparse(url)
         mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        if mac.startswith(UDN_UUID_PREFIX):
-            mac = mac[len(UDN_UUID_PREFIX) :]
-        if url.endswith(ISY_URL_POSTFIX):
-            url = url[: -len(ISY_URL_POSTFIX)]
+        mac = mac.removeprefix(UDN_UUID_PREFIX)
+        url = url.removesuffix(ISY_URL_POSTFIX)
 
         port = HTTP_PORT
         if parsed_url.port:
@@ -300,7 +301,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for isy994."""
+    """Handle a option flow for ISY/IoX."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""

@@ -8,7 +8,7 @@ from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,8 +16,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by the Swiss Federal Office for the Environment FOEN"
 
 ATTR_MAX_24H = "max-24h"
 ATTR_MEAN_24H = "mean-24h"
@@ -85,6 +83,10 @@ def setup_platform(
 class SwissHydrologicalDataSensor(SensorEntity):
     """Implementation of a Swiss hydrological sensor."""
 
+    _attr_attribution = (
+        "Data provided by the Swiss Federal Office for the Environment FOEN"
+    )
+
     def __init__(self, hydro_data, station, condition):
         """Initialize the Swiss hydrological sensor."""
         self.hydro_data = hydro_data
@@ -123,7 +125,6 @@ class SwissHydrologicalDataSensor(SensorEntity):
         attrs = {}
 
         if not self._data:
-            attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attrs
 
         attrs[ATTR_WATER_BODY_TYPE] = self._data["water-body-type"]
@@ -131,7 +132,6 @@ class SwissHydrologicalDataSensor(SensorEntity):
         attrs[ATTR_STATION_UPDATE] = self._data["parameters"][self._condition][
             "datetime"
         ]
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         for entry in CONDITION_DETAILS:
             attrs[entry.replace("-", "_")] = self._data["parameters"][self._condition][
@@ -145,7 +145,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
         """Icon to use in the frontend."""
         return self._icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.hydro_data.update()
         self._data = self.hydro_data.data

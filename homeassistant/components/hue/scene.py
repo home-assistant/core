@@ -5,19 +5,19 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.scenes import (
-    Scene as HueScene,
-    ScenePut as HueScenePut,
-    ScenesController,
-)
+from aiohue.v2.controllers.scenes import ScenesController
+from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
+from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .bridge import HueBridge
 from .const import DOMAIN
@@ -33,7 +33,7 @@ ATTR_BRIGHTNESS = "brightness"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
     bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
@@ -45,9 +45,14 @@ async def async_setup_entry(
 
     # add entities for all scenes
     @callback
-    def async_add_entity(event_type: EventType, resource: HueScene) -> None:
+    def async_add_entity(
+        event_type: EventType, resource: HueScene | HueSmartScene
+    ) -> None:
         """Add entity from Hue resource."""
-        async_add_entities([HueSceneEntity(bridge, api.scenes, resource)])
+        if isinstance(resource, HueSmartScene):
+            async_add_entities([HueSmartSceneEntity(bridge, api.scenes, resource)])
+        else:
+            async_add_entities([HueSceneEntity(bridge, api.scenes, resource)])
 
     # add all current items in controller
     for item in api.scenes:
@@ -59,7 +64,7 @@ async def async_setup_entry(
     )
 
     # add platform service to turn_on/activate scene with advanced options
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ACTIVATE_SCENE,
         {
@@ -68,24 +73,24 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=600)
+                vol.Coerce(float), vol.Range(min=0, max=3600)
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=255)
+                vol.Coerce(int), vol.Range(min=1, max=255)
             ),
         },
         "_async_activate",
     )
 
 
-class HueSceneEntity(HueBaseEntity, SceneEntity):
-    """Representation of a Scene entity from Hue Scenes."""
+class HueSceneEntityBase(HueBaseEntity, SceneEntity):
+    """Base Representation of a Scene entity from Hue Scenes."""
 
     def __init__(
         self,
         bridge: HueBridge,
         controller: ScenesController,
-        resource: HueScene,
+        resource: HueScene | HueSmartScene,
     ) -> None:
         """Initialize the entity."""
         super().__init__(bridge, controller, resource)
@@ -111,6 +116,26 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         return f"{self.group.metadata.name} {self.resource.metadata.name}"
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return device (service) info."""
+        # we create a virtual service/device for Hue scenes
+        # so we have a parent for grouped lights and scenes
+        group_type = self.group.type.value.title()
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name=self.group.metadata.name,
+            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
+            model=self.group.type.value.title(),
+            suggested_area=self.group.metadata.name if group_type == "Room" else None,
+            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
+        )
+
+
+class HueSceneEntity(HueSceneEntityBase):
+    """Representation of a Scene entity from Hue Scenes."""
+
+    @property
     def is_dynamic(self) -> bool:
         """Return if this scene has a dynamic color palette."""
         if self.resource.palette.color and len(self.resource.palette.color) > 1:
@@ -134,13 +159,13 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
 
         if speed is not None:
             await self.bridge.async_request_call(
-                self.controller.update,
+                self.controller.scene.update,
                 self.resource.id,
                 HueScenePut(speed=speed / 100),
             )
 
         await self.bridge.async_request_call(
-            self.controller.recall,
+            self.controller.scene.recall,
             self.resource.id,
             dynamic=dynamic,
             duration=transition,
@@ -169,17 +194,45 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
             "is_dynamic": self.is_dynamic,
         }
 
+
+class HueSmartSceneEntity(HueSceneEntityBase):
+    """Representation of a Smart Scene entity from Hue Scenes."""
+
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device (service) info."""
-        # we create a virtual service/device for Hue scenes
-        # so we have a parent for grouped lights and scenes
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
-            entry_type=DeviceEntryType.SERVICE,
-            name=self.group.metadata.name,
-            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
-            model=self.group.type.value.title(),
-            suggested_area=self.group.metadata.name,
-            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
+    def is_active(self) -> bool:
+        """Return if this smart scene is currently active."""
+        return self.resource.state == SmartSceneState.ACTIVE
+
+    async def async_activate(self, **kwargs: Any) -> None:
+        """Activate Hue Smart scene."""
+
+        await self.bridge.async_request_call(
+            self.controller.smart_scene.recall,
+            self.resource.id,
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the optional state attributes."""
+        res = {
+            "group_name": self.group.metadata.name,
+            "group_type": self.group.type.value,
+            "name": self.resource.metadata.name,
+            "is_active": self.is_active,
+        }
+        if self.is_active and self.resource.active_timeslot:
+            res["active_timeslot_id"] = self.resource.active_timeslot.timeslot_id
+            res["active_timeslot_name"] = self.resource.active_timeslot.weekday.value
+            # lookup active scene in timeslot
+            active_scene = None
+            count = 0
+            for day_timeslot in self.resource.week_timeslots:
+                for timeslot in day_timeslot.timeslots:
+                    if count != self.resource.active_timeslot.timeslot_id:
+                        count += 1
+                        continue
+                    active_scene = self.controller.get(timeslot.target.rid)
+                    break
+            if active_scene is not None:
+                res["active_scene"] = active_scene.metadata.name
+        return res

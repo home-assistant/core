@@ -21,13 +21,14 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}}
 
 
-async def test_form_user(hass):
+async def test_form_user(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -43,10 +44,12 @@ async def test_form_user(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -65,7 +68,7 @@ async def test_form_user(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_import(hass):
+async def test_form_import(hass: HomeAssistant) -> None:
     """Test import from existing config."""
 
     with patch(
@@ -75,10 +78,12 @@ async def test_form_import(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -98,7 +103,7 @@ async def test_form_import(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_duplicate_entries(hass):
+async def test_form_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate device or id errors."""
     flow1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -117,10 +122,12 @@ async def test_form_duplicate_entries(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -141,32 +148,38 @@ async def test_form_duplicate_entries(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_connection_timeout(hass):
+async def test_form_connection_timeout(hass: HomeAssistant) -> None:
     """Test we handle connection timeout."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "pyotgw.pyotgw.connect", side_effect=(asyncio.TimeoutError)
-    ) as mock_connect:
+        "pyotgw.OpenThermGateway.connect", side_effect=(asyncio.TimeoutError)
+    ) as mock_connect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "timeout_connect"}
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_form_connection_error(hass):
+async def test_form_connection_error(hass: HomeAssistant) -> None:
     """Test we handle serial connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("pyotgw.pyotgw.connect", side_effect=(SerialException)) as mock_connect:
+    with patch(
+        "pyotgw.OpenThermGateway.connect", side_effect=(SerialException)
+    ) as mock_connect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -176,7 +189,7 @@ async def test_form_connection_error(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_options_migration(hass):
+async def test_options_migration(hass: HomeAssistant) -> None:
     """Test migration of precision option after update."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -196,7 +209,11 @@ async def test_options_migration(hass):
     with patch(
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
         return_value=True,
-    ), patch("homeassistant.components.opentherm_gw.async_setup", return_value=True):
+    ), patch(
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+    ), patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -204,7 +221,7 @@ async def test_options_migration(hass):
             entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -212,13 +229,13 @@ async def test_options_migration(hass):
             user_input={},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_SET_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_FLOOR_TEMP] is True
 
 
-async def test_options_form(hass):
+async def test_options_form(hass: HomeAssistant) -> None:
     """Test the options form."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -243,7 +260,7 @@ async def test_options_form(hass):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -256,7 +273,7 @@ async def test_options_form(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -270,7 +287,7 @@ async def test_options_form(hass):
         result["flow_id"], user_input={CONF_READ_PRECISION: 0}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == 0.0
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -290,7 +307,7 @@ async def test_options_form(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is False

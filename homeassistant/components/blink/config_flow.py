@@ -9,7 +9,7 @@ from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
@@ -18,13 +18,38 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SIMPLE_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="seconds",
+            ),
+        ),
+    }
+)
 
-def validate_input(hass: core.HomeAssistant, auth):
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(next_step="simple_options"),
+    "simple_options": SchemaFlowFormStep(SIMPLE_OPTIONS_SCHEMA),
+}
+
+
+def validate_input(auth: Auth) -> None:
     """Validate the user input allows us to connect."""
     try:
         auth.startup()
@@ -34,7 +59,7 @@ def validate_input(hass: core.HomeAssistant, auth):
         raise Require2FA
 
 
-def _send_blink_2fa_pin(auth, pin):
+def _send_blink_2fa_pin(auth: Auth, pin: str) -> bool:
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
@@ -43,38 +68,34 @@ def _send_blink_2fa_pin(auth, pin):
     return auth.send_auth_key(blink, pin)
 
 
-class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Blink config flow."""
 
     VERSION = 3
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the blink flow."""
-        self.auth = None
+        self.auth: Auth | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> BlinkOptionsFlowHandler:
+        config_entry: ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
-        return BlinkOptionsFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        data = {CONF_USERNAME: "", CONF_PASSWORD: "", "device_id": DEVICE_ID}
         if user_input is not None:
-            data[CONF_USERNAME] = user_input["username"]
-            data[CONF_PASSWORD] = user_input["password"]
-
-            self.auth = Auth(data, no_prompt=True)
-            await self.async_set_unique_id(data[CONF_USERNAME])
+            self.auth = Auth({**user_input, "device_id": DEVICE_ID}, no_prompt=True)
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
 
             try:
-                await self.hass.async_add_executor_job(
-                    validate_input, self.hass, self.auth
-                )
+                await self.hass.async_add_executor_job(validate_input, self.auth)
                 return self._async_finish_flow()
             except Require2FA:
                 return await self.async_step_2fa()
@@ -84,18 +105,20 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-        data_schema = {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-        }
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
         )
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
@@ -118,7 +141,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="2fa",
             data_schema=vol.Schema(
-                {vol.Optional("pin"): vol.All(str, vol.Length(min=1))}
+                {vol.Optional(CONF_PIN): vol.All(str, vol.Length(min=1))}
             ),
             errors=errors,
         )
@@ -128,53 +151,15 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(dict(entry_data))
 
     @callback
-    def _async_finish_flow(self):
+    def _async_finish_flow(self) -> FlowResult:
         """Finish with setup."""
+        assert self.auth
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)
 
 
-class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Blink options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Blink options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-        self.blink = None
-
-    async def async_step_init(self, user_input=None):
-        """Manage the Blink options."""
-        self.blink = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        self.options[CONF_SCAN_INTERVAL] = self.blink.refresh_rate
-
-        return await self.async_step_simple_options()
-
-    async def async_step_simple_options(self, user_input=None):
-        """For simple options."""
-        if user_input is not None:
-            self.options.update(user_input)
-            self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL]
-            return self.async_create_entry(title="", data=self.options)
-
-        options = self.config_entry.options
-        scan_interval = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-        return self.async_show_form(
-            step_id="simple_options",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=scan_interval,
-                    ): int
-                }
-            ),
-        )
-
-
-class Require2FA(exceptions.HomeAssistantError):
+class Require2FA(HomeAssistantError):
     """Error to indicate we require 2FA."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

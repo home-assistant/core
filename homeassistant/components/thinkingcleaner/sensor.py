@@ -99,7 +99,9 @@ def setup_platform(
 class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
-    def __init__(self, tc_object, update_devices, description: SensorEntityDescription):
+    def __init__(
+        self, tc_object, update_devices, description: SensorEntityDescription
+    ) -> None:
         """Initialize the ThinkingCleaner."""
         self.entity_description = description
         self._tc_object = tc_object
@@ -107,7 +109,7 @@ class ThinkingCleanerSensor(SensorEntity):
 
         self._attr_name = f"{tc_object.name} {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._update_devices()
 

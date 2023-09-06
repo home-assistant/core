@@ -24,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import async_get
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo, async_get
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -95,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         hass.config.time_zone,
-        async_get_clientsession(hass),
+        client_session=async_get_clientsession(hass),
     )
 
     # Authenticate, build sensors
@@ -158,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         eight, heat_coordinator, user_coordinator
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

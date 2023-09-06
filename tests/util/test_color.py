@@ -31,8 +31,7 @@ GAMUT_INVALID_4 = color_util.GamutType(
 )
 
 
-# pylint: disable=invalid-name
-def test_color_RGB_to_xy_brightness():
+def test_color_RGB_to_xy_brightness() -> None:
     """Test color_RGB_to_xy_brightness."""
     assert color_util.color_RGB_to_xy_brightness(0, 0, 0) == (0, 0, 0)
     assert color_util.color_RGB_to_xy_brightness(255, 255, 255) == (0.323, 0.329, 255)
@@ -56,7 +55,7 @@ def test_color_RGB_to_xy_brightness():
     assert color_util.color_RGB_to_xy_brightness(0, 0, 255, GAMUT) == (0.138, 0.08, 12)
 
 
-def test_color_RGB_to_xy():
+def test_color_RGB_to_xy() -> None:
     """Test color_RGB_to_xy."""
     assert color_util.color_RGB_to_xy(0, 0, 0) == (0, 0)
     assert color_util.color_RGB_to_xy(255, 255, 255) == (0.323, 0.329)
@@ -76,7 +75,7 @@ def test_color_RGB_to_xy():
     assert color_util.color_RGB_to_xy(255, 0, 0, GAMUT) == (0.7, 0.299)
 
 
-def test_color_xy_brightness_to_RGB():
+def test_color_xy_brightness_to_RGB() -> None:
     """Test color_xy_brightness_to_RGB."""
     assert color_util.color_xy_brightness_to_RGB(1, 1, 0) == (0, 0, 0)
 
@@ -97,7 +96,7 @@ def test_color_xy_brightness_to_RGB():
     assert color_util.color_xy_brightness_to_RGB(0, 0, 255, GAMUT) == (9, 85, 255)
 
 
-def test_color_xy_to_RGB():
+def test_color_xy_to_RGB() -> None:
     """Test color_xy_to_RGB."""
     assert color_util.color_xy_to_RGB(0.35, 0.35) == (255, 243, 222)
 
@@ -114,7 +113,7 @@ def test_color_xy_to_RGB():
     assert color_util.color_xy_to_RGB(0, 0, GAMUT) == (9, 85, 255)
 
 
-def test_color_RGB_to_hsv():
+def test_color_RGB_to_hsv() -> None:
     """Test color_RGB_to_hsv."""
     assert color_util.color_RGB_to_hsv(0, 0, 0) == (0, 0, 0)
 
@@ -127,7 +126,7 @@ def test_color_RGB_to_hsv():
     assert color_util.color_RGB_to_hsv(255, 0, 0) == (0, 100, 100)
 
 
-def test_color_hsv_to_RGB():
+def test_color_hsv_to_RGB() -> None:
     """Test color_hsv_to_RGB."""
     assert color_util.color_hsv_to_RGB(0, 0, 0) == (0, 0, 0)
 
@@ -140,7 +139,7 @@ def test_color_hsv_to_RGB():
     assert color_util.color_hsv_to_RGB(0, 100, 100) == (255, 0, 0)
 
 
-def test_color_hsb_to_RGB():
+def test_color_hsb_to_RGB() -> None:
     """Test color_hsb_to_RGB."""
     assert color_util.color_hsb_to_RGB(0, 0, 0) == (0, 0, 0)
 
@@ -153,7 +152,7 @@ def test_color_hsb_to_RGB():
     assert color_util.color_hsb_to_RGB(0, 1.0, 1.0) == (255, 0, 0)
 
 
-def test_color_xy_to_hs():
+def test_color_xy_to_hs() -> None:
     """Test color_xy_to_hs."""
     assert color_util.color_xy_to_hs(1, 1) == (47.294, 100)
 
@@ -172,7 +171,7 @@ def test_color_xy_to_hs():
     assert color_util.color_xy_to_hs(0, 0, GAMUT) == (221.463, 96.471)
 
 
-def test_color_hs_to_xy():
+def test_color_hs_to_xy() -> None:
     """Test color_hs_to_xy."""
     assert color_util.color_hs_to_xy(180, 100) == (0.151, 0.343)
 
@@ -195,7 +194,7 @@ def test_color_hs_to_xy():
     assert color_util.color_hs_to_xy(360, 100, GAMUT) == (0.7, 0.299)
 
 
-def test_rgb_hex_to_rgb_list():
+def test_rgb_hex_to_rgb_list() -> None:
     """Test rgb_hex_to_rgb_list."""
     assert [255, 255, 255] == color_util.rgb_hex_to_rgb_list("ffffff")
 
@@ -210,7 +209,7 @@ def test_rgb_hex_to_rgb_list():
     assert [51, 153, 255, 0] == color_util.rgb_hex_to_rgb_list("3399ff00")
 
 
-def test_color_name_to_rgb_valid_name():
+def test_color_name_to_rgb_valid_name() -> None:
     """Test color_name_to_rgb."""
     assert color_util.color_name_to_rgb("red") == (255, 0, 0)
 
@@ -227,13 +226,13 @@ def test_color_name_to_rgb_valid_name():
     assert color_util.color_name_to_rgb("darkslate blue") == (72, 61, 139)
 
 
-def test_color_name_to_rgb_unknown_name_raises_value_error():
+def test_color_name_to_rgb_unknown_name_raises_value_error() -> None:
     """Test color_name_to_rgb."""
     with pytest.raises(ValueError):
         color_util.color_name_to_rgb("not a color")
 
 
-def test_color_rgb_to_rgbw():
+def test_color_rgb_to_rgbw() -> None:
     """Test color_rgb_to_rgbw."""
     assert color_util.color_rgb_to_rgbw(0, 0, 0) == (0, 0, 0, 0)
 
@@ -252,7 +251,7 @@ def test_color_rgb_to_rgbw():
     assert color_util.color_rgb_to_rgbw(127, 127, 127) == (0, 0, 0, 127)
 
 
-def test_color_rgbw_to_rgb():
+def test_color_rgbw_to_rgb() -> None:
     """Test color_rgbw_to_rgb."""
     assert color_util.color_rgbw_to_rgb(0, 0, 0, 0) == (0, 0, 0)
 
@@ -271,7 +270,7 @@ def test_color_rgbw_to_rgb():
     assert color_util.color_rgbw_to_rgb(0, 0, 0, 127) == (127, 127, 127)
 
 
-def test_color_rgb_to_hex():
+def test_color_rgb_to_hex() -> None:
     """Test color_rgb_to_hex."""
     assert color_util.color_rgb_to_hex(255, 255, 255) == "ffffff"
     assert color_util.color_rgb_to_hex(0, 0, 0) == "000000"
@@ -279,7 +278,7 @@ def test_color_rgb_to_hex():
     assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == "ff4400"
 
 
-def test_match_max_scale():
+def test_match_max_scale() -> None:
     """Test match_max_scale."""
     match_max_scale = color_util.match_max_scale
     assert match_max_scale((255, 255, 255), (255, 255, 255)) == (255, 255, 255)
@@ -293,7 +292,7 @@ def test_match_max_scale():
     assert match_max_scale((10, 20, 30, 128), (100, 200, 333)) == (38, 77, 128)
 
 
-def test_gamut():
+def test_gamut() -> None:
     """Test gamut functions."""
     assert color_util.check_valid_gamut(GAMUT)
     assert not color_util.check_valid_gamut(GAMUT_INVALID_1)
@@ -302,7 +301,7 @@ def test_gamut():
     assert not color_util.check_valid_gamut(GAMUT_INVALID_4)
 
 
-def test_color_temperature_mired_to_kelvin():
+def test_color_temperature_mired_to_kelvin() -> None:
     """Test color_temperature_mired_to_kelvin."""
     assert color_util.color_temperature_mired_to_kelvin(40) == 25000
     assert color_util.color_temperature_mired_to_kelvin(200) == 5000
@@ -310,7 +309,7 @@ def test_color_temperature_mired_to_kelvin():
         assert color_util.color_temperature_mired_to_kelvin(0)
 
 
-def test_color_temperature_kelvin_to_mired():
+def test_color_temperature_kelvin_to_mired() -> None:
     """Test color_temperature_kelvin_to_mired."""
     assert color_util.color_temperature_kelvin_to_mired(25000) == 40
     assert color_util.color_temperature_kelvin_to_mired(5000) == 200
@@ -318,47 +317,46 @@ def test_color_temperature_kelvin_to_mired():
         assert color_util.color_temperature_kelvin_to_mired(0)
 
 
-def test_returns_same_value_for_any_two_temperatures_below_1000():
+def test_returns_same_value_for_any_two_temperatures_below_1000() -> None:
     """Function should return same value for 999 Kelvin and 0 Kelvin."""
     rgb_1 = color_util.color_temperature_to_rgb(999)
     rgb_2 = color_util.color_temperature_to_rgb(0)
     assert rgb_1 == rgb_2
 
 
-def test_returns_same_value_for_any_two_temperatures_above_40000():
+def test_returns_same_value_for_any_two_temperatures_above_40000() -> None:
     """Function should return same value for 40001K and 999999K."""
     rgb_1 = color_util.color_temperature_to_rgb(40001)
     rgb_2 = color_util.color_temperature_to_rgb(999999)
     assert rgb_1 == rgb_2
 
 
-def test_should_return_pure_white_at_6600():
-    """
-    Function should return red=255, blue=255, green=255 when given 6600K.
+def test_should_return_pure_white_at_6600() -> None:
+    """Function should return red=255, blue=255, green=255 when given 6600K.
 
     6600K is considered "pure white" light.
     This is just a rough estimate because the formula itself is a "best
     guess" approach.
     """
     rgb = color_util.color_temperature_to_rgb(6600)
-    assert (255, 255, 255) == rgb
+    assert rgb == (255, 255, 255)
 
 
-def test_color_above_6600_should_have_more_blue_than_red_or_green():
+def test_color_above_6600_should_have_more_blue_than_red_or_green() -> None:
     """Function should return a higher blue value for blue-ish light."""
     rgb = color_util.color_temperature_to_rgb(6700)
     assert rgb[2] > rgb[1]
     assert rgb[2] > rgb[0]
 
 
-def test_color_below_6600_should_have_more_red_than_blue_or_green():
+def test_color_below_6600_should_have_more_red_than_blue_or_green() -> None:
     """Function should return a higher red value for red-ish light."""
     rgb = color_util.color_temperature_to_rgb(6500)
     assert rgb[0] > rgb[1]
     assert rgb[0] > rgb[2]
 
 
-def test_get_color_in_voluptuous():
+def test_get_color_in_voluptuous() -> None:
     """Test using the get method in color validation."""
     schema = vol.Schema(color_util.color_name_to_rgb)
 
@@ -368,128 +366,133 @@ def test_get_color_in_voluptuous():
     assert schema("red") == (255, 0, 0)
 
 
-def test_color_rgb_to_rgbww():
+def test_color_rgb_to_rgbww() -> None:
     """Test color_rgb_to_rgbww conversions."""
-    assert color_util.color_rgb_to_rgbww(255, 255, 255, 154, 370) == (
+    # Light with mid point at ~4600K (warm white) -> output compensated by adding blue
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 2702, 6493) == (
         0,
         54,
         98,
         255,
         255,
     )
-    assert color_util.color_rgb_to_rgbww(255, 255, 255, 100, 1000) == (
+    # Light with mid point at ~5500K (less warm white) -> output compensated by adding less blue
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 10000) == (
         255,
         255,
         255,
         0,
         0,
     )
-    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1, 1000) == (
+    # Light with mid point at ~1MK (unrealistically cold white) -> output compensated by adding red
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1000, 1000000) == (
         0,
         118,
         241,
         255,
         255,
     )
-    assert color_util.color_rgb_to_rgbww(128, 128, 128, 154, 370) == (
+    assert color_util.color_rgb_to_rgbww(128, 128, 128, 2702, 6493) == (
         0,
         27,
         49,
         128,
         128,
     )
-    assert color_util.color_rgb_to_rgbww(64, 64, 64, 154, 370) == (0, 14, 25, 64, 64)
-    assert color_util.color_rgb_to_rgbww(32, 64, 16, 154, 370) == (9, 64, 0, 38, 38)
-    assert color_util.color_rgb_to_rgbww(0, 0, 0, 154, 370) == (0, 0, 0, 0, 0)
-    assert color_util.color_rgb_to_rgbww(0, 0, 0, 0, 100) == (0, 0, 0, 0, 0)
-    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1, 5) == (103, 69, 0, 255, 255)
+    assert color_util.color_rgb_to_rgbww(64, 64, 64, 2702, 6493) == (0, 14, 25, 64, 64)
+    assert color_util.color_rgb_to_rgbww(32, 64, 16, 2702, 6493) == (9, 64, 0, 38, 38)
+    assert color_util.color_rgb_to_rgbww(0, 0, 0, 2702, 6493) == (0, 0, 0, 0, 0)
+    assert color_util.color_rgb_to_rgbww(0, 0, 0, 10000, 1000000) == (0, 0, 0, 0, 0)
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 200000, 1000000) == (
+        103,
+        69,
+        0,
+        255,
+        255,
+    )
 
 
-def test_color_rgbww_to_rgb():
+def test_color_rgbww_to_rgb() -> None:
     """Test color_rgbww_to_rgb conversions."""
-    assert color_util.color_rgbww_to_rgb(0, 54, 98, 255, 255, 154, 370) == (
+    assert color_util.color_rgbww_to_rgb(0, 54, 98, 255, 255, 2702, 6493) == (
         255,
         255,
         255,
     )
-    assert color_util.color_rgbww_to_rgb(255, 255, 255, 0, 0, 154, 370) == (
+    # rgb fully on, + both white channels turned off -> rgb fully on
+    assert color_util.color_rgbww_to_rgb(255, 255, 255, 0, 0, 2702, 6493) == (
         255,
         255,
         255,
     )
-    assert color_util.color_rgbww_to_rgb(0, 118, 241, 255, 255, 154, 370) == (
+    # r < g < b + both white channels fully enabled -> r < g < b capped at 255
+    assert color_util.color_rgbww_to_rgb(0, 118, 241, 255, 255, 2702, 6493) == (
         163,
         204,
         255,
     )
-    assert color_util.color_rgbww_to_rgb(0, 27, 49, 128, 128, 154, 370) == (
+    # r < g < b + both white channels 50% enabled -> r < g < b capped at 128
+    assert color_util.color_rgbww_to_rgb(0, 27, 49, 128, 128, 2702, 6493) == (
         128,
         128,
         128,
     )
-    assert color_util.color_rgbww_to_rgb(0, 14, 25, 64, 64, 154, 370) == (64, 64, 64)
-    assert color_util.color_rgbww_to_rgb(9, 64, 0, 38, 38, 154, 370) == (32, 64, 16)
-    assert color_util.color_rgbww_to_rgb(0, 0, 0, 0, 0, 154, 370) == (0, 0, 0)
-    assert color_util.color_rgbww_to_rgb(103, 69, 0, 255, 255, 153, 370) == (
+    # r < g < b + both white channels 25% enabled -> r < g < b capped at 64
+    assert color_util.color_rgbww_to_rgb(0, 14, 25, 64, 64, 2702, 6493) == (64, 64, 64)
+    assert color_util.color_rgbww_to_rgb(9, 64, 0, 38, 38, 2702, 6493) == (32, 64, 16)
+    assert color_util.color_rgbww_to_rgb(0, 0, 0, 0, 0, 2702, 6493) == (0, 0, 0)
+    assert color_util.color_rgbww_to_rgb(103, 69, 0, 255, 255, 2702, 6535) == (
         255,
         193,
         112,
     )
-    assert color_util.color_rgbww_to_rgb(255, 255, 255, 0, 0, 0, 0) == (255, 255, 255)
-    assert color_util.color_rgbww_to_rgb(255, 255, 255, 255, 255, 0, 0) == (
-        255,
-        161,
-        128,
-    )
-    assert color_util.color_rgbww_to_rgb(255, 255, 255, 255, 255, 0, 370) == (
-        255,
-        245,
-        237,
-    )
 
 
-def test_color_temperature_to_rgbww():
+def test_color_temperature_to_rgbww() -> None:
     """Test color temp to warm, cold conversion.
 
     Temperature values must be in mireds
     Home Assistant uses rgbcw for rgbww
     """
-    assert color_util.color_temperature_to_rgbww(153, 255, 153, 500) == (
+    # Coldest color temperature -> only cold channel enabled
+    assert color_util.color_temperature_to_rgbww(6535, 255, 2000, 6535) == (
         0,
         0,
         0,
         255,
         0,
     )
-    assert color_util.color_temperature_to_rgbww(153, 128, 153, 500) == (
+    assert color_util.color_temperature_to_rgbww(6535, 128, 2000, 6535) == (
         0,
         0,
         0,
         128,
         0,
     )
-    assert color_util.color_temperature_to_rgbww(500, 255, 153, 500) == (
+    # Warmest color temperature -> only cold channel enabled
+    assert color_util.color_temperature_to_rgbww(2000, 255, 2000, 6535) == (
         0,
         0,
         0,
         0,
         255,
     )
-    assert color_util.color_temperature_to_rgbww(500, 128, 153, 500) == (
+    assert color_util.color_temperature_to_rgbww(2000, 128, 2000, 6535) == (
         0,
         0,
         0,
         0,
         128,
     )
-    assert color_util.color_temperature_to_rgbww(347, 255, 153, 500) == (
+    # Warmer than mid point color temperature -> More warm than cold channel enabled
+    assert color_util.color_temperature_to_rgbww(2881, 255, 2000, 6535) == (
         0,
         0,
         0,
         112,
         143,
     )
-    assert color_util.color_temperature_to_rgbww(347, 128, 153, 500) == (
+    assert color_util.color_temperature_to_rgbww(2881, 128, 2000, 6535) == (
         0,
         0,
         0,
@@ -498,82 +501,80 @@ def test_color_temperature_to_rgbww():
     )
 
 
-def test_rgbww_to_color_temperature():
+def test_rgbww_to_color_temperature() -> None:
     """Test rgbww conversion to color temp.
 
     Temperature values must be in mireds
     Home Assistant uses rgbcw for rgbww
     """
-    assert color_util.rgbww_to_color_temperature(
-        (
-            0,
-            0,
-            0,
-            255,
-            0,
-        ),
-        153,
-        500,
-    ) == (153, 255)
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 128, 0), 153, 500) == (
-        153,
-        128,
-    )
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 255), 153, 500) == (
-        500,
+    # Only cold channel enabled -> coldest color temperature
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 255, 0), 2000, 6535) == (
+        6535,
         255,
     )
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 128), 153, 500) == (
-        500,
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 128, 0), 2000, 6535) == (
+        6535,
         128,
     )
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 112, 143), 153, 500) == (
-        348,
+    # Only warm channel enabled -> warmest color temperature
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 255), 2000, 6535) == (
+        2000,
         255,
     )
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 56, 72), 153, 500) == (
-        348,
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 128), 2000, 6535) == (
+        2000,
         128,
     )
-    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 0), 153, 500) == (
-        500,
+    # More warm than cold channel enabled -> warmer than mid point
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 112, 143), 2000, 6535) == (
+        2876,
+        255,
+    )
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 56, 72), 2000, 6535) == (
+        2872,
+        128,
+    )
+    # Both channels turned off -> warmest color temperature
+    assert color_util.rgbww_to_color_temperature((0, 0, 0, 0, 0), 2000, 6535) == (
+        2000,
         0,
     )
 
 
-def test_white_levels_to_color_temperature():
+def test_white_levels_to_color_temperature() -> None:
     """Test warm, cold conversion to color temp.
 
     Temperature values must be in mireds
     Home Assistant uses rgbcw for rgbww
     """
-    assert color_util.while_levels_to_color_temperature(
-        255,
-        0,
-        153,
-        500,
-    ) == (153, 255)
-    assert color_util.while_levels_to_color_temperature(128, 0, 153, 500) == (
-        153,
-        128,
-    )
-    assert color_util.while_levels_to_color_temperature(0, 255, 153, 500) == (
-        500,
+    # Only cold channel enabled -> coldest color temperature
+    assert color_util._white_levels_to_color_temperature(255, 0, 2000, 6535) == (
+        6535,
         255,
     )
-    assert color_util.while_levels_to_color_temperature(0, 128, 153, 500) == (
-        500,
+    assert color_util._white_levels_to_color_temperature(128, 0, 2000, 6535) == (
+        6535,
         128,
     )
-    assert color_util.while_levels_to_color_temperature(112, 143, 153, 500) == (
-        348,
+    # Only warm channel enabled -> warmest color temperature
+    assert color_util._white_levels_to_color_temperature(0, 255, 2000, 6535) == (
+        2000,
         255,
     )
-    assert color_util.while_levels_to_color_temperature(56, 72, 153, 500) == (
-        348,
+    assert color_util._white_levels_to_color_temperature(0, 128, 2000, 6535) == (
+        2000,
         128,
     )
-    assert color_util.while_levels_to_color_temperature(0, 0, 153, 500) == (
-        500,
+    assert color_util._white_levels_to_color_temperature(112, 143, 2000, 6535) == (
+        2876,
+        255,
+    )
+    assert color_util._white_levels_to_color_temperature(56, 72, 2000, 6535) == (
+        2872,
+        128,
+    )
+    # Both channels turned off -> warmest color temperature
+    assert color_util._white_levels_to_color_temperature(0, 0, 2000, 6535) == (
+        2000,
         0,
     )

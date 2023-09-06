@@ -61,14 +61,14 @@ class LinodeBinarySensor(BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOVING
 
-    def __init__(self, li, node_id):  # pylint: disable=invalid-name
+    def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id
         self._attr_extra_state_attributes = {}
         self._attr_name = None
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         data = None
         self._linode.update()

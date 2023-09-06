@@ -1,6 +1,7 @@
 """Config flow for fritzbox_callmonitor."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any, cast
 
 from fritzconnection import FritzConnection
@@ -9,7 +10,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -29,10 +29,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
-    FRITZ_ACTION_GET_INFO,
     FRITZ_ATTR_NAME,
     FRITZ_ATTR_SERIAL_NUMBER,
-    FRITZ_SERVICE_DEVICE_INFO,
     SERIAL_NUMBER,
 )
 
@@ -104,10 +102,8 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fritz_connection = FritzConnection(
                 address=self._host, user=self._username, password=self._password
             )
-            device_info = fritz_connection.call_action(
-                FRITZ_SERVICE_DEVICE_INFO, FRITZ_ACTION_GET_INFO
-            )
-            self._serial_number = device_info[FRITZ_ATTR_SERIAL_NUMBER]
+            info = fritz_connection.updatecheck
+            self._serial_number = info[FRITZ_ATTR_SERIAL_NUMBER]
 
             return ConnectResult.SUCCESS
         except RequestsConnectionError:

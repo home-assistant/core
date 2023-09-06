@@ -13,6 +13,7 @@ from homeassistant.components.hvv_departures.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -26,7 +27,7 @@ FIXTURE_OPTIONS = json.loads(load_fixture("hvv_departures/options.json"))
 FIXTURE_DEPARTURE_LIST = json.loads(load_fixture("hvv_departures/departure_list.json"))
 
 
-async def test_user_flow(hass):
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test that config flow works."""
 
     with patch(
@@ -42,7 +43,6 @@ async def test_user_flow(hass):
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
@@ -90,7 +90,7 @@ async def test_user_flow(hass):
         }
 
 
-async def test_user_flow_no_results(hass):
+async def test_user_flow_no_results(hass: HomeAssistant) -> None:
     """Test that config flow works when there are no results."""
 
     with patch(
@@ -103,7 +103,6 @@ async def test_user_flow_no_results(hass):
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
@@ -128,7 +127,7 @@ async def test_user_flow_no_results(hass):
         assert result_station["errors"]["base"] == "no_results"
 
 
-async def test_user_flow_invalid_auth(hass):
+async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Test that config flow handles invalid auth."""
 
     with patch(
@@ -139,7 +138,6 @@ async def test_user_flow_invalid_auth(hass):
             "Authentication failed!",
         ),
     ):
-
         # step: user
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -155,14 +153,13 @@ async def test_user_flow_invalid_auth(hass):
         assert result_user["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_flow_cannot_connect(hass):
+async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test that config flow handles connection errors."""
 
     with patch(
         "homeassistant.components.hvv_departures.hub.GTI.init",
         side_effect=CannotConnect(),
     ):
-
         # step: user
         result_user = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -178,7 +175,7 @@ async def test_user_flow_cannot_connect(hass):
         assert result_user["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_flow_station(hass):
+async def test_user_flow_station(hass: HomeAssistant) -> None:
     """Test that config flow handles empty data on step station."""
 
     with patch(
@@ -188,7 +185,6 @@ async def test_user_flow_station(hass):
         "homeassistant.components.hvv_departures.hub.GTI.checkName",
         return_value={"returnCode": "OK", "results": []},
     ):
-
         # step: user
 
         result_user = await hass.config_entries.flow.async_init(
@@ -212,7 +208,7 @@ async def test_user_flow_station(hass):
         assert result_station["step_id"] == "station"
 
 
-async def test_user_flow_station_select(hass):
+async def test_user_flow_station_select(hass: HomeAssistant) -> None:
     """Test that config flow handles empty data on step station_select."""
 
     with patch(
@@ -247,7 +243,7 @@ async def test_user_flow_station_select(hass):
         assert result_station_select["step_id"] == "station_select"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test that options flow works."""
 
     config_entry = MockConfigEntry(
@@ -273,7 +269,7 @@ async def test_options_flow(hass):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -281,7 +277,7 @@ async def test_options_flow(hass):
             user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_FILTER: [
                 {
@@ -296,7 +292,7 @@ async def test_options_flow(hass):
         }
 
 
-async def test_options_flow_invalid_auth(hass):
+async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Test that options flow works."""
 
     config_entry = MockConfigEntry(
@@ -329,13 +325,13 @@ async def test_options_flow_invalid_auth(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_options_flow_cannot_connect(hass):
+async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test that options flow works."""
 
     config_entry = MockConfigEntry(
@@ -364,7 +360,7 @@ async def test_options_flow_cannot_connect(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         assert result["errors"] == {"base": "cannot_connect"}

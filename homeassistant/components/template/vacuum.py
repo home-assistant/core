@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -147,7 +148,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         self._fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-        self._attr_supported_features = VacuumEntityFeature.START
+        self._attr_supported_features = (
+            VacuumEntityFeature.START | VacuumEntityFeature.STATE
+        )
 
         self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
 
@@ -191,8 +194,6 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._battery_level = None
         self._attr_fan_speed = None
 
-        if self._template:
-            self._attr_supported_features |= VacuumEntityFeature.STATE
         if self._battery_level_template:
             self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
@@ -204,46 +205,46 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         """Return the status of the vacuum cleaner."""
         return self._state
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         await self.async_run_script(self._start_script, context=self._context)
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the cleaning task."""
         if self._pause_script is None:
             return
 
         await self.async_run_script(self._pause_script, context=self._context)
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
         if self._stop_script is None:
             return
 
         await self.async_run_script(self._stop_script, context=self._context)
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self._return_to_base_script is None:
             return
 
         await self.async_run_script(self._return_to_base_script, context=self._context)
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self._clean_spot_script is None:
             return
 
         await self.async_run_script(self._clean_spot_script, context=self._context)
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         if self._locate_script is None:
             return
 
         await self.async_run_script(self._locate_script, context=self._context)
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self._set_fan_speed_script is None:
             return
@@ -263,8 +264,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 self._attr_fan_speed_list,
             )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template is not None:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
@@ -284,7 +286,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 self._update_battery_level,
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_state(self, result):

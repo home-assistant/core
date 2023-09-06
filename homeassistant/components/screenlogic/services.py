@@ -48,7 +48,8 @@ def async_load_screenlogic_services(hass: HomeAssistant):
             )
         ):
             raise HomeAssistantError(
-                f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for target not found"
+                f"Failed to call service '{SERVICE_SET_COLOR_MODE}'. Config entry for"
+                " target not found"
             )
         color_num = SUPPORTED_COLOR_MODES[service_call.data[ATTR_COLOR_MODE]]
         for entry_id in screenlogic_entry_ids:

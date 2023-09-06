@@ -25,7 +25,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> BTHomeHub5DeviceScanner | None:
     """Return a BT Home Hub 5 scanner if successful."""
     scanner = BTHomeHub5DeviceScanner(config[DOMAIN])
 
@@ -33,7 +35,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None
 
 
 class BTHomeHub5DeviceScanner(DeviceScanner):
-    """This class queries a BT Home Hub 5."""
+    """Class which queries a BT Home Hub 5."""
 
     def __init__(self, config):
         """Initialise the scanner."""

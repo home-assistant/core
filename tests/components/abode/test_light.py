@@ -8,9 +8,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -52,10 +51,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_type") == "RGB Dimmer"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Living Room Lamp"
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_HS
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
 
 
@@ -63,8 +62,8 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     """Test the light can be turned off."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
-    with patch("abodepy.AbodeLight.switch_off") as mock_switch_off:
-        assert await hass.services.async_call(
+    with patch("jaraco.abode.devices.light.Light.switch_off") as mock_switch_off:
+        await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
@@ -75,7 +74,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
     """Test the light can be turned on."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
-    with patch("abodepy.AbodeLight.switch_on") as mock_switch_on:
+    with patch("jaraco.abode.devices.light.Light.switch_on") as mock_switch_on:
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
@@ -87,7 +86,7 @@ async def test_set_brightness(hass: HomeAssistant) -> None:
     """Test the brightness can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
-    with patch("abodepy.AbodeLight.set_level") as mock_set_level:
+    with patch("jaraco.abode.devices.light.Light.set_level") as mock_set_level:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -103,7 +102,7 @@ async def test_set_color(hass: HomeAssistant) -> None:
     """Test the color can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
-    with patch("abodepy.AbodeLight.set_color") as mock_set_color:
+    with patch("jaraco.abode.devices.light.Light.set_color") as mock_set_color:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -118,7 +117,9 @@ async def test_set_color_temp(hass: HomeAssistant) -> None:
     """Test the color temp can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
-    with patch("abodepy.AbodeLight.set_color_temp") as mock_set_color_temp:
+    with patch(
+        "jaraco.abode.devices.light.Light.set_color_temp"
+    ) as mock_set_color_temp:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,

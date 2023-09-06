@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import dataclasses
+import logging
 from typing import Final
 from unittest.mock import Mock, patch
 
@@ -86,7 +87,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -95,7 +96,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -119,18 +120,21 @@ async def test_user_flow_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     """Test that SSDP discovery with an available device works."""
+    logging.getLogger("homeassistant.components.dlna_dms.config_flow").setLevel(
+        logging.DEBUG
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -138,7 +142,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -161,7 +165,7 @@ async def test_ssdp_flow_unavailable(
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     upnp_factory_mock.async_create_device.side_effect = UpnpError
@@ -171,7 +175,7 @@ async def test_ssdp_flow_unavailable(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -201,7 +205,7 @@ async def test_ssdp_flow_existing(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
@@ -216,7 +220,7 @@ async def test_ssdp_flow_duplicate_location(
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
 
@@ -230,7 +234,7 @@ async def test_ssdp_flow_bad_data(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "bad_ssdp"
 
     # Missing USN
@@ -240,7 +244,7 @@ async def test_ssdp_flow_bad_data(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "bad_ssdp"
 
 
@@ -280,7 +284,7 @@ async def test_duplicate_name(
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -288,7 +292,7 @@ async def test_duplicate_name(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: new_device_location,
@@ -318,7 +322,7 @@ async def test_ssdp_flow_upnp_udn(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
@@ -334,7 +338,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dms"
 
     # Service list does not contain services
@@ -346,7 +350,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dms"
 
     # ContentDirectory service is missing
@@ -362,7 +366,7 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dms"
 
 
@@ -384,5 +388,5 @@ async def test_ssdp_single_service(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dms"

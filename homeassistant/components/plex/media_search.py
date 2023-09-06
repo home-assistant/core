@@ -89,7 +89,8 @@ def search_media(
             if len(exact_matches) == 1:
                 return exact_matches[0]
         raise MediaNotFound(
-            f"Multiple matches, make content_id more specific or use `allow_multiple`: {results}"
+            "Multiple matches, make content_id more specific or use `allow_multiple`:"
+            f" {results}"
         )
 
     return results[0]

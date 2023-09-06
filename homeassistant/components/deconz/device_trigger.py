@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -22,10 +18,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .deconz_event import (
+    CONF_DECONZ_EVENT,
+    CONF_GESTURE,
+    DeconzAlarmEvent,
+    DeconzEvent,
+    DeconzPresenceEvent,
+    DeconzRelativeRotaryEvent,
+)
 from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
@@ -124,6 +128,18 @@ HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_4): {CONF_EVENT: 18},
 }
 
+HUE_WALL_REMOTE_MODEL = "RDM001"  # Hue wall switch
+HUE_WALL_REMOTE = {
+    (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_SHORT_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
+}
+
 FRIENDS_OF_HUE_SWITCH_MODEL = "FOHSWITCH"
 FRIENDS_OF_HUE_SWITCH = {
     (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1000},
@@ -154,18 +170,18 @@ FRIENDS_OF_HUE_SWITCH = {
 
 STYRBAR_REMOTE_MODEL = "Remote Control N2"
 STYRBAR_REMOTE = {
-    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
-    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
-    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
-    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2002},
-    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 2001},
-    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 2003},
-    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3002},
-    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 3001},
-    (CONF_LONG_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 3003},
-    (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4002},
-    (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 4001},
-    (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
+    (CONF_SHORT_RELEASE, CONF_DIM_UP): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_DIM_UP): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_DIM_UP): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_DIM_DOWN): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_DIM_DOWN): {CONF_EVENT: 2003},
+    (CONF_SHORT_RELEASE, CONF_LEFT): {CONF_EVENT: 3002},
+    (CONF_LONG_PRESS, CONF_LEFT): {CONF_EVENT: 3001},
+    (CONF_LONG_RELEASE, CONF_LEFT): {CONF_EVENT: 3003},
+    (CONF_SHORT_RELEASE, CONF_RIGHT): {CONF_EVENT: 4002},
+    (CONF_LONG_PRESS, CONF_RIGHT): {CONF_EVENT: 4001},
+    (CONF_LONG_RELEASE, CONF_RIGHT): {CONF_EVENT: 4003},
 }
 
 SYMFONISK_SOUND_CONTROLLER_MODEL = "SYMFONISK Sound Controller"
@@ -479,6 +495,12 @@ LIDL_SILVERCREST_DOORBELL = {
     (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
 }
 
+LIDL_SILVERCREST_BUTTON_REMOTE_MODEL = "TS004F"
+LIDL_SILVERCREST_BUTTON_REMOTE = {
+    (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
+    (CONF_DOUBLE_PRESS, ""): {CONF_EVENT: 1004},
+}
+
 LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL = "Switch-LIGHTIFY"
 LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL = "Switch 4x-LIGHTIFY"
 LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL = "Switch 4x EU-LIGHTIFY"
@@ -528,6 +550,7 @@ BUSCH_JAEGER_REMOTE = {
 
 SONOFF_SNZB_01_1_MODEL = "WB01"
 SONOFF_SNZB_01_2_MODEL = "WB-01"
+SONOFF_SNZB_01P_MODEL = "SNZB-01P"
 SONOFF_SNZB_01_SWITCH = {
     (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
     (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
@@ -572,6 +595,7 @@ REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN3: HUE_DIMMER_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    HUE_WALL_REMOTE_MODEL: HUE_WALL_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
     STYRBAR_REMOTE_MODEL: STYRBAR_REMOTE,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
@@ -604,6 +628,7 @@ REMOTES = {
     LEGRAND_ZGP_TOGGLE_SWITCH_MODEL: LEGRAND_ZGP_TOGGLE_SWITCH,
     LEGRAND_ZGP_SCENE_SWITCH_MODEL: LEGRAND_ZGP_SCENE_SWITCH,
     LIDL_SILVERCREST_DOORBELL_MODEL: LIDL_SILVERCREST_DOORBELL,
+    LIDL_SILVERCREST_BUTTON_REMOTE_MODEL: LIDL_SILVERCREST_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
@@ -615,6 +640,7 @@ REMOTES = {
     UBISYS_CONTROL_UNIT_C4_MODEL: UBISYS_CONTROL_UNIT_C4,
     SONOFF_SNZB_01_1_MODEL: SONOFF_SNZB_01_SWITCH,
     SONOFF_SNZB_01_2_MODEL: SONOFF_SNZB_01_SWITCH,
+    SONOFF_SNZB_01P_MODEL: SONOFF_SNZB_01_SWITCH,
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -625,7 +651,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def _get_deconz_event_from_device(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
-) -> DeconzAlarmEvent | DeconzEvent:
+) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
     gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
     for gateway in gateways.values():
@@ -668,8 +694,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     event_data: dict[str, int | str] = {}
@@ -693,7 +719,7 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )
 
 
@@ -714,7 +740,7 @@ async def async_get_triggers(
         return []
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

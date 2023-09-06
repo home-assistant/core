@@ -1,26 +1,7 @@
 """The nut component."""
-
 from __future__ import annotations
 
-from typing import Final
-
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    FREQUENCY_HERTZ,
-    PERCENTAGE,
-    POWER_VOLT_AMPERE,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
-    Platform,
-)
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import Platform
 
 DOMAIN = "nut"
 
@@ -39,538 +20,8 @@ DEFAULT_SCAN_INTERVAL = 60
 PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
 
-SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
-    "ups.status.display": SensorEntityDescription(
-        key="ups.status.display",
-        name="Status",
-        icon="mdi:information-outline",
-    ),
-    "ups.status": SensorEntityDescription(
-        key="ups.status",
-        name="Status Data",
-        icon="mdi:information-outline",
-    ),
-    "ups.alarm": SensorEntityDescription(
-        key="ups.alarm",
-        name="Alarms",
-        icon="mdi:alarm",
-    ),
-    "ups.temperature": SensorEntityDescription(
-        key="ups.temperature",
-        name="UPS Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.load": SensorEntityDescription(
-        key="ups.load",
-        name="Load",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "ups.load.high": SensorEntityDescription(
-        key="ups.load.high",
-        name="Overload Setting",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.id": SensorEntityDescription(
-        key="ups.id",
-        name="System identifier",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.delay.start": SensorEntityDescription(
-        key="ups.delay.start",
-        name="Load Restart Delay",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.delay.reboot": SensorEntityDescription(
-        key="ups.delay.reboot",
-        name="UPS Reboot Delay",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.delay.shutdown": SensorEntityDescription(
-        key="ups.delay.shutdown",
-        name="UPS Shutdown Delay",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.timer.start": SensorEntityDescription(
-        key="ups.timer.start",
-        name="Load Start Timer",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.timer.reboot": SensorEntityDescription(
-        key="ups.timer.reboot",
-        name="Load Reboot Timer",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.timer.shutdown": SensorEntityDescription(
-        key="ups.timer.shutdown",
-        name="Load Shutdown Timer",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.test.interval": SensorEntityDescription(
-        key="ups.test.interval",
-        name="Self-Test Interval",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.test.result": SensorEntityDescription(
-        key="ups.test.result",
-        name="Self-Test Result",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.test.date": SensorEntityDescription(
-        key="ups.test.date",
-        name="Self-Test Date",
-        icon="mdi:calendar",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.display.language": SensorEntityDescription(
-        key="ups.display.language",
-        name="Language",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.contacts": SensorEntityDescription(
-        key="ups.contacts",
-        name="External Contacts",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.efficiency": SensorEntityDescription(
-        key="ups.efficiency",
-        name="Efficiency",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.power": SensorEntityDescription(
-        key="ups.power",
-        name="Current Apparent Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.power.nominal": SensorEntityDescription(
-        key="ups.power.nominal",
-        name="Nominal Power",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.realpower": SensorEntityDescription(
-        key="ups.realpower",
-        name="Current Real Power",
-        native_unit_of_measurement=POWER_WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.realpower.nominal": SensorEntityDescription(
-        key="ups.realpower.nominal",
-        name="Nominal Real Power",
-        native_unit_of_measurement=POWER_WATT,
-        device_class=SensorDeviceClass.POWER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.beeper.status": SensorEntityDescription(
-        key="ups.beeper.status",
-        name="Beeper Status",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.type": SensorEntityDescription(
-        key="ups.type",
-        name="UPS Type",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.watchdog.status": SensorEntityDescription(
-        key="ups.watchdog.status",
-        name="Watchdog Status",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.start.auto": SensorEntityDescription(
-        key="ups.start.auto",
-        name="Start on AC",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.start.battery": SensorEntityDescription(
-        key="ups.start.battery",
-        name="Start on Battery",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.start.reboot": SensorEntityDescription(
-        key="ups.start.reboot",
-        name="Reboot on Battery",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ups.shutdown": SensorEntityDescription(
-        key="ups.shutdown",
-        name="Shutdown Ability",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.charge": SensorEntityDescription(
-        key="battery.charge",
-        name="Battery Charge",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "battery.charge.low": SensorEntityDescription(
-        key="battery.charge.low",
-        name="Low Battery Setpoint",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.charge.restart": SensorEntityDescription(
-        key="battery.charge.restart",
-        name="Minimum Battery to Start",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.charge.warning": SensorEntityDescription(
-        key="battery.charge.warning",
-        name="Warning Battery Setpoint",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:gauge",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.charger.status": SensorEntityDescription(
-        key="battery.charger.status",
-        name="Charging Status",
-        icon="mdi:information-outline",
-    ),
-    "battery.voltage": SensorEntityDescription(
-        key="battery.voltage",
-        name="Battery Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.voltage.nominal": SensorEntityDescription(
-        key="battery.voltage.nominal",
-        name="Nominal Battery Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.voltage.low": SensorEntityDescription(
-        key="battery.voltage.low",
-        name="Low Battery Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.voltage.high": SensorEntityDescription(
-        key="battery.voltage.high",
-        name="High Battery Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.capacity": SensorEntityDescription(
-        key="battery.capacity",
-        name="Battery Capacity",
-        native_unit_of_measurement="Ah",
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.current": SensorEntityDescription(
-        key="battery.current",
-        name="Battery Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.current.total": SensorEntityDescription(
-        key="battery.current.total",
-        name="Total Battery Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.temperature": SensorEntityDescription(
-        key="battery.temperature",
-        name="Battery Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.runtime": SensorEntityDescription(
-        key="battery.runtime",
-        name="Battery Runtime",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.runtime.low": SensorEntityDescription(
-        key="battery.runtime.low",
-        name="Low Battery Runtime",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.runtime.restart": SensorEntityDescription(
-        key="battery.runtime.restart",
-        name="Minimum Battery Runtime to Start",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.alarm.threshold": SensorEntityDescription(
-        key="battery.alarm.threshold",
-        name="Battery Alarm Threshold",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.date": SensorEntityDescription(
-        key="battery.date",
-        name="Battery Date",
-        icon="mdi:calendar",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.mfr.date": SensorEntityDescription(
-        key="battery.mfr.date",
-        name="Battery Manuf. Date",
-        icon="mdi:calendar",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.packs": SensorEntityDescription(
-        key="battery.packs",
-        name="Number of Batteries",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.packs.bad": SensorEntityDescription(
-        key="battery.packs.bad",
-        name="Number of Bad Batteries",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "battery.type": SensorEntityDescription(
-        key="battery.type",
-        name="Battery Chemistry",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.sensitivity": SensorEntityDescription(
-        key="input.sensitivity",
-        name="Input Power Sensitivity",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.transfer.low": SensorEntityDescription(
-        key="input.transfer.low",
-        name="Low Voltage Transfer",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.transfer.high": SensorEntityDescription(
-        key="input.transfer.high",
-        name="High Voltage Transfer",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.transfer.reason": SensorEntityDescription(
-        key="input.transfer.reason",
-        name="Voltage Transfer Reason",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.voltage": SensorEntityDescription(
-        key="input.voltage",
-        name="Input Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "input.voltage.nominal": SensorEntityDescription(
-        key="input.voltage.nominal",
-        name="Nominal Input Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.frequency": SensorEntityDescription(
-        key="input.frequency",
-        name="Input Line Frequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:flash",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.frequency.nominal": SensorEntityDescription(
-        key="input.frequency.nominal",
-        name="Nominal Input Line Frequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "input.frequency.status": SensorEntityDescription(
-        key="input.frequency.status",
-        name="Input Frequency Status",
-        icon="mdi:information-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "output.current": SensorEntityDescription(
-        key="output.current",
-        name="Output Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "output.current.nominal": SensorEntityDescription(
-        key="output.current.nominal",
-        name="Nominal Output Current",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "output.voltage": SensorEntityDescription(
-        key="output.voltage",
-        name="Output Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "output.voltage.nominal": SensorEntityDescription(
-        key="output.voltage.nominal",
-        name="Nominal Output Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "output.frequency": SensorEntityDescription(
-        key="output.frequency",
-        name="Output Frequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:flash",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "output.frequency.nominal": SensorEntityDescription(
-        key="output.frequency.nominal",
-        name="Nominal Output Frequency",
-        native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:flash",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    "ambient.humidity": SensorEntityDescription(
-        key="ambient.humidity",
-        name="Ambient Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "ambient.temperature": SensorEntityDescription(
-        key="ambient.temperature",
-        name="Ambient Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "watts": SensorEntityDescription(
-        key="watts",
-        name="Watts",
-        native_unit_of_measurement=POWER_WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-}
+
+USER_AVAILABLE_COMMANDS = "user_available_commands"
 
 STATE_TYPES = {
     "OL": "Online",
@@ -588,4 +39,60 @@ STATE_TYPES = {
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
     "ALARM": "Alarm",
+}
+
+COMMAND_BEEPER_DISABLE = "beeper.disable"
+COMMAND_BEEPER_ENABLE = "beeper.enable"
+COMMAND_BEEPER_MUTE = "beeper.mute"
+COMMAND_BEEPER_TOGGLE = "beeper.toggle"
+COMMAND_BYPASS_START = "bypass.start"
+COMMAND_BYPASS_STOP = "bypass.stop"
+COMMAND_CALIBRATE_START = "calibrate.start"
+COMMAND_CALIBRATE_STOP = "calibrate.stop"
+COMMAND_LOAD_OFF = "load.off"
+COMMAND_LOAD_ON = "load.on"
+COMMAND_RESET_INPUT_MINMAX = "reset.input.minmax"
+COMMAND_RESET_WATCHDOG = "reset.watchdog"
+COMMAND_SHUTDOWN_REBOOT = "shutdown.reboot"
+COMMAND_SHUTDOWN_REBOOT_GRACEFUL = "shutdown.reboot.graceful"
+COMMAND_SHUTDOWN_RETURN = "shutdown.return"
+COMMAND_SHUTDOWN_STAYOFF = "shutdown.stayoff"
+COMMAND_SHUTDOWN_STOP = "shutdown.stop"
+COMMAND_TEST_BATTERY_START = "test.battery.start"
+COMMAND_TEST_BATTERY_START_DEEP = "test.battery.start.deep"
+COMMAND_TEST_BATTERY_START_QUICK = "test.battery.start.quick"
+COMMAND_TEST_BATTERY_STOP = "test.battery.stop"
+COMMAND_TEST_FAILURE_START = "test.failure.start"
+COMMAND_TEST_FAILURE_STOP = "test.failure.stop"
+COMMAND_TEST_PANEL_START = "test.panel.start"
+COMMAND_TEST_PANEL_STOP = "test.panel.stop"
+COMMAND_TEST_SYSTEM_START = "test.system.start"
+
+INTEGRATION_SUPPORTED_COMMANDS = {
+    COMMAND_BEEPER_DISABLE,
+    COMMAND_BEEPER_ENABLE,
+    COMMAND_BEEPER_MUTE,
+    COMMAND_BEEPER_TOGGLE,
+    COMMAND_BYPASS_START,
+    COMMAND_BYPASS_STOP,
+    COMMAND_CALIBRATE_START,
+    COMMAND_CALIBRATE_STOP,
+    COMMAND_LOAD_OFF,
+    COMMAND_LOAD_ON,
+    COMMAND_RESET_INPUT_MINMAX,
+    COMMAND_RESET_WATCHDOG,
+    COMMAND_SHUTDOWN_REBOOT,
+    COMMAND_SHUTDOWN_REBOOT_GRACEFUL,
+    COMMAND_SHUTDOWN_RETURN,
+    COMMAND_SHUTDOWN_STAYOFF,
+    COMMAND_SHUTDOWN_STOP,
+    COMMAND_TEST_BATTERY_START,
+    COMMAND_TEST_BATTERY_START_DEEP,
+    COMMAND_TEST_BATTERY_START_QUICK,
+    COMMAND_TEST_BATTERY_STOP,
+    COMMAND_TEST_FAILURE_START,
+    COMMAND_TEST_FAILURE_STOP,
+    COMMAND_TEST_PANEL_START,
+    COMMAND_TEST_PANEL_STOP,
+    COMMAND_TEST_SYSTEM_START,
 }

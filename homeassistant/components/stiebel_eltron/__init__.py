@@ -5,7 +5,6 @@ import logging
 from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
-from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -13,6 +12,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
+CONF_HUB = "hub"
+DEFAULT_HUB = "modbus_hub"
+MODBUS_DOMAIN = "modbus"
 DOMAIN = "stiebel_eltron"
 
 CONFIG_SCHEMA = vol.Schema(

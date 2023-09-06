@@ -1,0 +1,24 @@
+{
+  "domain": "ld2410_ble",
+  "name": "LD2410 BLE",
+  "bluetooth": [
+    {
+      "local_name": "HLK-LD2410B_*"
+    },
+    {
+      "local_name": "HLK-LD2410_*"
+    },
+    {
+      "manufacturer_id": 256,
+      "manufacturer_data_start": [7, 1],
+      "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@930913"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/ld2410_ble",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": ["bluetooth-data-tools==1.11.0", "ld2410-ble==0.1.1"]
+}

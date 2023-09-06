@@ -20,8 +20,17 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
-      "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
+      "server_failure": "[%key:component::rtsp_to_webrtc::config::error::server_failure%]",
+      "server_unreachable": "[%key:component::rtsp_to_webrtc::config::error::server_unreachable%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stun_server": "Stun server address (host:port)"
+        }
+      }
     }
   }
 }

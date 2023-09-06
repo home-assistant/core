@@ -3,14 +3,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.update import DOMAIN, SERVICE_INSTALL, UpdateDeviceClass
-from homeassistant.components.update.const import (
+from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_TITLE,
+    DOMAIN,
+    SERVICE_INSTALL,
+    UpdateDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -18,14 +20,25 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 
+@pytest.fixture
+async def update_only() -> None:
+    """Enable only the update platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.UPDATE],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_update(hass: HomeAssistant) -> None:
+async def setup_demo_update(hass: HomeAssistant, update_only) -> None:
     """Initialize setup demo update entity."""
     assert await async_setup_component(hass, DOMAIN, {"update": {"platform": "demo"}})
     await hass.async_block_till_done()

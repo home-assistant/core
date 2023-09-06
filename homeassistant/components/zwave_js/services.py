@@ -1,4 +1,4 @@
-"""Methods and classes related to executing Z-Wave commands and publishing these to hass."""
+"""Methods and classes related to executing Z-Wave commands."""
 from __future__ import annotations
 
 import asyncio
@@ -8,11 +8,11 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, CommandStatus
-from zwave_js_server.exceptions import SetValueFailed
+from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
+from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import ValueDataType, get_value_id
+from zwave_js_server.model.value import ValueDataType, get_value_id_str
 from zwave_js_server.util.multicast import async_multicast_set_value
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
@@ -38,12 +38,6 @@ from .helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SET_VALUE_FAILED_EXC = SetValueFailed(
-    "Unable to set value, refer to "
-    "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue for "
-    "possible reasons"
-)
 
 
 def parameter_name_does_not_need_bitmask(
@@ -88,18 +82,22 @@ def raise_exceptions_from_results(
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
-        lines = (
-            f"{len(errors)} error(s):",
+        lines = [
             *(
                 f"{zwave_object} - {error.__class__.__name__}: {error.args[0]}"
                 for zwave_object, error in errors
-            ),
-        )
+            )
+        ]
+        if len(lines) > 1:
+            lines.insert(0, f"{len(errors)} error(s):")
         raise HomeAssistantError("\n".join(lines))
 
 
 class ZWaveServices:
-    """Class that holds our services (Zwave Commands) that should be published to hass."""
+    """Class that holds our services (Zwave Commands).
+
+    Services that should be published to hass.
+    """
 
     def __init__(
         self,
@@ -156,8 +154,8 @@ class ZWaveServices:
             if first_node and not all(node.client.driver is not None for node in nodes):
                 raise vol.Invalid(f"Driver not ready for all nodes: {nodes}")
 
-            # If any nodes don't have matching home IDs, we can't run the command because
-            # we can't multicast across multiple networks
+            # If any nodes don't have matching home IDs, we can't run the command
+            # because we can't multicast across multiple networks
             if (
                 first_node
                 and first_node.client.driver  # We checked the driver was ready above.
@@ -209,6 +207,7 @@ class ZWaveServices:
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                             vol.Coerce(int), cv.string
                         ),
@@ -243,6 +242,7 @@ class ZWaveServices:
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+                        vol.Optional(const.ATTR_ENDPOINT, default=0): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int),
@@ -409,6 +409,7 @@ class ZWaveServices:
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        endpoint = service.data[const.ATTR_ENDPOINT]
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
@@ -420,6 +421,7 @@ class ZWaveServices:
                     new_value,
                     property_or_property_name,
                     property_key=property_key,
+                    endpoint=endpoint,
                 )
                 for node in nodes
             ),
@@ -444,6 +446,7 @@ class ZWaveServices:
     ) -> None:
         """Bulk set multiple partial config values on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
+        endpoint = service.data[const.ATTR_ENDPOINT]
         property_ = service.data[const.ATTR_CONFIG_PARAMETER]
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
@@ -453,6 +456,7 @@ class ZWaveServices:
                     node,
                     property_,
                     new_value,
+                    endpoint=endpoint,
                 )
                 for node in nodes
             ),
@@ -497,7 +501,7 @@ class ZWaveServices:
 
         coros = []
         for node in nodes:
-            value_id = get_value_id(
+            value_id = get_value_id_str(
                 node,
                 command_class,
                 property_,
@@ -528,16 +532,20 @@ class ZWaveServices:
         nodes_list = list(nodes)
         # multiple set_values my fail so we will track the entire list
         set_value_failed_nodes_list: list[ZwaveNode | Endpoint] = []
-        for node_, success in get_valid_responses_from_results(nodes_list, results):
-            if success is False:
-                # If we failed to set a value, add node to SetValueFailed exception list
+        set_value_failed_error_list: list[SetValueFailed] = []
+        for node_, result in get_valid_responses_from_results(nodes_list, results):
+            if result and result.status not in SET_VALUE_SUCCESS:
+                # If we failed to set a value, add node to exception list
                 set_value_failed_nodes_list.append(node_)
+                set_value_failed_error_list.append(
+                    SetValueFailed(f"{result.status} {result.message}")
+                )
 
-        # Add the SetValueFailed exception to the results and the nodes to the node
-        # list. No-op if there are no SetValueFailed exceptions
+        # Add the exception to the results and the nodes to the node list. No-op if
+        # no set value commands failed
         raise_exceptions_from_results(
             (*nodes_list, *set_value_failed_nodes_list),
-            (*results, *([SET_VALUE_FAILED_EXC] * len(set_value_failed_nodes_list))),
+            (*results, *set_value_failed_error_list),
         )
 
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
@@ -582,13 +590,15 @@ class ZWaveServices:
             first_node = next(
                 node
                 for node in client.driver.controller.nodes.values()
-                if get_value_id(node, command_class, property_, endpoint, property_key)
+                if get_value_id_str(
+                    node, command_class, property_, endpoint, property_key
+                )
                 in node.values
             )
 
         # If value has a string type but the new value is not a string, we need to
         # convert it to one
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             first_node, command_class, property_, endpoint, property_key
         )
         if (
@@ -598,18 +608,21 @@ class ZWaveServices:
         ):
             new_value = str(new_value)
 
-        success = await async_multicast_set_value(
-            client=client,
-            new_value=new_value,
-            value_data=value,
-            nodes=None if broadcast else list(nodes),
-            options=options,
-        )
+        try:
+            result = await async_multicast_set_value(
+                client=client,
+                new_value=new_value,
+                value_data=value,
+                nodes=None if broadcast else list(nodes),
+                options=options,
+            )
+        except FailedZWaveCommand as err:
+            raise HomeAssistantError("Unable to set value via multicast") from err
 
-        if success is False:
+        if result.status not in SET_VALUE_SUCCESS:
             raise HomeAssistantError(
                 "Unable to set value via multicast"
-            ) from SetValueFailed
+            ) from SetValueFailed(f"{result.status} {result.message}")
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""
@@ -618,8 +631,11 @@ class ZWaveServices:
             "calls will still work for now but the service will be removed in a "
             "future release"
         )
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        await asyncio.gather(*(node.async_ping() for node in nodes))
+        nodes: list[ZwaveNode] = list(service.data[const.ATTR_NODES])
+        results = await asyncio.gather(
+            *(node.async_ping() for node in nodes), return_exceptions=True
+        )
+        raise_exceptions_from_results(nodes, results)
 
     async def async_invoke_cc_api(self, service: ServiceCall) -> None:
         """Invoke a command class API."""

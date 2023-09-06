@@ -19,7 +19,7 @@ class Diagnostics:
         self._values: dict[str, Any] = {}
 
     def increment(self, key: str) -> None:
-        """Increment a counter for the spcified key/event."""
+        """Increment a counter for the specified key/event."""
         self._counter.update(Counter({key: 1}))
 
     def set_value(self, key: str, value: Any) -> None:

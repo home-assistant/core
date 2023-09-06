@@ -3,28 +3,32 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import ValuesView
+from datetime import datetime
 from itertools import chain
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
+from yalexs_ble import YaleXSBLEDiscovery
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import aiohttp_client, device_registry as dr, discovery_flow
 
 from .activity import ActivityStream
-from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
+from .const import CONF_BRAND, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
@@ -37,12 +41,16 @@ API_CACHED_ATTRS = {
     "lock_status",
     "lock_status_datetime",
 }
+YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
-
-    august_gateway = AugustGateway(hass)
+    # Create an aiohttp session instead of using the default one since the
+    # default one is likely to trigger august's WAF if another integration
+    # is also using Cloudflare
+    session = aiohttp_client.async_create_clientsession(hass)
+    august_gateway = AugustGateway(hass, session)
 
     try:
         await august_gateway.async_setup(entry.data)
@@ -85,29 +93,64 @@ async def async_setup_august(
     await august_gateway.async_refresh_access_token_if_needed()
 
     hass.data.setdefault(DOMAIN, {})
-    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(hass, august_gateway)
+    data = hass.data[DOMAIN][config_entry.entry_id] = AugustData(
+        hass, config_entry, august_gateway
+    )
     await data.async_setup()
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+@callback
+def _async_trigger_ble_lock_discovery(
+    hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
+):
+    """Update keys for the yalexs-ble integration if available."""
+    for lock_detail in locks_with_offline_keys:
+        discovery_flow.async_create_flow(
+            hass,
+            YALEXS_BLE_DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data=YaleXSBLEDiscovery(
+                {
+                    "name": lock_detail.device_name,
+                    "address": lock_detail.mac_address,
+                    "serial": lock_detail.serial_number,
+                    "key": lock_detail.offline_key,
+                    "slot": lock_detail.offline_slot,
+                }
+            ),
+        )
 
 
 class AugustData(AugustSubscriberMixin):
     """August data object."""
 
-    def __init__(self, hass, august_gateway):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        august_gateway: AugustGateway,
+    ) -> None:
         """Init August data object."""
         super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
+        self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream = None
+        self.activity_stream: ActivityStream | None = None
         self._api = august_gateway.api
-        self._device_detail_by_id = {}
-        self._doorbells_by_id = {}
-        self._locks_by_id = {}
-        self._house_ids = set()
-        self._pubnub_unsub = None
+        self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
+        self._doorbells_by_id: dict[str, Doorbell] = {}
+        self._locks_by_id: dict[str, Lock] = {}
+        self._house_ids: set[str] = set()
+        self._pubnub_unsub: CALLBACK_TYPE | None = None
+
+    @property
+    def brand(self) -> str:
+        """Brand of the device."""
+        return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
 
     async def async_setup(self):
         """Async setup of august device data and activities."""
@@ -133,6 +176,19 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
+
+        # Currently we know how to feed data to yalexe_ble
+        # but we do not know how to send it to homekit_controller
+        # yet
+        _async_trigger_ble_lock_discovery(
+            self._hass,
+            [
+                lock_detail
+                for lock_detail in self._device_detail_by_id.values()
+                if isinstance(lock_detail, LockDetail) and lock_detail.offline_key
+            ],
+        )
+
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
@@ -145,13 +201,19 @@ class AugustData(AugustSubscriberMixin):
         )
         await self.activity_stream.async_setup()
         pubnub.subscribe(self.async_pubnub_message)
-        self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
+        self._pubnub_unsub = async_create_pubnub(
+            user_data["UserID"],
+            pubnub,
+            self.brand,
+        )
 
         if self._locks_by_id:
             # Do not prevent setup as the sync can timeout
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
-            asyncio.create_task(self._async_initial_sync())
+            self._config_entry.async_create_background_task(
+                self._hass, self._async_initial_sync(), "august-initial-sync"
+            )
 
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""
@@ -178,14 +240,18 @@ class AugustData(AugustSubscriberMixin):
                 )
 
     @callback
-    def async_pubnub_message(self, device_id, date_time, message):
+    def async_pubnub_message(
+        self, device_id: str, date_time: datetime, message: dict[str, Any]
+    ) -> None:
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
+        activity_stream = self.activity_stream
+        assert activity_stream is not None
         if activities:
-            self.activity_stream.async_process_newer_device_activities(activities)
+            activity_stream.async_process_newer_device_activities(activities)
             self.async_signal_device_id_update(device.device_id)
-        self.activity_stream.async_schedule_house_id_refresh(device.house_id)
+        activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
     def async_stop(self):
@@ -304,7 +370,7 @@ class AugustData(AugustSubscriberMixin):
         )
 
     async def async_status_async(self, device_id, hyper_bridge):
-        """Request status of the the device but do not wait for a response since it will come via pubnub."""
+        """Request status of the device but do not wait for a response since it will come via pubnub."""
         return await self._async_call_api_op_requires_bridge(
             device_id,
             self._api.async_status_async,
@@ -363,7 +429,10 @@ class AugustData(AugustSubscriberMixin):
             if self._device_detail_by_id.get(device_id):
                 continue
             _LOGGER.info(
-                "The doorbell %s could not be setup because the system could not fetch details about the doorbell",
+                (
+                    "The doorbell %s could not be setup because the system could not"
+                    " fetch details about the doorbell"
+                ),
                 doorbell.device_name,
             )
             del self._doorbells_by_id[device_id]
@@ -377,12 +446,18 @@ class AugustData(AugustSubscriberMixin):
             lock_detail = self._device_detail_by_id.get(device_id)
             if lock_detail is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because the system could not fetch details about the lock",
+                    (
+                        "The lock %s could not be setup because the system could not"
+                        " fetch details about the lock"
+                    ),
                     lock.device_name,
                 )
             elif lock_detail.bridge is None:
                 _LOGGER.info(
-                    "The lock %s could not be setup because it does not have a bridge (Connect)",
+                    (
+                        "The lock %s could not be setup because it does not have a"
+                        " bridge (Connect)"
+                    ),
                     lock.device_name,
                 )
                 del self._device_detail_by_id[device_id]

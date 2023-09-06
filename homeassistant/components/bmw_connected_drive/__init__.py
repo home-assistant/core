@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,7 +41,10 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 SERVICE_UPDATE_STATE = "update_state"
@@ -127,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms except notify
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
@@ -163,6 +166,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
 
     coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -182,7 +186,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
             identifiers={(DOMAIN, self.vehicle.vin)},
             manufacturer=vehicle.brand.name,
             model=vehicle.name,
-            name=f"{vehicle.brand.name} {vehicle.name}",
+            name=vehicle.name,
         )
 
     async def async_added_to_hass(self) -> None:

@@ -47,7 +47,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
-        device_class=SENSOR_MOISTURE,
+        device_class=SensorDeviceClass.MOISTURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_LIGHT: SensorEntityDescription(
@@ -100,16 +100,17 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         self._sensor_type = description.key
         self.entity_description = description
         self._name = self._tag.name
+        self._attr_unique_id = f"{self.tag_id}_{self._sensor_type}"
 
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = (
+        self.entity_id = (
             f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -118,11 +119,6 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
                 self._update_tag_info_callback,
             )
         )
-
-    @property
-    def entity_id(self):
-        """Overridden version."""
-        return self._entity_id
 
     @property
     def underscored_name(self):

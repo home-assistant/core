@@ -1,14 +1,10 @@
 assume_state:
-  name: Assume state
-  description: Set Sensibo device to external state.
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     state:
-      name: State
-      description: State to set.
       required: true
       example: "on"
       selector:
@@ -17,16 +13,12 @@ assume_state:
             - "on"
             - "off"
 enable_timer:
-  name: Enable Timer
-  description: Enable the timer with custom time.
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     minutes:
-      name: Minutes
-      description: Countdown for timer (for timer state on)
       required: false
       example: 30
       selector:
@@ -35,44 +27,32 @@ enable_timer:
           step: 1
           mode: box
 enable_pure_boost:
-  name: Enable Pure Boost
-  description: Enable and configure Pure Boost settings.
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
     ac_integration:
-      name: AC Integration
-      description: Integrate with Air Conditioner.
       required: true
       example: true
       selector:
         boolean:
     geo_integration:
-      name: Geo Integration
-      description: Integrate with Presence.
       required: true
       example: true
       selector:
         boolean:
     indoor_integration:
-      name: Indoor Air Quality
-      description: Integrate with checking indoor air quality.
       required: true
       example: true
       selector:
         boolean:
     outdoor_integration:
-      name: Outdoor Air Quality
-      description: Integrate with checking outdoor air quality.
       required: true
       example: true
       selector:
         boolean:
     sensitivity:
-      name: Sensitivity
-      description: Set the sensitivity for Pure Boost.
       required: true
       example: "Normal"
       selector:
@@ -80,3 +60,97 @@ enable_pure_boost:
           options:
             - "Normal"
             - "Sensitive"
+full_state:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    mode:
+      required: true
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "cool"
+            - "heat"
+            - "fan"
+            - "auto"
+            - "dry"
+            - "off"
+    target_temperature:
+      required: false
+      example: 23
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    fan_mode:
+      required: false
+      example: "low"
+      selector:
+        text:
+          type: text
+    swing_mode:
+      required: false
+      example: "fixedBottom"
+      selector:
+        text:
+          type: text
+    horizontal_swing_mode:
+      required: false
+      example: "fixedLeft"
+      selector:
+        text:
+          type: text
+    light:
+      required: false
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+            - "dim"
+enable_climate_react:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    high_temperature_threshold:
+      required: true
+      example: 24
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    high_temperature_state:
+      required: true
+      selector:
+        object:
+    low_temperature_threshold:
+      required: true
+      example: 19
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 0.1
+          mode: box
+    low_temperature_state:
+      required: true
+      selector:
+        object:
+    smart_type:
+      required: true
+      example: "temperature"
+      selector:
+        select:
+          options:
+            - "temperature"
+            - "feelsLike"
+            - "humidity"

@@ -1,4 +1,5 @@
 """The tests for the integration sensor platform."""
+import pytest
 
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
@@ -9,10 +10,11 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_linear_state(hass):
+async def test_linear_state(hass: HomeAssistant) -> None:
     """Test compensation sensor state."""
     config = {
         "compensation": {
@@ -57,7 +59,7 @@ async def test_linear_state(hass):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_linear_state_from_attribute(hass):
+async def test_linear_state_from_attribute(hass: HomeAssistant) -> None:
     """Test compensation sensor state that pulls from attribute."""
     config = {
         "compensation": {
@@ -101,7 +103,7 @@ async def test_linear_state_from_attribute(hass):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_quadratic_state(hass):
+async def test_quadratic_state(hass: HomeAssistant) -> None:
     """Test 3 degree polynominial compensation sensor."""
     config = {
         "compensation": {
@@ -145,7 +147,9 @@ async def test_quadratic_state(hass):
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 3.327
 
 
-async def test_numpy_errors(hass, caplog):
+async def test_numpy_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Tests bad polyfits."""
     config = {
         "compensation": {
@@ -166,7 +170,9 @@ async def test_numpy_errors(hass, caplog):
     assert "invalid value encountered in divide" in caplog.text
 
 
-async def test_datapoints_greater_than_degree(hass, caplog):
+async def test_datapoints_greater_than_degree(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Tests 3 bad data points."""
     config = {
         "compensation": {
@@ -188,7 +194,7 @@ async def test_datapoints_greater_than_degree(hass, caplog):
     assert "data_points must have at least 3 data_points" in caplog.text
 
 
-async def test_new_state_is_none(hass):
+async def test_new_state_is_none(hass: HomeAssistant) -> None:
     """Tests catch for empty new states."""
     config = {
         "compensation": {
@@ -217,3 +223,50 @@ async def test_new_state_is_none(hass):
     )
 
     assert last_changed == hass.states.get(expected_entity_id).last_changed
+
+
+@pytest.mark.parametrize(
+    ("lower", "upper"),
+    [
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+async def test_limits(hass: HomeAssistant, lower: bool, upper: bool) -> None:
+    """Test compensation sensor state."""
+    source = "sensor.test"
+    config = {
+        "compensation": {
+            "test": {
+                "source": source,
+                "data_points": [
+                    [1.0, 0.0],
+                    [3.0, 2.0],
+                    [2.0, 1.0],
+                ],
+                "precision": 2,
+                "lower_limit": lower,
+                "upper_limit": upper,
+                "unit_of_measurement": "a",
+            }
+        }
+    }
+    await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.compensation_sensor_test"
+
+    hass.states.async_set(source, 0, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 0.0 if lower else -1.0
+    assert float(state.state) == value
+
+    hass.states.async_set(source, 5, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    value = 2.0 if upper else 4.0
+    assert float(state.state) == value

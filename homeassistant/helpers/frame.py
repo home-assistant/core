@@ -96,14 +96,16 @@ def report_integration(
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
-        extra = " to the custom component author"
+        extra = " to the custom integration author"
     else:
         extra = ""
 
     _LOGGER.log(
         level,
-        "Detected integration that %s. "
-        "Please report issue%s for %s using this method at %s, line %s: %s",
+        (
+            "Detected integration that %s. "
+            "Please report issue%s for %s using this method at %s, line %s: %s"
+        ),
         what,
         extra,
         integration,

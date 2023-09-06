@@ -8,7 +8,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name} - {model} ({ip_address})?"
+        "description": "Do you want to set up {name} - {model} ({ip_address})?"
       }
     },
     "abort": {
@@ -18,6 +18,82 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "climate": {
+      "auto_comfort": {
+        "name": "Auto comfort"
+      }
+    },
+    "number": {
+      "comfort_min_speed": {
+        "name": "Auto Comfort Minimum Speed"
+      },
+      "comfort_max_speed": {
+        "name": "Auto Comfort Maximum Speed"
+      },
+      "comfort_heat_assist_speed": {
+        "name": "Auto Comfort Heat Assist Speed"
+      },
+      "return_to_auto_timeout": {
+        "name": "Return to Auto Timeout"
+      },
+      "motion_sense_timeout": {
+        "name": "Motion Sense Timeout"
+      },
+      "light_return_to_auto_timeout": {
+        "name": "Light Return to Auto Timeout"
+      },
+      "light_auto_motion_timeout": {
+        "name": "Light Motion Sense Timeout"
+      }
+    },
+    "sensor": {
+      "current_rpm": {
+        "name": "Current RPM"
+      },
+      "target_rpm": {
+        "name": "Target RPM"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "ip_address": {
+        "name": "[%key:common::config_flow::data::ip%]"
+      }
+    },
+    "switch": {
+      "legacy_ir_remote_enable": {
+        "name": "Legacy IR Remote"
+      },
+      "led_indicators_enable": {
+        "name": "Led Indicators"
+      },
+      "comfort_heat_assist_enable": {
+        "name": "Auto Comfort Heat Assist"
+      },
+      "fan_beep_enable": {
+        "name": "Beep"
+      },
+      "eco_enable": {
+        "name": "Eco Mode"
+      },
+      "motion_sense_enable": {
+        "name": "Motion Sense"
+      },
+      "return_to_auto_enable": {
+        "name": "Return to Auto"
+      },
+      "whoosh_enable": {
+        "name": "Whoosh"
+      },
+      "light_dim_to_warm_enable": {
+        "name": "Dim to Warm"
+      },
+      "light_return_to_auto_enable": {
+        "name": "Light Return to Auto"
+      }
     }
   }
 }

@@ -31,9 +31,9 @@ body:
       label: What version of Home Assistant Core has the issue?
       placeholder: core-
       description: >
-        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
+        Can be found in: [Settings ⇒ System ⇒ Repairs ⇒ Three Dots in Upper Right ⇒ System information](https://my.home-assistant.io/redirect/system_health/).
 
-        [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
+        [![Open your Home Assistant instance and show the system information.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
   - type: input
     attributes:
       label: What was the last working version of Home Assistant Core?
@@ -46,9 +46,9 @@ body:
     attributes:
       label: What type of installation are you running?
       description: >
-        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
+        Can be found in: [Settings ⇒ System ⇒ Repairs ⇒ Three Dots in Upper Right ⇒ System information](https://my.home-assistant.io/redirect/system_health/).
 
-        [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
+        [![Open your Home Assistant instance and show the system information.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
       options:
         - Home Assistant OS
         - Home Assistant Container
@@ -59,15 +59,15 @@ body:
     attributes:
       label: Integration causing the issue
       description: >
-        The name of the integration. For example: Automation, Philips Hue
+        The name of the integration, for example Automation or Philips Hue.
   - type: input
     id: integration_link
     attributes:
       label: Link to integration documentation on our website
       placeholder: "https://www.home-assistant.io/integrations/..."
       description: |
-        Providing a link [to the documentation][docs] helps us categorize the
-        issue, while also providing a useful reference for others.
+        Providing a link [to the documentation][docs] helps us categorize the issue and might speed up the
+        investigation by automatically informing a contributor, while also providing a useful reference for others.
 
         [docs]: https://www.home-assistant.io/integrations
 
@@ -80,8 +80,7 @@ body:
       label: Diagnostics information
       placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
       description: >-
-        Many integrations provide the ability to download diagnostic data
-        on the device page (and on the integration dashboard).
+        Many integrations provide the ability to [download diagnostic data](https://www.home-assistant.io/docs/configuration/troubleshooting/#debug-logs-and-diagnostics).
 
         **It would really help if you could download the diagnostics data for the device you are having issues with,
         and <ins>drag-and-drop that file into the textbox below.</ins>**

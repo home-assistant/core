@@ -9,15 +9,10 @@ some overrides to custom steps inserted in the middle of the flow.
 """
 from __future__ import annotations
 
-import asyncio
-from collections import OrderedDict
 from collections.abc import Iterable, Mapping
-from enum import Enum
 import logging
-import os
 from typing import Any
 
-import async_timeout
 from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
@@ -28,12 +23,9 @@ from google_nest_sdm.structure import InfoTrait, Structure
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import get_random_string
-from homeassistant.util.json import load_json
 
 from . import api
 from .const import (
@@ -43,7 +35,6 @@ from .const import (
     DATA_NEST_CONFIG,
     DATA_SDM,
     DOMAIN,
-    INSTALLED_AUTH_DOMAIN,
     OAUTH2_AUTHORIZE,
     SDM_SCOPES,
 )
@@ -64,10 +55,6 @@ PUBSUB_API_URL = "https://console.cloud.google.com/apis/library/pubsub.googleapi
 # URLs for Configure Device Access Project step
 DEVICE_ACCESS_CONSOLE_URL = "https://console.nest.google.com/device-access/"
 
-# URLs for App Auth deprecation and upgrade
-UPGRADE_MORE_INFO_URL = (
-    "https://www.home-assistant.io/integrations/nest/#deprecated-app-auth-credentials"
-)
 DEVICE_ACCESS_CONSOLE_EDIT_URL = (
     "https://console.nest.google.com/device-access/project/{project_id}/information"
 )
@@ -76,67 +63,10 @@ DEVICE_ACCESS_CONSOLE_EDIT_URL = (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigMode(Enum):
-    """Integration configuration mode."""
-
-    SDM = 1  # SDM api with configuration.yaml
-    LEGACY = 2  # "Works with Nest" API
-    SDM_APPLICATION_CREDENTIALS = 3  # Config entry only
-
-
-def get_config_mode(hass: HomeAssistant) -> ConfigMode:
-    """Return the integration configuration mode."""
-    if DOMAIN not in hass.data or not (
-        config := hass.data[DOMAIN].get(DATA_NEST_CONFIG)
-    ):
-        return ConfigMode.SDM_APPLICATION_CREDENTIALS
-    if CONF_PROJECT_ID in config:
-        return ConfigMode.SDM
-    return ConfigMode.LEGACY
-
-
 def _generate_subscription_id(cloud_project_id: str) -> str:
     """Create a new subscription id."""
     rnd = get_random_string(SUBSCRIPTION_RAND_LENGTH)
     return SUBSCRIPTION_FORMAT.format(cloud_project_id=cloud_project_id, rnd=rnd)
-
-
-@callback
-def register_flow_implementation(
-    hass: HomeAssistant,
-    domain: str,
-    name: str,
-    gen_authorize_url: str,
-    convert_code: str,
-) -> None:
-    """Register a flow implementation for legacy api.
-
-    domain: Domain of the component responsible for the implementation.
-    name: Name of the component.
-    gen_authorize_url: Coroutine function to generate the authorize url.
-    convert_code: Coroutine function to convert a code to an access token.
-    """
-    if DATA_FLOW_IMPL not in hass.data:
-        hass.data[DATA_FLOW_IMPL] = OrderedDict()
-
-    hass.data[DATA_FLOW_IMPL][domain] = {
-        "domain": domain,
-        "name": name,
-        "gen_authorize_url": gen_authorize_url,
-        "convert_code": convert_code,
-    }
-
-
-class NestAuthError(HomeAssistantError):
-    """Base class for Nest auth errors."""
-
-
-class CodeInvalid(NestAuthError):
-    """Raised when invalid authorization code."""
-
-
-class UnexpectedStateError(HomeAssistantError):
-    """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
 def generate_config_title(structures: Iterable[Structure]) -> str | None:
@@ -161,15 +91,9 @@ class NestFlowHandler(
     def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
-        self._upgrade = False
         self._data: dict[str, Any] = {DATA_SDM: {}}
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
-
-    @property
-    def config_mode(self) -> ConfigMode:
-        """Return the configuration type for this flow."""
-        return get_config_mode(self.hass)
 
     def _async_reauth_entry(self) -> ConfigEntry | None:
         """Return existing entry for reauth."""
@@ -211,7 +135,7 @@ class NestFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Complete OAuth setup and finish pubsub or finish."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
+        _LOGGER.debug("Finishing post-oauth configuration")
         self._data.update(data)
         if self.source == SOURCE_REAUTH:
             _LOGGER.debug("Skipping Pub/Sub configuration")
@@ -220,7 +144,6 @@ class NestFlowHandler(
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         self._data.update(entry_data)
 
         return await self.async_step_reauth_confirm()
@@ -229,47 +152,14 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth dialog."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        if self._data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
-            # The config entry points to an auth mechanism that no longer works and the
-            # user needs to take action in the google cloud console to resolve. First
-            # prompt to create app creds, then later ensure they've updated the device
-            # access console.
-            self._upgrade = True
-            implementations = await config_entry_oauth2_flow.async_get_implementations(
-                self.hass, self.DOMAIN
-            )
-            if not implementations:
-                return await self.async_step_auth_upgrade()
         return await self.async_step_user()
-
-    async def async_step_auth_upgrade(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Give instructions for upgrade of deprecated app auth."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
-        if user_input is None:
-            return self.async_show_form(
-                step_id="auth_upgrade",
-                description_placeholders={
-                    "more_info_url": UPGRADE_MORE_INFO_URL,
-                },
-            )
-        # Abort this flow and ask the user for application credentials. The frontend
-        # will restart a new config flow after the user finishes so schedule a new
-        # re-auth config flow for the same entry so the user may resume.
-        if reauth_entry := self._async_reauth_entry():
-            self.hass.async_add_job(reauth_entry.async_start_reauth, self.hass)
-        return self.async_abort(reason="missing_credentials")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        if self.config_mode == ConfigMode.LEGACY:
-            return await self.async_step_init(user_input)
         self._data[DATA_SDM] = {}
         if self.source == SOURCE_REAUTH:
             return await super().async_step_user(user_input)
@@ -333,7 +223,8 @@ class NestFlowHandler(
             project_id = user_input[CONF_PROJECT_ID]
             if project_id == self._data[CONF_CLOUD_PROJECT_ID]:
                 _LOGGER.error(
-                    "Device Access Project ID and Cloud Project ID must not be the same, see documentation"
+                    "Device Access Project ID and Cloud Project ID must not be the"
+                    " same, see documentation"
                 )
                 errors[CONF_PROJECT_ID] = "wrong_project_id"
             else:
@@ -354,39 +245,6 @@ class NestFlowHandler(
                 "more_info_url": MORE_INFO_URL,
             },
             errors=errors,
-        )
-
-    async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Verify any last pre-requisites before sending user through OAuth flow."""
-        if user_input is None and self._upgrade:
-            # During app auth upgrade we need the user to update their device access project
-            # before we redirect to the authentication flow.
-            return await self.async_step_device_project_upgrade()
-        return await super().async_step_auth(user_input)
-
-    async def async_step_device_project_upgrade(
-        self, user_input: dict | None = None
-    ) -> FlowResult:
-        """Update the device access project."""
-        if user_input is not None:
-            # Resume OAuth2 redirects
-            return await super().async_step_auth()
-        if not isinstance(
-            self.flow_impl, config_entry_oauth2_flow.LocalOAuth2Implementation
-        ):
-            raise ValueError(f"Unexpected OAuth implementation: {self.flow_impl}")
-        client_id = self.flow_impl.client_id
-        return self.async_show_form(
-            step_id="device_project_upgrade",
-            description_placeholders={
-                "device_access_console_url": DEVICE_ACCESS_CONSOLE_EDIT_URL.format(
-                    project_id=self._data[CONF_PROJECT_ID]
-                ),
-                "more_info_url": UPGRADE_MORE_INFO_URL,
-                "client_id": client_id,
-            },
         )
 
     async def async_step_pubsub(
@@ -426,7 +284,6 @@ class NestFlowHandler(
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
             if not errors:
-
                 try:
                     device_manager = await subscriber.async_get_device_manager()
                 except ApiException as err:
@@ -458,7 +315,7 @@ class NestFlowHandler(
 
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""
-        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
+        _LOGGER.debug("Creating/updating configuration entry")
         # Update existing config entry when in the reauth flow.
         if entry := self._async_reauth_entry():
             self.hass.config_entries.async_update_entry(
@@ -471,114 +328,3 @@ class NestFlowHandler(
         if self._structure_config_title:
             title = self._structure_config_title
         return self.async_create_entry(title=title, data=self._data)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow start."""
-        assert (
-            self.config_mode == ConfigMode.LEGACY
-        ), "Step only supported for legacy API"
-
-        flows = self.hass.data.get(DATA_FLOW_IMPL, {})
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        if not flows:
-            return self.async_abort(reason="missing_configuration")
-
-        if len(flows) == 1:
-            self.flow_impl = list(flows)[0]
-            return await self.async_step_link()
-
-        if user_input is not None:
-            self.flow_impl = user_input["flow_impl"]
-            return await self.async_step_link()
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
-        )
-
-    async def async_step_link(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Attempt to link with the Nest account.
-
-        Route the user to a website to authenticate with Nest. Depending on
-        implementation type we expect a pin or an external component to
-        deliver the authentication code.
-        """
-        assert (
-            self.config_mode == ConfigMode.LEGACY
-        ), "Step only supported for legacy API"
-
-        flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-
-        errors = {}
-
-        if user_input is not None:
-            try:
-                async with async_timeout.timeout(10):
-                    tokens = await flow["convert_code"](user_input["code"])
-                return self._entry_from_tokens(
-                    f"Nest (via {flow['name']})", flow, tokens
-                )
-
-            except asyncio.TimeoutError:
-                errors["code"] = "timeout"
-            except CodeInvalid:
-                errors["code"] = "invalid_pin"
-            except NestAuthError:
-                errors["code"] = "unknown"
-            except Exception:  # pylint: disable=broad-except
-                errors["code"] = "internal_error"
-                _LOGGER.exception("Unexpected error resolving code")
-
-        try:
-            async with async_timeout.timeout(10):
-                url = await flow["gen_authorize_url"](self.flow_id)
-        except asyncio.TimeoutError:
-            return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="unknown_authorize_url_generation")
-
-        return self.async_show_form(
-            step_id="link",
-            description_placeholders={"url": url},
-            data_schema=vol.Schema({vol.Required("code"): str}),
-            errors=errors,
-        )
-
-    async def async_step_import(self, info: dict[str, Any]) -> FlowResult:
-        """Import existing auth from Nest."""
-        assert (
-            self.config_mode == ConfigMode.LEGACY
-        ), "Step only supported for legacy API"
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        config_path = info["nest_conf_path"]
-
-        if not await self.hass.async_add_executor_job(os.path.isfile, config_path):
-            self.flow_impl = DOMAIN  # type: ignore[assignment]
-            return await self.async_step_link()
-
-        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        tokens = await self.hass.async_add_executor_job(load_json, config_path)
-
-        return self._entry_from_tokens(
-            "Nest (import from configuration.yaml)", flow, tokens
-        )
-
-    @callback
-    def _entry_from_tokens(
-        self, title: str, flow: dict[str, Any], tokens: list[Any] | dict[Any, Any]
-    ) -> FlowResult:
-        """Create an entry from tokens."""
-        return self.async_create_entry(
-            title=title, data={"tokens": tokens, "impl_domain": flow["domain"]}
-        )

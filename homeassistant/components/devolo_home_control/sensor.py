@@ -10,9 +10,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -21,7 +20,6 @@ from .devolo_device import DevoloDeviceEntity
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    "light": SensorDeviceClass.ILLUMINANCE,
     "humidity": SensorDeviceClass.HUMIDITY,
     "current": SensorDeviceClass.POWER,
     "total": SensorDeviceClass.ENERGY,
@@ -115,11 +113,8 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             self._multi_level_sensor_property.sensor_type
         )
         self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
-
+        self._attr_name = self._multi_level_sensor_property.sensor_type.capitalize()
         self._value = self._multi_level_sensor_property.value
-
-        if self._attr_device_class is None:
-            self._attr_name += f" {self._multi_level_sensor_property.sensor_type}"
 
         if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
             self._attr_entity_registry_enabled_default = False
@@ -127,6 +122,12 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_name = "Battery level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
@@ -138,11 +139,6 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
             device_instance=device_instance,
             element_uid=element_uid,
         )
-
-        self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
-        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
 
@@ -172,18 +168,19 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )
 
-        if consumption == "total":
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
 
-        self._attr_name += f" {consumption}"
+        self._attr_name = f"{consumption.capitalize()} consumption"
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
+        """Return the unique ID of the entity.
+
+        As both sensor types share the same element_uid we need to extend original
+        self._attr_unique_id to be really unique.
+        """
         return f"{self._attr_unique_id}_{self._sensor_type}"
 
     def _sync(self, message: tuple) -> None:

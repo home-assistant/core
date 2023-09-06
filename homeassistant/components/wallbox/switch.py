@@ -54,10 +54,16 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the switch."""
-        return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] in {
-            ChargerStatus.CHARGING,
-            ChargerStatus.PAUSED,
-            ChargerStatus.SCHEDULED,
+        return super().available and self.coordinator.data[
+            CHARGER_STATUS_DESCRIPTION_KEY
+        ] not in {
+            ChargerStatus.UNKNOWN,
+            ChargerStatus.UPDATING,
+            ChargerStatus.ERROR,
+            ChargerStatus.LOCKED,
+            ChargerStatus.LOCKED_CAR_CONNECTED,
+            ChargerStatus.DISCONNECTED,
+            ChargerStatus.READY,
         }
 
     @property
@@ -65,6 +71,7 @@ class WallboxSwitch(WallboxEntity, SwitchEntity):
         """Return the status of pause/resume."""
         return self.coordinator.data[CHARGER_STATUS_DESCRIPTION_KEY] in {
             ChargerStatus.CHARGING,
+            ChargerStatus.DISCHARGING,
             ChargerStatus.WAITING_FOR_CAR,
             ChargerStatus.WAITING,
         }

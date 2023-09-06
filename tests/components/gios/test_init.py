@@ -6,15 +6,15 @@ from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import STATIONS
+from . import STATIONS, init_integration
 
-from tests.common import MockConfigEntry, load_fixture, mock_device_registry
-from tests.components.gios import init_integration
+from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_async_setup_entry(hass):
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
@@ -24,7 +24,7 @@ async def test_async_setup_entry(hass):
     assert state.state == "4"
 
 
-async def test_config_not_ready(hass):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Test for setup failure if connection to GIOS is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -42,7 +42,7 @@ async def test_config_not_ready(hass):
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 
@@ -56,7 +56,9 @@ async def test_unload_entry(hass):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_migrate_device_and_config_entry(hass):
+async def test_migrate_device_and_config_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device_info identifiers and config entry migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -85,21 +87,20 @@ async def test_migrate_device_and_config_entry(hass):
     ):
         config_entry.add_to_hass(hass)
 
-        device_reg = mock_device_registry(hass)
-        device_entry = device_reg.async_get_or_create(
+        device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 123)}
         )
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        migrated_device_entry = device_reg.async_get_or_create(
+        migrated_device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123")}
         )
         assert device_entry.id == migrated_device_entry.id
 
 
-async def test_remove_air_quality_entities(hass):
+async def test_remove_air_quality_entities(hass: HomeAssistant) -> None:
     """Test remove air_quality entities from registry."""
     registry = er.async_get(hass)
 

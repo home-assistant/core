@@ -13,7 +13,7 @@ from wolf_smartset.models import (
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.const import UnitOfPressure, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,7 +53,7 @@ async def async_setup_entry(
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
-    def __init__(self, coordinator, wolf_object: Parameter, device_id):
+    def __init__(self, coordinator, wolf_object: Parameter, device_id) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.wolf_object = wolf_object
@@ -100,7 +100,7 @@ class WolfLinkHours(WolfLinkSensor):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TIME_HOURS
+        return UnitOfTime.HOURS
 
 
 class WolfLinkTemperature(WolfLinkSensor):
@@ -114,7 +114,7 @@ class WolfLinkTemperature(WolfLinkSensor):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
 
 class WolfLinkPressure(WolfLinkSensor):
@@ -128,7 +128,7 @@ class WolfLinkPressure(WolfLinkSensor):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return PRESSURE_BAR
+        return UnitOfPressure.BAR
 
 
 class WolfLinkPercentage(WolfLinkSensor):
@@ -143,10 +143,7 @@ class WolfLinkPercentage(WolfLinkSensor):
 class WolfLinkState(WolfLinkSensor):
     """Class for entities which has defined list of state."""
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return "wolflink__state"
+    _attr_translation_key = "state"
 
     @property
     def native_value(self):

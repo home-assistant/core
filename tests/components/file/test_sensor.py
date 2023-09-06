@@ -1,19 +1,11 @@
 """The tests for local file sensor platform."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path, mock_registry
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+from tests.common import get_fixture_path
 
 
 @patch("os.path.isfile", Mock(return_value=True))

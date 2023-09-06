@@ -4,8 +4,8 @@ from __future__ import annotations
 from math import ceil
 from typing import Any
 
-from abodepy.devices.light import AbodeLight as AbodeLT
-import abodepy.helpers.constants as CONST
+from jaraco.abode.devices.light import Light as AbodeLT
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -32,18 +32,17 @@ async def async_setup_entry(
     """Set up Abode light devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
-        entities.append(AbodeLight(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeLight(data, device)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT)
+    )
 
 
 class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
     _device: AbodeLT
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -118,8 +117,3 @@ class AbodeLight(AbodeDevice, LightEntity):
         if self._device.is_dimmable:
             return {ColorMode.BRIGHTNESS}
         return {ColorMode.ONOFF}
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0

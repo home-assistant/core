@@ -1,18 +1,18 @@
 {
   "domain": "sonos",
   "name": "Sonos",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sonos",
-  "requirements": ["soco==0.28.0"],
-  "dependencies": ["ssdp"],
   "after_dependencies": ["plex", "spotify", "zeroconf", "media_source"],
-  "zeroconf": ["_sonos._tcp.local."],
+  "codeowners": ["@cgtobi", "@jjlawren"],
+  "config_flow": true,
+  "dependencies": ["ssdp"],
+  "documentation": "https://www.home-assistant.io/integrations/sonos",
+  "iot_class": "local_push",
+  "loggers": ["soco"],
+  "requirements": ["soco==0.29.1", "sonos-websocket==0.1.2"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
     }
   ],
-  "codeowners": ["@cgtobi", "@jjlawren"],
-  "iot_class": "local_push",
-  "loggers": ["soco"]
+  "zeroconf": ["_sonos._tcp.local."]
 }

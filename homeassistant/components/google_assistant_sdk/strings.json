@@ -1,0 +1,58 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "auth": {
+        "title": "Link Google Account"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Google Assistant SDK integration needs to re-authenticate your account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "language_code": "Language code"
+        }
+      }
+    }
+  },
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Assistant SDK. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type.\n\n"
+  },
+  "services": {
+    "send_text_command": {
+      "name": "Send text command",
+      "description": "Sends a command as a text query to Google Assistant.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command(s) to send to Google Assistant."
+        },
+        "media_player": {
+          "name": "Media player entity",
+          "description": "Name(s) of media player entities to play response on."
+        }
+      }
+    }
+  }
+}

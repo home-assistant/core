@@ -1,6 +1,7 @@
 """Test against characteristics captured from a eufycam."""
+from homeassistant.core import HomeAssistant
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -10,7 +11,7 @@ from tests.components.homekit_controller.common import (
 )
 
 
-async def test_eufycam_setup(hass):
+async def test_eufycam_setup(hass: HomeAssistant) -> None:
     """Test that a eufycam can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "anker_eufycam.json")
     await setup_test_accessories(hass, accessories)
@@ -39,7 +40,7 @@ async def test_eufycam_setup(hass):
                         EntityTestInfo(
                             entity_id="camera.eufycam2_0000",
                             friendly_name="eufyCam2-0000",
-                            unique_id="homekit-A0000A000000000D-aid:4",
+                            unique_id="00:00:00:00:00:00_4",
                             state="idle",
                         ),
                     ],

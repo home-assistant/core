@@ -1,18 +1,18 @@
 {
-  "title": "Min / max / mean / median sensor",
+  "title": "Combine the state of several sensors",
   "config": {
     "step": {
       "user": {
-        "title": "Add min / max / mean / median sensor",
-        "description": "Create a sensor that calculates a min, max, mean or median value from a list of input sensors.",
+        "title": "[%key:component::min_max::title%]",
+        "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
         "data": {
           "entity_ids": "Input entities",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "round_digits": "Precision",
           "type": "Statistic characteristic"
         },
         "data_description": {
-          "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+          "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean, median or sum."
         }
       }
     }
@@ -29,6 +29,25 @@
           "round_digits": "[%key:component::min_max::config::step::user::data_description::round_digits%]"
         }
       }
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "mean": "Arithmetic mean",
+        "median": "Median",
+        "last": "Most recently updated",
+        "range": "Statistical range",
+        "sum": "Sum"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads min/max sensors from the YAML-configuration."
     }
   }
 }

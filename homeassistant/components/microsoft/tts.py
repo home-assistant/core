@@ -1,12 +1,13 @@
 """Support for the Microsoft Cognitive Services text-to-speech service."""
-from http.client import HTTPException
 import logging
 
 from pycsspeechtts import pycsspeechtts
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
+from homeassistant.generated.microsoft_tts import SUPPORTED_LANGUAGES
 import homeassistant.helpers.config_validation as cv
 
 CONF_GENDER = "gender"
@@ -16,80 +17,6 @@ CONF_VOLUME = "volume"
 CONF_PITCH = "pitch"
 CONF_CONTOUR = "contour"
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORTED_LANGUAGES = [
-    "ar-eg",
-    "ar-sa",
-    "bg-bg",
-    "ca-es",
-    "cs-cz",
-    "cy-gb",
-    "da-dk",
-    "de-at",
-    "de-ch",
-    "de-de",
-    "el-gr",
-    "en-au",
-    "en-ca",
-    "en-gb",
-    "en-hk",
-    "en-ie",
-    "en-in",
-    "en-nz",
-    "en-ph",
-    "en-sg",
-    "en-us",
-    "en-za",
-    "es-ar",
-    "es-co",
-    "es-es",
-    "es-mx",
-    "es-us",
-    "et-ee",
-    "fi-fi",
-    "fr-be",
-    "fr-ca",
-    "fr-ch",
-    "fr-fr",
-    "ga-ie",
-    "gu-in",
-    "he-il",
-    "hi-in",
-    "hr-hr",
-    "hu-hu",
-    "id-id",
-    "is-is",
-    "it-it",
-    "ja-jp",
-    "ko-kr",
-    "lt-lt",
-    "lv-lv",
-    "mr-in",
-    "ms-my",
-    "mt-mt",
-    "nb-no",
-    "nl-be",
-    "nl-nl",
-    "pl-pl",
-    "pt-br",
-    "pt-pt",
-    "ro-ro",
-    "ru-ru",
-    "sk-sk",
-    "sl-si",
-    "sv-se",
-    "sw-ke",
-    "ta-in",
-    "te-in",
-    "th-th",
-    "tr-tr",
-    "uk-ua",
-    "ur-pk",
-    "vi-vn",
-    "zh-cn",
-    "zh-hk",
-    "zh-tw",
-]
 
 GENDERS = ["Female", "Male"]
 
@@ -166,7 +93,17 @@ class MicrosoftProvider(Provider):
         """Return list of supported languages."""
         return SUPPORTED_LANGUAGES
 
-    def get_tts_audio(self, message, language, options=None):
+    @property
+    def supported_options(self):
+        """Return list of supported options like voice, emotion."""
+        return [CONF_GENDER, CONF_TYPE]
+
+    @property
+    def default_options(self):
+        """Return a dict include default options."""
+        return {CONF_GENDER: self._gender, CONF_TYPE: self._type}
+
+    def get_tts_audio(self, message, language, options):
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang
@@ -175,8 +112,8 @@ class MicrosoftProvider(Provider):
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)
             data = trans.speak(
                 language=language,
-                gender=self._gender,
-                voiceType=self._type,
+                gender=options[CONF_GENDER],
+                voiceType=options[CONF_TYPE],
                 output=self._output,
                 rate=self._rate,
                 volume=self._volume,
@@ -184,7 +121,7 @@ class MicrosoftProvider(Provider):
                 contour=self._contour,
                 text=message,
             )
-        except HTTPException as ex:
+        except HTTPError as ex:
             _LOGGER.error("Error occurred for Microsoft TTS: %s", ex)
             return (None, None)
         return ("mp3", data)

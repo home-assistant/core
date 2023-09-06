@@ -68,7 +68,7 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         super().__init__(hive, hive_device)
         self.entity_description = entity_description
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)

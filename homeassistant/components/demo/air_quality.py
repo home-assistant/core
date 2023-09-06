@@ -32,39 +32,27 @@ async def async_setup_entry(
 class DemoAirQuality(AirQualityEntity):
     """Representation of Air Quality data."""
 
-    def __init__(self, name, pm_2_5, pm_10, n2o):
+    _attr_attribution = "Powered by Home Assistant"
+    _attr_should_poll = False
+
+    def __init__(self, name: str, pm_2_5: int, pm_10: int, n2o: int | None) -> None:
         """Initialize the Demo Air Quality."""
-        self._name = name
+        self._attr_name = f"Demo Air Quality {name}"
         self._pm_2_5 = pm_2_5
         self._pm_10 = pm_10
         self._n2o = n2o
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Demo Air Quality {self._name}"
-
-    @property
-    def should_poll(self):
-        """No polling needed for Demo Air Quality."""
-        return False
-
-    @property
-    def particulate_matter_2_5(self):
+    def particulate_matter_2_5(self) -> int:
         """Return the particulate matter 2.5 level."""
         return self._pm_2_5
 
     @property
-    def particulate_matter_10(self):
+    def particulate_matter_10(self) -> int:
         """Return the particulate matter 10 level."""
         return self._pm_10
 
     @property
-    def nitrogen_oxide(self):
+    def nitrogen_oxide(self) -> int | None:
         """Return the nitrogen oxide (N2O) level."""
         return self._n2o
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return "Powered by Home Assistant"

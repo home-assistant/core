@@ -1,43 +1,24 @@
 """Sensor for checking the status of London Underground tube lines."""
 from __future__ import annotations
 
-from datetime import timedelta
+import logging
 
 from london_tube_status import TubeData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-ATTRIBUTION = "Powered by TfL Open Data"
+from .const import CONF_LINE, TUBE_LINES
+from .coordinator import LondonTubeCoordinator
 
-CONF_LINE = "line"
-
-ICON = "mdi:subway"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
-TUBE_LINES = [
-    "Bakerloo",
-    "Central",
-    "Circle",
-    "District",
-    "DLR",
-    "Hammersmith & City",
-    "Jubilee",
-    "London Overground",
-    "Metropolitan",
-    "Northern",
-    "Piccadilly",
-    "TfL Rail",
-    "Victoria",
-    "Waterloo & City",
-]
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_LINE): vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))])}
@@ -55,25 +36,30 @@ async def async_setup_platform(
     session = async_get_clientsession(hass)
 
     data = TubeData(session)
-    await data.update()
+    coordinator = LondonTubeCoordinator(hass, data)
+
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
 
     sensors = []
     for line in config[CONF_LINE]:
-        sensors.append(LondonTubeSensor(line, data))
+        sensors.append(LondonTubeSensor(coordinator, line))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
-class LondonTubeSensor(SensorEntity):
+class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
-    def __init__(self, name, data):
+    _attr_attribution = "Powered by TfL Open Data"
+    _attr_icon = "mdi:subway"
+
+    def __init__(self, coordinator, name):
         """Initialize the London Underground sensor."""
-        self._data = data
-        self._description = None
+        super().__init__(coordinator)
         self._name = name
-        self._state = None
-        self.attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def name(self):
@@ -83,21 +69,9 @@ class LondonTubeSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+        return self.coordinator.data[self.name]["State"]
 
     @property
     def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        self.attrs["Description"] = self._description
-        return self.attrs
-
-    async def async_update(self):
-        """Update the sensor."""
-        await self._data.update()
-        self._state = self._data.data[self.name]["State"]
-        self._description = self._data.data[self.name]["Description"]
+        return {"Description": self.coordinator.data[self.name]["Description"]}

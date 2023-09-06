@@ -13,9 +13,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TIME_MINUTES
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
@@ -42,48 +46,48 @@ class ToloSensorEntityDescription(
 SENSORS = (
     ToloSensorEntityDescription(
         key="water_level",
+        translation_key="water_level",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:waves-arrow-up",
-        name="Water Level",
         native_unit_of_measurement=PERCENTAGE,
         getter=lambda status: status.water_level_percent,
         availability_checker=None,
     ),
     ToloSensorEntityDescription(
         key="tank_temperature",
+        translation_key="tank_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Tank Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         getter=lambda status: status.tank_temperature,
         availability_checker=None,
     ),
     ToloSensorEntityDescription(
         key="power_timer_remaining",
+        translation_key="power_timer_remaining",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:power-settings",
-        name="Power Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.power_timer,
         availability_checker=lambda settings, status: status.power_on
         and settings.power_timer is not None,
     ),
     ToloSensorEntityDescription(
         key="salt_bath_timer_remaining",
+        translation_key="salt_bath_timer_remaining",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:shaker-outline",
-        name="Salt Bath Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.salt_bath_timer,
         availability_checker=lambda settings, status: status.salt_bath_on
         and settings.salt_bath_timer is not None,
     ),
     ToloSensorEntityDescription(
         key="fan_timer_remaining",
+        translation_key="fan_timer_remaining",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:fan-auto",
-        name="Fan Timer",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.fan_timer,
         availability_checker=lambda settings, status: status.fan_on
         and settings.fan_timer is not None,

@@ -1,19 +1,19 @@
 """The Evil Genius Labs integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import cast
 
 from aiohttp import ContentTypeError
-from async_timeout import timeout
 import pyevilgenius
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -85,23 +85,25 @@ class EvilGeniusUpdateCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Update Evil Genius data."""
         if not hasattr(self, "info"):
-            async with timeout(5):
+            async with asyncio.timeout(5):
                 self.info = await self.client.get_info()
 
         if not hasattr(self, "product"):
-            async with timeout(5):
+            async with asyncio.timeout(5):
                 try:
                     self.product = await self.client.get_product()
                 except ContentTypeError:
                     # Older versions of the API don't support this
                     self.product = None
 
-        async with timeout(5):
+        async with asyncio.timeout(5):
             return cast(dict, await self.client.get_all())
 
 
 class EvilGeniusEntity(CoordinatorEntity[EvilGeniusUpdateCoordinator]):
     """Base entity for Evil Genius."""
+
+    _attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:

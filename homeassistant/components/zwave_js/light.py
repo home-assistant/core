@@ -22,6 +22,7 @@ from zwave_js_server.const.command_class.color_switch import (
     TARGET_COLOR_PROPERTY,
     ColorComponent,
 )
+from zwave_js_server.const.command_class.multilevel_switch import SET_TO_PREVIOUS_VALUE
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value
 
@@ -125,7 +126,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.COLD_WHITE,
         )
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[ColorMode] = set()
 
         # get additional (optional) values and set features
         self._target_brightness = self.get_zwave_value(
@@ -150,7 +151,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         # Entity class attributes
-        self._attr_supported_features = 0
         self.supports_brightness_transition = bool(
             self._target_brightness is not None
             and TRANSITION_DURATION_OPTION
@@ -165,6 +165,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self.supports_brightness_transition or self.supports_color_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
+        self._set_optimistic_state: bool = False
+
     @callback
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
@@ -178,7 +180,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """
         if self.info.primary_value.value is None:
             return None
-        return round((self.info.primary_value.value / 99) * 255)
+        return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
     def color_mode(self) -> str | None:
@@ -188,10 +190,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on (brightness above 0)."""
+        if self._set_optimistic_state:
+            self._set_optimistic_state = False
+            return True
         brightness = self.brightness
-        if brightness is None:
-            return None
-        return brightness > 0
+        return brightness > 0 if brightness is not None else None
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -219,7 +222,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self._max_mireds
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported features."""
         return self._supported_color_modes
 
@@ -321,9 +324,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             color_name = MULTI_COLOR_MAP[color]
             colors_dict[color_name] = value
         # set updated color object
-        await self.info.node.async_set_value(
-            combined_color_val, colors_dict, zwave_transition
-        )
+        await self._async_set_value(combined_color_val, colors_dict, zwave_transition)
 
     async def _async_set_brightness(
         self, brightness: int | None, transition: float | None = None
@@ -333,8 +334,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if not self._target_brightness:
             return
         if brightness is None:
-            # Level 255 means to set it to previous value.
-            zwave_brightness = 255
+            zwave_brightness = SET_TO_PREVIOUS_VALUE
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
@@ -348,9 +348,18 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 zwave_transition = {TRANSITION_DURATION_OPTION: "default"}
 
         # setting a value requires setting targetValue
-        await self.info.node.async_set_value(
+        await self._async_set_value(
             self._target_brightness, zwave_brightness, zwave_transition
         )
+        # We do an optimistic state update when setting to a previous value
+        # to avoid waiting for the value to be updated from the device which is
+        # typically delayed and causes a confusing UX.
+        if (
+            zwave_brightness == SET_TO_PREVIOUS_VALUE
+            and self.info.primary_value.command_class == CommandClass.SWITCH_MULTILEVEL
+        ):
+            self._set_optimistic_state = True
+            self.async_write_ha_state()
 
     @callback
     def _calculate_color_values(self) -> None:
@@ -443,10 +452,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
 
 class ZwaveBlackIsOffLight(ZwaveLight):
-    """
-    Representation of a Z-Wave light where setting the color to black turns it off.
+    """Representation of a Z-Wave light where setting the color to black turns it off.
 
-    Currently only supports lights with RGB, no color temperature, and no white channels.
+    Currently only supports lights with RGB, no color temperature, and no white
+    channels.
     """
 
     def __init__(
@@ -472,13 +481,12 @@ class ZwaveBlackIsOffLight(ZwaveLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await super().async_turn_on(**kwargs)
-
         if (
             kwargs.get(ATTR_RGBW_COLOR) is not None
             or kwargs.get(ATTR_COLOR_TEMP) is not None
             or kwargs.get(ATTR_HS_COLOR) is not None
         ):
+            await super().async_turn_on(**kwargs)
             return
 
         transition = kwargs.get(ATTR_TRANSITION)

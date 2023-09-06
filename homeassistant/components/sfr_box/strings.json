@@ -1,0 +1,120 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "choose_auth": {
+        "description": "Setting credentials enables additional functionality.",
+        "menu_options": {
+          "auth": "Set credentials (recommended)",
+          "skip_auth": "Skip authentication"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Setting the credentials is optional, but enables additional functionality."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "dsl_status": {
+        "name": "DSL status"
+      },
+      "ftth_status": {
+        "name": "FTTH status"
+      },
+      "wan_status": {
+        "name": "WAN status"
+      }
+    },
+    "sensor": {
+      "dsl_attenuation_down": {
+        "name": "DSL attenuation down"
+      },
+      "dsl_attenuation_up": {
+        "name": "DSL attenuation up"
+      },
+      "dsl_crc": {
+        "name": "DSL CRC"
+      },
+      "dsl_counter": {
+        "name": "DSL counter"
+      },
+      "dsl_linemode": {
+        "name": "DSL line mode"
+      },
+      "dsl_line_status": {
+        "name": "DSL line status",
+        "state": {
+          "no_defect": "No Defect",
+          "of_frame": "Of Frame",
+          "loss_of_signal": "Loss Of Signal",
+          "loss_of_power": "Loss Of Power",
+          "loss_of_signal_quality": "Loss Of Signal Quality",
+          "unknown": "Unknown"
+        }
+      },
+      "dsl_noise_down": {
+        "name": "DSL noise down"
+      },
+      "dsl_noise_up": {
+        "name": "DSL noise up"
+      },
+      "dsl_rate_down": {
+        "name": "DSL rate down"
+      },
+      "dsl_rate_up": {
+        "name": "DSL rate up"
+      },
+      "dsl_training": {
+        "name": "DSL training",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "g_994_training": "G.994 Training",
+          "g_992_started": "G.992 Started",
+          "g_922_channel_analysis": "G.922 Channel Analysis",
+          "g_992_message_exchange": "G.992 Message Exchange",
+          "g_993_started": "G.993 Started",
+          "g_993_channel_analysis": "G.993 Channel Analysis",
+          "g_993_message_exchange": "G.993 Message Exchange",
+          "showtime": "Showtime",
+          "unknown": "Unknown"
+        }
+      },
+      "net_infra": {
+        "name": "Network infrastructure",
+        "state": {
+          "adsl": "ADSL",
+          "ftth": "FTTH",
+          "gprs": "GPRS",
+          "unknown": "Unknown"
+        }
+      },
+      "wan_mode": {
+        "name": "WAN mode",
+        "state": {
+          "adsl_ppp": "ADSL (PPP)",
+          "adsl_routed": "ADSL (Routed)",
+          "ftth_routed": "FTTH (Routed)",
+          "grps_ppp": "GPRS (PPP)",
+          "unknown": "Unknown"
+        }
+      }
+    }
+  }
+}

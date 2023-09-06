@@ -5,15 +5,14 @@ from typing import Any
 
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
 from elkm1_lib.thermostats import Thermostat
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -68,23 +67,25 @@ async def async_setup_entry(
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
     )
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkThermostat(ElkEntity, ClimateEntity):
     """Representation of an Elk-M1 Thermostat."""
 
+    _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.AUX_HEAT
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     )
+    _attr_min_temp = 1
+    _attr_max_temp = 99
+    _attr_hvac_modes = SUPPORT_HVAC
+    _attr_hvac_mode: HVACMode | None = None
+    _attr_target_temperature_step = 1
+    _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _element: Thermostat
-
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
-        """Initialize climate entity."""
-        super().__init__(element, elk, elk_data)
-        self._state: str | None = None
 
     @property
     def temperature_unit(self) -> str:
@@ -119,44 +120,14 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._element.heat_setpoint
 
     @property
-    def target_temperature_step(self) -> float:
-        """Return the supported step of target temperature."""
-        return 1
-
-    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._element.humidity
 
     @property
-    def hvac_mode(self) -> str | None:
-        """Return current operation ie. heat, cool, idle."""
-        return self._state
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available operation modes."""
-        return SUPPORT_HVAC
-
-    @property
-    def precision(self) -> int:
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
-
-    @property
     def is_aux_heat(self) -> bool:
         """Return if aux heater is on."""
         return self._element.mode == ThermostatMode.EMERGENCY_HEAT
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature supported."""
-        return 1
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature supported."""
-        return 99
 
     @property
     def fan_mode(self) -> str | None:
@@ -184,11 +155,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         """Turn auxiliary heater off."""
         self._elk_set(ThermostatMode.HEAT, None)
 
-    @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return [FAN_AUTO, FAN_ON]
-
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         thermostat_mode, elk_fan_mode = HASS_TO_ELK_FAN_MODES[fan_mode]
@@ -205,8 +171,11 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     def _element_changed(self, element: Element, changeset: Any) -> None:
         if self._element.mode is None:
-            self._state = None
+            self._attr_hvac_mode = None
         else:
-            self._state = ELK_TO_HASS_HVAC_MODES[self._element.mode]
-            if self._state == HVACMode.OFF and self._element.fan == ThermostatFan.ON:
-                self._state = HVACMode.FAN_ONLY
+            self._attr_hvac_mode = ELK_TO_HASS_HVAC_MODES[self._element.mode]
+            if (
+                self._attr_hvac_mode == HVACMode.OFF
+                and self._element.fan == ThermostatFan.ON
+            ):
+                self._attr_hvac_mode = HVACMode.FAN_ONLY

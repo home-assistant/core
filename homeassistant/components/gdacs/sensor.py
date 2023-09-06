@@ -1,6 +1,7 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -8,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_ICON, DOMAIN, FEED
 
@@ -33,19 +34,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the GDACS Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GdacsSensor(entry.entry_id, entry.unique_id, entry.title, manager)
+    sensor = GdacsSensor(entry, manager)
     async_add_entities([sensor])
-    _LOGGER.debug("Sensor setup done")
 
 
 class GdacsSensor(SensorEntity):
-    """This is a status sensor for the GDACS integration."""
+    """Status sensor for the GDACS integration."""
 
-    def __init__(self, config_entry_id, config_unique_id, config_title, manager):
+    _attr_should_poll = False
+    _attr_icon = DEFAULT_ICON
+    _attr_native_unit_of_measurement = DEFAULT_UNIT_OF_MEASUREMENT
+
+    def __init__(self, config_entry: ConfigEntry, manager) -> None:
         """Initialize entity."""
-        self._config_entry_id = config_entry_id
-        self._config_unique_id = config_unique_id
-        self._config_title = config_title
+        self._config_entry_id = config_entry.entry_id
+        self._attr_unique_id = config_entry.unique_id
+        self._attr_name = f"GDACS ({config_entry.title})"
         self._manager = manager
         self._status = None
         self._last_update = None
@@ -55,9 +59,9 @@ class GdacsSensor(SensorEntity):
         self._created = None
         self._updated = None
         self._removed = None
-        self._remove_signal_status = None
+        self._remove_signal_status: Callable[[], None] | None = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
@@ -79,12 +83,7 @@ class GdacsSensor(SensorEntity):
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GDACS status sensor."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
         if self._manager:
@@ -96,10 +95,12 @@ class GdacsSensor(SensorEntity):
         """Update the internal state from the provided information."""
         self._status = status_info.status
         self._last_update = (
-            dt.as_utc(status_info.last_update) if status_info.last_update else None
+            dt_util.as_utc(status_info.last_update) if status_info.last_update else None
         )
         if status_info.last_update_successful:
-            self._last_update_successful = dt.as_utc(status_info.last_update_successful)
+            self._last_update_successful = dt_util.as_utc(
+                status_info.last_update_successful
+            )
         else:
             self._last_update_successful = None
         self._last_timestamp = status_info.last_timestamp
@@ -112,26 +113,6 @@ class GdacsSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._total
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID containing latitude/longitude."""
-        return self._config_unique_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return f"GDACS ({self._config_title})"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEFAULT_ICON
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
     def extra_state_attributes(self):

@@ -8,7 +8,7 @@
         }
       },
       "confirm": {
-        "description": "Do you want to setup {name} {model} ({host})?"
+        "description": "Do you want to set up {name} {model} ({host})?"
       }
     },
     "error": {
@@ -25,6 +25,13 @@
         "data": {
           "hold_temp": "Set a permanent hold when adjusting the temperature."
         }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "hold": {
+        "name": "Hold"
       }
     }
   }

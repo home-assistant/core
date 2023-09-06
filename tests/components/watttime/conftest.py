@@ -62,11 +62,13 @@ def config_location_type_fixture(hass):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config_auth, config_coordinates, unique_id):
+def config_entry_fixture(hass, config_auth, config_coordinates):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=unique_id,
+        unique_id=(
+            f"{config_coordinates[CONF_LATITUDE]}, {config_coordinates[CONF_LONGITUDE]}"
+        ),
         data={
             **config_auth,
             **config_coordinates,
@@ -78,13 +80,13 @@ def config_entry_fixture(hass, config_auth, config_coordinates, unique_id):
     return entry
 
 
-@pytest.fixture(name="data_grid_region", scope="session")
+@pytest.fixture(name="data_grid_region", scope="package")
 def data_grid_region_fixture():
     """Define grid region data."""
     return json.loads(load_fixture("grid_region_data.json", "watttime"))
 
 
-@pytest.fixture(name="data_realtime_emissions", scope="session")
+@pytest.fixture(name="data_realtime_emissions", scope="package")
 def data_realtime_emissions_fixture():
     """Define realtime emissions data."""
     return json.loads(load_fixture("realtime_emissions_data.json", "watttime"))
@@ -112,9 +114,3 @@ async def setup_watttime_fixture(hass, client, config_auth, config_coordinates):
         )
         await hass.async_block_till_done()
         yield
-
-
-@pytest.fixture(name="unique_id")
-def unique_id_fixture(hass):
-    """Define a config entry unique ID fixture."""
-    return "32.87336, -117.22743"

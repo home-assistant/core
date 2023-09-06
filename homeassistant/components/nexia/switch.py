@@ -39,13 +39,14 @@ async def async_setup_entry(
 class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
     """Provides Nexia hold switch support."""
 
+    _attr_translation_key = "hold"
+
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the hold mode switch."""
-        switch_name = f"{zone.get_name()} Hold"
         zone_id = zone.zone_id
-        super().__init__(coordinator, zone, name=switch_name, unique_id=zone_id)
+        super().__init__(coordinator, zone, zone_id)
 
     @property
     def is_on(self) -> bool:
@@ -62,7 +63,7 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         if self._zone.get_current_mode() == OPERATION_MODE_OFF:
             await self._zone.call_permanent_off()
         else:
-            await self._zone.call_permanent_hold()
+            await self._zone.set_permanent_hold()
         self._signal_zone_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
@@ -31,6 +31,8 @@ class FirmataEntity:
 class FirmataPinEntity(FirmataEntity):
     """Representation of a Firmata pin entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         api: FirmataBoardPin,
@@ -49,11 +51,6 @@ class FirmataPinEntity(FirmataEntity):
     def name(self) -> str:
         """Get the name of the pin."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self) -> str:
