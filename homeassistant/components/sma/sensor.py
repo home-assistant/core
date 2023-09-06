@@ -70,7 +70,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._config_entry_unique_id = config_entry_unique_id
         self._attr_device_info = device_info
 
-        if self.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR or self.native_unit_of_measurement == UnitOfEnergy.WATT_HOUR:
+        if self.native_unit_of_measurement in (UnitOfEnergy.KILO_WATT_HOUR, UnitOfEnergy.WATT_HOUR):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
             self._attr_device_class = SensorDeviceClass.ENERGY
         if self.native_unit_of_measurement == UnitOfPower.WATT:
