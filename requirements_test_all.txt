@@ -303,7 +303,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.4
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.8
+aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
 aioridwell==2023.07.0
