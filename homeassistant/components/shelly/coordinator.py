@@ -426,6 +426,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_event_listeners.append(ota_event_callback)
 
         return _unsubscribe
+
     @callback
     def async_subscribe_input_events(
         self, input_event_callback: Callable[[dict[str, Any]], None]
