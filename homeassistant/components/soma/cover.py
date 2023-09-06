@@ -51,6 +51,8 @@ class SomaTilt(SomaEntity, CoverEntity):
         | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
+    CLOSED_UP_THRESHOLD = 80
+    CLOSED_DOWN_THRESHOLD = 20
 
     @property
     def current_cover_tilt_position(self) -> int:
@@ -69,6 +71,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             raise HomeAssistantError(
                 f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
+        self._attr_is_closed = True
         self.set_position(0)
 
     def open_cover_tilt(self, **kwargs: Any) -> None:
@@ -78,6 +81,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             raise HomeAssistantError(
                 f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
+        self._attr_is_closed = False
         self.set_position(100)
 
     def stop_cover_tilt(self, **kwargs: Any) -> None:
@@ -102,6 +106,13 @@ class SomaTilt(SomaEntity, CoverEntity):
                 f"Error while setting the cover position ({self.name}):"
                 f' {response["msg"]}'
             )
+        if (
+            kwargs[ATTR_TILT_POSITION] < self.CLOSED_DOWN_THRESHOLD
+            or kwargs[ATTR_TILT_POSITION] > self.CLOSED_UP_THRESHOLD
+        ):
+            self._attr_is_closed = True
+        else:
+            self._attr_is_closed = False
         self.set_position(kwargs[ATTR_TILT_POSITION])
 
     async def async_update(self) -> None:
@@ -114,6 +125,13 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.current_position = 50 + ((api_position * 50) / 100)
         else:
             self.current_position = 50 - ((api_position * 50) / 100)
+        if (
+            self.current_position < self.CLOSED_DOWN_THRESHOLD
+            or self.current_position > self.CLOSED_UP_THRESHOLD
+        ):
+            self._attr_is_closed = True
+        else:
+            self._attr_is_closed = False
 
 
 class SomaShade(SomaEntity, CoverEntity):
