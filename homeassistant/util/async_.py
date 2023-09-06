@@ -75,7 +75,10 @@ def run_callback_threadsafe(
 
 
 def check_loop(
-    func: Callable[..., Any], strict: bool = True, advise_msg: str | None = None
+    func: Callable[..., Any],
+    strict: bool = True,
+    advise_msg: str | None = None,
+    debug: bool = False,
 ) -> None:
     """Warn if called inside the event loop. Raise if `strict` is True.
 
@@ -134,7 +137,8 @@ def check_loop(
     else:
         extra = ""
 
-    _LOGGER.warning(
+    _LOGGER.log(
+        logging.DEBUG if debug else logging.WARNING,
         (
             "Detected blocking call to %s inside the event loop. This is causing"
             " stability issues. Please report issue%s for %s doing blocking calls at"
@@ -156,12 +160,14 @@ def check_loop(
         )
 
 
-def protect_loop(func: Callable[_P, _R], strict: bool = True) -> Callable[_P, _R]:
+def protect_loop(
+    func: Callable[_P, _R], strict: bool = True, debug: bool = False
+) -> Callable[_P, _R]:
     """Protect function from running in event loop."""
 
     @functools.wraps(func)
     def protected_loop_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        check_loop(func, strict=strict)
+        check_loop(func, strict=strict, debug=debug)
         return func(*args, **kwargs)
 
     return protected_loop_func

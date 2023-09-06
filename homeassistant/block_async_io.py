@@ -1,5 +1,6 @@
 """Block blocking calls being done in asyncio."""
 from http.client import HTTPConnection
+from ssl import SSLContext
 import time
 
 from .util.async_ import protect_loop
@@ -18,3 +19,7 @@ def enable() -> None:
     # Currently disabled. pytz doing I/O when getting timezone.
     # Prevent files being opened inside the event loop
     # builtins.open = protect_loop(builtins.open)
+
+    SSLContext.load_default_certs = protect_loop(  # type: ignore[method-assign]
+        SSLContext.load_default_certs, strict=False
+    )
