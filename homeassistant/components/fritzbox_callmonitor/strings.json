@@ -42,9 +42,9 @@
     "sensor": {
       "fritzbox_callmonitor": {
         "state": {
-          "ringing": "ringing",
-          "dialing": "dialing",
-          "talking": "talking",
+          "ringing": "Ringing",
+          "dialing": "Dialing",
+          "talking": "Talking",
           "idle": "[%key:common::state::idle%]"
         }
       }
