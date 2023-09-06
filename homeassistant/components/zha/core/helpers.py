@@ -29,18 +29,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import (
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    CUSTOM_CONFIGURATION,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA_ZHA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
+    from .. import ZHAData
     from .device import ZHADevice
-    from .gateway import ZHAGateway
 
 _T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
@@ -221,7 +215,7 @@ def async_get_zha_config_value(
 
 def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway = get_zha_data(hass).gateway
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
         if skip_coordinator and zha_device.is_coordinator:
@@ -244,7 +238,7 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     if not registry_device:
         _LOGGER.error("Device id `%s` not found in registry", device_id)
         raise KeyError(f"Device id `{device_id}` not found in registry.")
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway = get_zha_data(hass).gateway
     try:
         ieee_address = list(registry_device.identifiers)[0][1]
         ieee = zigpy.types.EUI64.convert(ieee_address)
@@ -421,3 +415,8 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
         return ieee, install_code
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
+
+
+def get_zha_data(hass: HomeAssistant) -> ZHAData:
+    """Get the global ZHA data object."""
+    return hass.data.get(DATA_ZHA, ZHAData())

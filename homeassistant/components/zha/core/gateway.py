@@ -46,9 +46,6 @@ from .const import (
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
-    DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID,
-    DATA_ZHA_GATEWAY,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -87,6 +84,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
+from .helpers import get_zha_data
 from .registries import GROUP_ENTITY_DOMAINS
 
 if TYPE_CHECKING:
@@ -220,8 +218,9 @@ class ZHAGateway:
             else:
                 break
 
-        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
+        zha_data = get_zha_data(self._hass)
+        zha_data.gateway = self
+        zha_data.bridge_id = str(self.coordinator_ieee)
 
         self.coordinator_zha_device = self._async_get_or_create_device(
             self._find_coordinator_device(), restored=True

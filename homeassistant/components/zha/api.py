@@ -9,35 +9,20 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.types import Channels
 from zigpy.util import pick_optimal_channel
 
-from .core.const import (
-    CONF_RADIO_TYPE,
-    DATA_ZHA,
-    DATA_ZHA_CONFIG,
-    DATA_ZHA_GATEWAY,
-    DOMAIN,
-    RadioType,
-)
+from .core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
 from .core.gateway import ZHAGateway
+from .core.helpers import get_zha_data
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
 
-def _get_gateway(hass: HomeAssistant) -> ZHAGateway:
-    """Get a reference to the ZHA gateway device."""
-    return hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-
-
 def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Find the singleton ZHA config entry, if one exists."""
 
     # If ZHA is already running, use its config entry
-    try:
-        zha_gateway = _get_gateway(hass)
-    except KeyError:
-        pass
-    else:
+    if (zha_gateway := get_zha_data(hass).gateway) is not None:
         return zha_gateway.config_entry
 
     # Otherwise, find one
@@ -51,8 +36,8 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
     """Get the network settings for the currently active ZHA network."""
-    zha_gateway: ZHAGateway = _get_gateway(hass)
-    app = zha_gateway.application_controller
+    zha_data = get_zha_data(hass)
+    app = zha_data.gateway.application_controller
 
     return NetworkBackup(
         node_info=app.state.node_info,
@@ -67,7 +52,7 @@ async def async_get_last_network_settings(
     if config_entry is None:
         config_entry = _get_config_entry(hass)
 
-    config = hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
+    config = get_zha_data(hass).yaml_config
     zha_gateway = ZHAGateway(hass, config, config_entry)
 
     app_controller_cls, app_config = zha_gateway.get_application_controller_data()
@@ -120,8 +105,8 @@ async def async_change_channel(
 ) -> None:
     """Migrate the ZHA network to a new channel."""
 
-    zha_gateway: ZHAGateway = _get_gateway(hass)
-    app = zha_gateway.application_controller
+    zha_data = get_zha_data(hass)
+    app = zha_data.gateway.application_controller
 
     if new_channel == "auto":
         channel_energy = await app.energy_scan(

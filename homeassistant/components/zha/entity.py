@@ -26,14 +26,12 @@ from homeassistant.helpers.typing import EventType
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID,
     DOMAIN,
     SIGNAL_GROUP_ENTITY_REMOVED,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
 )
-from .core.helpers import LogMixin
+from .core.helpers import LogMixin, get_zha_data
 
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
@@ -89,7 +87,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            via_device=(DOMAIN, get_zha_data(self.hass).bridge_id),
         )
 
     @callback

@@ -49,12 +49,12 @@ from .cluster_handlers import (  # noqa: F401
     security,
     smartenergy,
 )
+from .helpers import get_zha_data
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .device import ZHADevice
     from .endpoint import Endpoint
-    from .gateway import ZHAGateway
     from .group import ZHAGroup
 
 _LOGGER = logging.getLogger(__name__)
@@ -263,9 +263,7 @@ class ProbeEndpoint:
 
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
-        zha_config: ConfigType = hass.data[zha_const.DATA_ZHA].get(
-            zha_const.DATA_ZHA_CONFIG, {}
-        )
+        zha_config = get_zha_data(hass).yaml_config
         if overrides := zha_config.get(zha_const.CONF_DEVICE_CONFIG):
             self._device_configs.update(overrides)
 
@@ -297,9 +295,7 @@ class GroupProbe:
     @callback
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
-        zha_gateway: ZHAGateway = self._hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
+        zha_gateway = get_zha_data(self._hass).gateway
         if (zha_group := zha_gateway.groups.get(group_id)) is None:
             return
         self.discover_group_entities(zha_group)
@@ -321,21 +317,19 @@ class GroupProbe:
         if not entity_domains:
             return
 
-        zha_gateway: ZHAGateway = self._hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
+        zha_data = get_zha_data(self._hass)
         for domain in entity_domains:
             entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
             if entity_class is None:
                 continue
-            self._hass.data[zha_const.DATA_ZHA][domain].append(
+            zha_data.platforms[domain].append(
                 (
                     entity_class,
                     (
                         group.get_domain_entity_ids(domain),
                         f"{domain}_zha_group_0x{group.group_id:04x}",
                         group.group_id,
-                        zha_gateway.coordinator_zha_device,
+                        zha_data.gateway.coordinator_zha_device,
                     ),
                 )
             )
@@ -345,9 +339,7 @@ class GroupProbe:
     def determine_entity_domains(hass: HomeAssistant, group: ZHAGroup) -> list[str]:
         """Determine the entity domains for this group."""
         entity_domains: list[str] = []
-        zha_gateway: ZHAGateway = hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
+        zha_gateway = get_zha_data(hass).gateway
         all_domain_occurrences = []
         for member in group.members:
             if member.device.is_coordinator:

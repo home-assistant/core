@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
 from .cluster_handlers.general import MultistateInput
+from .core.helpers import get_zha_data
 
 if TYPE_CHECKING:
     from .cluster_handlers import ClientClusterHandler
@@ -206,7 +207,8 @@ class Endpoint:
         if self.device.status == DeviceStatus.INITIALIZED:
             return
 
-        self.device.hass.data[const.DATA_ZHA][platform].append(
+        zha_data = get_zha_data(self.device.hass)
+        zha_data.platforms[platform].append(
             (entity_class, (unique_id, self.device, cluster_handlers))
         )
 
