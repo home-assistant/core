@@ -850,9 +850,6 @@ jsonpath==0.82
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
 
-# homeassistant.components.tplink
-kasa-crypt==0.2.0
-
 # homeassistant.components.kegtron
 kegtron-ble==0.4.0
 
@@ -1052,9 +1049,6 @@ opower==0.0.33
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
-
-# homeassistant.components.tplink
-orjson==3.9.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0

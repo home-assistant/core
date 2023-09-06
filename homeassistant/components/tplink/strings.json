@@ -15,6 +15,10 @@
       },
       "discovery_confirm": {
         "description": "Do you want to set up {name} {model} ({host})?"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The TPLink integration needs to authenticate for this device, click Configure"
       }
     },
     "error": {
@@ -133,6 +137,17 @@
         "random_seed": {
           "name": "Random seed",
           "description": "Random seed."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "tplink_cloud_username": "Enter your TPLink Cloud username",
+          "tplink_cloud_password": "Enter your TPLink Cloud password",
+          "tplink_cloud_credentials_sync": "Keep these credentials synced across devices"
         }
       }
     }
