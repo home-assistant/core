@@ -167,7 +167,8 @@ class ReolinkHost:
             else:
                 if self._api.supported(None, "initial_ONVIF_state"):
                     _LOGGER.debug(
-                        "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
+                        "Waiting for initial ONVIF state on webhook '%s'",
+                        self._webhook_url,
                     )
                 else:
                     _LOGGER.debug(
