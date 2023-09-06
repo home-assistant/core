@@ -919,7 +919,7 @@ class TrackTemplateResultInfo:
         self,
         raise_on_template_error: bool,
         strict: bool = False,
-        log_fn: Callable[[str], None] | None = None,
+        log_fn: Callable[[str, int], None] | None = None,
     ) -> None:
         """Activation of template tracking."""
         block_render = False
@@ -1238,7 +1238,7 @@ def async_track_template_result(
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
     strict: bool = False,
-    log_fn: Callable[[str], None] | None = None,
+    log_fn: Callable[[str, int], None] | None = None,
     has_super_template: bool = False,
 ) -> TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.

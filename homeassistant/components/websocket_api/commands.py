@@ -5,6 +5,7 @@ from collections.abc import Callable
 import datetime as dt
 from functools import lru_cache, partial
 import json
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -523,14 +524,17 @@ async def handle_render_template(
     timeout = msg.get("timeout")
 
     @callback
-    def _error_listener(template_error: str) -> None:
+    def _error_listener(template_error: str, level: int) -> None:
         connection.send_message(
-            messages.event_message(msg["id"], {"error": template_error})
+            messages.event_message(
+                msg["id"],
+                {"error": template_error, "level": logging.getLevelName(level)},
+            )
         )
 
     @callback
-    def _thread_safe_error_listener(template_error: str) -> None:
-        hass.loop.call_soon_threadsafe(_error_listener, template_error)
+    def _thread_safe_error_listener(template_error: str, level: int) -> None:
+        hass.loop.call_soon_threadsafe(_error_listener, template_error, level)
 
     if timeout:
         try:

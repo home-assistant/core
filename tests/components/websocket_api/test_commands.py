@@ -1234,19 +1234,25 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
 
 ERR_MSG = {"type": "result", "success": False}
 
-VARIABLE_ERROR_UNDEFINED_FUNC = (
-    "Template variable error: 'my_unknown_func' is undefined "
-    "when rendering '{{ my_unknown_func() + 1 }}'"
-)
+VARIABLE_ERROR_UNDEFINED_FUNC = {
+    "error": (
+        "Template variable error: 'my_unknown_func' is undefined "
+        "when rendering '{{ my_unknown_func() + 1 }}'"
+    ),
+    "level": "ERROR",
+}
 TEMPLATE_ERROR_UNDEFINED_FUNC = {
     "code": "template_error",
     "message": "UndefinedError: 'my_unknown_func' is undefined",
 }
 
-VARIABLE_ERROR_UNDEFINED_VAR = (
-    "Template variable warning: 'my_unknown_var' is undefined "
-    "when rendering '{{ my_unknown_var }}'"
-)
+VARIABLE_WARNING_UNDEFINED_VAR = {
+    "error": (
+        "Template variable warning: 'my_unknown_var' is undefined "
+        "when rendering '{{ my_unknown_var }}'"
+    ),
+    "level": "WARNING",
+}
 TEMPLATE_ERROR_UNDEFINED_VAR = {
     "code": "template_error",
     "message": "UndefinedError: 'my_unknown_var' is undefined",
@@ -1264,16 +1270,16 @@ TEMPLATE_ERROR_UNDEFINED_FILTER = {
         (
             "{{ my_unknown_func() + 1 }}",
             [
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_FUNC}},
+                {"type": "event", "event": VARIABLE_ERROR_UNDEFINED_FUNC},
                 ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
             ],
         ),
         (
             "{{ my_unknown_var }}",
             [
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
                 {"type": "result", "success": True, "result": None},
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
                 {
                     "type": "event",
                     "event": {"result": "", "listeners": EMPTY_LISTENERS},
@@ -1325,16 +1331,16 @@ async def test_render_template_with_error(
         (
             "{{ my_unknown_func() + 1 }}",
             [
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_FUNC}},
+                {"type": "event", "event": VARIABLE_ERROR_UNDEFINED_FUNC},
                 ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
             ],
         ),
         (
             "{{ my_unknown_var }}",
             [
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
                 {"type": "result", "success": True, "result": None},
-                {"type": "event", "event": {"error": VARIABLE_ERROR_UNDEFINED_VAR}},
+                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
                 {
                     "type": "event",
                     "event": {"result": "", "listeners": EMPTY_LISTENERS},
