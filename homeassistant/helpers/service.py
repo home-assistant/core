@@ -772,11 +772,9 @@ def _get_permissible_entity_candidates(
     # entities so we do not need to check again.
     assert all_referenced is not None
     if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
-        return [
-            entity
-            for platform in platforms
-            if (entity := platform.entities.get(single_entity))
-        ]
+        for platform in platforms:
+            if (entity := platform.entities.get(single_entity)) is not None:
+                return [entity]
 
     return [
         platform.entities[entity_id]
