@@ -68,6 +68,7 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    ScriptRunResult,
     script_stack_cv,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -349,7 +350,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation."""
 
 
@@ -403,7 +404,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation."""
 
 
@@ -571,7 +572,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         run_variables: dict[str, Any],
         context: Context | None = None,
         skip_condition: bool = False,
-    ) -> None:
+    ) -> ScriptRunResult | None:
         """Trigger automation.
 
         This method is a coroutine.
@@ -607,7 +608,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 except TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
-                    return
+                    return None
 
             # Prepare tracing the automation
             automation_trace.set_trace(trace_get())
@@ -634,7 +635,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     trace_get(clear=False),
                 )
                 script_execution_set("failed_conditions")
-                return
+                return None
 
             self.async_set_context(trigger_context)
             event_data = {
@@ -656,7 +657,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             try:
                 with trace_path("action"):
-                    await self.action_script.async_run(
+                    return await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
@@ -686,6 +687,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             except Exception as err:  # pylint: disable=broad-except
                 self._logger.exception("While executing automation %s", self.entity_id)
                 automation_trace.set_error(err)
+
+            return None
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""

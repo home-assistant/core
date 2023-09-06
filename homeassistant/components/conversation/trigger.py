@@ -1,6 +1,8 @@
 """Offer sentence based automation rules."""
 from __future__ import annotations
 
+from asyncio import CancelledError
+import logging
 from typing import Any
 
 from hassil.recognize import PUNCTUATION, RecognizeResult
@@ -8,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -15,6 +18,11 @@ from homeassistant.helpers.typing import ConfigType
 from . import HOME_ASSISTANT_AGENT, _get_agent_manager
 from .const import DOMAIN
 from .default_agent import DefaultAgent
+
+CONF_RESPONSE_SUCCESS = "response_success"
+CONF_RESPONSE_ERROR = "response_error"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
@@ -32,6 +40,8 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_COMMAND): vol.All(
             cv.ensure_list, [cv.string], has_no_punctuation
         ),
+        vol.Optional(CONF_RESPONSE_SUCCESS): cv.string,
+        vol.Optional(CONF_RESPONSE_ERROR): cv.string,
     }
 )
 
@@ -74,14 +84,35 @@ async def async_attach_trigger(
             },
         }
 
+        error_message = config.get(CONF_RESPONSE_ERROR, "Error")
+
         # Wait for the automation to complete
         if future := hass.async_run_hass_job(
             job,
             {"trigger": trigger_input},
         ):
             await future
+            try:
+                if (result := future.result()) is None:
+                    _LOGGER.info(
+                        "Could not produce a sentence trigger response because automation failed"
+                    )
+                    return error_message
 
-        return "Done"
+                return template_helper.Template(
+                    config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
+                ).async_render(result.variables)
+            except CancelledError as err:
+                _LOGGER.warning(
+                    "Could not produce a sentence trigger response because automation task was cancelled: %s",
+                    err,
+                )
+                return error_message
+
+        _LOGGER.warning(
+            "Could not produce a sentence trigger response because automation task could not start"
+        )
+        return error_message
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)
