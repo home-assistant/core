@@ -1,3 +1,4 @@
+"""Test websockets module of FlexMeasures integration."""
 # pytest ./tests/components/flexmeasures/ --cov=homeassistant.components.flexmeasures --cov-report term-missing -vv
 
 
@@ -7,6 +8,7 @@ from homeassistant.core import HomeAssistant
 async def test_producer_consumer(
     hass: HomeAssistant, setup_fm_integration, fm_websocket_client
 ):
+    """Test websocket connection."""
     message = {
         "message_id": "1234-1234-1234-1234",
         "role": "RM",

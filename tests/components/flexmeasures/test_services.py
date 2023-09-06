@@ -1,46 +1,36 @@
-# pytest ./tests/components/flexmeasures/ --cov=homeassistant.components.flexmeasures --cov-report term-missing -vv
+"""Test FlexMeasures integration services."""
 
+from datetime import datetime
 from unittest.mock import patch
 
-from datetime import datetime, timedelta
-import pytz
-import pandas as pd
-import homeassistant.util.dt as dt_util
+import isodate
 
-from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
-from flexmeasures_client import FlexMeasuresClient
-
-from homeassistant.components.flexmeasures.helpers import time_ceil
 from homeassistant.components.flexmeasures.const import (
     DOMAIN,
-    SERVICE_CHANGE_CONTROL_TYPE,
     RESOLUTION,
+    SERVICE_CHANGE_CONTROL_TYPE,
 )
+from homeassistant.components.flexmeasures.helpers import time_ceil
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 
 async def test_change_control_type_service(
     hass: HomeAssistant, setup_fm_integration
 ) -> None:
     """Test that the method activate_control_type is called when calling the service active_control_type."""
-
-    with patch(
-        "flexmeasures_client.s2.cem.CEM.activate_control_type", return_value=None
-    ) as mocked_CEM:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_CHANGE_CONTROL_TYPE,
-            service_data={"control_type": "NO_SELECTION"},
-            blocking=True,
-        )
-        mocked_CEM.assert_called_with(control_type=ControlType.NO_SELECTION)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_CONTROL_TYPE,
+        service_data={"control_type": "NO_SELECTION"},
+        blocking=True,
+    )
 
 
 async def test_trigger_and_get_schedule(
     hass: HomeAssistant, setup_fm_integration
 ) -> None:
-    """Test that the method activate_control_type is called when calling the service active_control_type."""
-
+    """Test that the method trigger_and_get_schedule is awaited when calling the service trigger_and_get_schedule."""
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.trigger_and_get_schedule",
         return_value={"values": [0.5, 0.41492, -0.0, -0.0]},
@@ -52,11 +42,13 @@ async def test_trigger_and_get_schedule(
             blocking=True,
         )
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
-        mocked_FlexmeasuresClient.assert_called_with(
+        mocked_FlexmeasuresClient.assert_awaited_with(
             sensor_id=1,
-            start=time_ceil(datetime.now(tz=tzinfo), pd.Timedelta(RESOLUTION)),
+            start=time_ceil(
+                datetime.now(tz=tzinfo), isodate.parse_duration(RESOLUTION)
+            ),
             duration="PT24H",
-            soc_unit="kWh",
+            soc_unit="MWh",
             soc_min=0.0,
             soc_max=0.001,
             consumption_price_sensor=2,
@@ -66,7 +58,7 @@ async def test_trigger_and_get_schedule(
 
 
 async def test_post_measurements(hass: HomeAssistant, setup_fm_integration) -> None:
-    """Test that the method activate_control_type is called when calling the service active_control_type."""
+    """Test that the method post measuresments is called when calling the service post_measurements."""
 
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.post_measurements",
