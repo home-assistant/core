@@ -7,10 +7,12 @@ from aiohttp import ClientConnectionError
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import AsyncMock, MockConfigEntry
 
 CONFIG = {"username": "test-user", "password": "test-password"}
+ID = "533255-1"
 
 
 async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
@@ -40,7 +42,7 @@ async def test_setup_login_error(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
-        unique_id="test-id",
+        unique_id=ID,
     )
     config_entry.add_to_hass(hass)
     mock_aladdinconnect_api.login.return_value = False
@@ -59,7 +61,7 @@ async def test_setup_connection_error(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
-        unique_id="test-id",
+        unique_id=ID,
     )
     config_entry.add_to_hass(hass)
     mock_aladdinconnect_api.login.side_effect = ClientConnectionError
@@ -75,7 +77,7 @@ async def test_setup_component_no_error(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
-        unique_id="test-id",
+        unique_id=ID,
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -116,7 +118,7 @@ async def test_load_and_unload(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
-        unique_id="test-id",
+        unique_id=ID,
     )
     config_entry.add_to_hass(hass)
 
@@ -133,3 +135,38 @@ async def test_load_and_unload(
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_stale_device_removal(
+    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+) -> None:
+    """Test component setup missing door device is removed."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "bad_id")},
+    )
+
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert len(device_entry) == 1
+    assert "bad_id" not in device_entry[0].identifiers
