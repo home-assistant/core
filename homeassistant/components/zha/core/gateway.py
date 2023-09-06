@@ -48,7 +48,6 @@ from .const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
-    DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
@@ -767,18 +766,15 @@ class ZHAGateway:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
+        # shutdown is called when the config entry unloads are processed
+        # there are cases where unloads are processed because of a failure of
+        # some sort and the application controller may not have been
+        # created yet
         if (
             hasattr(self, "application_controller")
             and self.application_controller is not None
         ):
             await self.application_controller.shutdown()
-
-        # save a reference to configuration.yaml config since it is not reloaded
-        # when a config entry is reloaded
-        config = {}
-        if DATA_ZHA_CONFIG in self._hass.data[DATA_ZHA]:
-            config[DATA_ZHA_CONFIG] = self._hass.data[DATA_ZHA][DATA_ZHA_CONFIG]
-        self._hass.data[DATA_ZHA] = config
 
     def handle_message(
         self,
