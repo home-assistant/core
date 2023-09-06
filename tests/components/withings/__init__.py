@@ -11,6 +11,8 @@ from withings_api.common import (
     MeasureGetMeasGroupCategory,
     MeasureGetMeasResponse,
     MeasureType,
+    NotifyAppli,
+    NotifyListResponse,
     SleepGetSummaryResponse,
     UserGetDeviceResponse,
 )
@@ -51,11 +53,13 @@ class MockWithings:
         device_fixture: str = "person0_get_device.json",
         measurement_fixture: str = "person0_get_meas.json",
         sleep_fixture: str = "person0_get_sleep.json",
+        notify_list_fixture: str = "person0_notify_list.json",
     ):
         """Initialize mock."""
         self.device_fixture = device_fixture
         self.measurement_fixture = measurement_fixture
         self.sleep_fixture = sleep_fixture
+        self.notify_list_fixture = notify_list_fixture
 
     def user_get_device(self) -> UserGetDeviceResponse:
         """Get devices."""
@@ -86,3 +90,11 @@ class MockWithings:
         """Get sleep."""
         fixture = json.loads(load_fixture(f"withings/{self.sleep_fixture}"))
         return SleepGetSummaryResponse(**fixture)
+
+    def notify_list(
+        self,
+        appli: Optional[NotifyAppli] = None,
+    ) -> NotifyListResponse:
+        """Get sleep."""
+        fixture = json.loads(load_fixture(f"withings/{self.notify_list_fixture}"))
+        return NotifyListResponse(**fixture)
