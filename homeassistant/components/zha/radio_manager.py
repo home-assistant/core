@@ -155,7 +155,6 @@ class ZhaRadioManager:
         )
 
         try:
-            await app.connect()
             yield app
         finally:
             await app.disconnect()
@@ -171,6 +170,7 @@ class ZhaRadioManager:
             return
 
         async with self._connect_zigpy_app() as app:
+            await app.connect()
             await app.backups.restore_backup(backup, **kwargs)
 
     @staticmethod
@@ -219,6 +219,8 @@ class ZhaRadioManager:
         backup = None
 
         async with self._connect_zigpy_app() as app:
+            await app.connect()
+
             # Check if the stick has any settings and load them
             try:
                 await app.load_network_info()
@@ -242,11 +244,13 @@ class ZhaRadioManager:
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
         async with self._connect_zigpy_app() as app:
+            await app.connect()
             await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
         async with self._connect_zigpy_app() as app:
+            await app.connect()
             await app.reset_network_info()
 
     async def async_restore_backup_step_1(self) -> bool:
