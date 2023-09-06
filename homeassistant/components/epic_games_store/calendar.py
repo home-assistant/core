@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -13,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EGSUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -50,10 +48,10 @@ class EGSCalendar(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    @property
+    @property  # type: ignore[misc]
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        return {**super().state_attributes, **self._coordinator.data}
+        return {**(super().state_attributes or {}), **self._coordinator.data}
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -64,16 +62,30 @@ class EGSCalendar(CalendarEntity):
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        event = self._coordinator.data["free_games"]
-        self._event = _get_calendar_event(event)
+        event = self._coordinator.data.get("free_games") or self._coordinator.data.get(
+            "next_free_games"
+        )
+        if event:
+            self._event = _get_calendar_event(event)
 
 
 def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     return CalendarEvent(
-        summary=event["games"][0]["title"],
+        summary=(
+            "Current"
+            if event["start_at"]
+            <= datetime.now().replace(tzinfo=ZoneInfo("UTC"))
+            < event["end_at"]
+            else "Upcoming"
+        )
+        + " free games",
         start=event["start_at"],
         end=event["end_at"],
-        description=event["games"],
-        # uid=event.uid,
+        description="\n\n\n".join(
+            [
+                f"- {game['title']} : \n{game['description']}\n\n{game['url']}"
+                for game in event["games"]
+            ]
+        ),
     )

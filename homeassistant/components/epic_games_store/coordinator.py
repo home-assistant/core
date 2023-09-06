@@ -62,6 +62,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return_data: dict[str, dict[str, Any]] = self.data or {}
         for game in promo_games:
             game_title = game["title"]
+            game_description = game["description"]
             game_publisher = game["seller"]["name"]
             game_url = f"https://store.epicgames.com/{self.locale}/p/{game['catalogNs']['mappings'][0]['pageSlug']}"
             game_img_portrait = None
@@ -97,6 +98,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return_data[f"{prefix}free_games"]["games"].append(
                     {
                         "title": game_title,
+                        "description": game_description,
                         "publisher": game_publisher,
                         "url": game_url,
                         "img_portrait": game_img_portrait,
@@ -105,4 +107,5 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     }
                 )
 
+        _LOGGER.debug(return_data)
         return return_data
