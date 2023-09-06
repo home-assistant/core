@@ -349,6 +349,7 @@ def ws_start_preview(
     def async_preview_updated(
         state: str | None,
         attributes: Mapping[str, Any] | None,
+        listeners: dict[str, bool | set[str]] | None,
         error: str | None,
     ) -> None:
         """Forward config entry state events to websocket."""
@@ -363,7 +364,7 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "state": state},
+                {"attributes": attributes, "listeners": listeners, "state": state},
             )
         )
 
