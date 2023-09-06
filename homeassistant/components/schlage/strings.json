@@ -19,7 +19,7 @@
   "entity": {
     "binary_sensor": {
       "keypad_disabled": {
-        "name": "Keypad Disabled"
+        "name": "Keypad disabled"
       }
     },
     "switch": {

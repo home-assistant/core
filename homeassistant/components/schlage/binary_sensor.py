@@ -82,7 +82,7 @@ class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):
         device_id: str,
     ) -> None:
         """Initialize a SchlageBinarySensor."""
-        super().__init__(coordinator=coordinator, device_id=device_id)
+        super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
