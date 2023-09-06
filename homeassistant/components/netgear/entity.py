@@ -60,44 +60,6 @@ class NetgearDeviceEntity(CoordinatorEntity):
         super()._handle_coordinator_update()
 
 
-class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
-    """Base class for a Netgear router entity."""
-
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, router: NetgearRouter
-    ) -> None:
-        """Initialize a Netgear device."""
-        super().__init__(coordinator)
-        self._router = router
-
-        configuration_url = None
-        if host := self._router.entry.data[CONF_HOST]:
-            configuration_url = f"http://{host}/"
-
-        self._attr_unique_id = router.serial_number
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._router.unique_id)},
-            manufacturer="Netgear",
-            name=router.device_name,
-            model=router.model,
-            sw_version=router.firmware_version,
-            hw_version=router.hardware_version,
-            configuration_url=configuration_url,
-        )
-
-    @abstractmethod
-    @callback
-    def async_update_device(self) -> None:
-        """Update the Netgear device."""
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_update_device()
-        super()._handle_coordinator_update()
-
-
 class NetgearRouterEntity(Entity):
     """Base class for a Netgear router entity without coordinator."""
 
@@ -121,3 +83,25 @@ class NetgearRouterEntity(Entity):
             hw_version=router.hardware_version,
             configuration_url=configuration_url,
         )
+
+
+class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
+    """Base class for a Netgear router entity."""
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, router: NetgearRouter
+    ) -> None:
+        """Initialize a Netgear device."""
+        CoordinatorEntity.__init__(self, coordinator)
+        NetgearRouterEntity.__init__(self, router)
+
+    @abstractmethod
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_update_device()
+        super()._handle_coordinator_update()
