@@ -206,6 +206,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._config: dict = config
         self._state: str = STATUS_IDLE
         self._duration = cv.time_period_str(config[CONF_DURATION])
+        self._running_duration: timedelta | None = None
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
         self._listener: Callable[[], None] | None = None
@@ -251,6 +252,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             ATTR_DURATION: _format_timedelta(self._duration),
             ATTR_EDITABLE: self.editable,
         }
+        if self._running_duration:
+            attrs[ATTR_DURATION] = _format_timedelta(self._running_duration)
         if self._end is not None:
             attrs[ATTR_FINISHES_AT] = self._end.isoformat()
         if self._remaining is not None:
@@ -316,7 +319,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Set remaining to new value if needed
         if duration:
-            self._remaining = duration
+            self._remaining = self._running_duration = duration
         elif not self._remaining:
             self._remaining = self._duration
 
@@ -377,6 +380,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = None
         self.hass.bus.async_fire(
             EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
         )
@@ -395,6 +399,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = None
+        self._running_duration = None
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
@@ -412,6 +417,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         end = self._end
         self._end = None
         self._remaining = None
+        self._running_duration = None
         self.hass.bus.async_fire(
             EVENT_TIMER_FINISHED,
             {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},

@@ -314,7 +314,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_DURATION] == "0:00:15"
     assert state.attributes[ATTR_REMAINING] == "0:00:15"
 
     with pytest.raises(
@@ -348,7 +348,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_DURATION] == "0:00:15"
     assert state.attributes[ATTR_REMAINING] == "0:00:08"
 
     await hass.services.async_call(
@@ -360,7 +360,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_ACTIVE
-    assert state.attributes[ATTR_DURATION] == "0:00:10"
+    assert state.attributes[ATTR_DURATION] == "0:00:15"
     assert state.attributes[ATTR_REMAINING] == "0:00:10"
 
     await hass.services.async_call(
