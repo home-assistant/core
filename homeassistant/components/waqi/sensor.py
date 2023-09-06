@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -73,28 +73,15 @@ async def async_setup_platform(
     station_filter = config.get(CONF_STATIONS)
     locations = config[CONF_LOCATIONS]
 
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.4.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "World Air Quality Index",
-        },
-    )
-
     client = WAQIClient(session=async_get_clientsession(hass), request_timeout=TIMEOUT)
     client.authenticate(token)
+    station_count = 0
     try:
         for location_name in locations:
             stations = await client.search(location_name)
             _LOGGER.debug("The following stations were returned: %s", stations)
             for station in stations:
+                station_count = station_count + 1
                 if not station_filter or {
                     station.station_id,
                     station.station.external_url,
@@ -139,6 +126,18 @@ async def async_setup_platform(
         )
         _LOGGER.exception("Failed to connect to WAQI servers")
         raise PlatformNotReady from err
+    if station_count == 0:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_none_found",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_none_found",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
 
 async def async_setup_entry(
