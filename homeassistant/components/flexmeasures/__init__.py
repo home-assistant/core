@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 
 from flexmeasures_client import FlexMeasuresClient
-from flexmeasures_client.s2.cem import CEM
-from flexmeasures_client.s2.control_types.FRBC.frbc_simple import FRBCSimple
 import isodate
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,25 +44,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
 
-    cem = CEM(fm_client=client)
-    frbc = FRBCSimple(
-        power_sensor_id=get_from_option_or_config("power_sensor", entry),  # 1
-        price_sensor_id=get_from_option_or_config(
+    # store config
+    hass.data[DOMAIN]["frbc_config"] = {
+        "power_sensor_id": get_from_option_or_config("power_sensor", entry),  # 1
+        "price_sensor_id": get_from_option_or_config(
             "consumption_price_sensor", entry
         ),  # 2
-        soc_sensor_id=get_from_option_or_config("soc_sensor", entry),  # 4
-        rm_discharge_sensor_id=get_from_option_or_config(
+        "soc_sensor_id": get_from_option_or_config("soc_sensor", entry),  # 4
+        "rm_discharge_sensor_id": get_from_option_or_config(
             "rm_discharge_sensor", entry
         ),  # 5
-        schedule_duration=isodate.parse_duration(
+        "schedule_duration": isodate.parse_duration(
             get_from_option_or_config("schedule_duration", entry)
         ),  # PT24H
-    )
-    cem.register_control_type(frbc)
+    }
+
     hass.data[DOMAIN]["fm_client"] = client
 
-    hass.data[DOMAIN]["cem"] = cem
-    hass.http.register_view(WebsocketAPIView(cem))
+    hass.http.register_view(WebsocketAPIView())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

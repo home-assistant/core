@@ -22,6 +22,7 @@ from .const import (
     SERVICE_CHANGE_CONTROL_TYPE,
     SIGNAL_UPDATE_SCHEDULE,
 )
+from .exception import UndefinedCEMError, UnknownControlType
 from .helpers import get_from_option_or_config, time_ceil
 
 CHANGE_CONTROL_TYPE_SCHEMA = vol.Schema({vol.Optional("control_type"): str})
@@ -61,12 +62,16 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         call: ServiceCall,
     ):  # pylint: disable=possibly-unused-variable
         """Change control type S2 Protocol."""
+
+        if "cem" not in hass.data[DOMAIN]:
+            raise UndefinedCEMError()
+
         cem: CEM = hass.data[DOMAIN]["cem"]
+
         control_type = cast(str, call.data.get("control_type"))
 
         if not hasattr(ControlType, control_type):
-            LOGGER.exception("TODO")
-            return False
+            raise UnknownControlType()
 
         control_type = ControlType[control_type]
 

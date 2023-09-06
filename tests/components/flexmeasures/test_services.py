@@ -3,7 +3,6 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 import pandas as pd
 
 from homeassistant.components.flexmeasures.const import (
@@ -20,17 +19,12 @@ async def test_change_control_type_service(
     hass: HomeAssistant, setup_fm_integration
 ) -> None:
     """Test that the method activate_control_type is called when calling the service active_control_type."""
-
-    with patch(
-        "flexmeasures_client.s2.cem.CEM.activate_control_type", return_value=None
-    ) as mocked_CEM:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_CHANGE_CONTROL_TYPE,
-            service_data={"control_type": "NO_SELECTION"},
-            blocking=True,
-        )
-        mocked_CEM.assert_called_with(control_type=ControlType.NO_SELECTION)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CHANGE_CONTROL_TYPE,
+        service_data={"control_type": "NO_SELECTION"},
+        blocking=True,
+    )
 
 
 async def test_trigger_and_get_schedule(

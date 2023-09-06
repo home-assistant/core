@@ -8,11 +8,12 @@ from typing import Any, Final
 import aiohttp
 from aiohttp import web
 from flexmeasures_client.s2.cem import CEM
+from flexmeasures_client.s2.control_types.FRBC.frbc_simple import FRBCSimple
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 
-from .const import WS_VIEW_NAME, WS_VIEW_URI
+from .const import DOMAIN, WS_VIEW_NAME, WS_VIEW_URI
 
 _WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
 
@@ -23,22 +24,11 @@ class WebsocketAPIView(HomeAssistantView):
     name: str = WS_VIEW_NAME
     url: str = WS_VIEW_URI
     requires_auth: bool = False
-    cem: CEM
-
-    def __init__(self, cem: CEM) -> None:
-        """Expose WebSocket server via an API view.
-
-        :param cem: Customer Energy Manager
-        """
-        super().__init__()
-        self.cem = cem
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        self.cem.control_type = None
-        return await WebSocketHandler(
-            request.app["hass"], request, self.cem
-        ).async_handle()
+
+        return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
 class WebSocketAdapter(logging.LoggerAdapter):
@@ -54,12 +44,18 @@ class WebSocketAdapter(logging.LoggerAdapter):
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
-    def __init__(self, hass: HomeAssistant, request: web.Request, cem: CEM) -> None:
+    cem: CEM
+
+    def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
         self.wsock = web.WebSocketResponse(heartbeat=55)
-        self.cem = cem
+
+        self.cem = CEM(fm_client=hass.data[DOMAIN]["fm_client"])
+        frbc = FRBCSimple(**hass.data[DOMAIN]["frbc_config"])
+        hass.data[DOMAIN]["cem"] = self.cem
+        self.cem.register_control_type(frbc)
 
         self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
 

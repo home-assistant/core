@@ -1,7 +1,9 @@
 """Fixtures for websocket tests."""
 from collections.abc import Coroutine, Generator
 from typing import Any, cast
+from unittest.mock import MagicMock, PropertyMock
 
+from flexmeasures_client.s2.python_s2_protocol.common.schemas import ControlType
 import pytest
 
 from homeassistant.components.flexmeasures.const import DOMAIN, WS_VIEW_URI
@@ -20,6 +22,7 @@ from tests.typing import (
 @pytest.fixture
 async def setup_fm_integration(hass: HomeAssistant):
     """FlexMeasures integration setup."""
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -39,14 +42,23 @@ async def setup_fm_integration(hass: HomeAssistant):
         unique_id=1212121,
         state=ConfigEntryState.NOT_LOADED,
     )
+
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    return entry
+    class CEM:
+        async def activate_control_type():
+            return None
 
-    # await hass.config_entries.async_unload(entry.entry_id)
-    # await hass.async_block_till_done()
+    cem = MagicMock(CEM)
+
+    mock_control_type = PropertyMock(return_value=(ControlType.NO_SELECTION))
+
+    type(cem).control_type = mock_control_type
+    hass.data[DOMAIN]["cem"] = cem
+
+    return entry
 
 
 @pytest.fixture
