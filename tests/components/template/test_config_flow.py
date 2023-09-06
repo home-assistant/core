@@ -272,12 +272,12 @@ async def test_options(
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["unavailable", "50.0"],
+            ["", "50.0"],
             [{}, {}],
-            [["one"], ["one", "two"]],
+            [["one", "two"], ["one", "two"]],
         ),
     ),
 )
@@ -468,6 +468,173 @@ async def test_config_flow_preview_bad_input(
         "code": "invalid_user_input",
         "message": error,
     }
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+        "input_states",
+        "template_states",
+        "error_events",
+    ),
+    [
+        (
+            "sensor",
+            "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            {"one": "30.0", "two": "20.0"},
+            ["unavailable", "50.0"],
+            [
+                (
+                    "ValueError: Template error: float got invalid input 'unknown' "
+                    "when rendering template '{{ float(states('sensor.one')) + "
+                    "float(states('sensor.two')) }}' but no default was specified"
+                )
+            ],
+        ),
+    ],
+)
+async def test_config_flow_preview_template_startup_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    template_type: str,
+    state_template: str,
+    input_states: dict[str, str],
+    template_states: list[str],
+    error_events: list[str],
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["one", "two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == template_type
+    assert result["errors"] is None
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", "state": state_template},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+
+    for error_event in error_events:
+        msg = await client.receive_json()
+        assert msg["type"] == "event"
+        assert msg["event"] == {"error": error_event}
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[0]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[input_entity], {}
+        )
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[1]
+
+
+@pytest.mark.parametrize(
+    (
+        "template_type",
+        "state_template",
+        "input_states",
+        "template_states",
+        "error_events",
+    ),
+    [
+        (
+            "sensor",
+            "{{ float(states('sensor.one')) > 30 and undefined_function() }}",
+            [{"one": "30.0", "two": "20.0"}, {"one": "35.0", "two": "20.0"}],
+            ["False", "unavailable"],
+            ["'undefined_function' is undefined"],
+        ),
+    ],
+)
+async def test_config_flow_preview_template_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    template_type: str,
+    state_template: str,
+    input_states: list[dict[str, str]],
+    template_states: list[str],
+    error_events: list[str],
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["one", "two"]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[0][input_entity], {}
+        )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": template_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == template_type
+    assert result["errors"] is None
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My template", "state": state_template},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["type"] == "result"
+    assert msg["success"]
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[0]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[1][input_entity], {}
+        )
+
+    for error_event in error_events:
+        msg = await client.receive_json()
+        assert msg["type"] == "event"
+        assert msg["event"] == {"error": error_event}
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[1]
 
 
 @pytest.mark.parametrize(
