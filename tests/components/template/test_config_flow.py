@@ -471,11 +471,19 @@ async def test_config_flow_preview_bad_input(
 
 
 @pytest.mark.parametrize(
-    ("template_type", "state_template", "error_events"),
+    (
+        "template_type",
+        "state_template",
+        "input_states",
+        "template_states",
+        "error_events",
+    ),
     [
         (
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
+            {"one": "30.0", "two": "20.0"},
+            ["unavailable", "50.0"],
             [
                 (
                     "ValueError: Template error: float got invalid input 'unknown' "
@@ -491,10 +499,14 @@ async def test_config_flow_preview_template_startup_error(
     hass_ws_client: WebSocketGenerator,
     template_type: str,
     state_template: str,
+    input_states: dict[str, str],
+    template_states: list[str],
     error_events: list[str],
 ) -> None:
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
+
+    input_entities = ["one", "two"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -527,6 +539,19 @@ async def test_config_flow_preview_template_startup_error(
         msg = await client.receive_json()
         assert msg["type"] == "event"
         assert msg["event"] == {"error": error_event}
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[0]
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}", input_states[input_entity], {}
+        )
+
+    msg = await client.receive_json()
+    assert msg["type"] == "event"
+    assert msg["event"]["state"] == template_states[1]
 
 
 @pytest.mark.parametrize(

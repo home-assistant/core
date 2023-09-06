@@ -470,7 +470,6 @@ class TemplateEntity(Entity):
             self.hass,
             template_var_tups,
             self._handle_results,
-            raise_on_template_error=bool(log_fn),
             log_fn=log_fn,
             has_super_template=has_availability_template,
         )
