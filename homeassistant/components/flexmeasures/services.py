@@ -116,6 +116,9 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         hass.data[DOMAIN]["schedule"]["schedule"] = schedule
         hass.data[DOMAIN]["schedule"]["start"] = start
+        hass.data[DOMAIN]["schedule"]["duration"] = get_from_option_or_config(
+            "schedule_duration", entry
+        )
 
         async_dispatcher_send(hass, SIGNAL_UPDATE_SCHEDULE)
 
