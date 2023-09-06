@@ -124,7 +124,7 @@ async def test_number_writeable(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 2
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 4

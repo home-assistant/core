@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
@@ -100,29 +101,29 @@ def mock_all(aioclient_mock, request, os_info):
                 "version_latest": "1.0.0",
                 "version": "1.0.0",
                 "auto_update": True,
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "state": "stopped",
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "icon": False,
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "state": "stopped",
+                        "update_available": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "repository": "core",
+                        "icon": False,
+                    },
+                ],
             },
-            "addons": [
-                {
-                    "name": "test",
-                    "slug": "test",
-                    "installed": True,
-                    "update_available": False,
-                    "version": "1.0.0",
-                    "version_latest": "1.0.0",
-                    "repository": "core",
-                    "url": "https://github.com/home-assistant/addons/test",
-                },
-                {
-                    "name": "test2",
-                    "slug": "test2",
-                    "installed": True,
-                    "update_available": False,
-                    "version": "1.0.0",
-                    "version_latest": "1.0.0",
-                    "repository": "core",
-                    "url": "https://github.com",
-                },
-            ],
         },
     )
     aioclient_mock.get(
@@ -243,7 +244,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
     assert hass.components.hassio.is_hassio()
 
@@ -288,7 +289,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -307,7 +308,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -324,7 +325,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]["refresh_token"]
@@ -404,7 +405,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     assert aioclient_mock.mock_calls[1][2]["refresh_token"] == token.token
@@ -421,7 +422,7 @@ async def test_setup_core_push_timezone(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -441,7 +442,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -486,13 +487,17 @@ async def test_service_register(hassio_env, hass: HomeAssistant) -> None:
 
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
 async def test_service_calls(
-    hassio_env,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Call service and check the API calls behind that."""
-    assert await async_setup_component(hass, "hassio", {})
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
+    ):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
 
     aioclient_mock.post("http://127.0.0.1/addons/test/start", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/addons/test/stop", json={"result": "ok"})
@@ -519,14 +524,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 10
+    assert aioclient_mock.call_count == 26
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.call_count == 28
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -541,7 +546,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.call_count == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "homeassistant": True,
@@ -566,7 +571,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 16
+    assert aioclient_mock.call_count == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -584,7 +589,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 17
+    assert aioclient_mock.call_count == 33
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -599,11 +604,33 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 34
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
     }
+
+
+async def test_invalid_service_calls(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Call service with invalid input and check that it raises."""
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value=None,
+    ):
+        assert await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            "hassio", "addon_start", {"addon": "does_not_exist"}
+        )
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            "hassio", "addon_stdin", {"addon": "does_not_exist", "input": "test"}
+        )
 
 
 async def test_service_calls_core(
@@ -864,6 +891,7 @@ async def test_coordinator_updates(
 @pytest.mark.parametrize(
     ("extra_os_info", "integration"),
     [
+        ({"board": "green"}, "homeassistant_green"),
         ({"board": "odroid-c2"}, "hardkernel"),
         ({"board": "odroid-c4"}, "hardkernel"),
         ({"board": "odroid-n2"}, "hardkernel"),
@@ -889,7 +917,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count == 18
+    assert aioclient_mock.call_count == 22
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -150,7 +150,7 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: str | None
+        self, unique_id: str | None, name: str, entity_ids: list[str], mode: bool | None
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids

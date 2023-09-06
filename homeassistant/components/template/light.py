@@ -268,8 +268,9 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Return true if device is on."""
         return self._state
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
@@ -338,7 +339,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._update_supports_transition,
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
