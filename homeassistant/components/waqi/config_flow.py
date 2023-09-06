@@ -46,8 +46,8 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass)
             ) as waqi_client:
                 waqi_client.authenticate(user_input[CONF_API_KEY])
+                location = user_input[CONF_LOCATION]
                 try:
-                    location = user_input[CONF_LOCATION]
                     measuring_station: WAQIAirQuality = (
                         await waqi_client.get_by_coordinates(
                             location[CONF_LATITUDE], location[CONF_LONGITUDE]
@@ -103,7 +103,7 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 DOMAIN,
                 "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.2.0",
+                breaks_in_ha_version="2024.4.0",
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="deprecated_yaml_import_issue_already_configured",
