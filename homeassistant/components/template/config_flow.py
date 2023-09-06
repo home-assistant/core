@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -328,6 +328,7 @@ def ws_start_preview(
 
         return errors
 
+    entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
         template_type = flow_status["step_id"]
@@ -342,6 +343,12 @@ def ws_start_preview(
         template_type = config_entry.options["template_type"]
         name = config_entry.options["name"]
         schema = cast(vol.Schema, OPTIONS_FLOW[template_type].schema)
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, flow_status["handler"]
+        )
+        if entries:
+            entity_registry_entry = entries[0]
 
     errors = _validate(schema, template_type, msg["user_input"])
 
@@ -382,6 +389,7 @@ def ws_start_preview(
     _strip_sentinel(msg["user_input"])
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
     preview_entity.hass = hass
+    preview_entity.registry_entry = entity_registry_entry
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
