@@ -15,6 +15,7 @@ async def test_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""
+
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {
@@ -55,7 +56,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "None",
+                "select_schedule": "None",
                 "last_used": "Badkamer Schema",
                 "mode": "heat",
                 "sensors": {"temperature": 16.5, "setpoint": 13.0, "battery": 67},
@@ -120,7 +121,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "GF7  Woonkamer",
+                "select_schedule": "GF7  Woonkamer",
                 "last_used": "GF7  Woonkamer",
                 "mode": "auto",
                 "sensors": {"temperature": 20.9, "setpoint": 21.5, "battery": 34},
@@ -135,7 +136,7 @@ async def test_diagnostics(
                 "name": "Adam",
                 "zigbee_mac_address": "ABCD012345670101",
                 "vendor": "Plugwise",
-                "regulation_mode": "heating",
+                "select_regulation_mode": "heating",
                 "binary_sensors": {"plugwise_notification": True},
                 "sensors": {"outdoor_temperature": 7.81},
             },
@@ -296,7 +297,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "CV Jessie",
+                "select_schedule": "CV Jessie",
                 "last_used": "CV Jessie",
                 "mode": "auto",
                 "sensors": {"temperature": 17.2, "setpoint": 15.0, "battery": 37},
@@ -344,7 +345,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "Badkamer Schema",
+                "select_schedule": "Badkamer Schema",
                 "last_used": "Badkamer Schema",
                 "mode": "auto",
                 "sensors": {"temperature": 18.9, "setpoint": 14.0, "battery": 92},
@@ -391,7 +392,7 @@ async def test_diagnostics(
                     "Badkamer Schema",
                     "CV Jessie",
                 ],
-                "selected_schedule": "None",
+                "select_schedule": "None",
                 "last_used": "Badkamer Schema",
                 "mode": "heat",
                 "sensors": {

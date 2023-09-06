@@ -11,14 +11,11 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_LAST_PLAYED,
@@ -90,6 +87,8 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
 
     _attr_attribution = "Data provided by Last.fm"
     _attr_icon = "mdi:radio-fm"
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -101,7 +100,6 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
         self._username = username
         self._attr_unique_id = hashlib.sha256(username.encode("utf-8")).hexdigest()
-        self._attr_name = username
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.last.fm",
             entry_type=DeviceEntryType.SERVICE,

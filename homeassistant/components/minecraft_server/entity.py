@@ -1,8 +1,9 @@
 """Base entity for the Minecraft Server integration."""
 
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from . import MinecraftServer
 from .const import DOMAIN, MANUFACTURER
@@ -28,9 +29,9 @@ class MinecraftServerEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._server.unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({self._server.version})",
+            model=f"Minecraft Server ({self._server.data.version})",
             name=self._server.name,
-            sw_version=str(self._server.protocol_version),
+            sw_version=f"{self._server.data.protocol_version}",
         )
         self._attr_device_class = device_class
         self._extra_state_attributes = None

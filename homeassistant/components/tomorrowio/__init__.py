@@ -26,8 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -222,7 +221,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.async_refresh()
 
         self.update_interval = async_set_update_interval(self.hass, self._api)
-        self._schedule_refresh()
+        self._next_refresh = None
+        self._async_unsub_refresh()
+        if self._listeners:
+            self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """Unload a config entry from coordinator.

@@ -14,10 +14,7 @@ from homeassistant.components.lock import (
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    set_node_attribute,
-    trigger_subscription_callback,
-)
+from .common import set_node_attribute, trigger_subscription_callback
 
 
 # This tests needs to be adjusted to remove lingering tasks

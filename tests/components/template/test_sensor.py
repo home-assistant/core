@@ -725,8 +725,9 @@ async def test_this_variable_early_hass_not_running(
     # Signal hass started
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    # Re-render icon, name, pciture + other templates now rendered
+    # icon, name, picture + other templates now re-rendered
     state = hass.states.get(entity_id)
     assert state.state == "sensor.none_false: sensor.none_false"
     assert state.attributes == {
@@ -1529,3 +1530,47 @@ async def test_trigger_entity_restore_state(
     assert state.attributes["entity_picture"] == "/local/dogs.png"
     assert state.attributes["plus_one"] == 3
     assert state.attributes["another"] == 1
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [
+                        {
+                            "variables": {
+                                "my_variable": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Hello Name",
+                            "state": "{{ my_variable + 1 }}",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_action(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity with an action works."""
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "3"
+    assert state.context is context

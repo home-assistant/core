@@ -33,5 +33,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "camera": {
+      "live": {
+        "name": "live"
+      },
+      "last_ring": {
+        "name": "Last ring"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      }
+    }
   }
 }

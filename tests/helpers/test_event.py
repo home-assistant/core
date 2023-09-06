@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
-import async_timeout
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import jinja2
@@ -1903,7 +1902,7 @@ async def test_track_template_result_with_wildcard(hass: HomeAssistant) -> None:
     template_complex_str = r"""
 
 {% for state in states %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -4175,27 +4174,27 @@ async def test_periodic_task_entering_dst_2(
     )
 
     freezer.move_to(f"{today} 01:59:59.999999+01:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     freezer.move_to(f"{today} 03:00:00.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     freezer.move_to(f"{today} 03:00:01.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     freezer.move_to(f"{tomorrow} 01:59:59.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     freezer.move_to(f"{tomorrow} 02:00:00.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -4361,7 +4360,7 @@ async def test_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
 
 
@@ -4381,7 +4380,7 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4403,7 +4402,7 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4430,7 +4429,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
     with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(delay + delay_tolerance):
+        async with asyncio.timeout(delay + delay_tolerance):
             assert await future, "callback not canceled"
 
 

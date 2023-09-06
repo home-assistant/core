@@ -314,3 +314,36 @@ async def test_delete_script(
     assert hass_config_store["scripts.yaml"] == {"one": {}}
 
     assert len(ent_reg.entities) == 1
+
+
+@pytest.mark.parametrize("script_config", ({},))
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    hass_config_store,
+) -> None:
+    """Test script APIs endpoints do not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["script"]):
+        await async_setup_component(hass, "config", {})
+
+    hass_config_store["scripts.yaml"] = {
+        "moon": {"alias": "Moon"},
+    }
+
+    client = await hass_client(hass_read_only_access_token)
+
+    # Get
+    resp = await client.get("/api/config/script/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Update
+    resp = await client.post(
+        "/api/config/script/config/moon",
+        data=json.dumps({"sequence": []}),
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Delete
+    resp = await client.delete("/api/config/script/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED

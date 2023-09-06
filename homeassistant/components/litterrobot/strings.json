@@ -131,11 +131,6 @@
       "litter_box": {
         "name": "Litter box"
       }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
-      }
     }
   },
   "services": {

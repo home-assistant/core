@@ -18,7 +18,8 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN

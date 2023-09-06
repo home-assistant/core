@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
+    STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -46,6 +47,7 @@ from .const import (
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
+    CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
@@ -75,10 +77,6 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        # temporary fix,
-        # make sure slave is always defined to avoid an error in pymodbus
-        # attr(in_waiting) not defined.
-        # see issue #657 and PR #660 in riptideio/pymodbus
         self._slave = entry.get(CONF_SLAVE, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
@@ -107,6 +105,7 @@ class BasePlatform(Entity):
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._nan_value = entry.get(CONF_NAN_VALUE, None)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
@@ -189,8 +188,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int) -> float | int:
-        """Process value from sensor with scaling, offset, min/max etc."""
+    def __process_raw_value(self, entry: float | int | str) -> float | int | str | None:
+        """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
+        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+            return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -230,6 +231,11 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # the conversion only when it's absolutely necessary.
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
+                elif v_temp is None:
+                    v_result.append("")  # pragma: no cover
+                elif v_temp != v_temp:  # noqa: PLR0124
+                    # NaN float detection replace with None
+                    v_result.append("nan")  # pragma: no cover
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
@@ -240,8 +246,18 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # We could convert int to float, and the code would still work; however
         # we lose some precision, and unit tests will fail. Therefore, we do
         # the conversion only when it's absolutely necessary.
+
+        if val_result is None:
+            return None
+        # NaN float detection replace with None
+        if val_result != val_result:  # noqa: PLR0124
+            return None  # pragma: no cover
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
+        if isinstance(val_result, str):
+            if val_result == "nan":
+                val_result = None  # pragma: no cover
+            return val_result
         return f"{float(val_result):.{self._precision}f}"
 
 
@@ -296,11 +312,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
-            self._attr_is_on = state.state == STATE_ON
+            if state.state == STATE_ON:
+                self._attr_is_on = True
+            elif state.state == STATE_OFF:
+                self._attr_is_on = False
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, command, self._write_type
         )
         if result is None:
@@ -336,7 +355,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._verify_address, 1, self._verify_type
         )
         self._call_active = False

@@ -16,10 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_ca
 
 from ..entry_data import RuntimeEntryData
 from .cache import ESPHomeBluetoothCache
-from .client import (
-    ESPHomeClient,
-    ESPHomeClientData,
-)
+from .client import ESPHomeClient, ESPHomeClientData
 from .device import ESPHomeBluetoothDevice
 from .scanner import ESPHomeScanner
 

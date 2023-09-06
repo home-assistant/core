@@ -8,7 +8,7 @@ DEFAULT_PORT = 25565
 
 DOMAIN = "minecraft_server"
 
-ICON_LATENCY_TIME = "mdi:signal"
+ICON_LATENCY = "mdi:signal"
 ICON_PLAYERS_MAX = "mdi:account-multiple"
 ICON_PLAYERS_ONLINE = "mdi:account-multiple"
 ICON_PROTOCOL_VERSION = "mdi:numeric"
@@ -16,11 +16,17 @@ ICON_STATUS = "mdi:lan"
 ICON_VERSION = "mdi:numeric"
 ICON_MOTD = "mdi:minecraft"
 
-KEY_SERVERS = "servers"
+KEY_LATENCY = "latency"
+KEY_PLAYERS_MAX = "players_max"
+KEY_PLAYERS_ONLINE = "players_online"
+KEY_PROTOCOL_VERSION = "protocol_version"
+KEY_STATUS = "status"
+KEY_VERSION = "version"
+KEY_MOTD = "motd"
 
 MANUFACTURER = "Mojang AB"
 
-NAME_LATENCY_TIME = "Latency Time"
+NAME_LATENCY = "Latency Time"
 NAME_PLAYERS_MAX = "Players Max"
 NAME_PLAYERS_ONLINE = "Players Online"
 NAME_PROTOCOL_VERSION = "Protocol Version"

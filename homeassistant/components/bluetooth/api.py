@@ -4,11 +4,11 @@ These APIs are the only documented way to interact with the bluetooth integratio
 """
 from __future__ import annotations
 
+import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
-import async_timeout
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -152,7 +152,7 @@ async def async_process_advertisements(
     )
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             return await done
     finally:
         unload()

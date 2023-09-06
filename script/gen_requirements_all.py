@@ -9,9 +9,8 @@ from pathlib import Path
 import pkgutil
 import re
 import sys
-from typing import Any
-
 import tomllib
+from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
@@ -149,7 +148,7 @@ pyOpenSSL>=23.1.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.23.3
+protobuf==4.24.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder

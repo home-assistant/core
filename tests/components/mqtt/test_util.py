@@ -37,7 +37,7 @@ def mock_temp_dir():
 async def test_async_create_certificate_temp_files(
     hass: HomeAssistant, mock_temp_dir, option, content, file_created
 ) -> None:
-    """Test creating and reading certificate files."""
+    """Test creating and reading and recovery certificate files."""
     config = {option: content}
     await mqtt.util.async_create_certificate_temp_files(hass, config)
 
@@ -46,6 +46,22 @@ async def test_async_create_certificate_temp_files(
     assert (
         mqtt.util.migrate_certificate_file_to_content(file_path or content) == content
     )
+
+    # Make sure certificate temp files are recovered
+    if file_path:
+        # Overwrite content of file (except for auto option)
+        file = open(file_path, "wb")
+        file.write(b"invalid")
+        file.close()
+
+    await mqtt.util.async_create_certificate_temp_files(hass, config)
+    file_path2 = mqtt.util.get_file_path(option)
+    assert bool(file_path2) is file_created
+    assert (
+        mqtt.util.migrate_certificate_file_to_content(file_path2 or content) == content
+    )
+
+    assert file_path == file_path2
 
 
 async def test_reading_non_exitisting_certificate_file() -> None:
