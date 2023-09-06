@@ -153,7 +153,6 @@ class RoonServer:
             "entity_id": control_key,
             "type": roon_event_type,
         }
-        _LOGGER.error("Publishing Roon Event %s", event_data)
         self.hass.bus.async_fire(ROON_EVENT, event_data)
 
     async def async_do_loop(self):
