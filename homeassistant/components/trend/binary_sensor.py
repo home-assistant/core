@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_SENSORS,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -117,7 +119,6 @@ async def async_setup_platform(
         sensors.append(
             SensorTrend(
                 hass,
-                device_id,
                 friendly_name,
                 entity_id,
                 attribute,
@@ -127,6 +128,7 @@ async def async_setup_platform(
                 min_gradient,
                 sample_duration,
                 min_samples,
+                device_id=device_id,
             )
         )
 
@@ -135,6 +137,31 @@ async def async_setup_platform(
         return
 
     async_add_entities(sensors)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up trend sensor from config entry."""
+
+    async_add_entities(
+        [
+            SensorTrend(
+                hass,
+                entry.options[CONF_NAME],
+                entry.options[CONF_ENTITY_ID],
+                entry.options.get(CONF_ATTRIBUTE),
+                entry.options.get(CONF_DEVICE_CLASS),
+                entry.options[CONF_INVERT],
+                int(entry.options[CONF_MAX_SAMPLES]),
+                entry.options[CONF_MIN_GRADIENT],
+                entry.options[CONF_SAMPLE_DURATION],
+                config_entry=entry,
+            )
+        ]
+    )
 
 
 class SensorTrend(BinarySensorEntity, RestoreEntity):
@@ -147,20 +174,20 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        device_id: str,
         friendly_name: str,
         entity_id: str,
-        attribute: str,
-        device_class: BinarySensorDeviceClass,
+        attribute: str | None,
+        device_class: BinarySensorDeviceClass | None,
         invert: bool,
         max_samples: int,
         min_gradient: float,
         sample_duration: int,
         min_samples: int,
+        device_id: str | None = None,
+        config_entry: ConfigEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
         self._attr_name = friendly_name
         self._attr_device_class = device_class
         self._entity_id = entity_id
@@ -170,6 +197,12 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._min_gradient = min_gradient
         self._min_samples = min_samples
         self.samples: deque = deque(maxlen=max_samples)
+
+        if device_id is not None:
+            # set entity ID only if it has been set in configuration.yaml
+            self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+        elif config_entry is not None:
+            self._attr_unique_id = f"{config_entry.entry_id}_binary_sensor"
 
     @property
     def is_on(self) -> bool | None:

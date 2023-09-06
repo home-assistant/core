@@ -6048,12 +6048,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "trend": {
-      "name": "Trend",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -6875,6 +6869,12 @@
       "config_flow": false
     },
     "tod": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
+    "trend": {
+      "name": "Trend",
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"

@@ -4,5 +4,78 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads trend sensors from the YAML-configuration."
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Trend helper",
+        "description": "The trend helper allows you to create a sensor which show the trend of a numeric state or a state attribute from another entity.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "Entity that this sensor tracks"
+        }
+      },
+      "settings": {
+        "data": {
+          "attribute": "Attribute of entity that this sensor tracks",
+          "device_class": "Device class",
+          "invert": "Invert the result",
+          "max_samples": "Maximum number of stored samples",
+          "min_gradient": "Minimum rate at which the value must be changing",
+          "sample_duration": "Duration in seconds to store samples for"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "attribute": "[%key:component::trend::config::step::settings::data::attribute%]",
+          "device_class": "[%key:component::trend::config::step::settings::data::device_class%]",
+          "invert": "[%key:component::trend::config::step::settings::data::invert%]",
+          "max_samples": "[%key:component::trend::config::step::settings::data::max_samples%]",
+          "min_gradient": "[%key:component::trend::config::step::settings::data::min_gradient%]",
+          "sample_duration": "[%key:component::trend::config::step::settings::data::sample_duration%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "none": "None",
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    }
   }
 }
