@@ -123,8 +123,6 @@ class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
     # -- Set in async_initialize --
-    ha_device_registry: dr.DeviceRegistry
-    ha_entity_registry: er.EntityRegistry
     application_controller: ControllerApplication
     radio_description: str
 
@@ -193,9 +191,6 @@ class ZHAGateway:
         """Initialize controller and connect radio."""
         discovery.PROBE.initialize(self._hass)
         discovery.GROUP_PROBE.initialize(self._hass)
-
-        self.ha_device_registry = dr.async_get(self._hass)
-        self.ha_entity_registry = er.async_get(self._hass)
 
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
@@ -416,9 +411,11 @@ class ZHAGateway:
                 remove_tasks.append(entity_ref.remove_future)
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
-        reg_device = self.ha_device_registry.async_get(device.device_id)
+
+        device_registry = dr.async_get(self._hass)
+        reg_device = device_registry.async_get(device.device_id)
         if reg_device is not None:
-            self.ha_device_registry.async_remove_device(reg_device.id)
+            device_registry.async_remove_device(reg_device.id)
 
     def device_removed(self, device: zigpy.device.Device) -> None:
         """Handle device being removed from the network."""
@@ -488,9 +485,10 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
+        entity_registry = er.async_get(self._hass)
         assert self.coordinator_zha_device
         all_group_entity_entries = er.async_entries_for_device(
-            self.ha_entity_registry,
+            entity_registry,
             self.coordinator_zha_device.device_id,
             include_disabled_entities=True,
         )
@@ -508,7 +506,7 @@ class ZHAGateway:
             _LOGGER.debug(
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
-            self.ha_entity_registry.async_remove(entry.entity_id)
+            entity_registry.async_remove(entry.entity_id)
 
     @property
     def coordinator_ieee(self) -> EUI64:
@@ -584,7 +582,9 @@ class ZHAGateway:
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
             zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
-            device_registry_device = self.ha_device_registry.async_get_or_create(
+
+            device_registry = dr.async_get(self._hass)
+            device_registry_device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
