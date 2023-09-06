@@ -843,7 +843,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
 
         self._attr_device_info = device_info
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
+            f"{config_entry_unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
         )
 
         # Set sensor enabled to False.
