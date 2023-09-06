@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -117,20 +118,22 @@ class SensorTrend(BinarySensorEntity):
     """Representation of a trend Sensor."""
 
     _attr_should_poll = False
+    _gradient = 0.0
+    _state: bool | None = None
 
     def __init__(
         self,
-        hass,
-        device_id,
-        friendly_name,
-        entity_id,
-        attribute,
-        device_class,
-        invert,
-        max_samples,
-        min_gradient,
-        sample_duration,
-    ):
+        hass: HomeAssistant,
+        device_id: str,
+        friendly_name: str,
+        entity_id: str,
+        attribute: str,
+        device_class: BinarySensorDeviceClass,
+        invert: bool,
+        max_samples: int,
+        min_gradient: float,
+        sample_duration: int,
+    ) -> None:
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
@@ -141,12 +144,10 @@ class SensorTrend(BinarySensorEntity):
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
-        self._gradient = None
-        self._state = None
-        self.samples = deque(maxlen=max_samples)
+        self.samples: deque = deque(maxlen=max_samples)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
@@ -214,7 +215,7 @@ class SensorTrend(BinarySensorEntity):
         if self._invert:
             self._state = not self._state
 
-    def _calculate_gradient(self):
+    def _calculate_gradient(self) -> None:
         """Compute the linear trend gradient of the current samples.
 
         This need run inside executor.
