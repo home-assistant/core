@@ -7,7 +7,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -43,23 +42,6 @@ NONE_SENTINEL = "none"
 def generate_schema(domain: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
-
-    if domain == Platform.BINARY_SENSOR:
-        schema = {
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [cls.value for cls in BinarySensorDeviceClass],
-                            key=str.casefold,
-                        ),
-                    ],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                ),
-            )
-        }
 
     if domain == Platform.SENSOR:
         schema = {
@@ -218,9 +200,8 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type in (Platform.BINARY_SENSOR, Platform.SENSOR):
-            _strip_sentinel(user_input)
         if template_type == Platform.SENSOR:
+            _strip_sentinel(user_input)
             _validate_unit(user_input)
             _validate_state_class(user_input)
         return {"template_type": template_type} | user_input
