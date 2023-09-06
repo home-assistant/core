@@ -24,22 +24,13 @@ class HusqvarnaConfigFlowHandler(
     DOMAIN = DOMAIN
     VERSION = 1
 
-    async def async_step_oauth2(self, user_input=None) -> FlowResult:
-        """Handle the config-flow for Authorization Code Grant."""
-        return await super().async_step_user(user_input)
-
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow."""
         return await self.async_step_finish(DOMAIN, data)
 
     async def async_step_finish(self, unique_id, data) -> FlowResult:
         """Complete the config entries."""
-        existing_entry = await self.async_set_unique_id(unique_id)
-
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+        await self.async_set_unique_id(unique_id)
 
         return self.async_create_entry(
             title=unique_id,
@@ -58,7 +49,6 @@ class HusqvarnaConfigFlowHandler(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
             )
-        _LOGGER.debug("user_input: %s", user_input)
         return await self.async_step_user()
 
     @property
