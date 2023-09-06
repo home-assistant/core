@@ -128,7 +128,7 @@ class ZhaRadioManager:
         self.chosen_backup: zigpy.backups.NetworkBackup | None = None
 
     @contextlib.asynccontextmanager
-    async def _connect_zigpy_app(self) -> ControllerApplication:
+    async def connect_zigpy_app(self) -> ControllerApplication:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
@@ -169,7 +169,7 @@ class ZhaRadioManager:
         ):
             return
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.backups.restore_backup(backup, **kwargs)
 
@@ -218,7 +218,7 @@ class ZhaRadioManager:
         """Connect to the radio and load its current network settings."""
         backup = None
 
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
             await app.connect()
 
             # Check if the stick has any settings and load them
@@ -243,13 +243,13 @@ class ZhaRadioManager:
 
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
-        async with self._connect_zigpy_app() as app:
+        async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.reset_network_info()
 
