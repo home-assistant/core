@@ -93,9 +93,9 @@ async def async_setup_entry(
 
     _LOGGER.debug("%s - %s - %s disk(s)", router.name, router.mac, len(router.disks))
     entities.extend(
-        FreeboxDiskSensor(router, disk["id"], partition_id, description)
+        FreeboxDiskSensor(router, disk, partition, description)
         for disk in router.disks.values()
-        for partition_id in disk["partitions"]
+        for partition in disk["partitions"].values()
         for description in DISK_PARTITION_SENSORS
     )
 
@@ -191,25 +191,23 @@ class FreeboxDiskSensor(FreeboxSensor):
     def __init__(
         self,
         router: FreeboxRouter,
-        disk_id: int,
-        partition_id: int,
+        disk: dict[str, Any],
+        partition: dict[str, Any],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a Freebox disk sensor."""
         super().__init__(router, description)
-        self._disk_id = disk_id
-        self._partition_id = partition_id
-        disk: dict[str, Any] = self._router.disks[self._disk_id]
-        partition: dict[str, Any] = disk["partitions"][self._partition_id]
+        self._disk_id = disk["id"]
+        self._partition_id = partition["id"]
         self._attr_name = f"{partition['label']} {description.name}"
         self._attr_unique_id = (
-            f"{router.mac} {description.key} {disk_id} {partition_id}"
+            f"{router.mac} {description.key} {disk['id']} {partition['id']}"
         )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(disk_id))},
+            identifiers={(DOMAIN, disk["id"])},
             model=disk["model"],
-            name=f"Disk {disk_id}",
+            name=f"Disk {disk['id']}",
             sw_version=disk["firmware"],
             via_device=(
                 DOMAIN,
