@@ -33,13 +33,16 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
+    DATA_ZHA_DEVICE_TRIGGER_CACHE,
     DATA_ZHA_GATEWAY,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
     RadioType,
 )
+from .core.device import get_device_automation_triggers
 from .core.discovery import GROUP_PROBE
+from .radio_manager import ZhaRadioManager
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -134,6 +137,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
+    # Load and cache device trigger information early
+    zha_data.setdefault(DATA_ZHA_DEVICE_TRIGGER_CACHE, {})
+
+    device_registry = dr.async_get(hass)
+    radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+
+    async with radio_mgr.connect_zigpy_app() as app:
+        for dev in app.devices.values():
+            dev_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, str(dev.ieee))},
+                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            )
+
+            if dev_entry is None:
+                continue
+
+            zha_data[DATA_ZHA_DEVICE_TRIGGER_CACHE][dev_entry.id] = (
+                str(dev.ieee),
+                get_device_automation_triggers(dev),
+            )
+
     # Re-use the gateway object between ZHA reloads
     if (zha_gateway := zha_data.get(DATA_ZHA_GATEWAY)) is None:
         zha_gateway = ZHAGateway(hass, config, config_entry)
@@ -157,7 +181,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.async_on_unload(zha_gateway.shutdown)
 
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.coordinator_ieee))},
