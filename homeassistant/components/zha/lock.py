@@ -132,7 +132,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         result = await self._doorlock_cluster_handler.lock_door()
-        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
+        if result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
         self.async_write_ha_state()
@@ -140,7 +140,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         result = await self._doorlock_cluster_handler.unlock_door()
-        if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
+        if result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
         self.async_write_ha_state()
