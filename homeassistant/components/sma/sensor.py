@@ -331,6 +331,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
         key="daily_yield",
         name="Daily Yield",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
     "metering_power_supplied": SensorEntityDescription(
