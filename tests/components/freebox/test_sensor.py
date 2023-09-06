@@ -20,6 +20,17 @@ async def test_disk(
     """Test disk sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
+    # Initial state
+    assert (
+        router().storage.get_disks.return_value[2]["partitions"][0]["total_bytes"]
+        == 1960000000000
+    )
+
+    assert (
+        router().storage.get_disks.return_value[2]["partitions"][0]["free_bytes"]
+        == 1730000000000
+    )
+
     assert hass.states.get("sensor.freebox_free_space").state == "88.27"
 
     # Simulate a changed storage size
