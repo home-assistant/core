@@ -29,5 +29,3 @@ async def test_load_unload_config_entry(
         assert not hass.services.has_service(DOMAIN, service["service"])
 
     assert entry.state == ConfigEntryState.NOT_LOADED
-
-    # assert not hass.data.get(DOMAIN)
