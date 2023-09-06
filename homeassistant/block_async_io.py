@@ -21,5 +21,5 @@ def enable() -> None:
     # builtins.open = protect_loop(builtins.open)
 
     SSLContext.load_default_certs = protect_loop(  # type: ignore[method-assign]
-        SSLContext.load_default_certs, strict=False
+        SSLContext.load_default_certs, strict=False, debug=True
     )
