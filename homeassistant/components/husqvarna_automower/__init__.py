@@ -71,10 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
-    # implementation = await async_get_config_entry_implementation(hass, entry)
     coordinator = AutomowerDataUpdateCoordinator(
         hass,
-        # implementation,
         entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
