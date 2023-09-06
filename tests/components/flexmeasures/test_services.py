@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-import pandas as pd
+import isodate
 
 from homeassistant.components.flexmeasures.const import (
     DOMAIN,
@@ -44,7 +44,9 @@ async def test_trigger_and_get_schedule(
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         mocked_FlexmeasuresClient.assert_awaited_with(
             sensor_id=1,
-            start=time_ceil(datetime.now(tz=tzinfo), pd.Timedelta(RESOLUTION)),
+            start=time_ceil(
+                datetime.now(tz=tzinfo), isodate.parse_duration(RESOLUTION)
+            ),
             duration="PT24H",
             soc_unit="MWh",
             soc_min=0.0,
