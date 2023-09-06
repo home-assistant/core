@@ -36,8 +36,8 @@ class NetgearDeviceEntity(CoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             default_name=self._device_name,
-            default_model=self._device["device_model"],
-            via_device=(DOMAIN, self._router.unique_id),
+            default_model=device["device_model"],
+            via_device=(DOMAIN, router.unique_id),
         )
 
     def get_device_name(self):
@@ -60,10 +60,9 @@ class NetgearDeviceEntity(CoordinatorEntity):
         super()._handle_coordinator_update()
 
 
-class NetgearRouterCoordinatorEntity(CoordinatorEntity):
+class NetgearRouterCoordinatorEntity(NetgearRouterEntity, CoordinatorEntity):
     """Base class for a Netgear router entity."""
 
-    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, router: NetgearRouter
@@ -109,12 +108,12 @@ class NetgearRouterEntity(Entity):
         self._router = router
 
         configuration_url = None
-        if host := self._router.entry.data[CONF_HOST]:
+        if host := router.entry.data[CONF_HOST]:
             configuration_url = f"http://{host}/"
 
         self._attr_unique_id = router.serial_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._router.unique_id)},
+            identifiers={(DOMAIN, router.unique_id)},
             manufacturer="Netgear",
             name=router.device_name,
             model=router.model,
