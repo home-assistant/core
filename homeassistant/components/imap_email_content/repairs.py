@@ -79,7 +79,7 @@ async def async_process_issue(hass: HomeAssistant, config: ConfigType) -> None:
         hass,
         DOMAIN,
         issue_id,
-        breaks_in_ha_version="2023.10.0",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="migration",
