@@ -6,14 +6,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import (
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-)
+from collections.abc import Callable, Collection, Coroutine, Iterable, Mapping
 import concurrent.futures
 from contextlib import suppress
 import datetime
@@ -32,7 +25,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, loader, util
+from . import block_async_io, util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -174,6 +167,16 @@ def valid_entity_id(entity_id: str) -> bool:
     return VALID_ENTITY_ID.match(entity_id) is not None
 
 
+def validate_state(state: str) -> str:
+    """Validate a state, raise if it not valid."""
+    if len(state) > MAX_LENGTH_STATE_STATE:
+        raise InvalidStateError(
+            f"Invalid state with length {len(state)}. "
+            "State max length is 255 characters."
+        )
+    return state
+
+
 def callback(func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)
@@ -294,8 +297,15 @@ class HomeAssistant:
         _hass.hass = hass
         return hass
 
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<HomeAssistant {self.state}>"
+
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import loader
+
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -697,7 +707,9 @@ class HomeAssistant:
                 for task in tasks:
                     _LOGGER.debug("Waiting for task: %s", task)
 
-    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(
+        self, pending: Collection[asyncio.Future[Any]]
+    ) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
@@ -1251,13 +1263,9 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if len(state) > MAX_LENGTH_STATE_STATE:
-            raise InvalidStateError(
-                f"Invalid state encountered for entity ID: {entity_id}. "
-                "State max length is 255 characters."
-            )
+        validate_state(state)
 
-        self.entity_id = entity_id.lower()
+        self.entity_id = entity_id
         self.state = state
         self.attributes = ReadOnlyDict(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
@@ -1408,11 +1416,12 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_reservations", "_bus", "_loop")
+    __slots__ = ("_states", "_domain_index", "_reservations", "_bus", "_loop")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: dict[str, State] = {}
+        self._domain_index: dict[str, dict[str, State]] = {}
         self._reservations: set[str] = set()
         self._bus = bus
         self._loop = loop
@@ -1436,13 +1445,13 @@ class StateMachine:
             return list(self._states)
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return list(self._domain_index.get(domain_filter.lower(), ()))
 
-        return [
-            state.entity_id
-            for state in self._states.values()
-            if state.domain in domain_filter
-        ]
+        states: list[str] = []
+        for domain in domain_filter:
+            if domain_index := self._domain_index.get(domain):
+                states.extend(domain_index)
+        return states
 
     @callback
     def async_entity_ids_count(
@@ -1456,11 +1465,9 @@ class StateMachine:
             return len(self._states)
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return len(self._domain_index.get(domain_filter.lower(), ()))
 
-        return len(
-            [None for state in self._states.values() if state.domain in domain_filter]
-        )
+        return sum(len(self._domain_index.get(domain, ())) for domain in domain_filter)
 
     def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
@@ -1480,11 +1487,13 @@ class StateMachine:
             return list(self._states.values())
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return list(self._domain_index.get(domain_filter.lower(), {}).values())
 
-        return [
-            state for state in self._states.values() if state.domain in domain_filter
-        ]
+        states: list[State] = []
+        for domain in domain_filter:
+            if domain_index := self._domain_index.get(domain):
+                states.extend(domain_index.values())
+        return states
 
     def get(self, entity_id: str) -> State | None:
         """Retrieve state of entity_id or None if not found.
@@ -1520,13 +1529,12 @@ class StateMachine:
         """
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
-
-        if entity_id in self._reservations:
-            self._reservations.remove(entity_id)
+        self._reservations.discard(entity_id)
 
         if old_state is None:
             return False
 
+        self._domain_index[old_state.domain].pop(entity_id)
         old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
@@ -1648,6 +1656,10 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
+        if not (domain_index := self._domain_index.get(state.domain)):
+            domain_index = {}
+            self._domain_index[state.domain] = domain_index
+        domain_index[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},

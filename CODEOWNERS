@@ -354,8 +354,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/eq3btsmart/ @rytilahti
 /homeassistant/components/escea/ @lazdavila
 /tests/components/escea/ @lazdavila
-/homeassistant/components/esphome/ @OttoWinter @jesserockz @bdraco
-/tests/components/esphome/ @OttoWinter @jesserockz @bdraco
+/homeassistant/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
+/tests/components/esphome/ @OttoWinter @jesserockz @kbx81 @bdraco
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
@@ -707,6 +707,7 @@ build.json @home-assistant/supervisor
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
 /tests/components/logi_circle/ @evanjd
+/homeassistant/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
@@ -723,6 +724,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
+/homeassistant/components/matrix/ @PaarthShah
+/tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
 /homeassistant/components/mazda/ @bdr99
@@ -949,6 +952,8 @@ build.json @home-assistant/supervisor
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/private_ble_device/ @Jc2k
+/tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/profiler/ @bdraco
 /tests/components/profiler/ @bdraco
 /homeassistant/components/progettihwsw/ @ardaseremet
@@ -1309,6 +1314,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_weatherstation/ @endor-force @gjohansson-ST
 /homeassistant/components/transmission/ @engrbm87 @JPHutchins
 /tests/components/transmission/ @engrbm87 @JPHutchins
+/homeassistant/components/trend/ @jpbede
+/tests/components/trend/ @jpbede
 /homeassistant/components/tts/ @home-assistant/core @pvizeli
 /tests/components/tts/ @home-assistant/core @pvizeli
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
@@ -1411,8 +1418,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/wirelesstag/ @sergeymaysak
-/homeassistant/components/withings/ @vangorra
-/tests/components/withings/ @vangorra
+/homeassistant/components/withings/ @vangorra @joostlek
+/tests/components/withings/ @vangorra @joostlek
 /homeassistant/components/wiz/ @sbidy
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck

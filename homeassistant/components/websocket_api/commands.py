@@ -5,6 +5,7 @@ from collections.abc import Callable
 import datetime as dt
 from functools import lru_cache, partial
 import json
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -505,6 +506,7 @@ def _cached_template(template_str: str, hass: HomeAssistant) -> template.Templat
         vol.Optional("variables"): dict,
         vol.Optional("timeout"): vol.Coerce(float),
         vol.Optional("strict", default=False): bool,
+        vol.Optional("report_errors", default=False): bool,
     }
 )
 @decorators.async_response
@@ -513,15 +515,32 @@ async def handle_render_template(
 ) -> None:
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = _cached_template(template_str, hass)
+    report_errors: bool = msg["report_errors"]
+    if report_errors:
+        template_obj = template.Template(template_str, hass)
+    else:
+        template_obj = _cached_template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
-    info = None
+
+    @callback
+    def _error_listener(level: int, template_error: str) -> None:
+        connection.send_message(
+            messages.event_message(
+                msg["id"],
+                {"error": template_error, "level": logging.getLevelName(level)},
+            )
+        )
+
+    @callback
+    def _thread_safe_error_listener(level: int, template_error: str) -> None:
+        hass.loop.call_soon_threadsafe(_error_listener, level, template_error)
 
     if timeout:
         try:
+            log_fn = _thread_safe_error_listener if report_errors else None
             timed_out = await template_obj.async_render_will_timeout(
-                timeout, variables, strict=msg["strict"]
+                timeout, variables, strict=msg["strict"], log_fn=log_fn
             )
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -540,26 +559,31 @@ async def handle_render_template(
         event: EventType[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
-        nonlocal info
         track_template_result = updates.pop()
         result = track_template_result.result
         if isinstance(result, TemplateError):
-            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            if not report_errors:
+                return
+            connection.send_message(
+                messages.event_message(msg["id"], {"error": str(result)})
+            )
             return
 
         connection.send_message(
             messages.event_message(
-                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore[attr-defined]
+                msg["id"], {"result": result, "listeners": info.listeners}
             )
         )
 
     try:
+        log_fn = _error_listener if report_errors else None
         info = async_track_template_result(
             hass,
             [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
             strict=msg["strict"],
+            log_fn=log_fn,
         )
     except TemplateError as ex:
         connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
@@ -713,12 +737,12 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    response = await script_obj.async_run(msg.get("variables"), context=context)
+    script_result = await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_result(
         msg["id"],
         {
             "context": context,
-            "response": response,
+            "response": script_result.service_response if script_result else None,
         },
     )
 
