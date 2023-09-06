@@ -18,5 +18,25 @@
         }
       }
     }
+  },
+  "entity": {
+    "vacuum": {
+      "romy": {
+        "name": "romy",
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "default": "Default",
+              "normal": "Normal",
+              "silent": "Silent",
+              "intensive": "Intensive",
+              "super_silent": "Super silent",
+              "high": "High",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    }
   }
 }

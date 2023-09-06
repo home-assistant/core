@@ -18,13 +18,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, ICON, LOGGER
 from .coordinator import RomyVacuumCoordinator
 
-FAN_SPEED_NONE = "Default"
-FAN_SPEED_NORMAL = "Normal"
-FAN_SPEED_SILENT = "Silent"
-FAN_SPEED_INTENSIVE = "Intensive"
-FAN_SPEED_SUPER_SILENT = "Super_Silent"
-FAN_SPEED_HIGH = "High"
-FAN_SPEED_AUTO = "Auto"
+FAN_SPEED_NONE = "default"
+FAN_SPEED_NORMAL = "normal"
+FAN_SPEED_SILENT = "silent"
+FAN_SPEED_INTENSIVE = "intensive"
+FAN_SPEED_SUPER_SILENT = "super_silent"
+FAN_SPEED_HIGH = "high"
+FAN_SPEED_AUTO = "auto"
 
 FAN_SPEEDS: list[str] = [
     FAN_SPEED_NONE,
@@ -73,6 +73,9 @@ async def async_setup_entry(
 class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
     """Representation of a ROMY vacuum cleaner robot."""
 
+    _attr_translation_key = DOMAIN
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: RomyVacuumCoordinator,
@@ -87,10 +90,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_supported_features = SUPPORT_ROMY_ROBOT
         self._attr_fan_speed_list = FAN_SPEEDS
         self._attr_icon = ICON
-
         self._is_on = False
-        self._fan_speed = FAN_SPEEDS.index(FAN_SPEED_NONE)
-        self._fan_speed_update = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
