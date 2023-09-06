@@ -160,6 +160,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
+        if self._scale < 1 and not self._precision:
+            self._precision = 2
         self._offset = config[CONF_OFFSET]
         self._slave_count = config.get(CONF_SLAVE_COUNT, 0)
         self._slave_size = self._count = config[CONF_COUNT]
