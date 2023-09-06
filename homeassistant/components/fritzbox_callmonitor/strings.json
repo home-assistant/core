@@ -46,7 +46,7 @@
           "ringing": "ringing",
           "dialing": "dialing",
           "talking": "talking",
-          "idle": "idle"
+          "idle": "[%key:common::state::idle%]"
         }
       }
     }
