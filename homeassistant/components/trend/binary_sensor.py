@@ -134,10 +134,10 @@ class SensorTrend(BinarySensorEntity):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
-        self._name = friendly_name
+        self._attr_name = friendly_name
+        self._attr_device_class = device_class
         self._entity_id = entity_id
         self._attribute = attribute
-        self._device_class = device_class
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
@@ -146,26 +146,16 @@ class SensorTrend(BinarySensorEntity):
         self.samples = deque(maxlen=max_samples)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return the sensor class of the sensor."""
-        return self._device_class
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._name,
+            ATTR_FRIENDLY_NAME: self._attr_name,
             ATTR_GRADIENT: self._gradient,
             ATTR_INVERT: self._invert,
             ATTR_MIN_GRADIENT: self._min_gradient,
