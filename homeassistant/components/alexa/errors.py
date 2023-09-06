@@ -97,7 +97,6 @@ class AlexaUnsupportedThermostatTargetStateError(AlexaError):
     error_type = "INVALID_TARGET_STATE"
 
 
-
 class AlexaTempRangeError(AlexaError):
     """Class to represent TempRange errors."""
 
