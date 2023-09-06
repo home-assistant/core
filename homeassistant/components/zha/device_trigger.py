@@ -96,10 +96,7 @@ async def async_get_triggers(
 
     Make sure the device supports device automations and return the trigger list.
     """
-    try:
-        _, triggers = _get_device_trigger_data(hass, device_id)
-    except KeyError as err:
-        raise InvalidDeviceAutomationConfig from err
+    _, triggers = _get_device_trigger_data(hass, device_id)
 
     return [
         {
