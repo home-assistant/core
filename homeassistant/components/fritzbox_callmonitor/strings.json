@@ -41,13 +41,7 @@
   "entity": {
     "sensor": {
       "fritzbox_callmonitor": {
-        "name": "Call monitor",
-        "state": {
-          "ringing": "ringing",
-          "dialing": "dialing",
-          "talking": "talking",
-          "idle": "[%key:common::state::idle%]"
-        }
+        "name": "Call monitor"
       }
     }
   }
