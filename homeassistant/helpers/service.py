@@ -732,14 +732,14 @@ def async_set_service_schema(
     descriptions_cache[(domain, service)] = description
 
 
-def _get_entity_candidates(
+def _get_permissible_entity_candidates(
     call: ServiceCall,
     platforms: Iterable[EntityPlatform],
     entity_perms: None | (Callable[[str, str], bool]),
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
-    """Get entity candidates."""
+    """Get entity candidates that the user is allowed to access."""
     if entity_perms is not None:
         # Check the permissions since entity_perms is set
         if target_all_entities:
@@ -825,7 +825,7 @@ async def entity_service_call(
         data = call
 
     # A list with entities to call the service on.
-    entity_candidates = _get_entity_candidates(
+    entity_candidates = _get_permissible_entity_candidates(
         call,
         platforms,
         entity_perms,
