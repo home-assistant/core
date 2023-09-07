@@ -1240,7 +1240,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.9.1
+pyenphase==1.9.3
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1354,7 +1354,7 @@ pylitejet==0.5.0
 pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.1
+pylutron-caseta==0.18.2
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
