@@ -49,6 +49,8 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the current mode."""
         option_int = _ECOBEE_MODE_TO_NUMBERS[option]
+        if option_int == 3:
+            raise ValueError(f"Option {option} not valid for {self.entity_id}")
         await self.async_put_characteristics(
             {CharacteristicsTypes.VENDOR_ECOBEE_SET_HOLD_SCHEDULE: option_int}
         )
