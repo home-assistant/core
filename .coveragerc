@@ -286,6 +286,7 @@ omit =
     homeassistant/components/elkm1/binary_sensor.py
     homeassistant/components/elkm1/climate.py
     homeassistant/components/elkm1/light.py
+    homeassistant/components/elkm1/scene.py
     homeassistant/components/elkm1/sensor.py
     homeassistant/components/elkm1/switch.py
     homeassistant/components/elmax/__init__.py
