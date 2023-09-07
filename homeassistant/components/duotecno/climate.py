@@ -31,7 +31,7 @@ async def async_setup_entry(
 
 
 class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
-    """Representation of a BinarySensor."""
+    """Representation of a Duotecno climate entity."""
 
     _unit: SensUnit
     _attr_supported_features = (
