@@ -11,10 +11,16 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ERROR_ACTIVITIES
+from .const import (
+    DOCKED_STATES,
+    DOMAIN,
+    ERROR_ACTIVITIES,
+    ERROR_STATES,
+    MOWING_STATES,
+    PAUSED_STATES,
+)
 from .entity import AutomowerEntity
 
 SUPPORT_STATE_SERVICES = (
@@ -36,7 +42,6 @@ async def async_setup_entry(
         HusqvarnaAutomowerEntity(coordinator, idx)
         for idx, ent in enumerate(coordinator.session.data["data"])
     )
-    entity_platform.current_platform.get()
 
 
 class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
@@ -59,31 +64,25 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
-        if mower_attributes["mower"]["state"] in [
-            "PAUSED",
-            "WAIT_UPDATING",
-            "WAIT_POWER_UP",
-        ]:
-            activity = LawnMowerActivity.PAUSED
-        if mower_attributes["mower"]["activity"] in ["MOWING", "LEAVING", "GOING_HOME"]:
-            activity = LawnMowerActivity.MOWING
+        if mower_attributes["mower"]["state"] in PAUSED_STATES:
+            return LawnMowerActivity.PAUSED
+        if mower_attributes["mower"]["activity"] in MOWING_STATES:
+            return LawnMowerActivity.MOWING
         if (mower_attributes["mower"]["state"] == "RESTRICTED") or (
-            mower_attributes["mower"]["activity"] in ["PARKED_IN_CS", "CHARGING"]
+            mower_attributes["mower"]["activity"] in DOCKED_STATES
         ):
-            activity = LawnMowerActivity.DOCKED
-        if (
-            mower_attributes["mower"]["state"]
-            in [
-                "FATAL_ERROR",
-                "ERROR",
-                "ERROR_AT_POWER_UP",
-                "NOT_APPLICABLE",
-                "UNKNOWN",
-                "STOPPED",
-                "OFF",
-            ]
-        ) or mower_attributes["mower"]["activity"] in ERROR_ACTIVITIES:
-            activity = LawnMowerActivity.ERROR
+            return LawnMowerActivity.DOCKED
+        activity = LawnMowerActivity.ERROR
+        if not (
+            (mower_attributes["mower"]["state"] in ERROR_STATES)
+            or mower_attributes["mower"]["activity"] in ERROR_ACTIVITIES
+        ):
+            _LOGGER.warning(
+                "Unknown activity detected. Mower state is %s and mower activity is %s. \
+                Please report this issue",
+                mower_attributes["mower"]["state"],
+                mower_attributes["mower"]["activity"],
+            )
         return LawnMowerActivity(activity)
 
     @property

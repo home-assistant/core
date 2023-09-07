@@ -1,4 +1,4 @@
-"""Tests for lwan_mower module."""
+"""Tests for lawn_mower module."""
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -51,14 +51,7 @@ async def setup_entity(hass: HomeAssistant):
             connect=AsyncMock(),
             action=AsyncMock(),
         ),
-    ) as automower_session_mock:
-        (
-            MagicMock(name="MockCoordinator", session=automower_session_mock()),
-            patch(
-                "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            ),
-        )
-
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state == ConfigEntryState.LOADED
@@ -68,11 +61,11 @@ async def setup_entity(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
-async def test_vacuum_state(hass: HomeAssistant) -> None:
-    """Test vacuum state."""
+async def test_lawn_mower_state(hass: HomeAssistant) -> None:
+    """Test lawn_mower state."""
     await setup_entity(hass)
     coordinator = hass.data[DOMAIN]["automower_test"]
-    vacuum = HusqvarnaAutomowerEntity(coordinator, MWR_ONE_IDX)
+    lawn_mower = HusqvarnaAutomowerEntity(coordinator, MWR_ONE_IDX)
 
     def set_state(state: str):
         """Set new state."""
@@ -86,83 +79,86 @@ async def test_vacuum_state(hass: HomeAssistant) -> None:
             "activity"
         ] = activity
 
-    assert vacuum._attr_unique_id == MWR_ONE_ID
+    assert lawn_mower._attr_unique_id == MWR_ONE_ID
     set_activity("")
 
     set_state("PAUSED")
-    assert vacuum.state == LawnMowerActivity.PAUSED
+    assert lawn_mower.state == LawnMowerActivity.PAUSED
 
     set_state("WAIT_UPDATING")
-    assert vacuum.state == LawnMowerActivity.PAUSED
+    assert lawn_mower.state == LawnMowerActivity.PAUSED
 
     set_state("WAIT_POWER_UP")
-    assert vacuum.state == LawnMowerActivity.PAUSED
+    assert lawn_mower.state == LawnMowerActivity.PAUSED
 
     set_state("")
     set_activity("MOWING")
-    assert vacuum.state == LawnMowerActivity.MOWING
+    assert lawn_mower.state == LawnMowerActivity.MOWING
 
     set_activity("LEAVING")
-    assert vacuum.state == LawnMowerActivity.MOWING
+    assert lawn_mower.state == LawnMowerActivity.MOWING
 
     set_activity("GOING_HOME")
-    assert vacuum.state == LawnMowerActivity.MOWING
+    assert lawn_mower.state == LawnMowerActivity.MOWING
 
     set_activity("")
     set_state("RESTRICTED")
-    assert vacuum.state == LawnMowerActivity.DOCKED
+    assert lawn_mower.state == LawnMowerActivity.DOCKED
 
     set_state("")
     set_activity("PARKED_IN_CS")
-    assert vacuum.state == LawnMowerActivity.DOCKED
+    assert lawn_mower.state == LawnMowerActivity.DOCKED
 
     set_activity("CHARGING")
-    assert vacuum.state == LawnMowerActivity.DOCKED
+    assert lawn_mower.state == LawnMowerActivity.DOCKED
 
     set_activity("")
     set_state("FATAL_ERROR")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("ERROR")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("ERROR_AT_POWER_UP")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("NOT_APPLICABLE")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("UNKNOWN")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("STOPPED")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("OFF")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_state("")
     set_activity("STOPPED_IN_GARDEN")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_activity("UNKNOWN")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
     set_activity("NOT_APPLICABLE")
-    assert vacuum.state == LawnMowerActivity.ERROR
+    assert lawn_mower.state == LawnMowerActivity.ERROR
+
+    set_activity("SOMETHING_NEW")
+    assert lawn_mower.state == LawnMowerActivity.ERROR
 
 
 @pytest.mark.asyncio
-async def test_vacuum_commands(hass: HomeAssistant) -> None:
-    """Test vacuum commands."""
+async def test_lawn_mower_commands(hass: HomeAssistant) -> None:
+    """Test lawn_mower commands."""
     await setup_entity(hass)
     coordinator = hass.data[DOMAIN]["automower_test"]
-    vacuum = HusqvarnaAutomowerEntity(coordinator, MWR_ONE_IDX)
-    assert vacuum._attr_unique_id == MWR_ONE_ID
+    lawn_mower = HusqvarnaAutomowerEntity(coordinator, MWR_ONE_IDX)
+    assert lawn_mower._attr_unique_id == MWR_ONE_ID
 
     # Start
     # Success
-    await vacuum.async_start_mowing()
+    await lawn_mower.async_start_mowing()
     coordinator.session.action.assert_awaited_once_with(
         MWR_ONE_ID, '{"data": {"type": "ResumeSchedule"}}', "actions"
     )
@@ -172,12 +168,12 @@ async def test_vacuum_commands(hass: HomeAssistant) -> None:
     coordinator.session.action.side_effect = ClientResponseError(
         MagicMock(), MagicMock()
     )
-    await vacuum.async_start_mowing()
+    await lawn_mower.async_start_mowing()
 
     # Pause
     # Success
     coordinator.session.action.reset_mock()
-    await vacuum.async_pause()
+    await lawn_mower.async_pause()
     coordinator.session.action.assert_awaited_once_with(
         MWR_ONE_ID, '{"data": {"type": "Pause"}}', "actions"
     )
@@ -187,12 +183,12 @@ async def test_vacuum_commands(hass: HomeAssistant) -> None:
     coordinator.session.action.side_effect = ClientResponseError(
         MagicMock(), MagicMock()
     )
-    await vacuum.async_pause()
+    await lawn_mower.async_pause()
 
     # Stop
     # Success
     coordinator.session.action.reset_mock()
-    await vacuum.async_dock()
+    await lawn_mower.async_dock()
     coordinator.session.action.assert_awaited_once_with(
         MWR_ONE_ID, '{"data": {"type": "ParkUntilNextSchedule"}}', "actions"
     )
@@ -202,4 +198,4 @@ async def test_vacuum_commands(hass: HomeAssistant) -> None:
     coordinator.session.action.side_effect = ClientResponseError(
         MagicMock(), MagicMock()
     )
-    await vacuum.async_dock()
+    await lawn_mower.async_dock()
