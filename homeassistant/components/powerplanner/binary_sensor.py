@@ -47,7 +47,9 @@ class PPSensorEntity(PowerPlannerEntityBase, CoordinatorEntity, BinarySensorEnti
 
     def __init__(self, coordinator, schedule_name, hub: PowerplannerHub) -> None:
         """Init with a reference to the schedulename."""
-        super().__init__(coordinator, context=schedule_name)
+        PowerPlannerEntityBase.__init__(self, hash(hub.api_key))
+        CoordinatorEntity.__init__(self, coordinator, context=schedule_name)
+
         self._attr_is_on = False
         self._attr_name = "powerplanner." + schedule_name
         self._attr_device_class = BinarySensorDeviceClass.RUNNING
