@@ -266,6 +266,8 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
 class RensonSensor(RensonEntity, SensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: RensonSensorEntityDescription,

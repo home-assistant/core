@@ -135,8 +135,8 @@ def write_ci_workflow(version: Version) -> None:
 
     short_version = ".".join(str(version).split(".", maxsplit=2)[:2])
     content = re.sub(
-        r"(\n\W+HA_SHORT_VERSION: )\d{4}\.\d{1,2}\n",
-        f"\\g<1>{short_version}\n",
+        r"(\n\W+HA_SHORT_VERSION: )\"\d{4}\.\d{1,2}\"\n",
+        f'\\g<1>"{short_version}"\n',
         content,
         count=1,
     )
