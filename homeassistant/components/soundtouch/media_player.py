@@ -78,36 +78,35 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_source_list = [
+        Source.AUX.value,
+        Source.BLUETOOTH.value,
+    ]
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
 
-        self._device = device
+        self.device = device
 
-        self._attr_unique_id = self._device.config.device_id
+        self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.config.device_id)},
+            identifiers={(DOMAIN, device.config.device_id)},
             connections={
-                (CONNECTION_NETWORK_MAC, format_mac(self._device.config.mac_address))
+                (CONNECTION_NETWORK_MAC, format_mac(device.config.mac_address))
             },
             manufacturer="Bose Corporation",
-            model=self._device.config.type,
-            name=self._device.config.name,
+            model=device.config.type,
+            name=device.config.name,
         )
 
         self._status = None
         self._volume = None
         self._zone = None
 
-    @property
-    def device(self):
-        """Return SoundTouch device."""
-        return self._device
-
     def update(self) -> None:
         """Retrieve the latest data."""
-        self._status = self._device.status()
-        self._volume = self._device.volume()
+        self._status = self.device.status()
+        self._volume = self.device.volume()
         self._zone = self.get_zone_info()
 
     @property
@@ -132,61 +131,53 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return self._status.source
 
     @property
-    def source_list(self):
-        """List of available input sources."""
-        return [
-            Source.AUX.value,
-            Source.BLUETOOTH.value,
-        ]
-
-    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._volume.muted
 
     def turn_off(self) -> None:
         """Turn off media player."""
-        self._device.power_off()
+        self.device.power_off()
 
     def turn_on(self) -> None:
         """Turn on media player."""
-        self._device.power_on()
+        self.device.power_on()
 
     def volume_up(self) -> None:
         """Volume up the media player."""
-        self._device.volume_up()
+        self.device.volume_up()
 
     def volume_down(self) -> None:
         """Volume down media player."""
-        self._device.volume_down()
+        self.device.volume_down()
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._device.set_volume(int(volume * 100))
+        self.device.set_volume(int(volume * 100))
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._device.mute()
+        self.device.mute()
 
     def media_play_pause(self) -> None:
         """Simulate play pause media player."""
-        self._device.play_pause()
+        self.device.play_pause()
 
     def media_play(self) -> None:
         """Send play command."""
-        self._device.play()
+        self.device.play()
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
-        self._device.pause()
+        self.device.pause()
 
     def media_next_track(self) -> None:
         """Send next track command."""
-        self._device.next_track()
+        self.device.next_track()
 
     def media_previous_track(self) -> None:
         """Send the previous track command."""
-        self._device.previous_track()
+        self.device.previous_track()
 
     @property
     def media_image_url(self):
@@ -257,10 +248,10 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         if re.match(r"http?://", str(media_id)):
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
-            self._device.play_url(str(media_id))
+            self.device.play_url(str(media_id))
         else:
             # Preset
-            presets = self._device.presets()
+            presets = self.device.presets()
             preset = next(
                 iter(
                     [preset for preset in presets if preset.preset_id == str(media_id)]
@@ -269,7 +260,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             )
             if preset is not None:
                 _LOGGER.debug("Playing preset: %s", preset.name)
-                self._device.select_preset(preset)
+                self.device.select_preset(preset)
             else:
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
@@ -277,10 +268,10 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         """Select input source."""
         if source == Source.AUX.value:
             _LOGGER.debug("Selecting source AUX")
-            self._device.select_source_aux()
+            self.device.select_source_aux()
         elif source == Source.BLUETOOTH.value:
             _LOGGER.debug("Selecting source Bluetooth")
-            self._device.select_source_bluetooth()
+            self.device.select_source_bluetooth()
         else:
             _LOGGER.warning("Source %s is not supported", source)
 
@@ -293,8 +284,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         if not slaves:
             _LOGGER.warning("Unable to create zone without slaves")
         else:
-            _LOGGER.info("Creating zone with master %s", self._device.config.name)
-            self._device.create_zone([slave.device for slave in slaves])
+            _LOGGER.info("Creating zone with master %s", self.device.config.name)
+            self.device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
         """Remove slave(s) from and existing zone (multi-room).
@@ -310,7 +301,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Unable to find slaves to remove")
         else:
             _LOGGER.info(
-                "Removing slaves from zone with master %s", self._device.config.name
+                "Removing slaves from zone with master %s", self.device.config.name
             )
             # SoundTouch API seems to have a bug and won't remove slaves if there are
             # more than one in the payload. Therefore we have to loop over all slaves
@@ -318,7 +309,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             for slave in slaves:
                 # make sure to not try to remove the master (aka current device)
                 if slave.entity_id != self.entity_id:
-                    self._device.remove_zone_slave([slave.device])
+                    self.device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
         """Add slave(s) to and existing zone (multi-room).
@@ -332,9 +323,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Unable to find slaves to add")
         else:
             _LOGGER.info(
-                "Adding slaves to zone with master %s", self._device.config.name
+                "Adding slaves to zone with master %s", self.device.config.name
             )
-            self._device.add_zone_slave([slave.device for slave in slaves])
+            self.device.add_zone_slave([slave.device for slave in slaves])
 
     @property
     def extra_state_attributes(self):
@@ -360,7 +351,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def get_zone_info(self):
         """Return the current zone info."""
-        zone_status = self._device.zone_status()
+        zone_status = self.device.zone_status()
         if not zone_status:
             return None
 
@@ -372,7 +363,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         # property wrong on some slaves, so the only reliable way to detect
         # if the current devices is the master, is by comparing the master_id
         # of the zone with the device_id.
-        if zone_status.master_id == self._device.config.device_id:
+        if zone_status.master_id == self.device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
         # The master device has to be searched by it's ID and not IP since
