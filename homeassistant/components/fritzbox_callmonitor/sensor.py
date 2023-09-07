@@ -84,7 +84,7 @@ class FritzBoxCallSensor(SensorEntity):
     _attr_icon = ICON_PHONE
     _attr_translation_key = DOMAIN
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [cls.value for cls in CallState]
+    _attr_options = list(CallState)
 
     def __init__(
         self,
