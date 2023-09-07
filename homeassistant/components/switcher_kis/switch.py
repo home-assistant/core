@@ -6,7 +6,12 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api, SwitcherType2Api
+from aioswitcher.api import (
+    Command,
+    SwitcherBaseResponse,
+    SwitcherType1Api,
+    SwitcherType2Api,
+)
 from aioswitcher.device import DeviceCategory, DeviceState, LightState
 import voluptuous as vol
 
@@ -27,9 +32,9 @@ from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
+    CONF_TOKEN,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
-    CONF_TOKEN,
     SIGNAL_DEVICE_ADD,
 )
 
@@ -78,10 +83,23 @@ async def async_setup_entry(
             async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
-        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
-            async_add_entities([SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT1_ID), SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT2_ID)])
-        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
-            async_add_entities([SwitcherShutterDualLightSingleSwitchEntity(coordinator, LIGHT1_ID)])
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
+        ):
+            async_add_entities(
+                [
+                    SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT1_ID),
+                    SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT2_ID),
+                ]
+            )
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+        ):
+            async_add_entities(
+                [SwitcherShutterDualLightSingleSwitchEntity(coordinator, LIGHT1_ID)]
+            )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_switch)
@@ -121,7 +139,9 @@ class SwitcherBaseSwitchEntity(
 
         try:
             async with SwitcherType1Api(
-                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.device_type,
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -173,6 +193,7 @@ class SwitcherBaseSwitchEntity(
             self.coordinator.name,
         )
 
+
 class SwitcherBaselLightEntity(
     CoordinatorEntity[SwitcherDataUpdateCoordinator], SwitchEntity
 ):
@@ -185,14 +206,18 @@ class SwitcherBaselLightEntity(
         """Name of the entity."""
         return self.light_id.capitalize()
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator, light_id: str) -> None:
+    def __init__(
+        self, coordinator: SwitcherDataUpdateCoordinator, light_id: str
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
         self.light_id = light_id
 
         # Entity class attributes
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.light_id}"
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{self.light_id}"
+        )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
@@ -211,7 +236,10 @@ class SwitcherBaselLightEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id, self.coordinator.config_entry.data.get(CONF_TOKEN)
+                self.coordinator.data.device_type,
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.config_entry.data.get(CONF_TOKEN),
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -233,13 +261,19 @@ class SwitcherBaselLightEntity(
         if self.control_result is not None:
             return self.control_result
 
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+        if (
+            self.coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
+        ):
             if self.light_id == LIGHT1_ID:
                 return bool(self.coordinator.data.light == LightState.ON)
             else:
                 return bool(self.coordinator.data.light2 == LightState.ON)
 
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+        if (
+            self.coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+        ):
             if self.light_id == LIGHT1_ID:
                 return bool(self.coordinator.data.light == LightState.ON)
 
@@ -267,6 +301,7 @@ class SwitcherBaselLightEntity(
         self.control_result = False
         self.async_write_ha_state()
 
+
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
 
@@ -289,10 +324,12 @@ class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
         self.control_result = True
         self.async_write_ha_state()
 
+
 class SwitcherShutterSingleLightDualSwitchEntity(SwitcherBaselLightEntity):
     """Representation of a Switcher shutter single light dual switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+
 
 class SwitcherShutterDualLightSingleSwitchEntity(SwitcherBaselLightEntity):
     """Representation of a Switcher shutter dual light single switch entity."""

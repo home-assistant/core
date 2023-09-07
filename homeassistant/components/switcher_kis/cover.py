@@ -33,6 +33,7 @@ API_STOP = "stop_shutter"
 COVER1_ID = "runner"
 COVER2_ID = "runner2"
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -45,10 +46,21 @@ async def async_setup_entry(
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
             async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
-        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
+        ):
             async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
-        elif coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
-            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID), SwitcherCoverEntity(coordinator, COVER2_ID)])
+        elif (
+            coordinator.data.device_type.category
+            == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+        ):
+            async_add_entities(
+                [
+                    SwitcherCoverEntity(coordinator, COVER1_ID),
+                    SwitcherCoverEntity(coordinator, COVER2_ID),
+                ]
+            )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_cover)
@@ -74,12 +86,16 @@ class SwitcherCoverEntity(
         """Name of the entity."""
         return self.cover_id.capitalize()
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str) -> None:
+    def __init__(
+        self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.cover_id = cover_id
 
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}-{self.cover_id}"
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{self.cover_id}"
+        )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
@@ -95,7 +111,10 @@ class SwitcherCoverEntity(
     def _update_data(self) -> None:
         """Update data from device."""
         data: SwitcherShutter = self.coordinator.data
-        if not (data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE and self.cover_id == COVER2_ID):
+        if not (
+            data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
+            and self.cover_id == COVER2_ID
+        ):
             self._attr_current_cover_position = data.position
             self._attr_is_closed = data.position == 0
             self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
@@ -114,7 +133,10 @@ class SwitcherCoverEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.device_type, self.coordinator.data.ip_address, self.coordinator.data.device_id, self.coordinator.config_entry.data.get(CONF_TOKEN)
+                self.coordinator.data.device_type,
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.config_entry.data.get(CONF_TOKEN),
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
