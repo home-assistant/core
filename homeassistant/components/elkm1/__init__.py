@@ -518,6 +518,8 @@ class ElkEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
         return DeviceInfo(
+            name=self._element.name,
+            identifiers={(DOMAIN, self._unique_id)},
             via_device=(DOMAIN, f"{self._prefix}_system"),
         )
 
