@@ -76,13 +76,13 @@ class SnoozFan(FanEntity, RestoreEntity):
     _attr_name = None
     _attr_supported_features = FanEntityFeature.SET_SPEED
     _attr_should_poll = False
+    _is_on: bool | None = None
+    _percentage: int | None = None
 
     def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
         self._device = data.device
         self._attr_unique_id = data.device.address
-        self._is_on: bool | None = None
-        self._percentage: int | None = None
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
 
     @callback
