@@ -77,8 +77,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     # 1 --> 2: Use config entry ID as base for unique IDs.
     if config_entry.version == 1:
-        assert config_entry.unique_id
         old_unique_id = config_entry.unique_id
+        assert old_unique_id
         config_entry_id = config_entry.entry_id
 
         # Migrate config entry.
