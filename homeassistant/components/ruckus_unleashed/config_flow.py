@@ -85,14 +85,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=info[KEY_SYS_TITLE], data=user_input
                     )
-
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
+                if info[KEY_SYS_SERIAL] == self._reauth_entry.unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry, data=user_input
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._reauth_entry.entry_id
+                        )
+                    )
+                    return self.async_abort(reason="reauth_successful")
+                errors["base"] = "invalid_host"
 
         data_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
