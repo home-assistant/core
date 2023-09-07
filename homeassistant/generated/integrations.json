@@ -6308,6 +6308,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "weatherkit": {
+      "name": "Apple WeatherKit",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "webhook": {
       "name": "Webhook",
       "integration_type": "hub",

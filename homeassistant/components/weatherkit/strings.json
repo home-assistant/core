@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WeatherKit Setup",
+        "description": "Enter your location details and WeatherKit authentication credentials below.",
+        "data": {
+          "name": "Name",
+          "location": "Location",
+          "key_id": "Key ID",
+          "team_id": "Apple Team ID",
+          "service_id": "Service ID",
+          "key_pem": "Private Key (.p8)"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "This integration has already been configured.",
+      "unsupported_location": "Apple WeatherKit does not provide data for this location.",
+      "auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "connection": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}
