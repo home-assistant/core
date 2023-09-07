@@ -144,7 +144,7 @@ def error_response(
 def supports_encryption() -> bool:
     """Test if we support encryption."""
     try:
-        import nacl  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+        import nacl  # noqa: F401 pylint: disable=import-outside-toplevel
 
         return True
     except OSError:

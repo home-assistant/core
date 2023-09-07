@@ -32,10 +32,7 @@ async def async_setup_entry(
 class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity):
     """Representation of a BleBox switch feature."""
 
-    def __init__(self, feature: blebox_uniapi.switch.Switch) -> None:
-        """Initialize a BleBox switch feature."""
-        super().__init__(feature)
-        self._attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self):

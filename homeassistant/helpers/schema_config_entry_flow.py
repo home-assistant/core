@@ -292,9 +292,8 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         """Initialize config flow."""
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
 
-    @callback
     @staticmethod
-    def async_setup_preview(hass: HomeAssistant) -> None:
+    async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
     @classmethod
@@ -369,7 +368,8 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         options_flow: Mapping[str, SchemaFlowStep],
         async_options_flow_finished: Callable[[HomeAssistant, Mapping[str, Any]], None]
         | None = None,
-        async_setup_preview: Callable[[HomeAssistant], None] | None = None,
+        async_setup_preview: Callable[[HomeAssistant], Coroutine[Any, Any, None]]
+        | None = None,
     ) -> None:
         """Initialize options flow.
 

@@ -514,6 +514,7 @@ async def websocket_network_status(
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
+            "status": controller.status,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -1730,7 +1731,7 @@ async def websocket_subscribe_log_updates(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        hass.async_create_task(driver.async_stop_listening_logs())
+        hass.async_create_task(client.async_stop_listening_logs())
         for unsub in unsubs:
             unsub()
 
@@ -1771,7 +1772,7 @@ async def websocket_subscribe_log_updates(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    await driver.async_start_listening_logs()
+    await client.async_start_listening_logs()
     connection.send_result(msg[ID])
 
 

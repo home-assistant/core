@@ -82,7 +82,6 @@ NO_STORE = re.compile(
     r"|app/entrypoint.js"
     r")$"
 )
-# pylint: enable=implicit-str-concat
 # fmt: on
 
 RESPONSE_HEADERS_FILTER = {

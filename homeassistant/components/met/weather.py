@@ -16,8 +16,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    CoordinatorWeatherEntity,
     Forecast,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +30,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -91,7 +91,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-class MetWeather(CoordinatorWeatherEntity[MetDataUpdateCoordinator]):
+class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     """Implementation of a Met.no weather condition."""
 
     _attr_attribution = (
@@ -239,11 +239,13 @@ class MetWeather(CoordinatorWeatherEntity[MetDataUpdateCoordinator]):
         """Return the forecast array."""
         return self._forecast(self._hourly)
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(True)
 
