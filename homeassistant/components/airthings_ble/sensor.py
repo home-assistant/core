@@ -171,6 +171,12 @@ class AirthingsSensor(
                 (
                     CONNECTION_BLUETOOTH,
                     airthings_device.address,
+                ),
+            },
+            identifiers={
+                (
+                    DOMAIN,
+                    airthings_device.address,
                 )
             },
             name=name,
