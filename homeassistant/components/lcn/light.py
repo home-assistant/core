@@ -65,6 +65,8 @@ class LcnOutputLight(LcnEntity, LightEntity):
     """Representation of a LCN light for output ports."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_is_on = False
+    _attr_brightness = 255
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
@@ -79,8 +81,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
         )
         self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
 
-        self._brightness = 255
-        self._is_on = False
         self._is_dimming_to_zero = False
 
         if self.dimmable:
@@ -101,16 +101,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.output)
 
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -128,7 +118,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
             self.output.value, percent, transition
         ):
             return
-        self._is_on = True
+        self._attr_is_on = True
         self._is_dimming_to_zero = False
         self.async_write_ha_state()
 
@@ -146,7 +136,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
         ):
             return
         self._is_dimming_to_zero = bool(transition)
-        self._is_on = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj: InputType) -> None:
@@ -157,11 +147,11 @@ class LcnOutputLight(LcnEntity, LightEntity):
         ):
             return
 
-        self._brightness = int(input_obj.get_percent() / 100.0 * 255)
-        if self.brightness == 0:
+        self._attr_brightness = int(input_obj.get_percent() / 100.0 * 255)
+        if self._attr_brightness == 0:
             self._is_dimming_to_zero = False
-        if not self._is_dimming_to_zero and self.brightness is not None:
-            self._is_on = self.brightness > 0
+        if not self._is_dimming_to_zero and self._attr_brightness is not None:
+            self._attr_is_on = self._attr_brightness > 0
         self.async_write_ha_state()
 
 
@@ -170,6 +160,7 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_is_on = False
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
@@ -178,8 +169,6 @@ class LcnRelayLight(LcnEntity, LightEntity):
         super().__init__(config, entry_id, device_connection)
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
-
-        self._is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -193,18 +182,13 @@ class LcnRelayLight(LcnEntity, LightEntity):
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.output)
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
         if not await self.device_connection.control_relays(states):
             return
-        self._is_on = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -213,7 +197,7 @@ class LcnRelayLight(LcnEntity, LightEntity):
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         if not await self.device_connection.control_relays(states):
             return
-        self._is_on = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj: InputType) -> None:
@@ -221,5 +205,5 @@ class LcnRelayLight(LcnEntity, LightEntity):
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
 
-        self._is_on = input_obj.get_state(self.output.value)
+        self._attr_is_on = input_obj.get_state(self.output.value)
         self.async_write_ha_state()

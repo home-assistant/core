@@ -59,7 +59,7 @@ def validate_input(auth: Auth) -> None:
         raise Require2FA
 
 
-def _send_blink_2fa_pin(auth: Auth, pin: str) -> bool:
+def _send_blink_2fa_pin(auth: Auth, pin: str | None) -> bool:
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
@@ -122,8 +122,9 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
-            pin = user_input.get(CONF_PIN)
+            pin: str | None = user_input.get(CONF_PIN)
             try:
+                assert self.auth
                 valid_token = await self.hass.async_add_executor_job(
                     _send_blink_2fa_pin, self.auth, pin
                 )
