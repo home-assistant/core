@@ -565,7 +565,9 @@ async def handle_render_template(
             if not report_errors:
                 return
             connection.send_message(
-                messages.event_message(msg["id"], {"error": str(result)})
+                messages.event_message(
+                    msg["id"], {"error": str(result), "level": "ERROR"}
+                )
             )
             return
 
