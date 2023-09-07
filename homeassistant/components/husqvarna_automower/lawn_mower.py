@@ -43,7 +43,6 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
 
     _attr_name: str | None = None
     _attr_supported_features = SUPPORT_STATE_SERVICES
-    _attr_translation_key = "mower"
 
     def __init__(self, session, idx) -> None:
         """Set up HusqvarnaAutomowerEntity."""
