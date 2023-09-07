@@ -128,17 +128,12 @@ class SwitcherCoverEntity(
                 f"args: {args}, response/error: {response or error}"
             )
 
-    # This function return the currect shutter index (based of device type) used for the API Call
     def _get_shutter_index(self) -> int:
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER:
+        """Return the currect shutter index (based of device type) used for the API Call."""
+        if self.cover_id == COVER1_ID:
             return 1
-        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
-            return 3
-        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
-            if self.cover_id == COVER1_ID:
-                return 2
-            else:
-                return 3
+        elif self.cover_id == COVER2_ID:
+            return 2
         return 0
 
     async def async_close_cover(self, **kwargs: Any) -> None:

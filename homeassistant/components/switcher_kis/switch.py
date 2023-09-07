@@ -245,15 +245,12 @@ class SwitcherBaselLightEntity(
 
         return bool(self.coordinator.data.device_state == LightState.ON)
 
-    # This function return the currect light index (based of device type) used for the API Call
     def _get_light_index(self) -> int:
-        if self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL:
-            if self.light_id == LIGHT1_ID:
-                return 1
-            else:
-                return 2
-        elif self.coordinator.data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE:
+        """Return the currect shutter index (based of device type) used for the API Call."""
+        if self.light_id == LIGHT1_ID:
             return 1
+        elif self.light_id == LIGHT2_ID:
+            return 2
         return 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
