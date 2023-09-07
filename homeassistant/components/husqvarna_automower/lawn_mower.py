@@ -1,6 +1,7 @@
-"""Creates a vacuum entity for the mower."""
+"""Husqvarna automower entity."""
 import logging
 
+from aioautomower import AutomowerSession
 from aiohttp import ClientResponseError
 
 from homeassistant.components.lawn_mower import (
@@ -29,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up vacuum platform."""
+    """Set up lawn mower platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         HusqvarnaAutomowerEntity(coordinator, idx)
@@ -41,10 +42,10 @@ async def async_setup_entry(
 class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     """Defining each mower Entity."""
 
-    _attr_name: str | None = None
+    _attr_name = None
     _attr_supported_features = SUPPORT_STATE_SERVICES
 
-    def __init__(self, session, idx) -> None:
+    def __init__(self, session: AutomowerSession, idx: int) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(session, idx)
         self._attr_unique_id = self.coordinator.session.data["data"][self.idx]["id"]
@@ -52,13 +53,12 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        available = self.get_mower_attributes()["metadata"]["connected"]
-        return available
+        return self.mower_attributes["metadata"]["connected"]
 
     @property
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
-        mower_attributes = AutomowerEntity.get_mower_attributes(self)
+        mower_attributes = self.mower_attributes
         if mower_attributes["mower"]["state"] in [
             "PAUSED",
             "WAIT_UPDATING",
@@ -89,8 +89,7 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the specific state attributes of this mower."""
-        mower_attributes = AutomowerEntity.get_mower_attributes(self)
-        action = mower_attributes["planner"]["override"]["action"]
+        action = self.mower_attributes["planner"]["override"]["action"]
         action = action.lower() if action is not None else action
         return {
             "action": action,

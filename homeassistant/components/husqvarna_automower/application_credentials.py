@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
-# pylint: disable=unused-argument
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
     """Return authorization server."""
     return AuthorizationServer(
