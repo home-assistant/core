@@ -706,7 +706,7 @@ async def test_black_is_off_zdb5100(
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
         "commandClass": 51,
-        "endpoint": 0,
+        "endpoint": 1,
         "property": "targetColor",
     }
     assert args["value"] == {"red": 255, "green": 255, "blue": 255}
@@ -723,7 +723,7 @@ async def test_black_is_off_zdb5100(
             "args": {
                 "commandClassName": "Color Switch",
                 "commandClass": 51,
-                "endpoint": 0,
+                "endpoint": 1,
                 "property": "currentColor",
                 "newValue": {
                     "red": 0,
@@ -754,7 +754,7 @@ async def test_black_is_off_zdb5100(
             "args": {
                 "commandClassName": "Color Switch",
                 "commandClass": 51,
-                "endpoint": 0,
+                "endpoint": 1,
                 "property": "currentColor",
                 "newValue": {
                     "red": 0,
@@ -787,7 +787,7 @@ async def test_black_is_off_zdb5100(
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
         "commandClass": 51,
-        "endpoint": 0,
+        "endpoint": 1,
         "property": "targetColor",
     }
     assert args["value"] == {"red": 0, "green": 0, "blue": 0}
@@ -807,7 +807,7 @@ async def test_black_is_off_zdb5100(
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
         "commandClass": 51,
-        "endpoint": 0,
+        "endpoint": 1,
         "property": "targetColor",
     }
     assert args["value"] == {"red": 0, "green": 255, "blue": 0}
@@ -824,7 +824,7 @@ async def test_black_is_off_zdb5100(
             "args": {
                 "commandClassName": "Color Switch",
                 "commandClass": 51,
-                "endpoint": 0,
+                "endpoint": 1,
                 "property": "currentColor",
                 "newValue": None,
                 "prevValue": {
@@ -856,7 +856,7 @@ async def test_black_is_off_zdb5100(
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {
         "commandClass": 51,
-        "endpoint": 0,
+        "endpoint": 1,
         "property": "targetColor",
     }
     assert args["value"] == {"red": 255, "green": 76, "blue": 255}
