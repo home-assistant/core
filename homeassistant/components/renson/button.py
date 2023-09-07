@@ -20,7 +20,6 @@ from .entity import RensonEntity
 
 SYNC_TIME_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     key="sync_time",
-    device_class=ButtonDeviceClass.UPDATE,
     entity_category=EntityCategory.CONFIG,
     translation_key="sync_time",
 )
@@ -29,7 +28,6 @@ RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     key="restart",
     device_class=ButtonDeviceClass.RESTART,
     entity_category=EntityCategory.CONFIG,
-    translation_key="restart",
 )
 
 
@@ -71,9 +69,8 @@ class RensonButton(RensonEntity, ButtonEntity):
         super().__init__(description.key, api, coordinator)
 
         self.entity_description = description
-        self.action = action
+        self._action = action
 
     async def async_press(self) -> None:
         """Triggers the action."""
-        await self.hass.async_add_executor_job(self.action)
-        await self.coordinator.async_request_refresh()
+        await self.hass.async_add_executor_job(self._action)

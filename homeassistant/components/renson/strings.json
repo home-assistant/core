@@ -16,9 +16,6 @@
     "button": {
       "sync_time": {
         "name": "Sync time with device"
-      },
-      "restart": {
-        "name": "Restart device"
       }
     },
     "number": {
