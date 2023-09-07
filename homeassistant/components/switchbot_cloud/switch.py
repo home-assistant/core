@@ -54,18 +54,14 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_command(CommonCommands.ON)
-        if self._is_remote:
-            self._attr_is_on = True
-        else:
-            await self.coordinator.async_request_refresh()
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_command(CommonCommands.OFF)
-        if self._is_remote:
-            self._attr_is_on = False
-        else:
-            await self.coordinator.async_request_refresh()
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
