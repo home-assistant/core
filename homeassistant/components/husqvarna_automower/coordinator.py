@@ -17,7 +17,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Husqvarna data."""
 
     def __init__(
-        self, hass: HomeAssistant, api_key, access_token, entry: ConfigEntry
+        self, hass: HomeAssistant, implementation, access_token, entry: ConfigEntry
     ) -> None:
         """Initialize data updater."""
         super().__init__(
@@ -26,7 +26,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
         )
         self.session = aioautomower.AutomowerSession(
-            api_key, access_token, low_energy=False
+            implementation.client_id, access_token
         )
         self.session.register_token_callback(
             lambda token: hass.config_entries.async_update_entry(
