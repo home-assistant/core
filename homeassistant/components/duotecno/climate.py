@@ -23,7 +23,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Velbus switch based on config_entry."""
+    """Set up Duotecno climate based on config_entry."""
     cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoClimate(channel) for channel in cntrl.get_units(["SensUnit"])
