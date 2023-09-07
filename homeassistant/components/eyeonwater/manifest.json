@@ -1,11 +1,11 @@
 {
   "domain": "eyeonwater",
   "name": "EyeOnWater",
-  "codeowners": [],
+  "codeowners": ["@disforw", "@kdeyev"],
   "config_flow": true,
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/eyeonwater",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": ["pyonwater==0.2.5"]
+  "requirements": ["pyonwater==0.3.1"]
 }
