@@ -13,11 +13,6 @@
     }
   },
   "entity": {
-    "fan": {
-      "ventilation": {
-        "name": "Ventilation"
-      }
-    },
     "binary_sensor": {
       "frost_protection_active": {
         "name": "Frost protection active"
