@@ -1197,7 +1197,7 @@ class TrackTemplateResultInfo:
             )
             _LOGGER.debug(
                 (
-                    "Template group %s listens for %s, re-render blocker by super"
+                    "Template group %s listens for %s, re-render blocked by super"
                     " template: %s"
                 ),
                 self._track_templates,
