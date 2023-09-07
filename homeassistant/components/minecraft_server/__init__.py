@@ -78,7 +78,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # 1 --> 2: Use config entry ID as base for unique IDs.
     if config_entry.version == 1:
         assert config_entry.unique_id
-        assert config_entry.entry_id
         old_unique_id = config_entry.unique_id
         config_entry_id = config_entry.entry_id
 
@@ -94,7 +93,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Migrate entities.
         await er.async_migrate_entries(hass, config_entry_id, _migrate_entity_unique_id)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True
 
@@ -108,7 +107,6 @@ async def _async_migrate_device_identifiers(
     for device_entry in dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     ):
-        assert device_entry
         for identifier in device_entry.identifiers:
             if identifier[1] == old_unique_id:
                 # Device found in registry. Update identifiers.
@@ -138,7 +136,6 @@ async def _async_migrate_device_identifiers(
 @callback
 def _migrate_entity_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
     """Migrate the unique ID of an entity to the new format."""
-    assert entity_entry
 
     # Different variants of unique IDs are available in version 1:
     # 1) SRV record: '<host>-srv-<entity_type>'
