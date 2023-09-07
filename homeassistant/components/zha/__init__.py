@@ -134,7 +134,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
+    # Re-use the gateway object between ZHA reloads
+    if (zha_gateway := zha_data.get(DATA_ZHA_GATEWAY)) is None:
+        zha_gateway = ZHAGateway(hass, config, config_entry)
 
     try:
         await zha_gateway.async_initialize()
