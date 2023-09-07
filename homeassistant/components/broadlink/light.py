@@ -110,7 +110,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
         elif ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
-            state["colortemp"] = (color_temp - 153) * 100 + 2700
+            state["colortemp"] = round((color_temp - 2700) / 100 + 153)
             state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
 
         elif ATTR_COLOR_MODE in kwargs:
