@@ -55,17 +55,15 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self.meter = meter
         self._attr_name = f"{ELECTRIC_METER} {self.meter.meter}"
         self._attr_unique_id = f"{self.meter.esiid}_{self.meter.meter}"
-        self._attr_native_value = None
 
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        attributes = {
+        return {
             METER_NUMBER: self.meter.meter,
             ESIID: self.meter.esiid,
             CONF_ADDRESS: self.meter.address,
         }
-        return attributes
 
     @callback
     def _state_update(self):
