@@ -1998,7 +1998,7 @@ DATA_HOME_GET_NODES = [
         "category": "kfb",
         "group": {"label": ""},
         "id": 9,
-        "label": "Télécommande I",
+        "label": "Télécommande",
         "name": "node_9",
         "props": {
             "Address": 5,
@@ -2079,7 +2079,7 @@ DATA_HOME_GET_NODES = [
         "category": "dws",
         "group": {"label": "Entrée"},
         "id": 11,
-        "label": "dws i",
+        "label": "Ouverture porte",
         "name": "node_11",
         "props": {
             "Address": 6,
@@ -2271,7 +2271,7 @@ DATA_HOME_GET_NODES = [
         "category": "pir",
         "group": {"label": "Salon"},
         "id": 26,
-        "label": "Salon Détecteur s",
+        "label": "Détecteur",
         "name": "node_26",
         "props": {
             "Address": 9,
