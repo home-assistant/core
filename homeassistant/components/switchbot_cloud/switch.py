@@ -27,11 +27,8 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: Data = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        [
-            SwitchBotCloudSwitch(data.api, device, coordinator)
-            for device, coordinator in data.switches
-        ],
-        update_before_add=True,
+         SwitchBotCloudSwitch(data.api, device, coordinator)
+         for device, coordinator in data.switches
     )
 
 

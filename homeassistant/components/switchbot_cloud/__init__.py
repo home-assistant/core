@@ -26,12 +26,9 @@ class Data:
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up SwitchBot via API from a config entry."""
-    token = config.data.get(CONF_API_TOKEN)
-    secret = config.data.get(CONF_API_KEY)
+    token = config.data[CONF_API_TOKEN]
+    secret = config.data[CONF_API_KEY]
 
-    if not token or not secret:
-        _LOGGER.debug("Missing token or secret key")
-        return False
 
     api = SwitchBotAPI(token=token, secret=secret)
     devices = await api.list_devices()

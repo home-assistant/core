@@ -3,12 +3,8 @@
   "name": "SwitchBot Cloud",
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
-  "homekit": {},
   "iot_class": "cloud_polling",
   "loggers": ["switchbot_cloud"],
   "requirements": ["switchbot-api==1.0.1"],
-  "ssdp": [],
-  "zeroconf": []
 }
