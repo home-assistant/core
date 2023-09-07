@@ -417,7 +417,6 @@ omit =
     homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/home_base.py
     homeassistant/components/freebox/router.py
-    homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
@@ -705,7 +704,8 @@ omit =
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
-    homeassistant/components/matrix/*
+    homeassistant/components/matrix/__init__.py
+    homeassistant/components/matrix/notify.py
     homeassistant/components/matter/__init__.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
@@ -749,6 +749,7 @@ omit =
     homeassistant/components/moehlenhoff_alpha2/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/cover.py
+    homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py

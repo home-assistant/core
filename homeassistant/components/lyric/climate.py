@@ -139,6 +139,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     entity_description: ClimateEntityDescription
 
     _attr_name = None
+    _attr_preset_modes = [
+        PRESET_NO_HOLD,
+        PRESET_HOLD_UNTIL,
+        PRESET_PERMANENT_HOLD,
+        PRESET_TEMPORARY_HOLD,
+        PRESET_VACATION_HOLD,
+    ]
 
     def __init__(
         self,
@@ -244,17 +251,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self.device.changeableValues.thermostatSetpointStatus
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return preset modes."""
-        return [
-            PRESET_NO_HOLD,
-            PRESET_HOLD_UNTIL,
-            PRESET_PERMANENT_HOLD,
-            PRESET_TEMPORARY_HOLD,
-            PRESET_VACATION_HOLD,
-        ]
 
     @property
     def min_temp(self) -> float:
