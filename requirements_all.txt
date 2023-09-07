@@ -37,6 +37,7 @@ Mastodon.py==1.5.1
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
+# homeassistant.components.matrix
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
@@ -231,7 +232,7 @@ aioecowitt==2023.5.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==16.0.3
+aioesphomeapi==16.0.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -249,7 +250,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.1
+aiohomekit==3.0.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -360,10 +361,10 @@ aioswitcher==3.3.0
 aiosyncthing==0.5.1
 
 # homeassistant.components.tractive
-aiotractive==0.5.5
+aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==58
+aiounifi==60
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -509,7 +510,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.1
+bellows==0.36.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -518,10 +519,10 @@ bimmer-connected==0.14.0
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.1
+bleak-retry-connector==3.1.2
 
 # homeassistant.components.bluetooth
-bleak==0.20.2
+bleak==0.21.0
 
 # homeassistant.components.blebox
 blebox-uniapi==2.1.4
@@ -549,7 +550,8 @@ bluetooth-auto-recovery==1.2.1
 # homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
-bluetooth-data-tools==1.9.1
+# homeassistant.components.private_ble_device
+bluetooth-data-tools==1.11.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -835,7 +837,7 @@ fritzconnection[qr]==1.12.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena_bluetooth==1.3.0
+gardena_bluetooth==1.4.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -994,7 +996,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230831.0
+home-assistant-frontend==20230904.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1177,7 +1179,7 @@ lxml==4.9.3
 mac-vendor-lookup==0.1.12
 
 # homeassistant.components.matrix
-matrix-client==0.4.0
+matrix-nio==0.21.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1210,7 +1212,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.mill
-mill-local==0.2.0
+mill-local==0.3.0
 
 # homeassistant.components.mill
 millheater==0.11.1
@@ -1547,7 +1549,7 @@ pyRFXtrx==0.30.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.28.0
+pyTibber==0.28.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1671,7 +1673,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.8.1
+pyenphase==1.9.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1988,7 +1990,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.schlage
-pyschlage==2023.8.1
+pyschlage==2023.9.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.33
@@ -2107,7 +2109,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==2.0.2
+python-homewizard-energy==2.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2402,7 +2404,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.1.1
+simplepush==2.2.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==2023.08.0
@@ -2611,6 +2613,9 @@ unifi-discovery==1.1.7
 # homeassistant.components.unifiled
 unifiled==0.11
 
+# homeassistant.components.zha
+universal-silabs-flasher==0.0.13
+
 # homeassistant.components.upb
 upb-lib==0.5.4
 
@@ -2763,7 +2768,7 @@ zamg==0.2.4
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.88.0
+zeroconf==0.97.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
@@ -2790,7 +2795,7 @@ zigpy-zigate==0.11.0
 zigpy-znp==0.11.4
 
 # homeassistant.components.zha
-zigpy==0.57.0
+zigpy==0.57.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
