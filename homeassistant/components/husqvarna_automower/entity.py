@@ -1,12 +1,10 @@
 """Platform for Husqvarna Automower base entity."""
 
-import datetime
 import logging
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from . import AutomowerDataUpdateCoordinator
 from .const import DOMAIN, HUSQVARNA_URL
@@ -42,16 +40,6 @@ class AutomowerEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     def mower_attributes(self) -> dict[str, Any]:
         """Get the mower attributes of the current mower."""
         return self.coordinator.session.data["data"][self.idx]["attributes"]
-
-    def datetime_object(self, timestamp) -> datetime.datetime | None:
-        """Convert the mower local timestamp to a UTC datetime object."""
-        local: datetime.datetime | None
-        if timestamp != 0:
-            naive = datetime.datetime.fromtimestamp(timestamp / 1000, tz=None)
-            local = dt_util.as_local(naive)
-        if timestamp == 0:
-            local = None
-        return local
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
