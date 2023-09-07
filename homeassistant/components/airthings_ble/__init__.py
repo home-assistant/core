@@ -1,17 +1,22 @@
 """The Airthings BLE integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
+import re
+from datetime import timedelta
 
 from airthings_ble import AirthingsBluetoothDeviceData
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers.entity_registry import (RegistryEntry,
+                                                   async_migrate_entries)
+from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
+                                                      UpdateFailed)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -36,6 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find Airthings device with address {address}"
         )
+
+    await migrate_unique_id(hass, entry, address)
+    update_device_identifiers(hass, entry, address)
 
     async def _async_update_method():
         """Get data from Airthings BLE."""
@@ -64,6 +72,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: str):
+    """Update device identifiers to new identifiers."""
+    device_registry = async_get(hass)
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN)})
+    if device_entry and entry.entry_id in device_entry.config_entries:
+        new_identifiers = {(DOMAIN, address)}
+        _LOGGER.debug(
+            "Updating device id '%s' with new identifiers '%s'",
+            device_entry.id,
+            new_identifiers,
+        )
+        device_registry.async_update_device(
+            device_entry.id, new_identifiers=new_identifiers
+        )
+
+
+async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
+    """Migrate entities to new unique ids (with BLE Address)."""
+
+    @callback
+    def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
+        """Define a callback to migrate Airthings BLE entities to new unique IDs.
+
+        Old: {name}_description.key
+        New: {address}_description.key
+        """
+        _LOGGER.debug("Migrating starting for '%s'", address)
+
+        if entity_entry.unique_id.startswith(address):
+            _LOGGER.debug(
+                "Migrating entry starting with '%s' is already migrated", address
+            )
+            return None
+
+        if name := re.sub(r"^.*?_", "", entity_entry.unique_id.lower()):
+            new_unique_id = f"{address}_{name}"
+
+            if entity_entry.unique_id != new_unique_id:
+                return {"new_unique_id": new_unique_id}
+
+            _LOGGER.debug(
+                "Migrating, old unique ID == new. Old: '%s', new: '%s'",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+
+        return None
+
+    await async_migrate_entries(hass, entry.entry_id, async_migrate_callback)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
