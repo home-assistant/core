@@ -6,14 +6,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import (
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-)
+from collections.abc import Callable, Collection, Coroutine, Iterable, Mapping
 import concurrent.futures
 from contextlib import suppress
 import datetime
@@ -714,7 +707,9 @@ class HomeAssistant:
                 for task in tasks:
                     _LOGGER.debug("Waiting for task: %s", task)
 
-    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(
+        self, pending: Collection[asyncio.Future[Any]]
+    ) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
