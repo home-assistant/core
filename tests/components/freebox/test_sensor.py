@@ -9,7 +9,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
-from .const import DATA_STORAGE_GET_DISKS
+from .const import DATA_HOME_GET_NODES, DATA_STORAGE_GET_DISKS
 
 from tests.common import async_fire_time_changed
 
@@ -43,3 +43,29 @@ async def test_disk(
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_free_space").state == "44.9"
+
+
+async def test_battery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
+) -> None:
+    """Test battery sensor."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "100"
+    assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "100"
+    assert hass.states.get("sensor.detecteur_niveau_de_batterie").state == "100"
+
+    # Simulate a changed battery
+    data_home_get_nodes_changed = deepcopy(DATA_HOME_GET_NODES)
+    data_home_get_nodes_changed[2]["show_endpoints"][3]["value"] = 25
+    data_home_get_nodes_changed[3]["show_endpoints"][3]["value"] = 50
+    data_home_get_nodes_changed[4]["show_endpoints"][3]["value"] = 75
+    router().home.get_home_nodes.return_value = data_home_get_nodes_changed
+    # Simulate an update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "25"
+    assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "50"
+    assert hass.states.get("sensor.detecteur_niveau_de_batterie").state == "75"
