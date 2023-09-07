@@ -57,7 +57,7 @@ class MBSwitch(ToggleEntity):
                 "relay_value": 1,
             },
         }
-        await sendCommand(self.token, data)
+        await sendCommand(self, data)
         self.act["value"] = 1
 
     async def async_turn_off(self, **kwargs):
@@ -71,7 +71,7 @@ class MBSwitch(ToggleEntity):
                 "relay_value": 0,
             },
         }
-        await sendCommand(self.token, data)
+        await sendCommand(self, data)
         self.act["value"] = 0
 
     async def async_update(self):

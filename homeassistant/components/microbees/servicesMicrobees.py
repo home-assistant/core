@@ -1,32 +1,34 @@
-import aiohttp
+
+from homeassistant.helpers import aiohttp_client
 import logging
 import json
-
+from .const import SENDCOMMAND_URL,GETMYBEES_URL
 _LOGGER = logging.getLogger(__name__)
 
 
-async def sendCommand(token, data):
+async def sendCommand(self, data):
     _LOGGER.info("sendCommand: %s" % data)
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer %s" % token,
+        "Authorization": "Bearer %s" % self.token,
     }
-    async with aiohttp.ClientSession(headers=headers) as session:
+    async with aiohttp_client.async_create_clientsession(self.hass) as session:
         async with session.post(
-            "https://dev.microbees.com/v/1_0/sendCommand",
+            SENDCOMMAND_URL,
             json=data,
+            headers=headers
         ) as resp:
             await resp.text()
 
 
-async def getBees(token):
+async def getBees(hass,token):
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer %s" % token,
     }
-    async with aiohttp.ClientSession(headers=headers) as session:
+    async with aiohttp_client.async_create_clientsession(hass) as session:
         async with session.post(
-            "https://dev.microbees.com/v/1_0/getMyBees", headers=headers
+            GETMYBEES_URL, headers=headers
         ) as resp:
             data = await resp.text()
             js = json.loads(data)

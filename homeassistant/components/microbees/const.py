@@ -9,3 +9,6 @@ CONF_DEVICE_NAME = "device_name"
 CONFIG_ENTRY_VERSION = 1
 DEFAULT_NAME = "microBees"
 DOMAIN = "microbees"
+GET_TOKEN_URL ="https://dev.microbees.com/oauth/token"
+SENDCOMMAND_URL = "https://dev.microbees.com/v/1_0/sendCommand"
+GETMYBEES_URL ="https://dev.microbees.com/v/1_0/getMyBees"

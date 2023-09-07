@@ -12,11 +12,11 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_DOMAIN,
 )
-from .const import CONFIG_ENTRY_VERSION
+from .const import CONFIG_ENTRY_VERSION,GET_TOKEN_URL
 import json
 import aiohttp
 import base64
-
+from homeassistant.helpers import aiohttp_client
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,7 +36,7 @@ class microBeesFlowHandler(config_entries.ConfigFlow, domain=CONF_DOMAIN):
         # Login to microBees with user data.
         if user_input is not None:
             self.data.update(user_input)
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp_client.async_create_clientsession(self.hass) as session:
                 userpass = (
                     self.data[CONF_CLIENT_ID] + ":" + self.data[CONF_CLIENT_SECRET]
                 )
@@ -55,7 +55,7 @@ class microBeesFlowHandler(config_entries.ConfigFlow, domain=CONF_DOMAIN):
                 }
 
                 async with session.post(
-                    "https://dev.microbees.com/oauth/token", headers=headers, data=body
+                    GET_TOKEN_URL, headers=headers, data=body
                 ) as resp:
                     if resp.ok:
                         data = await resp.text()
