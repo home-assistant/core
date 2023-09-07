@@ -93,11 +93,7 @@ class FreeboxRouter:
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        try:
-            fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
-        except HttpRequestError as error:
-            _LOGGER.warning("The Freebox API URL devices error %s", error)
-            return
+        fbx_devices: list[dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
@@ -163,12 +159,8 @@ class FreeboxRouter:
 
     async def _update_disks_sensors(self) -> None:
         """Update Freebox disks."""
-        try:
-            # None at first request
-            fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
-        except BaseException:
-            _LOGGER.warning("The Freebox API exception during update disks sensors")
-            raise
+        # None at first request
+        fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
             self.disks[fbx_disk["id"]] = fbx_disk
