@@ -154,7 +154,7 @@ class SwitcherCoverEntity(
         """Return the current shutter index used for the API Call."""
         if self.cover_id == COVER1_ID:
             return 1
-        elif self.cover_id == COVER2_ID:
+        if self.cover_id == COVER2_ID:
             return 2
         return 0
 

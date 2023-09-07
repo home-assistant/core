@@ -267,8 +267,7 @@ class SwitcherBaselLightEntity(
         ):
             if self.light_id == LIGHT1_ID:
                 return bool(self.coordinator.data.light == LightState.ON)
-            else:
-                return bool(self.coordinator.data.light2 == LightState.ON)
+            return bool(self.coordinator.data.light2 == LightState.ON)
 
         if (
             self.coordinator.data.device_type.category
@@ -283,7 +282,7 @@ class SwitcherBaselLightEntity(
         """Return the current shutter index used for the API Call."""
         if self.light_id == LIGHT1_ID:
             return 1
-        elif self.light_id == LIGHT2_ID:
+        if self.light_id == LIGHT2_ID:
             return 2
         return 0
 
