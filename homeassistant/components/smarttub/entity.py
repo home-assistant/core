@@ -44,12 +44,12 @@ class SmartTubEntity(CoordinatorEntity):
 class SmartTubSensorBase(SmartTubEntity):
     """Base class for SmartTub sensors."""
 
-    def __init__(self, coordinator, spa, sensor_name, attr_name):
+    def __init__(self, coordinator, spa, sensor_name, state_key):
         """Initialize the entity."""
         super().__init__(coordinator, spa, sensor_name)
-        self._attr_name = attr_name
+        self._state_key = state_key
 
     @property
     def _state(self):
         """Retrieve the underlying state from the spa."""
-        return getattr(self.spa_status, self._attr_name)
+        return getattr(self.spa_status, self._state_key)
