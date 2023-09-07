@@ -202,7 +202,7 @@ class SwitcherBaselLightEntity(
     _attr_has_entity_name = True
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the entity."""
         return self.light_id.capitalize()
 
@@ -280,7 +280,7 @@ class SwitcherBaselLightEntity(
         return bool(self.coordinator.data.device_state == LightState.ON)
 
     def _get_light_index(self) -> int:
-        """Return the currect shutter index (based of device type) used for the API Call."""
+        """Return the current shutter index used for the API Call."""
         if self.light_id == LIGHT1_ID:
             return 1
         elif self.light_id == LIGHT2_ID:

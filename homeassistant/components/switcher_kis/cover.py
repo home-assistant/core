@@ -83,6 +83,7 @@ class SwitcherCoverEntity(
 
     @property
     def name(self):
+    def name(self) -> str:
         """Name of the entity."""
         return self.cover_id.capitalize()
 
@@ -151,7 +152,7 @@ class SwitcherCoverEntity(
             )
 
     def _get_shutter_index(self) -> int:
-        """Return the currect shutter index (based of device type) used for the API Call."""
+        """Return the current shutter index used for the API Call."""
         if self.cover_id == COVER1_ID:
             return 1
         elif self.cover_id == COVER2_ID:
