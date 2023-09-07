@@ -88,6 +88,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
+homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
@@ -136,6 +137,7 @@ homeassistant.components.fully_kiosk.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
+homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_sheets.*
@@ -213,6 +215,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.mastodon.*
+homeassistant.components.matrix.*
 homeassistant.components.matter.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
@@ -254,6 +257,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.powerwall.*
+homeassistant.components.private_ble_device.*
 homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
@@ -332,6 +336,7 @@ homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
+homeassistant.components.trend.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*

@@ -171,7 +171,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.STRING,
                 DataType.CUSTOM,
             ]
         ),
