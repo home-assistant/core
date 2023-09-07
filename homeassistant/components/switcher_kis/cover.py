@@ -82,7 +82,6 @@ class SwitcherCoverEntity(
     )
 
     @property
-    def name(self):
     def name(self) -> str:
         """Name of the entity."""
         return self.cover_id.capitalize()
