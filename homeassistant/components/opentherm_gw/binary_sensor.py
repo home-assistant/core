@@ -52,6 +52,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
     _attr_should_poll = False
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
@@ -61,73 +62,42 @@ class OpenThermBinarySensor(BinarySensorEntity):
         self._gateway = gw_dev
         self._var = var
         self._source = source
-        self._state = None
-        self._device_class = device_class
+        self._attr_device_class = device_class
         if TRANSLATE_SOURCE[source] is not None:
             friendly_name_format = (
                 f"{friendly_name_format} ({TRANSLATE_SOURCE[source]})"
             )
-        self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._attr_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
+        self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{var}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, gw_dev.gw_id)},
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            name=gw_dev.name,
+            sw_version=gw_dev.gw_version,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
-        _LOGGER.debug("Added OpenTherm Gateway binary sensor %s", self._friendly_name)
+        _LOGGER.debug("Added OpenTherm Gateway binary sensor %s", self._attr_name)
         self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from updates from the component."""
-        _LOGGER.debug(
-            "Removing OpenTherm Gateway binary sensor %s", self._friendly_name
-        )
+        _LOGGER.debug("Removing OpenTherm Gateway binary sensor %s", self._attr_name)
         self._unsub_updates()
 
     @property
     def available(self):
         """Return availability of the sensor."""
-        return self._state is not None
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Disable binary_sensors by default."""
-        return False
+        return self._attr_is_on is not None
 
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
         state = status[self._source].get(self._var)
-        self._state = None if state is None else bool(state)
+        self._attr_is_on = None if state is None else bool(state)
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the friendly name."""
-        return self._friendly_name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._gateway.gw_id)},
-            manufacturer="Schelte Bron",
-            model="OpenTherm Gateway",
-            name=self._gateway.name,
-            sw_version=self._gateway.gw_version,
-        )
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self._gateway.gw_id}-{self._source}-{self._var}"
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class
