@@ -5,7 +5,6 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -35,9 +34,6 @@ async def test_entry_diagnostics(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
