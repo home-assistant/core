@@ -99,6 +99,7 @@ class MirAIeClimateEntity(ClimateEntity):
             suggested_area=device.area_name,
         )
 
+        self._update_entity()
         _LOGGER.debug("MirAIe device added: %s", device.friendly_name)
 
     @property
@@ -112,108 +113,6 @@ class MirAIeClimateEntity(ClimateEntity):
             sw_version=self.device.firmware_version,
             suggested_area=self.device.area_name,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        _LOGGER.debug(
-            "%s - Availability queried: %s",
-            self._friendly_name,
-            self.device.status.is_online,
-        )
-
-        return self.device.status.is_online
-
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Gets the current HVAC Mode."""
-        power_mode = self.device.status.power_mode
-        hvac_mode = self.device.status.hvac_mode
-
-        result = (
-            HVACMode.OFF
-            if power_mode == MirAIePowerMode.OFF
-            else HVAC_MODE_MAP_TO_HASS[hvac_mode]
-        )
-
-        _LOGGER.debug(
-            "%s - HVAC mode queried: %s",
-            self._friendly_name,
-            result,
-        )
-
-        return result
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Gets the current room temperature."""
-        _LOGGER.debug(
-            "%s - Room Temperature queried: %s",
-            self._friendly_name,
-            self.device.status.room_temp,
-        )
-
-        return self.device.status.room_temp
-
-    @property
-    def target_temperature(self) -> float | None:
-        """Gets the current target temperature."""
-        _LOGGER.debug(
-            "%s - Target Temperature queried: %s",
-            self._friendly_name,
-            self.device.status.temperature,
-        )
-
-        return self.device.status.temperature
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Get the current Preset Mode."""
-        preset_mode = self.device.status.preset_mode
-        result = (
-            PRESET_NONE if preset_mode is None else PRESET_MODE_MAP_TO_HASS[preset_mode]
-        )
-
-        _LOGGER.debug(
-            "%s - Preset Mode queried: %s",
-            self._friendly_name,
-            result,
-        )
-
-        return result
-
-    @property
-    def fan_mode(self) -> str | None:
-        """Gets the current Fan Mode."""
-        fan_mode = self.device.status.fan_mode
-
-        result = FAN_MODE_MAP_TO_HASS[fan_mode]
-        _LOGGER.debug("%s - Fan Mode queried: %s", self._friendly_name, result)
-        return result
-
-    @property
-    def swing_mode(self) -> str | None:
-        """Gets the current Swing Mode."""
-        v_swing_mode = self.device.status.vertical_swing_mode
-        h_swing_mode = self.device.status.horizontal_swing_mode
-
-        result = self._map_swing_mode(v_swing_mode, h_swing_mode)
-        _LOGGER.debug("%s - Swing mode queried: %s", self._friendly_name, result)
-        return result
-
-    def _map_swing_mode(
-        self, v_swing: MirAIeSwingMode, h_swing: MirAIeSwingMode
-    ) -> str:
-        if v_swing == MirAIeSwingMode.AUTO and h_swing == MirAIeSwingMode.AUTO:
-            return SWING_BOTH
-
-        if MirAIeSwingMode.AUTO not in (v_swing, h_swing):
-            return SWING_OFF
-
-        if v_swing == MirAIeSwingMode.AUTO:
-            return SWING_VERTICAL
-
-        return SWING_HORIZONTAL
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
@@ -285,8 +184,53 @@ class MirAIeClimateEntity(ClimateEntity):
             preset_mode,
         )
 
+    def _map_swing_mode(
+        self, v_swing: MirAIeSwingMode, h_swing: MirAIeSwingMode
+    ) -> str:
+        if v_swing == MirAIeSwingMode.AUTO and h_swing == MirAIeSwingMode.AUTO:
+            return SWING_BOTH
+
+        if MirAIeSwingMode.AUTO not in (v_swing, h_swing):
+            return SWING_OFF
+
+        if v_swing == MirAIeSwingMode.AUTO:
+            return SWING_VERTICAL
+
+        return SWING_HORIZONTAL
+
+    def _update_entity(self):
+        self._attr_available = self.device.status.is_online
+        self._attr_current_temperature = self.device.status.room_temp
+        self._attr_target_temperature = self.device.status.temperature
+
+        # preset mode
+        preset_mode = self.device.status.preset_mode
+        self._attr_preset_mode = (
+            PRESET_NONE if preset_mode is None else PRESET_MODE_MAP_TO_HASS[preset_mode]
+        )
+
+        # fan mode
+        fan_mode = self.device.status.fan_mode
+        self._attr_fan_mode = FAN_MODE_MAP_TO_HASS[fan_mode]
+
+        # swing mode
+        v_swing_mode = self.device.status.vertical_swing_mode
+        h_swing_mode = self.device.status.horizontal_swing_mode
+        self._attr_swing_mode = self._map_swing_mode(v_swing_mode, h_swing_mode)
+
+        # hvac mode
+        power_mode = self.device.status.power_mode
+        hvac_mode = self.device.status.hvac_mode
+        self._attr_hvac_mode = (
+            HVACMode.OFF
+            if power_mode == MirAIePowerMode.OFF
+            else HVAC_MODE_MAP_TO_HASS[hvac_mode]
+        )
+
     def entity_state_changed_callback(self):
         """Device status has changed, notify Hass that the entity state must be updated."""
+
+        self._update_entity()
         _LOGGER.debug("%s - Hass State Updated", self._friendly_name)
         self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
