@@ -1,8 +1,8 @@
 """Test the LaCrosse View initialization."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from lacrosse_view import HTTPError, LoginError
 
 from homeassistant.components.lacrosse_view.const import DOMAIN
@@ -74,7 +74,7 @@ async def test_http_error(hass: HomeAssistant) -> None:
     assert entries[0].state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_new_token(hass: HomeAssistant) -> None:
+async def test_new_token(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test new token."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -92,19 +92,20 @@ async def test_new_token(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_after = datetime.now() + timedelta(hours=1)
-
     with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
         "lacrosse_view.LaCrosse.get_sensors",
         return_value=[TEST_SENSOR],
-    ), freeze_time(one_hour_after):
-        async_fire_time_changed(hass, one_hour_after)
+    ):
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         login.assert_called_once()
 
 
-async def test_failed_token(hass: HomeAssistant) -> None:
+async def test_failed_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test if a reauth flow occurs when token refresh fails."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -122,12 +123,9 @@ async def test_failed_token(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_after = datetime.now() + timedelta(hours=1)
-
-    with patch(
-        "lacrosse_view.LaCrosse.login", side_effect=LoginError("Test")
-    ), freeze_time(one_hour_after):
-        async_fire_time_changed(hass, one_hour_after)
+    with patch("lacrosse_view.LaCrosse.login", side_effect=LoginError("Test")):
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)

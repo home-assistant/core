@@ -43,7 +43,7 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options = ConnectionOptions(user_input[CONF_API_KEY], False)
             aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
             try:
-                await aemet.get_conventional_observation_stations(False)
+                await aemet.select_coordinates(latitude, longitude)
             except AuthError:
                 errors["base"] = "invalid_api_key"
 

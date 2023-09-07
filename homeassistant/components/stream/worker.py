@@ -624,4 +624,4 @@ def stream_worker(
             muxer.mux_packet(packet)
 
             if packet.is_keyframe and is_video(packet):
-                keyframe_converter.packet = packet
+                keyframe_converter.stash_keyframe_packet(packet)

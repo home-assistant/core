@@ -40,7 +40,6 @@ from .common import (
     MockPlatform,
     async_fire_time_changed,
     mock_config_flow,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -605,7 +604,10 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=lambda *args: mock_coro(True))
+        hass,
+        MockModule(
+            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
+        ),
     )
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -958,7 +960,7 @@ async def test_setup_raise_not_ready(
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
-    await p_setup(None)
+    await hass.async_run_hass_job(p_setup, None)
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
 
