@@ -128,7 +128,7 @@ class ZHAGateway:
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ) -> None:
         """Initialize the gateway."""
-        self._hass = hass
+        self.hass = hass
         self._config = config
         self._devices: dict[EUI64, ZHADevice] = {}
         self._groups: dict[int, ZHAGroup] = {}
@@ -155,7 +155,7 @@ class ZHAGateway:
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
             CONF_DATABASE,
-            self._hass.config.path(DEFAULT_DATABASE_NAME),
+            self.hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
@@ -187,8 +187,8 @@ class ZHAGateway:
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
-        discovery.PROBE.initialize(self._hass)
-        discovery.GROUP_PROBE.initialize(self._hass)
+        discovery.PROBE.initialize(self.hass)
+        discovery.GROUP_PROBE.initialize(self.hass)
 
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
@@ -218,7 +218,7 @@ class ZHAGateway:
             else:
                 break
 
-        zha_data = get_zha_data(self._hass)
+        zha_data = get_zha_data(self.hass)
         zha_data.gateway = self
         zha_data.bridge_id = str(self.coordinator_ieee)
 
@@ -295,7 +295,7 @@ class ZHAGateway:
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(
-            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+            self.hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
         )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
@@ -305,7 +305,7 @@ class ZHAGateway:
         address
         """
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_JOINED,
@@ -321,7 +321,7 @@ class ZHAGateway:
         """Handle a device initialization without quirks loaded."""
         manuf = device.manufacturer
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
@@ -338,7 +338,7 @@ class ZHAGateway:
 
     def device_initialized(self, device: zigpy.device.Device) -> None:
         """Handle device joined and basic information discovered."""
-        self._hass.async_create_task(self.async_device_initialized(device))
+        self.hass.async_create_task(self.async_device_initialized(device))
 
     def device_left(self, device: zigpy.device.Device) -> None:
         """Handle device leaving the network."""
@@ -353,7 +353,7 @@ class ZHAGateway:
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+            self.hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_member_added(
@@ -365,7 +365,7 @@ class ZHAGateway:
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+            self.hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
         if len(zha_group.members) == 2:
             # we need to do this because there wasn't already
@@ -393,7 +393,7 @@ class ZHAGateway:
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is not None:
             async_dispatcher_send(
-                self._hass,
+                self.hass,
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
@@ -411,7 +411,7 @@ class ZHAGateway:
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
 
-        device_registry = dr.async_get(self._hass)
+        device_registry = dr.async_get(self.hass)
         reg_device = device_registry.async_get(device.device_id)
         if reg_device is not None:
             device_registry.async_remove_device(reg_device.id)
@@ -423,14 +423,14 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
-            async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
-            self._hass.async_create_task(
+            async_dispatcher_send(self.hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
+            self.hass.async_create_task(
                 self._async_remove_device(zha_device, entity_refs),
                 "ZHAGateway._async_remove_device",
             )
             if device_info is not None:
                 async_dispatcher_send(
-                    self._hass,
+                    self.hass,
                     ZHA_GW_MSG,
                     {
                         ATTR_TYPE: ZHA_GW_MSG_DEVICE_REMOVED,
@@ -484,7 +484,7 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
-        entity_registry = er.async_get(self._hass)
+        entity_registry = er.async_get(self.hass)
         assert self.coordinator_zha_device
         all_group_entity_entries = er.async_entries_for_device(
             entity_registry,
@@ -579,10 +579,10 @@ class ZHAGateway:
     ) -> ZHADevice:
         """Get or create a ZHA device."""
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
-            zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
+            zha_device = ZHADevice.new(self.hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
 
-            device_registry = dr.async_get(self._hass)
+            device_registry = dr.async_get(self.hass)
             device_registry_device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
@@ -599,7 +599,7 @@ class ZHAGateway:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
-            zha_group = ZHAGroup(self._hass, self, zigpy_group)
+            zha_group = ZHAGroup(self.hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
         return zha_group
 
@@ -644,7 +644,7 @@ class ZHAGateway:
         device_info = zha_device.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -658,7 +658,7 @@ class ZHAGateway:
         await zha_device.async_configure()
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -666,7 +666,7 @@ class ZHAGateway:
             },
         )
         await zha_device.async_initialize(from_cache=False)
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
 
     async def _async_device_rejoined(self, zha_device: ZHADevice) -> None:
         _LOGGER.debug(
@@ -680,7 +680,7 @@ class ZHAGateway:
         device_info = zha_device.device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,

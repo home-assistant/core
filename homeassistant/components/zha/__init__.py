@@ -2,7 +2,6 @@
 import asyncio
 import contextlib
 import copy
-import dataclasses
 import logging
 import os
 import re
@@ -12,7 +11,7 @@ from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, Platform
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -41,7 +40,7 @@ from .core.const import (
 )
 from .core.device import get_device_automation_triggers
 from .core.discovery import GROUP_PROBE
-from .core.helpers import get_zha_data
+from .core.helpers import ZHAData, get_zha_data
 from .radio_manager import ZhaRadioManager
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
@@ -76,18 +75,6 @@ CENTICELSIUS = "C-100"
 
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class ZHAData:
-    """ZHA component data stored in `hass.data`."""
-    yaml_config: ConfigType = dataclasses.Field(default_factory=dict)
-    platforms: dict[Platform, list] = dataclasses.Field(default_factory=list)
-    gateway: ZHAGateway | None
-    device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.Field(
-        default_factory=dict
-    )
-    bridge_id: str | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -164,9 +151,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 get_device_automation_triggers(dev),
             )
 
-    _LOGGER.debug("Trigger cache: %s", zha_data[DATA_ZHA_DEVICE_TRIGGER_CACHE])
+    _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
+    zha_gateway = ZHAGateway(hass, zha_data.yaml_config, config_entry)
 
     async def async_zha_shutdown():
         """Handle shutdown tasks."""

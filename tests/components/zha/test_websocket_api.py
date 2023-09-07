@@ -37,6 +37,7 @@ from homeassistant.components.zha.core.const import (
     GROUP_IDS,
     GROUP_NAME,
 )
+from homeassistant.components.zha.core.helpers import get_zha_data
 from homeassistant.components.zha.websocket_api import (
     ATTR_DURATION,
     ATTR_INSTALL_CODE,
@@ -940,6 +941,7 @@ async def test_websocket_bind_unbind_devices(
 @pytest.mark.parametrize("command_type", ["bind", "unbind"])
 async def test_websocket_bind_unbind_group(
     command_type: str,
+    hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
 ) -> None:
@@ -947,10 +949,8 @@ async def test_websocket_bind_unbind_group(
 
     test_group_id = 0x0001
     gateway_mock = MagicMock()
-    with patch(
-        "homeassistant.components.zha.websocket_api.get_gateway",
-        return_value=gateway_mock,
-    ):
+
+    with patch.object(get_zha_data(hass), "gateway", gateway_mock):
         device_mock = MagicMock()
         bind_mock = AsyncMock()
         unbind_mock = AsyncMock()

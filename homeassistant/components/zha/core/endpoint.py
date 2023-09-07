@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
 from .cluster_handlers.general import MultistateInput
-from .core.helpers import get_zha_data
+from .helpers import get_zha_data
 
 if TYPE_CHECKING:
     from .cluster_handlers import ClientClusterHandler

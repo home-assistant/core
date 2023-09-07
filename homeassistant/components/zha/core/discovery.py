@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -338,14 +339,16 @@ class GroupProbe:
     @staticmethod
     def determine_entity_domains(hass: HomeAssistant, group: ZHAGroup) -> list[str]:
         """Determine the entity domains for this group."""
+        entity_registry = er.async_get(hass)
+
         entity_domains: list[str] = []
-        zha_gateway = get_zha_data(hass).gateway
         all_domain_occurrences = []
+
         for member in group.members:
             if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry,
+                entity_registry,
                 member.device.device_id,
                 include_disabled_entities=True,
             )

@@ -37,6 +37,10 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
     """Get the network settings for the currently active ZHA network."""
     zha_data = get_zha_data(hass)
+
+    if zha_data.gateway is None:
+        raise ValueError("ZHA is not running")
+
     app = zha_data.gateway.application_controller
 
     return NetworkBackup(
@@ -76,7 +80,7 @@ async def async_get_network_settings(
 
     try:
         return async_get_active_network_settings(hass)
-    except KeyError:
+    except ValueError:
         return await async_get_last_network_settings(hass, config_entry)
 
 

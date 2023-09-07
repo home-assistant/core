@@ -22,6 +22,7 @@ import zigpy.zdo.types as zdo_t
 
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
+from homeassistant.components.zha.core.helpers import get_zha_data
 from homeassistant.setup import async_setup_component
 
 from . import common
@@ -329,7 +330,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
         if setup_zha:
             await setup_zha_fixture()
 
-        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        zha_gateway = get_zha_data(hass).gateway
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device

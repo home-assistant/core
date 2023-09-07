@@ -16,6 +16,7 @@ import zigpy.zdo.types as zdo_types
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
@@ -356,7 +357,8 @@ async def websocket_get_devices(
 def _get_entity_name(
     zha_gateway: ZHAGateway, entity_ref: EntityReference
 ) -> str | None:
-    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    entity_registry = er.async_get(zha_gateway.hass)
+    entry = entity_registry.async_get(entity_ref.reference_id)
     return entry.name if entry else None
 
 
@@ -364,7 +366,8 @@ def _get_entity_name(
 def _get_entity_original_name(
     zha_gateway: ZHAGateway, entity_ref: EntityReference
 ) -> str | None:
-    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    entity_registry = er.async_get(zha_gateway.hass)
+    entry = entity_registry.async_get(entity_ref.reference_id)
     return entry.original_name if entry else None
 
 
