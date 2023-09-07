@@ -49,7 +49,7 @@ Pillow==10.0.0
 PlexAPI==4.13.2
 
 # homeassistant.components.progettihwsw
-ProgettiHWSW==0.1.1
+ProgettiHWSW==0.1.3
 
 # homeassistant.components.bluetooth_tracker
 # PyBluez==0.22
