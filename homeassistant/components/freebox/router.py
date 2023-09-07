@@ -171,7 +171,12 @@ class FreeboxRouter:
             raise
 
         for fbx_disk in fbx_disks:
-            self.disks[fbx_disk["id"]] = fbx_disk
+            disk: dict[str, Any] = {**fbx_disk}
+            disk_part: dict[int, dict[str, Any]] = {}
+            for fbx_disk_part in fbx_disk["partitions"]:
+                disk_part[fbx_disk_part["id"]] = fbx_disk_part
+            disk["partitions"] = disk_part
+            self.disks[fbx_disk["id"]] = disk
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
