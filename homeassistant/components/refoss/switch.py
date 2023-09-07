@@ -30,25 +30,19 @@ async def async_setup_entry(
     def entity_add_callback(device_ids: list[str]) -> None:
         """entity_add_callback."""
         new_entities = []
-        try:
-            for uuid in device_ids:
-                device = hass_data.device_manager.base_device_map[uuid]
-                if device is None:
-                    continue
-                if not isinstance(device, ToggleXMix):
-                    continue
+        for uuid in device_ids:
+            device = hass_data.device_manager.base_device_map[uuid]
+            if device is None:
+                continue
+            if not isinstance(device, ToggleXMix):
+                continue
 
-                if len(device.channels) == 0:
-                    continue
+            if len(device.channels) == 0:
+                continue
 
-                for channel in device.channels:
-                    w = SwitchEntityWrapper(device=device, channel=channel)
-                    new_entities.append(w)
-
-        except Exception as e:
-            LOGGER.debug("setup switch fail,err: %s", e)
-            raise e
-
+            for channel in device.channels:
+                w = SwitchEntityWrapper(device=device, channel=channel)
+                new_entities.append(w)
         async_add_entities(new_entities, True)
 
     entity_add_callback([*hass_data.device_manager.base_device_map])
