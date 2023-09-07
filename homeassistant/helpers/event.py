@@ -957,11 +957,14 @@ class TrackTemplateResultInfo:
             if info.exception:
                 if raise_on_template_error:
                     raise info.exception
-                _LOGGER.error(
-                    "Error while processing template: %s",
-                    track_template_.template,
-                    exc_info=info.exception,
-                )
+                if not log_fn:
+                    _LOGGER.error(
+                        "Error while processing template: %s",
+                        track_template_.template,
+                        exc_info=info.exception,
+                    )
+                else:
+                    log_fn(logging.ERROR, str(info.exception))
 
         self._track_state_changes = async_track_state_change_filtered(
             self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
@@ -1194,7 +1197,7 @@ class TrackTemplateResultInfo:
             )
             _LOGGER.debug(
                 (
-                    "Template group %s listens for %s, re-render blocker by super"
+                    "Template group %s listens for %s, re-render blocked by super"
                     " template: %s"
                 ),
                 self._track_templates,

@@ -15,13 +15,11 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
-    CoreState,
     HomeAssistant,
     State,
     callback,
@@ -38,6 +36,7 @@ from homeassistant.helpers.event import (
     async_track_template_result,
 )
 from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
     TemplateStateFromEntityId,
@@ -442,7 +441,11 @@ class TemplateEntity(Entity):
             )
 
     @callback
-    def _async_template_startup(self, *_: Any) -> None:
+    def _async_template_startup(
+        self,
+        _hass: HomeAssistant | None,
+        log_fn: Callable[[int, str], None] | None = None,
+    ) -> None:
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
@@ -467,6 +470,7 @@ class TemplateEntity(Entity):
             self.hass,
             template_var_tups,
             self._handle_results,
+            log_fn=log_fn,
             has_super_template=has_availability_template,
         )
         self.async_on_remove(result_info.async_remove)
@@ -515,10 +519,13 @@ class TemplateEntity(Entity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
+        def log_template_error(level: int, msg: str) -> None:
+            preview_callback(None, None, None, msg)
+
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup()
+            self._async_template_startup(None, log_template_error)
         except Exception as err:  # pylint: disable=broad-exception-caught
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
@@ -527,13 +534,7 @@ class TemplateEntity(Entity):
         """Run when entity about to be added to hass."""
         self._async_setup_templates()
 
-        if self.hass.state == CoreState.running:
-            self._async_template_startup()
-            return
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._async_template_startup
-        )
+        async_at_start(self.hass, self._async_template_startup)
 
     async def async_update(self) -> None:
         """Call for forced update."""

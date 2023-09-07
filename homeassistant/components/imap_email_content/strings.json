@@ -1,0 +1,27 @@
+{
+  "issues": {
+    "deprecation": {
+      "title": "The IMAP email content integration is deprecated",
+      "description": "The IMAP email content integration is deprecated. Your IMAP server configuration was already migrated to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap). To set up a sensor for the IMAP email content, set up a template sensor with the config:\n\n```yaml\n{yaml_example}```\n\nPlease remove the deprecated `imap_email_plaform` sensor configuration from your `configuration.yaml`.\n\nNote that the event filter only filters on the first of the configured allowed senders, customize the filter if needed.\n\nYou can skip this part if you have already set up a template sensor."
+    },
+    "migration": {
+      "title": "The IMAP email content integration needs attention",
+      "fix_flow": {
+        "step": {
+          "start": {
+            "title": "Migrate your IMAP email configuration",
+            "description": "The IMAP email content integration is deprecated. Your IMAP server configuration can be migrated automatically to the [imap integration](https://my.home-assistant.io/redirect/config_flow_start?domain=imap), this will enable using a custom `imap` event trigger. To set up a sensor that has an IMAP content state, a template sensor can be used. Remove the `imap_email_plaform` sensor configuration from your `configuration.yaml` after migration.\n\nSubmit to start migration of your IMAP server configuration to the `imap` integration."
+          },
+          "confirm": {
+            "title": "Your IMAP server settings will be migrated",
+            "description": "In this step an `imap` config entry will be set up with the following configuration:\n\n```text\nServer\t{server}\nPort\t{port}\nUsername\t{username}\nPassword\t*****\nFolder\t{folder}\n```\n\nSee also: (https://www.home-assistant.io/integrations/imap/)\n\nFitering configuration on allowed `sender` is part of the template sensor config that can copied and placed in your `configuration.yaml.\n\nNote that the event filter only filters on the first of the configured allowed senders, customize the filter if needed.\n\n```yaml\n{yaml_example}```\nDo not forget to cleanup the your `configuration.yaml` after migration.\n\nSubmit to migrate your IMAP server configuration to an `imap` configuration entry."
+          }
+        },
+        "abort": {
+          "already_configured": "The IMAP server config was already migrated to the imap integration. Remove the `imap_email_plaform` sensor configuration from your `configuration.yaml`.",
+          "cannot_connect": "Migration failed. Failed to connect to the IMAP server. Perform a manual migration."
+        }
+      }
+    }
+  }
+}
