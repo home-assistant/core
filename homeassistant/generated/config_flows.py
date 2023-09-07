@@ -350,6 +350,7 @@ FLOWS = {
         "plum_lightpad",
         "point",
         "poolsense",
+        "powerplanner",
         "powerwall",
         "private_ble_device",
         "profiler",

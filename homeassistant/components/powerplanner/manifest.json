@@ -1,0 +1,11 @@
+{
+  "domain": "powerplanner",
+  "name": "PowerPlanner",
+  "codeowners": ["@gurgelx"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/powerplanner",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "requirements": ["powerplanner-lib==0.0.8"]
+}
