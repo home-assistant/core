@@ -46,7 +46,7 @@ async def async_setup_entry(
                     new_entities.append(w)
 
         except Exception as e:
-            LOGGER.debug(f"setup switch fail,err:{e}")
+            LOGGER.debug("setup switch fail,err: %s", e)
             raise e
 
         async_add_entities(new_entities, True)

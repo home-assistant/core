@@ -21,21 +21,7 @@ class RefossEntity(Entity):
         if channel > 0:
             self._attr_name = f"{device.dev_name}-{channel}"
         self.device = device
-
-    @property
-    def should_poll(self) -> bool:
-        """should_poll."""
-        return True
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """device_info."""
-        device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.uuid)},
             manufacturer="refoss",
             model=self.device.device_type,
@@ -44,7 +30,10 @@ class RefossEntity(Entity):
             hw_version=self.device.hdware_version,
         )
 
-        return device_info
+    @property
+    def should_poll(self) -> bool:
+        """should_poll."""
+        return False
 
     async def async_update(self):
         """async_update."""
@@ -57,14 +46,14 @@ class RefossEntity(Entity):
         await self.device.async_update_push_state(
             namespace=namespace, data=data, uuid=uuid
         )
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.device.register_push_notification_handler_coroutine(
             self._async_push_notification_received
         )
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """async_will_remove_from_hass."""
