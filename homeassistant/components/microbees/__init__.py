@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     token = dict(entry.data)["token"]
 
-    bees = await getBees(token)
+    bees = await getBees(hass,token)
 
     entry.data = dict({"token": token, "bees": bees})
 
