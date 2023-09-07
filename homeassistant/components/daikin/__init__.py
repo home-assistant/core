@@ -135,9 +135,10 @@ async def async_migrate_unique_id(
 ) -> None:
     """Migrate old entry."""
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     old_unique_id = config_entry.unique_id
     new_unique_id = api.device.mac
-    new_name = api.device.values.get("name")
+    new_mac = dr.format_mac(new_unique_id)
 
     @callback
     def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -147,15 +148,29 @@ async def async_migrate_unique_id(
     if new_unique_id == old_unique_id:
         return
 
+    duplicate = dev_reg.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, new_mac)}, identifiers=None
+    )
+
+    # Remove duplicated device
+    if duplicate is not None:
+        _LOGGER.debug(
+            "Removing duplicated device %s",
+            duplicate.name,
+        )
+        dev_reg.async_remove_device(duplicate.id)
+        await asyncio.sleep(1)
+
+        if len(er.async_entries_for_device(ent_reg, duplicate.id)) > 0:
+            await asyncio.sleep(1)
+
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(
         dev_reg, config_entry.entry_id
     ):
         for connection in device_entry.connections:
             if connection[1] == old_unique_id:
-                new_connections = {
-                    (CONNECTION_NETWORK_MAC, dr.format_mac(new_unique_id))
-                }
+                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
 
                 _LOGGER.debug(
                     "Migrating device %s connections to %s",
@@ -166,16 +181,6 @@ async def async_migrate_unique_id(
                     device_entry.id,
                     merge_connections=new_connections,
                 )
-
-        if device_entry.name is None:
-            _LOGGER.debug(
-                "Migrating device name to %s",
-                new_name,
-            )
-            dev_reg.async_update_device(
-                device_entry.id,
-                name=new_name,
-            )
 
         # Migrate entities
         await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
