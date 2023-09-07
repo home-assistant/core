@@ -1,4 +1,6 @@
 """Test AccuWeather diagnostics."""
+from unittest.mock import MagicMock, patch
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
@@ -16,6 +18,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    mock_aladdinconnect_api: MagicMock,
 ) -> None:
     """Test config entry diagnostics."""
 
@@ -26,8 +29,12 @@ async def test_entry_diagnostics(
     )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()

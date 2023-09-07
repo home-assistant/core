@@ -5,5 +5,18 @@
       'password': '**REDACTED**',
       'username': '**REDACTED**',
     }),
+    'data': dict({
+      'doors': list([
+        dict({
+          'device_id': '**REDACTED**',
+          'door_number': 1,
+          'link_status': 'Connected',
+          'model': '02',
+          'name': 'home',
+          'serial': '**REDACTED**',
+          'status': 'open',
+        }),
+      ]),
+    }),
   })
 # ---
