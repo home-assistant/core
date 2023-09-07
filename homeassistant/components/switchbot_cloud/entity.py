@@ -18,7 +18,6 @@ class SwitchBotCloudEntity(CoordinatorEntity):
     """Representation of a SwitchBot Cloud entity."""
 
     _api: SwitchBotAPI
-    _is_remote = False
     _SwitchBot_state: dict[str, Any] | None = None
 
     def __init__(
@@ -32,7 +31,6 @@ class SwitchBotCloudEntity(CoordinatorEntity):
         self._api = api
         self._attr_unique_id = device.device_id
         self._attr_name = device.device_name
-        self._is_remote = isinstance(device, Remote)
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device.device_id)},
             "name": device.device_name,

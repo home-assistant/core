@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     token = config.data[CONF_API_TOKEN]
     secret = config.data[CONF_API_KEY]
 
-
     api = SwitchBotAPI(token=token, secret=secret)
     devices = await api.list_devices()
     _LOGGER.debug("Devices: %s", devices)

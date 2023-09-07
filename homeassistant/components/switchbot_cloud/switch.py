@@ -27,8 +27,8 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: Data = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-         SwitchBotCloudSwitch(data.api, device, coordinator)
-         for device, coordinator in data.switches
+        SwitchBotCloudSwitch(data.api, device, coordinator)
+        for device, coordinator in data.switches
     )
 
 
@@ -37,6 +37,7 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
 
     _attr_is_on: bool | None = None
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _is_remote = False
 
     def __init__(
         self,
@@ -46,6 +47,7 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(api, device, coordinator)
+        self._is_remote = isinstance(device, Remote)
         if isinstance(device, Device) and device.device_type.startswith("Plug"):
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
