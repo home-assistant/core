@@ -21,6 +21,8 @@ from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
     ATTR_NUKI_ID,
+    ATTR_RING_STATE,
+    ATTR_RING_TIMESTAMP,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
     DATA_LOCKS,
@@ -148,6 +150,16 @@ class NukiLockEntity(NukiDeviceEntity[NukiLock]):
 
 class NukiOpenerEntity(NukiDeviceEntity[NukiOpener]):
     """Representation of a Nuki opener."""
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the device specific state attributes."""
+        return {
+            ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
+            ATTR_NUKI_ID: self._nuki_device.nuki_id,
+            ATTR_RING_STATE: self._nuki_device.ring_action_state,
+            ATTR_RING_TIMESTAMP: self._nuki_device.ring_action_timestamp,
+        }
 
     @property
     def is_locked(self) -> bool:

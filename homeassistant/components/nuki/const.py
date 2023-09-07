@@ -4,6 +4,8 @@ DOMAIN = "nuki"
 # Attributes
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
+ATTR_RING_STATE = "ring_action_state"
+ATTR_RING_TIMESTAMP = "ring_action_timestamp"
 ATTR_ENABLE = "enable"
 ATTR_UNLATCH = "unlatch"
 
