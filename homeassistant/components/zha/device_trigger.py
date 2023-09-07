@@ -47,10 +47,8 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    try:
-        _, triggers = _get_device_trigger_data(hass, config[CONF_DEVICE_ID])
-    except KeyError as err:
-        raise InvalidDeviceAutomationConfig from err
+    # Trigger validation will not occur if the config entry is not loaded
+    _, triggers = _get_device_trigger_data(hass, config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
     if trigger not in triggers:
@@ -98,7 +96,10 @@ async def async_get_triggers(
 
     Make sure the device supports device automations and return the trigger list.
     """
-    _, triggers = _get_device_trigger_data(hass, device_id)
+    try:
+        _, triggers = _get_device_trigger_data(hass, device_id)
+    except KeyError as err:
+        raise InvalidDeviceAutomationConfig from err
 
     return [
         {

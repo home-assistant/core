@@ -159,6 +159,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 get_device_automation_triggers(dev),
             )
 
+    _LOGGER.debug("Trigger cache: %s", zha_data[DATA_ZHA_DEVICE_TRIGGER_CACHE])
+
     zha_gateway = ZHAGateway(hass, config, config_entry)
 
     async def async_zha_shutdown():
