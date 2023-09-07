@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
@@ -93,15 +94,18 @@ async def async_attach_trigger(
         ):
             await future
             try:
-                if (result := future.result()) is None:
+                if (automation_result := future.result()) is None:
                     _LOGGER.info(
                         "Could not produce a sentence trigger response because automation failed"
                     )
                     return error_message
 
-                return template_helper.Template(
-                    config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
-                ).async_render(result.variables)
+                try:
+                    return template_helper.Template(
+                        config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
+                    ).async_render(automation_result.variables)
+                except TemplateError:
+                    return error_message
             except CancelledError as err:
                 _LOGGER.warning(
                     "Could not produce a sentence trigger response because automation task was cancelled: %s",
