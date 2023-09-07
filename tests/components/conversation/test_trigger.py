@@ -1,7 +1,12 @@
 """Test conversation triggers."""
+import copy
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.conversation import _get_agent_manager
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
@@ -249,3 +254,57 @@ async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
             },
         },
     }
+
+
+@pytest.mark.parametrize(
+    "service",
+    ["test.automation", "test.automation20"],
+)
+async def test_custom_response(
+    hass: HomeAssistant, calls, setup_comp, service: str
+) -> None:
+    """Test the the custom responses."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "Hey yo",
+                        "Ha ha ha",
+                    ],
+                    "response_success": "success",
+                    "response_error": "error",
+                },
+                "action": {
+                    "service": service,
+                    "data_template": {"data": "{{ trigger }}"},
+                },
+            }
+        },
+    )
+
+    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    original_callback = copy.deepcopy(default_agent._trigger_sentences[0].callback)
+
+    with patch.object(
+        default_agent._trigger_sentences[0],
+        "callback",
+        wraps=original_callback,
+    ) as mock_trigger_callback:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {
+                "text": "Ha ha ha",
+            },
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+        assert len(calls) == (1 if service == "test.automation" else 0)
+        response = await original_callback(*mock_trigger_callback.call_args.args)
+        assert response == ("success" if service == "test.automation" else "error")
