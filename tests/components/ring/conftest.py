@@ -52,5 +52,11 @@ def requests_mock_fixture():
             re.compile(r"https:\/\/api\.ring\.com\/clients_api\/chimes\/\d+\/health"),
             text=load_fixture("chime_health_attrs.json", "ring"),
         )
-
+        # Mocks the response for setting properties in settings (i.e. motion_detection)
+        mock.patch(
+            re.compile(
+                r"https:\/\/api\.ring\.com\/devices\/v1\/devices\/\d+\/settings"
+            ),
+            text="ok",
+        )
         yield mock

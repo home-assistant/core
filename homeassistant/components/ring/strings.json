@@ -62,6 +62,9 @@
     "switch": {
       "siren": {
         "name": "[%key:component::siren::title%]"
+      },
+      "motion_detection": {
+        "name": "Motion Detection"
       }
     }
   },
