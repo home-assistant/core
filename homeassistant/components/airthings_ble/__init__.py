@@ -1,9 +1,9 @@
 """The Airthings BLE integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import re
-from datetime import timedelta
 
 from airthings_ble import AirthingsBluetoothDeviceData
 
@@ -13,10 +13,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import async_get
-from homeassistant.helpers.entity_registry import (RegistryEntry,
-                                                   async_migrate_entries)
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                      UpdateFailed)
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -77,7 +75,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: str):
     """Update device identifiers to new identifiers."""
     device_registry = async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN)})
+    device_entry = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                address,
+            )
+        }
+    )
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_identifiers = {(DOMAIN, address)}
         _LOGGER.debug(
