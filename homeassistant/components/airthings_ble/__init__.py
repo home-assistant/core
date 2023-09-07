@@ -12,8 +12,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import async_get
-from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.device_registry import async_get as device_async_get
+from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
+    async_get as entity_async_get,
+    async_migrate_entries,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -74,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: str):
     """Update device identifiers to new identifiers."""
-    device_registry = async_get(hass)
+    device_registry = device_async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={
             (
@@ -108,22 +112,23 @@ async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: st
         _LOGGER.debug("Migrating starting for '%s'", address)
 
         if entity_entry.unique_id.startswith(address):
-            _LOGGER.debug(
-                "Migrating entry starting with '%s' is already migrated", address
-            )
+            # Already migrated this entity
             return None
 
         if name := re.sub(r"^.*?_", "", entity_entry.unique_id.lower()):
             new_unique_id = f"{address}_{name}"
 
+            ent_reg = entity_async_get(hass)
+            for entity in ent_reg.entities.values():
+                if new_unique_id == entity.unique_id:
+                    _LOGGER.info(
+                        "Could not migrate, entity with unique ID '%s' already exists",
+                        new_unique_id,
+                    )
+                    return None
+
             if entity_entry.unique_id != new_unique_id:
                 return {"new_unique_id": new_unique_id}
-
-            _LOGGER.debug(
-                "Migrating, old unique ID == new. Old: '%s', new: '%s'",
-                entity_entry.unique_id,
-                new_unique_id,
-            )
 
         return None
 
