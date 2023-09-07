@@ -596,6 +596,38 @@ async def test_config_wrong_struct_sensor(
             False,
             "1.23",
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 10,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593750",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 2,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
     ],
 )
 async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
