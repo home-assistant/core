@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import API_KEY, DOMAIN
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
