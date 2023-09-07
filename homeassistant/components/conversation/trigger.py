@@ -101,9 +101,12 @@ async def async_attach_trigger(
                     return error_message
 
                 try:
-                    return template_helper.Template(
-                        config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
-                    ).async_render(automation_result.variables)
+                    return (
+                        template_helper.Template(
+                            config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
+                        ).async_render(automation_result.variables)
+                        or "Done"
+                    )
                 except TemplateError:
                     return error_message
             except CancelledError as err:
