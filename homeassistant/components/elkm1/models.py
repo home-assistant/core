@@ -7,7 +7,7 @@ from typing import Any
 from elkm1_lib import Elk
 
 
-@dataclass
+@dataclass(slots=True)
 class ELKM1Data:
     """Data for the elkm1 integration."""
 
