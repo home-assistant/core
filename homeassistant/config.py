@@ -257,10 +257,10 @@ CORE_CONFIG_SCHEMA = vol.All(
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+                cv.ensure_list, [vol.IsDir()]
             ),
             vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
                 cv.ensure_list, [cv.url]
@@ -297,7 +297,6 @@ CORE_CONFIG_SCHEMA = vol.All(
                 ],
                 _no_duplicate_auth_mfa_module,
             ),
-            # pylint: disable-next=no-value-for-parameter
             vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
             vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
             vol.Optional(CONF_CURRENCY): _validate_currency,

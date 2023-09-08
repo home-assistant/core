@@ -21,8 +21,8 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
+    STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +31,6 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -50,10 +49,12 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PRECISION,
     CONF_SCALE,
+    CONF_SLAVE_COUNT,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_VERIFY,
@@ -114,8 +115,7 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
-            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
+        self._cancel_call = async_call_later(self.hass, 1, self.async_update)
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
@@ -154,15 +154,27 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Initialize the switch."""
         super().__init__(hub, config)
         self._swap = config[CONF_SWAP]
+        if self._swap == CONF_SWAP_NONE:
+            self._swap = None
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
         self._precision = config[CONF_PRECISION]
         self._scale = config[CONF_SCALE]
+        if self._scale < 1 and not self._precision:
+            self._precision = 2
         self._offset = config[CONF_OFFSET]
-        self._count = config[CONF_COUNT]
+        self._slave_count = config.get(CONF_SLAVE_COUNT, 0)
+        self._slave_size = self._count = config[CONF_COUNT]
 
-    def _swap_registers(self, registers: list[int]) -> list[int]:
+    def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
         """Do swap as needed."""
+        if slave_count:
+            swapped = []
+            for i in range(0, self._slave_count + 1):
+                inx = i * self._slave_size
+                inx2 = inx + self._slave_size
+                swapped.extend(self._swap_registers(registers[inx:inx2], 0))
+            return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
@@ -176,10 +188,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int | str) -> float | int | str:
+    def __process_raw_value(self, entry: float | int | str) -> float | int | str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
-            return STATE_UNAVAILABLE
+            return None
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -192,7 +204,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
     def unpack_structure_result(self, registers: list[int]) -> str | None:
         """Convert registers to proper result."""
 
-        registers = self._swap_registers(registers)
+        if self._swap:
+            registers = self._swap_registers(registers, self._slave_count)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
@@ -218,6 +231,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 # the conversion only when it's absolutely necessary.
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
+                elif v_temp is None:
+                    v_result.append("")  # pragma: no cover
                 elif v_temp != v_temp:  # noqa: PLR0124
                     # NaN float detection replace with None
                     v_result.append("nan")  # pragma: no cover
@@ -232,6 +247,8 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         # we lose some precision, and unit tests will fail. Therefore, we do
         # the conversion only when it's absolutely necessary.
 
+        if val_result is None:
+            return None
         # NaN float detection replace with None
         if val_result != val_result:  # noqa: PLR0124
             return None  # pragma: no cover
@@ -239,7 +256,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             return str(val_result)
         if isinstance(val_result, str):
             if val_result == "nan":
-                val_result = STATE_UNAVAILABLE  # pragma: no cover
+                val_result = None  # pragma: no cover
             return val_result
         return f"{float(val_result):.{self._precision}f}"
 
@@ -295,7 +312,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
-            self._attr_is_on = state.state == STATE_ON
+            if state.state == STATE_ON:
+                self._attr_is_on = True
+            elif state.state == STATE_OFF:
+                self._attr_is_on = False
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""

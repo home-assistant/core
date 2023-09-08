@@ -10,6 +10,8 @@ from typing import Any
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.models.configuration import Configuration
+from aiounifi.models.device import DeviceSetPoePortModeRequest
 from aiounifi.websocket import WebsocketState
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,14 +29,18 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -87,9 +93,8 @@ class UniFiController:
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self.site_id: str = ""
-        self._site_name: str | None = None
-        self._site_role: str | None = None
+        self.site = config_entry.data[CONF_SITE_ID]
+        self.is_admin = False
 
         self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
         self._heartbeat_time: dict[str, datetime] = {}
@@ -98,6 +103,9 @@ class UniFiController:
 
         self.entities: dict[str, str] = {}
         self.known_objects: set[tuple[str, str]] = set()
+
+        self.poe_command_queue: dict[str, dict[int, str]] = {}
+        self._cancel_poe_command: CALLBACK_TYPE | None = None
 
     def load_config_entry_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
@@ -153,30 +161,6 @@ class UniFiController:
         """Return the host of this controller."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
-
-    @property
-    def site(self) -> str:
-        """Return the site of this config entry."""
-        site_id: str = self.config_entry.data[CONF_SITE_ID]
-        return site_id
-
-    @property
-    def site_name(self) -> str | None:
-        """Return the nice name of site."""
-        return self._site_name
-
-    @property
-    def site_role(self) -> str | None:
-        """Return the site user role of this controller."""
-        return self._site_role
-
-    @property
-    def mac(self) -> str | None:
-        """Return the mac address of this controller."""
-        for client in self.api.clients.values():
-            if self.host == client.ip:
-                return client.mac
-        return None
 
     @callback
     def register_platform_add_entities(
@@ -264,15 +248,8 @@ class UniFiController:
         """Set up a UniFi Network instance."""
         await self.api.initialize()
 
-        sites = await self.api.sites()
-        for site in sites.values():
-            if self.site == site["name"]:
-                self.site_id = site["_id"]
-                self._site_name = site["desc"]
-                break
-
-        description = await self.api.site_description()
-        self._site_role = description[0]["site_role"]
+        assert self.config_entry.unique_id is not None
+        self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
         # Restore clients that are not a part of active clients list.
         entity_registry = er.async_get(self.hass)
@@ -335,19 +312,55 @@ class UniFiController:
         for unique_id in unique_ids_to_remove:
             del self._heartbeat_time[unique_id]
 
-    async def async_update_device_registry(self) -> None:
+    @callback
+    def async_queue_poe_port_command(
+        self, device_id: str, port_idx: int, poe_mode: str
+    ) -> None:
+        """Queue commands to execute them together per device."""
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
+
+        device_queue = self.poe_command_queue.setdefault(device_id, {})
+        device_queue[port_idx] = poe_mode
+
+        async def async_execute_command(now: datetime) -> None:
+            """Execute previously queued commands."""
+            queue = self.poe_command_queue.copy()
+            self.poe_command_queue.clear()
+            for device_id, device_commands in queue.items():
+                device = self.api.devices[device_id]
+                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                await self.api.request(
+                    DeviceSetPoePortModeRequest.create(device, targets=commands)
+                )
+
+        self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """UniFi controller device info."""
+        assert self.config_entry.unique_id is not None
+
+        version: str | None = None
+        if sysinfo := next(iter(self.api.system_information.values()), None):
+            version = sysinfo.version
+
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(UNIFI_DOMAIN, self.config_entry.unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Network Application",
+            name="UniFi Network",
+            sw_version=version,
+        )
+
+    @callback
+    def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
-        if self.mac is None:
-            return
-
         device_registry = dr.async_get(self.hass)
-
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
-            default_manufacturer=ATTR_MANUFACTURER,
-            default_model="UniFi Network",
-            default_name="UniFi Network",
+        return device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id, **self.device_info
         )
 
     @staticmethod
@@ -413,6 +426,10 @@ class UniFiController:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
 
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
+
         return True
 
 
@@ -433,18 +450,19 @@ async def get_unifi_controller(
         )
 
     controller = aiounifi.Controller(
-        host=config[CONF_HOST],
-        username=config[CONF_USERNAME],
-        password=config[CONF_PASSWORD],
-        port=config[CONF_PORT],
-        site=config[CONF_SITE_ID],
-        websession=session,
-        ssl_context=ssl_context,
+        Configuration(
+            session,
+            host=config[CONF_HOST],
+            username=config[CONF_USERNAME],
+            password=config[CONF_PASSWORD],
+            port=config[CONF_PORT],
+            site=config[CONF_SITE_ID],
+            ssl_context=ssl_context,
+        )
     )
 
     try:
         async with asyncio.timeout(10):
-            await controller.check_unifi_os()
             await controller.login()
         return controller
 

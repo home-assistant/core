@@ -229,6 +229,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
+        key="gas_summary_consumption_heating_lastsevendays",
+        name="Heating gas consumption last seven days",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        value_getter=lambda api: api.getGasSummaryConsumptionHeatingLastSevenDays(),
+        unit_getter=lambda api: api.getGasSummaryConsumptionHeatingUnit(),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
         key="hotwater_gas_summary_consumption_heating_currentday",
         name="Hot water gas consumption current day",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import difflib
 import importlib
+from operator import itemgetter
 import os
 from pathlib import Path
 import pkgutil
 import re
 import sys
-from typing import Any
-
 import tomllib
+from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
@@ -334,7 +334,7 @@ def process_requirements(
 def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
-    for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
         for req in sorted(requirements):
             output.append(f"\n# {req}")
 
@@ -426,7 +426,7 @@ def gather_constraints() -> str:
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
                 },
-                key=lambda name: name.lower(),
+                key=str.lower,
             )
             + [""]
         )

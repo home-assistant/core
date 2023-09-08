@@ -32,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 class TasmotaEntity(Entity):
     """Base class for Tasmota entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, tasmota_entity: HATasmotaEntity) -> None:
         """Initialize."""
         self._tasmota_entity = tasmota_entity

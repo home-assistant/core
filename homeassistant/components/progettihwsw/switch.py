@@ -64,7 +64,7 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         """Initialize the values."""
         super().__init__(coordinator)
         self._switch = switch
-        self._name = name
+        self._attr_name = name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -80,11 +80,6 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
         """Toggle the state of switch."""
         await self._switch.toggle()
         await self.coordinator.async_request_refresh()
-
-    @property
-    def name(self):
-        """Return the switch name."""
-        return self._name
 
     @property
     def is_on(self):

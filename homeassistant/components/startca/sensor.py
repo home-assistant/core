@@ -157,6 +157,13 @@ async def async_setup_platform(
 
     name = config[CONF_NAME]
     monitored_variables = config[CONF_MONITORED_VARIABLES]
+    if bandwidthcap <= 0:
+        monitored_variables = list(
+            filter(
+                lambda itm: itm not in {"limit", "usage", "used_remaining"},
+                monitored_variables,
+            )
+        )
     entities = [
         StartcaSensor(ts_data, name, description)
         for description in SENSOR_TYPES
@@ -193,11 +200,9 @@ class StartcaData:
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
         # Set unlimited users to infinite, otherwise the cap.
-        self.data = (
-            {"limit": self.bandwidth_cap}
-            if self.bandwidth_cap > 0
-            else {"limit": float("inf")}
-        )
+        self.data = {}
+        if self.bandwidth_cap > 0:
+            self.data["limit"] = self.bandwidth_cap
 
     @staticmethod
     def bytes_to_gb(value):
@@ -232,11 +237,9 @@ class StartcaData:
         total_dl = self.bytes_to_gb(xml_data["usage"]["total"]["download"])
         total_ul = self.bytes_to_gb(xml_data["usage"]["total"]["upload"])
 
-        limit = self.data["limit"]
         if self.bandwidth_cap > 0:
             self.data["usage"] = 100 * used_dl / self.bandwidth_cap
-        else:
-            self.data["usage"] = 0
+            self.data["used_remaining"] = self.data["limit"] - used_dl
         self.data["usage_gb"] = used_dl
         self.data["used_download"] = used_dl
         self.data["used_upload"] = used_ul
@@ -246,6 +249,5 @@ class StartcaData:
         self.data["grace_total"] = grace_dl + grace_ul
         self.data["total_download"] = total_dl
         self.data["total_upload"] = total_ul
-        self.data["used_remaining"] = limit - used_dl
 
         return True

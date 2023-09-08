@@ -29,14 +29,8 @@
       "dc_switch": {
         "name": "DC switch"
       },
-      "operating": {
-        "name": "Operating"
-      },
       "grid_status": {
         "name": "Grid status"
-      },
-      "relay": {
-        "name": "Relay status"
       }
     },
     "number": {

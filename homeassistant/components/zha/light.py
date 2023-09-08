@@ -298,7 +298,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 transition_time=int(10 * self._DEFAULT_MIN_TRANSITION_TIME),
             )
             t_log["move_to_level_with_on_off"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 # First 'move to level' call failed, so if the transitioning delay
                 # isn't running from a previous call,
                 # the flag can be unset immediately
@@ -338,7 +338,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 transition_time=int(10 * duration),
             )
             t_log["move_to_level_with_on_off"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 # First 'move to level' call failed, so if the transitioning delay
                 # isn't running from a previous call, the flag can be unset immediately
                 if set_transition_flag and not self._transition_listener:
@@ -359,7 +359,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # if brightness is not 0.
             result = await self._on_off_cluster_handler.on()
             t_log["on_off"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 # 'On' call failed, but as brightness may still transition
                 # (for FORCE_ON lights), we start the timer to unset the flag after
                 # the transition_time if necessary.
@@ -391,7 +391,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 level=level, transition_time=int(10 * duration)
             )
             t_log["move_to_level_if_color"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
             self._attr_state = bool(level)
@@ -474,7 +474,7 @@ class BaseLight(LogMixin, light.LightEntity):
         if self._zha_config_enable_light_transitioning_flag:
             self.async_transition_start_timer(transition_time)
         self.debug("turned off: %s", result)
-        if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+        if result[1] is not Status.SUCCESS:
             return
         self._attr_state = False
 
@@ -514,7 +514,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 transition_time=int(10 * transition_time),
             )
             t_log["move_to_color_temp"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 return False
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = temperature
@@ -539,7 +539,7 @@ class BaseLight(LogMixin, light.LightEntity):
                     transition_time=int(10 * transition_time),
                 )
                 t_log["move_to_hue_and_saturation"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 return False
             self._attr_color_mode = ColorMode.HS
             self._attr_hs_color = hs_color
@@ -554,7 +554,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 transition_time=int(10 * transition_time),
             )
             t_log["move_to_color"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+            if result[1] is not Status.SUCCESS:
                 return False
             self._attr_color_mode = ColorMode.XY
             self._attr_xy_color = xy_color
@@ -1112,13 +1112,13 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
 
-        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True  # pylint: disable=invalid-name
+        self._GROUP_SUPPORTS_EXECUTE_IF_OFF = True
 
         for member in group.members:
             # Ensure we do not send group commands that violate the minimum transition
             # time of any members.
             if member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS:
-                self._DEFAULT_MIN_TRANSITION_TIME = (  # pylint: disable=invalid-name
+                self._DEFAULT_MIN_TRANSITION_TIME = (
                     MinTransitionLight._DEFAULT_MIN_TRANSITION_TIME
                 )
 

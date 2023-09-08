@@ -196,11 +196,10 @@ def async_log_errors(
             )
         except DenonAvrError as err:
             available = False
-            _LOGGER.error(
+            _LOGGER.exception(
                 "Error %s occurred in method %s for Denon AVR receiver",
                 err,
                 func.__name__,
-                exc_info=True,
             )
         finally:
             if available and not self.available:

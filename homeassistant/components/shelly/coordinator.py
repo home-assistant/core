@@ -9,9 +9,9 @@ from typing import Any, Generic, TypeVar, cast
 
 import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
-from aioshelly.block_device import BlockDevice
+from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
-from aioshelly.rpc_device import RpcDevice, UpdateType
+from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -44,6 +44,10 @@ from .const import (
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
@@ -274,8 +278,23 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
+            device_update_info(self.hass, self.device, self.entry)
+
+    @callback
+    def _async_handle_update(
+        self, device_: BlockDevice, update_type: BlockUpdateType
+    ) -> None:
+        """Handle device update."""
+        if update_type == BlockUpdateType.COAP_PERIODIC:
+            self._push_update_failures = 0
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
+            )
+        elif update_type == BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
-            if self._push_update_failures > MAX_PUSH_UPDATE_FAILURES:
+            if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
                 LOGGER.debug(
                     "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
                 )
@@ -293,12 +312,15 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                         "ip_address": self.device.ip_address,
                     },
                 )
-            device_update_info(self.hass, self.device, self.entry)
+        LOGGER.debug(
+            "Push update failures for %s: %s", self.name, self._push_update_failures
+        )
+        self.async_set_updated_data(None)
 
     def async_setup(self) -> None:
         """Set up the coordinator."""
         super().async_setup()
-        self.device.subscribe_updates(self.async_set_updated_data)
+        self.device.subscribe_updates(self._async_handle_update)
 
     def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -366,6 +388,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -389,6 +412,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
+
+    @callback
+    def async_subscribe_ota_events(
+        self, ota_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to OTA events."""
+
+        def _unsubscribe() -> None:
+            self._ota_event_listeners.remove(ota_event_callback)
+
+        self._ota_event_listeners.append(ota_event_callback)
+
+        return _unsubscribe
 
     @callback
     def async_subscribe_events(
@@ -443,6 +479,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                         ATTR_GENERATION: 2,
                     },
                 )
+            elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
+                for event_callback in self._ota_event_listeners:
+                    event_callback(event)
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -535,16 +574,18 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
 
     @callback
-    def _async_handle_update(self, device_: RpcDevice, update_type: UpdateType) -> None:
+    def _async_handle_update(
+        self, device_: RpcDevice, update_type: RpcUpdateType
+    ) -> None:
         """Handle device update."""
-        if update_type is UpdateType.INITIALIZED:
+        if update_type is RpcUpdateType.INITIALIZED:
             self.hass.async_create_task(self._async_connected())
             self.async_set_updated_data(None)
-        elif update_type is UpdateType.DISCONNECTED:
+        elif update_type is RpcUpdateType.DISCONNECTED:
             self.hass.async_create_task(self._async_disconnected())
-        elif update_type is UpdateType.STATUS:
+        elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
-        elif update_type is UpdateType.EVENT and (event := self.device.event):
+        elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
     def async_setup(self) -> None:
