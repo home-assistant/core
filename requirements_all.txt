@@ -5,7 +5,7 @@
 AEMET-OpenData==0.4.4
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.57
+AIOAladdinConnect==0.1.58
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.17
@@ -370,7 +370,7 @@ aiounifi==61
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.0.6
+aiovodafone==0.1.0
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -510,7 +510,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.2
+bellows==0.36.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -643,7 +643,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.95.0
+dbus-fast==1.95.2
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -2767,7 +2767,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.98.0
+zeroconf==0.102.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
