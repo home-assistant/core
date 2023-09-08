@@ -1,6 +1,6 @@
 """Test conversation triggers."""
-from asyncio import CancelledError
 import copy
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.conversation import _get_agent_manager
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
@@ -362,9 +362,14 @@ async def test_custom_response_template(
 
 
 async def test_custom_response_task_cancelled(
-    hass: HomeAssistant, calls, setup_comp
+    hass: HomeAssistant, calls, setup_comp, caplog
 ) -> None:
     """Test the the custom response errors."""
+
+    caplog.set_level(
+        logging.WARNING, logger="homeassistant.components.conversation.trigger"
+    )
+
     assert await async_setup_component(
         hass,
         "automation",
@@ -383,49 +388,41 @@ async def test_custom_response_task_cancelled(
         },
     )
 
-    async def mock_run_automation_make_response(
-        hass: HomeAssistant,
-        job: HassJob,
-        trigger_data: dict[str],
-        success_message: str,
-        error_message: str,
-    ):
-        """Mock the part of the trigger callback that handles running the automation."""
-        future = hass.async_run_hass_job(
-            job,
-            trigger_data,
-        )
-
-        await hass.async_stop()
-
-        try:
-            await future
-            future.result()
-            return success_message
-        except CancelledError:
-            return error_message
+    cancelled_future = hass.loop.create_future()
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     original_callback = copy.deepcopy(default_agent._trigger_sentences[0].callback)
 
     with patch(
-        "homeassistant.components.conversation.trigger.async_run_automation_make_response",
-        side_effect=mock_run_automation_make_response,
+        "homeassistant.components.conversation.trigger.HomeAssistant.async_run_hass_job",
+        return_value=cancelled_future,
     ), patch.object(
         default_agent._trigger_sentences[0],
         "callback",
         wraps=original_callback,
     ) as mock_trigger_callback:
-        await hass.services.async_call(
-            "conversation",
-            "process",
-            {
-                "text": "foobar",
-            },
-            blocking=True,
+        action_task = hass.loop.create_task(
+            hass.services.async_call(
+                "conversation",
+                "process",
+                {
+                    "text": "foobar",
+                },
+                blocking=True,
+            )
         )
+
+        cancelled_future.cancel()
+        await action_task
 
         await hass.async_block_till_done()
 
         response = await original_callback(*mock_trigger_callback.call_args.args)
         assert response == "error"
+        assert (
+            caplog.records[0]
+            .getMessage()
+            .startswith(
+                "Could not produce a sentence trigger response because automation task was cancelled"
+            )
+        )

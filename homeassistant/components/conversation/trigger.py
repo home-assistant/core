@@ -107,36 +107,30 @@ async def async_run_automation_make_response(
 ) -> str:
     """Run the automation action and generate a response."""
     # Wait for the automation to complete
-    if future := hass.async_run_hass_job(
-        job,
-        trigger_data,
-    ):
-        try:
-            await future
+    future = hass.async_run_hass_job(job, trigger_data)
+    assert future
 
-            if (automation_result := future.result()) is None:
-                _LOGGER.info(
-                    "Could not produce a sentence trigger response because automation failed"
-                )
-                return error_message
+    try:
+        await future
 
-            try:
-                return (
-                    template_helper.Template(success_message, hass).async_render(
-                        automation_result.variables
-                    )
-                    or "Done"
-                )
-            except TemplateError:
-                return error_message
-        except CancelledError as err:
-            _LOGGER.warning(
-                "Could not produce a sentence trigger response because automation task was cancelled: %s",
-                err,
+        if (automation_result := future.result()) is None:
+            _LOGGER.info(
+                "Could not produce a sentence trigger response because automation failed"
             )
             return error_message
 
-    _LOGGER.warning(
-        "Could not produce a sentence trigger response because automation task could not start"
-    )
-    return error_message
+        try:
+            return (
+                template_helper.Template(success_message, hass).async_render(
+                    automation_result.variables
+                )
+                or "Done"
+            )
+        except TemplateError:
+            return error_message
+    except CancelledError as err:
+        _LOGGER.warning(
+            "Could not produce a sentence trigger response because automation task was cancelled: %s",
+            err,
+        )
+        return error_message
