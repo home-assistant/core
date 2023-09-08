@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, HVACMODE
 from .entity import DuotecnoEntity, api_call
 
 
@@ -55,12 +55,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Get the current hvac_mode."""
-        state = self._unit.get_state()
-        if state == 1:
-            return HVACMode.HEAT
-        if state == 2:
-            return HVACMode.COOL
-        return HVACMode.OFF
+        return HVACMODE[self._unit.get_state()]
 
     @property
     def preset_mode(self) -> str:
