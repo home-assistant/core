@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Literal
 
+from apple_weatherkit import DataSetType
 from apple_weatherkit.client import (
     WeatherKitApiClient,
     WeatherKitApiClientAuthenticationError,
@@ -23,9 +23,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
     config_entry: ConfigEntry
-    supported_data_sets: list[
-        Literal["currentWeather", "forecastDaily", "forecastHourly"]
-    ] | None = None
+    supported_data_sets: list[DataSetType] | None = None
 
     def __init__(
         self,
@@ -47,7 +45,11 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             self.config_entry.data[CONF_LONGITUDE],
         )
 
-        requested_data_sets = ["currentWeather", "forecastDaily", "forecastHourly"]
+        requested_data_sets = [
+            DataSetType.CURRENT_WEATHER,
+            DataSetType.DAILY_FORECAST,
+            DataSetType.HOURLY_FORECAST,
+        ]
 
         self.supported_data_sets = [
             data_set
