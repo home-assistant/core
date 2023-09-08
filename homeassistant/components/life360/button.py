@@ -48,7 +48,7 @@ class Life360UpdateLocationButton(
         self._member_id = member_id
         self._attr_unique_id = f"{member_id}-update-location"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._member_id)},
+            identifiers={(DOMAIN, member_id)},
             name=coordinator.data.members[member_id].name,
         )
 
