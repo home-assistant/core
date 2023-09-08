@@ -1,7 +1,9 @@
 """Config flow for EyeOnWater integration."""
 import asyncio
 import logging
-from typing import Any, MappingProxyType
+from typing import Any
+from types import MappingProxyType
+
 
 from aiohttp import ClientError
 from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
