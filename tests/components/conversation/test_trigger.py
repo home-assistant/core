@@ -273,8 +273,7 @@ async def test_custom_response(
                 "trigger": {
                     "platform": "conversation",
                     "command": [
-                        "Hey yo",
-                        "Ha ha ha",
+                        "foobar",
                     ],
                     "response_success": "success",
                     "response_error": "error",
@@ -299,7 +298,7 @@ async def test_custom_response(
             "conversation",
             "process",
             {
-                "text": "Ha ha ha",
+                "text": "foobar",
             },
             blocking=True,
         )
@@ -309,6 +308,57 @@ async def test_custom_response(
         assert len(calls) == (1 if service == "test.automation" else 0)
         response = await original_callback(*mock_trigger_callback.call_args.args)
         assert response == ("success" if service == "test.automation" else "error")
+
+
+@pytest.mark.parametrize(
+    "template",
+    ["success {{ success }}", "success {{ (error)) }}"],
+)
+async def test_custom_response_template(
+    hass: HomeAssistant, setup_comp, template
+) -> None:
+    """Test the the custom response template."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "foobar",
+                    ],
+                    "response_success": template,
+                    "response_error": "error",
+                },
+                "action": {"variables": {"success": "success"}},
+            }
+        },
+    )
+
+    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    original_callback = copy.deepcopy(default_agent._trigger_sentences[0].callback)
+
+    with patch.object(
+        default_agent._trigger_sentences[0],
+        "callback",
+        wraps=original_callback,
+    ) as mock_trigger_callback:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {
+                "text": "foobar",
+            },
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+        response = await original_callback(*mock_trigger_callback.call_args.args)
+        assert response == (
+            "success success" if template == "success {{ success }}" else "error"
+        )
 
 
 async def test_custom_response_task_cancelled(
