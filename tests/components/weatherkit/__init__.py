@@ -16,7 +16,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant,
+    is_night_time: bool = False,
+    has_hourly_forecast: bool = True,
+    has_daily_forecast: bool = True,
+) -> MockConfigEntry:
     """Set up the WeatherKit integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -35,16 +40,28 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     weather_response = load_json_object_fixture("weatherkit/weather_response.json")
 
+    available_data_sets = [DataSetType.CURRENT_WEATHER]
+
+    if is_night_time:
+        weather_response["currentWeather"]["daylight"] = False
+        weather_response["currentWeather"]["conditionCode"] = "Clear"
+
+    if not has_daily_forecast:
+        del weather_response["forecastDaily"]
+    else:
+        available_data_sets.append(DataSetType.DAILY_FORECAST)
+
+    if not has_hourly_forecast:
+        del weather_response["forecastHourly"]
+    else:
+        available_data_sets.append(DataSetType.HOURLY_FORECAST)
+
     with patch(
         "apple_weatherkit.client.WeatherKitApiClient.get_weather_data",
         return_value=weather_response,
     ), patch(
         "apple_weatherkit.client.WeatherKitApiClient.get_availability",
-        return_value=[
-            DataSetType.CURRENT_WEATHER,
-            DataSetType.DAILY_FORECAST,
-            DataSetType.HOURLY_FORECAST,
-        ],
+        return_value=available_data_sets,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

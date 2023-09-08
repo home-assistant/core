@@ -1471,9 +1471,6 @@ omit =
     homeassistant/components/watson_tts/tts.py
     homeassistant/components/watttime/__init__.py
     homeassistant/components/watttime/sensor.py
-    homeassistant/components/weatherkit/__init__.py
-    homeassistant/components/weatherkit/weather.py
-    homeassistant/components/weatherkit/coordinator.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py

@@ -2,6 +2,8 @@
 
 from typing import Any, cast
 
+from apple_weatherkit import DataSetType
+
 from homeassistant.components.weather import (
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -127,10 +129,6 @@ class WeatherKitWeather(
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
-    _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
-    )
-
     def __init__(
         self,
         coordinator: WeatherKitDataUpdateCoordinator,
@@ -146,6 +144,19 @@ class WeatherKitWeather(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Apple Weather",
         )
+
+    @property
+    def supported_features(self) -> WeatherEntityFeature:
+        """Determine supported features based on available data sets reported by WeatherKit."""
+        if not self.coordinator.supported_data_sets:
+            return WeatherEntityFeature(0)
+
+        features = WeatherEntityFeature(0)
+        if DataSetType.DAILY_FORECAST in self.coordinator.supported_data_sets:
+            features |= WeatherEntityFeature.FORECAST_DAILY
+        if DataSetType.HOURLY_FORECAST in self.coordinator.supported_data_sets:
+            features |= WeatherEntityFeature.FORECAST_HOURLY
+        return features
 
     @property
     def data(self) -> dict[str, Any]:
