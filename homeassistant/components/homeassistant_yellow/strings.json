@@ -27,9 +27,9 @@
       "hardware_settings": {
         "title": "Configure hardware settings",
         "data": {
-          "disk_led": "Disk LED",
-          "heartbeat_led": "Heartbeat LED",
-          "power_led": "Power LED"
+          "heartbeat_led": "Yellow: system health LED",
+          "disk_led": "Green: activity LED",
+          "power_led": "Red: power LED"
         }
       },
       "install_addon": {
