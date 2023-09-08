@@ -2,13 +2,14 @@
 import asyncio
 import logging
 
+from pyonwater import EyeOnWaterAuthError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import debounce
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from pyonwater import EyeOnWaterAuthError
 
 from .config_flow import create_account_from_config
 from .const import (
