@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.octoprint.const import (
-    CONF_BUADRATE,
+    CONF_BAUDRATE,
     DOMAIN,
     SERVICE_CONNECT,
 )
@@ -16,7 +16,7 @@ from . import init_integration
 
 
 async def test_connect_default(hass) -> None:
-    """Test the set_config_parameter service."""
+    """Test the connect to printer service."""
     await init_integration(hass, "sensor")
 
     dev_reg = async_get_dev_reg(hass)
@@ -40,7 +40,7 @@ async def test_connect_default(hass) -> None:
 
 
 async def test_connect_all_arguments(hass) -> None:
-    """Test the set_config_parameter service."""
+    """Test the connect to printer service."""
     await init_integration(hass, "sensor")
 
     dev_reg = async_get_dev_reg(hass)
@@ -55,7 +55,7 @@ async def test_connect_all_arguments(hass) -> None:
                 ATTR_DEVICE_ID: device.id,
                 CONF_PROFILE_NAME: "Test Profile",
                 CONF_PORT: "VIRTUAL",
-                CONF_BUADRATE: 9600,
+                CONF_BAUDRATE: 9600,
             },
             blocking=True,
         )
