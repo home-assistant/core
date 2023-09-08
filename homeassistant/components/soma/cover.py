@@ -77,7 +77,6 @@ class SomaTilt(SomaEntity, CoverEntity):
                 f'Error while closing the cover ({self.name}): {response["msg"]}'
             )
         self.set_position(0)
-        self._attr_is_closed = self.is_closed
 
     def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
@@ -87,7 +86,6 @@ class SomaTilt(SomaEntity, CoverEntity):
                 f'Error while opening the cover ({self.name}): {response["msg"]}'
             )
         self.set_position(100)
-        self._attr_is_closed = self.is_closed
 
     def stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
@@ -112,7 +110,6 @@ class SomaTilt(SomaEntity, CoverEntity):
                 f' {response["msg"]}'
             )
         self.set_position(kwargs[ATTR_TILT_POSITION])
-        self._attr_is_closed = self.is_closed
 
     async def async_update(self) -> None:
         """Update the entity with the latest data."""
@@ -124,7 +121,6 @@ class SomaTilt(SomaEntity, CoverEntity):
             self.current_position = 50 + ((api_position * 50) / 100)
         else:
             self.current_position = 50 - ((api_position * 50) / 100)
-        self._attr_is_closed = self.is_closed
 
 
 class SomaShade(SomaEntity, CoverEntity):
