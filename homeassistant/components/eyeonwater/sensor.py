@@ -34,7 +34,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     meters = hass.data[DOMAIN][config_entry.entry_id][DATA_SMART_METER].meters
 
-    sensors: list [Entity] = []
+    sensors: list[Entity] = []
     for meter in meters:
         sensors.append(EyeOnWaterSensor(meter, coordinator))
         sensors.append(EyeOnWaterTempSensor(meter, coordinator))
