@@ -1,14 +1,17 @@
 """Message routing coordinators for handling NASweb push notifications."""
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from aiohttp import web
-from webio_api import WebioAPI
+from webio_api import Output as NASwebOutput, WebioAPI
 from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .relay_switch import RelaySwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +75,11 @@ class NASwebCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, webio_api: WebioAPI) -> None:
         """Initialize NASweb coordinator."""
+        self._hass = hass
         self._connection_confirmed = False
         super().__init__(hass, _LOGGER, name="nasweb_data")
         self.webio_api: WebioAPI = webio_api
+        self.async_add_switch_callback: Optional[AddEntitiesCallback] = None
         data: dict[str, Any] = {}
         data[KEY_OUTPUTS] = self.webio_api.outputs
         self.async_set_updated_data(data)
@@ -94,5 +99,21 @@ class NASwebCoordinator(DataUpdateCoordinator):
 
     def process_status_update(self, new_status: dict) -> None:
         """Process status update from NASweb."""
-        self.webio_api.update_device_status(new_status)
+        new_objects = self.webio_api.update_device_status(new_status)
+        new_outputs = new_objects[KEY_OUTPUTS]
+        if len(new_outputs) > 0:
+            self._add_switch_entities(new_outputs)
         self.async_set_updated_data(self.data)
+
+    def _add_switch_entities(self, switches: list[RelaySwitch]) -> None:
+        if self.async_add_switch_callback is not None:
+            new_switch_entities: list[RelaySwitch] = []
+            for zone in switches:
+                if not isinstance(zone, NASwebOutput):
+                    _LOGGER.error("Cannot create RelaySwitch without NASwebOutput")
+                    continue
+                new_zone = RelaySwitch(self, zone)
+                new_switch_entities.append(new_zone)
+            self._hass.async_add_executor_job(
+                self.async_add_switch_callback, new_switch_entities
+            )
