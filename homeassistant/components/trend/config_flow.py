@@ -6,15 +6,8 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_ATTRIBUTE,
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    UnitOfTime,
-)
+from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME, UnitOfTime
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -30,8 +23,6 @@ from .const import (
     DOMAIN,
 )
 
-NONE_SENTINEL = "none"
-
 
 async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Get options schema."""
@@ -41,19 +32,6 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
                 selector.AttributeSelectorConfig(
                     entity_id=handler.options[CONF_ENTITY_ID]
                 )
-            ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [cls.value for cls in BinarySensorDeviceClass],
-                            key=str.casefold,
-                        ),
-                    ],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                ),
             ),
             vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
             vol.Optional(CONF_MAX_SAMPLES, default=2): selector.NumberSelector(

@@ -122,13 +122,13 @@ async def async_setup_platform(
                 friendly_name,
                 entity_id,
                 attribute,
-                device_class,
                 invert,
                 max_samples,
                 min_gradient,
                 sample_duration,
                 min_samples,
                 device_id=device_id,
+                device_class=device_class,
             )
         )
 
@@ -153,7 +153,6 @@ async def async_setup_entry(
                 entry.options[CONF_NAME],
                 entry.options[CONF_ENTITY_ID],
                 entry.options.get(CONF_ATTRIBUTE),
-                entry.options.get(CONF_DEVICE_CLASS),
                 entry.options[CONF_INVERT],
                 int(entry.options[CONF_MAX_SAMPLES]),
                 entry.options[CONF_MIN_GRADIENT],
@@ -177,7 +176,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         friendly_name: str,
         entity_id: str,
         attribute: str | None,
-        device_class: BinarySensorDeviceClass | None,
         invert: bool,
         max_samples: int,
         min_gradient: float,
@@ -185,11 +183,11 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         min_samples: int,
         device_id: str | None = None,
         config_entry: ConfigEntry | None = None,
+        device_class: BinarySensorDeviceClass | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._hass = hass
         self._attr_name = friendly_name
-        self._attr_device_class = device_class
         self._entity_id = entity_id
         self._attribute = attribute
         self._invert = invert
@@ -197,6 +195,9 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._min_gradient = min_gradient
         self._min_samples = min_samples
         self.samples: deque = deque(maxlen=max_samples)
+
+        if device_class is not None:
+            self._attr_device_class = device_class
 
         if device_id is not None:
             # set entity ID only if it has been set in configuration.yaml
