@@ -96,6 +96,28 @@ async def test_api_state_change_of_non_existing_entity(
     assert hass.states.get("test_entity.that_does_not_exist").state == new_state
 
 
+async def test_api_state_change_with_bad_entity_id(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if API sends appropriate error if we omit state."""
+    resp = await mock_api_client.post(
+        "/api/states/bad.entity.id", json={"state": "new_state"}
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_api_state_change_with_bad_state(
+    hass: HomeAssistant, mock_api_client: TestClient
+) -> None:
+    """Test if API sends appropriate error if we omit state."""
+    resp = await mock_api_client.post(
+        "/api/states/test.test", json={"state": "x" * 256}
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
 async def test_api_state_change_with_bad_data(
     hass: HomeAssistant, mock_api_client: TestClient
 ) -> None:
