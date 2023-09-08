@@ -1,4 +1,5 @@
 """Test conversation triggers."""
+from asyncio import CancelledError
 import copy
 from unittest.mock import patch
 
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.conversation import _get_agent_manager
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import trigger
 from homeassistant.setup import async_setup_component
 
@@ -15,13 +16,13 @@ from tests.common import async_mock_service
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant):
     """Initialize components."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
@@ -308,3 +309,73 @@ async def test_custom_response(
         assert len(calls) == (1 if service == "test.automation" else 0)
         response = await original_callback(*mock_trigger_callback.call_args.args)
         assert response == ("success" if service == "test.automation" else "error")
+
+
+async def test_custom_response_task_cancelled(
+    hass: HomeAssistant, calls, setup_comp
+) -> None:
+    """Test the the custom response errors."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": [
+                        "foobar",
+                    ],
+                    "response_success": "success",
+                    "response_error": "error",
+                },
+                "action": {"delay": {"seconds": 0.5}},
+            }
+        },
+    )
+
+    async def mock_run_automation_make_response(
+        hass: HomeAssistant,
+        job: HassJob,
+        trigger_data: dict[str],
+        success_message: str,
+        error_message: str,
+    ):
+        """Mock the part of the trigger callback that handles running the automation."""
+        future = hass.async_run_hass_job(
+            job,
+            trigger_data,
+        )
+
+        await hass.async_stop()
+
+        try:
+            await future
+            future.result()
+            return success_message
+        except CancelledError:
+            return error_message
+
+    default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
+    original_callback = copy.deepcopy(default_agent._trigger_sentences[0].callback)
+
+    with patch(
+        "homeassistant.components.conversation.trigger.async_run_automation_make_response",
+        side_effect=mock_run_automation_make_response,
+    ), patch.object(
+        default_agent._trigger_sentences[0],
+        "callback",
+        wraps=original_callback,
+    ) as mock_trigger_callback:
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {
+                "text": "foobar",
+            },
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+        response = await original_callback(*mock_trigger_callback.call_args.args)
+        assert response == "error"

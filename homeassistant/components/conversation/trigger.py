@@ -85,43 +85,58 @@ async def async_attach_trigger(
             },
         }
 
+        success_message = config.get(CONF_RESPONSE_SUCCESS, "Done")
         error_message = config.get(CONF_RESPONSE_ERROR, "Error")
 
-        # Wait for the automation to complete
-        if future := hass.async_run_hass_job(
-            job,
-            {"trigger": trigger_input},
-        ):
-            await future
-            try:
-                if (automation_result := future.result()) is None:
-                    _LOGGER.info(
-                        "Could not produce a sentence trigger response because automation failed"
-                    )
-                    return error_message
-
-                try:
-                    return (
-                        template_helper.Template(
-                            config.get(CONF_RESPONSE_SUCCESS, "Done"), hass
-                        ).async_render(automation_result.variables)
-                        or "Done"
-                    )
-                except TemplateError:
-                    return error_message
-            except CancelledError as err:
-                _LOGGER.warning(
-                    "Could not produce a sentence trigger response because automation task was cancelled: %s",
-                    err,
-                )
-                return error_message
-
-        _LOGGER.warning(
-            "Could not produce a sentence trigger response because automation task could not start"
+        return await async_run_automation_make_response(
+            hass, job, {"trigger": trigger_input}, success_message, error_message
         )
-        return error_message
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)
 
     return default_agent.register_trigger(sentences, call_action)
+
+
+async def async_run_automation_make_response(
+    hass: HomeAssistant,
+    job: HassJob,
+    trigger_data: dict[str, Any],
+    success_message: str,
+    error_message: str,
+) -> str:
+    """Run the automation action and generate a response."""
+    # Wait for the automation to complete
+    if future := hass.async_run_hass_job(
+        job,
+        trigger_data,
+    ):
+        try:
+            await future
+
+            if (automation_result := future.result()) is None:
+                _LOGGER.info(
+                    "Could not produce a sentence trigger response because automation failed"
+                )
+                return error_message
+
+            try:
+                return (
+                    template_helper.Template(success_message, hass).async_render(
+                        automation_result.variables
+                    )
+                    or "Done"
+                )
+            except TemplateError:
+                return error_message
+        except CancelledError as err:
+            _LOGGER.warning(
+                "Could not produce a sentence trigger response because automation task was cancelled: %s",
+                err,
+            )
+            return error_message
+
+    _LOGGER.warning(
+        "Could not produce a sentence trigger response because automation task could not start"
+    )
+    return error_message
