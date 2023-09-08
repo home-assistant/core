@@ -1,6 +1,5 @@
 """Weather entity for Apple WeatherKit integration."""
 
-from types import MappingProxyType
 from typing import Any, cast
 
 from homeassistant.components.weather import (
@@ -34,11 +33,11 @@ async def async_setup_entry(
     coordinator: WeatherKitDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
+
     async_add_entities(
         [
             WeatherKitWeather(
                 coordinator,
-                config_entry.data,
             ),
         ]
     )
@@ -135,11 +134,10 @@ class WeatherKitWeather(
     def __init__(
         self,
         coordinator: WeatherKitDataUpdateCoordinator,
-        config: MappingProxyType[str, Any],
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._config = config
+        self._config = coordinator.config_entry.data
         self._attr_unique_id = (
             f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
         )
