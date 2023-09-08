@@ -37,7 +37,7 @@ class EyeOnWaterData:
         """Read each meter."""
         for meter in self.meters:
             try:
-                await meter.read_meter(client=self.client)
+                await meter.read_meter_info(client=self.client)
             except (EyeOnWaterAPIError, EyeOnWaterAuthError) as error:
                 raise UpdateFailed(error) from error
         return self.meters
