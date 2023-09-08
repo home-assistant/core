@@ -36,7 +36,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
-    _attr_condition = None
 
     def __init__(
         self, coordinator: ZamgDataUpdateCoordinator, name: str, station_id: str
