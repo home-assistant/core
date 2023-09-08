@@ -4,16 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 
 from apple_weatherkit import DataSetType
-from apple_weatherkit.client import (
-    WeatherKitApiClient,
-    WeatherKitApiClientAuthenticationError,
-    WeatherKitApiClientError,
-)
+from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -39,7 +34,8 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=15),
         )
 
-    async def _update_supported_data_sets(self):
+    async def update_supported_data_sets(self):
+        """Obtain the supported data sets for this location and store them."""
         supported_data_sets = await self.client.get_availability(
             self.config_entry.data[CONF_LATITUDE],
             self.config_entry.data[CONF_LONGITUDE],
@@ -63,14 +59,12 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the current weather and forecasts."""
         try:
             if not self.supported_data_sets:
-                await self._update_supported_data_sets()
+                await self.update_supported_data_sets()
 
             return await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
             )
-        except WeatherKitApiClientAuthenticationError as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
         except WeatherKitApiClientError as exception:
             raise UpdateFailed(exception) from exception
