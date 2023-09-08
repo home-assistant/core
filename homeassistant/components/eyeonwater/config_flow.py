@@ -3,12 +3,13 @@ import asyncio
 import logging
 from typing import Any
 
-import voluptuous as vol
 from aiohttp import ClientError
+from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
+import voluptuous as vol
+
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
-from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 from .const import DOMAIN
 
@@ -106,6 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
