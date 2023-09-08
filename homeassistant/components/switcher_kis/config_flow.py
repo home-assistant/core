@@ -112,6 +112,7 @@ class SwitcherOptionsFlowHandler(config_entries.OptionsFlow):
             errors=self._errors,
         )
 
+
 def _get_data_schema(
     config_entry: config_entries.ConfigEntry | None = None,
 ) -> vol.Schema:
