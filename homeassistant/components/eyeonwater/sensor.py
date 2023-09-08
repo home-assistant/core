@@ -1,5 +1,4 @@
 """Support for EyeOnWater sensors."""
-import logging
 from typing import Any
 
 from pyonwater import DataPoint, Meter
@@ -21,9 +20,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN, WATER_METER_NAME
-
-_LOGGER = logging.getLogger(__name__)
-_LOGGER.addHandler(logging.StreamHandler())
 
 
 async def async_setup_entry(
