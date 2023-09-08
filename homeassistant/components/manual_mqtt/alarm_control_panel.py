@@ -33,10 +33,11 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -481,9 +482,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             self.hass, self._command_topic, message_received, self._qos
         )
 
-    async def _async_state_changed_listener(self, event):
+    async def _async_state_changed_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Publish state change to MQTT."""
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
         await mqtt.async_publish(
             self.hass, self._state_topic, new_state.state, self._qos, True

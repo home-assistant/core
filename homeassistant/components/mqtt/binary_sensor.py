@@ -29,7 +29,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
@@ -97,6 +97,7 @@ async def _async_setup_entity(
 class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
     _expired: bool | None
     _expire_after: int | None
@@ -127,15 +128,17 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             expiration_at: datetime = last_state.last_changed + timedelta(
                 seconds=self._expire_after
             )
-            if expiration_at < (time_now := dt_util.utcnow()):
+            remain_seconds = (expiration_at - dt_util.utcnow()).total_seconds()
+
+            if remain_seconds <= 0:
                 # Skip reactivating the binary_sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
             self._attr_is_on = last_state.state == STATE_ON
 
-            self._expiration_trigger = async_track_point_in_utc_time(
-                self.hass, self._value_is_expired, expiration_at
+            self._expiration_trigger = async_call_later(
+                self.hass, remain_seconds, self._value_is_expired
             )
             _LOGGER.debug(
                 (
@@ -143,7 +146,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     " expiring %s"
                 ),
                 self.entity_id,
-                expiration_at - time_now,
+                remain_seconds,
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -201,10 +204,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self._expiration_trigger()
 
                 # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
-
-                self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self._value_is_expired, expiration_at
+                self._expiration_trigger = async_call_later(
+                    self.hass, self._expire_after, self._value_is_expired
                 )
 
             payload = self._value_template(msg.payload)

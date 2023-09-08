@@ -6,7 +6,8 @@ from typing import cast
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -60,9 +61,9 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         if self.is_sub_device:
             # Only return the url of the base device, to inherit device name
             # and model from parent device.
-            return {
-                "identifiers": {(DOMAIN, self.executor.base_device_url)},
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.executor.base_device_url)},
+            )
 
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
@@ -119,3 +120,5 @@ class OverkizDescriptiveEntity(OverkizEntity):
             # In case of sub device, use the provided label
             # and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
+        elif isinstance(description.name, str):
+            self._attr_name = description.name

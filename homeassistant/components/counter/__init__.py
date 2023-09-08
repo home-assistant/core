@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -292,7 +292,7 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             self.hass,
             DOMAIN,
             "deprecated_configure_service",
-            breaks_in_ha_version="2023.8.0",
+            breaks_in_ha_version="2023.12.0",
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,

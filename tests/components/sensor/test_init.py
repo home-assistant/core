@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    async_rounded_state,
     async_update_suggested_units,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -176,7 +177,7 @@ async def test_datetime_conversion(
     enable_custom_integrations: None,
 ) -> None:
     """Test conversion of datetime."""
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -232,7 +233,7 @@ async def test_a_sensor_with_a_non_numeric_device_class(
     A non numeric sensor with a valid device class should never be
     handled as numeric because it has a device class.
     """
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -333,7 +334,7 @@ RESTORE_DATA = {
         "native_unit_of_measurement": None,
         "native_value": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
+            "isoformat": datetime(2020, 2, 8, 15, tzinfo=UTC).isoformat(),
         },
     },
     "Decimal": {
@@ -374,7 +375,7 @@ RESTORE_DATA = {
         ),
         (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             dict,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -432,7 +433,7 @@ async def test_restore_sensor_save_state(
         (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE, "°F"),
         (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -557,6 +558,22 @@ async def test_restore_sensor_restore_state(
             100,
             "38",
         ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00,
+            "0.0",
+        ),
+        (
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+            UnitOfPressure.INHG,
+            UnitOfPressure.HPA,
+            UnitOfPressure.HPA,
+            -0.00001,
+            "0",
+        ),
     ],
 )
 async def test_custom_unit(
@@ -592,9 +609,14 @@ async def test_custom_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity0.entity_id)
+    entity_id = entity0.entity_id
+    state = hass.states.get(entity_id)
     assert state.state == custom_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == state_unit
+
+    assert (
+        async_rounded_state(hass, entity_id, hass.states.get(entity_id)) == custom_state
+    )
 
 
 @pytest.mark.parametrize(
@@ -902,7 +924,7 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        ),
+        )
     ],
 )
 async def test_unit_conversion_priority(
@@ -1130,6 +1152,9 @@ async def test_unit_conversion_priority_precision(
         "sensor": {"suggested_display_precision": 2},
         "sensor.private": {"suggested_unit_of_measurement": automatic_unit},
     }
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(automatic_state, 2)
+    )
 
     # Unregistered entity -> Follow native unit
     state = hass.states.get(entity1.entity_id)
@@ -1171,6 +1196,20 @@ async def test_unit_conversion_priority_precision(
     state = hass.states.get(entity2.entity_id)
     assert float(state.state) == pytest.approx(custom_state)
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == custom_unit
+
+    # Set a display_precision, this should have priority over suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity0.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entry0 = entity_registry.async_get(entity0.entity_id)
+    assert entry0.options["sensor"]["suggested_display_precision"] == 2
+    assert entry0.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    assert float(async_rounded_state(hass, entity0.entity_id, state)) == pytest.approx(
+        round(custom_state, 4)
+    )
 
 
 @pytest.mark.parametrize(
@@ -1760,6 +1799,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
         SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
@@ -1821,13 +1861,17 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value",
+    ("native_value", "problem"),
     [
-        "",
-        "abc",
-        "13.7.1",
-        datetime(2012, 11, 10, 7, 35, 1),
-        date(2012, 11, 10),
+        ("", "non-numeric"),
+        ("abc", "non-numeric"),
+        ("13.7.1", "non-numeric"),
+        (datetime(2012, 11, 10, 7, 35, 1), "non-numeric"),
+        (date(2012, 11, 10), "non-numeric"),
+        ("inf", "non-finite"),
+        (float("inf"), "non-finite"),
+        ("nan", "non-finite"),
+        (float("nan"), "non-finite"),
     ],
 )
 async def test_non_numeric_validation_error(
@@ -1835,6 +1879,7 @@ async def test_non_numeric_validation_error(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
+    problem: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1859,7 +1904,7 @@ async def test_non_numeric_validation_error(
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: '{native_value}'"
+        f"however, it has the {problem} value: '{native_value}'"
     ) in caplog.text
 
 
@@ -2362,3 +2407,39 @@ async def test_name(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+
+def test_async_rounded_state_unregistered_entity_is_passthrough(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on unregistered entity is passthrough."""
+    hass.states.async_set("sensor.test", "1.004")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "1.004"
+    hass.states.async_set("sensor.test", "-0.0")
+    state = hass.states.get("sensor.test")
+    assert async_rounded_state(hass, "sensor.test", state) == "-0.0"
+
+
+def test_async_rounded_state_registered_entity_with_display_precision(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_rounded_state on registered with display precision.
+
+    The -0 should be dropped.
+    """
+    entity_registry = er.async_get(hass)
+
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2, "display_precision": 4},
+    )
+    entity_id = entry.entity_id
+    hass.states.async_set(entity_id, "1.004")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "1.0040"
+    hass.states.async_set(entity_id, "-0.0")
+    state = hass.states.get(entity_id)
+    assert async_rounded_state(hass, entity_id, state) == "0.0000"

@@ -80,7 +80,7 @@ class MatterAdapter:
                 node.endpoints[data["endpoint_id"]],
             )
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-            if device := device_registry.async_get_device({identifier}):
+            if device := device_registry.async_get_device(identifiers={identifier}):
                 device_registry.async_remove_device(device.id)
 
         def node_removed_callback(event: EventType, node_id: int) -> None:
@@ -96,20 +96,24 @@ class MatterAdapter:
                 )
 
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 endpoint_added_callback, EventType.ENDPOINT_ADDED
             )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 endpoint_removed_callback, EventType.ENDPOINT_REMOVED
             )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(node_removed_callback, EventType.NODE_REMOVED)
+            self.matter_client.subscribe_events(
+                node_removed_callback, EventType.NODE_REMOVED
+            )
         )
         self.config_entry.async_on_unload(
-            self.matter_client.subscribe(node_added_callback, EventType.NODE_ADDED)
+            self.matter_client.subscribe_events(
+                node_added_callback, EventType.NODE_ADDED
+            )
         )
 
     def _setup_node(self, node: MatterNode) -> None:

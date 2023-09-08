@@ -1,8 +1,10 @@
 """Tests for ZHA integration init."""
+import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import TransientConnectionError
 
 from homeassistant.components.zha import async_setup_entry
 from homeassistant.components.zha.core.const import (
@@ -11,9 +13,12 @@ from homeassistant.components.zha.core.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
+
+from .test_light import LIGHT_ON_OFF
 
 from tests.common import MockConfigEntry
 
@@ -114,19 +119,27 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
 @pytest.mark.parametrize(
     ("path", "cleaned_path"),
     [
+        # No corrections
         ("/dev/path1", "/dev/path1"),
+        ("/dev/path1[asd]", "/dev/path1[asd]"),
         ("/dev/path1 ", "/dev/path1 "),
+        ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
+        # Brackets around URI
+        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
+        # Spaces
         ("socket://dev/path1 ", "socket://dev/path1"),
+        # Both
+        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
     ],
 )
 @patch("homeassistant.components.zha.setup_quirks", Mock(return_value=True))
 @patch(
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
-async def test_setup_with_v3_spaces_in_uri(
+async def test_setup_with_v3_cleaning_uri(
     hass: HomeAssistant, path: str, cleaned_path: str
 ) -> None:
-    """Test migration of config entry from v3 with spaces after `socket://` URI."""
+    """Test migration of config entry from v3, applying corrections to the port path."""
     config_entry_v3 = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -149,3 +162,46 @@ async def test_setup_with_v3_spaces_in_uri(
     assert config_entry_v3.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert config_entry_v3.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
     assert config_entry_v3.version == 3
+
+
+@patch(
+    "homeassistant.components.zha.PLATFORMS",
+    [Platform.LIGHT, Platform.BUTTON, Platform.SENSOR, Platform.SELECT],
+)
+async def test_zha_retry_unique_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zigpy_device_mock,
+    mock_zigpy_connect,
+    caplog,
+) -> None:
+    """Test that ZHA retrying creates unique entity IDs."""
+
+    config_entry.add_to_hass(hass)
+
+    # Ensure we have some device to try to load
+    app = mock_zigpy_connect.return_value
+    light = zigpy_device_mock(LIGHT_ON_OFF)
+    app.devices[light.ieee] = light
+
+    # Re-try setup but have it fail once, so entities have two chances to be created
+    with patch.object(
+        app,
+        "startup",
+        side_effect=[TransientConnectionError(), None],
+    ) as mock_connect:
+        with patch(
+            "homeassistant.config_entries.async_call_later",
+            lambda hass, delay, action: async_call_later(hass, 0, action),
+        ):
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+            # Wait for the config entry setup to retry
+            await asyncio.sleep(0.1)
+
+        assert len(mock_connect.mock_calls) == 2
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert "does not generate unique IDs" not in caplog.text

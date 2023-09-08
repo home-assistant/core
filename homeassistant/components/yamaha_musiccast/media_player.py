@@ -130,14 +130,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def _is_netusb(self):
-        return (
-            self.coordinator.data.netusb_input
-            == self.coordinator.data.zones[self._zone_id].input
-        )
+        return self.coordinator.data.netusb_input == self.source_id
 
     @property
     def _is_tuner(self):
-        return self.coordinator.data.zones[self._zone_id].input == "tuner"
+        return self.source_id == "tuner"
 
     @property
     def media_content_id(self):
@@ -517,9 +514,14 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         )
 
     @property
+    def source_id(self):
+        """ID of the current input source."""
+        return self.coordinator.data.zones[self._zone_id].input
+
+    @property
     def source(self):
         """Name of the current input source."""
-        return self.source_mapping.get(self.coordinator.data.zones[self._zone_id].input)
+        return self.source_mapping.get(self.source_id)
 
     @property
     def source_list(self):
@@ -597,7 +599,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return (
             self.coordinator.data.group_role == "client"
             and self.coordinator.data.group_id != NULL_GROUP
-            and self.source == ATTR_MC_LINK
+            and self.source_id == ATTR_MC_LINK
         )
 
     @property
@@ -606,7 +608,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         If the media player is not part of a group, False is returned.
         """
-        return self.is_network_client or self.source == ATTR_MAIN_SYNC
+        return self.is_network_client or self.source_id == ATTR_MAIN_SYNC
 
     def get_all_mc_entities(self) -> list[MusicCastMediaPlayer]:
         """Return all media player entities of the musiccast system."""
@@ -639,11 +641,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 and self.coordinator.data.group_id
                 == group_server.coordinator.data.group_id
                 and self.ip_address != group_server.ip_address
-                and self.source == ATTR_MC_LINK
+                and self.source_id == ATTR_MC_LINK
             )
             or (
                 self.ip_address == group_server.ip_address
-                and self.source == ATTR_MAIN_SYNC
+                and self.source_id == ATTR_MAIN_SYNC
             )
         )
 
@@ -859,8 +861,12 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """
         _LOGGER.debug("%s client leave called", self.entity_id)
         if not force and (
-            self.source == ATTR_MAIN_SYNC
-            or [entity for entity in self.other_zones if entity.source == ATTR_MC_LINK]
+            self.source_id == ATTR_MAIN_SYNC
+            or [
+                entity
+                for entity in self.other_zones
+                if entity.source_id == ATTR_MC_LINK
+            ]
         ):
             await self.coordinator.musiccast.zone_unjoin(self._zone_id)
         else:

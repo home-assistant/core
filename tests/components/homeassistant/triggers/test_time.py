@@ -102,6 +102,7 @@ async def test_if_fires_using_at_input_datetime(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
@@ -148,6 +149,7 @@ async def test_if_fires_using_at_input_datetime(
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -556,6 +558,7 @@ async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert await async_setup_component(
         hass,
@@ -587,6 +590,7 @@ async def test_datetime_in_past_on_load(hass: HomeAssistant, calls) -> None:
         },
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, future + timedelta(seconds=1))
     await hass.async_block_till_done()

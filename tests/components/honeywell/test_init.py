@@ -27,7 +27,9 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 1
+    assert (
+        hass.states.async_entity_ids_count() == 3
+    )  # 1 climate entity; 2 sensor entities
 
 
 async def test_setup_multiple_thermostats(
@@ -39,7 +41,9 @@ async def test_setup_multiple_thermostats(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 2
+    assert (
+        hass.states.async_entity_ids_count() == 6
+    )  # 2 climate entities; 4 sensor entities
 
 
 async def test_setup_multiple_thermostats_with_same_deviceid(
@@ -58,7 +62,9 @@ async def test_setup_multiple_thermostats_with_same_deviceid(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.async_entity_ids_count() == 1
+    assert (
+        hass.states.async_entity_ids_count() == 3
+    )  # 1 climate entity; 2 sensor entities
     assert "Platform honeywell does not generate unique IDs" not in caplog.text
 
 

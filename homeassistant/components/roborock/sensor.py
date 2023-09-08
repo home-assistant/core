@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.containers import RoborockStateCode
+from roborock.containers import RoborockErrorCode, RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import AREA_SQUARE_METERS, EntityCategory, UnitOfTime
+from homeassistant.const import (
+    AREA_SQUARE_METERS,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -112,6 +117,22 @@ SENSOR_DESCRIPTIONS = [
         translation_key="total_cleaning_area",
         value_fn=lambda data: data.clean_summary.square_meter_clean_area,
         native_unit_of_measurement=AREA_SQUARE_METERS,
+    ),
+    RoborockSensorDescription(
+        key="vacuum_error",
+        icon="mdi:alert-circle",
+        translation_key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: data.status.error_code.name,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockErrorCode.keys(),
+    ),
+    RoborockSensorDescription(
+        key="battery",
+        value_fn=lambda data: data.status.battery,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
     ),
 ]
 

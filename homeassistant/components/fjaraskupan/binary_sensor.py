@@ -13,11 +13,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 
 @dataclass
@@ -50,7 +52,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(coordinator: Coordinator) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [
             BinarySensor(
                 coordinator,
@@ -64,7 +66,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
+class BinarySensor(CoordinatorEntity[FjaraskupanCoordinator], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription
@@ -72,7 +74,7 @@ class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device: Device,
         device_info: DeviceInfo,
         entity_description: EntityDescription,

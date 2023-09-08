@@ -11,12 +11,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanCoordinator
 
 
 async def async_setup_entry(
@@ -26,13 +28,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(coordinator: Coordinator) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [RssiSensor(coordinator, coordinator.device, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class RssiSensor(CoordinatorEntity[Coordinator], SensorEntity):
+class RssiSensor(CoordinatorEntity[FjaraskupanCoordinator], SensorEntity):
     """Sensor device."""
 
     _attr_has_entity_name = True
@@ -44,7 +46,7 @@ class RssiSensor(CoordinatorEntity[Coordinator], SensorEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: FjaraskupanCoordinator,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:

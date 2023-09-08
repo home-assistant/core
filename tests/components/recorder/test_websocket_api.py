@@ -1,5 +1,4 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -215,9 +214,7 @@ async def test_statistics_during_period(
     }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize("offset", (0, 1, 2))
 async def test_statistic_during_period(
     recorder_mock: Recorder,
@@ -632,9 +629,7 @@ async def test_statistic_during_period(
     }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -797,9 +792,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(
-    datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc)
-)
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     (

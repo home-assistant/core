@@ -148,10 +148,7 @@ def hass_to_wilight_pause_time(value: int) -> int:
 class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._attr_name} {DESC_WATERING}"
+    _attr_translation_key = "watering"
 
     @property
     def is_on(self) -> bool:
@@ -272,10 +269,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._attr_name} {DESC_PAUSE}"
+    _attr_translation_key = "pause"
 
     @property
     def is_on(self) -> bool:

@@ -7,12 +7,13 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
@@ -78,10 +79,13 @@ class MatterEntity(Entity):
         sub_paths: list[str] = []
         for attr_cls in self._entity_info.attributes_to_watch:
             attr_path = self.get_matter_attribute_path(attr_cls)
+            if attr_path in sub_paths:
+                # prevent duplicate subscriptions
+                continue
             self._attributes_map[attr_cls] = attr_path
             sub_paths.append(attr_path)
             self._unsubscribes.append(
-                self.matter_client.subscribe(
+                self.matter_client.subscribe_events(
                     callback=self._on_matter_event,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
@@ -93,7 +97,7 @@ class MatterEntity(Entity):
         )
         # subscribe to node (availability changes)
         self._unsubscribes.append(
-            self.matter_client.subscribe(
+            self.matter_client.subscribe_events(
                 callback=self._on_matter_event,
                 event_filter=EventType.NODE_UPDATED,
                 node_filter=self._endpoint.node.node_id,
@@ -122,10 +126,13 @@ class MatterEntity(Entity):
 
     @callback
     def get_matter_attribute_value(
-        self, attribute: type[ClusterAttributeDescriptor]
+        self, attribute: type[ClusterAttributeDescriptor], null_as_none: bool = True
     ) -> Any:
         """Get current value for given attribute."""
-        return self._endpoint.get_attribute_value(None, attribute)
+        value = self._endpoint.get_attribute_value(None, attribute)
+        if null_as_none and value == NullValue:
+            return None
+        return value
 
     @callback
     def get_matter_attribute_path(

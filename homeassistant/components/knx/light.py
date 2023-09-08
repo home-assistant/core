@@ -4,11 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from xknx import XKNX
-from xknx.devices.light import (
-    ColorTemperatureType,
-    Light as XknxLight,
-    XYYColor,
-)
+from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
 
 from homeassistant import config_entries
 from homeassistant.components.light import (

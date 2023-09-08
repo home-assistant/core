@@ -47,7 +47,7 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on in case of a Problem is detected."""
-        return (
-            self.coordinator.data[self.entity_description.key] == "TooLow"
-            or self.coordinator.data[self.entity_description.key] == "TooHigh"
+        return self.coordinator.data[self.entity_description.key] in (
+            "TooLow",
+            "TooHigh",
         )

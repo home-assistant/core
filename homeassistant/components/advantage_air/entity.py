@@ -4,7 +4,7 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -83,6 +83,8 @@ class AdvantageAirZoneEntity(AdvantageAirAcEntity):
 
 class AdvantageAirThingEntity(AdvantageAirEntity):
     """Parent class for Advantage Air Things Entities."""
+
+    _attr_name = None
 
     def __init__(self, instance: AdvantageAirData, thing: dict[str, Any]) -> None:
         """Initialize common aspects of an Advantage Air Things entity."""

@@ -14,8 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -92,8 +91,8 @@ def async_migrate_unique_ids(
     device_name = slugify(coordinator.device.name)
 
     for key in ("reboot", "self_test", "mute", "unmute"):
-        if entity_entry.unique_id.startswith(device_name):
-            old_unique_id = entity_entry.unique_id
+        old_unique_id = f"{device_name}_{key}"
+        if entity_entry.unique_id == old_unique_id:
             new_unique_id = f"{coordinator.mac}_{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",

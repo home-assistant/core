@@ -563,7 +563,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
-            return await coro
+            script_result = await coro
+            return script_result.service_response if script_result else None
 
         # Caller does not want to wait for called script to finish so let script run in
         # separate Task. Make a new empty script stack; scripts are allowed to
@@ -608,7 +609,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             variables=service.data, context=service.context, wait=True
         )
         if service.return_response:
-            return response
+            return response or {}
         return None
 
     async def async_added_to_hass(self) -> None:

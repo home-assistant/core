@@ -3,21 +3,23 @@ import asyncio
 import copy
 import logging
 import os
+import re
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import websocket_api
+from . import repairs, websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
@@ -32,7 +34,6 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
@@ -85,19 +86,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _clean_serial_port_path(path: str) -> str:
+    """Clean the serial port path, applying corrections where necessary."""
+
+    if path.startswith("socket://"):
+        path = path.strip()
+
+    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
+    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
+        path = path.replace("[", "").replace("]", "")
+
+    return path
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
     """
 
-    # Strip whitespace around `socket://` URIs, this is no longer accepted by zigpy
-    # This will be removed in 2023.7.0
+    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
+    # This will be removed in 2023.11.0
     path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    cleaned_path = _clean_serial_port_path(path)
     data = copy.deepcopy(dict(config_entry.data))
 
-    if path.startswith("socket://") and path != path.strip():
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = path.strip()
+    if path != cleaned_path:
+        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
@@ -118,8 +134,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     else:
         _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
+    # Re-use the gateway object between ZHA reloads
+    if (zha_gateway := zha_data.get(DATA_ZHA_GATEWAY)) is None:
+        zha_gateway = ZHAGateway(hass, config, config_entry)
+
+    try:
+        await zha_gateway.async_initialize()
+    except Exception:  # pylint: disable=broad-except
+        if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+            try:
+                await repairs.warn_on_wrong_silabs_firmware(
+                    hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+                )
+            except repairs.AlreadyRunningEZSP as exc:
+                # If connecting fails but we somehow probe EZSP (e.g. stuck in the
+                # bootloader), reconnect, it should work
+                raise ConfigEntryNotReady from exc
+
+        raise
+
+    repairs.async_delete_blocking_issues(hass)
+
+    config_entry.async_on_unload(zha_gateway.shutdown)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -133,15 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     websocket_api.async_load_api(hass)
 
-    async def async_zha_shutdown(event):
-        """Handle shutdown tasks."""
-        zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
-        await zha_gateway.shutdown()
-
-    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
-    )
-
     await zha_gateway.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
@@ -150,8 +177,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA].pop(DATA_ZHA_GATEWAY)
-    await zha_gateway.shutdown()
+    try:
+        del hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    except KeyError:
+        return False
 
     GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
@@ -163,8 +192,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             for platform in PLATFORMS
         )
     )
-
-    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
     return True
 

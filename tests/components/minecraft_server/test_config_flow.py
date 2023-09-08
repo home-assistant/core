@@ -1,10 +1,9 @@
 """Test the Minecraft Server config flow."""
 
-import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiodns
-from mcstatus.pinger import PingResponse
+from mcstatus.status_response import JavaStatusResponse
 
 from homeassistant.components.minecraft_server.const import (
     DEFAULT_NAME,
@@ -12,17 +11,15 @@ from homeassistant.components.minecraft_server.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 class QueryMock:
     """Mock for result of aiodns.DNSResolver.query."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up query result mock."""
         self.host = "mc.dummyserver.com"
         self.port = 23456
@@ -31,7 +28,7 @@ class QueryMock:
         self.ttl = None
 
 
-STATUS_RESPONSE_RAW = {
+JAVA_STATUS_RESPONSE_RAW = {
     "description": {"text": "Dummy Description"},
     "version": {"name": "Dummy Version", "protocol": 123},
     "players": {
@@ -72,9 +69,6 @@ USER_INPUT_PORT_TOO_LARGE = {
     CONF_HOST: "mc.dummyserver.com:65536",
 }
 
-SRV_RECORDS = asyncio.Future()
-SRV_RECORDS.set_result([QueryMock()])
-
 
 async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test if initial configuration form is shown."""
@@ -84,45 +78,6 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-
-
-async def test_invalid_ip(hass: HomeAssistant) -> None:
-    """Test error in case of an invalid IP address."""
-    with patch("getmac.get_mac_address", return_value=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_ip"}
-
-
-async def test_same_host(hass: HomeAssistant) -> None:
-    """Test abort in case of same host name."""
-    with patch(
-        "aiodns.DNSResolver.query",
-        side_effect=aiodns.error.DNSError,
-    ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
-    ):
-        unique_id = "mc.dummyserver.com-25565"
-        config_data = {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: "mc.dummyserver.com",
-            CONF_PORT: DEFAULT_PORT,
-        }
-        mock_config_entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=unique_id, data=config_data
-        )
-        mock_config_entry.add_to_hass(hass)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-        )
-
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_port_too_small(hass: HomeAssistant) -> None:
@@ -158,7 +113,7 @@ async def test_connection_failed(hass: HomeAssistant) -> None:
     with patch(
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
-    ), patch("mcstatus.server.MinecraftServer.status", side_effect=OSError):
+    ), patch("mcstatus.server.JavaServer.async_status", side_effect=OSError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
@@ -171,10 +126,12 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
     """Test config entry in case of a successful connection with a SRV record."""
     with patch(
         "aiodns.DNSResolver.query",
-        return_value=SRV_RECORDS,
+        side_effect=AsyncMock(return_value=[QueryMock()]),
     ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        "mcstatus.server.JavaServer.async_status",
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_SRV
@@ -192,8 +149,10 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
     ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        "mcstatus.server.JavaServer.async_status",
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -211,8 +170,10 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
     ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        "mcstatus.server.JavaServer.async_status",
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
@@ -230,8 +191,10 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
     ), patch(
-        "mcstatus.server.MinecraftServer.status",
-        return_value=PingResponse(STATUS_RESPONSE_RAW),
+        "mcstatus.server.JavaServer.async_status",
+        return_value=JavaStatusResponse(
+            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6

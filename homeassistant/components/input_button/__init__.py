@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.button import SERVICE_PRESS, ButtonEntity

@@ -33,6 +33,7 @@ from homeassistant.util.ssl import SSLCipherList
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
+    CONF_ENABLE_PUSH,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -87,6 +88,7 @@ OPTIONS_SCHEMA_ADVANCED = {
         cv.positive_int,
         vol.Range(min=DEFAULT_MAX_MESSAGE_SIZE, max=MAX_MESSAGE_SIZE_LIMIT),
     ),
+    vol.Optional(CONF_ENABLE_PUSH, default=True): BOOLEAN_SELECTOR,
 }
 
 

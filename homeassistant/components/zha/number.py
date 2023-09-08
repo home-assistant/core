@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
-
-from typing_extensions import Self
-import zigpy.exceptions
-from zigpy.zcl.foundation import Status
+from typing import TYPE_CHECKING, Any, Self
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -363,9 +359,8 @@ class ZhaNumber(ZhaEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        num_value = float(value)
-        if await self._analog_output_cluster_handler.async_set_present_value(num_value):
-            self.async_write_ha_state()
+        await self._analog_output_cluster_handler.async_set_present_value(float(value))
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
@@ -435,17 +430,10 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
-        try:
-            res = await self._cluster_handler.cluster.write_attributes(
-                {self._zcl_attribute: int(value / self._attr_multiplier)}
-            )
-        except zigpy.exceptions.ZigbeeException as ex:
-            self.error("Could not set value: %s", ex)
-            return
-        if not isinstance(res, Exception) and all(
-            record.status == Status.SUCCESS for record in res[0]
-        ):
-            self.async_write_ha_state()
+        await self._cluster_handler.write_attributes_safe(
+            {self._zcl_attribute: int(value / self._attr_multiplier)}
+        )
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""

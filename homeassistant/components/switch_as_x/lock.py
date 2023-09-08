@@ -13,9 +13,11 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.helpers.typing import EventType
 
 from .entity import BaseEntity
 
@@ -68,7 +70,9 @@ class LockSwitch(BaseEntity, LockEntity):
         )
 
     @callback
-    def async_state_changed_listener(self, event: Event | None = None) -> None:
+    def async_state_changed_listener(
+        self, event: EventType[EventStateChangedData] | None = None
+    ) -> None:
         """Handle child updates."""
         super().async_state_changed_listener(event)
         if (

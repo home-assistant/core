@@ -20,6 +20,7 @@ from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
+    async_handle_schema_error,
     async_setup_entry_helper,
     send_discovery_done,
     update_device,
@@ -119,7 +120,11 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
     async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT tag discovery updates."""
         # Update tag scanner
-        config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
+        try:
+            config: DiscoveryInfoType = PLATFORM_SCHEMA(discovery_data)
+        except vol.Invalid as err:
+            async_handle_schema_error(discovery_data, err)
+            return
         self._config = config
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE),

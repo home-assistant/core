@@ -1,9 +1,9 @@
 """Support for Flick Electric Pricing data."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-import async_timeout
 from pyflick import FlickAPI, FlickPrice
 
 from homeassistant.components.sensor import SensorEntity
@@ -34,6 +34,7 @@ class FlickPricingSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Flick Electric"
     _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
+    _attr_has_entity_name = True
     _attr_translation_key = "power_price"
     _attributes: dict[str, Any] = {}
 
@@ -57,7 +58,7 @@ class FlickPricingSensor(SensorEntity):
         if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid
 
-        async with async_timeout.timeout(60):
+        async with asyncio.timeout(60):
             self._price = await self._api.getPricing()
 
         _LOGGER.debug("Pricing data: %s", self._price)

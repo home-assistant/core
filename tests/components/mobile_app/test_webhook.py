@@ -857,7 +857,9 @@ async def test_webhook_handle_scan_tag(
     hass: HomeAssistant, create_registrations, webhook_client
 ) -> None:
     """Test that we can scan tags."""
-    device = dr.async_get(hass).async_get_device({(DOMAIN, "mock-device-id")})
+    device = dr.async_get(hass).async_get_device(
+        identifiers={(DOMAIN, "mock-device-id")}
+    )
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)

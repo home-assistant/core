@@ -74,50 +74,50 @@
         }
       },
       "on_supervisor": {
-        "title": "Select connection method",
-        "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+        "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]",
+        "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
         "data": {
-          "use_addon": "Use the Z-Wave JS Supervisor add-on"
+          "use_addon": "[%key:component::zwave_js::config::step::on_supervisor::data::use_addon%]"
         }
       },
       "install_addon": {
-        "title": "The Z-Wave JS add-on installation has started"
+        "title": "[%key:component::zwave_js::config::step::install_addon::title%]"
       },
       "configure_addon": {
-        "title": "Enter the Z-Wave JS add-on configuration",
-        "description": "The add-on will generate security keys if those fields are left empty.",
+        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]",
+        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
-          "s0_legacy_key": "S0 Key (Legacy)",
-          "s2_authenticated_key": "S2 Authenticated Key",
-          "s2_unauthenticated_key": "S2 Unauthenticated Key",
-          "s2_access_control_key": "S2 Access Control Key",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
           "log_level": "Log level",
           "emulate_hardware": "Emulate Hardware"
         }
       },
       "start_addon": {
-        "title": "The Z-Wave JS add-on is starting."
+        "title": "[%key:component::zwave_js::config::step::start_addon::title%]"
       }
     },
     "error": {
-      "invalid_ws_url": "Invalid websocket URL",
+      "invalid_ws_url": "[%key:component::zwave_js::config::error::invalid_ws_url%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
-      "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
-      "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
-      "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
-      "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+      "addon_info_failed": "[%key:component::zwave_js::config::abort::addon_info_failed%]",
+      "addon_install_failed": "[%key:component::zwave_js::config::abort::addon_install_failed%]",
+      "addon_set_config_failed": "[%key:component::zwave_js::config::abort::addon_set_config_failed%]",
+      "addon_start_failed": "[%key:component::zwave_js::config::abort::addon_start_failed%]",
+      "addon_get_discovery_info_failed": "[%key:component::zwave_js::config::abort::addon_get_discovery_info_failed%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device."
     },
     "progress": {
-      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
+      "install_addon": "[%key:component::zwave_js::config::progress::install_addon%]",
+      "start_addon": "[%key:component::zwave_js::config::progress::start_addon%]"
     }
   },
   "device_automation": {
@@ -150,6 +150,216 @@
     "invalid_server_version": {
       "title": "Newer version of Z-Wave JS Server needed",
       "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue."
+    },
+    "dry_fan_presets_deprecation": {
+      "title": "Dry and Fan preset modes will be removed: {entity_id}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Dry and Fan preset modes will be removed: {entity_id}",
+            "description": "You are using the Dry or Fan preset modes in your entity `{entity_id}`.\n\nDry and Fan preset modes are deprecated and will be removed. Please update your automations to use the corresponding Dry and Fan **HVAC modes** instead.\n\nClick on SUBMIT below once you have manually fixed this issue."
+          }
+        }
+      }
+    },
+    "device_config_file_changed": {
+      "title": "Z-Wave device configuration file changed: {device_name}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Z-Wave device configuration file changed: {device_name}",
+            "description": "Z-Wave JS discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you'd like to proceed, click on SUBMIT below. The re-interview will take place in the background."
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "clear_lock_usercode": {
+      "name": "Clear lock user code",
+      "description": "Clears a user code from a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "Code slot",
+          "description": "Code slot to clear code from."
+        }
+      }
+    },
+    "set_lock_usercode": {
+      "name": "Set lock user code",
+      "description": "Sets a user code on a lock.",
+      "fields": {
+        "code_slot": {
+          "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]",
+          "description": "Code slot to set the code."
+        },
+        "usercode": {
+          "name": "Code",
+          "description": "Lock code to set."
+        }
+      }
+    },
+    "set_config_parameter": {
+      "name": "Set device configuration parameter",
+      "description": "Changes the configuration parameters of your Z-Wave devices.",
+      "fields": {
+        "endpoint": {
+          "name": "Endpoint",
+          "description": "The configuration parameter's endpoint."
+        },
+        "parameter": {
+          "name": "Parameter",
+          "description": "The name (or ID) of the configuration parameter you want to configure."
+        },
+        "bitmask": {
+          "name": "Bitmask",
+          "description": "Target a specific bitmask (see the documentation for more information)."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The new value to set for this configuration parameter."
+        }
+      }
+    },
+    "bulk_set_partial_config_parameters": {
+      "name": "Bulk set partial configuration parameters (advanced).",
+      "description": "Allows for bulk setting partial parameters. Useful when multiple partial parameters have to be set at the same time.",
+      "fields": {
+        "endpoint": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]",
+          "description": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::description%]"
+        },
+        "parameter": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::parameter::name%]",
+          "description": "[%key:component::zwave_js::services::set_config_parameter::fields::parameter::description%]"
+        },
+        "value": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]",
+          "description": "The new value(s) to set for this configuration parameter. Can either be a raw integer value to represent the bulk change or a mapping where the key is the bitmask (either in hex or integer form) and the value is the new value you want to set for that partial parameter."
+        }
+      }
+    },
+    "refresh_value": {
+      "name": "Refresh values",
+      "description": "Force updates the values of a Z-Wave entity.",
+      "fields": {
+        "entity_id": {
+          "name": "Entities",
+          "description": "Entities to refresh."
+        },
+        "refresh_all_values": {
+          "name": "Refresh all values?",
+          "description": "Whether to refresh all values (true) or just the primary value (false)."
+        }
+      }
+    },
+    "set_value": {
+      "name": "Set a value (advanced)",
+      "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This service has minimal validation so only use this service if you know what you are doing.",
+      "fields": {
+        "command_class": {
+          "name": "Command class",
+          "description": "The ID of the command class for the value."
+        },
+        "endpoint": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]",
+          "description": "The endpoint for the value."
+        },
+        "property": {
+          "name": "Property",
+          "description": "The ID of the property for the value."
+        },
+        "property_key": {
+          "name": "Property key",
+          "description": "The ID of the property key for the value."
+        },
+        "value": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]",
+          "description": "The new value to set."
+        },
+        "options": {
+          "name": "Options",
+          "description": "Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set."
+        },
+        "wait_for_result": {
+          "name": "Wait for result?",
+          "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device."
+        }
+      }
+    },
+    "multicast_set_value": {
+      "name": "Set a value on multiple devices via multicast (advanced)",
+      "description": "Changes any value that Z-Wave JS recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This service has minimal validation so only use this service if you know what you are doing.",
+      "fields": {
+        "broadcast": {
+          "name": "Broadcast?",
+          "description": "Whether command should be broadcast to all devices on the network."
+        },
+        "command_class": {
+          "name": "[%key:component::zwave_js::services::set_value::fields::command_class::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::command_class::description%]"
+        },
+        "endpoint": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::endpoint::description%]"
+        },
+        "property": {
+          "name": "[%key:component::zwave_js::services::set_value::fields::property::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::property::description%]"
+        },
+        "property_key": {
+          "name": "[%key:component::zwave_js::services::set_value::fields::property_key::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::property_key::description%]"
+        },
+        "options": {
+          "name": "[%key:component::zwave_js::services::set_value::fields::options::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::options::description%]"
+        },
+        "value": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]",
+          "description": "[%key:component::zwave_js::services::set_value::fields::value::description%]"
+        }
+      }
+    },
+    "ping": {
+      "name": "Ping a node",
+      "description": "Forces Z-Wave JS to try to reach a node. This can be used to update the status of the node in Z-Wave JS when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep."
+    },
+    "reset_meter": {
+      "name": "Reset meters on a node",
+      "description": "Resets the meters on a node.",
+      "fields": {
+        "meter_type": {
+          "name": "Meter type",
+          "description": "The type of meter to reset. Not all meters support the ability to pick a meter type to reset."
+        },
+        "value": {
+          "name": "Target value",
+          "description": "The value that meters should be reset to. Not all meters support the ability to be reset to a specific value."
+        }
+      }
+    },
+    "invoke_cc_api": {
+      "name": "Invoke a Command Class API on a node (advanced)",
+      "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` service and require direct calls to the Command Class API.",
+      "fields": {
+        "command_class": {
+          "name": "[%key:component::zwave_js::services::set_value::fields::command_class::name%]",
+          "description": "The ID of the command class that you want to issue a command to."
+        },
+        "endpoint": {
+          "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]",
+          "description": "The endpoint to call the API on. If an endpoint is specified, that endpoint will be targeted for all nodes associated with the target areas, devices, and/or entities. If an endpoint is not specified, the root endpoint (0) will be targeted for nodes associated with target areas and devices, and the endpoint for the primary value of each entity will be targeted."
+        },
+        "method_name": {
+          "name": "Method name",
+          "description": "The name of the API method to call. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods."
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters."
+        }
+      }
     }
   }
 }

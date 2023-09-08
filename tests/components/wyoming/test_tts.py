@@ -8,7 +8,7 @@ import wave
 import pytest
 from wyoming.audio import AudioChunk, AudioStop
 
-from homeassistant.components import tts
+from homeassistant.components import tts, wyoming
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import DATA_INSTANCES
@@ -31,7 +31,11 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     assert entity is not None
 
     assert entity.supported_languages == ["en-US"]
-    assert entity.supported_options == [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE]
+    assert entity.supported_options == [
+        tts.ATTR_AUDIO_OUTPUT,
+        tts.ATTR_VOICE,
+        wyoming.ATTR_SPEAKER,
+    ]
     voices = entity.async_get_supported_voices("en-US")
     assert len(voices) == 1
     assert voices[0].name == "Test Voice"
@@ -137,3 +141,28 @@ async def test_get_tts_audio_audio_oserror(
                 hass, "Hello world", "tts.test_tts", hass.config.language
             ),
         )
+
+
+async def test_voice_speaker(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
+    """Test using a different voice and speaker."""
+    audio = bytes(100)
+    audio_events = [
+        AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
+        AudioStop().event(),
+    ]
+
+    with patch(
+        "homeassistant.components.wyoming.tts.AsyncTcpClient",
+        MockAsyncTcpClient(audio_events),
+    ) as mock_client:
+        await tts.async_get_media_source_audio(
+            hass,
+            tts.generate_media_source_id(
+                hass,
+                "Hello world",
+                "tts.test_tts",
+                "en-US",
+                options={tts.ATTR_VOICE: "voice1", wyoming.ATTR_SPEAKER: "speaker1"},
+            ),
+        )
+        assert mock_client.written == snapshot

@@ -65,40 +65,6 @@ async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("button.my_mazda3_start_engine")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_start_engine"
-    state = hass.states.get("button.my_mazda3_start_engine")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Start engine"
-    assert state.attributes.get(ATTR_ICON) == "mdi:engine"
-
-    entry = entity_registry.async_get("button.my_mazda3_stop_engine")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_stop_engine"
-    state = hass.states.get("button.my_mazda3_stop_engine")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Stop engine"
-    assert state.attributes.get(ATTR_ICON) == "mdi:engine-off"
-
-    entry = entity_registry.async_get("button.my_mazda3_turn_on_hazard_lights")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_turn_on_hazard_lights"
-    state = hass.states.get("button.my_mazda3_turn_on_hazard_lights")
-    assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Turn on hazard lights"
-    assert state.attributes.get(ATTR_ICON) == "mdi:hazard-lights"
-
-    entry = entity_registry.async_get("button.my_mazda3_turn_off_hazard_lights")
-    assert entry
-    assert entry.unique_id == "JM000000000000000_turn_off_hazard_lights"
-    state = hass.states.get("button.my_mazda3_turn_off_hazard_lights")
-    assert state
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Turn off hazard lights"
-    )
-    assert state.attributes.get(ATTR_ICON) == "mdi:hazard-lights"
-
     entry = entity_registry.async_get("button.my_mazda3_refresh_status")
     assert entry
     assert entry.unique_id == "JM000000000000000_refresh_vehicle_status"
@@ -109,20 +75,45 @@ async def test_button_setup_electric_vehicle(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("entity_id_suffix", "api_method_name"),
+    ("electric_vehicle", "entity_id_suffix"),
     [
-        ("start_engine", "start_engine"),
-        ("stop_engine", "stop_engine"),
-        ("turn_on_hazard_lights", "turn_on_hazard_lights"),
-        ("turn_off_hazard_lights", "turn_off_hazard_lights"),
-        ("refresh_status", "refresh_vehicle_status"),
+        (True, "start_engine"),
+        (True, "stop_engine"),
+        (True, "turn_on_hazard_lights"),
+        (True, "turn_off_hazard_lights"),
+        (False, "refresh_status"),
+    ],
+)
+async def test_button_not_created(
+    hass: HomeAssistant, electric_vehicle, entity_id_suffix
+) -> None:
+    """Test that button entities are not created when they should not be."""
+    await init_integration(hass, electric_vehicle=electric_vehicle)
+
+    entity_registry = er.async_get(hass)
+
+    entity_id = f"button.my_mazda3_{entity_id_suffix}"
+    entry = entity_registry.async_get(entity_id)
+    assert entry is None
+    state = hass.states.get(entity_id)
+    assert state is None
+
+
+@pytest.mark.parametrize(
+    ("electric_vehicle", "entity_id_suffix", "api_method_name"),
+    [
+        (False, "start_engine", "start_engine"),
+        (False, "stop_engine", "stop_engine"),
+        (False, "turn_on_hazard_lights", "turn_on_hazard_lights"),
+        (False, "turn_off_hazard_lights", "turn_off_hazard_lights"),
+        (True, "refresh_status", "refresh_vehicle_status"),
     ],
 )
 async def test_button_press(
-    hass: HomeAssistant, entity_id_suffix, api_method_name
+    hass: HomeAssistant, electric_vehicle, entity_id_suffix, api_method_name
 ) -> None:
     """Test pressing the button entities."""
-    client_mock = await init_integration(hass, electric_vehicle=True)
+    client_mock = await init_integration(hass, electric_vehicle=electric_vehicle)
 
     await hass.services.async_call(
         BUTTON_DOMAIN,

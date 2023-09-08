@@ -112,6 +112,10 @@ def thermostat_fixture(device_factory):
             ],
             Attribute.thermostat_operating_state: "idle",
             Attribute.humidity: 34,
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
         },
     )
     device.status.attributes[Attribute.temperature] = Status(70, "F", None)
@@ -576,10 +580,14 @@ async def test_entity_and_device_attributes(hass: HomeAssistant, thermostat) -> 
     assert entry
     assert entry.unique_id == thermostat.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
+    entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, thermostat.device_id)}
+    )
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, thermostat.device_id)}
     assert entry.name == thermostat.label
-    assert entry.model == thermostat.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
