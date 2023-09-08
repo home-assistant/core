@@ -108,8 +108,6 @@ def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: 
 async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
-    _LOGGER.debug("Starting to migrate unique ids for address: %s", address)
-
     ent_reg = entity_async_get(hass)
 
     device_registry = device_async_get(hass)
