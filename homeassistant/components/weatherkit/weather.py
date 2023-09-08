@@ -1,7 +1,7 @@
 """Weather entity for Apple WeatherKit integration."""
 
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.weather import (
     Forecast,
@@ -11,15 +11,14 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
-    CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTRIBUTION, DOMAIN
@@ -122,6 +121,8 @@ class WeatherKitWeather(
     _attr_attribution = ATTRIBUTION
 
     _attr_has_entity_name = True
+    _attr_name = None
+
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_pressure_unit = UnitOfPressure.MBAR
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
@@ -139,31 +140,32 @@ class WeatherKitWeather(
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
         self._config = config
+        self._attr_unique_id = (
+            f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
+        )
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Apple Weather",
+        )
 
     @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        location = self._config[CONF_LOCATION]
-        return f"{location[CONF_LATITUDE]}-{location[CONF_LONGITUDE]}"
+    def data(self) -> dict[str, Any]:
+        """Return coordinator data."""
+        return self.coordinator.data
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        name: str = self._config.get(CONF_NAME, "Apple Weather")
-        return name
+    def current_weather(self) -> dict[str, Any]:
+        """Return current weather data."""
+        return self.coordinator.data.get("currentWeather")
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        condition_code = self.coordinator.data.get("currentWeather").get(
-            "conditionCode"
-        )
+        condition_code = cast(str, self.current_weather.get("conditionCode"))
         condition = condition_code_to_hass[condition_code]
 
-        if (
-            condition == "sunny"
-            and self.coordinator.data.get("currentWeather").get("daylight") is False
-        ):
+        if condition == "sunny" and self.current_weather.get("daylight") is False:
             condition = "clear-night"
 
         return condition
@@ -171,85 +173,74 @@ class WeatherKitWeather(
     @property
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
-        temperature = self.coordinator.data.get("currentWeather").get("temperature")
-        return temperature
+        return self.current_weather.get("temperature")
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the current apparent_temperature."""
-        apparent_temperature = self.coordinator.data.get("currentWeather").get(
-            "temperatureApparent"
-        )
-        return apparent_temperature
+        return self.current_weather.get("temperatureApparent")
 
     @property
     def native_dew_point(self) -> float | None:
         """Return the current dew_point."""
-        dew_point = self.coordinator.data.get("currentWeather").get(
-            "temperatureDewPoint"
-        )
-        return dew_point
+        return self.current_weather.get("temperatureDewPoint")
 
     @property
     def native_pressure(self) -> float | None:
         """Return the current pressure."""
-        pressure = self.coordinator.data.get("currentWeather").get("pressure")
-        return pressure
+        return self.current_weather.get("pressure")
 
     @property
     def humidity(self) -> float | None:
         """Return the current humidity."""
-        humidity = self.coordinator.data.get("currentWeather").get("humidity")
-        return humidity * 100
+        return cast(float, self.current_weather.get("humidity")) * 100
 
     @property
-    def cloud_coverage(self) -> int | None:
+    def cloud_coverage(self) -> float | None:
         """Return the current cloud_coverage."""
-        cloud_coverage = self.coordinator.data.get("currentWeather").get("cloudCover")
-        return cloud_coverage * 100
+        return cast(float, self.current_weather.get("cloudCover")) * 100
 
     @property
     def uv_index(self) -> float | None:
         """Return the current uv_index."""
-        uv_index = self.coordinator.data.get("currentWeather").get("uvIndex")
-        return uv_index
+        return self.current_weather.get("uvIndex")
 
     @property
     def native_visibility(self) -> float | None:
         """Return the current visibility."""
-        visibility = self.coordinator.data.get("currentWeather").get("visibility")
-        return visibility / 1000
+        return cast(float, self.current_weather.get("visibility")) / 1000
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the current wind_gust_speed."""
-        wind_gust_speed = self.coordinator.data.get("currentWeather").get("windGust")
-        return wind_gust_speed
+        return self.current_weather.get("windGust")
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the current wind_speed."""
-        wind_speed = self.coordinator.data.get("currentWeather").get("windSpeed")
-        return wind_speed
+        return self.current_weather.get("windSpeed")
 
     @property
     def wind_bearing(self) -> float | None:
         """Return the current wind_bearing."""
-        wind_bearing = self.coordinator.data.get("currentWeather").get("windDirection")
-        return wind_bearing
+        return self.current_weather.get("windDirection")
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        if not self.coordinator.data.get("forecastDaily"):
+        daily_forecast = self.data.get("forecastDaily")
+        if not daily_forecast:
             return None
-        forecast = self.coordinator.data.get("forecastDaily").get("days")
+
+        forecast = daily_forecast.get("days")
         return [_map_daily_forecast(f) for f in forecast]
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
-        if not self.coordinator.data.get("forecastHourly"):
+        hourly_forecast = self.data.get("forecastHourly")
+        if not hourly_forecast:
             return None
-        forecast = self.coordinator.data.get("forecastHourly").get("hours")
+
+        forecast = hourly_forecast.get("hours")
         return [_map_hourly_forecast(f) for f in forecast]

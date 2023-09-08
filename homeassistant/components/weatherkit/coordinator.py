@@ -11,7 +11,7 @@ from apple_weatherkit.client import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,7 +25,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     config_entry: ConfigEntry
     supported_data_sets: list[
         Literal["currentWeather", "forecastDaily", "forecastHourly"]
-    ] | None
+    ] | None = None
 
     def __init__(
         self,
@@ -34,7 +34,6 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize."""
         self.client = client
-        self.supported_data_sets = None
         super().__init__(
             hass=hass,
             logger=LOGGER,
@@ -44,8 +43,8 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_supported_data_sets(self):
         supported_data_sets = await self.client.get_availability(
-            self.config_entry.data[CONF_LOCATION][CONF_LATITUDE],
-            self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+            self.config_entry.data[CONF_LATITUDE],
+            self.config_entry.data[CONF_LONGITUDE],
         )
 
         requested_data_sets = ["currentWeather", "forecastDaily", "forecastHourly"]
@@ -65,8 +64,8 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
                 await self._update_supported_data_sets()
 
             return await self.client.get_weather_data(
-                self.config_entry.data[CONF_LOCATION][CONF_LATITUDE],
-                self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+                self.config_entry.data[CONF_LATITUDE],
+                self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
             )
         except WeatherKitApiClientAuthenticationError as exception:

@@ -19,18 +19,26 @@ from homeassistant.components.weatherkit.const import (
     CONF_TEAM_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-config_example_data = {
-    CONF_NAME: "Home",
+example_user_input = {
     CONF_LOCATION: {
         CONF_LATITUDE: 35.4690101707532,
         CONF_LONGITUDE: 135.74817234593166,
     },
+    CONF_KEY_ID: "QABCDEFG123",
+    CONF_SERVICE_ID: "io.home-assistant.testing",
+    CONF_TEAM_ID: "ABCD123456",
+    CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nwhateverkey\n-----END PRIVATE KEY-----",
+}
+
+example_config_data = {
+    CONF_LATITUDE: 35.4690101707532,
+    CONF_LONGITUDE: 135.74817234593166,
     CONF_KEY_ID: "QABCDEFG123",
     CONF_SERVICE_ID: "io.home-assistant.testing",
     CONF_TEAM_ID: "ABCD123456",
@@ -51,7 +59,7 @@ async def _test_exception_generates_error(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            config_example_data,
+            example_user_input,
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -72,27 +80,30 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            config_example_data,
+            example_user_input,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == config_example_data[CONF_NAME]
-    assert result2["data"] == config_example_data
+
+    location = example_user_input[CONF_LOCATION]
+    assert result2["title"] == f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
+
+    assert result2["data"] == example_config_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     await _test_exception_generates_error(
-        hass, WeatherKitApiClientAuthenticationError, "auth"
+        hass, WeatherKitApiClientAuthenticationError, "invalid_auth"
     )
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection errors."""
     await _test_exception_generates_error(
-        hass, WeatherKitApiClientCommunicationError, "connection"
+        hass, WeatherKitApiClientCommunicationError, "cannot_connect"
     )
 
 
@@ -114,7 +125,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            config_example_data,
+            example_user_input,
         )
 
     assert result2["type"] == FlowResultType.FORM

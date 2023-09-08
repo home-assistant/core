@@ -13,7 +13,7 @@ from apple_weatherkit.client import (
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     LocationSelector,
@@ -33,7 +33,6 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Home"): str,
         vol.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False, icon="")
         ),
@@ -70,19 +69,24 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._test_config(user_input)
             except WeatherKitUnsupportedLocationError as exception:
                 LOGGER.error(exception)
-                _errors["base"] = "unsupported_location"
+                errors["base"] = "unsupported_location"
             except WeatherKitApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
-                _errors["base"] = "auth"
+                errors["base"] = "invalid_auth"
             except WeatherKitApiClientCommunicationError as exception:
                 LOGGER.error(exception)
-                _errors["base"] = "connection"
+                errors["base"] = "cannot_connect"
             except WeatherKitApiClientError as exception:
                 LOGGER.exception(exception)
-                _errors["base"] = "unknown"
+                errors["base"] = "unknown"
             else:
+                # Flatten location
+                user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
+                user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
+                del user_input[CONF_LOCATION]
+
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
                     data=user_input,
                 )
 
@@ -97,7 +101,7 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors=_errors,
+            errors=errors,
         )
 
     async def _test_config(self, user_input: dict[str, Any]) -> None:
