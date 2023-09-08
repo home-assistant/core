@@ -255,6 +255,10 @@ class ModbusHub:
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
+        if CONF_CLOSE_COMM_ON_ERROR in client_config:
+            _LOGGER.warning(
+                "CLOSE_COMM_ON_ERROR is deprecated since 2023.10.0 and will be removed in 2024.3"
+            )
         # generic configuration
         self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
@@ -274,7 +278,6 @@ class ModbusHub:
         self._pb_params = {
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
-            "reset_socket": client_config[CONF_CLOSE_COMM_ON_ERROR],
             "retries": client_config[CONF_RETRIES],
             "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
         }
