@@ -32,7 +32,6 @@ class Life360UpdateLocationButton(
 ):
     """Represent an Life360 Update Location button."""
 
-    _attr_unique_id: str
     _attr_has_entity_name = True
     _attr_translation_key = "update_location"
 
