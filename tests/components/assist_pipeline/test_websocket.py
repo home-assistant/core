@@ -1633,3 +1633,29 @@ async def test_list_pipeline_languages(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"languages": ["en"]}
+
+
+async def test_list_pipeline_languages_with_aliases(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test listing pipeline languages using aliases."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.conversation.async_get_conversation_languages",
+        return_value={"he", "nb"},
+    ), patch(
+        "homeassistant.components.stt.async_get_speech_to_text_languages",
+        return_value={"he", "no"},
+    ), patch(
+        "homeassistant.components.tts.async_get_text_to_speech_languages",
+        return_value={"iw", "nb"},
+    ):
+        await client.send_json_auto_id({"type": "assist_pipeline/language/list"})
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {"languages": ["he", "nb"]}
