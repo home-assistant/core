@@ -61,10 +61,10 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self,
-        user_input: dict | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by the user."""
-        _errors = {}
+        errors = {}
         if user_input is not None:
             try:
                 await self._test_config(user_input)
@@ -100,7 +100,7 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=_errors,
         )
 
-    async def _test_config(self, user_input) -> None:
+    async def _test_config(self, user_input: dict[str, Any]) -> None:
         """Validate credentials."""
         client = WeatherKitApiClient(
             key_id=user_input[CONF_KEY_ID],
