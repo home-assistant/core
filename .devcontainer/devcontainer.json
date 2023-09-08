@@ -40,7 +40,6 @@
             "path": "/usr/bin/zsh"
           }
         },
-        "terminal.integrated.defaultProfile.linux": "zsh",
         "yaml.customTags": [
           "!input scalar",
           "!secret scalar",
