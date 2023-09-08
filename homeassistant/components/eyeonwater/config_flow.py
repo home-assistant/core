@@ -26,7 +26,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def get_hostname_for_country(hass) -> str:
+def get_hostname_for_country(hass: core.HomeAssistant) -> str:
     """Return EOW hostname based on HA country."""
     if hass.config.country == "CA":
         return CONF_EOW_HOSTNAME_CA
