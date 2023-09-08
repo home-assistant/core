@@ -186,3 +186,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(DATA_DEVICE)
 
     return unload_ok
+
+
+async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Reload Switcher component when options changed."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
