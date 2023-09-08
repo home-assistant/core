@@ -17,11 +17,9 @@ class EyeOnWaterData:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
         account: Account,
     ) -> None:
         """Initialize the data coordintator."""
-        self._entry = entry
         self.account = account
         websession = aiohttp_client.async_get_clientsession(hass)
         self.client = Client(websession, account)

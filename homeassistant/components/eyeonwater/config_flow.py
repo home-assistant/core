@@ -1,7 +1,7 @@
 """Config flow for EyeOnWater integration."""
 import asyncio
 import logging
-from typing import Any
+from typing import Any, MappingProxyType
 
 from aiohttp import ClientError
 from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
@@ -37,7 +37,7 @@ def get_hostname_for_country(hass: core.HomeAssistant) -> str:
 
 def create_account_from_config(
     hass: core.HomeAssistant,
-    data: dict[str, Any],
+    data: MappingProxyType[str, Any],
 ) -> Account:
     """Create account login from config."""
     eow_hostname = get_hostname_for_country(hass)
@@ -72,7 +72,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": account.username}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EyeOnWater."""
 
     VERSION = 1
