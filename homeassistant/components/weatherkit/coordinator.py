@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Literal
 
 from apple_weatherkit.client import (
     WeatherKitApiClient,
@@ -22,6 +23,9 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
     config_entry: ConfigEntry
+    supported_data_sets: list[
+        Literal["currentWeather", "forecastDaily", "forecastHourly"]
+    ] | None
 
     def __init__(
         self,
@@ -30,6 +34,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize."""
         self.client = client
+        self.supported_data_sets = None
         super().__init__(
             hass=hass,
             logger=LOGGER,
@@ -37,13 +42,32 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=15),
         )
 
+    async def _update_supported_data_sets(self):
+        supported_data_sets = await self.client.get_availability(
+            self.config_entry.data[CONF_LOCATION][CONF_LATITUDE],
+            self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+        )
+
+        requested_data_sets = ["currentWeather", "forecastDaily", "forecastHourly"]
+
+        self.supported_data_sets = [
+            data_set
+            for data_set in requested_data_sets
+            if data_set in supported_data_sets
+        ]
+
+        LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
+
     async def _async_update_data(self):
         """Update the current weather and forecasts."""
         try:
+            if not self.supported_data_sets:
+                await self._update_supported_data_sets()
+
             return await self.client.get_weather_data(
                 self.config_entry.data[CONF_LOCATION][CONF_LATITUDE],
                 self.config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
-                ["currentWeather", "forecastDaily", "forecastHourly"],
+                self.supported_data_sets,
             )
         except WeatherKitApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
