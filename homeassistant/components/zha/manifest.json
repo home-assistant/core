@@ -21,7 +21,7 @@
     "universal_silabs_flasher"
   ],
   "requirements": [
-    "bellows==0.36.2",
+    "bellows==0.36.3",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
     "zha-quirks==0.0.103",

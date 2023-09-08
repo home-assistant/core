@@ -29,7 +29,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.7.1
 
 # homeassistant.components.tasmota
-HATasmota==0.7.0
+HATasmota==0.7.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -327,7 +327,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.4
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.8
+aiorecollect==2023.09.0
 
 # homeassistant.components.ridwell
 aioridwell==2023.07.0
@@ -369,7 +369,7 @@ aiounifi==61
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.0.6
+aiovodafone==0.1.0
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -509,7 +509,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.36.2
+bellows==0.36.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected==0.14.0
@@ -518,7 +518,7 @@ bimmer-connected==0.14.0
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.2
+bleak-retry-connector==3.1.3
 
 # homeassistant.components.bluetooth
 bleak==0.21.0
@@ -540,10 +540,10 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.16.0
+bluetooth-adapters==0.16.1
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.2.1
+bluetooth-auto-recovery==1.2.2
 
 # homeassistant.components.bluetooth
 # homeassistant.components.esphome
@@ -641,7 +641,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.94.1
+dbus-fast==1.95.2
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -751,7 +751,7 @@ env-canada==0.5.36
 ephem==4.1.2
 
 # homeassistant.components.epson
-epson-projector==0.5.0
+epson-projector==0.5.1
 
 # homeassistant.components.epsonworkforce
 epsonprinter==0.0.9
@@ -994,7 +994,7 @@ hole==0.8.0
 holidays==0.28
 
 # homeassistant.components.frontend
-home-assistant-frontend==20230906.1
+home-assistant-frontend==20230908.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.8.2
@@ -1213,7 +1213,7 @@ micloud==0.5
 mill-local==0.2.0
 
 # homeassistant.components.mill
-millheater==0.11.1
+millheater==0.11.2
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1671,7 +1671,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.9.1
+pyenphase==1.11.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1821,7 +1821,7 @@ pylitejet==0.5.0
 pylitterbot==2023.4.5
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.18.1
+pylutron-caseta==0.18.2
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1851,7 +1851,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.4.1
+pymodbus==3.5.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1916,7 +1916,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.10.1
+pyoverkiz==1.9.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2369,10 +2369,10 @@ securetar==2023.3.0
 sendgrid==6.8.2
 
 # homeassistant.components.sense
-sense-energy==0.12.0
+sense-energy==0.12.1
 
 # homeassistant.components.emulated_kasa
-sense_energy==0.12.0
+sense_energy==0.12.1
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.0
@@ -2766,7 +2766,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.91.1
+zeroconf==0.98.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
