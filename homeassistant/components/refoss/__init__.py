@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW
+from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
 from .util import get_refoss_socket_server
 
 PLATFORMS: Final = [
@@ -102,18 +102,21 @@ class DeviceListener(RefossDeviceListener):
         self.device_manager = device_manager
         self.device_ids = device_ids
 
+    def update_device(self, device: BaseDevice) -> None:
+        """Update device status."""
+        if device.uuid in self.device_ids:
+            dispatcher_send(
+                self.hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}"
+            )
+
     def add_device(self, device: BaseDevice) -> None:
         """Add device."""
-        self.hass.add_job(self.async_remove_device, device.uuid)
+        self.async_remove_device(device.uuid)
 
         self.device_ids.add(device.uuid)
         dispatcher_send(self.hass, REFOSS_DISCOVERY_NEW, [device.uuid])
+        dispatcher_send(self.hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}")
         LOGGER.debug("Add device: %s", device.device_type)
-
-    def remove_device(self, device_id: str) -> None:
-        """Remove device removed listener."""
-        LOGGER.debug("Remove device: %s", device_id)
-        self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
     def async_remove_device(self, device_id: str) -> None:

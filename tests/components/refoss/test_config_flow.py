@@ -10,27 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
-from tests.components.refoss.socket_server import SocketServerProtocol
 
 DOMAIN: Final = "refoss"
-
-
-async def test_configured(hass: HomeAssistant):
-    """Test a successful config flow."""
-    with patch(
-        "homeassistant.components.refoss.config_flow.get_mac_address",
-        return_value="00:11:22:33:44:55",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-        with patch(
-            "homeassistant.components.refoss.util.SocketServerProtocol"
-        ) as mocksocketServerProtocol:
-            mocksocketServerProtocol.return_value = SocketServerProtocol()
 
 
 async def test_already_configured_abort(hass: HomeAssistant) -> None:

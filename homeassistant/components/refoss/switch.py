@@ -71,25 +71,23 @@ class SwitchEntityWrapper(RefossEntity, SwitchEntity):
         """is_on."""
         return self.device.is_on(channel=self._channel_id)
 
-    async def async_update(self):
-        """async_update."""
-        await super().async_update()
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """async_turn_on."""
         LOGGER.info(
             f"Turning on,device_type: {self.device.device_type}, channel: {self._channel_id}"
         )
         await self.device.async_turn_on(self._channel_id)
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """async_turn_off."""
         LOGGER.info(
             f"Turning off,device_type: {self.device.device_type}, channel: {self._channel_id}"
         )
-
         await self.device.async_turn_off(self._channel_id)
+        self.async_write_ha_state()
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """async_toggle."""
         await self.device.async_toggle(channel=self._channel_id)
+        self.async_write_ha_state()
