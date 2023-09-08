@@ -10,13 +10,15 @@ from airthings_ble import AirthingsBluetoothDeviceData
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import async_get as device_async_get
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    async_get as device_async_get,
+)
 from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
+    async_entries_for_device,
     async_get as entity_async_get,
-    async_migrate_entries,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -44,8 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Airthings device with address {address}"
         )
 
-    await migrate_unique_id(hass, entry, address)
     update_device_identifiers(hass, entry, address)
+    await migrate_unique_id(hass, entry, address)
 
     async def _async_update_method():
         """Get data from Airthings BLE."""
@@ -80,14 +82,18 @@ def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: 
     """Update device identifiers to new identifiers."""
     device_registry = device_async_get(hass)
     device_entry = device_registry.async_get_device(
-        identifiers={
+        connections={
             (
-                DOMAIN,
+                CONNECTION_BLUETOOTH,
                 address,
             )
         }
     )
-    if device_entry and entry.entry_id in device_entry.config_entries:
+    if (
+        device_entry
+        and not device_entry.identifiers
+        and entry.entry_id in device_entry.config_entries
+    ):
         new_identifiers = {(DOMAIN, address)}
         _LOGGER.debug(
             "Updating device id '%s' with new identifiers '%s'",
@@ -102,37 +108,65 @@ def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: 
 async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
-    @callback
-    def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
-        """Define a callback to migrate Airthings BLE entities to new unique IDs.
+    _LOGGER.debug("Starting to migrate unique ids for address: %s", address)
 
-        Old: {name}_description.key
-        New: {address}_description.key
-        """
-        _LOGGER.debug("Migrating starting for '%s'", address)
+    ent_reg = entity_async_get(hass)
 
-        if entity_entry.unique_id.startswith(address):
-            # Already migrated this entity
-            return None
+    device_registry = device_async_get(hass)
+    entity_registry = entity_async_get(hass)
 
-        if name := re.sub(r"^.*?_", "", entity_entry.unique_id.lower()):
-            new_unique_id = f"{address}_{name}"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, address)})
 
-            ent_reg = entity_async_get(hass)
-            for entity in ent_reg.entities.values():
-                if new_unique_id == entity.unique_id:
-                    _LOGGER.info(
-                        "Could not migrate, entity with unique ID '%s' already exists",
-                        new_unique_id,
-                    )
-                    return None
+    if not device:
+        return
 
-            if entity_entry.unique_id != new_unique_id:
-                return {"new_unique_id": new_unique_id}
+    entities = async_entries_for_device(
+        entity_registry,
+        device_id=device.id,
+        include_disabled_entities=True,
+    )
 
-        return None
+    def _migrate_unique_id(entity_id: str, new_unique_id: str):
+        _LOGGER.debug(
+            "Migrating entity '%s' to unique id '%s'", entity_id, new_unique_id
+        )
+        ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
 
-    await async_migrate_entries(hass, entry.entry_id, async_migrate_callback)
+    unique_ids: dict[str, dict[str, str]] = {}
+
+    for entity in entities:
+        # Need to extract the sensor type from the end of the unique id
+        if sensor_name := re.sub(r"^.*?_", "", entity.unique_id):
+            if sensor_name not in unique_ids:
+                unique_ids[sensor_name] = {}
+            if entity.unique_id.startswith(address):
+                unique_ids[sensor_name]["v3"] = entity.entity_id
+            elif "(" in entity.unique_id:
+                unique_ids[sensor_name]["v2"] = entity.entity_id
+            else:
+                unique_ids[sensor_name]["v1"] = entity.entity_id
+        else:
+            _LOGGER.debug(
+                "Could not find sensor name, aborting migration ('%s')",
+                entity.unique_id,
+            )
+
+    # Go through all the sensors and try to migrate the oldest format first. If it
+    # does not exist, try the format introduced in 2023.9.0. Only migrate if the
+    # newest correct format does not exist.
+    for sensor_type, versions in unique_ids.items():
+        if versions.get("v3"):
+            # Already migrated, skip this sensor
+            continue
+
+        new_unique_id = f"{address}_{sensor_type}"
+        if entity_id := versions.get("v1"):
+            _migrate_unique_id(
+                entity_id=entity_id,
+                new_unique_id=new_unique_id,
+            )
+        elif entity_id := versions.get("v2"):
+            _migrate_unique_id(entity_id=entity_id, new_unique_id=new_unique_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
