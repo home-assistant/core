@@ -240,7 +240,7 @@ class WeatherKitWeather(
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
-        """Return the forecast."""
+        """Return the daily forecast."""
         if not self.coordinator.data.get("forecastDaily"):
             return None
         forecast = self.coordinator.data.get("forecastDaily").get("days")
@@ -248,6 +248,7 @@ class WeatherKitWeather(
 
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast."""
         if not self.coordinator.data.get("forecastHourly"):
             return None
         forecast = self.coordinator.data.get("forecastHourly").get("hours")
