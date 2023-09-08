@@ -41,14 +41,15 @@ async def validate_input(hass: core.HomeAssistant, data):
         async with AjaxSession.async_create(
             data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
         ) as ruckus:
-            system_info = await ruckus.api.get_system_info(SystemStat.SYSINFO)
-            zd_serial = system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
             mesh_info = await ruckus.api.get_mesh_info()
-            mesh_name = mesh_info[API_MESH_NAME]
+            system_info = await ruckus.api.get_system_info(SystemStat.SYSINFO)
     except AuthenticationError as autherr:
         raise InvalidAuth from autherr
     except (ConnectionError, SchemaError) as connerr:
         raise CannotConnect from connerr
+
+    mesh_name = mesh_info[API_MESH_NAME]
+    zd_serial = system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
     return {
         KEY_SYS_TITLE: mesh_name,
