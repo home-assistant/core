@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .backports import anext  # pylint: disable=redefined-builtin
 from .const import (
     CONNECTIVITY_UPDATE_DELAY,
     LOG_SESSION_REFRESH_DELAY,
