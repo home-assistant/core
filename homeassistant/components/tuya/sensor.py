@@ -536,7 +536,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.COUNTDOWN,
             name="Countdown",
-            icon="mdi:timer-outline",
+            icon="mdi:timer-cog-outline",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         *BATTERY_SENSORS,
