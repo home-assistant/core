@@ -1,21 +1,23 @@
 """Support for EyeOnWater sensors."""
-import datetime
 import logging
 from typing import Any
+
+from pyonwater import DataPoint, Meter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from pyonwater import DataPoint, Meter
 
 from .const import DATA_COORDINATOR, DATA_SMART_METER, DOMAIN, WATER_METER_NAME
 
@@ -23,7 +25,11 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.addHandler(logging.StreamHandler())
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the EyeOnWater sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     meters = hass.data[DOMAIN][config_entry.entry_id][DATA_SMART_METER].meters
