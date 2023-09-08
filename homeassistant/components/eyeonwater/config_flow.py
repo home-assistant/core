@@ -8,7 +8,6 @@ from aiohttp import ClientError
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from pyonwater import Account, Client, EyeOnWaterAPIError, EyeOnWaterAuthError
 
 from .const import DOMAIN
@@ -42,7 +41,6 @@ def create_account_from_config(
     """Create account login from config."""
     eow_hostname = get_hostname_for_country(hass)
 
-    metric_measurement_system = hass.config.units is METRIC_SYSTEM
     username = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
 
@@ -50,7 +48,6 @@ def create_account_from_config(
         eow_hostname=eow_hostname,
         username=username,
         password=password,
-        metric_measurement_system=metric_measurement_system,
     )
 
 
