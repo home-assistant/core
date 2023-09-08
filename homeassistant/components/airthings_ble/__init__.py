@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     update_device_identifiers(hass, entry, address)
-    await migrate_unique_id(hass, entry, address)
+    migrate_unique_id(hass, entry, address)
 
     async def _async_update_method():
         """Get data from Airthings BLE."""
@@ -105,7 +105,7 @@ def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: 
         )
 
 
-async def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
+def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
     ent_reg = entity_async_get(hass)
