@@ -1512,7 +1512,10 @@ async def test_render_template_with_delayed_error(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"error": "UndefinedError: 'explode' is undefined"}
+    assert event == {
+        "error": "UndefinedError: 'explode' is undefined",
+        "level": "ERROR",
+    }
 
     assert "Template variable error" not in caplog.text
     assert "Template variable warning" not in caplog.text
