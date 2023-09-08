@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import aiohttp
 from pyoctoprintapi import OctoprintClient
@@ -11,23 +12,26 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
+    CONF_PROFILE_NAME,
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 
-from .const import DOMAIN
+from .const import CONF_BUADRATE, DOMAIN, SERVICE_CONNECT
 from .coordinator import OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,6 +125,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_CONNECT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Optional(CONF_PROFILE_NAME): cv.string,
+        vol.Optional(CONF_PORT): cv.string,
+        vol.Optional(CONF_BUADRATE): cv.positive_int,
+    }
+)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
@@ -191,6 +204,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    async def async_printer_connect(call: ServiceCall) -> None:
+        """Connect to a printer."""
+        client = async_get_client_for_service_call(hass, call)
+        await client.connect(
+            printer_profile=call.data.get(CONF_PROFILE_NAME),
+            port=call.data.get(CONF_PORT),
+            baud_rate=call.data.get(CONF_BUADRATE),
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_CONNECT,
+            async_printer_connect,
+            schema=SERVICE_CONNECT_SCHEMA,
+        )
+
     return True
 
 
@@ -202,3 +232,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def async_get_client_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> OctoprintClient:
+    """Get the client related to a service call (by device ID)."""
+    device_id = call.data[CONF_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if device_entry := device_registry.async_get(device_id):
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return cast(
+                    OctoprintClient, hass.data[DOMAIN][entry.entry_id]["client"]
+                )
+
+    raise ValueError(f"No client for device ID: {device_id}")

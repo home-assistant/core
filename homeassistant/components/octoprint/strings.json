@@ -32,5 +32,29 @@
     "progress": {
       "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
     }
+  },
+  "services": {
+    "printer_connect": {
+      "name": "Connect to a printer",
+      "description": "Instructs the octoprint server to connect to a printer.",
+      "fields": {
+        "device_id": {
+          "name": "Server",
+          "description": "The server that should connect."
+        },
+        "profile_name": {
+          "name": "Profile Name",
+          "description": "Printer profile to connect with."
+        },
+        "port": {
+          "name": "Serial Port",
+          "description": "Port name to connect on."
+        },
+        "baudrate": {
+          "name": "Baudrate",
+          "description": "Baud rate."
+        }
+      }
+    }
   }
 }
