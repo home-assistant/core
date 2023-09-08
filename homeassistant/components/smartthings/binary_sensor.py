@@ -53,9 +53,17 @@ async def async_setup_entry(
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
-        for capability in broker.get_assigned(device.device_id, "binary_sensor"):
-            attrib = CAPABILITY_TO_ATTRIB[capability]
-            sensors.append(SmartThingsBinarySensor(device, attrib))
+        device_capabilities_for_binary_sensor = broker.get_assigned(
+            device.device_id, "binary_sensor"
+        )
+        for component in device.components:
+            if component in device.status.disabled_components:
+                continue
+            for capability in device.components[component]:
+                if capability not in device_capabilities_for_binary_sensor:
+                    continue
+                attrib = CAPABILITY_TO_ATTRIB[capability]
+                sensors.append(SmartThingsBinarySensor(device, component, attrib))
     async_add_entities(sensors)
 
 
@@ -69,25 +77,32 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     """Define a SmartThings Binary Sensor."""
 
-    def __init__(self, device, attribute):
+    def __init__(self, device, component, attribute):
         """Init the class."""
         super().__init__(device)
+        self._component = component
         self._attribute = attribute
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._attribute}"
+        if self._component == "main":
+            return f"{self._device.label} {self._attribute}"
+        return f"{self._device.label} {self._component} {self._attribute}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
+        if self._component == "main":
+            return f"{self._device.device_id}.{self._attribute}"
+        return f"{self._device.device_id}.{self._component}.{self._attribute}"
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._device.status.is_on(self._attribute)
+        if self._component == "main":
+            return self._device.status.is_on(self._attribute)
+        return self._device.status.components[self._component].is_on(self._attribute)
 
     @property
     def device_class(self):

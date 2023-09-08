@@ -358,6 +358,8 @@ async def smartapp_sync_subscriptions(
     capabilities = set()
     for device in devices:
         capabilities.update(device.capabilities)
+        for component in device.components:
+            capabilities.update(device.components[component])
     # Remove items not defined in the library
     capabilities.intersection_update(CAPABILITIES)
     # Remove unused capabilities
