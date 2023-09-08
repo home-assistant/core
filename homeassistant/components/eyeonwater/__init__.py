@@ -22,7 +22,6 @@ from .const import (
 from .coordinator import EyeOnWaterData
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.addHandler(logging.StreamHandler())
 
 PLATFORMS = [Platform.SENSOR]
 
