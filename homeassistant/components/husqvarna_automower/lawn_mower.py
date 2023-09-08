@@ -2,7 +2,6 @@
 import logging
 
 from aioautomower import AutomowerSession
-from aiohttp import ClientResponseError
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -53,7 +52,7 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     def __init__(self, session: AutomowerSession, idx: int) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(session, idx)
-        self._attr_unique_id = self.coordinator.session.data["data"][self.idx]["id"]
+        self._attr_unique_id = f"{self.mower_id}_lawn_mower"
 
     @property
     def available(self) -> bool:
@@ -96,27 +95,12 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
-        command_type = "actions"
-        payload = '{"data": {"type": "ResumeSchedule"}}'
-        try:
-            await self.coordinator.session.action(self.mower_id, payload, command_type)
-        except ClientResponseError as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+        await self.coordinator.session.resume_schedule(self.mower_id)
 
     async def async_pause(self) -> None:
         """Pauses the mower."""
-        command_type = "actions"
-        payload = '{"data": {"type": "Pause"}}'
-        try:
-            await self.coordinator.session.action(self.mower_id, payload, command_type)
-        except ClientResponseError as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+        await self.coordinator.session.pause_mowing(self.mower_id)
 
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
-        command_type = "actions"
-        payload = '{"data": {"type": "ParkUntilNextSchedule"}}'
-        try:
-            await self.coordinator.session.action(self.mower_id, payload, command_type)
-        except ClientResponseError as exception:
-            _LOGGER.error("Command couldn't be sent to the command que: %s", exception)
+        await self.coordinator.session.park_until_next_schedule(self.mower_id)
