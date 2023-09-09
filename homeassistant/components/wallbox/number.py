@@ -91,6 +91,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
             coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:3]
             in BIDIRECTIONAL_MODEL_PREFIXES
         )
+        self.native_step = 0.0001
 
     @property
     def native_max_value(self) -> float:
