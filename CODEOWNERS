@@ -1367,7 +1367,7 @@ build.json @home-assistant/supervisor
 /tests/components/venstar/ @garbled1
 /homeassistant/components/verisure/ @frenck @niro1987
 /tests/components/verisure/ @frenck @niro1987
-/homeassistant/components/versasense/ @flamm3blemuff1n
+/homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
