@@ -7,7 +7,8 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.snooz import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
+from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,6 +19,8 @@ from . import (
     TEST_ADDRESS,
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
+    TEST_SNOOZ_FIRMWARE_VERSION,
+    TEST_SNOOZ_MODEL,
 )
 
 from tests.common import MockConfigEntry
@@ -162,7 +165,12 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={
+            CONF_NAME: TEST_SNOOZ_DISPLAY_NAME,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+            CONF_MODEL: TEST_SNOOZ_MODEL,
+            CONF_FIRMWARE_VERSION: TEST_SNOOZ_FIRMWARE_VERSION,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -182,7 +190,12 @@ async def test_async_step_user_with_found_devices_already_setup(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={
+            CONF_NAME: TEST_SNOOZ_DISPLAY_NAME,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+            CONF_MODEL: TEST_SNOOZ_MODEL,
+            CONF_FIRMWARE_VERSION: TEST_SNOOZ_FIRMWARE_VERSION,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -203,7 +216,12 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={
+            CONF_NAME: TEST_SNOOZ_DISPLAY_NAME,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+            CONF_MODEL: TEST_SNOOZ_MODEL,
+            CONF_FIRMWARE_VERSION: TEST_SNOOZ_FIRMWARE_VERSION,
+        },
     )
     entry.add_to_hass(hass)
 
@@ -329,5 +347,7 @@ async def _test_setup_entry(
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         CONF_TOKEN: TEST_PAIRING_TOKEN,
+        CONF_MODEL: TEST_SNOOZ_MODEL,
+        CONF_FIRMWARE_VERSION: TEST_SNOOZ_FIRMWARE_VERSION,
     }
     assert result["result"].unique_id == TEST_ADDRESS

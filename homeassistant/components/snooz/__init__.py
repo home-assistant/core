@@ -1,17 +1,29 @@
 """The Snooz component."""
 from __future__ import annotations
+import asyncio
 
 import logging
+from pysnooz import (
+    SnoozAdvertisementData,
+    SnoozDeviceModel,
+    SnoozFirmwareVersion,
+    parse_snooz_advertisement,
+)
 
 from pysnooz.device import SnoozDevice
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfo,
+    BluetoothScanningMode,
+    async_ble_device_from_address,
+    async_process_advertisements,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_FIRMWARE_VERSION, DOMAIN, LOGGER, PLATFORMS
 from .models import SnoozConfigurationData
 
 
@@ -28,10 +40,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Snooz with address {address}. Try power cycling the device"
         )
 
-    device = SnoozDevice(ble_device, token)
+    token: str = entry.data[CONF_TOKEN]
+    model: int = entry.data[CONF_MODEL]
+    firmware_version: int = entry.data[CONF_FIRMWARE_VERSION]
+    adv_data = SnoozAdvertisementData(
+        SnoozDeviceModel(model), SnoozFirmwareVersion(firmware_version), token
+    )
+    device = SnoozDevice(ble_device, adv_data)
+
+    device_info = await device.async_get_info()
+
+    if device_info is None:
+        await device.async_disconnect()
+        raise ConfigEntryError("Failed to get device information")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SnoozConfigurationData(
-        ble_device, device, entry.title
+        ble_device, adv_data, device_info, device, entry.title
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -60,3 +84,71 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data.pop(DOMAIN)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate configuration entry."""
+
+    # up to date
+    if config_entry.version == 2:
+        return True
+
+    LOGGER.debug(
+        f"Migrating entry {config_entry.entry_id} from version {config_entry.version}"
+    )
+
+    address = config_entry.data[CONF_ADDRESS]
+
+    adv_data = await hass.async_create_task(
+        async_get_supported_advertisement(hass, address)
+    )
+
+    if adv_data is None:
+        LOGGER.error(
+            f"Could not find supported advertisement for address {address} while migrating entry {config_entry.entry_id}"
+        )
+        return False
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_MODEL: adv_data.model,
+            CONF_FIRMWARE_VERSION: adv_data.firmware_version,
+        },
+    )
+
+    LOGGER.debug(f"Migration complete. Model: {adv_data}")
+    return True
+
+
+async def async_get_supported_advertisement(
+    hass: HomeAssistant, address: str
+) -> SnoozAdvertisementData | None:
+    """Process advertisements for an address until a supported advertisement is found."""
+
+    def is_supported(
+        service_info: BluetoothServiceInfo,
+    ) -> bool:
+        if parse_snooz_advertisement(service_info) is None:
+            LOGGER.warning(
+                f"Skipped unsupported advertisement: {service_info.name} ({service_info.address})."
+            )
+            return False
+
+        return True
+
+    try:
+        info = await async_process_advertisements(
+            hass,
+            is_supported,
+            {"address": address},
+            BluetoothScanningMode.ACTIVE,
+            10,
+        )
+
+        return parse_snooz_advertisement(info)
+    except asyncio.TimeoutError:
+        pass
+
+    return None

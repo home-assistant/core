@@ -4,8 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import Mock
 
-from pysnooz.api import SnoozDeviceState, UnknownSnoozState
-from pysnooz.commands import SnoozCommandResult, SnoozCommandResultStatus
+from pysnooz import (
+    SnoozDeviceState,
+    UnknownSnoozState,
+    SnoozCommandResult,
+    SnoozCommandResultStatus,
+)
 from pysnooz.testing import MockSnoozDevice
 import pytest
 
@@ -42,6 +46,7 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -56,6 +61,7 @@ async def test_transition_on(hass: HomeAssistant, snooz_fan_entity_id: str) -> N
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -73,6 +79,7 @@ async def test_turn_on_with_percentage(
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == percentage
     assert ATTR_ASSUMED_STATE not in state.attributes
@@ -91,6 +98,7 @@ async def test_set_percentage(
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.attributes[fan.ATTR_PERCENTAGE] == percentage
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -114,6 +122,7 @@ async def test_set_0_percentage_turns_off(
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_OFF
     # doesn't overwrite percentage when turning off
     assert state.attributes[fan.ATTR_PERCENTAGE] == 66
@@ -130,6 +139,7 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> None:
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_OFF
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -144,6 +154,7 @@ async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> 
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_OFF
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -157,6 +168,7 @@ async def test_push_events(
     mock_connected_snooz.device.trigger_state(SnoozDeviceState(False, 64))
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_PERCENTAGE] == 64
@@ -164,6 +176,7 @@ async def test_push_events(
     mock_connected_snooz.device.trigger_state(SnoozDeviceState(True, 12))
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 12
@@ -171,6 +184,7 @@ async def test_push_events(
     mock_connected_snooz.device.trigger_disconnect()
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
@@ -197,6 +211,7 @@ async def test_restore_state(
     await hass.config_entries.async_unload(entry.entry_id)
 
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
@@ -204,6 +219,7 @@ async def test_restore_state(
 
     # should match last known state
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
     assert state.attributes[ATTR_ASSUMED_STATE] is True
@@ -222,6 +238,7 @@ async def test_restore_unknown_state(
     await hass.config_entries.async_unload(entry.entry_id)
 
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # reload entry
@@ -229,6 +246,7 @@ async def test_restore_unknown_state(
 
     # should match last known state
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
@@ -243,7 +261,7 @@ async def test_command_results(
     mock_execute.return_value = SnoozCommandResult(
         SnoozCommandResultStatus.SUCCESSFUL, timedelta()
     )
-    mock_connected_snooz.device.state = SnoozDeviceState(on=True, volume=56)
+    mock_connected_snooz.device.trigger_state(SnoozDeviceState(on=True, volume=56))
 
     await hass.services.async_call(
         fan.DOMAIN,
@@ -253,13 +271,14 @@ async def test_command_results(
     )
 
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 56
 
     mock_execute.return_value = SnoozCommandResult(
         SnoozCommandResultStatus.CANCELLED, timedelta()
     )
-    mock_connected_snooz.device.state = SnoozDeviceState(on=False, volume=15)
+    mock_connected_snooz.device.trigger_state(SnoozDeviceState(on=False, volume=15))
 
     await hass.services.async_call(
         fan.DOMAIN,
@@ -270,6 +289,7 @@ async def test_command_results(
 
     # the device state shouldn't be written when cancelled
     state = hass.states.get(snooz_fan_entity_id)
+    assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 56
 
@@ -304,4 +324,8 @@ def get_fan_entity_id(
 ) -> str:
     """Get the entity ID for a mock device."""
 
-    return entity_registry.async_get_entity_id(Platform.FAN, DOMAIN, device.address)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.FAN, DOMAIN, device.address
+    )
+    assert entity_id
+    return entity_id

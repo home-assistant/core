@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
-from pysnooz.api import UnknownSnoozState
+from pysnooz import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
     SnoozCommandResultStatus,
@@ -83,7 +83,7 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Initialize a Snooz fan entity."""
         self._device = data.device
         self._attr_unique_id = data.device.address
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
+        self._attr_device_info = data.device_info
 
     @callback
     def _async_write_state_changed(self) -> None:
