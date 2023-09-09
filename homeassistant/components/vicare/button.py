@@ -104,6 +104,13 @@ class ViCareButton(ButtonEntity):
         self.entity_description = description
         self._device_config = device_config
         self._api = api
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_config.getConfig().serial)},
+            name=device_config.getModel(),
+            manufacturer="Viessmann",
+            model=device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
 
     def press(self) -> None:
         """Handle the button press."""
@@ -118,17 +125,6 @@ class ViCareButton(ButtonEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
-            manufacturer="Viessmann",
-            model=self._device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
-        )
 
     @property
     def unique_id(self) -> str:
