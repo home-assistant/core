@@ -11,7 +11,7 @@ from zigpy.util import pick_optimal_channel
 
 from .core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
 from .core.gateway import ZHAGateway
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, get_zha_gateway
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,11 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Find the singleton ZHA config entry, if one exists."""
 
     # If ZHA is already running, use its config entry
-    if (zha_gateway := get_zha_data(hass).gateway) is not None:
+    try:
+        zha_gateway = get_zha_gateway(hass)
+    except ValueError:
+        pass
+    else:
         return zha_gateway.config_entry
 
     # Otherwise, find one
@@ -36,12 +40,7 @@ def _get_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 def async_get_active_network_settings(hass: HomeAssistant) -> NetworkBackup:
     """Get the network settings for the currently active ZHA network."""
-    zha_data = get_zha_data(hass)
-
-    if zha_data.gateway is None:
-        raise ValueError("ZHA is not running")
-
-    app = zha_data.gateway.application_controller
+    app = get_zha_gateway(hass).application_controller
 
     return NetworkBackup(
         node_info=app.state.node_info,
@@ -109,8 +108,7 @@ async def async_change_channel(
 ) -> None:
     """Migrate the ZHA network to a new channel."""
 
-    zha_data = get_zha_data(hass)
-    app = zha_data.gateway.application_controller
+    app = get_zha_gateway(hass).application_controller
 
     if new_channel == "auto":
         channel_energy = await app.energy_scan(

@@ -219,7 +219,7 @@ def async_get_zha_config_value(
 
 def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
-    zha_gateway = get_zha_data(hass).gateway
+    zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
         if skip_coordinator and zha_device.is_coordinator:
@@ -242,7 +242,7 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     if not registry_device:
         _LOGGER.error("Device id `%s` not found in registry", device_id)
         raise KeyError(f"Device id `{device_id}` not found in registry.")
-    zha_gateway = get_zha_data(hass).gateway
+    zha_gateway = get_zha_gateway(hass)
     try:
         ieee_address = list(registry_device.identifiers)[0][1]
         ieee = zigpy.types.EUI64.convert(ieee_address)
@@ -439,3 +439,11 @@ class ZHAData:
 def get_zha_data(hass: HomeAssistant) -> ZHAData:
     """Get the global ZHA data object."""
     return hass.data.get(DATA_ZHA, ZHAData())
+
+
+def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:
+    """Get the ZHA gateway object."""
+    if (zha_gateway := get_zha_data(hass).gateway) is None:
+        raise ValueError("No gateway object exists")
+
+    return zha_gateway

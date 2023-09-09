@@ -32,7 +32,7 @@ def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, 
     # First, try checking to see if the device itself is accessible
     try:
         zha_device = async_get_zha_device(hass, device_id)
-    except AttributeError:
+    except ValueError:
         pass
     else:
         return str(zha_device.ieee), zha_device.device_automation_triggers

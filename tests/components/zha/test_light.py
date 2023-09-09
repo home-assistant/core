@@ -20,6 +20,7 @@ from homeassistant.components.zha.core.const import (
     ZHA_OPTIONS,
 )
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     patch_zha_config,
     send_attributes_report,
     update_attribute_cache,

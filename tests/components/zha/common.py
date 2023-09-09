@@ -11,7 +11,7 @@ import zigpy.zcl.foundation as zcl_f
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.helpers import (
     async_get_zha_config_value,
-    get_zha_data,
+    get_zha_gateway,
 )
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
@@ -86,11 +86,6 @@ def update_attribute_cache(cluster):
         attribute_reports=attrs
     )
     cluster.handle_message(hdr, msg)
-
-
-def get_zha_gateway(hass):
-    """Return ZHA gateway from hass.data."""
-    return get_zha_data(hass).gateway
 
 
 def make_attribute(attrid, value, status=0):
