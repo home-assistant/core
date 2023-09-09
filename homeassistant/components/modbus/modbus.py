@@ -266,6 +266,9 @@ class ModbusHub:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_close_comm_config",
             )
+            _LOGGER.warning(
+                "`close_comm_on_error`: is deprecated and will be remove in version 2024.4"
+            )
         # generic configuration
         self._client: ModbusBaseClient | None = None
         self._async_cancel_listener: Callable[[], None] | None = None
