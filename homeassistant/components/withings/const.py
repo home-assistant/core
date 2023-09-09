@@ -10,7 +10,6 @@ CONFIG = "config"
 DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 PROFILE = "profile"
-CONF_PROFILE = PROFILE
 PUSH_HANDLER = "push_handler"
 
 

@@ -1,7 +1,7 @@
 """Tests for config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.withings.const import CONF_PROFILE, DOMAIN
+from homeassistant.components.withings.const import DOMAIN, PROFILE
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -67,7 +67,7 @@ async def test_full_flow(
         assert result["step_id"] == "profile"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PROFILE: "Henk"}
+            result["flow_id"], user_input={PROFILE: "Henk"}
         )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -89,9 +89,7 @@ async def test_config_non_unique_profile(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup a non-unique profile."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_PROFILE: "Henk"}, unique_id="0"
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={PROFILE: "Henk"}, unique_id="0")
     config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -136,14 +134,14 @@ async def test_config_non_unique_profile(
     assert result["step_id"] == "profile"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PROFILE: "Henk"}
+        result["flow_id"], user_input={PROFILE: "Henk"}
     )
 
     assert result
     assert result["errors"]["base"] == "already_configured"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_PROFILE: "Henk 2"}
+        result["flow_id"], user_input={PROFILE: "Henk 2"}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Henk 2"
