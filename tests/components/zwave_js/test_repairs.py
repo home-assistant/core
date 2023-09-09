@@ -22,16 +22,10 @@ import homeassistant.helpers.issue_registry as ir
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-async def test_device_config_file_changed(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    client,
-    multisensor_6_state,
-    integration,
-) -> None:
-    """Test the device_config_file_changed issue."""
-    dev_reg = dr.async_get(hass)
+async def _trigger_repair_issue(
+    hass: HomeAssistant, client, multisensor_6_state
+) -> Node:
+    """Trigger repair issue."""
     # Create a node
     node_state = deepcopy(multisensor_6_state)
     node = Node(client, node_state)
@@ -50,6 +44,23 @@ async def test_device_config_file_changed(
     ):
         client.driver.controller.receive_event(event)
         await hass.async_block_till_done()
+
+    client.async_send_command_no_wait.reset_mock()
+
+    return node
+
+
+async def test_device_config_file_changed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test the device_config_file_changed issue."""
+    dev_reg = dr.async_get(hass)
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
@@ -169,24 +180,7 @@ async def test_abort_init(
 ) -> None:
     """Test aborting device_config_file_changed issue in init step."""
     dev_reg = dr.async_get(hass)
-    # Create a node
-    node_state = deepcopy(multisensor_6_state)
-    node = Node(client, node_state)
-    event = Event(
-        "node added",
-        {
-            "source": "controller",
-            "event": "node added",
-            "node": node_state,
-            "result": "",
-        },
-    )
-    with patch(
-        "zwave_js_server.model.node.Node.async_has_device_config_changed",
-        return_value=True,
-    ):
-        client.driver.controller.receive_event(event)
-        await hass.async_block_till_done()
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     # Unload config entry so we can't connect to the node
     await hass.config_entries.async_unload(integration.entry_id)
@@ -219,24 +213,7 @@ async def test_abort_confirm(
 ) -> None:
     """Test aborting device_config_file_changed issue in confirm step."""
     dev_reg = dr.async_get(hass)
-    # Create a node
-    node_state = deepcopy(multisensor_6_state)
-    node = Node(client, node_state)
-    event = Event(
-        "node added",
-        {
-            "source": "controller",
-            "event": "node added",
-            "node": node_state,
-            "result": "",
-        },
-    )
-    with patch(
-        "zwave_js_server.model.node.Node.async_has_device_config_changed",
-        return_value=True,
-    ):
-        client.driver.controller.receive_event(event)
-        await hass.async_block_till_done()
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
     assert device
@@ -250,10 +227,6 @@ async def test_abort_confirm(
     resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
-
-    # assert data["type"] == "abort"
-    # assert data["reason"] == "cannot_connect"
-    # assert data["description_placeholders"] == {"device_name": device.name}
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
