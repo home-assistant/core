@@ -41,12 +41,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await coordinator.update_supported_data_sets()
-    except (
-        WeatherKitApiClientAuthenticationError,
-        WeatherKitApiClientError,
-    ):
-        LOGGER.exception("Error initializing integration")
+    except WeatherKitApiClientAuthenticationError as ex:
+        LOGGER.error("Authentication error initializing integration: %s", ex)
         return False
+    except WeatherKitApiClientError as ex:
+        raise ConfigEntryNotReady from ex
 
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
