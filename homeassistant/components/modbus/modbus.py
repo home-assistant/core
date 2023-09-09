@@ -265,6 +265,11 @@ class ModbusHub:
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_close_comm_config",
+                translation_placeholders={
+                    "config_key": "close_comm_on_error",
+                    "integration": DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
             )
             _LOGGER.warning(
                 "`close_comm_on_error`: is deprecated and will be remove in version 2024.4"
