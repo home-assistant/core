@@ -120,16 +120,14 @@ async def async_setup_entry(
     """Set up the Minecraft Server sensor platform."""
     server = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create entities list.
-    entities = []
-
-    for description in SENSOR_DESCRIPTIONS:
-        entities.append(
-            MinecraftServerSensorEntity(server=server, description=description)
-        )
-
     # Add sensor entities.
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            MinecraftServerSensorEntity(server=server, description=description)
+            for description in SENSOR_DESCRIPTIONS
+        ],
+        True,
+    )
 
 
 class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):

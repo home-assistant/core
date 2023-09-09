@@ -20,12 +20,14 @@ class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription
     """Class describing Minecraft Server binary sensor entities."""
 
 
-STATUS_BINARY_SENSOR_DESCRIPTION = MinecraftServerBinarySensorEntityDescription(
-    key=KEY_STATUS,
-    translation_key=KEY_STATUS,
-    device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    icon=ICON_STATUS,
-)
+BINARY_SENSOR_DESCRIPTIONS = [
+    MinecraftServerBinarySensorEntityDescription(
+        key=KEY_STATUS,
+        translation_key=KEY_STATUS,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        icon=ICON_STATUS,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -36,13 +38,14 @@ async def async_setup_entry(
     """Set up the Minecraft Server binary sensor platform."""
     server = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create entities list.
-    entities = [
-        MinecraftServerBinarySensorEntity(server, STATUS_BINARY_SENSOR_DESCRIPTION)
-    ]
-
     # Add binary sensor entities.
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            MinecraftServerBinarySensorEntity(server=server, description=description)
+            for description in BINARY_SENSOR_DESCRIPTIONS
+        ],
+        True,
+    )
 
 
 class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntity):
