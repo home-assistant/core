@@ -626,6 +626,16 @@ async def test_battery_sensor_state_via_mqtt(
         "unit_of_measurement": "%",
     }
 
+    # Test polled state update
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS11",
+        '{"StatusSTS":{"BatteryPercentage":50}}',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_battery_level")
+    assert state.state == "50"
+
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(
