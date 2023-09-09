@@ -46,7 +46,7 @@ from . import (
     setup_mock_motioneye_config_entry,
 )
 
-from tests.common import async_capture_events, async_fire_time_changed
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
@@ -469,8 +469,10 @@ async def test_event_media_data(
     assert "media_content_id" not in events[-1].data
 
     # Test: Not a loaded motionEye config entry.
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     wrong_device = device_registry.async_get_or_create(
-        config_entry_id="wrong_config_id", identifiers={("motioneye", "a_1")}
+        config_entry_id=other_config_entry.entry_id, identifiers={("motioneye", "a_1")}
     )
     resp = await hass_client.post(
         URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID]),

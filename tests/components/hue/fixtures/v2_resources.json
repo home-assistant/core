@@ -475,6 +475,10 @@
       {
         "rid": "db50a5d9-8cc7-486f-be06-c0b8f0d26c69",
         "rtype": "zigbee_connectivity"
+      },
+      {
+        "rid": "2f029c7b-868b-49e9-aa01-a0bbc595990d",
+        "rtype": "relative_rotary"
       }
     ],
     "type": "device"

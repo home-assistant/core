@@ -1,6 +1,7 @@
 """Configuration for pylint tests."""
-from importlib.machinery import SourceFileLoader
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import sys
 from types import ModuleType
 
 from pylint.checkers import BaseChecker
@@ -13,11 +14,17 @@ BASE_PATH = Path(__file__).parents[2]
 @pytest.fixture(name="hass_enforce_type_hints", scope="session")
 def hass_enforce_type_hints_fixture() -> ModuleType:
     """Fixture to provide a requests mocker."""
-    loader = SourceFileLoader(
-        "hass_enforce_type_hints",
+    module_name = "hass_enforce_type_hints"
+    spec = spec_from_file_location(
+        module_name,
         str(BASE_PATH.joinpath("pylint/plugins/hass_enforce_type_hints.py")),
     )
-    return loader.load_module(None)
+    assert spec and spec.loader
+
+    module = module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 @pytest.fixture(name="linter")
@@ -37,11 +44,16 @@ def type_hint_checker_fixture(hass_enforce_type_hints, linter) -> BaseChecker:
 @pytest.fixture(name="hass_imports", scope="session")
 def hass_imports_fixture() -> ModuleType:
     """Fixture to provide a requests mocker."""
-    loader = SourceFileLoader(
-        "hass_imports",
-        str(BASE_PATH.joinpath("pylint/plugins/hass_imports.py")),
+    module_name = "hass_imports"
+    spec = spec_from_file_location(
+        module_name, str(BASE_PATH.joinpath("pylint/plugins/hass_imports.py"))
     )
-    return loader.load_module(None)
+    assert spec and spec.loader
+
+    module = module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 @pytest.fixture(name="imports_checker")

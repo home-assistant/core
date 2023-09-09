@@ -12,11 +12,11 @@ from typing import Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base import FritzBoxPhonebook
@@ -82,6 +82,9 @@ class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
     _attr_icon = ICON_PHONE
+    _attr_translation_key = DOMAIN
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(CallState)
 
     def __init__(
         self,

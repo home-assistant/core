@@ -6,14 +6,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import (
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-)
+from collections.abc import Callable, Collection, Coroutine, Iterable, Mapping
 import concurrent.futures
 from contextlib import suppress
 import datetime
@@ -26,23 +19,13 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    Self,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
 from urllib.parse import urlparse
 
-import async_timeout
 import voluptuous as vol
 import yarl
 
-from . import block_async_io, loader, util
+from . import block_async_io, util
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -118,7 +101,7 @@ _P = ParamSpec("_P")
 # Internal; not helpers.typing.UNDEFINED due to circular dependency
 _UNDEF: dict[Any, Any] = {}
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
+CALLBACK_TYPE = Callable[[], None]
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -182,6 +165,16 @@ def valid_entity_id(entity_id: str) -> bool:
     Format: <domain>.<entity> where both are slugs.
     """
     return VALID_ENTITY_ID.match(entity_id) is not None
+
+
+def validate_state(state: str) -> str:
+    """Validate a state, raise if it not valid."""
+    if len(state) > MAX_LENGTH_STATE_STATE:
+        raise InvalidStateError(
+            f"Invalid state with length {len(state)}. "
+            "State max length is 255 characters."
+        )
+    return state
 
 
 def callback(func: _CallableT) -> _CallableT:
@@ -298,21 +291,28 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
-    def __new__(cls) -> HomeAssistant:
+    def __new__(cls, config_dir: str) -> HomeAssistant:
         """Set the _hass thread local data."""
         hass = super().__new__(cls)
         _hass.hass = hass
         return hass
 
-    def __init__(self) -> None:
+    def __repr__(self) -> str:
+        """Return the representation."""
+        return f"<HomeAssistant {self.state}>"
+
+    def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import loader
+
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
-        self.config = Config(self)
+        self.config = Config(self, config_dir)
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
@@ -707,7 +707,9 @@ class HomeAssistant:
                 for task in tasks:
                     _LOGGER.debug("Waiting for task: %s", task)
 
-    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(
+        self, pending: Collection[asyncio.Future[Any]]
+    ) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
@@ -815,7 +817,7 @@ class HomeAssistant:
             )
             task.cancel("Home Assistant stage 2 shutdown")
             try:
-                async with async_timeout.timeout(0.1):
+                async with asyncio.timeout(0.1):
                     await task
             except asyncio.CancelledError:
                 pass
@@ -857,8 +859,7 @@ class HomeAssistant:
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # pylint: disable=protected-access
-                # pylint: disable-next=unidiomatic-typecheck
-                and type(job := args[0]) is HassJob
+                and type(job := args[0]) is HassJob  # noqa: E721
                 and job.cancel_on_shutdown
             ):
                 handle.cancel()
@@ -1035,17 +1036,17 @@ class EventBus:
         listeners = self._listeners.get(event_type, [])
         match_all_listeners = self._match_all_listeners
 
+        event = Event(event_type, event_data, origin, time_fired, context)
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Bus:Handling %s", event)
+
         if not listeners and not match_all_listeners:
             return
 
         # EVENT_HOMEASSISTANT_CLOSE should not be sent to MATCH_ALL listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
-
-        event = Event(event_type, event_data, origin, time_fired, context)
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Bus:Handling %s", event)
 
         for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
@@ -1262,13 +1263,9 @@ class State:
                 "Format should be <domain>.<object_id>"
             )
 
-        if len(state) > MAX_LENGTH_STATE_STATE:
-            raise InvalidStateError(
-                f"Invalid state encountered for entity ID: {entity_id}. "
-                "State max length is 255 characters."
-            )
+        validate_state(state)
 
-        self.entity_id = entity_id.lower()
+        self.entity_id = entity_id
         self.state = state
         self.attributes = ReadOnlyDict(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
@@ -1419,11 +1416,12 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_reservations", "_bus", "_loop")
+    __slots__ = ("_states", "_domain_index", "_reservations", "_bus", "_loop")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: dict[str, State] = {}
+        self._domain_index: dict[str, dict[str, State]] = {}
         self._reservations: set[str] = set()
         self._bus = bus
         self._loop = loop
@@ -1447,13 +1445,13 @@ class StateMachine:
             return list(self._states)
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return list(self._domain_index.get(domain_filter.lower(), ()))
 
-        return [
-            state.entity_id
-            for state in self._states.values()
-            if state.domain in domain_filter
-        ]
+        states: list[str] = []
+        for domain in domain_filter:
+            if domain_index := self._domain_index.get(domain):
+                states.extend(domain_index)
+        return states
 
     @callback
     def async_entity_ids_count(
@@ -1467,11 +1465,9 @@ class StateMachine:
             return len(self._states)
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return len(self._domain_index.get(domain_filter.lower(), ()))
 
-        return len(
-            [None for state in self._states.values() if state.domain in domain_filter]
-        )
+        return sum(len(self._domain_index.get(domain, ())) for domain in domain_filter)
 
     def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
@@ -1491,11 +1487,13 @@ class StateMachine:
             return list(self._states.values())
 
         if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
+            return list(self._domain_index.get(domain_filter.lower(), {}).values())
 
-        return [
-            state for state in self._states.values() if state.domain in domain_filter
-        ]
+        states: list[State] = []
+        for domain in domain_filter:
+            if domain_index := self._domain_index.get(domain):
+                states.extend(domain_index.values())
+        return states
 
     def get(self, entity_id: str) -> State | None:
         """Retrieve state of entity_id or None if not found.
@@ -1531,13 +1529,12 @@ class StateMachine:
         """
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
-
-        if entity_id in self._reservations:
-            self._reservations.remove(entity_id)
+        self._reservations.discard(entity_id)
 
         if old_state is None:
             return False
 
+        self._domain_index[old_state.domain].pop(entity_id)
         old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
@@ -1659,6 +1656,10 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
+        if not (domain_index := self._domain_index.get(state.domain)):
+            domain_index = {}
+            self._domain_index[state.domain] = domain_index
+        domain_index[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
@@ -2021,7 +2022,7 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_dir: str) -> None:
         """Initialize a new config object."""
         self.hass = hass
 
@@ -2057,7 +2058,7 @@ class Config:
         self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
-        self.config_dir: str | None = None
+        self.config_dir: str = config_dir
 
         # List of allowed external dirs to access
         self.allowlist_external_dirs: set[str] = set()
@@ -2088,8 +2089,6 @@ class Config:
 
         Async friendly.
         """
-        if self.config_dir is None:
-            raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
     def is_allowed_external_url(self, url: str) -> bool:

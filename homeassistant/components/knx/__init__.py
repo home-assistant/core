@@ -342,10 +342,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         [
-            platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in hass.data[DATA_KNX_CONFIG]
-            and platform is not Platform.NOTIFY
+            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
+            *[
+                platform
+                for platform in SUPPORTED_PLATFORMS
+                if platform in hass.data[DATA_KNX_CONFIG]
+                and platform not in (Platform.SENSOR, Platform.NOTIFY)
+            ],
         ],
     )
     if unload_ok:

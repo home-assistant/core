@@ -87,9 +87,9 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     entity_description: YouTubeSensorEntityDescription
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the entity is available."""
-        return self.entity_description.available_fn(
+        return super().available and self.entity_description.available_fn(
             self.coordinator.data[self._channel_id]
         )
 

@@ -3,6 +3,8 @@
 ABBREVIATIONS = {
     "act_t": "action_topic",
     "act_tpl": "action_template",
+    "act_stat_t": "activity_state_topic",
+    "act_val_tpl": "activity_value_template",
     "atype": "automation_type",
     "aux_cmd_t": "aux_command_topic",
     "aux_stat_tpl": "aux_state_template",
@@ -54,6 +56,8 @@ ABBREVIATIONS = {
     "dir_val_tpl": "direction_value_template",
     "dock_t": "docked_topic",
     "dock_tpl": "docked_template",
+    "dock_cmd_t": "dock_command_topic",
+    "dock_cmd_tpl": "dock_command_template",
     "e": "encoding",
     "en": "enabled_by_default",
     "ent_cat": "entity_category",
@@ -111,6 +115,7 @@ ABBREVIATIONS = {
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
     "name": "name",
+    "o": "origin",
     "obj_id": "object_id",
     "off_dly": "off_delay",
     "on_cmd_type": "on_command_type",
@@ -120,6 +125,8 @@ ABBREVIATIONS = {
     "osc_cmd_tpl": "oscillation_command_template",
     "osc_stat_t": "oscillation_state_topic",
     "osc_val_tpl": "oscillation_value_template",
+    "pause_cmd_t": "pause_command_topic",
+    "pause_mw_cmd_tpl": "pause_command_template",
     "pct_cmd_t": "percentage_command_topic",
     "pct_cmd_tpl": "percentage_command_template",
     "pct_stat_t": "percentage_state_topic",
@@ -214,6 +221,8 @@ ABBREVIATIONS = {
     "stat_tpl": "state_template",
     "stat_val_tpl": "state_value_template",
     "step": "step",
+    "strt_mw_cmd_t": "start_mowing_command_topic",
+    "strt_mw_cmd_tpl": "start_mowing_command_template",
     "stype": "subtype",
     "sug_dsp_prc": "suggested_display_precision",
     "sup_dur": "support_duration",
@@ -274,4 +283,10 @@ DEVICE_ABBREVIATIONS = {
     "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",
+}
+
+ORIGIN_ABBREVIATIONS = {
+    "name": "name",
+    "sw": "sw_version",
+    "url": "support_url",
 }
