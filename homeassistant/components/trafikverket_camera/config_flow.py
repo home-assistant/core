@@ -62,7 +62,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm re-authentication with Trafikverket."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
@@ -97,7 +97,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
