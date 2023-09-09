@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
@@ -115,7 +115,8 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 }
 
 
-def migrate(hass: HomeAssistant, address: str, sensor_name: str):
+@callback
+def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
     ent_reg = entity_async_get(hass)
@@ -201,7 +202,7 @@ async def async_setup_entry(
                 sensor_value,
             )
             continue
-        migrate(hass, coordinator.data.address, sensor_type)
+        async_migrate(hass, coordinator.data.address, sensor_type)
         entities.append(
             AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
