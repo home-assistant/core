@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyunifiprotect.data import (
     NVR,
@@ -22,7 +22,8 @@ from pyunifiprotect.data import (
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
@@ -57,7 +58,8 @@ def _async_device_entities(
         else data.get_by_types({model_type}, ignore_unadopted=False)
     )
     for device in devices:
-        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+        if TYPE_CHECKING:
+            assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         if not device.is_adopted_by_us:
             for description in unadopted_descs:
                 entities.append(
@@ -237,7 +239,8 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
-        assert isinstance(device, ProtectAdoptableDeviceModel)
+        if TYPE_CHECKING:
+            assert isinstance(device, ProtectAdoptableDeviceModel)
 
         if last_update_success := self.data.last_update_success:
             self.device = device

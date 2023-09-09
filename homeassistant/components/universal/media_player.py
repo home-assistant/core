@@ -85,13 +85,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackTemplate,
+    TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 ATTR_ACTIVE_CHILD = "active_child"
 
@@ -183,13 +185,18 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Subscribe to children and template state changes."""
 
         @callback
-        def _async_on_dependency_update(event):
+        def _async_on_dependency_update(
+            event: EventType[EventStateChangedData],
+        ) -> None:
             """Update ha state when dependencies update."""
             self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def _async_on_template_update(event, updates):
+        def _async_on_template_update(
+            event: EventType[EventStateChangedData] | None,
+            updates: list[TrackTemplateResult],
+        ) -> None:
             """Update state when template state changes."""
             for data in updates:
                 template = data.template

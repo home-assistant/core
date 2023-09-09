@@ -17,8 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -405,13 +406,13 @@ class ScannerEntity(BaseTrackerEntity):
     @property
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, StateType] = {}
-        attr.update(super().state_attributes)
-        if self.ip_address:
-            attr[ATTR_IP] = self.ip_address
-        if self.mac_address is not None:
-            attr[ATTR_MAC] = self.mac_address
-        if self.hostname is not None:
-            attr[ATTR_HOST_NAME] = self.hostname
+        attr = super().state_attributes
+
+        if ip_address := self.ip_address:
+            attr[ATTR_IP] = ip_address
+        if (mac_address := self.mac_address) is not None:
+            attr[ATTR_MAC] = mac_address
+        if (hostname := self.hostname) is not None:
+            attr[ATTR_HOST_NAME] = hostname
 
         return attr

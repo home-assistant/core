@@ -17,10 +17,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.esphome import (
-    DomainData,
-    dashboard,
-)
+from homeassistant.components.esphome import DomainData, dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,

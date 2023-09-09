@@ -69,7 +69,7 @@ def _get_meter_average_voltage(meter: Meter) -> float:
 POWERWALL_INSTANT_SENSORS = (
     PowerwallSensorEntityDescription(
         key="instant_power",
-        name="Now",
+        translation_key="instant_power",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
@@ -77,7 +77,7 @@ POWERWALL_INSTANT_SENSORS = (
     ),
     PowerwallSensorEntityDescription(
         key="instant_frequency",
-        name="Frequency Now",
+        translation_key="instant_frequency",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
@@ -86,7 +86,7 @@ POWERWALL_INSTANT_SENSORS = (
     ),
     PowerwallSensorEntityDescription(
         key="instant_current",
-        name="Average Current Now",
+        translation_key="instant_current",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -95,7 +95,7 @@ POWERWALL_INSTANT_SENSORS = (
     ),
     PowerwallSensorEntityDescription(
         key="instant_voltage",
-        name="Average Voltage Now",
+        translation_key="instant_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -136,7 +136,7 @@ async def async_setup_entry(
 class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
-    _attr_name = "Powerwall Charge"
+    _attr_translation_key = "charge"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -167,10 +167,8 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         self.entity_description = description
         super().__init__(powerwall_data)
         self._meter = meter
-        self._attr_name = f"Powerwall {self._meter.value.title()} {description.name}"
-        self._attr_unique_id = (
-            f"{self.base_unique_id}_{self._meter.value}_{description.key}"
-        )
+        self._attr_translation_key = f"{meter.value}_{description.translation_key}"
+        self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{description.key}"
 
     @property
     def native_value(self) -> float:
@@ -181,7 +179,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
 class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
     """Representation of the Powerwall backup reserve setting."""
 
-    _attr_name = "Powerwall Backup Reserve"
+    _attr_translation_key = "backup_reserve"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -215,7 +213,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(powerwall_data)
         self._meter = meter
-        self._attr_name = f"Powerwall {meter.value.title()} {meter_direction.title()}"
+        self._attr_translation_key = f"{meter.value}_{meter_direction}"
         self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{meter_direction}"
 
     @property

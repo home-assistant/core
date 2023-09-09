@@ -7,9 +7,7 @@ from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
-
-DEFAULT_NAME = "ISS"
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

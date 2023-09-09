@@ -1,23 +1,18 @@
 """The awair component."""
 from __future__ import annotations
 
-from asyncio import gather
+from asyncio import gather, timeout
 from dataclasses import dataclass
 from datetime import timedelta
 
 from aiohttp import ClientSession
-from async_timeout import timeout
 from python_awair import Awair, AwairLocal
 from python_awair.air_data import AirData
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_HOST,
-    Platform,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

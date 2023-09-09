@@ -22,6 +22,7 @@ from homeassistant.components.zha.core.device import ZHADevice
 from homeassistant.components.zha.core.endpoint import Endpoint
 import homeassistant.components.zha.core.registries as registries
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import get_zha_gateway, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -831,3 +832,37 @@ async def test_invalid_cluster_handler(hass: HomeAssistant, caplog) -> None:
         zha_endpoint.add_all_cluster_handlers()
 
     assert "missing_attr" in caplog.text
+
+
+# parametrize side effects:
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (zigpy.exceptions.ZigbeeException(), "Failed to send request"),
+        (
+            zigpy.exceptions.ZigbeeException("Zigbee exception"),
+            "Failed to send request: Zigbee exception",
+        ),
+        (asyncio.TimeoutError(), "Failed to send request: device did not respond"),
+    ],
+)
+async def test_retry_request(
+    side_effect: Exception | None, expected_error: str | None
+) -> None:
+    """Test the `retry_request` decorator's handling of zigpy-internal exceptions."""
+
+    async def func(arg1: int, arg2: int) -> int:
+        assert arg1 == 1
+        assert arg2 == 2
+
+        raise side_effect
+
+    func = mock.AsyncMock(wraps=func)
+    decorated_func = cluster_handlers.retry_request(func)
+
+    with pytest.raises(HomeAssistantError) as exc:
+        await decorated_func(1, arg2=2)
+
+    assert func.await_count == 3
+    assert isinstance(exc.value, HomeAssistantError)
+    assert str(exc.value) == expected_error

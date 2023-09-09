@@ -129,7 +129,7 @@ async def test_arm_home_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm home test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
@@ -139,7 +139,7 @@ async def test_arm_home_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm home"
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         # should have started a re-auth flow
@@ -183,7 +183,7 @@ async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm home instant test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
@@ -193,7 +193,7 @@ async def test_arm_home_instant_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_HOME_INSTANT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert (
             f"{err.value}"
             == "TotalConnect usercode is invalid. Did not arm home instant"
@@ -240,7 +240,7 @@ async def test_arm_away_instant_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_AWAY_INSTANT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm away instant test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
@@ -250,7 +250,7 @@ async def test_arm_away_instant_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 DOMAIN, SERVICE_ALARM_ARM_AWAY_INSTANT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert (
             f"{err.value}"
             == "TotalConnect usercode is invalid. Did not arm away instant"
@@ -296,7 +296,7 @@ async def test_arm_away_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_AWAY, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm away test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
@@ -306,7 +306,7 @@ async def test_arm_away_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_AWAY, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm away"
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         # should have started a re-auth flow
@@ -353,7 +353,7 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to disarm test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
         assert mock_request.call_count == 2
@@ -363,7 +363,7 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect usercode is invalid. Did not disarm"
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
         # should have started a re-auth flow
@@ -406,7 +406,7 @@ async def test_arm_night_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm night test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 2
@@ -416,7 +416,7 @@ async def test_arm_night_failure(hass: HomeAssistant) -> None:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
             )
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect usercode is invalid. Did not arm night"
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
         # should have started a re-auth flow

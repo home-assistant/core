@@ -581,6 +581,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
+        ({"prefix": "before", "suffix": "after"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -653,6 +654,11 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
             {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
+        ),
+        (
+            {"options": ["red", "green", "blue"], "sort": True},
+            ("red", "blue"),
+            (0, None, ["red"]),
         ),
     ),
 )
@@ -743,6 +749,11 @@ def test_icon_selector_schema(schema, valid_selections, invalid_selections) -> N
     (
         (
             {},
+            ("abc",),
+            (None,),
+        ),
+        (
+            {"include_default": True},
             ("abc",),
             (None,),
         ),

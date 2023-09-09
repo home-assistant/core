@@ -37,18 +37,25 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import DOMAIN, PLATFORMS
 
@@ -395,9 +402,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Get default temp from super class
         return super().max_temp
 
-    async def _async_sensor_changed(self, event):
+    async def _async_sensor_changed(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle temperature changes."""
-        new_state = event.data.get("new_state")
+        new_state = event.data["new_state"]
         if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
@@ -418,10 +427,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_heater_turn_off()
 
     @callback
-    def _async_switch_changed(self, event):
+    def _async_switch_changed(self, event: EventType[EventStateChangedData]) -> None:
         """Handle heater switch state changes."""
-        new_state = event.data.get("new_state")
-        old_state = event.data.get("old_state")
+        new_state = event.data["new_state"]
+        old_state = event.data["old_state"]
         if new_state is None:
             return
         if old_state is None:
@@ -429,11 +438,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def _async_update_temp(self, state):
+    def _async_update_temp(self, state: State) -> None:
         """Update thermostat with latest state from sensor."""
         try:
             cur_temp = float(state.state)
-            if math.isnan(cur_temp) or math.isinf(cur_temp):
+            if not math.isfinite(cur_temp):
                 raise ValueError(f"Sensor has illegal state {state.state}")
             self._cur_temp = cur_temp
         except ValueError as ex:

@@ -29,5 +29,15 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "number": {
+      "effect_speed": {
+        "name": "Effect speed"
+      },
+      "dual_head_ratio": {
+        "name": "Dual head ratio"
+      }
+    }
   }
 }

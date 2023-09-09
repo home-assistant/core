@@ -45,7 +45,6 @@ _KNOWN_LRU_CLASSES = (
     "StatesMetaManager",
     "StateAttributesManager",
     "StatisticsMetaManager",
-    "DomainData",
     "IntegrationMatcher",
 )
 
