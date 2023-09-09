@@ -134,13 +134,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             # If we already have the unique id, try to set it now
             # so we can avoid probing the device if its already
             # configured or ignored
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.discovery_info[CONF_HOST],
-                    CONF_NAME: self.discovery_info[CONF_NAME],
-                },
-            )
+            await self._async_set_unique_id_and_abort_if_already_configured(unique_id)
 
         self.context.update({"title_placeholders": {"name": name}})
 
@@ -177,16 +171,22 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         if unique_id and self.unique_id != unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.discovery_info[CONF_HOST],
-                    CONF_NAME: self.discovery_info[CONF_NAME],
-                },
-            )
+            await self._async_set_unique_id_and_abort_if_already_configured(unique_id)
 
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_zeroconf_confirm()
+
+    async def _async_set_unique_id_and_abort_if_already_configured(
+        self, unique_id: str
+    ) -> None:
+        """Set the unique ID and abort if already configured."""
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self.discovery_info[CONF_HOST],
+                CONF_NAME: self.discovery_info[CONF_NAME],
+            },
+        )
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
