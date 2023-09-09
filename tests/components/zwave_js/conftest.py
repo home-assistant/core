@@ -3,7 +3,7 @@ import asyncio
 import copy
 import io
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -687,6 +687,17 @@ def mock_client_fixture(
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
+
+        async def async_send_command_side_effect(message, require_schema=None):
+            """Return the command response."""
+            if message["command"] == "node.has_device_config_changed":
+                return {"changed": False}
+            return DEFAULT
+
+        client.async_send_command.return_value = {
+            "result": {"success": True, "status": 255}
+        }
+        client.async_send_command.side_effect = async_send_command_side_effect
 
         yield client
 

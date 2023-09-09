@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -274,22 +274,23 @@ class AlexaEntity:
         self.entity_conf = config.entity_config.get(entity.entity_id, {})
 
     @property
-    def entity_id(self):
+    def entity_id(self) -> str:
         """Return the Entity ID."""
         return self.entity.entity_id
 
-    def friendly_name(self):
+    def friendly_name(self) -> str:
         """Return the Alexa API friendly name."""
-        return self.entity_conf.get(CONF_NAME, self.entity.name).translate(
-            TRANSLATION_TABLE
-        )
+        friendly_name: str = self.entity_conf.get(
+            CONF_NAME, self.entity.name
+        ).translate(TRANSLATION_TABLE)
+        return friendly_name
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = self.entity_conf.get(CONF_DESCRIPTION) or self.entity_id
         return f"{description} via Home Assistant".translate(TRANSLATION_TABLE)
 
-    def alexa_id(self):
+    def alexa_id(self) -> str:
         """Return the Alexa API entity id."""
         return generate_alexa_id(self.entity.entity_id)
 
@@ -317,7 +318,7 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
-    def serialize_properties(self):
+    def serialize_properties(self) -> Generator[dict[str, Any], None, None]:
         """Yield each supported property in API format."""
         for interface in self.interfaces():
             if not interface.properties_proactively_reported():
@@ -325,9 +326,9 @@ class AlexaEntity:
 
             yield from interface.serialize_properties()
 
-    def serialize_discovery(self):
+    def serialize_discovery(self) -> dict[str, Any]:
         """Serialize the entity for discovery."""
-        result = {
+        result: dict[str, Any] = {
             "displayCategories": self.display_categories(),
             "cookie": {},
             "endpointId": self.alexa_id(),
@@ -366,7 +367,7 @@ def async_get_entities(
     hass: HomeAssistant, config: AbstractConfig
 ) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
-    entities = []
+    entities: list[AlexaEntity] = []
     for state in hass.states.async_all():
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
             continue
@@ -725,7 +726,7 @@ class MediaPlayerCapabilities(AlexaEntity):
 class SceneCapabilities(AlexaEntity):
     """Class to represent Scene capabilities."""
 
-    def description(self):
+    def description(self) -> str:
         """Return the Alexa API description."""
         description = AlexaEntity.description(self)
         if "scene" not in description.casefold():

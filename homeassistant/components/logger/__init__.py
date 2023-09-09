@@ -126,7 +126,6 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
 
             super().setLevel(level)
 
-        # pylint: disable=invalid-name
         def orig_setLevel(self, level: int | str) -> None:
             """Set the log level."""
             super().setLevel(level)

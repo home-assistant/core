@@ -8,11 +8,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    MOCK_FIRMWARE_AVAILABLE,
-    MOCK_FIRMWARE_RELEASE_URL,
-    MOCK_USER_DATA,
-)
+from .const import MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator

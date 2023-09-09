@@ -36,6 +36,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
+    DeviceInfo,
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import (
@@ -44,7 +45,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import (
     ENTITY_CATEGORIES_SCHEMA,
-    DeviceInfo,
     Entity,
     async_generate_entity_id,
 )
@@ -69,9 +69,20 @@ from .const import (
     ATTR_DISCOVERY_PAYLOAD,
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
+    CONF_CONFIGURATION_URL,
+    CONF_CONNECTIONS,
+    CONF_DEPRECATED_VIA_HUB,
     CONF_ENCODING,
+    CONF_HW_VERSION,
+    CONF_IDENTIFIERS,
+    CONF_MANUFACTURER,
+    CONF_OBJECT_ID,
+    CONF_ORIGIN,
     CONF_QOS,
+    CONF_SUGGESTED_AREA,
+    CONF_SW_VERSION,
     CONF_TOPIC,
+    CONF_VIA_DEVICE,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -84,6 +95,7 @@ from .discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
+    MQTT_ORIGIN_INFO_SCHEMA,
     MQTTDiscoveryPayload,
     clear_discovery_hash,
     set_discovery_hash,
@@ -118,17 +130,6 @@ CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
-
-CONF_IDENTIFIERS = "identifiers"
-CONF_CONNECTIONS = "connections"
-CONF_MANUFACTURER = "manufacturer"
-CONF_HW_VERSION = "hw_version"
-CONF_SW_VERSION = "sw_version"
-CONF_VIA_DEVICE = "via_device"
-CONF_DEPRECATED_VIA_HUB = "via_hub"
-CONF_SUGGESTED_AREA = "suggested_area"
-CONF_CONFIGURATION_URL = "configuration_url"
-CONF_OBJECT_ID = "object_id"
 
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
@@ -228,6 +229,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
@@ -1014,6 +1016,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _issue_key: str | None
 
     def __init__(
         self,
@@ -1027,6 +1030,7 @@ class MqttEntity(
         self._config: ConfigType = config
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
+        self._discovery = discovery_data is not None
 
         # Load config
         self._setup_from_config(self._config)
@@ -1050,6 +1054,7 @@ class MqttEntity(
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        self.collect_issues()
         await super().async_added_to_hass()
         self._prepare_subscribe_topics()
         await self._subscribe_topics()
@@ -1122,6 +1127,7 @@ class MqttEntity(
 
     def _set_entity_name(self, config: ConfigType) -> None:
         """Help setting the entity name if needed."""
+        self._issue_key = None
         entity_name: str | None | UndefinedType = config.get(CONF_NAME, UNDEFINED)
         # Only set _attr_name if it is needed
         if entity_name is not UNDEFINED:
@@ -1130,6 +1136,7 @@ class MqttEntity(
             # Assign the default name
             self._attr_name = self._default_name
         if CONF_DEVICE in config:
+            device_name: str
             if CONF_NAME not in config[CONF_DEVICE]:
                 _LOGGER.info(
                     "MQTT device information always needs to include a name, got %s, "
@@ -1137,14 +1144,41 @@ class MqttEntity(
                     "name must be included in each entity's device configuration",
                     config,
                 )
-            elif config[CONF_DEVICE][CONF_NAME] == entity_name:
+            elif (device_name := config[CONF_DEVICE][CONF_NAME]) == entity_name:
+                self._attr_name = None
+                if not self._discovery:
+                    self._issue_key = "entity_name_is_device_name_yaml"
                 _LOGGER.warning(
                     "MQTT device name is equal to entity name in your config %s, "
                     "this is not expected. Please correct your configuration. "
                     "The entity name will be set to `null`",
                     config,
                 )
-                self._attr_name = None
+            elif isinstance(entity_name, str) and entity_name.startswith(device_name):
+                self._attr_name = (
+                    new_entity_name := entity_name[len(device_name) :].lstrip()
+                )
+                if device_name[:1].isupper():
+                    # Ensure a capital if the device name first char is a capital
+                    new_entity_name = new_entity_name[:1].upper() + new_entity_name[1:]
+                if not self._discovery:
+                    self._issue_key = "entity_name_startswith_device_name_yaml"
+                _LOGGER.warning(
+                    "MQTT entity name starts with the device name in your config %s, "
+                    "this is not expected. Please correct your configuration. "
+                    "The device name prefix will be stripped off the entity name "
+                    "and becomes '%s'",
+                    config,
+                    new_entity_name,
+                )
+
+    def collect_issues(self) -> None:
+        """Process issues for MQTT entities."""
+        if self._issue_key is None:
+            return
+        mqtt_data = get_mqtt_data(self.hass)
+        issues = mqtt_data.issues.setdefault(self._issue_key, set())
+        issues.add(self.entity_id)
 
     def _setup_common_attributes_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the common attributes for the entity."""

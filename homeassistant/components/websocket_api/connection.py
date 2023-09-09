@@ -164,12 +164,12 @@ class ActiveConnection:
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
-            type(msg) is not dict  # pylint: disable=unidiomatic-typecheck
+            type(msg) is not dict  # noqa: E721
             or (
                 not (cur_id := msg.get("id"))
-                or type(cur_id) is not int  # pylint: disable=unidiomatic-typecheck
+                or type(cur_id) is not int  # noqa: E721
                 or not (type_ := msg.get("type"))
-                or type(type_) is not str  # pylint: disable=unidiomatic-typecheck
+                or type(type_) is not str  # noqa: E721
             )
         ):
             self.logger.error("Received invalid command: %s", msg)

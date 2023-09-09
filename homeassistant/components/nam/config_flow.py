@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-import async_timeout
 from nettigo_air_monitor import (
     ApiError,
     AuthFailedError,
@@ -51,7 +50,7 @@ async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
     options = ConnectionOptions(host)
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         mac = await nam.async_get_mac_address()
 
     return NamConfig(mac, nam.auth_enabled)
@@ -67,7 +66,7 @@ async def async_check_credentials(
 
     nam = await NettigoAirMonitor.create(websession, options)
 
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         await nam.async_check_credentials()
 
 

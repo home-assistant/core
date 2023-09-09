@@ -38,12 +38,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import const
-from .const import Measurement
+from .const import DOMAIN, Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
@@ -438,22 +439,16 @@ class DataManager:
     async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
-        now = dt_util.utcnow()
+        now = dt_util.now()
         yesterday = now - datetime.timedelta(days=1)
-        yesterday_noon = datetime.datetime(
-            yesterday.year,
-            yesterday.month,
-            yesterday.day,
-            12,
-            0,
-            0,
-            0,
-            datetime.UTC,
+        yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
+            hours=12
         )
+        yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
             return self._api.sleep_get_summary(
-                lastupdate=yesterday_noon,
+                lastupdate=yesterday_noon_utc,
                 data_fields=[
                     GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
                     GetSleepSummaryField.DEEP_SLEEP_DURATION,
@@ -567,6 +562,10 @@ class BaseWithingsSensor(Entity):
             description, data_manager.user_id
         )
         self._state_data: Any | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(data_manager.user_id))},
+            name=data_manager.profile,
+        )
 
     @property
     def available(self) -> bool:

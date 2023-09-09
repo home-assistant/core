@@ -9,7 +9,7 @@ import pytest
 def mock_usb_serial_by_id_fixture() -> Generator[MagicMock, None, None]:
     """Mock usb serial by id."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.usb.get_serial_by_id"
+        "homeassistant.components.zha.config_flow.usb.get_serial_by_id"
     ) as mock_usb_serial_by_id:
         mock_usb_serial_by_id.side_effect = lambda x: x
         yield mock_usb_serial_by_id
@@ -149,3 +149,21 @@ def start_addon_fixture():
         "homeassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon
+
+
+@pytest.fixture(name="stop_addon")
+def stop_addon_fixture():
+    """Mock stop add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_stop_addon"
+    ) as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def uninstall_addon_fixture():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon

@@ -15,6 +15,7 @@ async def test_cleanup_orphaned_devices(
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
+    entry.add_to_hass(hass)
 
     test_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -55,6 +56,7 @@ async def test_migrate_transient_devices(
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
+    entry.add_to_hass(hass)
 
     # Pre-create devices and entities to test device migration
     plexweb_device = device_registry.async_get_or_create(

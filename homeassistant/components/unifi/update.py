@@ -103,7 +103,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self._attr_supported_features = UpdateEntityFeature.PROGRESS
-        if self.controller.site_role == "admin":
+        if self.controller.is_admin:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)

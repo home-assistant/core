@@ -314,7 +314,7 @@ async def test_discover_lights(hass: HomeAssistant, hue_client) -> None:
     await hass.async_block_till_done()
 
     result_json = await async_get_lights(hue_client)
-    assert "1" not in result_json.keys()
+    assert "1" not in result_json
     devices = {val["uniqueid"] for val in result_json.values()}
     assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
 
@@ -1130,7 +1130,6 @@ async def test_put_light_state_fan(hass_hue, hue_client) -> None:
         assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
 
 
-# pylint: disable=invalid-name
 async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client) -> None:
     """Test the form with urlencoded content."""
     entity_number = ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
@@ -1215,7 +1214,6 @@ async def test_get_empty_groups_state(hue_client) -> None:
     assert result_json == {}
 
 
-# pylint: disable=invalid-name
 async def perform_put_test_on_ceiling_lights(
     hass_hue, hue_client, content_type=CONTENT_TYPE_JSON
 ):

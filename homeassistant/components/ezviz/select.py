@@ -63,8 +63,6 @@ async def async_setup_entry(
 class EzvizSelect(EzvizEntity, SelectEntity):
     """Representation of a EZVIZ select entity."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,
