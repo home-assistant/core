@@ -43,6 +43,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     Platform.SIREN,
     Platform.STT,
     Platform.SWITCH,
+    Platform.TODO,
     Platform.TEXT,
     Platform.TIME,
     Platform.UPDATE,

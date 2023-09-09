@@ -19,12 +19,25 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+async def test_unload_entry(
+    hass: HomeAssistant, sl_setup: None, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test adding an item intent."""
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_add_item(hass: HomeAssistant, sl_setup) -> None:
