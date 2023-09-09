@@ -107,7 +107,7 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_update(self) -> None:
         """Get the latest details from the device."""
-        if not self._attr_available:
+        if not self.available:
             try:
                 await self._vlc.connect()
             except ConnectError as err:
@@ -145,7 +145,7 @@ class VlcDevice(MediaPlayerEntity):
             vlc_position = time_output.time
 
             # Check if current position is stale.
-            if vlc_position != self._attr_media_position:
+            if vlc_position != self.media_position:
                 self._attr_media_position_updated_at = dt_util.utcnow()
                 self._attr_media_position = vlc_position
 
@@ -160,11 +160,11 @@ class VlcDevice(MediaPlayerEntity):
 
         # Many radio streams put artist/title/album in now_playing and title is the station name.
         if now_playing:
-            if not self._attr_media_artist:
+            if not self.media_artist:
                 self._attr_media_artist = self._attr_media_title
             self._attr_media_title = now_playing
 
-        if self._attr_media_title:
+        if self.media_title:
             return
 
         # Fall back to filename.
@@ -173,7 +173,7 @@ class VlcDevice(MediaPlayerEntity):
 
             # Strip out auth signatures if streaming local media
             if (
-                self._attr_media_title
+                self.media_title
                 and (pos := self._attr_media_title.find("?authSig=")) != -1
             ):
                 self._attr_media_title = self._attr_media_title[:pos]
@@ -201,7 +201,7 @@ class VlcDevice(MediaPlayerEntity):
         await self._vlc.set_volume(round(volume * MAX_VOLUME))
         self._attr_volume_level = volume
 
-        if self._attr_is_volume_muted and self._attr_volume_level > 0:
+        if self.is_volume_muted and self.volume_level > 0:
             # This can happen if we were muted and then see a volume_up.
             self._attr_is_volume_muted = False
 
