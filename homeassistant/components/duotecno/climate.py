@@ -1,7 +1,6 @@
 """Support for Duotecno climate devices."""
 from typing import Any
 
-from duotecno.protocol import SensFanspeed, SensPreset
 from duotecno.unit import SensUnit
 
 from homeassistant.components.climate import (
@@ -14,7 +13,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HVACMODE
+from .const import DOMAIN, HVACMODE, PRESETMODES
 from .entity import DuotecnoEntity, api_call
 
 
@@ -39,8 +38,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
-    _attr_preset_modes = list(SensPreset.__members__.keys())
-    _attr_fan_modes = list(SensFanspeed.__members__.keys())
+    _attr_preset_modes = list(PRESETMODES)
 
     @property
     def current_temperature(self) -> int | None:
@@ -60,7 +58,10 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Get the preset mode."""
-        return SensPreset(self._unit.get_preset()).name
+        return next(
+            (key for key, val in PRESETMODES.items() if val == self._unit.get_preset()),
+            "Sun",
+        )
 
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -72,7 +73,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     @api_call
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        await self._unit.set_preset(SensPreset[preset_mode].value)
+        await self._unit.set_preset(PRESETMODES[preset_mode])
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Duotecno does not support setting this, we can only display it."""
