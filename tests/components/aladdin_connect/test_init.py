@@ -9,6 +9,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import DEVICE_CONFIG_OPEN
+
 from tests.common import AsyncMock, MockConfigEntry
 
 CONFIG = {"username": "test-user", "password": "test-password"}
@@ -141,20 +143,48 @@ async def test_stale_device_removal(
     hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
 ) -> None:
     """Test component setup missing door device is removed."""
+    DEVICE_CONFIG_DOOR_2 = {
+        "device_id": 533255,
+        "door_number": 2,
+        "name": "home 2",
+        "status": "open",
+        "link_status": "Connected",
+        "serial": "12346",
+        "model": "02",
+    }
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG,
         unique_id=ID,
     )
     config_entry.add_to_hass(hass)
+    mock_aladdinconnect_api.get_doors = AsyncMock(
+        return_value=[DEVICE_CONFIG_OPEN, DEVICE_CONFIG_DOOR_2]
+    )
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "bad_id")},
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
     )
+    assert len(device_entry) == 2
+    assert any("533255-1" in identifier for identifier in device_entry[0].identifiers)
+    assert any("533255-2" in identifier for identifier in device_entry[1].identifiers)
 
+    assert await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+
+    mock_aladdinconnect_api.get_doors = AsyncMock(return_value=[DEVICE_CONFIG_OPEN])
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -169,4 +199,4 @@ async def test_stale_device_removal(
         device_registry, config_entry.entry_id
     )
     assert len(device_entry) == 1
-    assert "bad_id" not in device_entry[0].identifiers
+    assert any("533255-1" in identifier for identifier in device_entry[0].identifiers)
