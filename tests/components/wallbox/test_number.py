@@ -35,8 +35,8 @@ async def test_wallbox_number_class(
             json=authorisation_response,
             status_code=200,
         )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
+        mock_request.post(
+            "https://api.wall-box.com/chargers/config/12345",
             json=json.loads(
                 json.dumps(
                     {
@@ -73,8 +73,8 @@ async def test_wallbox_number_class_connection_error(
             json=authorisation_response,
             status_code=200,
         )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
+        mock_request.post(
+            "https://api.wall-box.com/chargers/config/12345",
             json=json.loads(
                 json.dumps(
                     {
