@@ -141,7 +141,6 @@ def migrate(hass: HomeAssistant, entry: ConfigEntry, address: str, sensor_name: 
     unique_ids: dict[str, str] = {}
 
     for entity in filtered_entities:
-        # Need to extract the sensor type from the end of the unique id
         if entity.unique_id.startswith(address):
             unique_ids["v3"] = entity.entity_id
         elif "(" in entity.unique_id:
