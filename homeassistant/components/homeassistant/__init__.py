@@ -252,10 +252,18 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
         await hass.config.async_update(
-            latitude=call.data[ATTR_LATITUDE],
-            longitude=call.data[ATTR_LONGITUDE],
-            elevation=call.data.get(ATTR_ELEVATION, None),
+            latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
         )
+
+        service_data = {
+            "latitude": call.data[ATTR_LATITUDE],
+            "longitude": call.data[ATTR_LONGITUDE],
+        }
+
+        if call.data.get(ATTR_ELEVATION):
+            service_data["elevation"] = call.data[ATTR_ELEVATION]
+
+        await hass.config.async_update(**service_data)
 
     async_register_admin_service(
         hass,

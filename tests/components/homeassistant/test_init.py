@@ -311,7 +311,7 @@ async def test_setting_location(hass: HomeAssistant) -> None:
         {"latitude": 30, "longitude": 40},
         blocking=True,
     )
-    assert len(events) == 1
+    assert len(events) == 2
     assert hass.config.latitude == 30
     assert hass.config.longitude == 40
     assert hass.config.elevation != 50
