@@ -131,7 +131,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         """Initialize sensor base entity."""
         super().__init__(server)
         self.entity_description = description
-        self._attr_unique_id = f"{server.unique_id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{server.unique_id}-{description.key}"
 
     @property
     def available(self) -> bool:

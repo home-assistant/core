@@ -58,7 +58,7 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
         """Initialize status binary sensor."""
         super().__init__(server=server)
         self.entity_description = description
-        self._attr_unique_id = f"{self._server.unique_id}-{KEY_STATUS}"
+        self._attr_unique_id = f"{server.unique_id}-{description.key}"
         self._attr_is_on = False
 
     async def async_update(self) -> None:

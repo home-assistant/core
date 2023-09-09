@@ -23,11 +23,11 @@ class MinecraftServerEntity(Entity):
         """Initialize base entity."""
         self._server = server
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._server.unique_id)},
+            identifiers={(DOMAIN, server.unique_id)},
             manufacturer=MANUFACTURER,
-            model=f"Minecraft Server ({self._server.data.version})",
-            name=self._server.name,
-            sw_version=f"{self._server.data.protocol_version}",
+            model=f"Minecraft Server ({server.data.version})",
+            name=server.name,
+            sw_version=str(server.data.protocol_version),
         )
         self._disconnect_dispatcher: CALLBACK_TYPE | None = None
 
