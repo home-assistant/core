@@ -130,7 +130,6 @@ async def test_all_entities(
 ) -> None:
     """Test all entities."""
     await setup_integration()
-    er.async_get(hass)
 
     mock = MockWithings(PERSON0)
     with patch(
