@@ -542,9 +542,8 @@ async def handle_render_template(
             timed_out = await template_obj.async_render_will_timeout(
                 timeout, variables, strict=msg["strict"], log_fn=log_fn
             )
-        except TemplateError as ex:
-            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
-            return
+        except TemplateError:
+            timed_out = False
 
         if timed_out:
             connection.send_error(
@@ -583,7 +582,6 @@ async def handle_render_template(
             hass,
             [TrackTemplate(template_obj, variables)],
             _template_listener,
-            raise_on_template_error=True,
             strict=msg["strict"],
             log_fn=log_fn,
         )
