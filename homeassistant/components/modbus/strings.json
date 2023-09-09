@@ -71,8 +71,8 @@
   },
   "issues": {
     "deprecated_close_comm_config": {
-      "title": "`close_comm_on_error:` is deprecated",
-      "description": "Please remove parameter `close_comm_on_error`: from the modus entry in configuration.yaml and restart Home Assistant to fix this issue.\nCommunication is automatically closed on errors. Please review the other parameters for error handling."
+      "title": "`close_comm_on_error` configuration key is being removed",
+      "description": "Please remove the `close_comm_on_error` key from the modbus entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nCommunication is automatically closed on errors. Please review the other parameters for error handling."
     }
   }
 }
