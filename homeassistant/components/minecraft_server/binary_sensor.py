@@ -38,15 +38,15 @@ async def async_setup_entry(
 
     # Create entities list.
     entities = [
-        MinecraftServerStatusBinarySensor(server, STATUS_BINARY_SENSOR_DESCRIPTION)
+        MinecraftServerBinarySensorEntity(server, STATUS_BINARY_SENSOR_DESCRIPTION)
     ]
 
     # Add binary sensor entities.
     async_add_entities(entities, True)
 
 
-class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntity):
-    """Representation of a Minecraft Server status binary sensor."""
+class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntity):
+    """Representation of a Minecraft Server binary sensor base entity."""
 
     entity_description: MinecraftServerBinarySensorEntityDescription
 
@@ -55,12 +55,12 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
         server: MinecraftServer,
         description: MinecraftServerBinarySensorEntityDescription,
     ) -> None:
-        """Initialize status binary sensor."""
+        """Initialize binary sensor base entity."""
         super().__init__(server=server)
         self.entity_description = description
         self._attr_unique_id = f"{server.unique_id}-{description.key}"
         self._attr_is_on = False
 
     async def async_update(self) -> None:
-        """Update status."""
+        """Update binary sensor state."""
         self._attr_is_on = self._server.online
