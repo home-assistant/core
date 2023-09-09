@@ -419,7 +419,6 @@ omit =
     homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/home_base.py
     homeassistant/components/freebox/router.py
-    homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/device_tracker.py
@@ -1012,6 +1011,7 @@ omit =
     homeassistant/components/renson/const.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
+    homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
