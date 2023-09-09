@@ -43,15 +43,23 @@ BINARY_SENSOR_DESCRIPTIONS = [
         translation_key="mop_drying_status",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.status.dry_status == 1,
+        value_fn=lambda data: data.status.dry_status,
     ),
     RoborockBinarySensorDescription(
-        key="water_shortage_status",
-        translation_key="water_shortage",
-        icon="mdi:water",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        key="water_box_carriage_status",
+        translation_key="mop_attached",
+        icon="mdi:square-rounded",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.status.water_shortage_status == 1,
+        value_fn=lambda data: data.status.water_box_carriage_status,
+    ),
+    RoborockBinarySensorDescription(
+        key="water_box_status",
+        translation_key="water_box_attached",
+        icon="mdi:water",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.water_box_status,
     ),
 ]
 
@@ -95,6 +103,9 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.roborock_device_info.props
+        return (
+            self.entity_description.value_fn(
+                self.coordinator.roborock_device_info.props
+            )
+            == 1
         )
