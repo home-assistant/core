@@ -318,7 +318,8 @@ class ESPHomeClient(BaseBleakClient):
         Returns:
             Boolean representing connection status.
         """
-        await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
+        if not self._bluetooth_device.ble_connections_free:
+            await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
         cache = self._cache
 
         self._mtu = cache.get_gatt_mtu_cache(self._address_as_int)
@@ -391,14 +392,12 @@ class ESPHomeClient(BaseBleakClient):
     async def _disconnect(self) -> bool:
         self._async_disconnected_cleanup()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
-        await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
+        if not self._bluetooth_device.ble_connections_free:
+            await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
         return True
 
     async def _wait_for_free_connection_slot(self, timeout: float) -> None:
         """Wait for a free connection slot."""
-        bluetooth_device = self._bluetooth_device
-        if bluetooth_device.ble_connections_free:
-            return
         _LOGGER.debug(
             "%s: %s - %s: Out of connection slots, waiting for a free one",
             self._source_name,
@@ -406,7 +405,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.address,
         )
         async with asyncio.timeout(timeout):
-            await bluetooth_device.wait_for_ble_connections_free()
+            await self._bluetooth_device.wait_for_ble_connections_free()
 
     @property
     def is_connected(self) -> bool:
