@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 
 from airthings_ble import AirthingsDevice
 
@@ -116,7 +115,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 }
 
 
-def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
+def migrate(hass: HomeAssistant, entry: ConfigEntry, address: str, sensor_name: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
     ent_reg = entity_async_get(hass)
@@ -135,30 +134,26 @@ def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
         include_disabled_entities=True,
     )
 
+    filtered_entities = (
+        entity for entity in entities if entity.unique_id.endswith(sensor_name)
+    )
+
+    unique_ids: dict[str, dict[str, str]] = {}
+
+    for entity in filtered_entities:
+        # Need to extract the sensor type from the end of the unique id
+        if entity.unique_id.startswith(address):
+            unique_ids[sensor_name]["v3"] = entity.entity_id
+        elif "(" in entity.unique_id:
+            unique_ids[sensor_name]["v2"] = entity.entity_id
+        else:
+            unique_ids[sensor_name]["v1"] = entity.entity_id
+
     def _migrate_unique_id(entity_id: str, new_unique_id: str):
         _LOGGER.debug(
             "Migrating entity '%s' to unique id '%s'", entity_id, new_unique_id
         )
         ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
-
-    unique_ids: dict[str, dict[str, str]] = {}
-
-    for entity in entities:
-        # Need to extract the sensor type from the end of the unique id
-        if sensor_name := re.sub(r"^.*?_", "", entity.unique_id):
-            if sensor_name not in unique_ids:
-                unique_ids[sensor_name] = {}
-            if entity.unique_id.startswith(address):
-                unique_ids[sensor_name]["v3"] = entity.entity_id
-            elif "(" in entity.unique_id:
-                unique_ids[sensor_name]["v2"] = entity.entity_id
-            else:
-                unique_ids[sensor_name]["v1"] = entity.entity_id
-        else:
-            _LOGGER.debug(
-                "Could not find sensor name, aborting migration ('%s')",
-                entity.unique_id,
-            )
 
     # Go through all the sensors and try to migrate the oldest format first. If it
     # does not exist, try the format introduced in 2023.9.0. Only migrate if the
@@ -208,11 +203,10 @@ async def async_setup_entry(
                 sensor_value,
             )
             continue
+        migrate(hass, entry, coordinator.data.address, sensor_type)
         entities.append(
             AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
-
-    migrate_unique_id(hass, entry, coordinator.data.address)
 
     async_add_entities(entities)
 
