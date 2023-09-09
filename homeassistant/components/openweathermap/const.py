@@ -48,6 +48,7 @@ ATTR_API_UV_INDEX = "uv_index"
 ATTR_API_VISIBILITY_DISTANCE = "visibility_distance"
 ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_FORECAST = "forecast"
+ATTR_API_NATIONAL_WEATHER_ALERTS = "national_weather_alerts"
 UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 

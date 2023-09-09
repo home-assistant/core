@@ -1,7 +1,10 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
+import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -41,6 +44,7 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_HUMIDITY,
+    ATTR_API_NATIONAL_WEATHER_ALERTS,
     ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -60,6 +64,8 @@ from .const import (
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -158,6 +164,10 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_WEATHER_CODE,
         name="Weather Code",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_NATIONAL_WEATHER_ALERTS,
+        name="National weather alerts",
     ),
 )
 FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -313,7 +323,37 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
+        if self.entity_description.key == ATTR_API_NATIONAL_WEATHER_ALERTS:
+            if not self._weather_coordinator.data.get(
+                self.entity_description.key, None
+            ):
+                return 0
+            return len(
+                self._weather_coordinator.data.get(self.entity_description.key, None)
+            )
         return self._weather_coordinator.data.get(self.entity_description.key, None)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra state attributes."""
+        if self.entity_description.key == ATTR_API_NATIONAL_WEATHER_ALERTS:
+            data = self._weather_coordinator.data.get(self.entity_description.key, None)
+            variable_safe = []
+            if data is None:
+                return {"alerts": None}
+            for alert in data:
+                alert_data = {
+                    "sender": alert.sender,
+                    "title": alert.title,
+                    "start": str(alert.start_time()),
+                    "end": str(alert.end_time()),
+                    "description": alert.description,
+                    "tags": alert.tags,
+                }
+                variable_safe.append(alert_data)
+
+            return {"alerts": variable_safe}
+        return None
 
 
 class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):

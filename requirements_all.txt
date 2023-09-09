@@ -1920,7 +1920,7 @@ pyotp==2.8.0
 pyoverkiz==1.9.0
 
 # homeassistant.components.openweathermap
-pyowm==3.2.0
+pyowm==3.3.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
