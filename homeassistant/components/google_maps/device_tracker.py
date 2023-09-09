@@ -118,7 +118,7 @@ class GoogleMapsScanner:
                 )
                 _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
                 continue
-            elif last_seen == self._prev_seen.get(dev_id, last_seen) and hasattr(person, "source_type"):
+            if last_seen == self._prev_seen.get(dev_id, last_seen) and hasattr(person, "source_type"):
                 _LOGGER.warning(
                     "Ignoring %s update because timestamp "
                     "is same than last timestamp %s : %s",
