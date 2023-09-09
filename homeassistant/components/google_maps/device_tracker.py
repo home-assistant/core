@@ -124,9 +124,9 @@ class GoogleMapsScanner:
                 _LOGGER.warning(
                     "Ignoring %s update because timestamp "
                     "is same than last timestamp %s : %s",
-                    person.nickname, 
-                    last_seen, 
-                    person.source_type
+                    person.nickname,
+                    last_seen,
+                    person.source_type,
                 )
                 self._prev_seen[dev_id] = last_seen
                 continue
