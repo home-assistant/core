@@ -86,6 +86,7 @@ class VlcDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _volume_bkp = 0.0
+    volume_level: int
 
     def __init__(
         self, config_entry: ConfigEntry, vlc: Client, name: str, available: bool
@@ -172,11 +173,8 @@ class VlcDevice(MediaPlayerEntity):
             self._attr_media_title = data_info["filename"]
 
             # Strip out auth signatures if streaming local media
-            if (
-                self.media_title
-                and (pos := self._attr_media_title.find("?authSig=")) != -1
-            ):
-                self._attr_media_title = self._attr_media_title[:pos]
+            if self.media_title and (pos := self.media_title.find("?authSig=")) != -1:
+                self._attr_media_title = self.media_title[:pos]
 
     @catch_vlc_errors
     async def async_media_seek(self, position: float) -> None:
