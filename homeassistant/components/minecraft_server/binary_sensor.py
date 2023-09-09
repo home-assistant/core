@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinecraftServer
-from .const import DOMAIN, ICON_STATUS, KEY_STATUS, NAME_STATUS
+from .const import DOMAIN, ICON_STATUS, KEY_STATUS
 from .entity import MinecraftServerEntity
 
 
@@ -18,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server binary sensor platform."""
-    server = hass.data[DOMAIN][config_entry.unique_id]
+    server = hass.data[DOMAIN][config_entry.entry_id]
 
     # Create entities list.
     entities = [MinecraftServerStatusBinarySensor(server)]
@@ -36,7 +36,7 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
         """Initialize status binary sensor."""
         super().__init__(
             server=server,
-            type_name=NAME_STATUS,
+            entity_type=KEY_STATUS,
             icon=ICON_STATUS,
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
         )

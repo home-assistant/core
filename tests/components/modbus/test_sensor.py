@@ -187,7 +187,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            "Structure request 16 bytes, but 2 registers have a size of 4 bytes",
+            f"{TEST_ENTITY_NAME}: Size of structure is 16 bytes but `{CONF_COUNT}: 2` is 4 bytes",
         ),
         (
             {
@@ -212,12 +212,11 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                         CONF_ADDRESS: 1234,
                         CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
-                        CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "",
                     },
                 ]
             },
-            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field cannot be empty",
+            f"{TEST_ENTITY_NAME}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
         (
             {
@@ -227,12 +226,11 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                         CONF_ADDRESS: 1234,
                         CONF_DATA_TYPE: DataType.CUSTOM,
                         CONF_COUNT: 4,
-                        CONF_SWAP: CONF_SWAP_NONE,
                         CONF_STRUCTURE: "1s",
                     },
                 ]
             },
-            "Structure request 1 bytes, but 4 registers have a size of 8 bytes",
+            f"{TEST_ENTITY_NAME}: Size of structure is 1 bytes but `{CONF_COUNT}: 4` is 8 bytes",
         ),
         (
             {
@@ -247,7 +245,7 @@ async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
                     },
                 ]
             },
-            f"{TEST_ENTITY_NAME}: `structure` illegal with `swap`",
+            f"{TEST_ENTITY_NAME}: `{CONF_SWAP}:{CONF_SWAP_WORD}` cannot be combined with `{CONF_DATA_TYPE}: {DataType.CUSTOM}`",
         ),
     ],
 )
@@ -267,7 +265,6 @@ async def test_config_wrong_struct_sensor(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -599,6 +596,38 @@ async def test_config_wrong_struct_sensor(
             False,
             "1.23",
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 10,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593750",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 2,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 0.01,
+                CONF_OFFSET: 0,
+            },
+            [0x00AB, 0xCDEF],
+            False,
+            "112593.75",
+        ),
     ],
 )
 async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
@@ -710,7 +739,6 @@ async def test_slave_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> Non
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -935,7 +963,7 @@ async def test_lazy_error_sensor(
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
+    await do_next_cycle(hass, mock_do_cycle, 5)
     assert hass.states.get(ENTITY_ID).state == start_expect
     await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
@@ -1003,7 +1031,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 201,
-                    CONF_SCAN_INTERVAL: 1,
                 },
             ],
         },
@@ -1014,7 +1041,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
     [
         (
             {
-                CONF_COUNT: 1,
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT16,
             },
@@ -1023,7 +1049,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_COUNT: 1,
                 CONF_SWAP: CONF_SWAP_BYTE,
                 CONF_DATA_TYPE: DataType.UINT16,
             },
@@ -1032,7 +1057,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_SWAP: CONF_SWAP_NONE,
                 CONF_DATA_TYPE: DataType.UINT32,
             },
@@ -1041,7 +1065,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_SWAP: CONF_SWAP_BYTE,
                 CONF_DATA_TYPE: DataType.UINT32,
             },
@@ -1050,7 +1073,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_SWAP: CONF_SWAP_WORD,
                 CONF_DATA_TYPE: DataType.UINT32,
             },
@@ -1059,7 +1081,6 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
         ),
         (
             {
-                CONF_COUNT: 2,
                 CONF_SWAP: CONF_SWAP_WORD_BYTE,
                 CONF_DATA_TYPE: DataType.UINT32,
             },

@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from contextvars import ContextVar
 from copy import copy
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -401,7 +402,7 @@ class _ScriptRun:
         )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
-    async def async_run(self) -> ServiceResponse:
+    async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
@@ -443,7 +444,7 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return response
+        return ScriptRunResult(response, self._variables)
 
     async def _async_step(self, log_exceptions):
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -1189,6 +1190,14 @@ class _IfData(TypedDict):
     if_else: Script | None
 
 
+@dataclass
+class ScriptRunResult:
+    """Container with the result of a script run."""
+
+    service_response: ServiceResponse
+    variables: dict
+
+
 class Script:
     """Representation of a script."""
 
@@ -1480,7 +1489,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
-    ) -> ServiceResponse:
+    ) -> ScriptRunResult | None:
         """Run script."""
         if context is None:
             self._log(
