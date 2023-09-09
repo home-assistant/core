@@ -1,7 +1,7 @@
 """Tests for the withings component."""
 from collections.abc import Iterable
 import json
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import arrow
@@ -82,10 +82,10 @@ class MockWithings:
     def sleep_get_summary(
         self,
         data_fields: Iterable[GetSleepSummaryField],
-        startdateymd: Optional[DateType] = arrow.utcnow(),
-        enddateymd: Optional[DateType] = arrow.utcnow(),
-        offset: Optional[int] = None,
-        lastupdate: Optional[DateType] = arrow.utcnow(),
+        startdateymd: DateType | None = arrow.utcnow(),
+        enddateymd: DateType | None = arrow.utcnow(),
+        offset: int | None = None,
+        lastupdate: DateType | None = arrow.utcnow(),
     ) -> SleepGetSummaryResponse:
         """Get sleep."""
         fixture = json.loads(load_fixture(f"withings/{self.sleep_fixture}"))
@@ -93,7 +93,7 @@ class MockWithings:
 
     def notify_list(
         self,
-        appli: Optional[NotifyAppli] = None,
+        appli: NotifyAppli | None = None,
     ) -> NotifyListResponse:
         """Get sleep."""
         fixture = json.loads(load_fixture(f"withings/{self.notify_list_fixture}"))
