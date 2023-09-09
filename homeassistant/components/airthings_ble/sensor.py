@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import logging
+import re
 
 from airthings_ble import AirthingsDevice
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -22,8 +23,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    DeviceInfo,
+    async_get as device_async_get,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get as entity_async_get,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -107,9 +116,71 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 }
 
 
+def migrate_unique_id(hass: HomeAssistant, entry: ConfigEntry, address: str):
+    """Migrate entities to new unique ids (with BLE Address)."""
+
+    ent_reg = entity_async_get(hass)
+
+    device_registry = device_async_get(hass)
+    entity_registry = entity_async_get(hass)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, address)})
+
+    if not device:
+        return
+
+    entities = async_entries_for_device(
+        entity_registry,
+        device_id=device.id,
+        include_disabled_entities=True,
+    )
+
+    def _migrate_unique_id(entity_id: str, new_unique_id: str):
+        _LOGGER.debug(
+            "Migrating entity '%s' to unique id '%s'", entity_id, new_unique_id
+        )
+        ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
+
+    unique_ids: dict[str, dict[str, str]] = {}
+
+    for entity in entities:
+        # Need to extract the sensor type from the end of the unique id
+        if sensor_name := re.sub(r"^.*?_", "", entity.unique_id):
+            if sensor_name not in unique_ids:
+                unique_ids[sensor_name] = {}
+            if entity.unique_id.startswith(address):
+                unique_ids[sensor_name]["v3"] = entity.entity_id
+            elif "(" in entity.unique_id:
+                unique_ids[sensor_name]["v2"] = entity.entity_id
+            else:
+                unique_ids[sensor_name]["v1"] = entity.entity_id
+        else:
+            _LOGGER.debug(
+                "Could not find sensor name, aborting migration ('%s')",
+                entity.unique_id,
+            )
+
+    # Go through all the sensors and try to migrate the oldest format first. If it
+    # does not exist, try the format introduced in 2023.9.0. Only migrate if the
+    # newest correct format does not exist.
+    for sensor_type, versions in unique_ids.items():
+        if versions.get("v3"):
+            # Already migrated, skip this sensor
+            continue
+
+        new_unique_id = f"{address}_{sensor_type}"
+        if entity_id := versions.get("v1"):
+            _migrate_unique_id(
+                entity_id=entity_id,
+                new_unique_id=new_unique_id,
+            )
+        elif entity_id := versions.get("v2"):
+            _migrate_unique_id(entity_id=entity_id, new_unique_id=new_unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Airthings BLE sensors."""
@@ -140,6 +211,8 @@ async def async_setup_entry(
         entities.append(
             AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
+
+    migrate_unique_id(hass, entry, coordinator.data.address)
 
     async_add_entities(entities)
 
