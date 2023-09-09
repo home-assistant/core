@@ -19,14 +19,9 @@ class MinecraftServerEntity(Entity):
     def __init__(
         self,
         server: MinecraftServer,
-        entity_type: str,
-        icon: str,
-        device_class: str | None,
     ) -> None:
         """Initialize base entity."""
         self._server = server
-        self._attr_icon = icon
-        self._attr_unique_id = f"{self._server.unique_id}-{entity_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._server.unique_id)},
             manufacturer=MANUFACTURER,
@@ -34,8 +29,6 @@ class MinecraftServerEntity(Entity):
             name=self._server.name,
             sw_version=f"{self._server.data.protocol_version}",
         )
-        self._attr_device_class = device_class
-        self._extra_state_attributes = None
         self._disconnect_dispatcher: CALLBACK_TYPE | None = None
 
     async def async_update(self) -> None:

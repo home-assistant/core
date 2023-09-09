@@ -1,7 +1,10 @@
 """The Minecraft Server binary sensor platform."""
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,6 +13,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import MinecraftServer
 from .const import DOMAIN, ICON_STATUS, KEY_STATUS
 from .entity import MinecraftServerEntity
+
+
+@dataclass
+class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Minecraft Server binary sensor entities."""
+
+
+STATUS_BINARY_SENSOR_DESCRIPTION = MinecraftServerBinarySensorEntityDescription(
+    key=KEY_STATUS,
+    translation_key=KEY_STATUS,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    icon=ICON_STATUS,
+)
 
 
 async def async_setup_entry(
@@ -21,7 +37,9 @@ async def async_setup_entry(
     server = hass.data[DOMAIN][config_entry.entry_id]
 
     # Create entities list.
-    entities = [MinecraftServerStatusBinarySensor(server)]
+    entities = [
+        MinecraftServerStatusBinarySensor(server, STATUS_BINARY_SENSOR_DESCRIPTION)
+    ]
 
     # Add binary sensor entities.
     async_add_entities(entities, True)
@@ -30,16 +48,17 @@ async def async_setup_entry(
 class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntity):
     """Representation of a Minecraft Server status binary sensor."""
 
-    _attr_translation_key = KEY_STATUS
+    entity_description: MinecraftServerBinarySensorEntityDescription
 
-    def __init__(self, server: MinecraftServer) -> None:
+    def __init__(
+        self,
+        server: MinecraftServer,
+        description: MinecraftServerBinarySensorEntityDescription,
+    ) -> None:
         """Initialize status binary sensor."""
-        super().__init__(
-            server=server,
-            entity_type=KEY_STATUS,
-            icon=ICON_STATUS,
-            device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        )
+        super().__init__(server=server)
+        self.entity_description = description
+        self._attr_unique_id = f"{self._server.unique_id}-{KEY_STATUS}"
         self._attr_is_on = False
 
     async def async_update(self) -> None:
