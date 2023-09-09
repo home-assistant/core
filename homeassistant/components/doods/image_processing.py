@@ -394,7 +394,8 @@ class Doods(ImageProcessingEntity):
             self._save_image(image, matches, paths)
         else:
             _LOGGER.debug("Not saving image(s), no detections found or no output"
-                          " file configured")
+                          " file configured"
+            )
 
         self._matches = matches
         self._total_matches = total_matches
