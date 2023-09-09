@@ -123,7 +123,7 @@ async def async_setup_entry(
     # Add sensor entities.
     async_add_entities(
         [
-            MinecraftServerSensorEntity(server=server, description=description)
+            MinecraftServerSensorEntity(server, description)
             for description in SENSOR_DESCRIPTIONS
         ],
         True,

@@ -41,7 +41,7 @@ async def async_setup_entry(
     # Add binary sensor entities.
     async_add_entities(
         [
-            MinecraftServerBinarySensorEntity(server=server, description=description)
+            MinecraftServerBinarySensorEntity(server, description)
             for description in BINARY_SENSOR_DESCRIPTIONS
         ],
         True,
