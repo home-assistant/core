@@ -54,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        conf_host = cast(str, user_input[CONF_USERNAME])
+        conf_host = cast(str, user_input[CONF_HOST])
         conf_username = cast(str, user_input[CONF_USERNAME])
         conf_password = cast(str, user_input[CONF_PASSWORD])
 

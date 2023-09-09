@@ -9,14 +9,20 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    UnitOfTemperature,
-)
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+
+HASS_TO_KOMFOVENT_MODES = {
+    HVACMode.COOL: komfovent_api.KomfoventModes.COOL,
+    HVACMode.HEAT_COOL: komfovent_api.KomfoventModes.HEAT_COOL,
+    HVACMode.OFF: komfovent_api.KomfoventModes.OFF,
+    HVACMode.AUTO: komfovent_api.KomfoventModes.AUTO,
+}
+KOMFOVENT_TO_HASS_MODES = {v: k for k, v in HASS_TO_KOMFOVENT_MODES.items()}
 
 
 async def async_setup_entry(
@@ -32,9 +38,8 @@ async def async_setup_entry(
 class KomfoventDevice(ClimateEntity):
     """Representation of a ventilation unit."""
 
-    _attr_hvac_modes = [HVACMode.FAN_ONLY]
-    _attr_hvac_mode = HVACMode.FAN_ONLY
-    _attr_preset_modes = [mode.name for mode in komfovent_api.KomfoventOperatingModes]
+    _attr_hvac_modes = list(HASS_TO_KOMFOVENT_MODES.keys())
+    _attr_preset_modes = [mode.name for mode in komfovent_api.KomfoventPresets]
     _attr_supported_features = ClimateEntityFeature.PRESET_MODE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "ventilation_unit"
@@ -58,10 +63,16 @@ class KomfoventDevice(ClimateEntity):
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new target temperature."""
-        await komfovent_api.set_operating_mode(
+        """Set new target preset mode."""
+        await komfovent_api.set_preset(
             self._komfovent_credentials,
-            komfovent_api.KomfoventOperatingModes[preset_mode],
+            komfovent_api.KomfoventPresets[preset_mode],
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        await komfovent_api.set_mode(
+            self._komfovent_credentials, HASS_TO_KOMFOVENT_MODES[hvac_mode]
         )
 
     async def async_update(self) -> None:
@@ -73,5 +84,6 @@ class KomfoventDevice(ClimateEntity):
             self._attr_available = False
             return
         self._attr_available = True
-        self._attr_preset_mode = status.mode
+        self._attr_preset_mode = status.preset
         self._attr_current_temperature = status.temp_extract
+        self._attr_hvac_mode = KOMFOVENT_TO_HASS_MODES[status.mode]
