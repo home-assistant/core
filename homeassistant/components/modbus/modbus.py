@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -256,8 +257,14 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
-            _LOGGER.warning(
-                "CLOSE_COMM_ON_ERROR is deprecated since 2023.10.0 and will be removed in 2024.3"
+            async_create_issue(  # pragma: no cover
+                hass,
+                DOMAIN,
+                "deprecated_close_comm_config",
+                breaks_in_ha_version="2024.4.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_close_comm_config",
             )
         # generic configuration
         self._client: ModbusBaseClient | None = None

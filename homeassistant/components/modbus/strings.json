@@ -68,5 +68,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_close_comm_config": {
+      "title": "CLOSE_COMM_ON_ERROR is deprecated",
+      "description": "Please remove parameter \"close_comm_on_error:\" from the modus entry in configuration.yaml."
+    }
   }
 }
