@@ -138,39 +138,39 @@ def migrate(hass: HomeAssistant, entry: ConfigEntry, address: str, sensor_name: 
         entity for entity in entities if entity.unique_id.endswith(sensor_name)
     )
 
-    unique_ids: dict[str, dict[str, str]] = {}
+    unique_ids: dict[str, str] = {}
 
     for entity in filtered_entities:
         # Need to extract the sensor type from the end of the unique id
         if entity.unique_id.startswith(address):
-            unique_ids[sensor_name]["v3"] = entity.entity_id
+            unique_ids["v3"] = entity.entity_id
         elif "(" in entity.unique_id:
-            unique_ids[sensor_name]["v2"] = entity.entity_id
+            unique_ids["v2"] = entity.entity_id
         else:
-            unique_ids[sensor_name]["v1"] = entity.entity_id
+            unique_ids["v1"] = entity.entity_id
 
     def _migrate_unique_id(entity_id: str, new_unique_id: str):
-        _LOGGER.debug(
-            "Migrating entity '%s' to unique id '%s'", entity_id, new_unique_id
-        )
         ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
+        _LOGGER.info("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
 
-    # Go through all the sensors and try to migrate the oldest format first. If it
-    # does not exist, try the format introduced in 2023.9.0. Only migrate if the
-    # newest correct format does not exist.
-    for sensor_type, versions in unique_ids.items():
-        if versions.get("v3"):
-            # Already migrated, skip this sensor
-            continue
+    if unique_ids.get("v3"):
+        # Already has the newest unique id format
+        _LOGGER.debug("Already migrated: '%s'", unique_ids["v3"])
+        return
 
-        new_unique_id = f"{address}_{sensor_type}"
-        if entity_id := versions.get("v1"):
-            _migrate_unique_id(
-                entity_id=entity_id,
-                new_unique_id=new_unique_id,
-            )
-        elif entity_id := versions.get("v2"):
-            _migrate_unique_id(entity_id=entity_id, new_unique_id=new_unique_id)
+    new_unique_id = f"{address}_{sensor_name}"
+
+    # Try to migrate the pre 2023.9.0 unique id first
+    if entity_id := unique_ids.get("v1"):
+        _migrate_unique_id(
+            entity_id=entity_id,
+            new_unique_id=new_unique_id,
+        )
+
+    # If pre 2023.9.0 unique id is not found, try to migrate the unique id
+    # introduced in 2023.9.0
+    elif entity_id := unique_ids.get("v2"):
+        _migrate_unique_id(entity_id=entity_id, new_unique_id=new_unique_id)
 
 
 async def async_setup_entry(
