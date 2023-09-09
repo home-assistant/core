@@ -1234,27 +1234,27 @@ EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
 
 ERR_MSG = {"type": "result", "success": False}
 
-VARIABLE_ERROR_UNDEFINED_FUNC = {
+EVENT_UNDEFINED_FUNC_1 = {
     "error": "'my_unknown_func' is undefined",
     "level": "ERROR",
 }
-TEMPLATE_ERROR_UNDEFINED_FUNC = {
-    "code": "template_error",
-    "message": "UndefinedError: 'my_unknown_func' is undefined",
+EVENT_UNDEFINED_FUNC_2 = {
+    "error": "UndefinedError: 'my_unknown_func' is undefined",
+    "level": "ERROR",
 }
 
-VARIABLE_WARNING_UNDEFINED_VAR = {
+EVENT_UNDEFINED_VAR_WARN = {
     "error": "'my_unknown_var' is undefined",
     "level": "WARNING",
 }
-TEMPLATE_ERROR_UNDEFINED_VAR = {
-    "code": "template_error",
-    "message": "UndefinedError: 'my_unknown_var' is undefined",
+EVENT_UNDEFINED_VAR_ERR = {
+    "error": "UndefinedError: 'my_unknown_var' is undefined",
+    "level": "ERROR",
 }
 
-TEMPLATE_ERROR_UNDEFINED_FILTER = {
-    "code": "template_error",
-    "message": "TemplateAssertionError: No filter named 'unknown_filter'.",
+EVENT_UNDEFINED_FILTER = {
+    "error": "TemplateAssertionError: No filter named 'unknown_filter'.",
+    "level": "ERROR",
 }
 
 
@@ -1264,16 +1264,19 @@ TEMPLATE_ERROR_UNDEFINED_FILTER = {
         (
             "{{ my_unknown_func() + 1 }}",
             [
-                {"type": "event", "event": VARIABLE_ERROR_UNDEFINED_FUNC},
-                ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
             ],
         ),
         (
             "{{ my_unknown_var }}",
             [
-                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
                 {"type": "result", "success": True, "result": None},
-                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
                 {
                     "type": "event",
                     "event": {"result": "", "listeners": EMPTY_LISTENERS},
@@ -1282,11 +1285,19 @@ TEMPLATE_ERROR_UNDEFINED_FILTER = {
         ),
         (
             "{{ my_unknown_var + 1 }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
         ),
         (
             "{{ now() | unknown_filter }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
         ),
     ],
 )
@@ -1325,16 +1336,20 @@ async def test_render_template_with_error(
         (
             "{{ my_unknown_func() + 1 }}",
             [
-                {"type": "event", "event": VARIABLE_ERROR_UNDEFINED_FUNC},
-                ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
             ],
         ),
         (
             "{{ my_unknown_var }}",
             [
-                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
                 {"type": "result", "success": True, "result": None},
-                {"type": "event", "event": VARIABLE_WARNING_UNDEFINED_VAR},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
                 {
                     "type": "event",
                     "event": {"result": "", "listeners": EMPTY_LISTENERS},
@@ -1343,11 +1358,19 @@ async def test_render_template_with_error(
         ),
         (
             "{{ my_unknown_var + 1 }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
         ),
         (
             "{{ now() | unknown_filter }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
         ),
     ],
 )
@@ -1386,19 +1409,35 @@ async def test_render_template_with_timeout_and_error(
     [
         (
             "{{ my_unknown_func() + 1 }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FUNC}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+            ],
         ),
         (
             "{{ my_unknown_var }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
         ),
         (
             "{{ my_unknown_var + 1 }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_VAR}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
         ),
         (
             "{{ now() | unknown_filter }}",
-            [ERR_MSG | {"error": TEMPLATE_ERROR_UNDEFINED_FILTER}],
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
         ),
     ],
 )
@@ -1409,7 +1448,73 @@ async def test_render_template_strict_with_timeout_and_error(
     template: str,
     expected_events: list[dict[str, str]],
 ) -> None:
-    """Test a template with an error with a timeout."""
+    """Test a template with an error with a timeout.
+
+    In this test report_errors is enabled.
+    """
+    caplog.set_level(logging.INFO)
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "timeout": 5,
+            "strict": True,
+            "report_errors": True,
+        }
+    )
+
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
+    assert "TemplateError" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("template", "expected_events"),
+    [
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+    ],
+)
+async def test_render_template_strict_with_timeout_and_error_2(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
+    """Test a template with an error with a timeout.
+
+    In this test report_errors is disabled.
+    """
     caplog.set_level(logging.INFO)
     await websocket_client.send_json(
         {
@@ -1427,28 +1532,162 @@ async def test_render_template_strict_with_timeout_and_error(
         for key, value in expected_event.items():
             assert msg[key] == value
 
-    assert "Template variable error" not in caplog.text
-    assert "Template variable warning" not in caplog.text
-    assert "TemplateError" not in caplog.text
+    assert "TemplateError" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("template", "expected_events_1", "expected_events_2"),
+    [
+        (
+            "{{ now() | random }}",
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "level": "ERROR",
+                    },
+                },
+                {"type": "result", "success": True, "result": None},
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "level": "ERROR",
+                    },
+                },
+            ],
+            [],
+        ),
+        (
+            "{{ float(states.sensor.foo.state) + 1 }}",
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "UndefinedError: 'None' has no attribute 'state'",
+                        "level": "ERROR",
+                    },
+                },
+                {"type": "result", "success": True, "result": None},
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "UndefinedError: 'None' has no attribute 'state'",
+                        "level": "ERROR",
+                    },
+                },
+            ],
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "result": 3.0,
+                        "listeners": EMPTY_LISTENERS | {"entities": ["sensor.foo"]},
+                    },
+                },
+            ],
+        ),
+    ],
+)
 async def test_render_template_error_in_template_code(
-    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events_1: list[dict[str, str]],
+    expected_events_2: list[dict[str, str]],
 ) -> None:
-    """Test a template that will throw in template.py."""
+    """Test a template that will throw in template.py.
+
+    In this test report_errors is enabled.
+    """
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": "{{ now() | random }}"}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "report_errors": True,
+        }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events_1:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    hass.states.async_set("sensor.foo", "2")
+
+    for expected_event in expected_events_2:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
     assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("template", "expected_events_1", "expected_events_2"),
+    [
+        (
+            "{{ now() | random }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+            [],
+        ),
+        (
+            "{{ float(states.sensor.foo.state) + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "result": 3.0,
+                        "listeners": EMPTY_LISTENERS | {"entities": ["sensor.foo"]},
+                    },
+                },
+            ],
+        ),
+    ],
+)
+async def test_render_template_error_in_template_code_2(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events_1: list[dict[str, str]],
+    expected_events_2: list[dict[str, str]],
+) -> None:
+    """Test a template that will throw in template.py.
+
+    In this test report_errors is disabled.
+    """
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": template}
+    )
+
+    for expected_event in expected_events_1:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    hass.states.async_set("sensor.foo", "2")
+
+    for expected_event in expected_events_2:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "TemplateError" in caplog.text
 
 
 async def test_render_template_with_delayed_error(
@@ -1512,7 +1751,10 @@ async def test_render_template_with_delayed_error(
     assert msg["id"] == 5
     assert msg["type"] == "event"
     event = msg["event"]
-    assert event == {"error": "UndefinedError: 'explode' is undefined"}
+    assert event == {
+        "error": "UndefinedError: 'explode' is undefined",
+        "level": "ERROR",
+    }
 
     assert "Template variable error" not in caplog.text
     assert "Template variable warning" not in caplog.text
