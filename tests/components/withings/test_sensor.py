@@ -2,6 +2,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
 
@@ -73,6 +74,7 @@ def async_assert_state_equals(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -119,22 +121,15 @@ async def test_sensor_default_enabled_entities(
             )
             state_obj = hass.states.get(entity_id)
 
-            if attribute.entity_registry_enabled_default:
-                async_assert_state_equals(entity_id, state_obj, expected, attribute)
-            else:
-                assert state_obj is None
+            async_assert_state_equals(entity_id, state_obj, expected, attribute)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant, setup_integration: ComponentSetup, snapshot: SnapshotAssertion
 ) -> None:
     """Test all entities."""
-    with patch(
-        "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"
-    ) as enabled_by_default_mock:
-        enabled_by_default_mock.return_value = False
-        await setup_integration()
-    er.async_get(hass)
+    await setup_integration()
 
     mock = MockWithings(PERSON0)
     with patch(
