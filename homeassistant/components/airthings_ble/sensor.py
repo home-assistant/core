@@ -115,7 +115,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 }
 
 
-def migrate(hass: HomeAssistant, entry: ConfigEntry, address: str, sensor_name: str):
+def migrate(hass: HomeAssistant, address: str, sensor_name: str):
     """Migrate entities to new unique ids (with BLE Address)."""
 
     ent_reg = entity_async_get(hass)
@@ -154,7 +154,6 @@ def migrate(hass: HomeAssistant, entry: ConfigEntry, address: str, sensor_name: 
 
     if unique_ids.get("v3"):
         # Already has the newest unique id format
-        _LOGGER.debug("Already migrated: '%s'", unique_ids["v3"])
         return
 
     new_unique_id = f"{address}_{sensor_name}"
@@ -202,7 +201,7 @@ async def async_setup_entry(
                 sensor_value,
             )
             continue
-        migrate(hass, entry, coordinator.data.address, sensor_type)
+        migrate(hass, coordinator.data.address, sensor_type)
         entities.append(
             AirthingsSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
         )
