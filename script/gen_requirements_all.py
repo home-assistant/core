@@ -426,7 +426,7 @@ def gather_constraints() -> str:
                     *gather_recursive_requirements("default_config"),
                     *gather_recursive_requirements("mqtt"),
                 },
-                key=lambda name: name.lower(),
+                key=str.lower,
             )
             + [""]
         )
