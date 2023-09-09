@@ -27,6 +27,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mop_attached": {
+        "name": "Mop attached"
+      },
+      "mop_drying_status": {
+        "name": "Mop drying"
+      },
+      "water_box_attached": {
+        "name": "Water box attached"
+      }
+    },
     "number": {
       "volume": {
         "name": "Volume"

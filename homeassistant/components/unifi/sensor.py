@@ -27,6 +27,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    UnitOfTemperature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfPower
@@ -85,6 +86,16 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
             and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
             < controller.option_detection_time
         ]
+    )
+
+
+@callback
+def async_device_uptime_value_fn(
+    controller: UniFiController, device: Device
+) -> datetime:
+    """Calculate the uptime of the device."""
+    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(
+        second=0, microsecond=0
     )
 
 
@@ -178,7 +189,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
     ),
     UnifiSensorEntityDescription[Clients, Client](
-        key="Uptime sensor",
+        key="Client uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=True,
@@ -271,6 +282,43 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=async_device_outlet_supported_fn,
         unique_id_fn=lambda controller, obj_id: f"ac_power_conumption-{obj_id}",
         value_fn=lambda controller, device: device.outlet_ac_power_consumption,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda device: "Uptime",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
+        supported_fn=lambda controller, obj_id: True,
+        unique_id_fn=lambda controller, obj_id: f"device_uptime-{obj_id}",
+        value_fn=async_device_uptime_value_fn,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        has_entity_name=True,
+        allowed_fn=lambda controller, obj_id: True,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        event_is_on=None,
+        event_to_subscribe=None,
+        name_fn=lambda device: "Temperature",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
+        supported_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].has_temperature,
+        unique_id_fn=lambda controller, obj_id: f"device_temperature-{obj_id}",
+        value_fn=lambda ctrlr, device: device.general_temperature,
     ),
 )
 
