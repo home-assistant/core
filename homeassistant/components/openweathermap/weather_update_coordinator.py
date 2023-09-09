@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
-from pyowm.weatherapi25.one_call import OneCall
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -122,7 +121,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             interval = "3h"
         return interval
 
-    def _convert_weather_response(self, weather_response: OneCall):
+    def _convert_weather_response(self, weather_response):
         """Format the weather response correctly."""
         current_weather = weather_response.current
         forecast_weather = self._get_forecast_from_weather_response(weather_response)
@@ -280,3 +279,4 @@ class LegacyWeather:
         """Initialize weather object."""
         self.current = current_weather
         self.forecast = forecast
+        self.national_weather_alerts = None
