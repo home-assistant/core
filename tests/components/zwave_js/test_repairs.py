@@ -157,3 +157,117 @@ async def test_invalid_issue(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def test_abort_init(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test aborting device_config_file_changed issue in init step."""
+    dev_reg = dr.async_get(hass)
+    # Create a node
+    node_state = deepcopy(multisensor_6_state)
+    node = Node(client, node_state)
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": "",
+        },
+    )
+    with patch(
+        "zwave_js_server.model.node.Node.async_has_device_config_changed",
+        return_value=True,
+    ):
+        client.driver.controller.receive_event(event)
+        await hass.async_block_till_done()
+
+    # Unload config entry so we can't connect to the node
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    assert device
+    issue_id = f"device_config_file_changed.{device.id}"
+
+    await async_process_repairs_platforms(hass)
+    await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    url = RepairsFlowIndexView.url
+    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "cannot_connect"
+    assert data["description_placeholders"] == {"device_name": device.name}
+
+
+async def test_abort_confirm(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test aborting device_config_file_changed issue in confirm step."""
+    dev_reg = dr.async_get(hass)
+    # Create a node
+    node_state = deepcopy(multisensor_6_state)
+    node = Node(client, node_state)
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": "",
+        },
+    )
+    with patch(
+        "zwave_js_server.model.node.Node.async_has_device_config_changed",
+        return_value=True,
+    ):
+        client.driver.controller.receive_event(event)
+        await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    assert device
+    issue_id = f"device_config_file_changed.{device.id}"
+
+    await async_process_repairs_platforms(hass)
+    await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    url = RepairsFlowIndexView.url
+    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    # assert data["type"] == "abort"
+    # assert data["reason"] == "cannot_connect"
+    # assert data["description_placeholders"] == {"device_name": device.name}
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
+
+    # Unload config entry so we can't connect to the node
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    # Apply fix
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    resp = await http_client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "cannot_connect"
+    assert data["description_placeholders"] == {"device_name": device.name}
