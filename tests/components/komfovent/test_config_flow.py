@@ -8,7 +8,9 @@ from homeassistant import config_entries
 from homeassistant.components.komfovent.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -21,7 +23,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    await __test_normal_flow(hass, mock_setup_entry, result["flow_id"])
+    final_result = await __test_normal_flow(hass, result["flow_id"])
+    assert final_result["type"] == FlowResultType.CREATE_ENTRY
+    assert final_result["title"] == "test-name"
+    assert final_result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -61,12 +71,44 @@ async def test_form_error_handling(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": expected_response}
 
-    await __test_normal_flow(hass, mock_setup_entry, result2["flow_id"])
+    final_result = await __test_normal_flow(hass, result2["flow_id"])
+    assert final_result["type"] == FlowResultType.CREATE_ENTRY
+    assert final_result["title"] == "test-name"
+    assert final_result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def __test_normal_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, flow_id: str
+async def test_device_already_exists(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
+    """Test device is not added when it already exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id="test-uid",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+
+    final_result = await __test_normal_flow(hass, result["flow_id"])
+    assert final_result["type"] == FlowResultType.ABORT
+    assert final_result["reason"] == "already_configured"
+
+
+async def __test_normal_flow(hass: HomeAssistant, flow_id: str) -> FlowResult:
     """Test flow completing as expected, no matter what happened before."""
 
     with patch(
@@ -79,7 +121,7 @@ async def __test_normal_flow(
         "homeassistant.components.komfovent.config_flow.komfovent_api.get_settings",
         return_value=(
             komfovent_api.KomfoventConnectionResult.SUCCESS,
-            komfovent_api.KomfoventSettings("test-name", None, None, None),
+            komfovent_api.KomfoventSettings("test-name", None, None, "test-uid"),
         ),
     ):
         final_result = await hass.config_entries.flow.async_configure(
@@ -92,11 +134,4 @@ async def __test_normal_flow(
         )
         await hass.async_block_till_done()
 
-    assert final_result["type"] == FlowResultType.CREATE_ENTRY
-    assert final_result["title"] == "test-name"
-    assert final_result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    return final_result

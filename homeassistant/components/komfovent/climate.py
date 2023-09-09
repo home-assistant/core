@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Komfovent unit control."""
-    (credentials, settings) = hass.data[DOMAIN][entry.entry_id]
+    credentials, settings = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([KomfoventDevice(credentials, settings)], True)
 
 
@@ -57,7 +57,6 @@ class KomfoventDevice(ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, settings.serial_number)},
             model=settings.model,
-            name=settings.name,
             sw_version=settings.version,
             manufacturer="Komfovent",
         )

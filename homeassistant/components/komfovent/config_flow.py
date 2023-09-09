@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 import komfovent_api
 import voluptuous as vol
@@ -54,9 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id=STEP_USER, data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        conf_host = cast(str, user_input[CONF_HOST])
-        conf_username = cast(str, user_input[CONF_USERNAME])
-        conf_password = cast(str, user_input[CONF_PASSWORD])
+        conf_host = user_input[CONF_HOST]
+        conf_username = user_input[CONF_USERNAME]
+        conf_password = user_input[CONF_PASSWORD]
 
         result, credentials = komfovent_api.get_credentials(
             conf_host, conf_username, conf_password
