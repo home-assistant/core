@@ -7,7 +7,11 @@ from typing import Any
 from amcrest import AmcrestError, LoginError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_HOST,
@@ -57,6 +61,25 @@ SETUP_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): str,
+        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.In(
+            RESOLUTION_LIST
+        ),
+        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE): vol.In(
+            STREAM_SOURCE_LIST
+        ),
+        vol.Optional(CONF_BINARY_SENSORS, default=[]): cv.multi_select(
+            {sensor.key: sensor.name for sensor in BINARY_SENSORS}
+        ),
+        vol.Optional(CONF_SENSORS, default=[]): cv.multi_select(
+            {sensor.key: sensor.name for sensor in SENSORS}
+        ),
+        vol.Optional(CONF_CONTROL_LIGHT, default=DEFAULT_CONTROL_LIGHT): bool,
     }
 )
 
@@ -139,7 +162,7 @@ class AmcrestConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=SETUP_SCHEMA, errors=errors or {}
+            step_id="user", data_schema=SETUP_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
@@ -147,12 +170,8 @@ class AmcrestConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(import_data)
 
 
-class AmcrestOptionsFlow(OptionsFlow):
+class AmcrestOptionsFlow(OptionsFlowWithConfigEntry):
     """Amcrest options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize an Amcrest options flow."""
-        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -174,40 +193,5 @@ class AmcrestOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FFMPEG_ARGUMENTS,
-                        default=user_input.get(
-                            CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-                        ),
-                    ): str,
-                    vol.Optional(
-                        CONF_RESOLUTION,
-                        default=user_input.get(CONF_RESOLUTION, DEFAULT_RESOLUTION),
-                    ): vol.In(RESOLUTION_LIST),
-                    vol.Optional(
-                        CONF_STREAM_SOURCE,
-                        default=user_input.get(
-                            CONF_STREAM_SOURCE, DEFAULT_STREAM_SOURCE
-                        ),
-                    ): vol.In(STREAM_SOURCE_LIST),
-                    vol.Optional(
-                        CONF_BINARY_SENSORS,
-                        default=user_input.get(CONF_BINARY_SENSORS, []),
-                    ): cv.multi_select(
-                        {sensor.key: sensor.name for sensor in BINARY_SENSORS}
-                    ),
-                    vol.Optional(
-                        CONF_SENSORS,
-                        default=user_input.get(CONF_SENSORS, []),
-                    ): cv.multi_select({sensor.key: sensor.name for sensor in SENSORS}),
-                    vol.Optional(
-                        CONF_CONTROL_LIGHT,
-                        default=user_input.get(
-                            CONF_CONTROL_LIGHT, DEFAULT_CONTROL_LIGHT
-                        ),
-                    ): bool,
-                }
-            ),
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
         )

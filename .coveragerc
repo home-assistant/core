@@ -63,7 +63,6 @@ omit =
     homeassistant/components/amcrest/__init__.py
     homeassistant/components/amcrest/binary_sensor.py
     homeassistant/components/amcrest/camera.py
-    homeassistant/components/amcrest/const.py
     homeassistant/components/amcrest/helpers.py
     homeassistant/components/amcrest/sensor.py
     homeassistant/components/ampio/*
