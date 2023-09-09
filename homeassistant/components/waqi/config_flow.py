@@ -207,7 +207,6 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 "integration_title": "World Air Quality Index",
             },
         )
-
         return self.async_create_entry(
             title=import_config[CONF_NAME],
             data={
