@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -184,13 +185,28 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 DOMAIN,
                 "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.2.0",
+                breaks_in_ha_version="2024.4.0",
                 is_fixable=False,
                 severity=IssueSeverity.ERROR,
                 translation_key="deprecated_yaml_import_issue_already_configured",
                 translation_placeholders=ISSUE_PLACEHOLDER,
             )
             raise exc
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "World Air Quality Index",
+            },
+        )
 
         return self.async_create_entry(
             title=import_config[CONF_NAME],
