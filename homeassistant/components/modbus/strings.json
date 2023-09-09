@@ -72,7 +72,7 @@
   "issues": {
     "deprecated_close_comm_config": {
       "title": "`close_comm_on_error` configuration key is being removed",
-      "description": "Please remove the `close_comm_on_error` key from the modbus entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nCommunication is automatically closed on errors. Please review the other parameters for error handling."
+      "description": "Please remove the `close_comm_on_error` key from the modbus entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nCommunication is automatically closed on errors. Please review the other parameters for error handling, please see https://www.home-assistant.io/integrations/modbus"
     }
   }
 }
