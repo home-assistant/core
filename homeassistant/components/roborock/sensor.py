@@ -162,6 +162,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.status.rdt,
         translation_key="mop_drying_remaining_time",
