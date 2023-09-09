@@ -43,7 +43,15 @@
         "name": "Cleaning progress"
       },
       "dock_error": {
-        "name": "Dock error"
+        "name": "Dock error",
+        "state": {
+          "ok": "Ok",
+          "duct_blockage": "Duct blockage",
+          "water_empty": "Water empty",
+          "waste_water_tank_full": "Waste water tank full",
+          "dirty_tank_latch_open": "Dirty tank latch open",
+          "no_dustbin": "No dustbin"
+        }
       },
       "main_brush_time_left": {
         "name": "Main brush time left"
