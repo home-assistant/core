@@ -116,8 +116,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         name = discovery_info.name.replace(f".{zctype}", "")
         tls = zctype == "_ipps._tcp.local."
         base_path = discovery_info.properties.get("rp", "ipp/print")
-
-        self.context.update({"title_placeholders": {"name": name}})
+        unique_id = discovery_info.properties.get("UUID")
 
         self.discovery_info.update(
             {
@@ -127,9 +126,23 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: False,
                 CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
-                CONF_UUID: discovery_info.properties.get("UUID"),
+                CONF_UUID: unique_id,
             }
         )
+
+        if unique_id:
+            # If we already have the unique id, try to set it now
+            # so we can avoid probing the device if its already
+            # configured or ignored
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.discovery_info[CONF_HOST],
+                    CONF_NAME: self.discovery_info[CONF_NAME],
+                },
+            )
+
+        self.context.update({"title_placeholders": {"name": name}})
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
@@ -147,7 +160,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        unique_id = self.discovery_info[CONF_UUID]
         if not unique_id and info[CONF_UUID]:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info. Falling back to IPP UUID"
@@ -164,7 +176,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 "Unable to determine unique id from discovery info and IPP response"
             )
 
-        if unique_id:
+        if unique_id and self.unique_id != unique_id:
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured(
                 updates={
