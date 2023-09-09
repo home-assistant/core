@@ -1,7 +1,5 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
-
-from homeassistant.backports.enum import StrEnum
+from enum import IntFlag, StrEnum
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"

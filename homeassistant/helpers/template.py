@@ -34,7 +34,6 @@ from typing import (
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
-import async_timeout
 from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment, pass_eval_context
@@ -459,6 +458,7 @@ class Template:
         "_exc_info",
         "_limited",
         "_strict",
+        "_log_fn",
         "_hash_cache",
         "_renders",
     )
@@ -476,6 +476,7 @@ class Template:
         self._exc_info: sys._OptExcInfo | None = None
         self._limited: bool | None = None
         self._strict: bool | None = None
+        self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
 
@@ -483,6 +484,11 @@ class Template:
     def _env(self) -> TemplateEnvironment:
         if self.hass is None:
             return _NO_HASS_ENV
+        # Bypass cache if a custom log function is specified
+        if self._log_fn is not None:
+            return TemplateEnvironment(
+                self.hass, self._limited, self._strict, self._log_fn
+            )
         if self._limited:
             wanted_env = _ENVIRONMENT_LIMITED
         elif self._strict:
@@ -492,9 +498,7 @@ class Template:
         ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(
-                self.hass,
-                self._limited,  # type: ignore[no-untyped-call]
-                self._strict,
+                self.hass, self._limited, self._strict, self._log_fn
             )
         return ret
 
@@ -538,6 +542,7 @@ class Template:
         parse_result: bool = True,
         limited: bool = False,
         strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> Any:
         """Render given template.
@@ -554,7 +559,7 @@ class Template:
                 return self.template
             return self._parse_result(self.template)
 
-        compiled = self._compiled or self._ensure_compiled(limited, strict)
+        compiled = self._compiled or self._ensure_compiled(limited, strict, log_fn)
 
         if variables is not None:
             kwargs.update(variables)
@@ -609,6 +614,7 @@ class Template:
         timeout: float,
         variables: TemplateVarsType = None,
         strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
         **kwargs: Any,
     ) -> bool:
         """Check to see if rendering a template will timeout during render.
@@ -629,7 +635,7 @@ class Template:
         if self.is_static:
             return False
 
-        compiled = self._compiled or self._ensure_compiled(strict=strict)
+        compiled = self._compiled or self._ensure_compiled(strict=strict, log_fn=log_fn)
 
         if variables is not None:
             kwargs.update(variables)
@@ -651,7 +657,7 @@ class Template:
         try:
             template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
@@ -665,7 +671,11 @@ class Template:
 
     @callback
     def async_render_to_info(
-        self, variables: TemplateVarsType = None, strict: bool = False, **kwargs: Any
+        self,
+        variables: TemplateVarsType = None,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+        **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         self._renders += 1
@@ -681,7 +691,9 @@ class Template:
 
         token = _render_info.set(render_info)
         try:
-            render_info._result = self.async_render(variables, strict=strict, **kwargs)
+            render_info._result = self.async_render(
+                variables, strict=strict, log_fn=log_fn, **kwargs
+            )
         except TemplateError as ex:
             render_info.exception = ex
         finally:
@@ -744,7 +756,10 @@ class Template:
             return value if error_value is _SENTINEL else error_value
 
     def _ensure_compiled(
-        self, limited: bool = False, strict: bool = False
+        self,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
     ) -> jinja2.Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
@@ -757,10 +772,14 @@ class Template:
             self._strict is None or self._strict == strict
         ), "can't change between strict and non strict template"
         assert not (strict and limited), "can't combine strict and limited template"
+        assert (
+            self._log_fn is None or self._log_fn == log_fn
+        ), "can't change custom log function"
         assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
         self._strict = strict
+        self._log_fn = log_fn
         env = self._env
 
         self._compiled = jinja2.Template.from_code(
@@ -1934,7 +1953,7 @@ def is_number(value):
         fvalue = float(value)
     except (ValueError, TypeError):
         return False
-    if math.isnan(fvalue) or math.isinf(fvalue):
+    if not math.isfinite(fvalue):
         return False
     return True
 
@@ -2179,45 +2198,56 @@ def _render_with_context(
         return template.render(**kwargs)
 
 
-class LoggingUndefined(jinja2.Undefined):
+def make_logging_undefined(
+    strict: bool | None, log_fn: Callable[[int, str], None] | None
+) -> type[jinja2.Undefined]:
     """Log on undefined variables."""
 
-    def _log_message(self) -> None:
+    if strict:
+        return jinja2.StrictUndefined
+
+    def _log_with_logger(level: int, msg: str) -> None:
         template, action = template_cv.get() or ("", "rendering or compiling")
-        _LOGGER.warning(
-            "Template variable warning: %s when %s '%s'",
-            self._undefined_message,
+        _LOGGER.log(
+            level,
+            "Template variable %s: %s when %s '%s'",
+            logging.getLevelName(level).lower(),
+            msg,
             action,
             template,
         )
 
-    def _fail_with_undefined_error(self, *args, **kwargs):
-        try:
-            return super()._fail_with_undefined_error(*args, **kwargs)
-        except self._undefined_exception as ex:
-            template, action = template_cv.get() or ("", "rendering or compiling")
-            _LOGGER.error(
-                "Template variable error: %s when %s '%s'",
-                self._undefined_message,
-                action,
-                template,
-            )
-            raise ex
+    _log_fn = log_fn or _log_with_logger
 
-    def __str__(self) -> str:
-        """Log undefined __str___."""
-        self._log_message()
-        return super().__str__()
+    class LoggingUndefined(jinja2.Undefined):
+        """Log on undefined variables."""
 
-    def __iter__(self):
-        """Log undefined __iter___."""
-        self._log_message()
-        return super().__iter__()
+        def _log_message(self) -> None:
+            _log_fn(logging.WARNING, self._undefined_message)
 
-    def __bool__(self) -> bool:
-        """Log undefined __bool___."""
-        self._log_message()
-        return super().__bool__()
+        def _fail_with_undefined_error(self, *args, **kwargs):
+            try:
+                return super()._fail_with_undefined_error(*args, **kwargs)
+            except self._undefined_exception as ex:
+                _log_fn(logging.ERROR, self._undefined_message)
+                raise ex
+
+        def __str__(self) -> str:
+            """Log undefined __str___."""
+            self._log_message()
+            return super().__str__()
+
+        def __iter__(self):
+            """Log undefined __iter___."""
+            self._log_message()
+            return super().__iter__()
+
+        def __bool__(self) -> bool:
+            """Log undefined __bool___."""
+            self._log_message()
+            return super().__bool__()
+
+    return LoggingUndefined
 
 
 async def async_load_custom_templates(hass: HomeAssistant) -> None:
@@ -2277,14 +2307,15 @@ class HassLoader(jinja2.BaseLoader):
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
-    def __init__(self, hass, limited=False, strict=False):
+    def __init__(
+        self,
+        hass: HomeAssistant | None,
+        limited: bool | None = False,
+        strict: bool | None = False,
+        log_fn: Callable[[int, str], None] | None = None,
+    ) -> None:
         """Initialise template environment."""
-        undefined: type[LoggingUndefined] | type[jinja2.StrictUndefined]
-        if not strict:
-            undefined = LoggingUndefined
-        else:
-            undefined = jinja2.StrictUndefined
-        super().__init__(undefined=undefined)
+        super().__init__(undefined=make_logging_undefined(strict, log_fn))
         self.hass = hass
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | str | None
@@ -2382,6 +2413,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # can be discarded, we only need to get at the hass object.
         def hassfunction(
             func: Callable[Concatenate[HomeAssistant, _P], _R],
+            jinja_context: Callable[
+                [Callable[Concatenate[Any, _P], _R]],
+                Callable[Concatenate[Any, _P], _R],
+            ] = pass_context,
         ) -> Callable[Concatenate[Any, _P], _R]:
             """Wrap function that depend on hass."""
 
@@ -2389,42 +2424,40 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
                 return func(hass, *args, **kwargs)
 
-            return pass_context(wrapper)
+            return jinja_context(wrapper)
 
         self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = pass_context(self.globals["device_entities"])
+        self.filters["device_entities"] = self.globals["device_entities"]
 
         self.globals["device_attr"] = hassfunction(device_attr)
-        self.filters["device_attr"] = pass_context(self.globals["device_attr"])
+        self.filters["device_attr"] = self.globals["device_attr"]
 
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
-        self.tests["is_device_attr"] = pass_eval_context(self.globals["is_device_attr"])
+        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
+        self.filters["config_entry_id"] = self.globals["config_entry_id"]
 
         self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = pass_context(self.globals["device_id"])
+        self.filters["device_id"] = self.globals["device_id"]
 
         self.globals["areas"] = hassfunction(areas)
-        self.filters["areas"] = pass_context(self.globals["areas"])
+        self.filters["areas"] = self.globals["areas"]
 
         self.globals["area_id"] = hassfunction(area_id)
-        self.filters["area_id"] = pass_context(self.globals["area_id"])
+        self.filters["area_id"] = self.globals["area_id"]
 
         self.globals["area_name"] = hassfunction(area_name)
-        self.filters["area_name"] = pass_context(self.globals["area_name"])
+        self.filters["area_name"] = self.globals["area_name"]
 
         self.globals["area_entities"] = hassfunction(area_entities)
-        self.filters["area_entities"] = pass_context(self.globals["area_entities"])
+        self.filters["area_entities"] = self.globals["area_entities"]
 
         self.globals["area_devices"] = hassfunction(area_devices)
-        self.filters["area_devices"] = pass_context(self.globals["area_devices"])
+        self.filters["area_devices"] = self.globals["area_devices"]
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
-        self.filters["integration_entities"] = pass_context(
-            self.globals["integration_entities"]
-        )
+        self.filters["integration_entities"] = self.globals["integration_entities"]
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -2480,25 +2513,25 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return
 
         self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = pass_context(self.globals["expand"])
+        self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = pass_context(hassfunction(closest_filter))
+        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = pass_eval_context(
-            self.globals["is_hidden_entity"]
+        self.tests["is_hidden_entity"] = hassfunction(
+            is_hidden_entity, pass_eval_context
         )
         self.globals["is_state"] = hassfunction(is_state)
-        self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
+        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.tests["is_state_attr"] = pass_eval_context(self.globals["is_state_attr"])
+        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
         self.globals["has_value"] = hassfunction(has_value)
-        self.filters["has_value"] = pass_context(self.globals["has_value"])
-        self.tests["has_value"] = pass_eval_context(self.globals["has_value"])
+        self.filters["has_value"] = self.globals["has_value"]
+        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
@@ -2576,4 +2609,4 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return cached
 
 
-_NO_HASS_ENV = TemplateEnvironment(None)  # type: ignore[no-untyped-call]
+_NO_HASS_ENV = TemplateEnvironment(None)

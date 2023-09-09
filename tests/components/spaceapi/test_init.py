@@ -9,8 +9,6 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
-
 CONFIG = {
     DOMAIN: {
         "space": "Home",
@@ -83,7 +81,7 @@ SENSOR_OUTPUT = {
 @pytest.fixture
 def mock_client(hass, hass_client):
     """Start the Home Assistant HTTP component."""
-    with patch("homeassistant.components.spaceapi", return_value=mock_coro(True)):
+    with patch("homeassistant.components.spaceapi", return_value=True):
         hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))
 
     hass.states.async_set(

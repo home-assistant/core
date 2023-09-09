@@ -9,7 +9,8 @@ import pytest
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -37,6 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="Green House",
         unique_id="unique",
+        version=2,
         domain=DOMAIN,
         data={
             CONF_LATITUDE: 52.42,
@@ -47,7 +49,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_DECLINATION: 30,
             CONF_AZIMUTH: 190,
             CONF_MODULES_POWER: 5100,
-            CONF_DAMPING: 0.5,
+            CONF_DAMPING_MORNING: 0.5,
+            CONF_DAMPING_EVENING: 0.5,
             CONF_INVERTER_SIZE: 2000,
         },
     )

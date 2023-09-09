@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -182,6 +183,12 @@ class UpdateEntityDescription(EntityDescription):
     entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
+@lru_cache(maxsize=256)
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+    """Return True if version is newer."""
+    return AwesomeVersion(latest_version) > installed_version
+
+
 class UpdateEntity(RestoreEntity):
     """Representation of an update entity."""
 
@@ -208,6 +215,13 @@ class UpdateEntity(RestoreEntity):
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._attr_installed_version
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For updates this is True if the entity has a device class.
+        """
+        return self.device_class is not None
 
     @property
     def device_class(self) -> UpdateDeviceClass | None:
@@ -355,7 +369,7 @@ class UpdateEntity(RestoreEntity):
             return STATE_OFF
 
         try:
-            newer = AwesomeVersion(latest_version) > installed_version
+            newer = _version_is_newer(latest_version, installed_version)
             return STATE_ON if newer else STATE_OFF
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match

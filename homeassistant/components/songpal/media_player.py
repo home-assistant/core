@@ -5,7 +5,6 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-import async_timeout
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -30,7 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -68,7 +67,7 @@ async def async_setup_entry(
 
     device = Device(endpoint)
     try:
-        async with async_timeout.timeout(
+        async with asyncio.timeout(
             10
         ):  # set timeout to avoid blocking the setup process
             await device.get_supported_methods()

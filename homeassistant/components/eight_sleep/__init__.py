@@ -24,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import async_get
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo, async_get
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,

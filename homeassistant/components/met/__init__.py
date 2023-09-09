@@ -6,10 +6,9 @@ from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Self
 
 import metno
-from typing_extensions import Self
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

@@ -1409,6 +1409,7 @@ async def test_turn_on_area(
 ) -> None:
     """Test turning on an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -1480,6 +1481,7 @@ async def test_light_area_same_name(
 ) -> None:
     """Test turning on a light with the same name as an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

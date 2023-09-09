@@ -29,7 +29,7 @@ MOCK_HOST = "fake_host"
 MOCK_IPS = {"fritz.box": "192.168.178.1", "printer": "192.168.178.2"}
 MOCK_MODELNAME = "FRITZ!Box 7530 AX"
 MOCK_FIRMWARE = "256.07.29"
-MOCK_FIRMWARE_AVAILABLE = "256.07.50"
+MOCK_FIRMWARE_AVAILABLE = "7.50"
 MOCK_FIRMWARE_RELEASE_URL = (
     "http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt"
 )

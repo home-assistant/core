@@ -597,6 +597,7 @@ async def test_device_id(hass: HomeAssistant) -> None:
     entity_registry = er.async_get(hass)
 
     source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(
         config_entry_id=source_config_entry.entry_id,
         identifiers={("sensor", "identifier_test")},

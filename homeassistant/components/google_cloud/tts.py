@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 
-import async_timeout
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -286,7 +285,7 @@ class GoogleCloudTTSProvider(Provider):
                 "input": synthesis_input,
             }
 
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 assert self.hass
                 response = await self.hass.async_add_executor_job(
                     self._client.synthesize_speech, request

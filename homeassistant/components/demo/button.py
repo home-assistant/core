@@ -5,7 +5,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -51,3 +51,4 @@ class DemoButton(ButtonEntity):
         persistent_notification.async_create(
             self.hass, "Button pressed", title="Button"
         )
+        self.hass.bus.async_fire("demo_button_pressed")

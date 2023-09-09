@@ -9,6 +9,22 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
+        "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    },
+    {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+        "service_uuid": "b42e3882-ade7-11e4-89d3-123b93f75cba",
     },
     {
         "connectable": False,
@@ -508,6 +524,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
         "domain": "xiaomi_ble",
         "service_data_uuid": "0000181b-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "xiaomi_ble",
+        "service_data_uuid": "0000181d-0000-1000-8000-00805f9b34fb",
     },
     {
         "connectable": False,
