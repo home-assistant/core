@@ -489,37 +489,36 @@ async def test_zeroconf_empty_unique_id_uses_serial(hass: HomeAssistant) -> None
     )
     mock_printer_without_uuid = Printer.from_dict(json.loads(fixture))
     mock_printer_without_uuid.unique_id = None
-    with patch(
-        "homeassistant.components.ipp.config_flow.IPP", autospec=True
-    ) as ipp_mock:
-        client = ipp_mock.return_value
-        client.printer.return_value = mock_printer_without_uuid
-        yield client
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     discovery_info.properties = {
         **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
         "UUID": "",
     }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
+    with patch(
+        "homeassistant.components.ipp.config_flow.IPP", autospec=True
+    ) as ipp_mock:
+        client = ipp_mock.return_value
+        client.printer.return_value = mock_printer_without_uuid
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
 
-    assert result["type"] == FlowResultType.FORM
+        assert result["type"] == FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+        )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"
 
     assert result["data"]
     assert result["data"][CONF_HOST] == "192.168.1.31"
-    assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
+    assert result["data"][CONF_UUID] == ""
 
     assert result["result"]
-    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
+    assert result["result"].unique_id == "555534593035345555"
