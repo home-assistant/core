@@ -1,6 +1,7 @@
 """Tests for the IPP config flow."""
 import dataclasses
-from unittest.mock import MagicMock
+import json
+from unittest.mock import MagicMock, patch
 
 from pyipp import (
     IPPConnectionError,
@@ -8,6 +9,7 @@ from pyipp import (
     IPPError,
     IPPParseError,
     IPPVersionNotSupportedError,
+    Printer,
 )
 import pytest
 
@@ -23,7 +25,7 @@ from . import (
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -337,6 +339,21 @@ async def test_zeroconf_empty_unique_id(
 
     assert result["type"] == FlowResultType.FORM
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EPSON XP-6000 Series"
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == "192.168.1.31"
+    assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
+
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
+
 
 async def test_zeroconf_no_unique_id(
     hass: HomeAssistant,
@@ -354,6 +371,21 @@ async def test_zeroconf_no_unique_id(
     )
 
     assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EPSON XP-6000 Series"
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == "192.168.1.31"
+    assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
+
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
 
 
 async def test_full_user_flow_implementation(
@@ -445,6 +477,49 @@ async def test_full_zeroconf_tls_flow_implementation(
     assert result["data"][CONF_NAME] == "EPSON XP-6000 Series"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert result["data"][CONF_SSL]
+
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
+
+
+async def test_zeroconf_empty_unique_id_uses_serial(hass: HomeAssistant) -> None:
+    """Test zeroconf flow if printer lacks (empty) unique identification with serial fallback."""
+    fixture = await hass.async_add_executor_job(
+        load_fixture, "ipp/printer_without_uuid.json"
+    )
+    mock_printer_without_uuid = Printer.from_dict(json.loads(fixture))
+    mock_printer_without_uuid.unique_id = None
+    with patch(
+        "homeassistant.components.ipp.config_flow.IPP", autospec=True
+    ) as ipp_mock:
+        client = ipp_mock.return_value
+        client.printer.return_value = mock_printer_without_uuid
+        yield client
+
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
+    discovery_info.properties = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
+        "UUID": "",
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "EPSON XP-6000 Series"
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == "192.168.1.31"
+    assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
 
     assert result["result"]
     assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
