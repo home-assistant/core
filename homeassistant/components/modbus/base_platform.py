@@ -236,7 +236,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
                 elif v_temp is None:
-                    v_result.append("nan")
+                    v_result.append("0")
                 elif v_temp != v_temp:  # noqa: PLR0124
                     # NaN float detection replace with None
                     v_result.append("nan")
