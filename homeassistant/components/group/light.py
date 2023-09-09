@@ -110,6 +110,19 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_light(
+    name: str, validated_config: dict[str, Any]
+) -> LightGroup:
+    """Create a preview sensor."""
+    return LightGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_ALL, False),
+    )
+
+
 FORWARDED_ATTRIBUTES = frozenset(
     {
         ATTR_BRIGHTNESS,
@@ -137,7 +150,7 @@ class LightGroup(GroupEntity, LightEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, unique_id: str | None, name: str, entity_ids: list[str], mode: str | None
+        self, unique_id: str | None, name: str, entity_ids: list[str], mode: bool | None
     ) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids

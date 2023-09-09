@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import itertools
+from typing import Any
 
 import voluptuous as vol
 
@@ -84,6 +85,18 @@ async def async_setup_entry(
                 entities,
             )
         ]
+    )
+
+
+@callback
+def async_create_preview_event(
+    name: str, validated_config: dict[str, Any]
+) -> EventGroup:
+    """Create a preview sensor."""
+    return EventGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
     )
 
 

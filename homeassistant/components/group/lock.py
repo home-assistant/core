@@ -90,6 +90,16 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_lock(name: str, validated_config: dict[str, Any]) -> LockGroup:
+    """Create a preview sensor."""
+    return LockGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class LockGroup(GroupEntity, LockEntity):
     """Representation of a lock group."""
 

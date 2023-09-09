@@ -46,3 +46,22 @@ send_text:
       example: "Hello world"
       selector:
         text:
+power_command:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command:
+      required: true
+      example: "sleep"
+      selector:
+        select:
+          options:
+            - "hibernate"
+            - "lock"
+            - "logout"
+            - "restart"
+            - "shutdown"
+            - "sleep"

@@ -38,12 +38,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import const
-from .const import Measurement
+from .const import DOMAIN, Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
@@ -547,6 +548,7 @@ class BaseWithingsSensor(Entity):
 
     _attr_should_poll = False
     entity_description: WithingsEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self, data_manager: DataManager, description: WithingsEntityDescription
@@ -554,13 +556,14 @@ class BaseWithingsSensor(Entity):
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self.entity_description = description
-        self._attr_name = (
-            f"Withings {description.measurement.value} {data_manager.profile}"
-        )
         self._attr_unique_id = get_attribute_unique_id(
             description, data_manager.user_id
         )
         self._state_data: Any | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(data_manager.user_id))},
+            name=data_manager.profile,
+        )
 
     @property
     def available(self) -> bool:

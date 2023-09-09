@@ -213,6 +213,7 @@ def platforms(device: Device) -> set[Platform]:
         supported_platforms.add(Platform.BINARY_SENSOR)
     if device.device and "wifi1" in device.device.features:
         supported_platforms.add(Platform.DEVICE_TRACKER)
+        supported_platforms.add(Platform.IMAGE)
     if device.device and "update" in device.device.features:
         supported_platforms.add(Platform.UPDATE)
     return supported_platforms

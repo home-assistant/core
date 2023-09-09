@@ -20,6 +20,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
     Platform.SENSOR,
 ]
 
