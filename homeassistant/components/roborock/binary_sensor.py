@@ -39,8 +39,8 @@ class RoborockBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="dry_status",
-        icon="mdi:heat-wave",
         translation_key="mop_drying_status",
+        icon="mdi:heat-wave",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
@@ -103,9 +103,8 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return (
+        return bool(
             self.entity_description.value_fn(
                 self.coordinator.roborock_device_info.props
             )
-            == 1
         )
