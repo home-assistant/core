@@ -18,11 +18,18 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 @dataclass
+class SwitchbotDevices:
+    """Switchbot devices data."""
+
+    switches: list[Device | Remote]
+
+
+@dataclass
 class SwitchbotCloudData:
     """Data to use in platforms."""
 
     api: SwitchBotAPI
-    switches: list[Device | Remote]
+    devices: SwitchbotDevices
 
 
 async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
@@ -42,16 +49,18 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     data = SwitchbotCloudData(
         api=api,
-        switches=[
-            (device, coordinator)
-            for device, coordinator in devices_and_coordinators
-            if isinstance(device, Device)
-            and device.device_type.startswith("Plug")
-            or isinstance(device, Remote)
-        ],
+        devices=SwitchbotDevices(
+            switches=[
+                (device, coordinator)
+                for device, coordinator in devices_and_coordinators
+                if isinstance(device, Device)
+                and device.device_type.startswith("Plug")
+                or isinstance(device, Remote)
+            ],
+        ),
     )
     hass.data[DOMAIN][config.entry_id] = data
-    _LOGGER.debug("Switches: %s", data.switches)
+    _LOGGER.debug("Switches: %s", data.devices.switches)
     await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     await gather(
         *[coordinator.async_refresh() for _, coordinator in devices_and_coordinators]

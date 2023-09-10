@@ -25,7 +25,7 @@ async def async_setup_entry(
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
         _make_instance(data.api, device, coordinator)
-        for device, coordinator in data.switches
+        for device, coordinator in data.devices.switches
     )
 
 
@@ -58,6 +58,8 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
 
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
+
+    _attr_name = None
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -30,7 +30,6 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         super().__init__(coordinator)
         self._api = api
         self._attr_unique_id = device.device_id
-        self._attr_name = device.device_name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_name,
