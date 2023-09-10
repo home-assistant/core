@@ -202,7 +202,7 @@ async def test_airzone_water_heater_set_temp(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("water_heater.airzone_dhw")
-    assert state.attributes.get(ATTR_TEMPERATURE) == 35
+    assert state.attributes[ATTR_TEMPERATURE] == 35
 
 
 async def test_airzone_water_heater_set_temp_error(hass: HomeAssistant) -> None:
