@@ -103,7 +103,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
-        params: dict[str, Any] = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
+        params = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
         await self._async_update_dhw_params(params)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
