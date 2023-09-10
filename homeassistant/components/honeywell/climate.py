@@ -316,8 +316,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
-            raise HomeAssistantError(
-                "Honeywell set temperature failed: invalid temperature."
+            raise ValueError(
+                f"Honeywell set temperature failed: invalid temperature {temperature}."
             ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -332,8 +332,8 @@ class HoneywellUSThermostat(ClimateEntity):
 
             except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
-                raise HomeAssistantError(
-                    "Honeywell set temperature failed: invalid temperature."
+                raise ValueError(
+                    f"Honeywell set temperature failed: invalid temperature: {temperature}."
                 ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -375,8 +375,8 @@ class HoneywellUSThermostat(ClimateEntity):
                 self._heat_away_temp,
                 self._cool_away_temp,
             )
-            raise HomeAssistantError(
-                "Honeywell set temperature failed: temperature out of range."
+            raise ValueError(
+                f"Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {self._heat_away_temp}, Cool Temperature: {self._cool_away_temp}."
             ) from err
 
     async def _turn_hold_mode_on(self) -> None:
@@ -399,7 +399,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
-            raise HomeAssistantError("Honeywell invalid system mode returned.")
+            raise HomeAssistantError(f"Honeywell invalid system mode returned {mode}.")
 
     async def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
