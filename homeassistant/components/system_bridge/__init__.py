@@ -29,7 +29,12 @@ from homeassistant.const import (
     CONF_URL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -194,52 +199,59 @@ async def async_setup_entry(
                 raise vol.Invalid(f"Could not find device {device}") from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
-    async def handle_open_path(call: ServiceCall) -> None:
+    async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
         _LOGGER.debug("Open: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_path(
-            OpenPath(path=call.data[CONF_PATH])
+        response = await coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
         )
+        return response.dict()
 
-    async def handle_power_command(call: ServiceCall) -> None:
+    async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
         """Handle the power command service call."""
         _LOGGER.debug("Power command: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await getattr(
+        response = await getattr(
             coordinator.websocket_client,
-            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
         )()
+        return response.dict()
 
-    async def handle_open_url(call: ServiceCall) -> None:
+    async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
         _LOGGER.debug("Open: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
+        response = await coordinator.websocket_client.open_url(
+            OpenUrl(url=service_call.data[CONF_URL])
+        )
+        return response.dict()
 
-    async def handle_send_keypress(call: ServiceCall) -> None:
+    async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_keypress(
-            KeyboardKey(key=call.data[CONF_KEY])
+        response = await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
         )
+        return response.dict()
 
-    async def handle_send_text(call: ServiceCall) -> None:
+    async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_text(
-            KeyboardText(text=call.data[CONF_TEXT])
+        response = await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
         )
+        return response.dict()
 
     hass.services.async_register(
         DOMAIN,
@@ -251,6 +263,7 @@ async def async_setup_entry(
                 vol.Required(CONF_PATH): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -263,6 +276,7 @@ async def async_setup_entry(
                 vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -275,6 +289,7 @@ async def async_setup_entry(
                 vol.Required(CONF_URL): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -287,6 +302,7 @@ async def async_setup_entry(
                 vol.Required(CONF_KEY): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -299,6 +315,7 @@ async def async_setup_entry(
                 vol.Required(CONF_TEXT): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Reload entry when its updated.
