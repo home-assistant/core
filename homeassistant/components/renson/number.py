@@ -6,9 +6,13 @@ import logging
 from renson_endura_delta.field_enum import FILTER_PRESET_FIELD, DataType
 from renson_endura_delta.renson import RensonVentilation
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,6 +32,8 @@ RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
     native_max_value=360,
     entity_category=EntityCategory.CONFIG,
     has_entity_name=True,
+    device_class=NumberDeviceClass.DURATION,
+    native_unit_of_measurement=UnitOfTime.DAYS,
 )
 
 
