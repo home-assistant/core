@@ -79,6 +79,9 @@
       },
       "max_dhw_temperature": {
         "name": "Domestic hot water setpoint"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {

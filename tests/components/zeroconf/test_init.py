@@ -220,7 +220,7 @@ async def test_setup_with_overly_long_url_and_name(
             " string long string long string long string long string"
         ),
     ), patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo.request",
+        "homeassistant.components.zeroconf.AsyncServiceInfo.async_request",
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1219,6 +1219,8 @@ async def test_setup_with_disallowed_characters_in_local_name(
         hass.config,
         "location_name",
         "My.House",
+    ), patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo.async_request",
     ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
