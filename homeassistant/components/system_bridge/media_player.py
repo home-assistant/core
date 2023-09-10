@@ -112,7 +112,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             MediaPlayerEntityFeature.REPEAT_SET | MediaPlayerEntityFeature.SHUFFLE_SET
         )
 
-        data: SystemBridgeCoordinatorData = self.coordinator.data
+        data = self._systembridge_data
         if data.media.is_previous_enabled:
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if data.media.is_next_enabled:
