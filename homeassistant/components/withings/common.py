@@ -6,11 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Union
+from typing import Any
 
 from aiohttp.web import Response
 import requests
@@ -27,7 +27,6 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import webhook
 from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.http import HomeAssistantView
@@ -39,12 +38,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import const
-from .const import Measurement
+from .const import DOMAIN, Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
@@ -104,10 +104,14 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
     MeasureType.SP02: Measurement.SPO2_PCT,
     MeasureType.HYDRATION: Measurement.HYDRATION,
     MeasureType.PULSE_WAVE_VELOCITY: Measurement.PWV,
-    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY,
+    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY: (
+        Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY
+    ),
     GetSleepSummaryField.DEEP_SLEEP_DURATION: Measurement.SLEEP_DEEP_DURATION_SECONDS,
     GetSleepSummaryField.DURATION_TO_SLEEP: Measurement.SLEEP_TOSLEEP_DURATION_SECONDS,
-    GetSleepSummaryField.DURATION_TO_WAKEUP: Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS,
+    GetSleepSummaryField.DURATION_TO_WAKEUP: (
+        Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS
+    ),
     GetSleepSummaryField.HR_AVERAGE: Measurement.SLEEP_HEART_RATE_AVERAGE,
     GetSleepSummaryField.HR_MAX: Measurement.SLEEP_HEART_RATE_MAX,
     GetSleepSummaryField.HR_MIN: Measurement.SLEEP_HEART_RATE_MIN,
@@ -241,7 +245,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Union[dict[MeasureType, Any], None]
+            dict[MeasureType, Any] | None
         ](
             hass,
             _LOGGER,
@@ -292,7 +296,8 @@ class DataManager:
     async def _do_retry(self, func, attempts=3) -> Any:
         """Retry a function call.
 
-        Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
+        Withings' API occasionally and incorrectly throws errors.
+        Retrying the call tends to work.
         """
         exception = None
         for attempt in range(1, attempts + 1):
@@ -375,8 +380,8 @@ class DataManager:
                 profile.appli,
                 self._notify_unsubscribe_delay.total_seconds(),
             )
-            # Quick calls to Withings can result in the service returning errors. Give them
-            # some time to cool down.
+            # Quick calls to Withings can result in the service returning errors.
+            # Give them some time to cool down.
             await asyncio.sleep(self._notify_subscribe_delay.total_seconds())
             await self._hass.async_add_executor_job(
                 self._api.notify_revoke, profile.callbackurl, profile.appli
@@ -406,7 +411,7 @@ class DataManager:
     async def async_get_measures(self) -> dict[Measurement, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
-        now = dt.utcnow()
+        now = dt_util.utcnow()
         startdate = now - datetime.timedelta(days=7)
 
         response = await self._hass.async_add_executor_job(
@@ -434,22 +439,16 @@ class DataManager:
     async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
         _LOGGER.debug("Updating withing sleep summary")
-        now = dt.utcnow()
+        now = dt_util.now()
         yesterday = now - datetime.timedelta(days=1)
-        yesterday_noon = datetime.datetime(
-            yesterday.year,
-            yesterday.month,
-            yesterday.day,
-            12,
-            0,
-            0,
-            0,
-            datetime.timezone.utc,
+        yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
+            hours=12
         )
+        yesterday_noon_utc = dt_util.as_utc(yesterday_noon)
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
             return self._api.sleep_get_summary(
-                lastupdate=yesterday_noon,
+                lastupdate=yesterday_noon_utc,
                 data_fields=[
                     GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
                     GetSleepSummaryField.DEEP_SLEEP_DURATION,
@@ -549,6 +548,7 @@ class BaseWithingsSensor(Entity):
 
     _attr_should_poll = False
     entity_description: WithingsEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self, data_manager: DataManager, description: WithingsEntityDescription
@@ -556,13 +556,14 @@ class BaseWithingsSensor(Entity):
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self.entity_description = description
-        self._attr_name = (
-            f"Withings {description.measurement.value} {data_manager.profile}"
-        )
         self._attr_unique_id = get_attribute_unique_id(
             description, data_manager.user_id
         )
         self._state_data: Any | None = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(data_manager.user_id))},
+            name=data_manager.profile,
+        )
 
     @property
     def available(self) -> bool:

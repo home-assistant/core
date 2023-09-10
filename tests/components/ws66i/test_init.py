@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.ws66i.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from .test_media_player import (
     MOCK_CONFIG,
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 ZONE_1_ID = "media_player.zone_11"
 
 
-async def test_cannot_connect(hass):
+async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test connection error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
@@ -34,7 +35,7 @@ async def test_cannot_connect(hass):
         assert hass.states.get(ZONE_1_ID) is None
 
 
-async def test_cannot_connect_2(hass):
+async def test_cannot_connect_2(hass: HomeAssistant) -> None:
     """Test connection error pt 2."""
     # Another way to test same case as test_cannot_connect
     ws66i = MockWs66i()
@@ -55,7 +56,7 @@ async def test_cannot_connect_2(hass):
         assert hass.states.get(ZONE_1_ID) is None
 
 
-async def test_unload_config_entry(hass):
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS

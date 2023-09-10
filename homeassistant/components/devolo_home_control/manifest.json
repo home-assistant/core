@@ -1,14 +1,14 @@
 {
   "domain": "devolo_home_control",
   "name": "devolo Home Control",
-  "integration_type": "hub",
-  "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
-  "requirements": ["devolo-home-control-api==0.18.2"],
   "after_dependencies": ["zeroconf"],
-  "config_flow": true,
   "codeowners": ["@2Fake", "@Shutgun"],
-  "quality_scale": "silver",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
+  "integration_type": "hub",
   "iot_class": "local_push",
-  "zeroconf": ["_dvl-deviceapi._tcp.local."],
-  "loggers": ["devolo_home_control_api"]
+  "loggers": ["devolo_home_control_api"],
+  "quality_scale": "gold",
+  "requirements": ["devolo-home-control-api==0.18.2"],
+  "zeroconf": ["_dvl-deviceapi._tcp.local."]
 }

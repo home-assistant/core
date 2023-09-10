@@ -1,27 +1,59 @@
 """Test the Switch config flow."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.group import DOMAIN, async_setup_entry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
-    "group_type,group_state,member_state,member_attributes,extra_input,extra_options,extra_attrs",
+    (
+        "group_type",
+        "group_state",
+        "member_state",
+        "member_attributes",
+        "extra_input",
+        "extra_options",
+        "extra_attrs",
+    ),
     (
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
+        (
+            "event",
+            STATE_UNKNOWN,
+            "2021-01-01T23:59:59.123+00:00",
+            {
+                "event_type": "single_press",
+                "event_types": ["single_press", "double_press"],
+            },
+            {},
+            {},
+            {},
+        ),
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
+        (
+            "sensor",
+            "20.0",
+            "10",
+            {},
+            {"type": "sum"},
+            {"type": "sum"},
+            {},
+        ),
         ("switch", "on", "on", {}, {}, {}, {}),
     ),
 )
@@ -96,13 +128,14 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by", ((False, None), (True, "integration"))
+    ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
+        ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
@@ -161,7 +194,7 @@ async def test_config_flow_hides_members(
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
@@ -171,19 +204,26 @@ def get_suggested(schema, key):
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    ("group_type", "member_state", "extra_options", "options_options"),
     (
-        ("binary_sensor", "on", {"all": False}),
-        ("cover", "open", {}),
-        ("fan", "on", {}),
-        ("light", "on", {"all": False}),
-        ("lock", "locked", {}),
-        ("media_player", "on", {}),
-        ("switch", "on", {"all": False}),
+        ("binary_sensor", "on", {"all": False}, {}),
+        ("cover", "open", {}, {}),
+        ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
+        ("fan", "on", {}, {}),
+        ("light", "on", {"all": False}, {}),
+        ("lock", "locked", {}, {}),
+        ("media_player", "on", {}, {}),
+        (
+            "sensor",
+            "10",
+            {"ignore_non_numeric": False, "type": "sum"},
+            {"ignore_non_numeric": False, "type": "sum"},
+        ),
+        ("switch", "on", {"all": False}, {}),
     ),
 )
 async def test_options(
-    hass: HomeAssistant, group_type, member_state, extra_options
+    hass: HomeAssistant, group_type, member_state, extra_options, options_options
 ) -> None:
     """Test reconfiguring."""
     members1 = [f"{group_type}.one", f"{group_type}.two"]
@@ -226,9 +266,7 @@ async def test_options(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "entities": members2,
-        },
+        user_input={"entities": members2, **options_options},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -272,7 +310,7 @@ async def test_options(
 
 
 @pytest.mark.parametrize(
-    "group_type,extra_options,extra_options_after,advanced",
+    ("group_type", "extra_options", "extra_options_after", "advanced"),
     (
         ("light", {"all": False}, {"all": False}, False),
         ("light", {"all": True}, {"all": True}, False),
@@ -343,17 +381,18 @@ async def test_all_options(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by_initial,hidden_by",
+    ("hide_members", "hidden_by_initial", "hidden_by"),
     (
         (False, er.RegistryEntryHider.INTEGRATION, None),
         (True, None, er.RegistryEntryHider.INTEGRATION),
     ),
 )
 @pytest.mark.parametrize(
-    "group_type,extra_input",
+    ("group_type", "extra_input"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),
+        ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
@@ -425,3 +464,235 @@ async def test_options_flow_hides_members(
 
     assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
     assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+
+
+COVER_ATTRS = [{"supported_features": 0}, {}]
+EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
+FAN_ATTRS = [{"supported_features": 0}, {}]
+LIGHT_ATTRS = [
+    {
+        "icon": "mdi:lightbulb-group",
+        "supported_color_modes": ["onoff"],
+        "supported_features": 0,
+    },
+    {"color_mode": "onoff"},
+]
+LOCK_ATTRS = [{"supported_features": 1}, {}]
+MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
+SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+
+
+@pytest.mark.parametrize(
+    ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
+    [
+        ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
+        ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
+        ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
+        ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
+        ("light", {}, ["on", "off"], "on", LIGHT_ATTRS),
+        ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
+        ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
+        ("switch", {}, ["on", "off"], "on", [{}, {}]),
+    ],
+)
+async def test_config_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    extra_user_input: dict[str, Any],
+    input_states: list[str],
+    group_state: str,
+    extra_attributes: list[dict[str, Any]],
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    input_entities = [f"{domain}.input_one", f"{domain}.input_two"]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": domain},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == domain
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My group", "entities": input_entities}
+            | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "My group"} | extra_attributes[0],
+        "state": "unavailable",
+    }
+
+    hass.states.async_set(input_entities[0], input_states[0])
+    hass.states.async_set(input_entities[1], input_states[1])
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {
+            "entity_id": input_entities,
+            "friendly_name": "My group",
+        }
+        | extra_attributes[0]
+        | extra_attributes[1],
+        "state": group_state,
+    }
+    assert len(hass.states.async_all()) == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "extra_config_flow_data",
+        "extra_user_input",
+        "input_states",
+        "group_state",
+        "extra_attributes",
+    ),
+    [
+        ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
+        ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
+        ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
+        ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),
+        ("light", {}, {}, ["on", "off"], "on", LIGHT_ATTRS),
+        ("lock", {}, {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("media_player", {}, {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
+        (
+            "sensor",
+            {"type": "min"},
+            {"type": "max"},
+            ["10", "20"],
+            "20.0",
+            SENSOR_ATTRS,
+        ),
+        ("switch", {}, {}, ["on", "off"], "on", [{}, {}]),
+    ],
+)
+async def test_option_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    extra_config_flow_data: dict[str, Any],
+    extra_user_input: dict[str, Any],
+    input_states: list[str],
+    group_state: str,
+    extra_attributes: dict[str, Any],
+) -> None:
+    """Test the option flow preview."""
+    input_entities = [f"{domain}.input_one", f"{domain}.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": input_entities,
+            "group_type": domain,
+            "hide_members": False,
+            "name": "My group",
+        }
+        | extra_config_flow_data,
+        title="My group",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    hass.states.async_set(input_entities[0], input_states[0])
+    hass.states.async_set(input_entities[1], input_states[1])
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {"entities": input_entities} | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"entity_id": input_entities, "friendly_name": "My group"}
+        | extra_attributes[0]
+        | extra_attributes[1],
+        "state": group_state,
+    }
+    assert len(hass.states.async_all()) == 3
+
+
+async def test_option_flow_sensor_preview_config_entry_removed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the option flow preview where the config entry is removed."""
+    client = await hass_ws_client(hass)
+
+    input_entities = ["sensor.input_one", "sensor.input_two"]
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": input_entities,
+            "group_type": "sensor",
+            "hide_members": False,
+            "name": "My sensor group",
+            "type": "min",
+        },
+        title="My min_max",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] is None
+    assert result["preview"] == "group"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                "entities": input_entities,
+                "type": "min",
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {"code": "unknown_error", "message": "Unknown error"}

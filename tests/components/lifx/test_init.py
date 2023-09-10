@@ -5,10 +5,13 @@ from datetime import timedelta
 import socket
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN, discovery
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -26,7 +29,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_lifx_causes_discovery(hass):
+async def test_configuring_lifx_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
     start_calls = 0
 
@@ -72,7 +75,7 @@ async def test_configuring_lifx_causes_discovery(hass):
         assert start_calls == 4
 
 
-async def test_config_entry_reload(hass):
+async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
@@ -87,7 +90,7 @@ async def test_config_entry_reload(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_retry(hass):
+async def test_config_entry_retry(hass: HomeAssistant) -> None:
     """Test that a config entry can be retried."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -101,7 +104,7 @@ async def test_config_entry_retry(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_get_version_fails(hass):
+async def test_get_version_fails(hass: HomeAssistant) -> None:
     """Test we handle get version failing."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -118,7 +121,7 @@ async def test_get_version_fails(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_dns_error_at_startup(hass):
+async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
     """Test we handle get version failing."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
@@ -148,3 +151,23 @@ async def test_dns_error_at_startup(hass):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_wrong_serial(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config entry enters setup retry when serial mismatches."""
+    mismatched_serial = f"{SERIAL[:-1]}0"
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=mismatched_serial
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert (
+        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc"
+        in caplog.text
+    )

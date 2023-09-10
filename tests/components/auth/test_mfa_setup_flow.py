@@ -2,12 +2,16 @@
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.components.auth import mfa_setup_flow
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded
+from tests.typing import WebSocketGenerator
 
 
-async def test_ws_setup_depose_mfa(hass, hass_ws_client):
+async def test_ws_setup_depose_mfa(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test set up mfa module for current user."""
     hass.auth = await auth_manager_from_config(
         hass,

@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
+from typing import Final
 
 import voluptuous as vol
 
@@ -24,7 +25,7 @@ CONF_SOURCES = "sources"
 
 DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
-DEFAULT_TIMEOUT = None
+DEFAULT_TIMEOUT: Final = None
 DEFAULT_SOURCES: dict[str, str] = {}
 
 

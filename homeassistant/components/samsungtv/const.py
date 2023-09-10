@@ -6,7 +6,6 @@ DOMAIN = "samsungtv"
 
 ATTR_PROPERTIES = "properties"
 
-DEFAULT_NAME = "Samsung TV"
 DEFAULT_MANUFACTURER = "Samsung"
 
 VALUE_CONF_NAME = "HomeAssistant"
@@ -16,7 +15,6 @@ CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SSDP_RENDERING_CONTROL_LOCATION = "ssdp_rendering_control_location"
 CONF_SSDP_MAIN_TV_AGENT_LOCATION = "ssdp_main_tv_agent_location"
-CONF_ON_ACTION = "turn_on_action"
 CONF_SESSION_ID = "session_id"
 
 RESULT_AUTH_MISSING = "auth_missing"

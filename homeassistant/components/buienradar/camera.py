@@ -51,8 +51,7 @@ async def async_setup_entry(
 
 
 class BuienradarCam(Camera):
-    """
-    A camera component producing animated buienradar radar-imagery GIFs.
+    """A camera component producing animated buienradar radar-imagery GIFs.
 
     Rain radar imagery camera based on image URL taken from [0].
 
@@ -62,8 +61,7 @@ class BuienradarCam(Camera):
     def __init__(
         self, latitude: float, longitude: float, delta: float, country: str
     ) -> None:
-        """
-        Initialize the component.
+        """Initialize the component.
 
         This constructor must be run in the event loop.
         """
@@ -145,8 +143,7 @@ class BuienradarCam(Camera):
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """
-        Return a still image response from the camera.
+        """Return a still image response from the camera.
 
         Uses asyncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
@@ -168,7 +165,7 @@ class BuienradarCam(Camera):
 
         # get lock, check iff loading, await notification if loading
         async with self._condition:
-            # can not be tested - mocked http response returns immediately
+            # cannot be tested - mocked http response returns immediately
             if self._loading:
                 _LOGGER.debug("already loading - waiting for notification")
                 await self._condition.wait()

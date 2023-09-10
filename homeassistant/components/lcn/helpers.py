@@ -5,7 +5,7 @@ import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import Union, cast
+from typing import TypeAlias, cast
 
 import pypck
 import voluptuous as vol
@@ -60,9 +60,10 @@ from .const import (
 
 # typing
 AddressType = tuple[int, int, bool]
-DeviceConnectionType = Union[
-    pypck.module.ModuleConnection, pypck.module.GroupConnection
-]
+DeviceConnectionType: TypeAlias = (
+    pypck.module.ModuleConnection | pypck.module.GroupConnection
+)
+
 InputType = type[pypck.inputs.Input]
 
 # Regex for address validation
@@ -290,7 +291,7 @@ def purge_device_registry(
 
     # Find device that references the host.
     references_host = set()
-    host_device = device_registry.async_get_device({(DOMAIN, entry_id)})
+    host_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
     if host_device is not None:
         references_host.add(host_device.id)
 
@@ -298,7 +299,9 @@ def purge_device_registry(
     references_entry_data = set()
     for device_data in imported_entry_data[CONF_DEVICES]:
         device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device({(DOMAIN, device_unique_id)})
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_unique_id)}
+        )
         if device is not None:
             references_entry_data.add(device.id)
 

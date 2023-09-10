@@ -8,7 +8,7 @@ from homeassistant.components.automation.config import (
 )
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from . import ACTION_DELETE, EditIdBasedConfigView
 
@@ -23,7 +23,7 @@ async def async_setup(hass):
         if action != ACTION_DELETE:
             return
 
-        ent_reg = entity_registry.async_get(hass)
+        ent_reg = er.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
 

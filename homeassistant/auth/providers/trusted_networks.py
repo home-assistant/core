@@ -14,7 +14,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, Union, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -23,12 +23,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-IPAddress = Union[IPv4Address, IPv6Address]
-IPNetwork = Union[IPv4Network, IPv6Network]
+IPAddress = IPv4Address | IPv6Address
+IPNetwork = IPv4Network | IPv6Network
 
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_TRUSTED_USERS = "trusted_users"
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
                     [
                         vol.Or(
                             cv.uuid4_hex,
-                            vol.Schema({vol.Required(CONF_GROUP): cv.uuid4_hex}),
+                            vol.Schema({vol.Required(CONF_GROUP): str}),
                         )
                     ],
                 )

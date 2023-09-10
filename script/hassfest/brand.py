@@ -11,7 +11,9 @@ BRAND_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("integrations"): [str],
-        vol.Optional("iot_standards"): [vol.Any("homekit", "zigbee", "zwave")],
+        vol.Optional("iot_standards"): [
+            vol.Any("homekit", "matter", "zigbee", "zwave")
+        ],
     }
 )
 

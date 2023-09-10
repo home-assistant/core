@@ -1,7 +1,7 @@
-"""Support for the demo for speech to text service."""
+"""Support for the demo for speech-to-text service."""
 from __future__ import annotations
 
-from aiohttp import StreamReader
+from collections.abc import AsyncIterable
 
 from homeassistant.components.stt import (
     AudioBitRates,
@@ -9,28 +9,31 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    Provider,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
 
-async def async_get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> Provider:
-    """Set up Demo speech component."""
-    return DemoProvider()
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Demo speech platform via config entry."""
+    async_add_entities([DemoProviderEntity()])
 
 
-class DemoProvider(Provider):
-    """Demo speech API provider."""
+class DemoProviderEntity(SpeechToTextEntity):
+    """Demo speech API provider entity."""
+
+    _attr_name = "Demo STT"
 
     @property
     def supported_languages(self) -> list[str]:
@@ -63,12 +66,12 @@ class DemoProvider(Provider):
         return [AudioChannels.CHANNEL_STEREO]
 
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
 
         # Read available data
-        async for _ in stream.iter_chunked(4096):
+        async for _ in stream:
             pass
 
         return SpeechResult("Turn the Kitchen Lights on", SpeechResultState.SUCCESS)

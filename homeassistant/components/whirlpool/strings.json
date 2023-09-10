@@ -8,6 +8,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -18,13 +21,14 @@
   "entity": {
     "sensor": {
       "whirlpool_machine": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
           "delay_countdown": "Delay Countdown",
           "delay_paused": "Delay Paused",
           "smart_delay": "Smart Delay",
-          "smart_grid_pause": "Smart Delay",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
           "pause": "[%key:common::state::paused%]",
           "running_maincycle": "Running Maincycle",
           "running_postcycle": "Running Postcycle",
@@ -48,14 +52,18 @@
         }
       },
       "whirlpool_tank": {
+        "name": "Detergent level",
         "state": {
           "unknown": "Unknown",
           "empty": "Empty",
-          "25%": "25%",
-          "50%": "50%",
-          "100%": "100%",
+          "25": "25%",
+          "50": "50%",
+          "100": "100%",
           "active": "[%key:common::state::active%]"
         }
+      },
+      "end_time": {
+        "name": "End time"
       }
     }
   }

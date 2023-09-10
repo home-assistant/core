@@ -1,15 +1,17 @@
 """Test the ibeacon config flow."""
-
 from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.ibeacon.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_user_no_bluetooth(hass, mock_bluetooth_adapters):
+async def test_setup_user_no_bluetooth(
+    hass: HomeAssistant, mock_bluetooth_adapters: None
+) -> None:
     """Test setting up via user interaction when bluetooth is not enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -19,7 +21,7 @@ async def test_setup_user_no_bluetooth(hass, mock_bluetooth_adapters):
     assert result["reason"] == "bluetooth_not_available"
 
 
-async def test_setup_user(hass, enable_bluetooth):
+async def test_setup_user(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test setting up via user interaction with bluetooth enabled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -36,7 +38,9 @@ async def test_setup_user(hass, enable_bluetooth):
     assert result2["data"] == {}
 
 
-async def test_setup_user_already_setup(hass, enable_bluetooth):
+async def test_setup_user_already_setup(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
     """Test setting up via user when already setup ."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(

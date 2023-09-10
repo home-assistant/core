@@ -1,7 +1,6 @@
 """The tests for the Group Switch platform."""
+import asyncio
 from unittest.mock import patch
-
-import async_timeout
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
@@ -18,13 +17,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(hass: HomeAssistant) -> None:
     """Test switch group default state."""
     hass.states.async_set("switch.tv", "on")
     await async_setup_component(
@@ -55,7 +55,7 @@ async def test_default_state(hass):
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
+async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting in 'any' mode.
 
     The group state is unavailable if all group members are unavailable.
@@ -143,7 +143,7 @@ async def test_state_reporting(hass):
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
 
-async def test_state_reporting_all(hass):
+async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
     The group state is unavailable if all group members are unavailable.
@@ -230,7 +230,9 @@ async def test_state_reporting_all(hass):
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
 
-async def test_service_calls(hass, enable_custom_integrations):
+async def test_service_calls(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,
@@ -284,7 +286,7 @@ async def test_service_calls(hass, enable_custom_integrations):
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload switches."""
     await async_setup_component(
         hass,
@@ -326,7 +328,7 @@ async def test_reload(hass):
     assert hass.states.get("switch.outside_switches_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload switches."""
     hass.states.async_set("switch.something", STATE_ON)
     await async_setup_component(
@@ -364,7 +366,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("switch.outside_switches_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload switches."""
     assert await async_setup_component(
         hass,
@@ -399,7 +403,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("switch.outside_switches_g").state == STATE_OFF
 
 
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested switch group."""
     await async_setup_component(
         hass,
@@ -440,7 +444,7 @@ async def test_nested_group(hass):
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.some_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,

@@ -13,10 +13,10 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
@@ -56,15 +56,15 @@ async def _async_valve_reset(client: Client) -> None:
 BUTTON_DESCRIPTIONS = (
     ValveControllerButtonDescription(
         key=BUTTON_KIND_REBOOT,
-        name="Reboot",
         push_action=_async_reboot,
+        device_class=ButtonDeviceClass.RESTART,
         # Buttons don't actually need a coordinator; we give them one so they can
         # properly inherit from GuardianEntity:
         api_category=API_SYSTEM_DIAGNOSTICS,
     ),
     ValveControllerButtonDescription(
         key=BUTTON_KIND_RESET_VALVE_DIAGNOSTICS,
-        name="Reset valve diagnostics",
+        translation_key="reset_diagnostics",
         push_action=_async_valve_reset,
         # Buttons don't actually need a coordinator; we give them one so they can
         # properly inherit from GuardianEntity:

@@ -1,0 +1,6 @@
+{
+  "domain": "eufy",
+  "name": "eufy",
+  "integrations": ["eufy", "eufylife_ble"],
+  "iot_standards": []
+}

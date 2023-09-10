@@ -5,12 +5,16 @@ from unittest.mock import Mock
 from aiohttp import ClientError
 
 from homeassistant.components.airly.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_airly_system_health(hass, aioclient_mock):
+async def test_airly_system_health(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Airly system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", text="")
     hass.config.components.add(DOMAIN)
@@ -36,7 +40,9 @@ async def test_airly_system_health(hass, aioclient_mock):
     assert info["requests_per_day"] == 100
 
 
-async def test_airly_system_health_fail(hass, aioclient_mock):
+async def test_airly_system_health_fail(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Airly system health."""
     aioclient_mock.get("https://airapi.airly.eu/v2/", exc=ClientError)
     hass.config.components.add(DOMAIN)

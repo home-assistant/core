@@ -12,6 +12,7 @@ from homeassistant.components.monoprice.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -23,7 +24,7 @@ CONFIG = {
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -53,7 +54,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -71,7 +72,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_generic_exception(hass):
+async def test_generic_exception(hass: HomeAssistant) -> None:
     """Test we handle cannot generic exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +90,7 @@ async def test_generic_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
     conf = {CONF_PORT: "/test/port", CONF_SOURCES: {"4": "four"}}
 

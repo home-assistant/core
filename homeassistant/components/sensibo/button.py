@@ -6,8 +6,8 @@ from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -33,7 +33,7 @@ class SensiboButtonEntityDescription(
 
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
-    name="Reset filter",
+    translation_key="reset_filter",
     icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",

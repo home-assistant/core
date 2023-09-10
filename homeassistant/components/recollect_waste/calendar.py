@@ -48,6 +48,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     """Define a ReCollect Waste calendar."""
 
     _attr_icon = "mdi:delete-empty"
+    _attr_name = None
 
     def __init__(
         self,
@@ -57,7 +58,7 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
         """Initialize the ReCollect Waste entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{self._identifier}_calendar"
+        self._attr_unique_id = self._identifier
         self._event: CalendarEvent | None = None
 
     @property

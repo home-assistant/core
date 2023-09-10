@@ -136,9 +136,9 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # These are unexpected and we log the trace to help with troubleshooting
             LOGGER.exception(exception)
             raise UpdateFailed(exception) from exception
-        else:
-            self._last_response = response
-            return response.data["data"]["repository"]
+
+        self._last_response = response
+        return response.data["data"]["repository"]
 
     async def _handle_event(self, event: GitHubEventModel) -> None:
         """Handle an event."""

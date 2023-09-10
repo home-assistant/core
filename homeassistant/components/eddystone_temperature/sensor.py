@@ -1,5 +1,4 @@
-"""
-Read temperature information from Eddystone beacons.
+"""Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
@@ -8,7 +7,6 @@ from __future__ import annotations
 
 import logging
 
-# pylint: disable=import-error
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 

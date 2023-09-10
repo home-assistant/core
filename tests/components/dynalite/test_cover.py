@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
@@ -53,7 +53,7 @@ def mock_device():
     return mock_dev
 
 
-async def test_cover_setup(hass, mock_device):
+async def test_cover_setup(hass: HomeAssistant, mock_device) -> None:
     """Test a successful setup."""
     await create_entity_from_device(hass, mock_device)
     entity_state = hass.states.get("cover.name")
@@ -92,7 +92,7 @@ async def test_cover_setup(hass, mock_device):
     )
 
 
-async def test_cover_without_tilt(hass, mock_device):
+async def test_cover_without_tilt(hass: HomeAssistant, mock_device) -> None:
     """Test a cover with no tilt."""
     mock_device.has_tilt = False
     await create_entity_from_device(hass, mock_device)
@@ -117,7 +117,7 @@ async def check_cover_position(
     assert entity_state.state == expected
 
 
-async def test_cover_positions(hass, mock_device):
+async def test_cover_positions(hass: HomeAssistant, mock_device) -> None:
     """Test that the state updates in the various positions."""
     update_func = await create_entity_from_device(hass, mock_device)
     await check_cover_position(
@@ -134,7 +134,7 @@ async def test_cover_positions(hass, mock_device):
     )
 
 
-async def test_cover_restore_state(hass, mock_device):
+async def test_cover_restore_state(hass: HomeAssistant, mock_device) -> None:
     """Test restore from cache."""
     mock_restore_cache(
         hass,
@@ -146,7 +146,7 @@ async def test_cover_restore_state(hass, mock_device):
     assert entity_state.state == STATE_OPEN
 
 
-async def test_cover_restore_state_bad_cache(hass, mock_device):
+async def test_cover_restore_state_bad_cache(hass: HomeAssistant, mock_device) -> None:
     """Test restore from a cache without the attribute."""
     mock_restore_cache(
         hass,

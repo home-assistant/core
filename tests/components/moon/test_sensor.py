@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "moon_value,native_value,icon",
+    ("moon_value", "native_value", "icon"),
     [
         (0, STATE_NEW_MOON, MOON_ICONS[STATE_NEW_MOON]),
         (5, STATE_WAXING_CRESCENT, MOON_ICONS[STATE_WAXING_CRESCENT]),
@@ -60,14 +60,14 @@ async def test_moon_day(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Moon Phase"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
     assert state.attributes[ATTR_OPTIONS] == [
-        STATE_FIRST_QUARTER,
-        STATE_FULL_MOON,
-        STATE_LAST_QUARTER,
         STATE_NEW_MOON,
-        STATE_WANING_CRESCENT,
-        STATE_WANING_GIBBOUS,
         STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
         STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
     ]
 
     entity_registry = er.async_get(hass)

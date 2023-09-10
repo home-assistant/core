@@ -1,18 +1,24 @@
 """Test UniFi Network diagnostics."""
-
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_controller import setup_unifi_integration
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test config entry diagnostics."""
     client = {
         "blocked": False,
@@ -135,7 +141,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             "unique_id": "1",
             "version": 1,
         },
-        "site_role": "admin",
+        "role_is_admin": True,
         "clients": {
             "00:00:00:00:00:00": {
                 "blocked": False,

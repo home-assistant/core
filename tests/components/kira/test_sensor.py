@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.kira import sensor as kira
+from homeassistant.core import HomeAssistant
 
 TEST_CONFIG = {kira.DOMAIN: {"sensors": [{"host": "127.0.0.1", "port": 17324}]}}
 
@@ -17,7 +18,9 @@ def add_entities(devices):
 
 
 @patch("homeassistant.components.kira.sensor.KiraReceiver.schedule_update_ha_state")
-def test_kira_sensor_callback(mock_schedule_update_ha_state, hass):
+def test_kira_sensor_callback(
+    mock_schedule_update_ha_state, hass: HomeAssistant
+) -> None:
     """Ensure Kira sensor properly updates its attributes from callback."""
     mock_kira = MagicMock()
     hass.data[kira.DOMAIN] = {kira.CONF_SENSOR: {}}

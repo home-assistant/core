@@ -1,11 +1,11 @@
 {
   "domain": "conversation",
   "name": "Conversation",
-  "documentation": "https://www.home-assistant.io/integrations/conversation",
-  "requirements": ["hassil==0.2.3", "home-assistant-intents==0.0.1"],
+  "codeowners": ["@home-assistant/core", "@synesthesiam"],
   "dependencies": ["http"],
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
+  "documentation": "https://www.home-assistant.io/integrations/conversation",
+  "integration_type": "system",
   "iot_class": "local_push",
-  "integration_type": "system"
+  "quality_scale": "internal",
+  "requirements": ["hassil==1.2.5", "home-assistant-intents==2023.8.2"]
 }

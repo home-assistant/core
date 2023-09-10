@@ -8,7 +8,9 @@ from . import setup_awair
 from .const import LOCAL_CONFIG, LOCAL_UNIQUE_ID
 
 
-async def test_local_awair_sensors(hass: HomeAssistant, local_devices, local_data):
+async def test_local_awair_sensors(
+    hass: HomeAssistant, local_devices, local_data
+) -> None:
     """Test expected sensors on a local Awair."""
     fixtures = [local_devices, local_data]
     entry = await setup_awair(hass, fixtures, LOCAL_UNIQUE_ID, LOCAL_CONFIG)

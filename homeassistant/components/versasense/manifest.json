@@ -1,9 +1,9 @@
 {
   "domain": "versasense",
   "name": "VersaSense",
+  "codeowners": ["@imstevenxyz"],
   "documentation": "https://www.home-assistant.io/integrations/versasense",
-  "codeowners": ["@flamm3blemuff1n"],
-  "requirements": ["pyversasense==0.0.6"],
   "iot_class": "local_polling",
-  "loggers": ["pyversasense"]
+  "loggers": ["pyversasense"],
+  "requirements": ["pyversasense==0.0.6"]
 }

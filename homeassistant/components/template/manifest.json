@@ -1,9 +1,11 @@
 {
   "domain": "template",
   "name": "Template",
-  "documentation": "https://www.home-assistant.io/integrations/template",
-  "codeowners": ["@PhracturedBlue", "@tetienne", "@home-assistant/core"],
-  "quality_scale": "internal",
   "after_dependencies": ["group"],
-  "iot_class": "local_push"
+  "codeowners": ["@PhracturedBlue", "@tetienne", "@home-assistant/core"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/template",
+  "integration_type": "helper",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
 }

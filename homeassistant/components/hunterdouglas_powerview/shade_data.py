@@ -50,7 +50,7 @@ class PowerviewShadePositions:
 class PowerviewShadeData:
     """Coordinate shade data between multiple api calls."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init the shade data."""
         self._group_data_by_id: dict[int, dict[str | int, Any]] = {}
         self.positions: dict[int, PowerviewShadePositions] = {}

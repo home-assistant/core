@@ -2,8 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homewizard_energy.features import Features
-from homewizard_energy.models import Device
+from homewizard_energy.models import Data, Device
 
 
 def get_mock_device(
@@ -26,12 +25,9 @@ def get_mock_device(
             firmware_version=firmware_version,
         )
     )
-    mock_device.data = AsyncMock(return_value=None)
+    mock_device.data = AsyncMock(return_value=Data.from_dict({}))
     mock_device.state = AsyncMock(return_value=None)
     mock_device.system = AsyncMock(return_value=None)
-    mock_device.features = AsyncMock(
-        return_value=Features(product_type, firmware_version)
-    )
 
     mock_device.close = AsyncMock()
 

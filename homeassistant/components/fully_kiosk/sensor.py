@@ -12,10 +12,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfInformation
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
@@ -27,72 +27,86 @@ def round_storage(value: int) -> float:
     return round(value * 0.000001, 1)
 
 
+def truncate_url(value: StateType) -> tuple[StateType, dict[str, Any]]:
+    """Truncate URL if longer than 256."""
+    url = str(value)
+    truncated = len(url) > 256
+    extra_state_attributes = {
+        "full_url": url,
+        "truncated": truncated,
+    }
+    if truncated:
+        return (url[0:255], extra_state_attributes)
+    return (url, extra_state_attributes)
+
+
 @dataclass
 class FullySensorEntityDescription(SensorEntityDescription):
     """Fully Kiosk Browser sensor description."""
 
-    state_fn: Callable | None = None
+    round_state_value: bool = False
+    state_fn: Callable[[StateType], tuple[StateType, dict[str, Any]]] | None = None
 
 
 SENSORS: tuple[FullySensorEntityDescription, ...] = (
     FullySensorEntityDescription(
         key="batteryLevel",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
+        key="currentPage",
+        translation_key="current_page",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_fn=truncate_url,
+    ),
+    FullySensorEntityDescription(
         key="screenOrientation",
-        name="Screen orientation",
+        translation_key="screen_orientation",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
         key="foregroundApp",
-        name="Foreground app",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    FullySensorEntityDescription(
-        key="currentPage",
-        name="Current page",
+        translation_key="foreground_app",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
         key="internalStorageFreeSpace",
-        name="Internal storage free space",
+        translation_key="internal_storage_free_space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="internalStorageTotalSpace",
-        name="Internal storage total space",
+        translation_key="internal_storage_total_space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="ramFreeMemory",
-        name="Free memory",
+        translation_key="ram_free_memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
     FullySensorEntityDescription(
         key="ramTotalMemory",
-        name="Total memory",
+        translation_key="ram_total_memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        state_fn=round_storage,
+        round_state_value=True,
     ),
 )
 
@@ -130,13 +144,19 @@ class FullySensor(FullyKioskEntity, SensorEntity):
 
         super().__init__(coordinator)
 
-    @property
-    def native_value(self) -> Any:
-        """Return the state of the sensor."""
-        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
-            return None
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        extra_state_attributes: dict[str, Any] = {}
+        value = self.coordinator.data.get(self.entity_description.key)
 
-        if self.entity_description.state_fn is not None:
-            return self.entity_description.state_fn(value)
+        if value is not None:
+            if self.entity_description.state_fn is not None:
+                value, extra_state_attributes = self.entity_description.state_fn(value)
 
-        return value
+            if self.entity_description.round_state_value:
+                value = round_storage(value)
+
+        self._attr_native_value = value
+        self._attr_extra_state_attributes = extra_state_attributes
+
+        self.async_write_ha_state()

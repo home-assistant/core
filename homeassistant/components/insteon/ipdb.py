@@ -1,24 +1,25 @@
 """Utility methods for the Insteon platform."""
-from pyinsteon.device_types import (
+from collections.abc import Iterable
+
+from pyinsteon.device_types.device_base import Device
+from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     ClimateControl_Thermostat,
     ClimateControl_WirelessThermostat,
     DimmableLightingControl,
+    DimmableLightingControl_Dial,
     DimmableLightingControl_DinRail,
     DimmableLightingControl_FanLinc,
-    DimmableLightingControl_InLineLinc,
+    DimmableLightingControl_InLineLinc01,
+    DimmableLightingControl_InLineLinc02,
     DimmableLightingControl_KeypadLinc_6,
     DimmableLightingControl_KeypadLinc_8,
     DimmableLightingControl_LampLinc,
     DimmableLightingControl_OutletLinc,
-    DimmableLightingControl_SwitchLinc,
+    DimmableLightingControl_SwitchLinc01,
+    DimmableLightingControl_SwitchLinc02,
     DimmableLightingControl_ToggleLinc,
     EnergyManagement_LoadController,
-    GeneralController_ControlLinc,
-    GeneralController_MiniRemote_4,
-    GeneralController_MiniRemote_8,
-    GeneralController_MiniRemote_Switch,
-    GeneralController_RemoteLinc,
     SecurityHealthSafety_DoorSensor,
     SecurityHealthSafety_LeakSensor,
     SecurityHealthSafety_MotionSensor,
@@ -28,12 +29,15 @@ from pyinsteon.device_types import (
     SwitchedLightingControl,
     SwitchedLightingControl_ApplianceLinc,
     SwitchedLightingControl_DinRail,
-    SwitchedLightingControl_InLineLinc,
+    SwitchedLightingControl_I3Outlet,
+    SwitchedLightingControl_InLineLinc01,
+    SwitchedLightingControl_InLineLinc02,
     SwitchedLightingControl_KeypadLinc_6,
     SwitchedLightingControl_KeypadLinc_8,
     SwitchedLightingControl_OnOffOutlet,
     SwitchedLightingControl_OutletLinc,
-    SwitchedLightingControl_SwitchLinc,
+    SwitchedLightingControl_SwitchLinc01,
+    SwitchedLightingControl_SwitchLinc02,
     SwitchedLightingControl_ToggleLinc,
     WindowCovering,
     X10Dimmable,
@@ -41,78 +45,70 @@ from pyinsteon.device_types import (
     X10OnOffSensor,
 )
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 
-from .const import ON_OFF_EVENTS
-
-DEVICE_PLATFORM = {
-    AccessControl_Morningstar: {LOCK: [1]},
-    DimmableLightingControl: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    DimmableLightingControl_DinRail: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    DimmableLightingControl_FanLinc: {LIGHT: [1], FAN: [2], ON_OFF_EVENTS: [1, 2]},
-    DimmableLightingControl_InLineLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
+DEVICE_PLATFORM: dict[Device, dict[Platform, Iterable[int]]] = {
+    AccessControl_Morningstar: {Platform.LOCK: [1]},
+    DimmableLightingControl: {Platform.LIGHT: [1]},
+    DimmableLightingControl_Dial: {Platform.LIGHT: [1]},
+    DimmableLightingControl_DinRail: {Platform.LIGHT: [1]},
+    DimmableLightingControl_FanLinc: {Platform.LIGHT: [1], Platform.FAN: [2]},
+    DimmableLightingControl_InLineLinc01: {Platform.LIGHT: [1]},
+    DimmableLightingControl_InLineLinc02: {Platform.LIGHT: [1]},
     DimmableLightingControl_KeypadLinc_6: {
-        LIGHT: [1],
-        SWITCH: [3, 4, 5, 6],
-        ON_OFF_EVENTS: [1, 3, 4, 5, 6],
+        Platform.LIGHT: [1],
+        Platform.SWITCH: [3, 4, 5, 6],
     },
     DimmableLightingControl_KeypadLinc_8: {
-        LIGHT: [1],
-        SWITCH: range(2, 9),
-        ON_OFF_EVENTS: range(1, 9),
+        Platform.LIGHT: [1],
+        Platform.SWITCH: range(2, 9),
     },
-    DimmableLightingControl_LampLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    DimmableLightingControl_OutletLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    DimmableLightingControl_SwitchLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    DimmableLightingControl_ToggleLinc: {LIGHT: [1], ON_OFF_EVENTS: [1]},
-    EnergyManagement_LoadController: {SWITCH: [1], BINARY_SENSOR: [2]},
-    GeneralController_ControlLinc: {ON_OFF_EVENTS: [1]},
-    GeneralController_MiniRemote_4: {ON_OFF_EVENTS: range(1, 5)},
-    GeneralController_MiniRemote_8: {ON_OFF_EVENTS: range(1, 9)},
-    GeneralController_MiniRemote_Switch: {ON_OFF_EVENTS: [1, 2]},
-    GeneralController_RemoteLinc: {ON_OFF_EVENTS: [1]},
-    SecurityHealthSafety_DoorSensor: {BINARY_SENSOR: [1, 3, 4], ON_OFF_EVENTS: [1]},
-    SecurityHealthSafety_LeakSensor: {BINARY_SENSOR: [2, 4]},
-    SecurityHealthSafety_MotionSensor: {BINARY_SENSOR: [1, 2, 3], ON_OFF_EVENTS: [1]},
-    SecurityHealthSafety_OpenCloseSensor: {BINARY_SENSOR: [1]},
-    SecurityHealthSafety_Smokebridge: {BINARY_SENSOR: [1, 2, 3, 4, 6, 7]},
-    SensorsActuators_IOLink: {SWITCH: [1], BINARY_SENSOR: [2], ON_OFF_EVENTS: [1, 2]},
-    SwitchedLightingControl: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    SwitchedLightingControl_ApplianceLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    SwitchedLightingControl_DinRail: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    SwitchedLightingControl_InLineLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
+    DimmableLightingControl_LampLinc: {Platform.LIGHT: [1]},
+    DimmableLightingControl_OutletLinc: {Platform.LIGHT: [1]},
+    DimmableLightingControl_SwitchLinc01: {Platform.LIGHT: [1]},
+    DimmableLightingControl_SwitchLinc02: {Platform.LIGHT: [1]},
+    DimmableLightingControl_ToggleLinc: {Platform.LIGHT: [1]},
+    EnergyManagement_LoadController: {
+        Platform.SWITCH: [1],
+        Platform.BINARY_SENSOR: [2],
+    },
+    SecurityHealthSafety_DoorSensor: {Platform.BINARY_SENSOR: [1, 3, 4]},
+    SecurityHealthSafety_LeakSensor: {Platform.BINARY_SENSOR: [2, 4]},
+    SecurityHealthSafety_MotionSensor: {Platform.BINARY_SENSOR: [1, 2, 3]},
+    SecurityHealthSafety_OpenCloseSensor: {Platform.BINARY_SENSOR: [1]},
+    SecurityHealthSafety_Smokebridge: {Platform.BINARY_SENSOR: [1, 2, 3, 4, 6, 7]},
+    SensorsActuators_IOLink: {Platform.SWITCH: [1], Platform.BINARY_SENSOR: [2]},
+    SwitchedLightingControl: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_ApplianceLinc: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_DinRail: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_I3Outlet: {Platform.SWITCH: [1, 2]},
+    SwitchedLightingControl_InLineLinc01: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_InLineLinc02: {Platform.SWITCH: [1]},
     SwitchedLightingControl_KeypadLinc_6: {
-        SWITCH: [1, 3, 4, 5, 6],
-        ON_OFF_EVENTS: [1, 3, 4, 5, 6],
+        Platform.SWITCH: [1, 3, 4, 5, 6],
     },
     SwitchedLightingControl_KeypadLinc_8: {
-        SWITCH: range(1, 9),
-        ON_OFF_EVENTS: range(1, 9),
+        Platform.SWITCH: range(1, 9),
     },
-    SwitchedLightingControl_OnOffOutlet: {SWITCH: [1, 2], ON_OFF_EVENTS: [1, 2]},
-    SwitchedLightingControl_OutletLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    SwitchedLightingControl_SwitchLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    SwitchedLightingControl_ToggleLinc: {SWITCH: [1], ON_OFF_EVENTS: [1]},
-    ClimateControl_Thermostat: {CLIMATE: [1]},
-    ClimateControl_WirelessThermostat: {CLIMATE: [1]},
-    WindowCovering: {COVER: [1]},
-    X10Dimmable: {LIGHT: [1]},
-    X10OnOff: {SWITCH: [1]},
-    X10OnOffSensor: {BINARY_SENSOR: [1]},
+    SwitchedLightingControl_OnOffOutlet: {Platform.SWITCH: [1, 2]},
+    SwitchedLightingControl_OutletLinc: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_SwitchLinc01: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_SwitchLinc02: {Platform.SWITCH: [1]},
+    SwitchedLightingControl_ToggleLinc: {Platform.SWITCH: [1]},
+    ClimateControl_Thermostat: {Platform.CLIMATE: [1]},
+    ClimateControl_WirelessThermostat: {Platform.CLIMATE: [1]},
+    WindowCovering: {Platform.COVER: [1]},
+    X10Dimmable: {Platform.LIGHT: [1]},
+    X10OnOff: {Platform.SWITCH: [1]},
+    X10OnOffSensor: {Platform.BINARY_SENSOR: [1]},
 }
 
 
-def get_device_platforms(device):
+def get_device_platforms(device) -> dict[Platform, Iterable[int]]:
     """Return the HA platforms for a device type."""
-    return DEVICE_PLATFORM.get(type(device), {}).keys()
+    return DEVICE_PLATFORM.get(type(device), {})
 
 
-def get_platform_groups(device, domain) -> dict:
-    """Return the platforms that a device belongs in."""
-    return DEVICE_PLATFORM.get(type(device), {}).get(domain, {})  # type: ignore[attr-defined]
+def get_device_platform_groups(device: Device, platform: Platform) -> Iterable[int]:
+    """Return the list of device groups for a platform."""
+    return get_device_platforms(device).get(platform, [])

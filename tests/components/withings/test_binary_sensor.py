@@ -18,7 +18,9 @@ WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    current_request_with_host: None,
 ) -> None:
     """Test binary sensor."""
     in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]

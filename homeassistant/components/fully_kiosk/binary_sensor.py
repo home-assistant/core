@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -18,18 +18,18 @@ from .entity import FullyKioskEntity
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="kioskMode",
-        name="Kiosk mode",
+        translation_key="kiosk_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="plugged",
-        name="Plugged in",
+        translation_key="plugged_in",
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="isDeviceAdmin",
-        name="Device admin",
+        translation_key="device_admin",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

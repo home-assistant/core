@@ -10,8 +10,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -71,12 +71,8 @@ class FreeboxButton(ButtonEntity):
         """Initialize a Freebox button."""
         self.entity_description = description
         self._router = router
+        self._attr_device_info = router.device_info
         self._attr_unique_id = f"{router.mac} {description.name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._router.device_info
 
     async def async_press(self) -> None:
         """Press the button."""

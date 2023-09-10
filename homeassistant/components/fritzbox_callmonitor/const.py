@@ -1,7 +1,7 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
 
@@ -19,7 +19,7 @@ ICON_PHONE: Final = "mdi:phone"
 ATTR_PREFIXES = "prefixes"
 
 FRITZ_ATTR_NAME = "name"
-FRITZ_ATTR_SERIAL_NUMBER = "NewSerialNumber"
+FRITZ_ATTR_SERIAL_NUMBER = "Serial"
 
 UNKNOWN_NAME = "unknown"
 SERIAL_NUMBER = "serial_number"

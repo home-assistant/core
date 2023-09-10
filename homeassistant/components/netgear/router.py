@@ -19,8 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -204,7 +204,7 @@ class NetgearRouter:
             if ntg_device.mac is None:
                 continue
 
-            device_mac = format_mac(ntg_device.mac)
+            device_mac = dr.format_mac(ntg_device.mac)
 
             if not self.devices.get(device_mac):
                 new_device = True
@@ -336,7 +336,7 @@ class NetgearDeviceEntity(NetgearBaseEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             default_name=self._device_name,
             default_model=self._device["device_model"],
             via_device=(DOMAIN, self._router.unique_id),

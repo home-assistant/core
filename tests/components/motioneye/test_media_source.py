@@ -127,9 +127,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         "title": "http://test:8766",
         "media_class": "directory",
         "media_content_type": "",
-        "media_content_id": (
-            "media-source://motioneye/74565ad414754616000674c87bdc876c"
-        ),
+        "media_content_id": "media-source://motioneye/74565ad414754616000674c87bdc876c",
         "can_play": False,
         "can_expand": True,
         "children_media_class": "directory",
@@ -365,10 +363,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     client.get_movie_url = Mock(return_value="http://movie-url")
     media = await async_resolve_media(
         hass,
-        (
-            f"{URI_SCHEME}{DOMAIN}"
-            f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
-        ),
+        f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
         None,
     )
     assert media == PlayMedia(url="http://movie-url", mime_type="video/mp4")
@@ -378,10 +373,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     client.get_image_url = Mock(return_value="http://image-url")
     media = await async_resolve_media(
         hass,
-        (
-            f"{URI_SCHEME}{DOMAIN}"
-            f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg"
-        ),
+        f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg",
         None,
     )
     assert media == PlayMedia(url="http://image-url", mime_type="image/jpeg")
@@ -460,10 +452,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
     with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
-            (
-                f"{URI_SCHEME}{DOMAIN}"
-                f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
-            ),
+            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
             None,
         )
 
@@ -472,10 +461,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
     with pytest.raises(MediaSourceError):
         await async_resolve_media(
             hass,
-            (
-                f"{URI_SCHEME}{DOMAIN}"
-                f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#foo.mp4"
-            ),
+            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#foo.mp4",
             None,
         )
 
@@ -491,7 +477,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         "media_class": "directory",
         "media_content_type": "video",
         "media_content_id": (
-            f"media-source://motioneye"
+            "media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
         ),
         "can_play": False,

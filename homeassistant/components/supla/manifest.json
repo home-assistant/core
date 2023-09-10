@@ -1,9 +1,9 @@
 {
   "domain": "supla",
   "name": "Supla",
-  "documentation": "https://www.home-assistant.io/integrations/supla",
-  "requirements": ["asyncpysupla==0.0.5"],
   "codeowners": ["@mwegrzynek"],
+  "documentation": "https://www.home-assistant.io/integrations/supla",
   "iot_class": "cloud_polling",
-  "loggers": ["asyncpysupla"]
+  "loggers": ["asyncpysupla"],
+  "requirements": ["asyncpysupla==0.0.5"]
 }

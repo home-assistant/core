@@ -4,12 +4,6 @@ from typing import Any
 
 from pyinsteon import devices
 from pyinsteon.constants import ALDBStatus
-from pyinsteon.topics import (
-    ALDB_STATUS_CHANGED,
-    DEVICE_LINK_CONTROLLER_CREATED,
-    DEVICE_LINK_RESPONDER_CREATED,
-)
-from pyinsteon.utils import subscribe_topic, unsubscribe_topic
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -271,33 +265,31 @@ async def websocket_notify_on_aldb_status(
         return
 
     @callback
-    def record_added(controller, responder, group):
+    def record_added(record, sender, deleted):
         """Forward ALDB events to websocket."""
         forward_data = {"type": "record_loaded"}
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     @callback
-    def aldb_loaded():
+    def aldb_loaded(status):
         """Forward ALDB loaded event to websocket."""
         forward_data = {
             "type": "status_changed",
-            "is_loading": device.aldb.status == ALDBStatus.LOADING,
+            "is_loading": status == ALDBStatus.LOADING,
         }
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        unsubscribe_topic(record_added, f"{DEVICE_LINK_CONTROLLER_CREATED}.{device.id}")
-        unsubscribe_topic(record_added, f"{DEVICE_LINK_RESPONDER_CREATED}.{device.id}")
-        unsubscribe_topic(aldb_loaded, f"{device.id}.{ALDB_STATUS_CHANGED}")
+        device.aldb.unsubscribe_record_changed(record_added)
+        device.aldb.unsubscribe_status_changed(aldb_loaded)
 
         forward_data = {"type": "unsubscribed"}
         connection.send_message(websocket_api.event_message(msg["id"], forward_data))
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    subscribe_topic(record_added, f"{DEVICE_LINK_CONTROLLER_CREATED}.{device.id}")
-    subscribe_topic(record_added, f"{DEVICE_LINK_RESPONDER_CREATED}.{device.id}")
-    subscribe_topic(aldb_loaded, f"{device.id}.{ALDB_STATUS_CHANGED}")
+    device.aldb.subscribe_record_changed(record_added)
+    device.aldb.subscribe_status_changed(aldb_loaded)
 
     connection.send_result(msg[ID])

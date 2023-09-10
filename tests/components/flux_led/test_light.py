@@ -154,7 +154,7 @@ async def test_light_mac_address_not_found(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "protocol,sw_version,model_num,model",
+    ("protocol", "sw_version", "model_num", "model"),
     [
         ("LEDENET_ORIGINAL", 1, 0x01, "Original LEDEDNET (0x35)"),
         ("LEDENET", 8, 0x33, "Magic Home Branded RGB Controller (0x33)"),
@@ -182,7 +182,7 @@ async def test_light_device_registry(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers={}, connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model

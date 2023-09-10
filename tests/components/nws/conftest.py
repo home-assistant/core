@@ -6,7 +6,7 @@ import pytest
 from .const import DEFAULT_FORECAST, DEFAULT_OBSERVATION
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_simple_nws():
     """Mock pynws SimpleNWS with default values."""
     with patch("homeassistant.components.nws.SimpleNWS") as mock_nws:
@@ -23,7 +23,7 @@ def mock_simple_nws():
         yield mock_nws
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_simple_nws_config():
     """Mock pynws SimpleNWS with default values in config_flow."""
     with patch("homeassistant.components.nws.config_flow.SimpleNWS") as mock_nws:
@@ -34,7 +34,7 @@ def mock_simple_nws_config():
         yield mock_nws
 
 
-@pytest.fixture()
+@pytest.fixture
 def no_sensor():
     """Remove sensors."""
     with patch(
@@ -43,7 +43,7 @@ def no_sensor():
         yield mock_setup_entry
 
 
-@pytest.fixture()
+@pytest.fixture
 def no_weather():
     """Remove weather."""
     with patch(

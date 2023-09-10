@@ -13,8 +13,8 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import (
     ATTR_LEVEL,
-    DEFAULT_LOGSEVERITY,
     DOMAIN,
+    EVENT_LOGGING_CHANGED,  # noqa: F401
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
     LOGGER_LOGS,
@@ -38,9 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    LOGGER_DEFAULT, default=DEFAULT_LOGSEVERITY
-                ): _VALID_LOG_LEVEL,
+                vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
                 vol.Optional(LOGGER_FILTERS): vol.Schema({cv.string: [cv.is_regex]}),
             }
@@ -128,7 +126,6 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
 
             super().setLevel(level)
 
-        # pylint: disable=invalid-name
         def orig_setLevel(self, level: int | str) -> None:
             """Set the log level."""
             super().setLevel(level)

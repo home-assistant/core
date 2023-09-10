@@ -24,8 +24,7 @@ import homeassistant.helpers.entity_registry as er
 from .common import VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
-VACUUM_UNIQUE_ID_OLD = "LR3C012345-Litter Box"
-VACUUM_UNIQUE_ID_NEW = "LR3C012345-litter_box"
+VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
 
 COMPONENT_SERVICE_DOMAIN = {
     SERVICE_SET_SLEEP_MODE: DOMAIN,
@@ -36,15 +35,14 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     """Tests the vacuum entity was set up."""
     ent_reg = er.async_get(hass)
 
-    # Create entity entry to migrate to new unique ID
     ent_reg.async_get_or_create(
         PLATFORM_DOMAIN,
         DOMAIN,
-        VACUUM_UNIQUE_ID_OLD,
+        VACUUM_UNIQUE_ID,
         suggested_object_id=VACUUM_ENTITY_ID.replace(PLATFORM_DOMAIN, ""),
     )
     ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
-    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID_OLD
+    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
     assert len(ent_reg.entities) == 1
@@ -56,7 +54,7 @@ async def test_vacuum(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = ent_reg.async_get(VACUUM_ENTITY_ID)
-    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID_NEW
+    assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
 
 async def test_vacuum_status_when_sleeping(
@@ -97,7 +95,7 @@ async def test_vacuum_with_error(
 
 
 @pytest.mark.parametrize(
-    "service,command,extra",
+    ("service", "command", "extra"),
     [
         (SERVICE_START, "start_cleaning", None),
         (SERVICE_TURN_OFF, "set_power_status", None),

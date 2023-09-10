@@ -11,12 +11,13 @@ from homeassistant.components.canary.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TIMEOUT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT, _patch_async_setup, _patch_async_setup_entry, init_integration
 
 
-async def test_user_form(hass, canary_config_flow):
+async def test_user_form(hass: HomeAssistant, canary_config_flow) -> None:
     """Test we get the user initiated form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -40,7 +41,9 @@ async def test_user_form(hass, canary_config_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass, canary_config_flow):
+async def test_user_form_cannot_connect(
+    hass: HomeAssistant, canary_config_flow
+) -> None:
     """Test we handle errors that should trigger the cannot connect error."""
     canary_config_flow.side_effect = HTTPError()
 
@@ -67,7 +70,9 @@ async def test_user_form_cannot_connect(hass, canary_config_flow):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_form_unexpected_exception(hass, canary_config_flow):
+async def test_user_form_unexpected_exception(
+    hass: HomeAssistant, canary_config_flow
+) -> None:
     """Test we handle unexpected exception."""
     canary_config_flow.side_effect = Exception()
 
@@ -84,7 +89,9 @@ async def test_user_form_unexpected_exception(hass, canary_config_flow):
     assert result["reason"] == "unknown"
 
 
-async def test_user_form_single_instance_allowed(hass, canary_config_flow):
+async def test_user_form_single_instance_allowed(
+    hass: HomeAssistant, canary_config_flow
+) -> None:
     """Test that configuring more than one instance is rejected."""
     await init_integration(hass, skip_entry_setup=True)
 
@@ -97,7 +104,7 @@ async def test_user_form_single_instance_allowed(hass, canary_config_flow):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass, canary):
+async def test_options_flow(hass: HomeAssistant, canary) -> None:
     """Test updating options."""
     with patch("homeassistant.components.canary.PLATFORMS", []):
         entry = await init_integration(hass)

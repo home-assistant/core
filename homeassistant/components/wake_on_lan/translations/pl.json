@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "moved_yaml": {
-            "description": "Konfiguracja Wake on LAN za pomoc\u0105 YAML zosta\u0142a przeniesiona do klucza integracji. \n\nTwoja istniej\u0105ca konfiguracja YAML b\u0119dzie dzia\u0142a\u0107 przez kolejne 2 wersje. \n\nPrzenie\u015b swoj\u0105 konfiguracj\u0119 YAML do klucza integracji zgodnie z dokumentacj\u0105.",
-            "title": "Konfiguracja YAML dla Wake on LAN zostaje przeniesiona"
-        }
-    }
-}

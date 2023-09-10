@@ -59,8 +59,7 @@ class SirenTurnOnServiceParameters(TypedDict, total=False):
 def process_turn_on_params(
     siren: SirenEntity, params: SirenTurnOnServiceParameters
 ) -> SirenTurnOnServiceParameters:
-    """
-    Process turn_on service params.
+    """Process turn_on service params.
 
     Filters out unsupported params and validates the rest.
     """
@@ -132,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TOGGLE,
         {},
         "async_toggle",
-        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
+        [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
 
     return True
@@ -178,8 +177,7 @@ class SirenEntity(ToggleEntity):
 
     @property
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
-        """
-        Return a list of available tones.
+        """Return a list of available tones.
 
         Requires SirenEntityFeature.TONES.
         """

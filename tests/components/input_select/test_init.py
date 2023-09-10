@@ -1,5 +1,4 @@
 """The tests for the Input select component."""
-# pylint: disable=protected-access
 from unittest.mock import patch
 
 import pytest
@@ -26,12 +25,13 @@ from homeassistant.const import (
     ATTR_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_restore_cache
+from tests.common import MockUser, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -68,7 +68,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [
         None,
@@ -81,7 +81,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_select_option(hass):
+async def test_select_option(hass: HomeAssistant) -> None:
     """Test select_option methods."""
     assert await async_setup_component(
         hass,
@@ -102,17 +102,18 @@ async def test_select_option(hass):
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "non existing option"},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
     assert state.state == "another option"
 
 
-async def test_select_next(hass):
+async def test_select_next(hass: HomeAssistant) -> None:
     """Test select_next methods."""
     assert await async_setup_component(
         hass,
@@ -150,7 +151,7 @@ async def test_select_next(hass):
     assert state.state == "first option"
 
 
-async def test_select_previous(hass):
+async def test_select_previous(hass: HomeAssistant) -> None:
     """Test select_previous methods."""
     assert await async_setup_component(
         hass,
@@ -188,7 +189,7 @@ async def test_select_previous(hass):
     assert state.state == "last option"
 
 
-async def test_select_first_last(hass):
+async def test_select_first_last(hass: HomeAssistant) -> None:
     """Test select_first and _last methods."""
     assert await async_setup_component(
         hass,
@@ -228,7 +229,7 @@ async def test_select_first_last(hass):
     assert state.state == "last option"
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -268,7 +269,7 @@ async def test_config_options(hass):
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
-async def test_set_options_service(hass):
+async def test_set_options_service(hass: HomeAssistant) -> None:
     """Test set_options service."""
     assert await async_setup_component(
         hass,
@@ -305,12 +306,13 @@ async def test_set_options_service(hass):
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "first option"},
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
     assert state.state == "test1"
 
@@ -324,7 +326,7 @@ async def test_set_options_service(hass):
     assert state.state == "test2"
 
 
-async def test_set_options_service_duplicate(hass):
+async def test_set_options_service_duplicate(hass: HomeAssistant) -> None:
     """Test set_options service with duplicates."""
     assert await async_setup_component(
         hass,
@@ -364,7 +366,7 @@ async def test_set_options_service_duplicate(hass):
     ]
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -387,7 +389,7 @@ async def test_restore_state(hass):
     assert state.state == "first option"
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -413,7 +415,9 @@ async def test_initial_state_overrules_restore_state(hass):
     assert state.state == "middle option"
 
 
-async def test_input_select_context(hass, hass_admin_user):
+async def test_input_select_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_select context works."""
     assert await async_setup_component(
         hass,
@@ -442,7 +446,9 @@ async def test_input_select_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -525,7 +531,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -538,7 +544,9 @@ async def test_load_from_storage(hass, storage_setup):
     ]
 
 
-async def test_load_from_storage_duplicate(hass, storage_setup, caplog):
+async def test_load_from_storage_duplicate(
+    hass: HomeAssistant, storage_setup, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test set up from old storage with duplicates."""
     items = [
         {
@@ -562,7 +570,7 @@ async def test_load_from_storage_duplicate(hass, storage_setup, caplog):
     assert state.attributes.get(ATTR_OPTIONS) == ["yaml update 1", "yaml update 2"]
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={DOMAIN: {"from_yaml": {"options": ["yaml option", "other option"]}}}
@@ -578,7 +586,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={DOMAIN: {"from_yaml": {"options": ["yaml option"]}}}
@@ -600,7 +610,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -625,7 +637,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test updating options updates the state."""
 
     settings = {
@@ -681,7 +695,12 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert not resp["success"]
 
 
-async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
+async def test_update_duplicates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test updating options updates the state."""
 
     settings = {
@@ -722,7 +741,9 @@ async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -753,7 +774,12 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.attributes[ATTR_OPTIONS] == ["new option", "even newer option"]
 
 
-async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog):
+async def test_ws_create_duplicates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test create WS with duplicates."""
     assert await storage_setup(items=[])
 
@@ -784,7 +810,7 @@ async def test_ws_create_duplicates(hass, hass_ws_client, storage_setup, caplog)
     assert not hass.states.get(input_entity_id)
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})

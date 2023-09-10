@@ -64,7 +64,8 @@ async def handle_refresh_vehicle_status(
 class MazdaButtonEntityDescription(ButtonEntityDescription):
     """Describes a Mazda button entity."""
 
-    # Function to determine whether the vehicle supports this button, given the coordinator data
+    # Function to determine whether the vehicle supports this button,
+    # given the coordinator data
     is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     async_press: Callable[
@@ -75,27 +76,31 @@ class MazdaButtonEntityDescription(ButtonEntityDescription):
 BUTTON_ENTITIES = [
     MazdaButtonEntityDescription(
         key="start_engine",
-        name="Start engine",
+        translation_key="start_engine",
         icon="mdi:engine",
+        is_supported=lambda data: not data["isElectric"],
     ),
     MazdaButtonEntityDescription(
         key="stop_engine",
-        name="Stop engine",
+        translation_key="stop_engine",
         icon="mdi:engine-off",
+        is_supported=lambda data: not data["isElectric"],
     ),
     MazdaButtonEntityDescription(
         key="turn_on_hazard_lights",
-        name="Turn on hazard lights",
+        translation_key="turn_on_hazard_lights",
         icon="mdi:hazard-lights",
+        is_supported=lambda data: not data["isElectric"],
     ),
     MazdaButtonEntityDescription(
         key="turn_off_hazard_lights",
-        name="Turn off hazard lights",
+        translation_key="turn_off_hazard_lights",
         icon="mdi:hazard-lights",
+        is_supported=lambda data: not data["isElectric"],
     ),
     MazdaButtonEntityDescription(
         key="refresh_vehicle_status",
-        name="Refresh status",
+        translation_key="refresh_vehicle_status",
         icon="mdi:refresh",
         async_press=handle_refresh_vehicle_status,
         is_supported=lambda data: data["isElectric"],

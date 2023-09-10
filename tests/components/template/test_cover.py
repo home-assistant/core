@@ -1,4 +1,6 @@
 """The tests for the Template cover platform."""
+from typing import Any
+
 import pytest
 
 from homeassistant import setup
@@ -21,7 +23,9 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import assert_setup_component
 
@@ -46,9 +50,9 @@ OPEN_CLOSE_COVER_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
-    "config, states",
+    ("config", "states"),
     [
         (
             {
@@ -70,7 +74,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "dog",
-                    STATE_CLOSING,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: dog",
@@ -79,7 +83,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "cat",
-                    STATE_OPEN,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: cat",
@@ -88,7 +92,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                 (
                     "cover.test_state",
                     "bear",
-                    STATE_OPEN,
+                    STATE_UNKNOWN,
                     {},
                     -1,
                     "Received invalid cover is_on state: bear",
@@ -102,15 +106,17 @@ OPEN_CLOSE_COVER_CONFIG = {
                     "covers": {
                         "test_template_cover": {
                             **OPEN_CLOSE_COVER_CONFIG,
-                            "position_template": "{{ states.cover.test.attributes.position }}",
+                            "position_template": (
+                                "{{ states.cover.test.attributes.position }}"
+                            ),
                             "value_template": "{{ states.cover.test_state.state }}",
                         }
                     },
                 }
             },
             [
-                ("cover.test_state", STATE_OPEN, STATE_OPEN, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSED, STATE_OPEN, {}, -1, ""),
+                ("cover.test_state", STATE_OPEN, STATE_UNKNOWN, {}, -1, ""),
+                ("cover.test_state", STATE_CLOSED, STATE_UNKNOWN, {}, -1, ""),
                 ("cover.test_state", STATE_OPENING, STATE_OPENING, {}, -1, ""),
                 ("cover.test_state", STATE_CLOSING, STATE_CLOSING, {}, -1, ""),
                 ("cover.test", STATE_CLOSED, STATE_CLOSING, {"position": 0}, 0, ""),
@@ -128,10 +134,12 @@ OPEN_CLOSE_COVER_CONFIG = {
         ),
     ],
 )
-async def test_template_state_text(hass, states, start_ha, caplog):
+async def test_template_state_text(
+    hass: HomeAssistant, states, start_ha, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the state text of a template."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_UNKNOWN
 
     for entity, set_state, test_state, attr, pos, text in states:
         hass.states.async_set(entity, set_state, attributes=attr)
@@ -143,7 +151,73 @@ async def test_template_state_text(hass, states, start_ha, caplog):
         assert text in caplog.text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(
+    ("config", "entity", "set_state", "test_state", "attr"),
+    [
+        (
+            {
+                DOMAIN: {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            **OPEN_CLOSE_COVER_CONFIG,
+                            "position_template": (
+                                "{{ states.cover.test.attributes.position }}"
+                            ),
+                            "value_template": "{{ states.cover.test_state.state }}",
+                        }
+                    },
+                }
+            },
+            "cover.test_state",
+            "",
+            STATE_UNKNOWN,
+            {},
+        ),
+        (
+            {
+                DOMAIN: {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            **OPEN_CLOSE_COVER_CONFIG,
+                            "position_template": (
+                                "{{ states.cover.test.attributes.position }}"
+                            ),
+                            "value_template": "{{ states.cover.test_state.state }}",
+                        }
+                    },
+                }
+            },
+            "cover.test_state",
+            None,
+            STATE_UNKNOWN,
+            {},
+        ),
+    ],
+)
+async def test_template_state_text_ignored_if_none_or_empty(
+    hass: HomeAssistant,
+    entity: str,
+    set_state: str,
+    test_state: str,
+    attr: dict[str, Any],
+    start_ha,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ignoring an empty state text of a template."""
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_UNKNOWN
+
+    hass.states.async_set(entity, set_state, attributes=attr)
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == test_state
+    assert "ERROR" not in caplog.text
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -160,13 +234,13 @@ async def test_template_state_text(hass, states, start_ha, caplog):
         },
     ],
 )
-async def test_template_state_boolean(hass, start_ha):
+async def test_template_state_boolean(hass: HomeAssistant, start_ha) -> None:
     """Test the value_template attribute."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -176,14 +250,18 @@ async def test_template_state_boolean(hass, start_ha):
                 "covers": {
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
-                        "position_template": "{{ states.cover.test.attributes.position }}",
+                        "position_template": (
+                            "{{ states.cover.test.attributes.position }}"
+                        ),
                     }
                 },
             }
         },
     ],
 )
-async def test_template_position(hass, start_ha):
+async def test_template_position(
+    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the position_template attribute."""
     hass.states.async_set("cover.test", STATE_OPEN)
     attrs = {}
@@ -191,6 +269,7 @@ async def test_template_position(hass, start_ha):
     for set_state, pos, test_state in [
         (STATE_CLOSED, 42, STATE_OPEN),
         (STATE_OPEN, 0.0, STATE_CLOSED),
+        (STATE_CLOSED, None, STATE_UNKNOWN),
     ]:
         attrs["position"] = pos
         hass.states.async_set("cover.test", set_state, attributes=attrs)
@@ -198,9 +277,10 @@ async def test_template_position(hass, start_ha):
         state = hass.states.get("cover.test_template_cover")
         assert state.attributes.get("current_position") == pos
         assert state.state == test_state
+        assert "ValueError" not in caplog.text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -210,21 +290,64 @@ async def test_template_position(hass, start_ha):
                 "covers": {
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
-                        "value_template": "{{ 1 == 1 }}",
-                        "tilt_template": "{{ 42 }}",
+                        "optimistic": False,
                     }
                 },
             }
         },
     ],
 )
-async def test_template_tilt(hass, start_ha):
+async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
+    """Test the is_closed attribute."""
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(
+    ("config", "tilt_position"),
+    [
+        (
+            {
+                DOMAIN: {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            **OPEN_CLOSE_COVER_CONFIG,
+                            "value_template": "{{ 1 == 1 }}",
+                            "tilt_template": "{{ 42 }}",
+                        }
+                    },
+                }
+            },
+            42.0,
+        ),
+        (
+            {
+                DOMAIN: {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            **OPEN_CLOSE_COVER_CONFIG,
+                            "value_template": "{{ 1 == 1 }}",
+                            "tilt_template": "{{ None }}",
+                        }
+                    },
+                }
+            },
+            None,
+        ),
+    ],
+)
+async def test_template_tilt(
+    hass: HomeAssistant, tilt_position: float | None, start_ha
+) -> None:
     """Test the tilt_template attribute."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.attributes.get("current_tilt_position") == 42.0
+    assert state.attributes.get("current_tilt_position") == tilt_position
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -247,25 +370,27 @@ async def test_template_tilt(hass, start_ha):
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "position_template": "{{ on }}",
-                        "tilt_template": "{% if states.cover.test_state.state %}"
-                        "on"
-                        "{% else %}"
-                        "off"
-                        "{% endif %}",
+                        "tilt_template": (
+                            "{% if states.cover.test_state.state %}"
+                            "on"
+                            "{% else %}"
+                            "off"
+                            "{% endif %}"
+                        ),
                     },
                 },
             }
         },
     ],
 )
-async def test_template_out_of_bounds(hass, start_ha):
+async def test_template_out_of_bounds(hass: HomeAssistant, start_ha) -> None:
     """Test template out-of-bounds condition."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") is None
     assert state.attributes.get("current_position") is None
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -294,13 +419,15 @@ async def test_template_out_of_bounds(hass, start_ha):
         },
     ],
 )
-async def test_template_open_or_position(hass, start_ha, caplog_setup_text):
+async def test_template_open_or_position(
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that at least one of open_cover or set_position is used."""
     assert hass.states.async_all("cover") == []
     assert "Invalid config for [cover.template]" in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -317,7 +444,7 @@ async def test_template_open_or_position(hass, start_ha, caplog_setup_text):
         },
     ],
 )
-async def test_open_action(hass, start_ha, calls):
+async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
     """Test the open_cover command."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
@@ -332,7 +459,7 @@ async def test_open_action(hass, start_ha, calls):
     assert calls[0].data["caller"] == "cover.test_template_cover"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -356,7 +483,7 @@ async def test_open_action(hass, start_ha, calls):
         },
     ],
 )
-async def test_close_stop_action(hass, start_ha, calls):
+async def test_close_stop_action(hass: HomeAssistant, start_ha, calls) -> None:
     """Test the close-cover and stop_cover commands."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_OPEN
@@ -378,14 +505,14 @@ async def test_close_stop_action(hass, start_ha, calls):
     assert calls[1].data["caller"] == "cover.test_template_cover"
 
 
-@pytest.mark.parametrize("count,domain", [(1, "input_number")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "input_number")])
 @pytest.mark.parametrize(
     "config",
     [
         {"input_number": {"test": {"min": "0", "max": "100", "initial": "42"}}},
     ],
 )
-async def test_set_position(hass, start_ha, calls):
+async def test_set_position(hass: HomeAssistant, start_ha, calls) -> None:
     """Test the set_position command."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -417,7 +544,7 @@ async def test_set_position(hass, start_ha, calls):
     state = hass.states.async_set("input_number.test", 42)
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -478,7 +605,7 @@ async def test_set_position(hass, start_ha, calls):
     assert calls[-1].data["position"] == 25
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -503,7 +630,7 @@ async def test_set_position(hass, start_ha, calls):
     ],
 )
 @pytest.mark.parametrize(
-    "service,attr,tilt_position",
+    ("service", "attr", "tilt_position"),
     [
         (
             SERVICE_SET_COVER_TILT_POSITION,
@@ -514,7 +641,9 @@ async def test_set_position(hass, start_ha, calls):
         (SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: ENTITY_COVER}, 0),
     ],
 )
-async def test_set_tilt_position(hass, service, attr, start_ha, calls, tilt_position):
+async def test_set_tilt_position(
+    hass: HomeAssistant, service, attr, start_ha, calls, tilt_position
+) -> None:
     """Test the set_tilt_position command."""
     await hass.services.async_call(
         DOMAIN,
@@ -530,7 +659,7 @@ async def test_set_tilt_position(hass, service, attr, start_ha, calls, tilt_posi
     assert calls[-1].data["tilt_position"] == tilt_position
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -546,7 +675,7 @@ async def test_set_tilt_position(hass, service, attr, start_ha, calls, tilt_posi
         },
     ],
 )
-async def test_set_position_optimistic(hass, start_ha, calls):
+async def test_set_position_optimistic(hass: HomeAssistant, start_ha, calls) -> None:
     """Test optimistic position mode."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") is None
@@ -575,7 +704,7 @@ async def test_set_position_optimistic(hass, start_ha, calls):
         assert state.state == test_state
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -593,7 +722,9 @@ async def test_set_position_optimistic(hass, start_ha, calls):
         },
     ],
 )
-async def test_set_tilt_position_optimistic(hass, start_ha, calls):
+async def test_set_tilt_position_optimistic(
+    hass: HomeAssistant, start_ha, calls
+) -> None:
     """Test the optimistic tilt_position mode."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") is None
@@ -622,7 +753,7 @@ async def test_set_tilt_position_optimistic(hass, start_ha, calls):
         assert state.attributes.get("current_tilt_position") == pos
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -633,16 +764,16 @@ async def test_set_tilt_position_optimistic(hass, start_ha, calls):
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "value_template": "{{ states.cover.test_state.state }}",
-                        "icon_template": "{% if states.cover.test_state.state %}"
-                        "mdi:check"
-                        "{% endif %}",
+                        "icon_template": (
+                            "{% if states.cover.test_state.state %}mdi:check{% endif %}"
+                        ),
                     }
                 },
             }
         },
     ],
 )
-async def test_icon_template(hass, start_ha):
+async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
     """Test icon template."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("icon") == ""
@@ -655,7 +786,7 @@ async def test_icon_template(hass, start_ha):
     assert state.attributes["icon"] == "mdi:check"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -666,16 +797,18 @@ async def test_icon_template(hass, start_ha):
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "value_template": "{{ states.cover.test_state.state }}",
-                        "entity_picture_template": "{% if states.cover.test_state.state %}"
-                        "/local/cover.png"
-                        "{% endif %}",
+                        "entity_picture_template": (
+                            "{% if states.cover.test_state.state %}"
+                            "/local/cover.png"
+                            "{% endif %}"
+                        ),
                     }
                 },
             }
         },
     ],
 )
-async def test_entity_picture_template(hass, start_ha):
+async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
     """Test icon template."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("entity_picture") == ""
@@ -688,7 +821,7 @@ async def test_entity_picture_template(hass, start_ha):
     assert state.attributes["entity_picture"] == "/local/cover.png"
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -699,14 +832,16 @@ async def test_entity_picture_template(hass, start_ha):
                     "test_template_cover": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "value_template": "open",
-                        "availability_template": "{{ is_state('availability_state.state','on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_state.state','on') }}"
+                        ),
                     }
                 },
             }
         },
     ],
 )
-async def test_availability_template(hass, start_ha):
+async def test_availability_template(hass: HomeAssistant, start_ha) -> None:
     """Test availability template."""
     hass.states.async_set("availability_state.state", STATE_OFF)
     await hass.async_block_till_done()
@@ -719,7 +854,7 @@ async def test_availability_template(hass, start_ha):
     assert hass.states.get("cover.test_template_cover").state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -736,13 +871,15 @@ async def test_availability_template(hass, start_ha):
         },
     ],
 )
-async def test_availability_without_availability_template(hass, start_ha):
+async def test_availability_without_availability_template(
+    hass: HomeAssistant, start_ha
+) -> None:
     """Test that component is available if there is no."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -761,14 +898,14 @@ async def test_availability_without_availability_template(hass, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, start_ha, caplog_setup_text
-):
+    hass: HomeAssistant, start_ha, caplog_setup_text
+) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("cover.test_template_cover") != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog_setup_text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -786,13 +923,13 @@ async def test_invalid_availability_template_keeps_component_available(
         },
     ],
 )
-async def test_device_class(hass, start_ha):
+async def test_device_class(hass: HomeAssistant, start_ha) -> None:
     """Test device class."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("device_class") == "door"
 
 
-@pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -810,13 +947,13 @@ async def test_device_class(hass, start_ha):
         },
     ],
 )
-async def test_invalid_device_class(hass, start_ha):
+async def test_invalid_device_class(hass: HomeAssistant, start_ha) -> None:
     """Test device class."""
     state = hass.states.get("cover.test_template_cover")
     assert not state
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -839,12 +976,12 @@ async def test_invalid_device_class(hass, start_ha):
         },
     ],
 )
-async def test_unique_id(hass, start_ha):
+async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     """Test unique_id option only creates one cover per id."""
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -855,14 +992,16 @@ async def test_unique_id(hass, start_ha):
                     "garage_door": {
                         **OPEN_CLOSE_COVER_CONFIG,
                         "friendly_name": "Garage Door",
-                        "value_template": "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}",
+                        "value_template": (
+                            "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}"
+                        ),
                     },
                 },
             }
         },
     ],
 )
-async def test_state_gets_lowercased(hass, start_ha):
+async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
     """Test True/False is lowercased."""
 
     hass.states.async_set("binary_sensor.garage_door_sensor", "off")
@@ -876,7 +1015,7 @@ async def test_state_gets_lowercased(hass, start_ha):
     assert hass.states.get("cover.garage_door").state == STATE_CLOSED
 
 
-@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
@@ -909,8 +1048,8 @@ async def test_state_gets_lowercased(hass, start_ha):
     ],
 )
 async def test_self_referencing_icon_with_no_template_is_not_a_loop(
-    hass, start_ha, caplog
-):
+    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test a self referencing icon with no value template is not a loop."""
     assert len(hass.states.async_all()) == 1
 

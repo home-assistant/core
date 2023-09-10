@@ -1,9 +1,9 @@
 {
   "domain": "london_underground",
   "name": "London Underground",
+  "codeowners": ["@jpbede"],
   "documentation": "https://www.home-assistant.io/integrations/london_underground",
-  "requirements": ["london-tube-status==0.5"],
-  "codeowners": [],
   "iot_class": "cloud_polling",
-  "loggers": ["london_tube_status"]
+  "loggers": ["london_tube_status"],
+  "requirements": ["london-tube-status==0.5"]
 }

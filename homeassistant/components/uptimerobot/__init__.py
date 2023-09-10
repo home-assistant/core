@@ -84,9 +84,9 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:
             raise UpdateFailed(exception) from exception
-        else:
-            if response.status != API_ATTR_OK:
-                raise UpdateFailed(response.error.message)
+
+        if response.status != API_ATTR_OK:
+            raise UpdateFailed(response.error.message)
 
         monitors: list[UptimeRobotMonitor] = response.data
 
@@ -100,7 +100,7 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         if stale_monitors := current_monitors - new_monitors:
             for monitor_id in stale_monitors:
                 if device := self._device_registry.async_get_device(
-                    {(DOMAIN, monitor_id)}
+                    identifiers={(DOMAIN, monitor_id)}
                 ):
                     self._device_registry.async_remove_device(device.id)
 

@@ -32,11 +32,11 @@ async def _async_call_or_raise_not_ready(
     except RadiothermTstatError as ex:
         msg = f"{host} was busy (invalid value returned): {ex}"
         raise ConfigEntryNotReady(msg) from ex
-    except (OSError, URLError) as ex:
-        msg = f"{host} connection error: {ex}"
-        raise ConfigEntryNotReady(msg) from ex
     except timeout as ex:
         msg = f"{host} timed out waiting for a response: {ex}"
+        raise ConfigEntryNotReady(msg) from ex
+    except (OSError, URLError) as ex:
+        msg = f"{host} connection error: {ex}"
         raise ConfigEntryNotReady(msg) from ex
 
 

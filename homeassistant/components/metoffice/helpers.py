@@ -35,18 +35,18 @@ def fetch_data(connection: datapoint.Manager, site: Site, mode: str) -> MetOffic
     except (ValueError, datapoint.exceptions.APIException) as err:
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
-    else:
-        time_now = utcnow()
-        return MetOfficeData(
-            now=forecast.now(),
-            forecast=[
-                timestep
-                for day in forecast.days
-                for timestep in day.timesteps
-                if timestep.date > time_now
-                and (
-                    mode == MODE_3HOURLY or timestep.date.hour > 6
-                )  # ensures only one result per day in MODE_DAILY
-            ],
-            site=site,
-        )
+
+    time_now = utcnow()
+    return MetOfficeData(
+        now=forecast.now(),
+        forecast=[
+            timestep
+            for day in forecast.days
+            for timestep in day.timesteps
+            if timestep.date > time_now
+            and (
+                mode == MODE_3HOURLY or timestep.date.hour > 6
+            )  # ensures only one result per day in MODE_DAILY
+        ],
+        site=site,
+    )

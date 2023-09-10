@@ -3,17 +3,19 @@
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
+import ssl
 from unittest.mock import patch
 
+import pytest
 import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    DATA_MEGABYTES,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -44,12 +46,12 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
                     "timeout": 30,
                     "sensor": [
                         {
-                            "unit_of_measurement": DATA_MEGABYTES,
+                            "unit_of_measurement": UnitOfInformation.MEGABYTES,
                             "name": "sensor1",
                             "value_template": "{{ value_json.sensor1 }}",
                         },
                         {
-                            "unit_of_measurement": DATA_MEGABYTES,
+                            "unit_of_measurement": UnitOfInformation.MEGABYTES,
                             "name": "sensor2",
                             "value_template": "{{ value_json.sensor2 }}",
                         },
@@ -134,6 +136,46 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
 
 
 @respx.mock
+async def test_setup_with_ssl_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup with an ssl error."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "https://localhost",
+                    "method": "GET",
+                    "verify_ssl": "false",
+                    "timeout": 30,
+                    "sensor": [
+                        {
+                            "unit_of_measurement": UnitOfInformation.MEGABYTES,
+                            "name": "sensor1",
+                            "value_template": "{{ value_json.sensor1 }}",
+                        },
+                    ],
+                    "binary_sensor": [
+                        {
+                            "name": "binary_sensor1",
+                            "value_template": "{{ value_json.binary_sensor1 }}",
+                        },
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+    assert "ssl error" in caplog.text
+
+
+@respx.mock
 async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     """Test setup with minimum configuration (resource_template)."""
 
@@ -158,12 +200,12 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
                     "timeout": 30,
                     "sensor": [
                         {
-                            "unit_of_measurement": DATA_MEGABYTES,
+                            "unit_of_measurement": UnitOfInformation.MEGABYTES,
                             "name": "sensor1",
                             "value_template": "{{ value_json.sensor1 }}",
                         },
                         {
-                            "unit_of_measurement": DATA_MEGABYTES,
+                            "unit_of_measurement": UnitOfInformation.MEGABYTES,
                             "name": "sensor2",
                             "value_template": "{{ value_json.sensor2 }}",
                         },

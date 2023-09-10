@@ -37,15 +37,15 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    _attr_native_unit_of_measurement = "mg/dL"
+    _attr_icon = "mdi:cloud-question"
+
+    def __init__(self, api: NightscoutAPI, name, unique_id) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_extra_state_attributes: dict[str, Any] = {}
-        self._attr_native_unit_of_measurement = "mg/dL"
-        self._attr_icon = "mdi:cloud-question"
-        self._attr_available = False
 
     async def async_update(self) -> None:
         """Fetch the latest data from Nightscout REST API and update the state."""

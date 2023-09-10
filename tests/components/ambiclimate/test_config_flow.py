@@ -8,6 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 
@@ -29,7 +30,7 @@ async def init_config_flow(hass):
     return flow
 
 
-async def test_abort_if_no_implementation_registered(hass):
+async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> None:
     """Test we abort if no implementation is registered."""
     flow = config_flow.AmbiclimateFlowHandler()
     flow.hass = hass
@@ -39,7 +40,7 @@ async def test_abort_if_no_implementation_registered(hass):
     assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Ambiclimate is already setup."""
     flow = await init_config_flow(hass)
 
@@ -57,7 +58,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_full_flow_implementation(hass):
+async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
@@ -96,7 +97,7 @@ async def test_full_flow_implementation(hass):
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_abort_invalid_code(hass):
+async def test_abort_invalid_code(hass: HomeAssistant) -> None:
     """Test if no code is given to step_code."""
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
@@ -107,7 +108,7 @@ async def test_abort_invalid_code(hass):
     assert result["reason"] == "access_token"
 
 
-async def test_already_setup(hass):
+async def test_already_setup(hass: HomeAssistant) -> None:
     """Test when already setup."""
     MockConfigEntry(domain=config_flow.DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -119,7 +120,7 @@ async def test_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_view(hass):
+async def test_view(hass: HomeAssistant) -> None:
     """Test view."""
     hass.config_entries.flow.async_init = AsyncMock()
 

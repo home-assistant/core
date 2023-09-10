@@ -1,0 +1,14 @@
+{
+  "services": {
+    "speedtest": {
+      "name": "Speedtest",
+      "description": "Immediately executes a speed test with iperf3.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "The host name of the iperf3 server (already configured) to run a test with."
+        }
+      }
+    }
+  }
+}

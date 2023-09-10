@@ -1,36 +1,46 @@
 """Tests for the Bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
 from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.passive_update_processor import (
+    STORAGE_KEY,
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import CoreState, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import current_entry
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -40,7 +50,12 @@ from . import (
     patch_all_discovered_devices,
 )
 
-from tests.common import MockEntityPlatform, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +101,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     entity_descriptions={
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
@@ -98,7 +113,11 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
+async def test_basic_usage(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -197,9 +216,13 @@ async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapte
 
 
 async def test_unavailable_after_no_data(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test that the coordinator is unavailable after no data for a while."""
+    start_monotonic = time.monotonic()
+
     with patch(
         "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
         {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
@@ -265,7 +288,12 @@ async def test_unavailable_after_no_data(
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -279,7 +307,12 @@ async def test_unavailable_after_no_data(
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now,
+    ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
         )
@@ -293,8 +326,10 @@ async def test_unavailable_after_no_data(
 
 
 async def test_no_updates_once_stopping(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test updates are ignored once hass is stopping."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -348,8 +383,11 @@ async def test_no_updates_once_stopping(
 
 
 async def test_exception_from_update_method(
-    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -368,7 +406,7 @@ async def test_exception_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             raise Exception("Test exception")
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -398,6 +436,7 @@ async def test_exception_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get an exception
@@ -413,8 +452,10 @@ async def test_exception_from_update_method(
 
 
 async def test_bad_data_from_update_method(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test we handle bad data from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -433,7 +474,7 @@ async def test_bad_data_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             return "bad_data"
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -463,10 +504,11 @@ async def test_bad_data_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get bad data
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO_2, BluetoothChange.ADVERTISEMENT)
 
     assert processor.available is False
@@ -767,8 +809,10 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 
 
 async def test_integration_with_entity(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -814,21 +858,48 @@ async def test_integration_with_entity(
         mock_add_entities,
     )
 
+    entity_key_events = []
+
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock entity key listener."""
+        entity_key_events.append(data)
+
+    cancel_async_add_entity_key_listener = processor.async_add_entity_key_listener(
+        _async_entity_key_listener,
+        PassiveBluetoothEntityKey(key="humidity", device_id="primary"),
+    )
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_entities.mock_calls) == 1
+
+    # should have triggered the entity key listener since the
+    # the device is becoming available
+    assert len(entity_key_events) == 1
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Second call with just the remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 1
 
+    # should not have triggered the entity key listener since there
+    # there is no update with the entity key
+    assert len(entity_key_events) == 1
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Third call with primary and remote sensor entities adds the primary sensor entities
     assert len(mock_add_entities.mock_calls) == 2
 
+    # should not have triggered the entity key listener since there
+    # there is an update with the entity key
+    assert len(entity_key_events) == 2
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Forth call with both primary and remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 2
+
+    # should not have triggered the entity key listener since there
+    # there is an update with the entity key
+    assert len(entity_key_events) == 3
 
     entities = [
         *mock_add_entities.mock_calls[0][1][0],
@@ -848,6 +919,7 @@ async def test_integration_with_entity(
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id="remote"
     )
+    cancel_async_add_entity_key_listener()
     cancel_coordinator()
 
 
@@ -885,7 +957,7 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
             name="Temperature",
-            native_unit_of_measurement=TEMP_CELSIUS,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
@@ -899,8 +971,10 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 
 
 async def test_integration_with_entity_without_a_device(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -962,8 +1036,10 @@ async def test_integration_with_entity_without_a_device(
 
 
 async def test_passive_bluetooth_entity_with_entity_platform(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test with a mock entity platform."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1060,9 +1136,23 @@ BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
+DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={},
+    entity_names={},
+    entity_descriptions={},
+)
+
+
 async def test_integration_multiple_entity_platforms(
-    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1084,21 +1174,21 @@ async def test_integration_multiple_entity_platforms(
     binary_sensor_processor = PassiveBluetoothDataProcessor(
         lambda service_info: BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
     )
-    sesnor_processor = PassiveBluetoothDataProcessor(
+    sensor_processor = PassiveBluetoothDataProcessor(
         lambda service_info: SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
     )
 
     coordinator.async_register_processor(binary_sensor_processor)
-    coordinator.async_register_processor(sesnor_processor)
+    coordinator.async_register_processor(sensor_processor)
     cancel_coordinator = coordinator.async_start()
 
     binary_sensor_processor.async_add_listener(MagicMock())
-    sesnor_processor.async_add_listener(MagicMock())
+    sensor_processor.async_add_listener(MagicMock())
 
     mock_add_sensor_entities = MagicMock()
     mock_add_binary_sensor_entities = MagicMock()
 
-    sesnor_processor.async_add_entities_listener(
+    sensor_processor.async_add_entities_listener(
         PassiveBluetoothProcessorEntity,
         mock_add_sensor_entities,
     )
@@ -1112,14 +1202,14 @@ async def test_integration_multiple_entity_platforms(
     assert len(mock_add_binary_sensor_entities.mock_calls) == 1
     assert len(mock_add_sensor_entities.mock_calls) == 1
 
-    binary_sesnor_entities = [
+    binary_sensor_entities = [
         *mock_add_binary_sensor_entities.mock_calls[0][1][0],
     ]
-    sesnor_entities = [
+    sensor_entities = [
         *mock_add_sensor_entities.mock_calls[0][1][0],
     ]
 
-    sensor_entity_one: PassiveBluetoothProcessorEntity = sesnor_entities[0]
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sensor_entities[0]
     sensor_entity_one.hass = hass
     assert sensor_entity_one.available is True
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
@@ -1133,7 +1223,7 @@ async def test_integration_multiple_entity_platforms(
         key="pressure", device_id=None
     )
 
-    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sesnor_entities[
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sensor_entities[
         0
     ]
     binary_sensor_entity_one.hass = hass
@@ -1152,8 +1242,11 @@ async def test_integration_multiple_entity_platforms(
 
 
 async def test_exception_from_coordinator_update_method(
-    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
-):
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1205,3 +1298,281 @@ async def test_exception_from_coordinator_update_method(
     assert processor.available is True
     unregister_processor()
     cancel_coordinator()
+
+
+async def test_integration_multiple_entity_platforms_with_reload_and_restart(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms with reload."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+
+    @callback
+    def _mock_update_method(
+        service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    current_entry.set(entry)
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    binary_sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE,
+        BINARY_SENSOR_DOMAIN,
+    )
+    sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE, SENSOR_DOMAIN
+    )
+
+    unregister_binary_sensor_processor = coordinator.async_register_processor(
+        binary_sensor_processor, BinarySensorEntityDescription
+    )
+    unregister_sensor_processor = coordinator.async_register_processor(
+        sensor_processor, SensorEntityDescription
+    )
+    cancel_coordinator = coordinator.async_start()
+
+    binary_sensor_processor.async_add_listener(MagicMock())
+    sensor_processor.async_add_listener(MagicMock())
+
+    mock_add_sensor_entities = MagicMock()
+    mock_add_binary_sensor_entities = MagicMock()
+
+    sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_sensor_entities,
+    )
+    binary_sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_binary_sensor_entities,
+    )
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    # First call with just the remote sensor entities results in them being added
+    assert len(mock_add_binary_sensor_entities.mock_calls) == 1
+    assert len(mock_add_sensor_entities.mock_calls) == 1
+
+    binary_sensor_entities = [
+        *mock_add_binary_sensor_entities.mock_calls[0][1][0],
+    ]
+    sensor_entities = [
+        *mock_add_sensor_entities.mock_calls[0][1][0],
+    ]
+
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sensor_entities[0]
+    sensor_entity_one.hass = hass
+    assert sensor_entity_one.available is True
+    assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
+    assert sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="pressure", device_id=None
+    )
+
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sensor_entities[
+        0
+    ]
+    binary_sensor_entity_one.hass = hass
+    assert binary_sensor_entity_one.available is True
+    assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
+    assert binary_sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="motion", device_id=None
+    )
+    cancel_coordinator()
+    unregister_binary_sensor_processor()
+    unregister_sensor_processor()
+
+    mock_add_sensor_entities = MagicMock()
+    mock_add_binary_sensor_entities = MagicMock()
+
+    current_entry.set(entry)
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    binary_sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE,
+        BINARY_SENSOR_DOMAIN,
+    )
+    sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE,
+        SENSOR_DOMAIN,
+    )
+
+    sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_sensor_entities,
+    )
+    binary_sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_binary_sensor_entities,
+    )
+
+    unregister_binary_sensor_processor = coordinator.async_register_processor(
+        binary_sensor_processor, BinarySensorEntityDescription
+    )
+    unregister_sensor_processor = coordinator.async_register_processor(
+        sensor_processor, SensorEntityDescription
+    )
+    cancel_coordinator = coordinator.async_start()
+
+    assert len(mock_add_binary_sensor_entities.mock_calls) == 1
+    assert len(mock_add_sensor_entities.mock_calls) == 1
+
+    binary_sensor_entities = [
+        *mock_add_binary_sensor_entities.mock_calls[0][1][0],
+    ]
+    sensor_entities = [
+        *mock_add_sensor_entities.mock_calls[0][1][0],
+    ]
+
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sensor_entities[0]
+    sensor_entity_one.hass = hass
+    assert sensor_entity_one.available is True
+    assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
+    assert sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="pressure", device_id=None
+    )
+
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sensor_entities[
+        0
+    ]
+    binary_sensor_entity_one.hass = hass
+    assert binary_sensor_entity_one.available is True
+    assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
+    assert binary_sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="motion", device_id=None
+    )
+
+    await hass.async_stop()
+    await hass.async_block_till_done()
+
+    assert SENSOR_DOMAIN in hass_storage[STORAGE_KEY]["data"][entry.entry_id]
+    assert BINARY_SENSOR_DOMAIN in hass_storage[STORAGE_KEY]["data"][entry.entry_id]
+
+    # We don't normally cancel or unregister these at stop,
+    # but since we are mocking a restart we need to cleanup
+    cancel_coordinator()
+    unregister_binary_sensor_processor()
+    unregister_sensor_processor()
+
+    hass = await async_test_home_assistant(asyncio.get_running_loop())
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    current_entry.set(entry)
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    mock_add_sensor_entities = MagicMock()
+    mock_add_binary_sensor_entities = MagicMock()
+
+    binary_sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE,
+        BINARY_SENSOR_DOMAIN,
+    )
+    sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: DEVICE_ONLY_PASSIVE_BLUETOOTH_DATA_UPDATE,
+        SENSOR_DOMAIN,
+    )
+
+    sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_sensor_entities,
+    )
+    binary_sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_binary_sensor_entities,
+    )
+
+    unregister_binary_sensor_processor = coordinator.async_register_processor(
+        binary_sensor_processor, BinarySensorEntityDescription
+    )
+    unregister_sensor_processor = coordinator.async_register_processor(
+        sensor_processor, SensorEntityDescription
+    )
+    cancel_coordinator = coordinator.async_start()
+
+    assert len(mock_add_binary_sensor_entities.mock_calls) == 1
+    assert len(mock_add_sensor_entities.mock_calls) == 1
+
+    binary_sensor_entities = [
+        *mock_add_binary_sensor_entities.mock_calls[0][1][0],
+    ]
+    sensor_entities = [
+        *mock_add_sensor_entities.mock_calls[0][1][0],
+    ]
+
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sensor_entities[0]
+    sensor_entity_one.hass = hass
+    assert sensor_entity_one.available is False  # service data not injected
+    assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
+    assert sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="pressure", device_id=None
+    )
+
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sensor_entities[
+        0
+    ]
+    binary_sensor_entity_one.hass = hass
+    assert binary_sensor_entity_one.available is False  # service data not injected
+    assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
+    assert binary_sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="motion", device_id=None
+    )
+    cancel_coordinator()
+    unregister_binary_sensor_processor()
+    unregister_sensor_processor()
+    await hass.async_stop()

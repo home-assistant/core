@@ -1,11 +1,11 @@
 {
   "domain": "imap",
   "name": "IMAP",
+  "codeowners": ["@jbouwh"],
   "config_flow": true,
   "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/imap",
-  "requirements": ["aioimaplib==1.0.1"],
-  "codeowners": ["@engrbm87"],
   "iot_class": "cloud_push",
-  "loggers": ["aioimaplib"]
+  "loggers": ["aioimaplib"],
+  "requirements": ["aioimaplib==1.0.1"]
 }

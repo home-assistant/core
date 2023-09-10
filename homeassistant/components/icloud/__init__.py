@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     icloud_account = account
 
         if icloud_account is None:
-            raise Exception(
+            raise ValueError(
                 f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account

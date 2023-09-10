@@ -54,7 +54,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_wait_for_full_advertisement(
         self, discovery_info: BluetoothServiceInfo, device: DeviceData
     ) -> BluetoothServiceInfo:
-        """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
+        """Sometimes first advertisement we receive is blank or incomplete.
+
+        Wait until we get a useful one.
+        """
         if not device.pending:
             return discovery_info
 
@@ -87,15 +90,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_device = device
 
-        # Wait until we have received enough information about this device to detect its encryption type
+        # Wait until we have received enough information about
+        # this device to detect its encryption type
         try:
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
         except asyncio.TimeoutError:
             # This device might have a really long advertising interval
-            # So create a config entry for it, and if we discover it has encryption later
-            # We can do a reauth
+            # So create a config entry for it, and if we discover it has
+            # encryption later, we can do a reauth
             return await self.async_step_confirm_slow()
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
@@ -119,7 +123,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -153,7 +157,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -210,15 +214,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self.context["title_placeholders"] = {"name": discovery.title}
 
-            # Wait until we have received enough information about this device to detect its encryption type
+            # Wait until we have received enough information about
+            # this device to detect its encryption type
             try:
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
             except asyncio.TimeoutError:
                 # This device might have a really long advertising interval
-                # So create a config entry for it, and if we discover it has encryption later
-                # We can do a reauth
+                # So create a config entry for it, and if we discover
+                # it has encryption later, we can do a reauth
                 return await self.async_step_confirm_slow()
 
             self._discovered_device = discovery.device

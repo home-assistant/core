@@ -3,6 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
+        "description": "By default, this integration uses a Telnet connection to your receiver to receive real-time updates. Only one Telnet connection to your receiver can be established at a time. The Telnet connection can be disabled after setting up the integration.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         },
@@ -40,9 +41,36 @@
           "show_all_sources": "Show all sources",
           "zone2": "Set up Zone 2",
           "zone3": "Set up Zone 3",
-          "update_audyssey": "Update Audyssey settings"
+          "update_audyssey": "Update Audyssey settings",
+          "use_telnet": "Use Telnet connection"
         }
       }
+    }
+  },
+  "services": {
+    "get_command": {
+      "name": "Get command",
+      "description": "Send sa generic HTTP get command.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Endpoint of the command, including associated parameters."
+        }
+      }
+    },
+    "set_dynamic_eq": {
+      "name": "Set dynamic equalizer",
+      "description": "Enables or disables DynamicEQ.",
+      "fields": {
+        "dynamic_eq": {
+          "name": "Dynamic equalizer",
+          "description": "True/false for enable/disable."
+        }
+      }
+    },
+    "update_audyssey": {
+      "name": "Update Audyssey",
+      "description": "Updates Audyssey settings."
     }
   }
 }

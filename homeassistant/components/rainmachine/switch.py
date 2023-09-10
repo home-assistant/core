@@ -1,23 +1,21 @@
-"""This component provides support for RainMachine programs and zones."""
+"""Component providing support for RainMachine programs and zones."""
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from regenmaschine.errors import RainMachineError
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID
+from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
@@ -163,14 +161,14 @@ TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING = "hot_days_extra_watering"
 RESTRICTIONS_SWITCH_DESCRIPTIONS = (
     RainMachineRestrictionSwitchDescription(
         key=TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED,
-        name="Freeze protection",
+        translation_key=TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED,
         icon="mdi:snowflake-alert",
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectEnabled",
     ),
     RainMachineRestrictionSwitchDescription(
         key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
-        name="Extra water on hot days",
+        translation_key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
         icon="mdi:heat-wave",
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="hotDaysExtraWatering",

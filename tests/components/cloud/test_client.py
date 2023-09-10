@@ -13,8 +13,14 @@ from homeassistant.components.cloud.const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import State
+from homeassistant.components.homeassistant.exposed_entities import (
+    DATA_EXPOSED_ENTITIES,
+    ExposedEntities,
+    async_expose_entity,
+)
+from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -30,7 +36,7 @@ def mock_cloud_inst():
     return MagicMock(subscription_expired=False)
 
 
-async def test_handler_alexa(hass):
+async def test_handler_alexa(hass: HomeAssistant) -> None:
     """Test handler Alexa."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
@@ -69,7 +75,7 @@ async def test_handler_alexa(hass):
     assert device["manufacturerName"] == "Home Assistant"
 
 
-async def test_handler_alexa_disabled(hass, mock_cloud_fixture):
+async def test_handler_alexa_disabled(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test handler Alexa when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
     cloud = hass.data["cloud"]
@@ -83,7 +89,7 @@ async def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     assert resp["event"]["payload"]["type"] == "BRIDGE_UNREACHABLE"
 
 
-async def test_handler_google_actions(hass):
+async def test_handler_google_actions(hass: HomeAssistant) -> None:
     """Test handler Google Actions."""
     hass.states.async_set("switch.test", "on", {"friendly_name": "Test switch"})
     hass.states.async_set("switch.test2", "on", {"friendly_name": "Test switch 2"})
@@ -135,15 +141,15 @@ async def test_handler_google_actions(hass):
 
 
 @pytest.mark.parametrize(
-    "intent,response_payload",
+    ("intent", "response_payload"),
     [
         ("action.devices.SYNC", {"agentUserId": "myUserName", "devices": []}),
         ("action.devices.QUERY", {"errorCode": "deviceTurnedOff"}),
     ],
 )
 async def test_handler_google_actions_disabled(
-    hass, mock_cloud_fixture, intent, response_payload
-):
+    hass: HomeAssistant, mock_cloud_fixture, intent, response_payload
+) -> None:
     """Test handler Google Actions when user has disabled it."""
     mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
@@ -164,7 +170,9 @@ async def test_handler_google_actions_disabled(
     assert resp["payload"] == response_payload
 
 
-async def test_webhook_msg(hass, caplog):
+async def test_webhook_msg(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test webhook msg."""
     with patch("hass_nabucasa.Cloud.initialize"):
         setup = await async_setup_component(hass, "cloud", {"cloud": {}})
@@ -239,37 +247,57 @@ async def test_webhook_msg(hass, caplog):
     assert '{"nonexisting": "payload"}' in caplog.text
 
 
-async def test_google_config_expose_entity(hass, mock_cloud_setup, mock_cloud_login):
+async def test_google_config_expose_entity(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
     """Test Google config exposing entity method uses latest config."""
+    entity_registry = er.async_get(hass)
+
+    # Enable exposing new entities to Google
+    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities.async_set_expose_new_entities("cloud.google_assistant", True)
+
+    # Register a light entity
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
     cloud_client = hass.data[DOMAIN].client
-    state = State("light.kitchen", "on")
+    state = State(entity_entry.entity_id, "on")
     gconf = await cloud_client.get_google_config()
 
     assert gconf.should_expose(state)
 
-    await cloud_client.prefs.async_update_google_entity_config(
-        entity_id="light.kitchen", should_expose=False
-    )
+    async_expose_entity(hass, "cloud.google_assistant", entity_entry.entity_id, False)
 
     assert not gconf.should_expose(state)
 
 
-async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login):
+async def test_google_config_should_2fa(
+    hass: HomeAssistant, mock_cloud_setup, mock_cloud_login
+) -> None:
     """Test Google config disabling 2FA method uses latest config."""
+    entity_registry = er.async_get(hass)
+
+    # Register a light entity
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+
     cloud_client = hass.data[DOMAIN].client
     gconf = await cloud_client.get_google_config()
-    state = State("light.kitchen", "on")
+    state = State(entity_entry.entity_id, "on")
 
     assert gconf.should_2fa(state)
 
-    await cloud_client.prefs.async_update_google_entity_config(
-        entity_id="light.kitchen", disable_2fa=True
+    entity_registry.async_update_entity_options(
+        entity_entry.entity_id, "cloud.google_assistant", {"disable_2fa": True}
     )
 
     assert not gconf.should_2fa(state)
 
 
-async def test_set_username(hass):
+async def test_set_username(hass: HomeAssistant) -> None:
     """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
@@ -278,13 +306,15 @@ async def test_set_username(hass):
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
-    await client.cloud_started()
+    await client.cloud_connected()
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
-async def test_login_recovers_bad_internet(hass, caplog):
+async def test_login_recovers_bad_internet(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Alexa can recover bad auth."""
     prefs = Mock(
         alexa_enabled=True,
@@ -296,7 +326,7 @@ async def test_login_recovers_bad_internet(hass, caplog):
     client._alexa_config = Mock(
         async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
     )
-    await client.cloud_started()
+    await client.cloud_connected()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
     assert "Unable to activate Alexa Report State" in caplog.text
 
@@ -304,3 +334,42 @@ async def test_login_recovers_bad_internet(hass, caplog):
     await hass.async_block_till_done()
 
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 2
+
+
+async def test_system_msg(hass: HomeAssistant) -> None:
+    """Test system msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    assert cloud.client.relayer_region is None
+
+    response = await cloud.client.async_system_message(
+        {
+            "region": "xx-earth-616",
+        }
+    )
+
+    assert response is None
+    assert cloud.client.relayer_region == "xx-earth-616"
+
+
+async def test_cloud_connection_info(hass: HomeAssistant) -> None:
+    """Test connection info msg."""
+    with patch("hass_nabucasa.Cloud.initialize"):
+        setup = await async_setup_component(hass, "cloud", {"cloud": {}})
+        assert setup
+    cloud = hass.data["cloud"]
+
+    response = await cloud.client.async_cloud_connection_info({})
+
+    assert response == {
+        "remote": {
+            "connected": False,
+            "enabled": False,
+            "instance_domain": None,
+            "alias": None,
+        },
+        "version": HA_VERSION,
+    }

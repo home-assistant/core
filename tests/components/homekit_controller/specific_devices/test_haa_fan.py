@@ -1,7 +1,7 @@
 """Make sure that a H.A.A. fan can be setup."""
-
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -13,7 +13,7 @@ from ..common import (
 )
 
 
-async def test_haa_fan_setup(hass):
+async def test_haa_fan_setup(hass: HomeAssistant) -> None:
     """Test that a H.A.A. fan can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "haa_fan.json")
     await setup_test_accessories(hass, accessories)

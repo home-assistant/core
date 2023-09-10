@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -120,9 +120,13 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
 
-SourceType = Union[
-    GridSourceType, SolarSourceType, BatterySourceType, GasSourceType, WaterSourceType
-]
+SourceType = (
+    GridSourceType
+    | SolarSourceType
+    | BatterySourceType
+    | GasSourceType
+    | WaterSourceType
+)
 
 
 class DeviceConsumption(TypedDict):

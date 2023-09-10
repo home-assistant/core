@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.kira import remote as kira
+from homeassistant.core import HomeAssistant
 
 SERVICE_SEND_COMMAND = "send_command"
 
@@ -18,7 +19,7 @@ def add_entities(devices):
         DEVICES.append(device)
 
 
-def test_service_call(hass):
+def test_service_call(hass: HomeAssistant) -> None:
     """Test Kira's ability to send commands."""
     mock_kira = MagicMock()
     hass.data[kira.DOMAIN] = {kira.CONF_REMOTE: {}}

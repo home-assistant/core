@@ -1,36 +1,18 @@
 """Support for Hydrawise cloud."""
-from datetime import timedelta
-import logging
 
-from hydrawiser.core import Hydrawiser
+
+from pydrawise.legacy import LegacyHydrawise
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
-
-ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-CONF_WATERING_TIME = "watering_minutes"
-
-NOTIFICATION_ID = "hydrawise_notification"
-NOTIFICATION_TITLE = "Hydrawise Setup"
-
-DATA_HYDRAWISE = "hydrawise"
-DOMAIN = "hydrawise"
-DEFAULT_WATERING_TIME = 15
-
-SCAN_INTERVAL = timedelta(seconds=120)
-
-SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
+from .const import DOMAIN, LOGGER, NOTIFICATION_ID, NOTIFICATION_TITLE, SCAN_INTERVAL
+from .coordinator import HydrawiseDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,70 +27,36 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hunter Hydrawise component."""
     conf = config[DOMAIN]
     access_token = conf[CONF_ACCESS_TOKEN]
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        hydrawise = Hydrawiser(user_token=access_token)
-        hass.data[DATA_HYDRAWISE] = HydrawiseHub(hydrawise)
+        hydrawise = await hass.async_add_executor_job(LegacyHydrawise, access_token)
     except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
-        persistent_notification.create(
-            hass,
-            f"Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+        LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
+        _show_failure_notification(hass, str(ex))
         return False
 
-    def hub_refresh(event_time):
-        """Call Hydrawise hub to refresh information."""
-        _LOGGER.debug("Updating Hydrawise Hub component")
-        hass.data[DATA_HYDRAWISE].data.update_controller_info()
-        dispatcher_send(hass, SIGNAL_UPDATE_HYDRAWISE)
+    if not hydrawise.current_controller:
+        LOGGER.error("Failed to fetch Hydrawise data")
+        _show_failure_notification(hass, "Failed to fetch Hydrawise data.")
+        return False
 
-    # Call the Hydrawise API to refresh updates
-    track_time_interval(hass, hub_refresh, scan_interval)
+    hass.data[DOMAIN] = HydrawiseDataUpdateCoordinator(hass, hydrawise, scan_interval)
+
+    # NOTE: We don't need to call async_config_entry_first_refresh() because
+    # data is fetched when the Hydrawiser object is instantiated.
 
     return True
 
 
-class HydrawiseHub:
-    """Representation of a base Hydrawise device."""
-
-    def __init__(self, data):
-        """Initialize the entity."""
-        self.data = data
-
-
-class HydrawiseEntity(Entity):
-    """Entity class for Hydrawise devices."""
-
-    _attr_attribution = "Data provided by hydrawise.com"
-
-    def __init__(self, data, description: EntityDescription):
-        """Initialize the Hydrawise entity."""
-        self.entity_description = description
-        self.data = data
-        self._attr_name = f"{self.data['name']} {description.name}"
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_HYDRAWISE, self._update_callback
-            )
-        )
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"identifier": self.data.get("relay")}
+def _show_failure_notification(hass: HomeAssistant, error: str) -> None:
+    persistent_notification.create(
+        hass,
+        f"Error: {error}<br />You will need to restart hass after fixing.",
+        title=NOTIFICATION_TITLE,
+        notification_id=NOTIFICATION_ID,
+    )

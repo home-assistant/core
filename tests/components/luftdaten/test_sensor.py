@@ -12,8 +12,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,7 +40,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Temperature"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_humidity")
@@ -68,7 +68,7 @@ async def test_luftdaten_sensors(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sensor 12345 Pressure"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_pressure_at_sealevel")
@@ -84,7 +84,7 @@ async def test_luftdaten_sensors(
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PA
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPressure.PA
     assert ATTR_ICON not in state.attributes
 
     entry = entity_registry.async_get("sensor.sensor_12345_pm10")

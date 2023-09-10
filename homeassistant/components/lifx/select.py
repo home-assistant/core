@@ -5,8 +5,8 @@ from aiolifx_themes.themes import ThemeLibrary
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -15,22 +15,22 @@ from .const import (
     INFRARED_BRIGHTNESS,
     INFRARED_BRIGHTNESS_VALUES_MAP,
 )
-from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
-from .entity import LIFXSensorEntity
+from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 from .util import lifx_features
 
 THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
 
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
-    name="Infrared brightness",
+    translation_key="infrared_brightness",
     entity_category=EntityCategory.CONFIG,
     options=list(INFRARED_BRIGHTNESS_VALUES_MAP.values()),
 )
 
 THEME_ENTITY = SelectEntityDescription(
     key=ATTR_THEME,
-    name="Theme",
+    translation_key="theme",
     entity_category=EntityCategory.CONFIG,
     options=THEME_NAMES,
 )
@@ -42,40 +42,31 @@ async def async_setup_entry(
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[LIFXSensorEntity] = []
+    entities: list[LIFXEntity] = []
 
     if lifx_features(coordinator.device)["infrared"]:
         entities.append(
-            LIFXInfraredBrightnessSelectEntity(
-                coordinator.sensor_coordinator, description=INFRARED_BRIGHTNESS_ENTITY
-            )
+            LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
     if lifx_features(coordinator.device)["multizone"] is True:
-        entities.append(
-            LIFXThemeSelectEntity(
-                coordinator.sensor_coordinator, description=THEME_ENTITY
-            )
-        )
+        entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
 
     async_add_entities(entities)
 
 
-class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
+class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXSensorUpdateCoordinator,
+        coordinator: LIFXUpdateCoordinator,
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the IR brightness config entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
@@ -94,22 +85,19 @@ class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
         await self.coordinator.async_set_infrared_brightness(option)
 
 
-class LIFXThemeSelectEntity(LIFXSensorEntity, SelectEntity):
+class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
     """Theme entity for LIFX multizone devices."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXSensorUpdateCoordinator,
+        coordinator: LIFXUpdateCoordinator,
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the theme selection entity."""
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_current_option = None
 
     @callback

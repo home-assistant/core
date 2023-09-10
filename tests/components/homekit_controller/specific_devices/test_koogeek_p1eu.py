@@ -1,7 +1,7 @@
 """Make sure that existing Koogeek P1EU support isn't broken."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -13,7 +13,7 @@ from ..common import (
 )
 
 
-async def test_koogeek_p1eu_setup(hass):
+async def test_koogeek_p1eu_setup(hass: HomeAssistant) -> None:
     """Test that a Koogeek P1EU can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "koogeek_p1eu.json")
     await setup_test_accessories(hass, accessories)

@@ -7,10 +7,13 @@ import yarl
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import const, models
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import WebSocketGenerator
 
-async def test_is_media_source_id():
+
+async def test_is_media_source_id() -> None:
     """Test media source validation."""
     assert media_source.is_media_source_id(media_source.URI_SCHEME)
     assert media_source.is_media_source_id(f"{media_source.URI_SCHEME}domain")
@@ -20,7 +23,7 @@ async def test_is_media_source_id():
     assert not media_source.is_media_source_id("test")
 
 
-async def test_generate_media_source_id():
+async def test_generate_media_source_id() -> None:
     """Test identifier generation."""
     tests = [
         (None, None),
@@ -37,7 +40,7 @@ async def test_generate_media_source_id():
         )
 
 
-async def test_async_browse_media(hass):
+async def test_async_browse_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -92,10 +95,10 @@ async def test_async_browse_media(hass):
     media = await media_source.async_browse_media(hass, const.URI_SCHEME)
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert len(media.children) == 1
-    assert media.children[0].title == "Local Media"
+    assert media.children[0].title == "My media"
 
 
-async def test_async_resolve_media(hass):
+async def test_async_resolve_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -111,7 +114,9 @@ async def test_async_resolve_media(hass):
 
 
 @patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
-async def test_async_resolve_media_no_entity(hass, caplog):
+async def test_async_resolve_media_no_entity(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -129,7 +134,7 @@ async def test_async_resolve_media_no_entity(hass, caplog):
     )
 
 
-async def test_async_unresolve_media(hass):
+async def test_async_unresolve_media(hass: HomeAssistant) -> None:
     """Test browse media."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -149,7 +154,9 @@ async def test_async_unresolve_media(hass):
         )
 
 
-async def test_websocket_browse_media(hass, hass_ws_client):
+async def test_websocket_browse_media(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test browse media websocket."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -203,7 +210,9 @@ async def test_websocket_browse_media(hass, hass_ws_client):
 
 
 @pytest.mark.parametrize("filename", ["test.mp3", "Epic Sax Guy 10 Hours.mp4"])
-async def test_websocket_resolve_media(hass, hass_ws_client, filename):
+async def test_websocket_resolve_media(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, filename
+) -> None:
     """Test browse media websocket."""
     assert await async_setup_component(hass, media_source.DOMAIN, {})
     await hass.async_block_till_done()
@@ -258,7 +267,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     assert msg["error"]["message"] == "test"
 
 
-async def test_browse_resolve_without_setup():
+async def test_browse_resolve_without_setup() -> None:
     """Test browse and resolve work without being setup."""
     with pytest.raises(BrowseError):
         await media_source.async_browse_media(Mock(data={}), None)

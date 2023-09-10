@@ -188,8 +188,14 @@ class Thermostat(HomeAccessory):
                 (CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
             )
 
+        if (
+            ATTR_CURRENT_HUMIDITY in attributes
+            or features & ClimateEntityFeature.TARGET_HUMIDITY
+        ):
+            self.chars.append(CHAR_CURRENT_HUMIDITY)
+
         if features & ClimateEntityFeature.TARGET_HUMIDITY:
-            self.chars.extend((CHAR_TARGET_HUMIDITY, CHAR_CURRENT_HUMIDITY))
+            self.chars.append(CHAR_TARGET_HUMIDITY)
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
         self.set_primary_service(serv_thermostat)
@@ -253,7 +259,6 @@ class Thermostat(HomeAccessory):
                 properties={PROP_MIN_VALUE: hc_min_temp, PROP_MAX_VALUE: hc_max_temp},
             )
         self.char_target_humidity = None
-        self.char_current_humidity = None
         if CHAR_TARGET_HUMIDITY in self.chars:
             self.char_target_humidity = serv_thermostat.configure_char(
                 CHAR_TARGET_HUMIDITY,
@@ -265,6 +270,8 @@ class Thermostat(HomeAccessory):
                 # of 0-80%
                 properties={PROP_MIN_VALUE: min_humidity},
             )
+        self.char_current_humidity = None
+        if CHAR_CURRENT_HUMIDITY in self.chars:
             self.char_current_humidity = serv_thermostat.configure_char(
                 CHAR_CURRENT_HUMIDITY, value=50
             )

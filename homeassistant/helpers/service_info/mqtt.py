@@ -1,14 +1,13 @@
 """MQTT Discovery data."""
 from dataclasses import dataclass
 import datetime as dt
-from typing import Union
 
 from homeassistant.data_entry_flow import BaseServiceInfo
 
-ReceivePayloadType = Union[str, bytes]
+ReceivePayloadType = str | bytes
 
 
-@dataclass
+@dataclass(slots=True)
 class MqttServiceInfo(BaseServiceInfo):
     """Prepared info from mqtt entries."""
 

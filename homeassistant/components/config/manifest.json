@@ -1,9 +1,9 @@
 {
   "domain": "config",
   "name": "Configuration",
-  "documentation": "https://www.home-assistant.io/integrations/config",
-  "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "dependencies": ["http"],
+  "documentation": "https://www.home-assistant.io/integrations/config",
+  "integration_type": "system",
+  "quality_scale": "internal"
 }

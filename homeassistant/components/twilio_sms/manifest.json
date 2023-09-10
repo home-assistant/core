@@ -1,8 +1,8 @@
 {
   "domain": "twilio_sms",
   "name": "Twilio SMS",
-  "documentation": "https://www.home-assistant.io/integrations/twilio_sms",
-  "dependencies": ["twilio"],
   "codeowners": [],
+  "dependencies": ["twilio"],
+  "documentation": "https://www.home-assistant.io/integrations/twilio_sms",
   "iot_class": "cloud_push"
 }

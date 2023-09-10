@@ -13,11 +13,13 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityCategory,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -46,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
+    component.register_shutdown()
 
     # Clean up old devices created by device tracker entities in the past.
     # Can be removed after 2022.6
@@ -174,7 +177,9 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
+    hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
+    )
 
 
 class BaseTrackerEntity(Entity):
@@ -347,7 +352,7 @@ class ScannerEntity(BaseTrackerEntity):
                 self.mac_address,
                 self.unique_id,
             )
-            if self.is_connected:
+            if self.is_connected and self.ip_address:
                 _async_connected_device_registered(
                     hass,
                     self.mac_address,
@@ -361,7 +366,7 @@ class ScannerEntity(BaseTrackerEntity):
         assert self.mac_address is not None
 
         return dr.async_get(self.hass).async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
         )
 
     async def async_internal_added_to_hass(self) -> None:
@@ -369,7 +374,6 @@ class ScannerEntity(BaseTrackerEntity):
         # Entities without a unique ID don't have a device
         if (
             not self.registry_entry
-            or not self.platform
             or not self.platform.config_entry
             or not self.mac_address
             or (device_entry := self.find_device_entry()) is None
@@ -402,13 +406,13 @@ class ScannerEntity(BaseTrackerEntity):
     @property
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, StateType] = {}
-        attr.update(super().state_attributes)
-        if self.ip_address is not None:
-            attr[ATTR_IP] = self.ip_address
-        if self.mac_address is not None:
-            attr[ATTR_MAC] = self.mac_address
-        if self.hostname is not None:
-            attr[ATTR_HOST_NAME] = self.hostname
+        attr = super().state_attributes
+
+        if ip_address := self.ip_address:
+            attr[ATTR_IP] = ip_address
+        if (mac_address := self.mac_address) is not None:
+            attr[ATTR_MAC] = mac_address
+        if (hostname := self.hostname) is not None:
+            attr[ATTR_HOST_NAME] = hostname
 
         return attr

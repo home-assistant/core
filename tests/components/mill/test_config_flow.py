@@ -4,12 +4,13 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.mill.const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -19,7 +20,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -54,7 +55,7 @@ async def test_create_entry(hass):
     }
 
 
-async def test_flow_entry_already_exists(hass):
+async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -94,7 +95,7 @@ async def test_flow_entry_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -123,7 +124,7 @@ async def test_connection_error(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_local_create_entry(hass):
+async def test_local_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -163,7 +164,7 @@ async def test_local_create_entry(hass):
     assert result["data"] == test_data
 
 
-async def test_local_flow_entry_already_exists(hass):
+async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -213,7 +214,7 @@ async def test_local_flow_entry_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_local_connection_error(hass):
+async def test_local_connection_error(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(

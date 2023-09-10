@@ -1,16 +1,15 @@
-"""
-Test against characteristics captured from a Velux Gateway.
+"""Test against characteristics captured from a Velux Gateway.
 
 https://github.com/home-assistant/core/issues/44314
 """
-
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -22,7 +21,7 @@ from ..common import (
 )
 
 
-async def test_velux_cover_setup(hass):
+async def test_velux_cover_setup(hass: HomeAssistant) -> None:
     """Test that a velux gateway can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "velux_gateway.json")
     await setup_test_accessories(hass, accessories)
@@ -74,7 +73,7 @@ async def test_velux_cover_setup(hass):
                             friendly_name="VELUX Sensor Temperature sensor",
                             capabilities={"state_class": SensorStateClass.MEASUREMENT},
                             unique_id="00:00:00:00:00:00_2_8",
-                            unit_of_measurement=TEMP_CELSIUS,
+                            unit_of_measurement=UnitOfTemperature.CELSIUS,
                             state="18.9",
                         ),
                         EntityTestInfo(

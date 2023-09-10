@@ -1,5 +1,6 @@
 """Tests for the numato binary_sensor platform."""
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -12,7 +13,9 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
+async def test_failing_setups_no_entities(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -21,7 +24,9 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
-async def test_setup_callbacks(hass, numato_fixture, monkeypatch):
+async def test_setup_callbacks(
+    hass: HomeAssistant, numato_fixture, monkeypatch
+) -> None:
     """During setup a callback shall be registered."""
 
     numato_fixture.discover()
@@ -38,7 +43,9 @@ async def test_setup_callbacks(hass, numato_fixture, monkeypatch):
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
 
 
-async def test_hass_binary_sensor_notification(hass, numato_fixture):
+async def test_hass_binary_sensor_notification(
+    hass: HomeAssistant, numato_fixture
+) -> None:
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
@@ -52,7 +59,9 @@ async def test_hass_binary_sensor_notification(hass, numato_fixture):
     )
 
 
-async def test_binary_sensor_setup_without_discovery_info(hass, config, numato_fixture):
+async def test_binary_sensor_setup_without_discovery_info(
+    hass: HomeAssistant, config, numato_fixture
+) -> None:
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
     await discovery.async_load_platform(

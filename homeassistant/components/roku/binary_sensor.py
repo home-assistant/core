@@ -11,8 +11,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -36,27 +36,27 @@ class RokuBinarySensorEntityDescription(
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="headphones_connected",
-        name="Headphones connected",
+        translation_key="headphones_connected",
         icon="mdi:headphones",
         value_fn=lambda device: device.info.headphones_connected,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_airplay",
-        name="Supports AirPlay",
+        translation_key="supports_airplay",
         icon="mdi:cast-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_airplay,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_ethernet",
-        name="Supports ethernet",
+        translation_key="supports_ethernet",
         icon="mdi:ethernet",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ethernet_support,
     ),
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
-        name="Supports find remote",
+        translation_key="supports_find_remote",
         icon="mdi:remote",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.supports_find_remote,
@@ -71,10 +71,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = coordinator.data.info.serial_number
+
     async_add_entities(
         RokuBinarySensorEntity(
-            device_id=unique_id,
             coordinator=coordinator,
             description=description,
         )

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfMass,
@@ -26,7 +27,6 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -45,7 +45,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.air_conditioner_mode: [
@@ -55,7 +55,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.air_quality_sensor: [
@@ -160,7 +160,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.dryer_operating_state: [
@@ -303,7 +303,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.oven_operating_state: [
@@ -362,7 +362,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.robot_cleaner_movement: [
@@ -382,7 +382,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.signal_strength: [
@@ -433,7 +433,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_heating_setpoint: [
@@ -443,7 +443,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             SensorDeviceClass.TEMPERATURE,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_mode: [
@@ -453,7 +453,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.thermostat_operating_state: [
@@ -473,7 +473,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             SensorDeviceClass.TEMPERATURE,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.three_axis: [],
@@ -518,7 +518,7 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
             None,
             None,
             None,
-            EntityCategory.CONFIG,
+            EntityCategory.DIAGNOSTIC,
         )
     ],
     Capability.washer_operating_state: [
@@ -535,7 +535,11 @@ CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     ],
 }
 
-UNITS = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
+UNITS = {
+    "C": UnitOfTemperature.CELSIUS,
+    "F": UnitOfTemperature.FAHRENHEIT,
+    "lux": LIGHT_LUX,
+}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 POWER_CONSUMPTION_REPORT_NAMES = [

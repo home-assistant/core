@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import slugify
 
 from . import init_integration
@@ -21,7 +22,7 @@ from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
-async def test_switch(hass, mock_bridge, mock_api, monkeypatch):
+async def test_switch(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
     """Test the switch."""
     await init_integration(hass)
     assert mock_bridge
@@ -69,7 +70,13 @@ async def test_switch(hass, mock_bridge, mock_api, monkeypatch):
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_PLUG_DEVICE]], indirect=True)
-async def test_switch_control_fail(hass, mock_bridge, mock_api, monkeypatch, caplog):
+async def test_switch_control_fail(
+    hass: HomeAssistant,
+    mock_bridge,
+    mock_api,
+    monkeypatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test switch control fail."""
     await init_integration(hass)
     assert mock_bridge

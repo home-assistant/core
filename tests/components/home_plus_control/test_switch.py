@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
@@ -54,7 +55,7 @@ def one_entity_state(hass, device_uid):
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
+    device_id = device_reg.async_get_device(identifiers={(DOMAIN, device_uid)}).id
     entity_entries = er.async_entries_for_device(entity_reg, device_id)
 
     assert len(entity_entries) == 1
@@ -63,10 +64,10 @@ def one_entity_state(hass, device_uid):
 
 
 async def test_plant_update(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test entity and device loading."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -100,10 +101,10 @@ async def test_plant_update(
 
 
 async def test_plant_topology_reduction_change(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an entity leaving the plant topology."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -142,7 +143,7 @@ async def test_plant_topology_reduction_change(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -159,10 +160,10 @@ async def test_plant_topology_reduction_change(
 
 
 async def test_plant_topology_increase_change(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an entity entering the plant topology."""
     # Remove one module initially
     new_module = mock_modules.pop("0000000987654321fedcba")
@@ -204,7 +205,7 @@ async def test_plant_topology_increase_change(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -219,7 +220,9 @@ async def test_plant_topology_increase_change(
     )
 
 
-async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
+async def test_module_status_unavailable(
+    hass: HomeAssistant, mock_config_entry, mock_modules
+) -> None:
     """Test a module becoming unreachable in the plant."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -264,7 +267,7 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -285,10 +288,10 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
 
 
 async def test_module_status_available(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test a module becoming reachable in the plant."""
     # Set the module initially unreachable
     mock_modules["0000000987654321fedcba"].reachable = False
@@ -335,7 +338,7 @@ async def test_module_status_available(
         return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1
@@ -357,10 +360,10 @@ async def test_module_status_available(
 
 
 async def test_initial_api_error(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an API error on initial call."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -391,10 +394,10 @@ async def test_initial_api_error(
 
 
 async def test_update_with_api_error(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_modules,
-):
+) -> None:
     """Test an API timeout when updating the module data."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
@@ -439,7 +442,7 @@ async def test_update_with_api_error(
         side_effect=HomePlusControlApiError,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=400)
+            hass, dt.datetime.now(dt.UTC) + dt.timedelta(seconds=400)
         )
         await hass.async_block_till_done()
     assert len(mock_check.mock_calls) == 1

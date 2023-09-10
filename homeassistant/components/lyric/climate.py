@@ -21,7 +21,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -113,7 +118,6 @@ async def async_setup_entry(
                     ),
                     location,
                     device,
-                    hass.config.units.temperature_unit,
                 )
             )
 
@@ -134,16 +138,30 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     coordinator: DataUpdateCoordinator[Lyric]
     entity_description: ClimateEntityDescription
 
+    _attr_name = None
+    _attr_preset_modes = [
+        PRESET_NO_HOLD,
+        PRESET_HOLD_UNTIL,
+        PRESET_PERMANENT_HOLD,
+        PRESET_TEMPORARY_HOLD,
+        PRESET_VACATION_HOLD,
+    ]
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Lyric],
         description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
-        temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._temperature_unit = temperature_unit
+        # Use the native temperature unit from the device settings
+        if device.units == "Fahrenheit":
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_precision = PRECISION_WHOLE
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_precision = PRECISION_HALVES
 
         # Setup supported hvac modes
         self._attr_hvac_modes = [HVACMode.OFF]
@@ -175,11 +193,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if self.device.changeableValues.thermostatSetpointStatus:
             return SUPPORT_FLAGS_LCC
         return SUPPORT_FLAGS_TCC
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._temperature_unit
 
     @property
     def current_temperature(self) -> float | None:
@@ -238,17 +251,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self.device.changeableValues.thermostatSetpointStatus
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return preset modes."""
-        return [
-            PRESET_NO_HOLD,
-            PRESET_HOLD_UNTIL,
-            PRESET_PERMANENT_HOLD,
-            PRESET_TEMPORARY_HOLD,
-            PRESET_VACATION_HOLD,
-        ]
 
     @property
     def min_temp(self) -> float:
@@ -314,10 +316,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
         try:
             if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                # If the system is off, turn it to Heat first then to Auto, otherwise it turns to
-                # Auto briefly and then reverts to Off (perhaps related to heatCoolMode). This is the
-                # behavior that happens with the native app as well, so likely a bug in the api itself
-
+                # If the system is off, turn it to Heat first then to Auto,
+                # otherwise it turns to.
+                # Auto briefly and then reverts to Off (perhaps related to
+                # heatCoolMode). This is the behavior that happens with the
+                # native app as well, so likely a bug in the api itself
                 if HVAC_MODES[self.device.changeableValues.mode] == HVACMode.OFF:
                     _LOGGER.debug(
                         "HVAC mode passed to lyric: %s",

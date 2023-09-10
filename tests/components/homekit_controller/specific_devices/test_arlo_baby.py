@@ -1,8 +1,7 @@
 """Make sure that an Arlo Baby can be setup."""
-
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -14,7 +13,7 @@ from ..common import (
 )
 
 
-async def test_arlo_baby_setup(hass):
+async def test_arlo_baby_setup(hass: HomeAssistant) -> None:
     """Test that an Arlo Baby can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "arlo_baby.json")
     await setup_test_accessories(hass, accessories)
@@ -65,7 +64,7 @@ async def test_arlo_baby_setup(hass):
                     unique_id="00:00:00:00:00:00_1_1000",
                     friendly_name="ArloBabyA0 Temperature",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=TEMP_CELSIUS,
+                    unit_of_measurement=UnitOfTemperature.CELSIUS,
                     state="24.0",
                 ),
                 EntityTestInfo(

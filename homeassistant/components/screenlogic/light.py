@@ -1,15 +1,23 @@
 """Support for a ScreenLogic light 'circuit' switch."""
+from dataclasses import dataclass
 import logging
 
-from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES
+from screenlogicpy.const.data import ATTR, DEVICE
+from screenlogicpy.const.msg import CODE
+from screenlogicpy.device_const.circuit import GENERIC_CIRCUIT_NAMES, INTERFACE
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import (
+    ColorMode,
+    LightEntity,
+    LightEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ScreenLogicCircuitEntity
-from .const import DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
+from .const import DOMAIN as SL_DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
+from .coordinator import ScreenlogicDataUpdateCoordinator
+from .entity import ScreenLogicCircuitEntity, ScreenLogicPushEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,20 +28,45 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
+    entities: list[ScreenLogicLight] = []
+    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
+        config_entry.entry_id
+    ]
+    gateway = coordinator.gateway
+    for circuit_index, circuit_data in gateway.get_data(DEVICE.CIRCUIT).items():
+        if circuit_data[ATTR.FUNCTION] not in LIGHT_CIRCUIT_FUNCTIONS:
+            continue
+        circuit_name = circuit_data[ATTR.NAME]
+        circuit_interface = INTERFACE(circuit_data[ATTR.INTERFACE])
+        entities.append(
             ScreenLogicLight(
-                coordinator, circuit_num, circuit["name"] not in GENERIC_CIRCUIT_NAMES
+                coordinator,
+                ScreenLogicLightDescription(
+                    subscription_code=CODE.STATUS_CHANGED,
+                    data_path=(DEVICE.CIRCUIT, circuit_index),
+                    key=circuit_index,
+                    name=circuit_name,
+                    entity_registry_enabled_default=(
+                        circuit_name not in GENERIC_CIRCUIT_NAMES
+                        and circuit_interface != INTERFACE.DONT_SHOW
+                    ),
+                ),
             )
-            for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items()
-            if circuit["function"] in LIGHT_CIRCUIT_FUNCTIONS
-        ]
-    )
+        )
+
+    async_add_entities(entities)
+
+
+@dataclass
+class ScreenLogicLightDescription(
+    LightEntityDescription, ScreenLogicPushEntityDescription
+):
+    """Describes a ScreenLogic light entity."""
 
 
 class ScreenLogicLight(ScreenLogicCircuitEntity, LightEntity):
     """Class to represent a ScreenLogic Light."""
 
+    entity_description: ScreenLogicLightDescription
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}

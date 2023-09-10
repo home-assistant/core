@@ -78,7 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SMART_METER: smart_meter_texas_data,
     }
 
-    asyncio.create_task(coordinator.async_refresh())
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

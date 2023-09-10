@@ -550,6 +550,7 @@ BUSCH_JAEGER_REMOTE = {
 
 SONOFF_SNZB_01_1_MODEL = "WB01"
 SONOFF_SNZB_01_2_MODEL = "WB-01"
+SONOFF_SNZB_01P_MODEL = "SNZB-01P"
 SONOFF_SNZB_01_SWITCH = {
     (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
     (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
@@ -639,6 +640,7 @@ REMOTES = {
     UBISYS_CONTROL_UNIT_C4_MODEL: UBISYS_CONTROL_UNIT_C4,
     SONOFF_SNZB_01_1_MODEL: SONOFF_SNZB_01_SWITCH,
     SONOFF_SNZB_01_2_MODEL: SONOFF_SNZB_01_SWITCH,
+    SONOFF_SNZB_01P_MODEL: SONOFF_SNZB_01_SWITCH,
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -738,7 +740,7 @@ async def async_get_triggers(
         return []
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

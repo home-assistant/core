@@ -1,34 +1,115 @@
 """The Minecraft Server sensor platform."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from collections.abc import Callable, MutableMapping
+from dataclasses import dataclass
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import MinecraftServer, MinecraftServerEntity
+from . import MinecraftServer, MinecraftServerData
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
-    ICON_LATENCY_TIME,
+    ICON_LATENCY,
     ICON_MOTD,
     ICON_PLAYERS_MAX,
     ICON_PLAYERS_ONLINE,
     ICON_PROTOCOL_VERSION,
     ICON_VERSION,
-    NAME_LATENCY_TIME,
-    NAME_MOTD,
-    NAME_PLAYERS_MAX,
-    NAME_PLAYERS_ONLINE,
-    NAME_PROTOCOL_VERSION,
-    NAME_VERSION,
-    UNIT_MOTD,
+    KEY_LATENCY,
+    KEY_MOTD,
+    KEY_PLAYERS_MAX,
+    KEY_PLAYERS_ONLINE,
+    KEY_PROTOCOL_VERSION,
+    KEY_VERSION,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
-    UNIT_PROTOCOL_VERSION,
-    UNIT_VERSION,
 )
+from .entity import MinecraftServerEntity
+
+
+@dataclass
+class MinecraftServerEntityDescriptionMixin:
+    """Mixin values for Minecraft Server entities."""
+
+    value_fn: Callable[[MinecraftServerData], StateType]
+    attributes_fn: Callable[[MinecraftServerData], MutableMapping[str, Any]] | None
+
+
+@dataclass
+class MinecraftServerSensorEntityDescription(
+    SensorEntityDescription, MinecraftServerEntityDescriptionMixin
+):
+    """Class describing Minecraft Server sensor entities."""
+
+
+def get_extra_state_attributes_players_list(
+    data: MinecraftServerData,
+) -> dict[str, list[str]]:
+    """Return players list as extra state attributes, if available."""
+    extra_state_attributes = {}
+    players_list = data.players_list
+
+    if players_list is not None and len(players_list) != 0:
+        extra_state_attributes[ATTR_PLAYERS_LIST] = players_list
+
+    return extra_state_attributes
+
+
+SENSOR_DESCRIPTIONS = [
+    MinecraftServerSensorEntityDescription(
+        key=KEY_VERSION,
+        translation_key=KEY_VERSION,
+        icon=ICON_VERSION,
+        value_fn=lambda data: data.version,
+        attributes_fn=None,
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_PROTOCOL_VERSION,
+        translation_key=KEY_PROTOCOL_VERSION,
+        icon=ICON_PROTOCOL_VERSION,
+        value_fn=lambda data: data.protocol_version,
+        attributes_fn=None,
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_PLAYERS_MAX,
+        translation_key=KEY_PLAYERS_MAX,
+        native_unit_of_measurement=UNIT_PLAYERS_MAX,
+        icon=ICON_PLAYERS_MAX,
+        value_fn=lambda data: data.players_max,
+        attributes_fn=None,
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_LATENCY,
+        translation_key=KEY_LATENCY,
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        suggested_display_precision=0,
+        icon=ICON_LATENCY,
+        value_fn=lambda data: data.latency,
+        attributes_fn=None,
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_MOTD,
+        translation_key=KEY_MOTD,
+        icon=ICON_MOTD,
+        value_fn=lambda data: data.motd,
+        attributes_fn=None,
+    ),
+    MinecraftServerSensorEntityDescription(
+        key=KEY_PLAYERS_ONLINE,
+        translation_key=KEY_PLAYERS_ONLINE,
+        native_unit_of_measurement=UNIT_PLAYERS_ONLINE,
+        icon=ICON_PLAYERS_ONLINE,
+        value_fn=lambda data: data.players_online,
+        attributes_fn=get_extra_state_attributes_players_list,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -37,145 +118,43 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
-    server = hass.data[DOMAIN][config_entry.unique_id]
-
-    # Create entities list.
-    entities = [
-        MinecraftServerVersionSensor(server),
-        MinecraftServerProtocolVersionSensor(server),
-        MinecraftServerLatencyTimeSensor(server),
-        MinecraftServerPlayersOnlineSensor(server),
-        MinecraftServerPlayersMaxSensor(server),
-        MinecraftServerMOTDSensor(server),
-    ]
+    server = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add sensor entities.
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            MinecraftServerSensorEntity(server, description)
+            for description in SENSOR_DESCRIPTIONS
+        ],
+        True,
+    )
 
 
 class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
+    entity_description: MinecraftServerSensorEntityDescription
+
     def __init__(
         self,
         server: MinecraftServer,
-        type_name: str,
-        icon: str,
-        unit: str | None,
-        device_class: str | None = None,
+        description: MinecraftServerSensorEntityDescription,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(server, type_name, icon, device_class)
-        self._attr_native_unit_of_measurement = unit
+        super().__init__(server)
+        self.entity_description = description
+        self._attr_unique_id = f"{server.unique_id}-{description.key}"
 
     @property
     def available(self) -> bool:
         """Return sensor availability."""
         return self._server.online
 
-
-class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server version sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize version sensor."""
-        super().__init__(
-            server=server, type_name=NAME_VERSION, icon=ICON_VERSION, unit=UNIT_VERSION
-        )
-
     async def async_update(self) -> None:
-        """Update version."""
-        self._attr_native_value = self._server.version
+        """Update sensor state."""
+        self._attr_native_value = self.entity_description.value_fn(self._server.data)
 
-
-class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server protocol version sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize protocol version sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_PROTOCOL_VERSION,
-            icon=ICON_PROTOCOL_VERSION,
-            unit=UNIT_PROTOCOL_VERSION,
-        )
-
-    async def async_update(self) -> None:
-        """Update protocol version."""
-        self._attr_native_value = self._server.protocol_version
-
-
-class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server latency time sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize latency time sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_LATENCY_TIME,
-            icon=ICON_LATENCY_TIME,
-            unit=UnitOfTime.MILLISECONDS,
-        )
-
-    async def async_update(self) -> None:
-        """Update latency time."""
-        self._attr_native_value = self._server.latency_time
-
-
-class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server online players sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize online players sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_PLAYERS_ONLINE,
-            icon=ICON_PLAYERS_ONLINE,
-            unit=UNIT_PLAYERS_ONLINE,
-        )
-
-    async def async_update(self) -> None:
-        """Update online players state and device state attributes."""
-        self._attr_native_value = self._server.players_online
-
-        extra_state_attributes = {}
-        players_list = self._server.players_list
-
-        if players_list is not None and len(players_list) != 0:
-            extra_state_attributes[ATTR_PLAYERS_LIST] = self._server.players_list
-
-        self._attr_extra_state_attributes = extra_state_attributes
-
-
-class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server maximum number of players sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize maximum number of players sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_PLAYERS_MAX,
-            icon=ICON_PLAYERS_MAX,
-            unit=UNIT_PLAYERS_MAX,
-        )
-
-    async def async_update(self) -> None:
-        """Update maximum number of players."""
-        self._attr_native_value = self._server.players_max
-
-
-class MinecraftServerMOTDSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server MOTD sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize MOTD sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_MOTD,
-            icon=ICON_MOTD,
-            unit=UNIT_MOTD,
-        )
-
-    async def async_update(self) -> None:
-        """Update MOTD."""
-        self._attr_native_value = self._server.motd
+        if self.entity_description.attributes_fn:
+            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
+                self._server.data
+            )

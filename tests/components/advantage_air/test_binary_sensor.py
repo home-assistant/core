@@ -3,8 +3,9 @@ from datetime import timedelta
 
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import (
     TEST_SET_RESPONSE,
@@ -15,9 +16,12 @@ from . import (
 )
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
+async def test_binary_sensor_async_setup_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test binary sensor setup."""
 
     aioclient_mock.get(
@@ -35,7 +39,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First Air Filter
-    entity_id = "binary_sensor.ac_one_filter"
+    entity_id = "binary_sensor.myzone_filter"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -45,7 +49,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-filter"
 
     # Test Second Air Filter
-    entity_id = "binary_sensor.ac_two_filter"
+    entity_id = "binary_sensor.mytemp_filter"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -55,7 +59,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac2-filter"
 
     # Test First Motion Sensor
-    entity_id = "binary_sensor.ac_one_zone_open_with_sensor_motion"
+    entity_id = "binary_sensor.myzone_zone_open_with_sensor_motion"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -65,7 +69,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-motion"
 
     # Test Second Motion Sensor
-    entity_id = "binary_sensor.ac_one_zone_closed_with_sensor_motion"
+    entity_id = "binary_sensor.myzone_zone_closed_with_sensor_motion"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -75,7 +79,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z02-motion"
 
     # Test First MyZone Sensor (disabled by default)
-    entity_id = "binary_sensor.ac_one_zone_open_with_sensor_myzone"
+    entity_id = "binary_sensor.myzone_zone_open_with_sensor_myzone"
 
     assert not hass.states.get(entity_id)
 
@@ -84,7 +88,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -97,7 +101,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-myzone"
 
     # Test Second Motion Sensor (disabled by default)
-    entity_id = "binary_sensor.ac_one_zone_closed_with_sensor_myzone"
+    entity_id = "binary_sensor.myzone_zone_closed_with_sensor_myzone"
 
     assert not hass.states.get(entity_id)
 
@@ -106,7 +110,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

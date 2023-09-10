@@ -5,7 +5,6 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -53,11 +52,7 @@ class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonE
         self._device_id = device_id
         self._attr_name = f"OctoPrint {button_type}"
         self._attr_unique_id = f"{button_type}-{device_id}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
     @property
     def available(self) -> bool:

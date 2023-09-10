@@ -1,7 +1,7 @@
 """Make sure that existing VOCOlinc VP3 support isn't broken."""
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from ..common import (
@@ -14,7 +14,7 @@ from ..common import (
 )
 
 
-async def test_vocolinc_vp3_setup(hass):
+async def test_vocolinc_vp3_setup(hass: HomeAssistant) -> None:
     """Test that a VOCOlinc VP3 can be correctly setup in HA."""
 
     entity_registry = er.async_get(hass)

@@ -1,10 +1,10 @@
 {
   "domain": "energy",
   "name": "Energy",
-  "documentation": "https://www.home-assistant.io/integrations/energy",
   "codeowners": ["@home-assistant/core"],
-  "iot_class": "calculated",
   "dependencies": ["websocket_api", "history", "recorder"],
-  "quality_scale": "internal",
-  "integration_type": "system"
+  "documentation": "https://www.home-assistant.io/integrations/energy",
+  "integration_type": "system",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

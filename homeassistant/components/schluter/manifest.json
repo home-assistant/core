@@ -1,9 +1,9 @@
 {
   "domain": "schluter",
   "name": "Schluter",
-  "documentation": "https://www.home-assistant.io/integrations/schluter",
-  "requirements": ["py-schluter==0.1.7"],
   "codeowners": ["@prairieapps"],
+  "documentation": "https://www.home-assistant.io/integrations/schluter",
   "iot_class": "cloud_polling",
-  "loggers": ["schluter"]
+  "loggers": ["schluter"],
+  "requirements": ["py-schluter==0.1.7"]
 }

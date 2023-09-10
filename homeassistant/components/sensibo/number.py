@@ -7,10 +7,14 @@ from typing import Any
 
 from pysensibo.model import SensiboDevice
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -38,9 +42,10 @@ class SensiboNumberEntityDescription(
 DEVICE_NUMBER_TYPES = (
     SensiboNumberEntityDescription(
         key="calibration_temp",
+        translation_key="calibration_temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         remote_key="temperature",
-        name="Temperature calibration",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=-10,
@@ -50,9 +55,10 @@ DEVICE_NUMBER_TYPES = (
     ),
     SensiboNumberEntityDescription(
         key="calibration_hum",
+        translation_key="calibration_humidity",
+        device_class=NumberDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
         remote_key="humidity",
-        name="Humidity calibration",
-        icon="mdi:water",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=-10,

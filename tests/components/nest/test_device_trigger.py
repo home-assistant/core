@@ -1,6 +1,7 @@
 """The tests for Nest device triggers."""
 from google_nest_sdm.event import EventMessage
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -16,11 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
-from tests.common import (
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 DEVICE_NAME = "My Camera"
 DATA_MESSAGE = {"message": "service-called"}
@@ -103,7 +100,7 @@ async def test_get_triggers(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     expected_triggers = [
         {
@@ -124,7 +121,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_multiple_devices(
@@ -198,7 +195,7 @@ async def test_triggers_for_invalid_device_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
     assert device_entry is not None
 
     # Create an additional device that does not exist.  Fetching supported
@@ -233,7 +230,7 @@ async def test_no_triggers(
     assert triggers == []
 
 
-async def test_fires_on_camera_motion(hass, calls):
+async def test_fires_on_camera_motion(hass: HomeAssistant, calls) -> None:
     """Test camera_motion triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
@@ -244,7 +241,7 @@ async def test_fires_on_camera_motion(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_person(hass, calls):
+async def test_fires_on_camera_person(hass: HomeAssistant, calls) -> None:
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_person")
 
@@ -255,7 +252,7 @@ async def test_fires_on_camera_person(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_camera_sound(hass, calls):
+async def test_fires_on_camera_sound(hass: HomeAssistant, calls) -> None:
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_sound")
 
@@ -266,7 +263,7 @@ async def test_fires_on_camera_sound(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_fires_on_doorbell_chime(hass, calls):
+async def test_fires_on_doorbell_chime(hass: HomeAssistant, calls) -> None:
     """Test doorbell_chime triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "doorbell_chime")
 
@@ -277,7 +274,7 @@ async def test_fires_on_doorbell_chime(hass, calls):
     assert calls[0].data == DATA_MESSAGE
 
 
-async def test_trigger_for_wrong_device_id(hass, calls):
+async def test_trigger_for_wrong_device_id(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
@@ -291,7 +288,7 @@ async def test_trigger_for_wrong_device_id(hass, calls):
     assert len(calls) == 0
 
 
-async def test_trigger_for_wrong_event_type(hass, calls):
+async def test_trigger_for_wrong_event_type(hass: HomeAssistant, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
@@ -324,7 +321,7 @@ async def test_subscriber_automation(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
+    device_entry = device_registry.async_get_device(identifiers={("nest", DEVICE_ID)})
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 

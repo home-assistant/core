@@ -1,7 +1,8 @@
 """Define tests for the Sabnzbd config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysabnzbd import SabnzbdApiException
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sabnzbd import DOMAIN
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_URL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
@@ -30,8 +32,10 @@ VALID_CONFIG_OLD = {
     CONF_SSL: False,
 }
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_create_entry(hass):
+
+async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -42,10 +46,7 @@ async def test_create_entry(hass):
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
         return_value=True,
-    ), patch(
-        "homeassistant.components.sabnzbd.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -62,7 +63,7 @@ async def test_create_entry(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_auth_error(hass):
+async def test_auth_error(hass: HomeAssistant) -> None:
     """Test that the user step fails."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",
@@ -77,7 +78,7 @@ async def test_auth_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import_flow(hass) -> None:
+async def test_import_flow(hass: HomeAssistant) -> None:
     """Test the import configuration flow."""
     with patch(
         "homeassistant.components.sabnzbd.sab.SabnzbdApi.check_available",

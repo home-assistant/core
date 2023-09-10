@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from pywizlight.bulblibrary import BulbType
 
 from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
 from .models import WizData
 
 
-class WizEntity(CoordinatorEntity[DataUpdateCoordinator[Optional[float]]], Entity):
+class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
     """Representation of WiZ entity."""
 
     _attr_has_entity_name = True

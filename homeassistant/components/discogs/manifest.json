@@ -1,9 +1,9 @@
 {
   "domain": "discogs",
   "name": "Discogs",
-  "documentation": "https://www.home-assistant.io/integrations/discogs",
-  "requirements": ["discogs_client==2.3.0"],
   "codeowners": ["@thibmaek"],
+  "documentation": "https://www.home-assistant.io/integrations/discogs",
   "iot_class": "cloud_polling",
-  "loggers": ["discogs_client"]
+  "loggers": ["discogs_client"],
+  "requirements": ["discogs-client==2.3.0"]
 }

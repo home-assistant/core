@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import subprocess
 
 from icmplib import async_multiping
 import voluptuous as vol
 
-from homeassistant import const, util
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
@@ -17,10 +16,12 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
     SourceType,
 )
+from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -34,7 +35,7 @@ CONCURRENT_PING_LIMIT = 6
 
 PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
+        vol.Required(CONF_HOSTS): {cv.slug: cv.string},
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )
@@ -43,7 +44,14 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 class HostSubProcess:
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, hass, config, privileged):
+    def __init__(
+        self,
+        ip_address: str,
+        dev_id: str,
+        hass: HomeAssistant,
+        config: ConfigType,
+        privileged: bool | None,
+    ) -> None:
         """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
@@ -51,10 +59,13 @@ class HostSubProcess:
         self._count = config[CONF_PING_COUNT]
         self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
 
-    def ping(self):
+    def ping(self) -> bool | None:
         """Send an ICMP echo request and return True if success."""
         with subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+            self._ping_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            close_fds=False,  # required for posix_spawn
         ) as pinger:
             try:
                 pinger.communicate(timeout=1 + PING_TIMEOUT)
@@ -87,7 +98,7 @@ async def async_setup_scanner(
     """Set up the Host objects and return the update function."""
 
     privileged = hass.data[DOMAIN][PING_PRIVS]
-    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[const.CONF_HOSTS].items()}
+    ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[CONF_HOSTS].items()}
     interval = config.get(
         CONF_SCAN_INTERVAL,
         timedelta(seconds=len(ip_to_dev_id) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
@@ -101,10 +112,10 @@ async def async_setup_scanner(
     if privileged is None:
         hosts = [
             HostSubProcess(ip, dev_id, hass, config, privileged)
-            for (dev_id, ip) in config[const.CONF_HOSTS].items()
+            for (dev_id, ip) in config[CONF_HOSTS].items()
         ]
 
-        async def async_update(now):
+        async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
             results = await gather_with_concurrency(
                 CONCURRENT_PING_LIMIT,
@@ -120,7 +131,7 @@ async def async_setup_scanner(
 
     else:
 
-        async def async_update(now):
+        async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
             responses = await async_multiping(
                 list(ip_to_dev_id),
@@ -137,14 +148,14 @@ async def async_setup_scanner(
                 )
             )
 
-    async def _async_update_interval(now):
+    async def _async_update_interval(now: datetime) -> None:
         try:
             await async_update(now)
         finally:
             if not hass.is_stopping:
                 async_track_point_in_utc_time(
-                    hass, _async_update_interval, util.dt.utcnow() + interval
+                    hass, _async_update_interval, now + interval
                 )
 
-    await _async_update_interval(None)
+    await _async_update_interval(dt_util.now())
     return True

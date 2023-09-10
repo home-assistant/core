@@ -13,8 +13,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -39,31 +39,31 @@ class FullyButtonEntityDescription(
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
     FullyButtonEntityDescription(
         key="restartApp",
-        name="Restart browser",
+        translation_key="restart_browser",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.restartApp(),
     ),
     FullyButtonEntityDescription(
         key="rebootDevice",
-        name="Reboot device",
+        translation_key="restart_device",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.rebootDevice(),
     ),
     FullyButtonEntityDescription(
         key="toForeground",
-        name="Bring to foreground",
+        translation_key="to_foreground",
         press_action=lambda fully: fully.toForeground(),
     ),
     FullyButtonEntityDescription(
         key="toBackground",
-        name="Send to background",
+        translation_key="to_background",
         press_action=lambda fully: fully.toBackground(),
     ),
     FullyButtonEntityDescription(
         key="loadStartUrl",
-        name="Load start URL",
+        translation_key="load_start_url",
         press_action=lambda fully: fully.loadStartUrl(),
     ),
 )

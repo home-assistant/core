@@ -1,5 +1,4 @@
 """The tests for the input_boolean component."""
-# pylint: disable=protected-access
 import logging
 from unittest.mock import patch
 
@@ -19,11 +18,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, State
+from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_restore_cache
+from tests.common import MockUser, mock_component, mock_restore_cache
+from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_config(hass):
+async def test_config(hass: HomeAssistant) -> None:
     """Test config."""
     invalid_configs = [None, 1, {}, {"name with space": None}]
 
@@ -60,7 +60,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_methods(hass):
+async def test_methods(hass: HomeAssistant) -> None:
     """Test is_on, turn_on, turn_off methods."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test_1": None}})
     entity_id = "input_boolean.test_1"
@@ -86,7 +86,7 @@ async def test_methods(hass):
     assert is_on(hass, entity_id)
 
 
-async def test_config_options(hass):
+async def test_config_options(hass: HomeAssistant) -> None:
     """Test configuration options."""
     count_start = len(hass.states.async_entity_ids())
 
@@ -122,7 +122,7 @@ async def test_config_options(hass):
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -147,7 +147,7 @@ async def test_restore_state(hass):
     assert state.state == "off"
 
 
-async def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> None:
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_boolean.b1", "on"), State("input_boolean.b2", "off"))
@@ -170,7 +170,9 @@ async def test_initial_state_overrules_restore_state(hass):
     assert state.state == "on"
 
 
-async def test_input_boolean_context(hass, hass_admin_user):
+async def test_input_boolean_context(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
     """Test that input_boolean context works."""
     assert await async_setup_component(
         hass, "input_boolean", {"input_boolean": {"ac": {CONF_INITIAL: True}}}
@@ -193,7 +195,7 @@ async def test_input_boolean_context(hass, hass_admin_user):
     assert state2.context.user_id == hass_admin_user.id
 
 
-async def test_reload(hass, hass_admin_user):
+async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
     ent_reg = er.async_get(hass)
@@ -268,7 +270,7 @@ async def test_reload(hass, hass_admin_user):
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work_reloaded"
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -277,7 +279,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -291,7 +293,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
@@ -311,7 +315,9 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
@@ -336,7 +342,9 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_ws_update(hass, hass_ws_client, storage_setup):
+async def test_ws_update(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test update WS."""
 
     settings = {
@@ -391,7 +399,9 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
     assert state.attributes["friendly_name"] == "new_name_2"
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
@@ -419,7 +429,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.state
 
 
-async def test_setup_no_config(hass, hass_admin_user):
+async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())
     assert await async_setup_component(hass, DOMAIN, {})

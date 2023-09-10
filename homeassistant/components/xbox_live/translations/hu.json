@@ -1,8 +1,0 @@
-{
-    "issues": {
-        "pending_removal": {
-            "description": "Az Xbox Live integr\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra v\u00e1r a Home Assistantb\u00f3l, \u00e9s a Home Assistant 2023.2-t\u0151l m\u00e1r nem lesz el\u00e9rhet\u0151.\n\nAz integr\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl, mivel csak a r\u00e9gi Xbox 360 eszk\u00f6zzel haszn\u00e1lhat\u00f3, \u00e9s az upstream API m\u00e1r fizet\u0151s el\u0151fizet\u00e9st ig\u00e9nyel. Az \u00fajabb konzolokat az Xbox integr\u00e1ci\u00f3 ingyenesen t\u00e1mogatja.\n\nA hiba kijav\u00edt\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el az Xbox Live YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
-            "title": "Az Xbox Live integr\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
-        }
-    }
-}

@@ -22,7 +22,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up August cameras."""
     data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
-    session = aiohttp_client.async_get_clientsession(hass)
+    # Create an aiohttp session instead of using the default one since the
+    # default one is likely to trigger august's WAF if another integration
+    # is also using Cloudflare
+    session = aiohttp_client.async_create_clientsession(hass)
     async_add_entities(
         AugustCamera(data, doorbell, session, DEFAULT_TIMEOUT)
         for doorbell in data.doorbells
@@ -30,32 +33,25 @@ async def async_setup_entry(
 
 
 class AugustCamera(AugustEntityMixin, Camera):
-    """An implementation of a August security camera."""
+    """An implementation of an August security camera."""
+
+    _attr_translation_key = "camera"
 
     def __init__(self, data, device, session, timeout):
-        """Initialize a August security camera."""
+        """Initialize an August security camera."""
         super().__init__(data, device)
         self._timeout = timeout
         self._session = session
         self._image_url = None
         self._image_content = None
-        self._attr_name = f"{device.device_name} Camera"
         self._attr_unique_id = f"{self._device_id:s}_camera"
+        self._attr_motion_detection_enabled = True
+        self._attr_brand = DEFAULT_NAME
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._device.has_subscription
-
-    @property
-    def motion_detection_enabled(self) -> bool:
-        """Return the camera motion detection status."""
-        return True
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return DEFAULT_NAME
 
     @property
     def model(self):

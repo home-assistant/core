@@ -14,10 +14,18 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 TEST_ENTITY_ID = "media_player.walkman"
+
+
+@pytest.fixture(autouse=True)
+def autouse_disable_platforms(disable_platforms):
+    """Auto use the disable_platforms fixture."""
 
 
 @pytest.fixture(name="mock_media_seek")
@@ -30,7 +38,7 @@ def media_player_media_seek_fixture():
         yield seek
 
 
-async def test_source_select(hass):
+async def test_source_select(hass: HomeAssistant) -> None:
     """Test the input source service."""
     entity_id = "media_player.lounge_room"
 
@@ -61,7 +69,7 @@ async def test_source_select(hass):
     assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == "xbox"
 
 
-async def test_repeat_set(hass):
+async def test_repeat_set(hass: HomeAssistant) -> None:
     """Test the repeat set service."""
     entity_id = "media_player.walkman"
 
@@ -82,7 +90,7 @@ async def test_repeat_set(hass):
     assert state.attributes.get(mp.ATTR_MEDIA_REPEAT) == mp.const.REPEAT_MODE_ALL
 
 
-async def test_clear_playlist(hass):
+async def test_clear_playlist(hass: HomeAssistant) -> None:
     """Test clear playlist."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -102,7 +110,7 @@ async def test_clear_playlist(hass):
     assert state.state == STATE_OFF
 
 
-async def test_volume_services(hass):
+async def test_volume_services(hass: HomeAssistant) -> None:
     """Test the volume service."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -174,7 +182,7 @@ async def test_volume_services(hass):
     assert state.attributes.get(mp.ATTR_MEDIA_VOLUME_MUTED) is True
 
 
-async def test_turning_off_and_on(hass):
+async def test_turning_off_and_on(hass: HomeAssistant) -> None:
     """Test turn_on and turn_off."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -215,7 +223,7 @@ async def test_turning_off_and_on(hass):
     assert not mp.is_on(hass, TEST_ENTITY_ID)
 
 
-async def test_playing_pausing(hass):
+async def test_playing_pausing(hass: HomeAssistant) -> None:
     """Test media_pause."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -262,7 +270,7 @@ async def test_playing_pausing(hass):
     assert state.state == STATE_PLAYING
 
 
-async def test_prev_next_track(hass):
+async def test_prev_next_track(hass: HomeAssistant) -> None:
     """Test media_next_track and media_previous_track ."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -327,7 +335,7 @@ async def test_prev_next_track(hass):
     assert state.attributes.get(mp.ATTR_MEDIA_EPISODE) == "1"
 
 
-async def test_play_media(hass):
+async def test_play_media(hass: HomeAssistant) -> None:
     """Test play_media ."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -377,7 +385,7 @@ async def test_play_media(hass):
     assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == "some_id"
 
 
-async def test_seek(hass, mock_media_seek):
+async def test_seek(hass: HomeAssistant, mock_media_seek) -> None:
     """Test seek."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -413,7 +421,7 @@ async def test_seek(hass, mock_media_seek):
     assert mock_media_seek.called
 
 
-async def test_stop(hass):
+async def test_stop(hass: HomeAssistant) -> None:
     """Test stop."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -433,7 +441,9 @@ async def test_stop(hass):
     assert state.state == STATE_OFF
 
 
-async def test_media_image_proxy(hass, hass_client):
+async def test_media_image_proxy(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test the media server image proxy server ."""
     assert await async_setup_component(
         hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
@@ -477,7 +487,7 @@ async def test_media_image_proxy(hass, hass_client):
     assert await req.text() == fake_picture_data
 
 
-async def test_grouping(hass):
+async def test_grouping(hass: HomeAssistant) -> None:
     """Test the join/unjoin services."""
     walkman = "media_player.walkman"
     kitchen = "media_player.kitchen"

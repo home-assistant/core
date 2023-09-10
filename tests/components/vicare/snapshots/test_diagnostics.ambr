@@ -1,0 +1,4716 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'data': list([
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging.level.total',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.707Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging.level.total',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'bottom',
+            'middle',
+            'top',
+            'total',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging.level',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging.level',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.pumps.circuit',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.713Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.pumps.circuit',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.burners.0.statistics',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'hours': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 18726.3,
+            }),
+            'starts': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 14315,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:23:17.238Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.burners.0.statistics',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes.heating',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.971Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'device',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/device',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.pumps.circulation.schedule',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.694Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.pumps.circulation.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.circulation.pump',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'off',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.639Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.circulation.pump',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pump',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.heating.schedule',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.922Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.heating.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.sensors.temperature.supply',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.572Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.sensors.temperature.supply',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.sensors.temperature.collector',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.700Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.sensors.temperature.collector',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes.active',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.677Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.burner',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:46.543Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.burner',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.operating.programs.holiday',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.714Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.operating.programs.holiday',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging.level.bottom',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.711Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging.level.bottom',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.sensors.temperature.supply',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'connected',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 63,
+            }),
+          }),
+          'timestamp': '2021-08-25T15:13:19.679Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.sensors.temperature.supply',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes.dhw',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.955Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setMode': dict({
+              'isExecutable': True,
+              'name': 'setMode',
+              'params': dict({
+                'mode': dict({
+                  'constraints': dict({
+                    'enum': list([
+                      'standby',
+                      'dhw',
+                      'dhwAndHeating',
+                      'forcedReduced',
+                      'forcedNormal',
+                    ]),
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.active/commands/setMode',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes.active',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': 'dhw',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.654Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'activate': dict({
+              'isExecutable': True,
+              'name': 'activate',
+              'params': dict({
+                'temperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 4,
+                    'stepping': 1,
+                  }),
+                  'required': False,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.comfort/commands/activate',
+            }),
+            'deactivate': dict({
+              'isExecutable': False,
+              'name': 'deactivate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.comfort/commands/deactivate',
+            }),
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 4,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.comfort/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.comfort',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 22,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.825Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.comfort',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'operating',
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.717Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setCurve': dict({
+              'isExecutable': True,
+              'name': 'setCurve',
+              'params': dict({
+                'shift': dict({
+                  'constraints': dict({
+                    'max': 40,
+                    'min': -13,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+                'slope': dict({
+                  'constraints': dict({
+                    'max': 3.5,
+                    'min': 0.2,
+                    'stepping': 0.1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.heating.curve/commands/setCurve',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.heating.curve',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'shift': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 7,
+            }),
+            'slope': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 1.1,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.909Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.heating.curve',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler.sensors.temperature.commonSupply',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.838Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.sensors.temperature.commonSupply',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pump',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.frostprotection',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.903Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.frostprotection',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'circulation',
+            'dhw',
+            'frostprotection',
+            'heating',
+            'operating',
+            'sensors',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.863Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pumps',
+            'sensors',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.698Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'modes',
+            'programs',
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'modulation',
+            'statistics',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.burners.0',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:46.550Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.burners.0',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'modes',
+            'programs',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.standby',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.560Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'changeEndDate': dict({
+              'isExecutable': False,
+              'name': 'changeEndDate',
+              'params': dict({
+                'end': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                    'sameDayAllowed': False,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.holiday/commands/changeEndDate',
+            }),
+            'schedule': dict({
+              'isExecutable': True,
+              'name': 'schedule',
+              'params': dict({
+                'end': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                    'sameDayAllowed': False,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+                'start': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.holiday/commands/schedule',
+            }),
+            'unschedule': dict({
+              'isExecutable': True,
+              'name': 'unschedule',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.holiday/commands/unschedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.holiday',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'end': dict({
+              'type': 'string',
+              'value': '',
+            }),
+            'start': dict({
+              'type': 'string',
+              'value': '',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.541Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.holiday',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.modes.standby',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.726Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.modes.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'dhw',
+            'dhwAndHeating',
+            'heating',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.pumps.primary',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'off',
+            }),
+          }),
+          'timestamp': '2021-08-25T14:18:44.841Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.pumps.primary',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.programs.holiday',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.722Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.programs.holiday',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'reduced',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'normal',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.heating.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.heating.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.920Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.heating.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes.dhwAndHeating',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.967Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes.dhwAndHeating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 3,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.reduced/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.reduced',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 18,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.553Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.reduced',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'offset',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.device.time',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.device.time',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'curve',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.heating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'changeEndDate': dict({
+              'isExecutable': False,
+              'name': 'changeEndDate',
+              'params': dict({
+                'end': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                    'sameDayAllowed': False,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.holiday/commands/changeEndDate',
+            }),
+            'schedule': dict({
+              'isExecutable': True,
+              'name': 'schedule',
+              'params': dict({
+                'end': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                    'sameDayAllowed': False,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+                'start': dict({
+                  'constraints': dict({
+                    'regEx': '^[\\d]{4}-[\\d]{2}-[\\d]{2}$',
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.holiday/commands/schedule',
+            }),
+            'unschedule': dict({
+              'isExecutable': True,
+              'name': 'unschedule',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.holiday/commands/unschedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.holiday',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'end': dict({
+              'type': 'string',
+              'value': '',
+            }),
+            'start': dict({
+              'type': 'string',
+              'value': '',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.543Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.holiday',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setMode': dict({
+              'isExecutable': True,
+              'name': 'setMode',
+              'params': dict({
+                'mode': dict({
+                  'constraints': dict({
+                    'enum': list([
+                      'standby',
+                      'dhw',
+                      'dhwAndHeating',
+                      'forcedReduced',
+                      'forcedNormal',
+                    ]),
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.active/commands/setMode',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes.active',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': 'dhw',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.666Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'reduced',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'normal',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.heating.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.heating.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '22:00',
+                    'mode': 'normal',
+                    'position': 0,
+                    'start': '06:00',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.918Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.heating.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.controller.serial',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': '################',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.574Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.controller.serial',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.external',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.536Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.external',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setName': dict({
+              'isExecutable': True,
+              'name': 'setName',
+              'params': dict({
+                'name': dict({
+                  'constraints': dict({
+                    'maxLength': 20,
+                    'minLength': 1,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0/commands/setName',
+            }),
+          }),
+          'components': list([
+            'circulation',
+            'dhw',
+            'frostprotection',
+            'heating',
+            'operating',
+            'sensors',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'name': dict({
+              'type': 'string',
+              'value': '',
+            }),
+            'type': dict({
+              'type': 'string',
+              'value': 'heatingCircuit',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.859Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.939Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.dhw.pumps.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.pumps.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'comfort',
+            'eco',
+            'external',
+            'holiday',
+            'normal',
+            'reduced',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'room',
+            'supply',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.sensors.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.sensors.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.frostprotection',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'off',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.894Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.frostprotection',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes.dhwAndHeating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.958Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.dhwAndHeating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'programs',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.operating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.operating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'boiler',
+            'buffer',
+            'burner',
+            'burners',
+            'circuits',
+            'configuration',
+            'device',
+            'dhw',
+            'operating',
+            'sensors',
+            'solar',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            '0',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.burners',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.burners',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.dhw.pumps.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.dhw.pumps.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'circuit',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.pumps',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.pumps',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging.level.top',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.708Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging.level.top',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'sensors',
+            'serial',
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.holiday',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.545Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.holiday',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.sensors.temperature.outside',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'connected',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 20.8,
+            }),
+          }),
+          'timestamp': '2021-08-25T15:07:33.251Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.sensors.temperature.outside',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.sensors.temperature.room',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.566Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.sensors.temperature.room',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'modes',
+            'programs',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.power.consumption.total',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'day': dict({
+              'type': 'array',
+              'value': list([
+                0.219,
+                0.316,
+                0.32,
+                0.325,
+                0.311,
+                0.317,
+                0.312,
+                0.313,
+              ]),
+            }),
+            'dayValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T15:10:12.179Z',
+            }),
+            'month': dict({
+              'type': 'array',
+              'value': list([
+                7.843,
+                9.661,
+                9.472,
+                31.747,
+                35.805,
+                37.785,
+                35.183,
+                39.583,
+                37.998,
+                31.939,
+                30.552,
+                13.375,
+                9.734,
+              ]),
+            }),
+            'monthValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T13:22:54.009Z',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'kilowattHour',
+            }),
+            'week': dict({
+              'type': 'array',
+              'value': list([
+                0.829,
+                2.241,
+                2.22,
+                2.233,
+                2.23,
+                2.23,
+                2.227,
+                2.008,
+                2.198,
+                2.236,
+                2.159,
+                2.255,
+                2.497,
+                6.849,
+                7.213,
+                6.749,
+                7.994,
+                7.958,
+                8.397,
+                8.728,
+                8.743,
+                7.453,
+                8.386,
+                8.839,
+                8.763,
+                8.678,
+                7.896,
+                8.783,
+                9.821,
+                8.683,
+                9,
+                8.738,
+                9.027,
+                8.974,
+                8.882,
+                8.286,
+                8.448,
+                8.785,
+                8.704,
+                8.053,
+                7.304,
+                7.078,
+                7.251,
+                6.839,
+                6.902,
+                7.042,
+                6.864,
+                6.818,
+                3.938,
+                2.308,
+                2.283,
+                2.246,
+                2.269,
+              ]),
+            }),
+            'weekValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T13:22:51.623Z',
+            }),
+            'year': dict({
+              'type': 'array',
+              'value': list([
+                207.106,
+                311.579,
+                320.275,
+              ]),
+            }),
+            'yearValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T15:13:33.507Z',
+            }),
+          }),
+          'timestamp': '2021-08-25T15:13:35.950Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.power.consumption.total',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pumps',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.modes.active',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.724Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.modes.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setName': dict({
+              'isExecutable': True,
+              'name': 'setName',
+              'params': dict({
+                'name': dict({
+                  'constraints': dict({
+                    'maxLength': 20,
+                    'minLength': 1,
+                  }),
+                  'required': True,
+                  'type': 'string',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1/commands/setName',
+            }),
+          }),
+          'components': list([
+            'circulation',
+            'dhw',
+            'frostprotection',
+            'heating',
+            'operating',
+            'sensors',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'name': dict({
+              'type': 'string',
+              'value': '',
+            }),
+            'type': dict({
+              'type': 'string',
+              'value': 'heatingCircuit',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.861Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.gas.consumption.heating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'day': dict({
+              'type': 'array',
+              'value': list([
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+              ]),
+            }),
+            'dayValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:37.198Z',
+            }),
+            'month': dict({
+              'type': 'array',
+              'value': list([
+                0,
+                0,
+                0,
+                3508,
+                5710,
+                6491,
+                7106,
+                8131,
+                6728,
+                3438,
+                2113,
+                336,
+                0,
+              ]),
+            }),
+            'monthValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:42.956Z',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'kilowattHour',
+            }),
+            'week': dict({
+              'type': 'array',
+              'value': list([
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                24,
+                544,
+                806,
+                636,
+                1153,
+                1081,
+                1275,
+                1582,
+                1594,
+                888,
+                1353,
+                1678,
+                1588,
+                1507,
+                1093,
+                1687,
+                2679,
+                1647,
+                1916,
+                1668,
+                1870,
+                1877,
+                1785,
+                1325,
+                1351,
+                1718,
+                1597,
+                1220,
+                706,
+                562,
+                653,
+                429,
+                442,
+                629,
+                435,
+                414,
+                149,
+                0,
+                0,
+                0,
+                0,
+              ]),
+            }),
+            'weekValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-23T01:22:41.933Z',
+            }),
+            'year': dict({
+              'type': 'array',
+              'value': list([
+                30946,
+                32288,
+                37266,
+              ]),
+            }),
+            'yearValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:38.203Z',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.627Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.gas.consumption.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.reduced',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.556Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.reduced',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'off',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'on',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.pumps.circulation.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.dhw.pumps.circulation.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.866Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.pumps.circulation.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.programs.standard',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.719Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.programs.standard',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.dhw.pumps.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.pumps.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'off',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'on',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.dhw.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '10:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 1,
+                    'start': '16:30',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '10:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 1,
+                    'start': '16:30',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '06:30',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '06:30',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '10:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 1,
+                    'start': '16:30',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '10:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 1,
+                    'start': '16:30',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '10:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                  dict({
+                    'end': '24:00',
+                    'mode': 'on',
+                    'position': 1,
+                    'start': '16:30',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.883Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'circulation',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.dhw.pumps',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.dhw.pumps',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.external',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.540Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.external',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'multiFamilyHouse',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.configuration',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.configuration',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pumps',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.programs.eco',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.720Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.programs.eco',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 5,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:46.376Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler.serial',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': '################',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.840Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.serial',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'curve',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.heating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.pumps.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'on',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.609Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.pumps.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.configuration.multiFamilyHouse',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.693Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.configuration.multiFamilyHouse',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'comfort',
+            'eco',
+            'external',
+            'holiday',
+            'normal',
+            'reduced',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'modes',
+            'programs',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes.standby',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.533Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.standby',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.558Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.modes.ventilation',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.729Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.modes.ventilation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'curve',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.heating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.dhw.pumps.circulation.schedule',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.876Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.dhw.pumps.circulation.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 3,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.normal/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.normal',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 23,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.548Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.normal',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 3,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.normal/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.normal',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 21,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.546Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.normal',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes.dhwAndHeating',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.963Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.dhwAndHeating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.active',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.649Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.933Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.dhw.schedule',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.890Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.dhw.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'activate': dict({
+              'isExecutable': True,
+              'name': 'activate',
+              'params': dict({
+                'temperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 4,
+                    'stepping': 1,
+                  }),
+                  'required': False,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.comfort/commands/activate',
+            }),
+            'deactivate': dict({
+              'isExecutable': False,
+              'name': 'deactivate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.comfort/commands/deactivate',
+            }),
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 4,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.comfort/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.comfort',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 24,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.827Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.comfort',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.standby',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.559Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setCurve': dict({
+              'isExecutable': True,
+              'name': 'setCurve',
+              'params': dict({
+                'shift': dict({
+                  'constraints': dict({
+                    'max': 40,
+                    'min': -13,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+                'slope': dict({
+                  'constraints': dict({
+                    'max': 3.5,
+                    'min': 0.2,
+                    'stepping': 0.1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.heating.curve/commands/setCurve',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.heating.curve',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'shift': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 9,
+            }),
+            'slope': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 1.4,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.906Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.heating.curve',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.eco',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.552Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.eco',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.gas.consumption.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'day': dict({
+              'type': 'array',
+              'value': list([
+                22,
+                33,
+                32,
+                34,
+                32,
+                32,
+                32,
+                32,
+              ]),
+            }),
+            'dayValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T14:16:40.084Z',
+            }),
+            'month': dict({
+              'type': 'array',
+              'value': list([
+                805,
+                1000,
+                968,
+                1115,
+                1109,
+                1087,
+                995,
+                1124,
+                1087,
+                1094,
+                1136,
+                1009,
+                966,
+              ]),
+            }),
+            'monthValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T13:22:47.985Z',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'kilowattHour',
+            }),
+            'week': dict({
+              'type': 'array',
+              'value': list([
+                84,
+                232,
+                226,
+                230,
+                230,
+                226,
+                229,
+                214,
+                229,
+                229,
+                220,
+                229,
+                229,
+                250,
+                244,
+                247,
+                266,
+                268,
+                268,
+                255,
+                248,
+                247,
+                242,
+                244,
+                248,
+                250,
+                238,
+                242,
+                259,
+                256,
+                259,
+                263,
+                255,
+                241,
+                257,
+                250,
+                237,
+                240,
+                243,
+                253,
+                257,
+                253,
+                258,
+                261,
+                254,
+                254,
+                256,
+                258,
+                240,
+                240,
+                230,
+                223,
+                231,
+              ]),
+            }),
+            'weekValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T13:22:47.418Z',
+            }),
+            'year': dict({
+              'type': 'array',
+              'value': list([
+                8203,
+                12546,
+                11741,
+              ]),
+            }),
+            'yearValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-25T13:22:51.902Z',
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:41.758Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.gas.consumption.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            '0',
+            '1',
+            '2',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'enabled': dict({
+              'type': 'array',
+              'value': list([
+                '0',
+                '1',
+              ]),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.864Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.active',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': 'standby',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.643Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.power.production',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.634Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.power.production',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'activate': dict({
+              'isExecutable': False,
+              'name': 'activate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.eco/commands/activate',
+            }),
+            'deactivate': dict({
+              'isExecutable': False,
+              'name': 'deactivate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.eco/commands/deactivate',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.programs.eco',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 21,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.547Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.programs.eco',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.normal',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.551Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.normal',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'charging',
+            'oneTimeCharge',
+            'schedule',
+            'sensors',
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'status': dict({
+              'type': 'string',
+              'value': 'on',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.650Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.circulation.pump',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.642Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.circulation.pump',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler.sensors.temperature.main',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'connected',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 63,
+            }),
+          }),
+          'timestamp': '2021-08-25T15:13:19.598Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.sensors.temperature.main',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.circulation.pump',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'off',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.641Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.circulation.pump',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'activate': dict({
+              'isExecutable': False,
+              'name': 'activate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.eco/commands/activate',
+            }),
+            'deactivate': dict({
+              'isExecutable': False,
+              'name': 'deactivate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.eco/commands/deactivate',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.eco',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 23,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.549Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.eco',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.charging.level',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'bottom': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+            'middle': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+            'top': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.603Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.charging.level',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pump',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.circulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.circulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.modes.standard',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.728Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.modes.standard',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'holiday',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.operating.programs',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.operating.programs',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'off',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'on',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.dhw.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.880Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'eco',
+            'holiday',
+            'standard',
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.programs',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.programs',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setSchedule': dict({
+              'isExecutable': True,
+              'name': 'setSchedule',
+              'params': dict({
+                'newSchedule': dict({
+                  'constraints': dict({
+                    'defaultMode': 'off',
+                    'maxEntries': 4,
+                    'modes': list([
+                      'on',
+                    ]),
+                    'overlapAllowed': True,
+                    'resolution': 10,
+                  }),
+                  'required': True,
+                  'type': 'Schedule',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.pumps.circulation.schedule/commands/setSchedule',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.dhw.pumps.circulation.schedule',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': True,
+            }),
+            'entries': dict({
+              'type': 'Schedule',
+              'value': dict({
+                'fri': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'mon': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '05:30',
+                  }),
+                ]),
+                'sat': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '05:30',
+                  }),
+                ]),
+                'sun': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '06:30',
+                  }),
+                ]),
+                'thu': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'tue': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+                'wed': list([
+                  dict({
+                    'end': '20:00',
+                    'mode': 'on',
+                    'position': 0,
+                    'start': '04:30',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.871Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.pumps.circulation.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'room',
+            'supply',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.sensors.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.sensors.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging.level.middle',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.710Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging.level.middle',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes.standby',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.508Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setTargetTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTargetTemperature',
+              'params': dict({
+                'temperature': dict({
+                  'constraints': dict({
+                    'efficientLowerBorder': 10,
+                    'efficientUpperBorder': 60,
+                    'max': 60,
+                    'min': 10,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.temperature.main/commands/setTargetTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.temperature.main',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 58,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.819Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.temperature.main',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'activate': dict({
+              'isExecutable': True,
+              'name': 'activate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.oneTimeCharge/commands/activate',
+            }),
+            'deactivate': dict({
+              'isExecutable': False,
+              'name': 'deactivate',
+              'params': dict({
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.oneTimeCharge/commands/deactivate',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.oneTimeCharge',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.607Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.oneTimeCharge',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.gas.consumption.total',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'day': dict({
+              'type': 'array',
+              'value': list([
+                22,
+                33,
+                32,
+                34,
+                32,
+                32,
+                32,
+                32,
+              ]),
+            }),
+            'dayValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:37.198Z',
+            }),
+            'month': dict({
+              'type': 'array',
+              'value': list([
+                805,
+                1000,
+                968,
+                4623,
+                6819,
+                7578,
+                8101,
+                9255,
+                7815,
+                4532,
+                3249,
+                1345,
+                966,
+              ]),
+            }),
+            'monthValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:42.956Z',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'kilowattHour',
+            }),
+            'week': dict({
+              'type': 'array',
+              'value': list([
+                84,
+                232,
+                226,
+                230,
+                230,
+                226,
+                229,
+                214,
+                229,
+                229,
+                220,
+                229,
+                253,
+                794,
+                1050,
+                883,
+                1419,
+                1349,
+                1543,
+                1837,
+                1842,
+                1135,
+                1595,
+                1922,
+                1836,
+                1757,
+                1331,
+                1929,
+                2938,
+                1903,
+                2175,
+                1931,
+                2125,
+                2118,
+                2042,
+                1575,
+                1588,
+                1958,
+                1840,
+                1473,
+                963,
+                815,
+                911,
+                690,
+                696,
+                883,
+                691,
+                672,
+                389,
+                240,
+                230,
+                223,
+                231,
+              ]),
+            }),
+            'weekValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-23T01:22:41.933Z',
+            }),
+            'year': dict({
+              'type': 'array',
+              'value': list([
+                39149,
+                44834,
+                49007,
+              ]),
+            }),
+            'yearValueReadAt': dict({
+              'type': 'string',
+              'value': '2021-08-18T21:22:38.203Z',
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:41.785Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.gas.consumption.total',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.burners.0.modulation',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'unit': dict({
+              'type': 'string',
+              'value': 'percent',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'percent',
+              'value': 0,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:46.499Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.burners.0.modulation',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'total',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.power.consumption',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.power.consumption',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setTemperature': dict({
+              'isExecutable': True,
+              'name': 'setTemperature',
+              'params': dict({
+                'targetTemperature': dict({
+                  'constraints': dict({
+                    'max': 37,
+                    'min': 3,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.reduced/commands/setTemperature',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.reduced',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'demand': dict({
+              'type': 'string',
+              'value': 'unknown',
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 21,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.555Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.reduced',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'outside',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.sensors.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.sensors.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.sensors.temperature.room',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.564Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.sensors.temperature.room',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.boiler.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'collector',
+            'dhw',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.sensors.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.sensors.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'level',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.charging',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T14:16:41.453Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.charging',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes.standby',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.524Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.standby',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'charging',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'main',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.active',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'string',
+              'value': 'standby',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.645Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.active',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.schedule',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.695Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.schedule',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'level',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.buffer.charging',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.buffer.charging',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.programs.comfort',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.830Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.programs.comfort',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'dhw',
+            'dhwAndHeating',
+            'heating',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.operating.modes',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.operating.modes',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'standard',
+            'standby',
+            'ventilation',
+          ]),
+          'deviceId': '0',
+          'feature': 'ventilation.operating.modes',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/ventilation.operating.modes',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'circulation',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.dhw.pumps',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.dhw.pumps',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'comfort',
+            'eco',
+            'external',
+            'holiday',
+            'normal',
+            'reduced',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.operating.modes.heating',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.978Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.operating.modes.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'room',
+            'supply',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.sensors.temperature',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.sensors.temperature',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.sensors.temperature.outlet',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'error',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.637Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.sensors.temperature.outlet',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'time',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.device',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.device',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'temperature',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.sensors',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.sensors',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.device.time.offset',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'value': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 96,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.575Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.device.time.offset',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.sensors.temperature.room',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.562Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.sensors.temperature.room',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'circulation',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.dhw.pumps',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw.pumps',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.frostprotection',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'off',
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.900Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.frostprotection',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.solar.sensors.temperature.dhw',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:47.633Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.solar.sensors.temperature.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'pumps',
+            'schedule',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.0.dhw',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.400Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.0.dhw',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+            'setCurve': dict({
+              'isExecutable': True,
+              'name': 'setCurve',
+              'params': dict({
+                'shift': dict({
+                  'constraints': dict({
+                    'max': 40,
+                    'min': -13,
+                    'stepping': 1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+                'slope': dict({
+                  'constraints': dict({
+                    'max': 3.5,
+                    'min': 0.2,
+                    'stepping': 0.1,
+                  }),
+                  'required': True,
+                  'type': 'number',
+                }),
+              }),
+              'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.heating.curve/commands/setCurve',
+            }),
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.2.heating.curve',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'shift': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+            'slope': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 1.4,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:46.910Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.2.heating.curve',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes.heating',
+          'gatewayId': '################',
+          'isEnabled': False,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.975Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes.heating',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.programs.external',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'active': dict({
+              'type': 'boolean',
+              'value': False,
+            }),
+            'temperature': dict({
+              'type': 'number',
+              'unit': '',
+              'value': 0,
+            }),
+          }),
+          'timestamp': '2021-08-25T03:29:47.538Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.programs.external',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.dhw.sensors.temperature.hotWaterStorage',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'connected',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 58.6,
+            }),
+          }),
+          'timestamp': '2021-08-25T15:02:49.557Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.dhw.sensors.temperature.hotWaterStorage',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.sensors.temperature.supply',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+            'status': dict({
+              'type': 'string',
+              'value': 'connected',
+            }),
+            'unit': dict({
+              'type': 'string',
+              'value': 'celsius',
+            }),
+            'value': dict({
+              'type': 'number',
+              'unit': 'celsius',
+              'value': 25.5,
+            }),
+          }),
+          'timestamp': '2021-08-25T11:03:00.515Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.sensors.temperature.supply',
+        }),
+        dict({
+          'apiVersion': 1,
+          'commands': dict({
+          }),
+          'components': list([
+            'active',
+            'dhw',
+            'dhwAndHeating',
+            'heating',
+            'standby',
+          ]),
+          'deviceId': '0',
+          'feature': 'heating.circuits.1.operating.modes',
+          'gatewayId': '################',
+          'isEnabled': True,
+          'isReady': True,
+          'properties': dict({
+          }),
+          'timestamp': '2021-08-25T03:29:46.401Z',
+          'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes',
+        }),
+      ]),
+    }),
+    'entry': dict({
+      'data': dict({
+        'client_id': '**REDACTED**',
+        'heating_type': 'auto',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'vicare',
+      'entry_id': '1234',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': 'ViCare',
+      'version': 1,
+    }),
+  })
+# ---

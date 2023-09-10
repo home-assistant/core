@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
+from .client import CloudClient
 from .const import DOMAIN
 from .subscription import async_migrate_paypal_agreement, async_subscription_info
 
@@ -24,8 +25,7 @@ def async_manage_legacy_subscription_issue(
     hass: HomeAssistant,
     subscription_info: dict[str, Any],
 ) -> None:
-    """
-    Manage the legacy subscription issue.
+    """Manage the legacy subscription issue.
 
     If the provider is "legacy" create an issue,
     in all other cases remove the issue.
@@ -68,11 +68,11 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     async def async_step_change_plan(self, _: None = None) -> FlowResult:
         """Wait for the user to authorize the app installation."""
 
-        cloud: Cloud = self.hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = self.hass.data[DOMAIN]
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
-            # We can not get here without a flow manager
+            # We cannot get here without a flow manager
             assert flow_manager is not None
 
             retries = 0

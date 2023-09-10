@@ -54,7 +54,8 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # this is a reauth attempt
                 if self._reauth_entry.unique_id != self.unique_id:
-                    # there is a config entry matching this account, but it is not the one we were trying to reauth
+                    # there is a config entry matching this account,
+                    # but it is not the one we were trying to reauth
                     return self.async_abort(reason="already_configured")
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input

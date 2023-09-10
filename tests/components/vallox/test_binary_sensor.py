@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "metrics,expected_state",
+    ("metrics", "expected_state"),
     [
         ({"A_CYC_IO_HEATER": 1}, "on"),
         ({"A_CYC_IO_HEATER": 0}, "off"),

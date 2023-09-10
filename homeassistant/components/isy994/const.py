@@ -1,6 +1,8 @@
 """Constants for the ISY Platform."""
 import logging
 
+from pyisy.constants import PROP_ON_LEVEL, PROP_RAMP_RATE
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -13,15 +15,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_LOCKED,
@@ -34,6 +39,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
     UV_INDEX,
     Platform,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -58,6 +64,7 @@ DOMAIN = "isy994"
 
 MANUFACTURER = "Universal Devices, Inc"
 
+CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
@@ -74,14 +81,19 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [
+NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+NODE_AUX_PROP_PLATFORMS = [
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -92,6 +104,17 @@ PROGRAM_PLATFORMS = [
     Platform.LOCK,
     Platform.SWITCH,
 ]
+ROOT_NODE_PLATFORMS = [Platform.BUTTON]
+VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
+
+# Set of all platforms used by integration
+PLATFORMS = {
+    *NODE_PLATFORMS,
+    *NODE_AUX_PROP_PLATFORMS,
+    *PROGRAM_PLATFORMS,
+    *ROOT_NODE_PLATFORMS,
+    *VARIABLE_PLATFORMS,
+}
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
@@ -99,12 +122,6 @@ SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 # (they can turn off, and report their state)
 ISY_GROUP_PLATFORM = Platform.SWITCH
 
-ISY994_ISY = "isy"
-ISY994_NODES = "isy994_nodes"
-ISY994_PROGRAMS = "isy994_programs"
-ISY994_VARIABLES = "isy994_variables"
-
-ISY_CONF_NETWORKING = "Networking Module"
 ISY_CONF_UUID = "uuid"
 ISY_CONF_NAME = "name"
 ISY_CONF_MODEL = "model"
@@ -173,8 +190,6 @@ UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
 
-SENSOR_AUX = "sensor_aux"
-
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
@@ -199,14 +214,6 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
             TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
-    },
-    Platform.BUTTON: {
-        # No devices automatically sorted as buttons at this time. Query buttons added elsewhere.
-        FILTER_UOM: [],
-        FILTER_STATES: [],
-        FILTER_NODE_DEF_ID: [],
-        FILTER_INSTEON_TYPE: [],
-        FILTER_ZWAVE_CAT: [],
     },
     Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
@@ -251,7 +258,7 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
-        FILTER_ZWAVE_CAT: [],
+        FILTER_ZWAVE_CAT: ["106", "107"],
     },
     Platform.LIGHT: {
         FILTER_UOM: ["51"],
@@ -308,6 +315,10 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_ZWAVE_CAT: ["140"],
     },
 }
+NODE_AUX_FILTERS: dict[str, Platform] = {
+    PROP_ON_LEVEL: Platform.NUMBER,
+    PROP_RAMP_RATE: Platform.SELECT,
+}
 
 UOM_FRIENDLY_NAME = {
     "1": UnitOfElectricCurrent.AMPERE,
@@ -328,8 +339,8 @@ UOM_FRIENDLY_NAME = {
     "18": UnitOfLength.FEET,
     "19": UnitOfTime.HOURS,
     "20": UnitOfTime.HOURS,
-    "21": "%AH",
-    "22": "%RH",
+    "21": PERCENTAGE,
+    "22": PERCENTAGE,
     "23": UnitOfPressure.INHG,
     "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
@@ -392,7 +403,7 @@ UOM_FRIENDLY_NAME = {
     "92": f"{DEGREE} South",
     UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
-    "102": "kWs",
+    "102": "kWs",  # Kilowatt Seconds
     "103": CURRENCY_DOLLAR,
     "104": CURRENCY_CENT,
     "105": UnitOfLength.INCHES,
@@ -410,6 +421,29 @@ UOM_FRIENDLY_NAME = {
     "118": UnitOfPressure.HPA,
     "119": UnitOfEnergy.WATT_HOUR,
     "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
+    "122": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
+    "123": f"bq/{UnitOfVolume.CUBIC_METERS}",  # Becquerel per cubic meter
+    "124": f"pCi/{UnitOfVolume.LITERS}",  # Picocuries per liter
+    "125": "pH",
+    "126": "bpm",  # Beats per Minute
+    "127": UnitOfPressure.MMHG,
+    "128": "J",
+    "129": "BMI",  # Body Mass Index
+    "130": f"{UnitOfVolume.LITERS}/{UnitOfTime.HOURS}",
+    "131": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    "132": "bpm",  # Breaths per minute
+    "133": UnitOfFrequency.KILOHERTZ,
+    "134": f"{UnitOfLength.METERS}/{UnitOfTime.SECONDS}²",
+    "135": UnitOfApparentPower.VOLT_AMPERE,  # Volt-Amp
+    "136": POWER_VOLT_AMPERE_REACTIVE,  # VAR = Volt-Amp Reactive
+    "137": "",  # NTP DateTime - Number of seconds since 1900
+    "138": UnitOfPressure.PSI,
+    "139": DEGREE,  # Degree 0-360
+    "140": f"{UnitOfMass.MILLIGRAMS}/{UnitOfVolume.LITERS}",
+    "141": "N",  # Netwon
+    "142": f"{UnitOfVolume.GALLONS}/{UnitOfTime.SECONDS}",
+    "143": "gpm",  # Gallon per Minute
+    "144": "gph",  # Gallon per Hour
 }
 
 UOM_TO_STATES = {

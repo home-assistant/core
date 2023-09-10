@@ -4,10 +4,9 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_integration
 

@@ -1,6 +1,7 @@
 """Home Assistant representation of an UPnP/IGD."""
 from __future__ import annotations
 
+from datetime import datetime
 from functools import partial
 from ipaddress import ip_address
 from typing import Any
@@ -68,7 +69,9 @@ class Device:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[
+            dict[str, str | datetime | int | float | None]
+        ] | None = None
         self.original_udn: str | None = None
 
     async def async_get_mac_address(self) -> str | None:
@@ -134,7 +137,7 @@ class Device:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
-    async def async_get_data(self) -> dict[str, Any]:
+    async def async_get_data(self) -> dict[str, str | datetime | int | float | None]:
         """Get all data from device."""
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()

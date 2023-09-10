@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import numpy
+import numpy as np
 import requests
 import voluptuous as vol
 
@@ -104,7 +104,7 @@ def setup_platform(
     if not CV2_IMPORTED:
         _LOGGER.error(
             "No OpenCV library found! Install or compile for your system "
-            "following instructions here: http://opencv.org/releases.html"
+            "following instructions here: https://opencv.org/?s=releases"
         )
         return
 
@@ -165,7 +165,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+        cv_image = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         matches = {}
         total_matches = 0
@@ -188,8 +188,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
                 cv_image, scaleFactor=scale, minNeighbors=neighbors, minSize=min_size
             )
             regions = []
-            # pylint: disable=invalid-name
-            for (x, y, w, h) in detections:
+            for x, y, w, h in detections:
                 regions.append((int(x), int(y), int(w), int(h)))
                 total_matches += 1
 

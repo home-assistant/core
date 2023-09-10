@@ -1,8 +1,7 @@
 """Support for Hydrawise sprinkler binary sensors."""
 from __future__ import annotations
 
-import logging
-
+from pydrawise.legacy import LegacyHydrawise
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,14 +11,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_HYDRAWISE, HydrawiseEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
+from .coordinator import HydrawiseDataUpdateCoordinator
+from .entity import HydrawiseEntity
 
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
@@ -55,24 +54,30 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up a sensor for a Hydrawise device."""
-    hydrawise = hass.data[DATA_HYDRAWISE].data
+    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN]
+    hydrawise: LegacyHydrawise = coordinator.api
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     entities = []
     if BINARY_SENSOR_STATUS.key in monitored_conditions:
         entities.append(
-            HydrawiseBinarySensor(hydrawise.current_controller, BINARY_SENSOR_STATUS)
+            HydrawiseBinarySensor(
+                data=hydrawise.current_controller,
+                coordinator=coordinator,
+                description=BINARY_SENSOR_STATUS,
+            )
         )
 
     # create a sensor for each zone
-    entities.extend(
-        [
-            HydrawiseBinarySensor(zone, description)
-            for zone in hydrawise.relays
-            for description in BINARY_SENSOR_TYPES
-            if description.key in monitored_conditions
-        ]
-    )
+    for zone in hydrawise.relays:
+        for description in BINARY_SENSOR_TYPES:
+            if description.key not in monitored_conditions:
+                continue
+            entities.append(
+                HydrawiseBinarySensor(
+                    data=zone, coordinator=coordinator, description=description
+                )
+            )
 
     add_entities(entities, True)
 
@@ -80,12 +85,13 @@ def setup_platform(
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
     """A sensor implementation for Hydrawise device."""
 
-    def update(self) -> None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
-        mydata = self.hass.data[DATA_HYDRAWISE].data
+        LOGGER.debug("Updating Hydrawise binary sensor: %s", self.name)
         if self.entity_description.key == "status":
-            self._attr_is_on = mydata.status == "All good!"
+            self._attr_is_on = self.coordinator.last_update_success
         elif self.entity_description.key == "is_watering":
-            relay_data = mydata.relays[self.data["relay"] - 1]
+            relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
             self._attr_is_on = relay_data["timestr"] == "Now"
+        super()._handle_coordinator_update()

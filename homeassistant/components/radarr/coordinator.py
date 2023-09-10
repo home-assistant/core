@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, Union, cast
+from typing import Generic, TypeVar
 
 from aiopyarr import Health, RadarrMovie, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", bound=Union[SystemStatus, list[RootFolder], list[Health], int])
+T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
@@ -71,7 +71,10 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
 
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
-        return cast(list[RootFolder], await self.api_client.async_get_root_folders())
+        root_folders = await self.api_client.async_get_root_folders()
+        if isinstance(root_folders, RootFolder):
+            root_folders = [root_folders]
+        return root_folders
 
 
 class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
@@ -87,4 +90,7 @@ class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
 
     async def _fetch_data(self) -> int:
         """Fetch the movies data."""
-        return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
+        movies = await self.api_client.async_get_movies()
+        if isinstance(movies, RadarrMovie):
+            return 1
+        return len(movies)

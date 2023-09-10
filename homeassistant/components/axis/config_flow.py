@@ -232,7 +232,7 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the Axis device options."""
-        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.unique_id]
+        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(

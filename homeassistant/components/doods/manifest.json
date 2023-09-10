@@ -1,9 +1,9 @@
 {
   "domain": "doods",
   "name": "DOODS - Dedicated Open Object Detection Service",
-  "documentation": "https://www.home-assistant.io/integrations/doods",
-  "requirements": ["pydoods==1.0.2", "pillow==9.4.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/doods",
   "iot_class": "local_polling",
-  "loggers": ["pydoods"]
+  "loggers": ["pydoods"],
+  "requirements": ["pydoods==1.0.2", "Pillow==10.0.0"]
 }

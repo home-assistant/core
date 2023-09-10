@@ -18,7 +18,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize PoolSense config flow."""
 
     async def async_step_user(self, user_input=None):

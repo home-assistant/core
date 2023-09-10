@@ -1,8 +1,8 @@
 {
   "domain": "water_heater",
   "name": "Water Heater",
-  "documentation": "https://www.home-assistant.io/integrations/water_heater",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "integration_type": "entity"
+  "documentation": "https://www.home-assistant.io/integrations/water_heater",
+  "integration_type": "entity",
+  "quality_scale": "internal"
 }

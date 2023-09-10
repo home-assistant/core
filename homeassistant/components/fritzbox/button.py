@@ -4,7 +4,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
@@ -20,10 +20,7 @@ async def async_setup_entry(
     ][CONF_COORDINATOR]
 
     async_add_entities(
-        [
-            FritzBoxTemplate(coordinator, ain)
-            for ain in coordinator.data.templates.keys()
-        ]
+        [FritzBoxTemplate(coordinator, ain) for ain in coordinator.data.templates]
     )
 
 

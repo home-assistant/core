@@ -1,10 +1,10 @@
 {
   "domain": "life360",
   "name": "Life360",
+  "codeowners": ["@pnbruckner"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/life360",
-  "codeowners": ["@pnbruckner"],
-  "requirements": ["life360==5.5.0"],
   "iot_class": "cloud_polling",
-  "loggers": ["life360"]
+  "loggers": ["life360"],
+  "requirements": ["life360==6.0.0"]
 }

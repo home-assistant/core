@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.components import light
 from homeassistant.components.light.reproduce_state import DEPRECATION_WARNING
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
@@ -23,7 +23,9 @@ VALID_RGBWW_COLOR = {"rgbww_color": (255, 63, 111, 10, 20)}
 VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Light states."""
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
@@ -169,7 +171,9 @@ async def test_reproducing_states(hass, caplog):
         light.ColorMode.XY,
     ),
 )
-async def test_filter_color_modes(hass, caplog, color_mode):
+async def test_filter_color_modes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, color_mode
+) -> None:
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
     all_colors = {
@@ -222,7 +226,9 @@ async def test_filter_color_modes(hass, caplog, color_mode):
     assert len(turn_on_calls) == 1
 
 
-async def test_deprecation_warning(hass, caplog):
+async def test_deprecation_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecation warning."""
     hass.states.async_set("light.entity_off", "off", {})
     turn_on_calls = async_mock_service(hass, "light", "turn_on")

@@ -1,9 +1,9 @@
 {
   "domain": "rocketchat",
   "name": "Rocket.Chat",
-  "documentation": "https://www.home-assistant.io/integrations/rocketchat",
-  "requirements": ["rocketchat-API==0.6.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/rocketchat",
   "iot_class": "cloud_push",
-  "loggers": ["rocketchat_API"]
+  "loggers": ["rocketchat_API"],
+  "requirements": ["rocketchat-API==0.6.1"]
 }

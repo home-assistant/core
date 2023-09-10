@@ -1,16 +1,16 @@
 """Tests for the diagnostics data provided by the Pure Energie integration."""
-from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test diagnostics."""

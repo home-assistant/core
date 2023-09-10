@@ -14,11 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenGarageDataUpdateCoordinator
@@ -83,7 +83,4 @@ class OpenGarageSensor(OpenGarageEntity, SensorEntity):
     @callback
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_name = (
-            f'{self.coordinator.data["name"]} {self.entity_description.key}'
-        )
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)

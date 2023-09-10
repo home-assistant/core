@@ -9,12 +9,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
@@ -144,7 +145,7 @@ class WiffiEntity(Entity):
         """Initialize the base elements of a wiffi entity."""
         self._id = generate_unique_id(device, metric)
         self._device_info = DeviceInfo(
-            connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
             identifiers={(DOMAIN, device.mac_address)},
             manufacturer="stall.biz",
             model=device.moduletype,

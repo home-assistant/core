@@ -8,6 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +38,7 @@ def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
     return doorbirdapi_mock
 
 
-async def test_user_form(hass):
+async def test_user_form(hass: HomeAssistant) -> None:
     """Test we get the user form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -76,7 +77,7 @@ async def test_user_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_zeroconf_wrong_oui(hass):
+async def test_form_zeroconf_wrong_oui(hass: HomeAssistant) -> None:
     """Test we abort when we get the wrong OUI via zeroconf."""
 
     result = await hass.config_entries.flow.async_init(
@@ -96,7 +97,7 @@ async def test_form_zeroconf_wrong_oui(hass):
     assert result["reason"] == "not_doorbird_device"
 
 
-async def test_form_zeroconf_link_local_ignored(hass):
+async def test_form_zeroconf_link_local_ignored(hass: HomeAssistant) -> None:
     """Test we abort when we get a link local address via zeroconf."""
 
     result = await hass.config_entries.flow.async_init(
@@ -116,7 +117,7 @@ async def test_form_zeroconf_link_local_ignored(hass):
     assert result["reason"] == "link_local_address"
 
 
-async def test_form_zeroconf_ipv4_address(hass):
+async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
     """Test we abort and update the ip address from zeroconf with an ipv4 address."""
 
     config_entry = MockConfigEntry(
@@ -144,7 +145,7 @@ async def test_form_zeroconf_ipv4_address(hass):
     assert config_entry.data[CONF_HOST] == "4.4.4.4"
 
 
-async def test_form_zeroconf_non_ipv4_ignored(hass):
+async def test_form_zeroconf_non_ipv4_ignored(hass: HomeAssistant) -> None:
     """Test we abort when we get a non ipv4 address via zeroconf."""
 
     result = await hass.config_entries.flow.async_init(
@@ -164,7 +165,7 @@ async def test_form_zeroconf_non_ipv4_ignored(hass):
     assert result["reason"] == "not_ipv4_address"
 
 
-async def test_form_zeroconf_correct_oui(hass):
+async def test_form_zeroconf_correct_oui(hass: HomeAssistant) -> None:
     """Test we can setup from zeroconf with the correct OUI source."""
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
@@ -226,7 +227,9 @@ async def test_form_zeroconf_correct_oui(hass):
         None,
     ],
 )
-async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_effect):
+async def test_form_zeroconf_correct_oui_wrong_device(
+    hass: HomeAssistant, doorbell_state_side_effect
+) -> None:
     """Test we can setup from zeroconf with the correct OUI source but not a doorstation."""
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
@@ -255,7 +258,7 @@ async def test_form_zeroconf_correct_oui_wrong_device(hass, doorbell_state_side_
     assert result["reason"] == "not_doorbird_device"
 
 
-async def test_form_user_cannot_connect(hass):
+async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -275,7 +278,7 @@ async def test_form_user_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_user_invalid_auth(hass):
+async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle cannot invalid auth error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -296,7 +299,7 @@ async def test_form_user_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
 
     config_entry = MockConfigEntry(

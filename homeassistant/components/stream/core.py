@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-import async_timeout
 import attr
 import numpy as np
 
@@ -146,8 +145,9 @@ class Segment:
         """Render the HLS playlist section for the Segment.
 
         The Segment may still be in progress.
-        This method stores intermediate data in hls_playlist_parts, hls_num_parts_rendered,
-        and hls_playlist_complete to avoid redoing work on subsequent calls.
+        This method stores intermediate data in hls_playlist_parts,
+        hls_num_parts_rendered, and hls_playlist_complete to avoid redoing
+        work on subsequent calls.
         """
         if self.hls_playlist_complete:
             return self.hls_playlist_template[0]
@@ -164,12 +164,14 @@ class Segment:
             ):
                 self.hls_playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
-                    f'"./segment/{self.sequence}.{part_num}.m4s"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                    f'"./segment/{self.sequence}.{part_num}.m4s"'
+                    f'{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            # Construct the final playlist_template. The placeholder will share a line with
-            # the first element to avoid an extra newline when we don't render any parts.
-            # Append an empty string to create a trailing newline when we do render parts
+            # Construct the final playlist_template. The placeholder will share a
+            # line with the first element to avoid an extra newline when we don't
+            # render any parts. Append an empty string to create a trailing newline
+            # when we do render parts
             self.hls_playlist_parts.append("")
             self.hls_playlist_template = (
                 [] if last_stream_id == self.stream_id else ["#EXT-X-DISCONTINUITY"]
@@ -204,9 +206,9 @@ class Segment:
         )
         if not add_hint:
             return playlist
-        # Preload hints help save round trips by informing the client about the next part.
-        # The next part will usually be in this segment but will be first part of the next
-        # segment if this segment is already complete.
+        # Preload hints help save round trips by informing the client about the
+        # next part. The next part will usually be in this segment but will be
+        # first part of the next segment if this segment is already complete.
         if self.complete:  # Next part belongs to next segment
             sequence = self.sequence + 1
             part_num = 0
@@ -329,7 +331,7 @@ class StreamOutput:
     async def part_recv(self, timeout: float | None = None) -> bool:
         """Wait for an event signalling the latest part segment."""
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await self._part_event.wait()
         except asyncio.TimeoutError:
             return False
@@ -366,15 +368,13 @@ class StreamOutput:
 
 
 class StreamView(HomeAssistantView):
-    """
-    Base StreamView.
+    """Base StreamView.
 
     For implementation of a new stream format, define `url` and `name`
     attributes, and implement `handle` method in a child class.
     """
 
     requires_auth = False
-    platform = None
 
     async def get(
         self, request: web.Request, token: str, sequence: str = "", part_num: str = ""
@@ -416,8 +416,7 @@ TRANSFORM_IMAGE_FUNCTION = (
 
 
 class KeyFrameConverter:
-    """
-    Enables generating and getting an image from the last keyframe seen in the stream.
+    """Enables generating and getting an image from the last keyframe seen in the stream.
 
     An overview of the thread and state interaction:
         the worker thread sets a packet
@@ -437,11 +436,13 @@ class KeyFrameConverter:
     ) -> None:
         """Initialize."""
 
-        # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # Keep import here so that we can import stream integration
+        # without installingreqs
+        # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
-        self.packet: Packet = None
+        self._packet: Packet = None
+        self._event: asyncio.Event = asyncio.Event()
         self._hass = hass
         self._image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
@@ -450,9 +451,16 @@ class KeyFrameConverter:
         self._stream_settings = stream_settings
         self._dynamic_stream_settings = dynamic_stream_settings
 
-    def create_codec_context(self, codec_context: CodecContext) -> None:
+    def stash_keyframe_packet(self, packet: Packet) -> None:
+        """Store the keyframe and set the asyncio.Event from the event loop.
+
+        This is called from the worker thread.
         """
-        Create a codec context to be used for decoding the keyframes.
+        self._packet = packet
+        self._hass.loop.call_soon_threadsafe(self._event.set)
+
+    def create_codec_context(self, codec_context: CodecContext) -> None:
+        """Create a codec context to be used for decoding the keyframes.
 
         This is run by the worker thread and will only be called once per worker.
         """
@@ -460,8 +468,9 @@ class KeyFrameConverter:
         if self._codec_context:
             return
 
-        # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
+        # Keep import here so that we can import stream integration without
+        # installing reqs
+        # pylint: disable-next=import-outside-toplevel
         from av import CodecContext
 
         self._codec_context = CodecContext.create(codec_context.name, "r")
@@ -475,18 +484,17 @@ class KeyFrameConverter:
         return TRANSFORM_IMAGE_FUNCTION[orientation](image)
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
-        """
-        Generate the keyframe image.
+        """Generate the keyframe image.
 
         This is run in an executor thread, but since it is called within an
         the asyncio lock from the main thread, there will only be one entry
         at a time per instance.
         """
 
-        if not (self._turbojpeg and self.packet and self._codec_context):
+        if not (self._turbojpeg and self._packet and self._codec_context):
             return
-        packet = self.packet
-        self.packet = None
+        packet = self._packet
+        self._packet = None
         for _ in range(2):  # Retry once if codec context needs to be flushed
             try:
                 # decode packet (flush afterwards)
@@ -520,10 +528,14 @@ class KeyFrameConverter:
         self,
         width: int | None = None,
         height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
 
         # Use a lock to ensure only one thread is working on the keyframe at a time
+        if wait_for_next_keyframe:
+            self._event.clear()
+            await self._event.wait()
         async with self._lock:
             await self._hass.async_add_executor_job(self._generate_image, width, height)
         return self._image

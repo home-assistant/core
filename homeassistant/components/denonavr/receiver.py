@@ -19,6 +19,8 @@ class ConnectDenonAVR:
         show_all_inputs: bool,
         zone2: bool,
         zone3: bool,
+        use_telnet: bool,
+        update_audyssey: bool,
         async_client_getter: Callable,
     ) -> None:
         """Initialize the class."""
@@ -27,6 +29,8 @@ class ConnectDenonAVR:
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
+        self._use_telnet = use_telnet
+        self._update_audyssey = update_audyssey
 
         self._zones: dict[str, str | None] = {}
         if zone2:
@@ -85,5 +89,11 @@ class ConnectDenonAVR:
         # Use httpx.AsyncClient getter provided by Home Assistant
         receiver.set_async_client_getter(self._async_client_getter)
         await receiver.async_setup()
+        # Do an initial update if telnet is used.
+        if self._use_telnet:
+            await receiver.async_update()
+            if self._update_audyssey:
+                await receiver.async_update_audyssey()
+            await receiver.async_telnet_connect()
 
         self._receiver = receiver

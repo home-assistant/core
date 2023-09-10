@@ -1,5 +1,5 @@
 """The tests for the  Template switch platform."""
-
+import pytest
 
 from homeassistant import setup
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -11,7 +11,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component, mock_restore_cache
@@ -34,7 +34,7 @@ OPTIMISTIC_SWITCH_CONFIG = {
 }
 
 
-async def test_template_state_text(hass):
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -70,7 +70,7 @@ async def test_template_state_text(hass):
     assert state.state == STATE_OFF
 
 
-async def test_template_state_boolean_on(hass):
+async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
     """Test the setting of the state with boolean on."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -97,7 +97,7 @@ async def test_template_state_boolean_on(hass):
     assert state.state == STATE_ON
 
 
-async def test_template_state_boolean_off(hass):
+async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
     """Test the setting of the state with off."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -124,7 +124,7 @@ async def test_template_state_boolean_off(hass):
     assert state.state == STATE_OFF
 
 
-async def test_icon_template(hass):
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -137,9 +137,11 @@ async def test_icon_template(hass):
                         "test_template_switch": {
                             **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "icon_template": "{% if states.switch.test_state.state %}"
-                            "mdi:check"
-                            "{% endif %}",
+                            "icon_template": (
+                                "{% if states.switch.test_state.state %}"
+                                "mdi:check"
+                                "{% endif %}"
+                            ),
                         }
                     },
                 }
@@ -160,7 +162,7 @@ async def test_icon_template(hass):
     assert state.attributes["icon"] == "mdi:check"
 
 
-async def test_entity_picture_template(hass):
+async def test_entity_picture_template(hass: HomeAssistant) -> None:
     """Test entity_picture template."""
     with assert_setup_component(1, "switch"):
         assert await async_setup_component(
@@ -173,9 +175,11 @@ async def test_entity_picture_template(hass):
                         "test_template_switch": {
                             **OPTIMISTIC_SWITCH_CONFIG,
                             "value_template": "{{ states.switch.test_state.state }}",
-                            "entity_picture_template": "{% if states.switch.test_state.state %}"
-                            "/local/switch.png"
-                            "{% endif %}",
+                            "entity_picture_template": (
+                                "{% if states.switch.test_state.state %}"
+                                "/local/switch.png"
+                                "{% endif %}"
+                            ),
                         }
                     },
                 }
@@ -196,7 +200,7 @@ async def test_entity_picture_template(hass):
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
 
-async def test_template_syntax_error(hass):
+async def test_template_syntax_error(hass: HomeAssistant) -> None:
     """Test templating syntax error."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -222,7 +226,7 @@ async def test_template_syntax_error(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_invalid_name_does_not_create(hass):
+async def test_invalid_name_does_not_create(hass: HomeAssistant) -> None:
     """Test invalid name."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -248,7 +252,7 @@ async def test_invalid_name_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_invalid_switch_does_not_create(hass):
+async def test_invalid_switch_does_not_create(hass: HomeAssistant) -> None:
     """Test invalid switch."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -269,7 +273,7 @@ async def test_invalid_switch_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_no_switches_does_not_create(hass):
+async def test_no_switches_does_not_create(hass: HomeAssistant) -> None:
     """Test if there are no switches no creation."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -283,7 +287,7 @@ async def test_no_switches_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_missing_on_does_not_create(hass):
+async def test_missing_on_does_not_create(hass: HomeAssistant) -> None:
     """Test missing on."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -316,7 +320,7 @@ async def test_missing_on_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_missing_off_does_not_create(hass):
+async def test_missing_off_does_not_create(hass: HomeAssistant) -> None:
     """Test missing off."""
     with assert_setup_component(0, "switch"):
         assert await async_setup_component(
@@ -349,7 +353,7 @@ async def test_missing_off_does_not_create(hass):
     assert hass.states.async_all("switch") == []
 
 
-async def test_on_action(hass, calls):
+async def test_on_action(hass: HomeAssistant, calls) -> None:
     """Test on action."""
     assert await async_setup_component(
         hass,
@@ -389,7 +393,7 @@ async def test_on_action(hass, calls):
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_on_action_optimistic(hass, calls):
+async def test_on_action_optimistic(hass: HomeAssistant, calls) -> None:
     """Test on action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -430,7 +434,7 @@ async def test_on_action_optimistic(hass, calls):
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action(hass, calls):
+async def test_off_action(hass: HomeAssistant, calls) -> None:
     """Test off action."""
     assert await async_setup_component(
         hass,
@@ -470,7 +474,7 @@ async def test_off_action(hass, calls):
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_off_action_optimistic(hass, calls):
+async def test_off_action_optimistic(hass: HomeAssistant, calls) -> None:
     """Test off action in optimistic mode."""
     assert await async_setup_component(
         hass,
@@ -511,7 +515,7 @@ async def test_off_action_optimistic(hass, calls):
     assert calls[-1].data["caller"] == "switch.test_template_switch"
 
 
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test state restoration."""
     mock_restore_cache(
         hass,
@@ -552,7 +556,7 @@ async def test_restore_state(hass):
     assert state.state == STATE_OFF
 
 
-async def test_available_template_with_entities(hass):
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     """Test availability templates with values from other entities."""
     await setup.async_setup_component(
         hass,
@@ -564,7 +568,9 @@ async def test_available_template_with_entities(hass):
                     "test_template_switch": {
                         **OPTIMISTIC_SWITCH_CONFIG,
                         "value_template": "{{ 1 == 1 }}",
-                        "availability_template": "{{ is_state('availability_state.state', 'on') }}",
+                        "availability_template": (
+                            "{{ is_state('availability_state.state', 'on') }}"
+                        ),
                     }
                 },
             }
@@ -586,7 +592,9 @@ async def test_available_template_with_entities(hass):
     assert hass.states.get("switch.test_template_switch").state == STATE_UNAVAILABLE
 
 
-async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an invalid availability keeps the device available."""
     await setup.async_setup_component(
         hass,
@@ -610,10 +618,10 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
-    assert ("UndefinedError: 'x' is undefined") in caplog.text
+    assert "UndefinedError: 'x' is undefined" in caplog.text
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one switch per id."""
     await setup.async_setup_component(
         hass,

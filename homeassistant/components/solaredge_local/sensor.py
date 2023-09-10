@@ -278,7 +278,7 @@ class SolarEdgeSensor(SensorEntity):
         platform_name,
         data,
         description: SolarEdgeLocalSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._platform_name = platform_name
@@ -290,7 +290,7 @@ class SolarEdgeSensor(SensorEntity):
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:
             try:
-                return {extra_attr: self._data.info[self.entity_description.key]}
+                return {extra_attr: self._data.info.get(self.entity_description.key)}
             except KeyError:
                 pass
         return None
@@ -298,7 +298,7 @@ class SolarEdgeSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self._data.update()
-        self._attr_native_value = self._data.data[self.entity_description.key]
+        self._attr_native_value = self._data.data.get(self.entity_description.key)
 
 
 class SolarEdgeData:

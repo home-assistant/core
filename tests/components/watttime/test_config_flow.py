@@ -26,7 +26,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
-    "exc,error", [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")]
+    ("exc", "error"),
+    [(InvalidCredentialsError, "invalid_auth"), (Exception, "unknown")],
 )
 async def test_auth_errors(
     hass: HomeAssistant, config_auth, config_location_type, exc, error
@@ -44,7 +45,7 @@ async def test_auth_errors(
 
 
 @pytest.mark.parametrize(
-    "get_grid_region,errors",
+    ("get_grid_region", "errors"),
     [
         (
             AsyncMock(side_effect=CoordinatesNotFoundError),
@@ -83,7 +84,7 @@ async def test_coordinate_errors(
 )
 async def test_duplicate_error(
     hass: HomeAssistant, config_auth, config_entry, config_location_type, setup_watttime
-):
+) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_auth
@@ -95,7 +96,7 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistant, config_entry):
+async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.components.watttime.async_setup_entry", return_value=True

@@ -4,13 +4,12 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
-ICON = "mdi:toggle-switch"
 
 
 async def async_setup_entry(
@@ -54,6 +53,8 @@ async def async_setup_entry(
 
 class SmappeeActuator(SwitchEntity):
     """Representation of a Smappee Comport Plug."""
+
+    _attr_icon = "mdi:toggle-switch"
 
     def __init__(
         self,
@@ -104,11 +105,6 @@ class SmappeeActuator(SwitchEntity):
 
         # Switch or comfort plug
         return self._state == "ON_ON"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on Comport Plug."""

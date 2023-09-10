@@ -44,19 +44,172 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
-  "issues": {
-    "manual_migration": {
-      "title": "Manual migration required for LaMetric",
-      "description": "The LaMetric integration has been modernized: It is now configured and set up via the user interface and the communcations are now local.\n\nUnfortunately, there is no automatic migration path possible and thus requires you to re-set up your LaMetric with Home Assistant. Please consult the Home Assistant LaMetric integration documentation on how to set it up.\n\nRemove the old LaMetric YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
-  },
   "entity": {
+    "button": {
+      "app_next": {
+        "name": "Next app"
+      },
+      "app_previous": {
+        "name": "Previous app"
+      },
+      "dismiss_current": {
+        "name": "Dismiss current notification"
+      },
+      "dismiss_all": {
+        "name": "Dismiss all notifications"
+      }
+    },
+    "sensor": {
+      "rssi": {
+        "name": "Wi-Fi signal"
+      }
+    },
     "select": {
       "brightness_mode": {
+        "name": "Brightness mode",
         "state": {
           "auto": "Automatic",
           "manual": "Manual"
         }
+      }
+    },
+    "switch": {
+      "bluetooth": {
+        "name": "Bluetooth"
+      }
+    }
+  },
+  "services": {
+    "chart": {
+      "name": "Display a chart",
+      "description": "Displays a chart on a LaMetric device.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "The LaMetric device to display the chart on."
+        },
+        "data": {
+          "name": "Data",
+          "description": "The list of data points in the chart."
+        },
+        "sound": {
+          "name": "Sound",
+          "description": "The notification sound to play."
+        },
+        "cycles": {
+          "name": "Cycles",
+          "description": "The number of times to display the message. When set to 0, the message will be displayed until dismissed."
+        },
+        "icon_type": {
+          "name": "Icon type",
+          "description": "The type of icon to display, indicating the nature of the notification."
+        },
+        "priority": {
+          "name": "Priority",
+          "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted."
+        }
+      }
+    },
+    "message": {
+      "name": "Display a message",
+      "description": "Displays a message with an optional icon on a LaMetric device.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::lametric::services::chart::fields::device_id::name%]",
+          "description": "The LaMetric device to display the message on."
+        },
+        "message": {
+          "name": "Message",
+          "description": "The message to display."
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons."
+        },
+        "sound": {
+          "name": "[%key:component::lametric::services::chart::fields::sound::name%]",
+          "description": "[%key:component::lametric::services::chart::fields::sound::description%]"
+        },
+        "cycles": {
+          "name": "[%key:component::lametric::services::chart::fields::cycles::name%]",
+          "description": "[%key:component::lametric::services::chart::fields::cycles::description%]"
+        },
+        "icon_type": {
+          "name": "[%key:component::lametric::services::chart::fields::icon_type::name%]",
+          "description": "[%key:component::lametric::services::chart::fields::icon_type::description%]"
+        },
+        "priority": {
+          "name": "[%key:component::lametric::services::chart::fields::priority::name%]",
+          "description": "[%key:component::lametric::services::chart::fields::priority::description%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sound": {
+      "options": {
+        "alarm1": "Alarm 1",
+        "alarm2": "Alarm 2",
+        "alarm3": "Alarm 3",
+        "alarm4": "Alarm 4",
+        "alarm5": "Alarm 5",
+        "alarm6": "Alarm 6",
+        "alarm7": "Alarm 7",
+        "alarm8": "Alarm 8",
+        "alarm9": "Alarm 9",
+        "alarm10": "Alarm 10",
+        "alarm11": "Alarm 11",
+        "alarm12": "Alarm 12",
+        "alarm13": "Alarm 13",
+        "bicycle": "Bicycle",
+        "car": "Car",
+        "cash": "Cash",
+        "cat": "Cat",
+        "dog": "Dog 1",
+        "dog2": "Dog 2",
+        "energy": "Energy",
+        "knock-knock": "Knock knock",
+        "letter_email": "Letter email",
+        "lose1": "Lose 1",
+        "lose2": "Lose 2",
+        "negative1": "Negative 1",
+        "negative2": "Negative 2",
+        "negative3": "Negative 3",
+        "negative4": "Negative 4",
+        "negative5": "Negative 5",
+        "notification": "Notification 1",
+        "notification2": "Notification 2",
+        "notification3": "Notification 3",
+        "notification4": "Notification 4",
+        "open_door": "Open door",
+        "positive1": "Positive 1",
+        "positive2": "Positive 2",
+        "positive3": "Positive 3",
+        "positive4": "Positive 4",
+        "positive5": "Positive 5",
+        "positive6": "Positive 6",
+        "statistic": "Statistic",
+        "thunder": "Thunder",
+        "water1": "Water 1",
+        "water2": "Water 2",
+        "win": "Win 1",
+        "win2": "Win 2",
+        "wind": "Wind",
+        "wind_short": "Wind short"
+      }
+    },
+    "icon_type": {
+      "options": {
+        "none": "None",
+        "info": "Info",
+        "alert": "Alert"
+      }
+    },
+    "priority": {
+      "options": {
+        "info": "[%key:component::lametric::selector::icon_type::options::info%]",
+        "warning": "Warning",
+        "critical": "Critical"
       }
     }
   }

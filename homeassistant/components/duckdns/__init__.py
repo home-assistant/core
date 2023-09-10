@@ -1,11 +1,19 @@
 """Integrate with DuckDNS."""
-from datetime import timedelta
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
@@ -100,14 +108,18 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
 
 @callback
 @bind_hass
-def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
+def async_track_time_interval_backoff(
+    hass: HomeAssistant,
+    action: Callable[[datetime], Coroutine[Any, Any, bool]],
+    intervals,
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     if not isinstance(intervals, (list, tuple)):
         intervals = (intervals,)
-    remove = None
+    remove: CALLBACK_TYPE | None = None
     failed = 0
 
-    async def interval_listener(now):
+    async def interval_listener(now: datetime) -> None:
         """Handle elapsed intervals with backoff."""
         nonlocal failed, remove
         try:
@@ -116,13 +128,16 @@ def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
                 failed = 0
         finally:
             delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_call_later(hass, delay.total_seconds(), interval_listener)
+            remove = async_call_later(
+                hass, delay.total_seconds(), interval_listener_job
+            )
 
+    interval_listener_job = HassJob(interval_listener, cancel_on_shutdown=True)
     hass.async_run_job(interval_listener, dt_util.utcnow())
 
-    def remove_listener():
+    def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener

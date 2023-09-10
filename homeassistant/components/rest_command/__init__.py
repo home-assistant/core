@@ -125,7 +125,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     headers=headers,
                     timeout=timeout,
                 ) as response:
-
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
                             "Success. Url: %s. Status code: %d. Payload: %s",

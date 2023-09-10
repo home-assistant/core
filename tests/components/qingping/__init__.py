@@ -20,8 +20,9 @@ LIGHT_AND_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
     address="aa:bb:cc:dd:ee:ff",
     rssi=-60,
     service_data={
-        "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12"
-        b"\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
+        "0000fdcd-0000-1000-8000-00805f9b34fb": (
+            b"H\x12\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
+        )
     },
     source="local",
 )

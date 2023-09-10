@@ -23,7 +23,7 @@ DHCP_DATA = {**BASE_DATA, "host": DHCP_IP}
 
 
 @pytest.mark.parametrize(
-    "init_data, init_context, entry",
+    ("init_data", "init_context", "entry"),
     [
         (
             None,

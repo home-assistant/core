@@ -35,7 +35,7 @@ from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,8 @@ class PowerwallDataManager:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
-                # The error might include some important information about what exactly changed.
+                # The error might include some important information
+                # about what exactly changed.
                 persistent_notification.create(
                     self.hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
@@ -109,7 +110,8 @@ class PowerwallDataManager:
                 if self.password is None:
                     raise ConfigEntryAuthFailed from err
                 _LOGGER.debug("Access denied, trying to reauthenticate")
-                # there is still an attempt left to authenticate, so we continue in the loop
+                # there is still an attempt left to authenticate,
+                # so we continue in the loop
             except APIError as err:
                 raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
             else:
@@ -156,6 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         base_info=base_info,
         http_session=http_session,
         coordinator=None,
+        api_instance=power_wall,
     )
 
     manager = PowerwallDataManager(hass, power_wall, ip_address, password, runtime_data)
@@ -166,6 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="Powerwall site",
         update_method=manager.async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        always_update=False,
     )
 
     await coordinator.async_config_entry_first_refresh()

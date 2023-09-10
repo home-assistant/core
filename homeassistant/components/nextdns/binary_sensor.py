@@ -13,8 +13,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,14 +43,14 @@ SENSORS = (
     NextDnsBinarySensorEntityDescription[ConnectionStatus](
         key="this_device_nextdns_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="This device NextDNS connection status",
+        translation_key="device_connection_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         state=lambda data, _: data.connected,
     ),
     NextDnsBinarySensorEntityDescription[ConnectionStatus](
         key="this_device_profile_connection_status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="This device profile connection status",
+        translation_key="device_profile_connection_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         state=lambda data, profile_id: profile_id == data.profile_id,
     ),

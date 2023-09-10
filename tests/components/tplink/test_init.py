@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import DOMAIN
@@ -25,7 +27,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_tplink_causes_discovery(hass):
+async def test_configuring_tplink_causes_discovery(hass: HomeAssistant) -> None:
     """Test that specifying empty config does discovery."""
     with patch("homeassistant.components.tplink.Discover.discover") as discover:
         discover.return_value = {MagicMock(): MagicMock()}
@@ -47,7 +49,7 @@ async def test_configuring_tplink_causes_discovery(hass):
         assert len(discover.mock_calls) == call_count * 4
 
 
-async def test_config_entry_reload(hass):
+async def test_config_entry_reload(hass: HomeAssistant) -> None:
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -62,7 +64,7 @@ async def test_config_entry_reload(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_retry(hass):
+async def test_config_entry_retry(hass: HomeAssistant) -> None:
     """Test that a config entry can be retried."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
@@ -76,7 +78,7 @@ async def test_config_entry_retry(hass):
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_reg: EntityRegistry
-):
+) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
     config_entry.add_to_hass(hass)
@@ -111,3 +113,23 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     )
     assert migrated_dimmer_entity_reg.entity_id == original_dimmer_entity_reg.entity_id
     assert migrated_dimmer_entity_reg.entity_id != rollout_dimmer_entity_reg.entity_id
+
+
+async def test_config_entry_wrong_mac_Address(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config entry enters setup retry when mac address mismatches."""
+    mismatched_mac = f"{MAC_ADDRESS[:-1]}0"
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=mismatched_mac
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    with _patch_discovery(), _patch_single_discovery():
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert (
+        "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:f0, found aa:bb:cc:dd:ee:ff"
+        in caplog.text
+    )

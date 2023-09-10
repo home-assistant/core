@@ -1,5 +1,4 @@
 """The tests for the Traccar device tracker platform."""
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from pytraccar import ReportsEventeModel
@@ -15,12 +14,14 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_capture_events
 
 
-async def test_import_events_catch_all(hass):
+async def test_import_events_catch_all(hass: HomeAssistant) -> None:
     """Test importing all events and firing them in HA using their event types."""
     conf_dict = {
         DOMAIN: TRACCAR_PLATFORM_SCHEMA(
@@ -46,7 +47,7 @@ async def test_import_events_catch_all(hass):
                 "maintenanceId": 1,
                 "deviceId": device["id"],
                 "type": "ignitionOn",
-                "eventTime": datetime.utcnow().isoformat(),
+                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "attributes": {},
             }
         ),
@@ -58,7 +59,7 @@ async def test_import_events_catch_all(hass):
                 "maintenanceId": 1,
                 "deviceId": device["id"],
                 "type": "ignitionOff",
-                "eventTime": datetime.utcnow().isoformat(),
+                "eventTime": dt_util.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "attributes": {},
             }
         ),

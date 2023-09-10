@@ -16,7 +16,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_async_step_bluetooth_valid_device(hass):
+async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -35,7 +35,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_async_step_bluetooth_not_aranet4(hass):
+async def test_async_step_bluetooth_not_aranet4(hass: HomeAssistant) -> None:
     """Test that we reject discovery via Bluetooth for an unrelated device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -45,7 +45,7 @@ async def test_async_step_bluetooth_not_aranet4(hass):
     assert result["type"] == FlowResultType.ABORT
 
 
-async def test_async_step_bluetooth_devices_already_setup(hass):
+async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -> None:
     """Test we can't start a flow if there is already a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -62,7 +62,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_async_step_bluetooth_already_in_progress(hass):
+async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> None:
     """Test we can't start a flow for the same device twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -81,7 +81,9 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_async_step_user_takes_precedence_over_discovery(hass):
+async def test_async_step_user_takes_precedence_over_discovery(
+    hass: HomeAssistant,
+) -> None:
     """Test manual setup takes precedence over discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -115,7 +117,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
 
-async def test_async_step_user_no_devices_found(hass: HomeAssistant):
+async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
     """Test setup from service info cache with no devices found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -125,7 +127,7 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_only_other_devices_found(hass: HomeAssistant):
+async def test_async_step_user_only_other_devices_found(hass: HomeAssistant) -> None:
     """Test setup from service info cache with only other devices found."""
     with patch(
         "homeassistant.components.aranet.config_flow.async_discovered_service_info",
@@ -139,7 +141,7 @@ async def test_async_step_user_only_other_devices_found(hass: HomeAssistant):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_with_found_devices(hass: HomeAssistant):
+async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.aranet.config_flow.async_discovered_service_info",
@@ -162,7 +164,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant):
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_async_step_user_device_added_between_steps(hass: HomeAssistant):
+async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(
         "homeassistant.components.aranet.config_flow.async_discovered_service_info",
@@ -190,7 +192,9 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant):
     assert result2["reason"] == "already_configured"
 
 
-async def test_async_step_user_with_found_devices_already_setup(hass: HomeAssistant):
+async def test_async_step_user_with_found_devices_already_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -210,7 +214,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass: HomeAssist
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_old_firmware(hass: HomeAssistant):
+async def test_async_step_user_old_firmware(hass: HomeAssistant) -> None:
     """Test we can't set up a device with firmware too old to report measurements."""
     with patch(
         "homeassistant.components.aranet.config_flow.async_discovered_service_info",
@@ -231,7 +235,7 @@ async def test_async_step_user_old_firmware(hass: HomeAssistant):
     assert result2["reason"] == "outdated_version"
 
 
-async def test_async_step_user_integrations_disabled(hass: HomeAssistant):
+async def test_async_step_user_integrations_disabled(hass: HomeAssistant) -> None:
     """Test we can't set up a device the device's integration setting disabled."""
     with patch(
         "homeassistant.components.aranet.config_flow.async_discovered_service_info",

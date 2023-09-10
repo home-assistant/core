@@ -55,7 +55,6 @@ from .const import (  # noqa: F401
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -64,7 +63,6 @@ from .const import (  # noqa: F401
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
-    CONF_HUB,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -78,8 +76,11 @@ from .const import (  # noqa: F401
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
+    CONF_MAX_VALUE,
     CONF_MIN_TEMP,
+    CONF_MIN_VALUE,
     CONF_MSG_WAIT,
+    CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_RETRIES,
@@ -102,8 +103,11 @@ from .const import (  # noqa: F401
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
+    CONF_WRITE_REGISTERS,
     CONF_WRITE_TYPE,
+    CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
@@ -118,6 +122,7 @@ from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
     duplicate_modbus_validator,
+    nan_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
@@ -165,7 +170,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT16,
                 DataType.FLOAT32,
                 DataType.FLOAT64,
-                DataType.STRING,
                 DataType.STRING,
                 DataType.CUSTOM,
             ]
@@ -224,23 +228,40 @@ CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+            vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
-                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
+                        vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_HEAT_COOL): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_AUTO): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_DRY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_MODE_FAN_ONLY): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
                     },
+                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
             ),
         }
@@ -249,7 +270,10 @@ CLIMATE_SCHEMA = vol.All(
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING,): vol.In(
+        vol.Optional(
+            CONF_INPUT_TYPE,
+            default=CALL_TYPE_REGISTER_HOLDING,
+        ): vol.In(
             [
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_COIL,
@@ -285,6 +309,10 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_VALUE): number_validator,
+            vol.Optional(CONF_MAX_VALUE): number_validator,
+            vol.Optional(CONF_NAN_VALUE): nan_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
         }
     ),
 )

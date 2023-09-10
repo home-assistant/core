@@ -20,7 +20,7 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
             send(
                 key=entry[CONF_DEVICE_KEY],
                 password=entry[CONF_PASSWORD],
-                salt=entry[CONF_PASSWORD],
+                salt=entry[CONF_SALT],
                 title="HA test",
                 message="Message delivered successfully",
             )
@@ -45,7 +45,6 @@ class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-
             await self.async_set_unique_id(user_input[CONF_DEVICE_KEY])
             self._abort_if_unique_id_configured()
 

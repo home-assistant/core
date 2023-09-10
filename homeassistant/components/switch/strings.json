@@ -2,24 +2,47 @@
   "title": "Switch",
   "device_automation": {
     "action_type": {
-      "toggle": "Toggle {entity_name}",
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "toggle": "[%key:common::device_automation::action_type::toggle%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
     },
     "condition_type": {
-      "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off"
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
     },
     "trigger_type": {
-      "changed_states": "{entity_name} turned on or off",
-      "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off"
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "name": "[%key:component::switch::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
+    "switch": {
+      "name": "[%key:component::switch::entity_component::_::name%]"
+    },
+    "outlet": {
+      "name": "Outlet"
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns a switch on."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns a switch off."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a switch on/off."
     }
   }
 }

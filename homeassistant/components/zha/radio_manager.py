@@ -3,21 +3,25 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from contextlib import suppress
 import copy
+import enum
 import logging
 import os
 from typing import Any
 
+from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
 
+from . import repairs
 from .core.const import (
     CONF_DATABASE,
     CONF_RADIO_TYPE,
@@ -39,8 +43,16 @@ AUTOPROBE_RADIOS = (
     RadioType.zigate,
 )
 
-CONNECT_DELAY_S = 1.0
+RECOMMENDED_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
+)
 
+CONNECT_DELAY_S = 1.0
+RETRY_DELAY_S = 1.0
+
+BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
@@ -64,6 +76,14 @@ HARDWARE_MIGRATION_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ProbeResult(enum.StrEnum):
+    """Radio firmware probing result."""
+
+    RADIO_TYPE_DETECTED = "radio_type_detected"
+    WRONG_FIRMWARE_INSTALLED = "wrong_firmware_installed"
+    PROBING_FAILED = "probing_failed"
 
 
 def _allow_overwrite_ezsp_ieee(
@@ -126,6 +146,8 @@ class ZhaRadioManager:
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
+        app_config[CONF_NWK_BACKUP_ENABLED] = False
+        app_config[CONF_USE_THREAD] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -159,8 +181,10 @@ class ZhaRadioManager:
 
         return RadioType[radio_type]
 
-    async def detect_radio_type(self) -> bool:
+    async def detect_radio_type(self) -> ProbeResult:
         """Probe all radio types on the current port."""
+        assert self.device_path is not None
+
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
@@ -179,9 +203,14 @@ class ZhaRadioManager:
             self.radio_type = radio
             self.device_settings = dev_config
 
-            return True
+            repairs.async_delete_blocking_issues(self.hass)
+            return ProbeResult.RADIO_TYPE_DETECTED
 
-        return False
+        with suppress(repairs.AlreadyRunningEZSP):
+            if await repairs.warn_on_wrong_silabs_firmware(self.hass, self.device_path):
+                return ProbeResult.WRONG_FIRMWARE_INSTALLED
+
+        return ProbeResult.PROBING_FAILED
 
     async def async_load_network_settings(
         self, *, create_backup: bool = False
@@ -206,6 +235,7 @@ class ZhaRadioManager:
 
             # The list of backups will always exist
             self.backups = app.backups.backups.copy()
+            self.backups.sort(reverse=True, key=lambda b: b.backup_time)
 
         return backup
 
@@ -241,11 +271,12 @@ class ZhaRadioManager:
 
             assert self.current_settings is not None
 
+        metadata = self.current_settings.network_info.metadata["ezsp"]
+
         if (
             self.current_settings.node_info.ieee == self.chosen_backup.node_info.ieee
-            or not self.current_settings.network_info.metadata["ezsp"][
-                "can_write_custom_eui64"
-            ]
+            or metadata["can_rewrite_custom_eui64"]
+            or not metadata["can_burn_userdata_custom_eui64"]
         ):
             # No point in prompting the user if the backup doesn't have a new IEEE
             # address or if there is no way to overwrite the IEEE address a second time
@@ -273,7 +304,7 @@ class ZhaMultiPANMigrationHelper:
     """Helper class for automatic migration when upgrading the firmware of a radio.
 
     This class is currently only intended to be used when changing the firmware on the
-    radio used in the Home Assistant Sky Connect USB stick and the Home Assistant Yellow
+    radio used in the Home Assistant SkyConnect USB stick and the Home Assistant Yellow
     from Zigbee only firmware to firmware supporting both Zigbee and Thread.
     """
 
@@ -320,11 +351,9 @@ class ZhaMultiPANMigrationHelper:
             # ZHA is using another radio, do nothing
             return False
 
-        try:
+        # OperationNotAllowed: ZHA is not running
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_unload(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not running
-            pass
 
         # Temporarily connect to the old radio to read its settings
         config_entry_data = self._config_entry.data
@@ -333,7 +362,24 @@ class ZhaMultiPANMigrationHelper:
         old_radio_mgr.device_path = config_entry_data[CONF_DEVICE][CONF_DEVICE_PATH]
         old_radio_mgr.device_settings = config_entry_data[CONF_DEVICE]
         old_radio_mgr.radio_type = RadioType[config_entry_data[CONF_RADIO_TYPE]]
-        backup = await old_radio_mgr.async_load_network_settings(create_backup=True)
+
+        for retry in range(BACKUP_RETRIES):
+            try:
+                backup = await old_radio_mgr.async_load_network_settings(
+                    create_backup=True
+                )
+                break
+            except OSError as err:
+                if retry >= BACKUP_RETRIES - 1:
+                    raise
+
+                _LOGGER.debug(
+                    "Failed to create backup %r, retrying in %s seconds",
+                    err,
+                    RETRY_DELAY_S,
+                )
+
+            await asyncio.sleep(RETRY_DELAY_S)
 
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
@@ -373,16 +419,14 @@ class ZhaMultiPANMigrationHelper:
                 _LOGGER.debug(
                     "Failed to restore backup %r, retrying in %s seconds",
                     err,
-                    CONNECT_DELAY_S,
+                    RETRY_DELAY_S,
                 )
 
-            await asyncio.sleep(CONNECT_DELAY_S)
+            await asyncio.sleep(RETRY_DELAY_S)
 
         _LOGGER.debug("Restored backup after %s retries", retry)
 
         # Launch ZHA again
-        try:
+        # OperationNotAllowed: ZHA is not unloaded
+        with suppress(config_entries.OperationNotAllowed):
             await self._hass.config_entries.async_setup(self._config_entry.entry_id)
-        except config_entries.OperationNotAllowed:
-            # ZHA is not unloaded
-            pass

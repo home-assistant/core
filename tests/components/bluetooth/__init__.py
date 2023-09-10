@@ -1,9 +1,11 @@
 """Tests for the Bluetooth integration."""
 
 
+from contextlib import contextmanager
+import itertools
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -33,6 +35,7 @@ __all__ = (
     "patch_all_discovered_devices",
     "patch_discovered_devices",
     "generate_advertisement_data",
+    "generate_ble_device",
     "MockBleakClient",
 )
 
@@ -46,6 +49,12 @@ ADVERTISEMENT_DATA_DEFAULTS = {
     "tx_power": -127,
 }
 
+BLE_DEVICE_DEFAULTS = {
+    "name": None,
+    "rssi": -127,
+    "details": None,
+}
+
 
 def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     """Generate advertisement data with defaults."""
@@ -53,6 +62,28 @@ def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
     for key, value in ADVERTISEMENT_DATA_DEFAULTS.items():
         new.setdefault(key, value)
     return AdvertisementData(**new)
+
+
+def generate_ble_device(
+    address: str | None = None,
+    name: str | None = None,
+    details: Any | None = None,
+    rssi: int | None = None,
+    **kwargs: Any,
+) -> BLEDevice:
+    """Generate a BLEDevice with defaults."""
+    new = kwargs.copy()
+    if address is not None:
+        new["address"] = address
+    if name is not None:
+        new["name"] = name
+    if details is not None:
+        new["details"] = details
+    if rssi is not None:
+        new["rssi"] = rssi
+    for key, value in BLE_DEVICE_DEFAULTS.items():
+        new.setdefault(key, value)
+    return BLEDevice(**new)
 
 
 def _get_manager() -> BluetoothManager:
@@ -126,7 +157,7 @@ def inject_bluetooth_service_info_bleak(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -152,7 +183,7 @@ def inject_bluetooth_service_info(
         service_uuids=info.service_uuids,
         rssi=info.rssi,
     )
-    device = BLEDevice(  # type: ignore[no-untyped-call]
+    device = generate_ble_device(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
@@ -160,20 +191,46 @@ def inject_bluetooth_service_info(
     inject_advertisement(hass, device, advertisement_data)
 
 
+@contextmanager
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
-    return patch.object(
-        _get_manager(),
-        "_async_all_discovered_addresses",
-        return_value={ble_device.address for ble_device in mock_discovered},
+    manager = _get_manager()
+    original_history = {}
+    scanners = list(
+        itertools.chain(
+            manager._connectable_scanners, manager._non_connectable_scanners
+        )
     )
+    for scanner in scanners:
+        data = scanner.discovered_devices_and_advertisement_data
+        original_history[scanner] = data.copy()
+        data.clear()
+    if scanners:
+        data = scanners[0].discovered_devices_and_advertisement_data
+        data.clear()
+        data.update(
+            {device.address: (device, MagicMock()) for device in mock_discovered}
+        )
+    yield
+    for scanner in scanners:
+        data = scanner.discovered_devices_and_advertisement_data
+        data.clear()
+        data.update(original_history[scanner])
 
 
+@contextmanager
 def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock the combined best path to discovered devices from all the scanners."""
-    return patch.object(
-        _get_manager(), "async_discovered_devices", return_value=mock_discovered
-    )
+    manager = _get_manager()
+    original_all_history = manager._all_history
+    original_connectable_history = manager._connectable_history
+    manager._connectable_history = {}
+    manager._all_history = {
+        device.address: MagicMock(device=device) for device in mock_discovered
+    }
+    yield
+    manager._all_history = original_all_history
+    manager._connectable_history = original_connectable_history
 
 
 async def async_setup_with_default_adapter(hass: HomeAssistant) -> MockConfigEntry:

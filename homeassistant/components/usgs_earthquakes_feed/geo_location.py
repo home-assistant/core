@@ -165,7 +165,9 @@ class UsgsEarthquakesFeedEntityManager:
             await self.async_update()
 
         # Trigger updates at regular intervals.
-        async_track_time_interval(self._hass, update, self._scan_interval)
+        async_track_time_interval(
+            self._hass, update, self._scan_interval, cancel_on_shutdown=True
+        )
         _LOGGER.debug("Feed entity manager initialized")
 
     async def async_update(self) -> None:
@@ -195,7 +197,7 @@ class UsgsEarthquakesFeedEntityManager:
 
 
 class UsgsEarthquakesEvent(GeolocationEvent):
-    """This represents an external event with USGS Earthquake data."""
+    """Represents an external event with USGS Earthquake data."""
 
     _attr_icon = "mdi:pulse"
     _attr_should_poll = False

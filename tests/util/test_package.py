@@ -1,12 +1,12 @@
 """Test Home Assistant package util methods."""
 import asyncio
+from importlib.metadata import PackageNotFoundError, metadata
 import logging
 import os
 from subprocess import PIPE
 import sys
 from unittest.mock import MagicMock, call, patch
 
-import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
@@ -84,7 +84,7 @@ def mock_async_subprocess():
     return async_popen
 
 
-def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test an install attempt on a package that doesn't exist."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False)
@@ -95,11 +95,12 @@ def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test an upgrade attempt on a package."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ)
@@ -118,11 +119,12 @@ def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test an install with a target."""
     target = "target_folder"
     env = mock_env_copy()
@@ -142,19 +144,21 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv):
     assert package.install_package(TEST_NEW_REQ, False, target=target)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env
+        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env, close_fds=False
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_target_venv(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install_target_venv(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test an install with a target in a virtual environment."""
     target = "target_folder"
     with pytest.raises(AssertionError):
         package.install_package(TEST_NEW_REQ, False, target=target)
 
 
-def test_install_error(caplog, mock_sys, mock_popen, mock_venv):
+def test_install_error(
+    caplog: pytest.LogCaptureFixture, mock_sys, mock_popen, mock_venv
+) -> None:
     """Test an install that errors out."""
     caplog.set_level(logging.WARNING)
     mock_popen.return_value.returncode = 1
@@ -164,7 +168,7 @@ def test_install_error(caplog, mock_sys, mock_popen, mock_venv):
         assert record.levelname == "ERROR"
 
 
-def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test install with constraint file on not installed package."""
     env = mock_env_copy()
     constraints = "constraints_file.txt"
@@ -185,11 +189,12 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
+def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     """Test install with find-links on not installed package."""
     env = mock_env_copy()
     link = "https://wheels-repository"
@@ -211,11 +216,12 @@ def test_install_find_links(mock_sys, mock_popen, mock_env_copy, mock_venv):
         stdout=PIPE,
         stderr=PIPE,
         env=env,
+        close_fds=False,
     )
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-async def test_async_get_user_site(mock_env_copy):
+async def test_async_get_user_site(mock_env_copy) -> None:
     """Test async get user site directory."""
     deps_dir = "/deps_dir"
     env = mock_env_copy()
@@ -233,15 +239,16 @@ async def test_async_get_user_site(mock_env_copy):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
         env=env,
+        close_fds=False,
     )
     assert ret == os.path.join(deps_dir, "lib_dir")
 
 
-def test_check_package_global():
+def test_check_package_global() -> None:
     """Test for an installed package."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     assert package.is_installed(installed_package)
     assert package.is_installed(f"{installed_package}=={installed_version}")
@@ -250,20 +257,20 @@ def test_check_package_global():
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_zip():
+def test_check_package_zip() -> None:
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
 
 
-def test_get_distribution_falls_back_to_version():
+def test_get_distribution_falls_back_to_version() -> None:
     """Test for get_distribution failing and fallback to version."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     with patch(
-        "homeassistant.util.package.pkg_resources.get_distribution",
-        side_effect=pkg_resources.ExtractionError,
+        "homeassistant.util.package.distribution",
+        side_effect=PackageNotFoundError,
     ):
         assert package.is_installed(installed_package)
         assert package.is_installed(f"{installed_package}=={installed_version}")
@@ -272,15 +279,15 @@ def test_get_distribution_falls_back_to_version():
         assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_previous_failed_install():
+def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
-    first_package = list(pkg_resources.working_set)[0]
-    installed_package = first_package.project_name
-    installed_version = first_package.version
+    pkg = metadata("homeassistant")
+    installed_package = pkg["name"]
+    installed_version = pkg["version"]
 
     with patch(
-        "homeassistant.util.package.pkg_resources.get_distribution",
-        side_effect=pkg_resources.ExtractionError,
+        "homeassistant.util.package.distribution",
+        side_effect=PackageNotFoundError,
     ), patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")

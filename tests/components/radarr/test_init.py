@@ -11,7 +11,7 @@ from . import create_entry, patch_radarr, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test unload."""
     entry = await setup_integration(hass, aioclient_mock)
     assert entry.state == ConfigEntryState.LOADED
@@ -25,7 +25,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
 
 async def test_async_setup_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = await setup_integration(hass, aioclient_mock, connection_error=True)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -33,7 +33,7 @@ async def test_async_setup_entry_not_ready(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_auth_failed(hass: HomeAssistant):
+async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     entry = create_entry(hass)
     with patch_radarr() as radarrmock:
@@ -44,12 +44,14 @@ async def test_async_setup_entry_auth_failed(hass: HomeAssistant):
         assert not hass.data.get(DOMAIN)
 
 
-async def test_device_info(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+async def test_device_info(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test device info."""
     entry = await setup_integration(hass, aioclient_mock)
     device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "http://192.168.1.189:7887/test"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

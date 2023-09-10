@@ -6,8 +6,12 @@ from aiohttp import web
 
 from homeassistant.components.http.request_context import setup_request_context
 
+from tests.typing import ClientSessionGenerator
 
-async def test_request_context_middleware(aiohttp_client):
+
+async def test_request_context_middleware(
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
     """Test that request context is set from middleware."""
     context = ContextVar("request", default=None)
     app = web.Application()

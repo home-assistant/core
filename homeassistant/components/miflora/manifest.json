@@ -1,8 +1,0 @@
-{
-  "domain": "miflora",
-  "name": "Mi Flora",
-  "documentation": "https://www.home-assistant.io/integrations/miflora",
-  "requirements": [],
-  "codeowners": ["@danielhiversen", "@basnijholt"],
-  "iot_class": "local_polling"
-}

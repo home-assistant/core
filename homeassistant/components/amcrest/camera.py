@@ -20,13 +20,12 @@ from homeassistant.components.camera import (
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -146,7 +145,7 @@ async def async_setup_platform(
     # with this version, update the old entity with the new unique id.
     serial_number = await device.api.async_serial_number
     serial_number = serial_number.strip()
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
     if entity_id is not None:
         _LOGGER.debug("Updating unique id for camera %s", entity_id)

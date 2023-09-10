@@ -1,4 +1,4 @@
-"""This component provides HA sensor support for Travis CI framework."""
+"""Component providing HA sensor support for Travis CI framework."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -141,7 +141,7 @@ class TravisCISensor(SensorEntity):
 
     def __init__(
         self, data, repo_name, user, branch, description: SensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._build = None

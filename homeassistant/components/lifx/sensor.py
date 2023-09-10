@@ -10,19 +10,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_RSSI, DOMAIN
-from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
-from .entity import LIFXSensorEntity
+from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 RSSI_SENSOR = SensorEntityDescription(
     key=ATTR_RSSI,
-    name="RSSI",
+    translation_key="rssi",
     device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=SensorStateClass.MEASUREMENT,
@@ -35,25 +35,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up LIFX sensor from config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([LIFXRssiSensor(coordinator.sensor_coordinator, RSSI_SENSOR)])
+    async_add_entities([LIFXRssiSensor(coordinator, RSSI_SENSOR)])
 
 
-class LIFXRssiSensor(LIFXSensorEntity, SensorEntity):
+class LIFXRssiSensor(LIFXEntity, SensorEntity):
     """LIFX RSSI sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXSensorUpdateCoordinator,
+        coordinator: LIFXUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise the RSSI sensor."""
 
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
 
     @callback

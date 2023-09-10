@@ -1,5 +1,6 @@
 """Verify that WeMo device triggers work as expected."""
 import pytest
+from pytest_unordered import unordered
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -13,13 +14,10 @@ from homeassistant.const import (
     CONF_TYPE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 MOCK_DEVICE_ID = "some-device-id"
 DATA_MESSAGE = {"message": "service-called"}
@@ -55,7 +53,7 @@ async def setup_automation(hass, device_id, trigger_type):
     )
 
 
-async def test_get_triggers(hass, wemo_entity):
+async def test_get_triggers(hass: HomeAssistant, wemo_entity) -> None:
     """Test that the triggers appear for a supported device."""
     assert wemo_entity.device_id is not None
 
@@ -70,7 +68,7 @@ async def test_get_triggers(hass, wemo_entity):
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "changed_states",
             "metadata": {"secondary": False},
@@ -78,7 +76,7 @@ async def test_get_triggers(hass, wemo_entity):
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
             "metadata": {"secondary": False},
@@ -86,7 +84,7 @@ async def test_get_triggers(hass, wemo_entity):
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
             CONF_DOMAIN: Platform.SWITCH,
-            CONF_ENTITY_ID: wemo_entity.entity_id,
+            CONF_ENTITY_ID: wemo_entity.id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",
             "metadata": {"secondary": False},
@@ -95,10 +93,10 @@ async def test_get_triggers(hass, wemo_entity):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, wemo_entity.device_id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
-async def test_fires_on_long_press(hass):
+async def test_fires_on_long_press(hass: HomeAssistant) -> None:
     """Test wemo long press trigger firing."""
     assert await setup_automation(hass, MOCK_DEVICE_ID, EVENT_TYPE_LONG_PRESS)
     calls = async_mock_service(hass, "test", "automation")

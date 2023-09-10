@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from aiobafi6 import Device
 
@@ -39,9 +39,8 @@ class BAFBinarySensorDescription(
 OCCUPANCY_SENSORS = (
     BAFBinarySensorDescription(
         key="occupancy",
-        name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=lambda device: cast(Optional[bool], device.fan_occupancy_detected),
+        value_fn=lambda device: cast(bool | None, device.fan_occupancy_detected),
     ),
 )
 
@@ -70,7 +69,7 @@ class BAFBinarySensor(BAFEntity, BinarySensorEntity):
     def __init__(self, device: Device, description: BAFBinarySensorDescription) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(device, f"{device.name} {description.name}")
+        super().__init__(device)
         self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback

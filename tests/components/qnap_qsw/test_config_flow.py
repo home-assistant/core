@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == SOURCE_USER
+        assert result["step_id"] == "user"
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
@@ -101,7 +101,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_form_unique_id_error(hass: HomeAssistant):
+async def test_form_unique_id_error(hass: HomeAssistant) -> None:
     """Test unique ID error."""
 
     system_board = MagicMock()
@@ -119,7 +119,7 @@ async def test_form_unique_id_error(hass: HomeAssistant):
         assert result["reason"] == "invalid_id"
 
 
-async def test_connection_error(hass: HomeAssistant):
+async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection to host error."""
 
     with patch(
@@ -133,7 +133,7 @@ async def test_connection_error(hass: HomeAssistant):
         assert result["errors"] == {CONF_URL: "cannot_connect"}
 
 
-async def test_login_error(hass: HomeAssistant):
+async def test_login_error(hass: HomeAssistant) -> None:
     """Test login error."""
 
     with patch(
@@ -210,7 +210,7 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_dhcp_connection_error(hass: HomeAssistant):
+async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
     """Test DHCP connection to host error."""
 
     with patch(
@@ -241,7 +241,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_dhcp_login_error(hass: HomeAssistant):
+async def test_dhcp_login_error(hass: HomeAssistant) -> None:
     """Test DHCP login error."""
 
     with patch(

@@ -5,12 +5,13 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Literal, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
@@ -112,12 +113,12 @@ class ElectricityTypeData:
     voltage: str | None = None
 
     @classmethod
-    def from_json(cls, data: str) -> ElectricityTypeData:
+    def from_json(cls, data: str) -> Self:
         """Load JSON string and return a ElectricityTypeData object."""
         return cls(**json.loads(data.lower()))
 
     @classmethod
-    def from_raw(cls, data: str) -> ElectricityTypeData:
+    def from_raw(cls, data: str) -> Self:
         """Decode base64 string and return a ElectricityTypeData object."""
         raw = base64.b64decode(data)
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0

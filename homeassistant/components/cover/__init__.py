@@ -4,15 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import functools as ft
 import logging
-from typing import Any, TypeVar, final
+from typing import Any, ParamSpec, TypeVar, final
 
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,

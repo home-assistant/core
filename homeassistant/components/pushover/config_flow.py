@@ -89,7 +89,6 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self._async_abort_entries_match(
                 {
                     CONF_USER_KEY: user_input[CONF_USER_KEY],

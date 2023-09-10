@@ -43,6 +43,7 @@ async def async_setup_entry(
 class SomaTilt(SomaEntity, CoverEntity):
     """Representation of a Soma Tilt device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
@@ -109,7 +110,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 
         api_position = int(response["position"])
 
-        if "closed_upwards" in response.keys():
+        if "closed_upwards" in response:
             self.current_position = 50 + ((api_position * 50) / 100)
         else:
             self.current_position = 50 - ((api_position * 50) / 100)
@@ -118,6 +119,7 @@ class SomaTilt(SomaEntity, CoverEntity):
 class SomaShade(SomaEntity, CoverEntity):
     """Representation of a Soma Shade device."""
 
+    _attr_name = None
     _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = (
         CoverEntityFeature.OPEN

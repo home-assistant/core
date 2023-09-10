@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from functools import partial
 
-from abodepy import Abode, AbodeAutomation as AbodeAuto
-from abodepy.devices import AbodeDevice as AbodeDev
-from abodepy.exceptions import AbodeAuthenticationException, AbodeException
-import abodepy.helpers.timeline as TIMELINE
+from jaraco.abode.automation import Automation as AbodeAuto
+from jaraco.abode.client import Client as Abode
+from jaraco.abode.devices.base import Device as AbodeDev
+from jaraco.abode.exceptions import (
+    AuthenticationException as AbodeAuthenticationException,
+    Exception as AbodeException,
+)
+from jaraco.abode.helpers.timeline import Groups as GROUPS
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -24,9 +28,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
+from .const import ATTRIBUTION, CONF_POLLING, DOMAIN, LOGGER
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -82,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     polling = entry.data[CONF_POLLING]
-    cache = hass.config.path(DEFAULT_CACHEDB)
 
     # For previous config entries where unique_id is None
     if entry.unique_id is None:
@@ -92,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         abode = await hass.async_add_executor_job(
-            Abode, username, password, True, True, True, cache
+            Abode, username, password, True, True, True
         )
 
     except AbodeAuthenticationException as ex:
@@ -225,17 +229,17 @@ def setup_abode_events(hass: HomeAssistant) -> None:
         hass.bus.fire(event, data)
 
     events = [
-        TIMELINE.ALARM_GROUP,
-        TIMELINE.ALARM_END_GROUP,
-        TIMELINE.PANEL_FAULT_GROUP,
-        TIMELINE.PANEL_RESTORE_GROUP,
-        TIMELINE.AUTOMATION_GROUP,
-        TIMELINE.DISARM_GROUP,
-        TIMELINE.ARM_GROUP,
-        TIMELINE.ARM_FAULT_GROUP,
-        TIMELINE.TEST_GROUP,
-        TIMELINE.CAPTURE_GROUP,
-        TIMELINE.DEVICE_GROUP,
+        GROUPS.ALARM,
+        GROUPS.ALARM_END,
+        GROUPS.PANEL_FAULT,
+        GROUPS.PANEL_RESTORE,
+        GROUPS.AUTOMATION,
+        GROUPS.DISARM,
+        GROUPS.ARM,
+        GROUPS.ARM_FAULT,
+        GROUPS.TEST,
+        GROUPS.CAPTURE,
+        GROUPS.DEVICE,
     ]
 
     for event in events:
@@ -284,14 +288,14 @@ class AbodeDevice(AbodeEntity):
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_unique_id = device.device_uuid
+        self._attr_unique_id = device.uuid
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
             self._data.abode.events.add_device_callback,
-            self._device.device_id,
+            self._device.id,
             self._update_callback,
         )
 
@@ -299,7 +303,7 @@ class AbodeDevice(AbodeEntity):
         """Unsubscribe from device events."""
         await super().async_will_remove_from_hass()
         await self.hass.async_add_executor_job(
-            self._data.abode.events.remove_all_device_callbacks, self._device.device_id
+            self._data.abode.events.remove_all_device_callbacks, self._device.id
         )
 
     def update(self) -> None:
@@ -310,17 +314,17 @@ class AbodeDevice(AbodeEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            "device_id": self._device.device_id,
+            "device_id": self._device.id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
             "device_type": self._device.type,
         }
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return entity.DeviceInfo(
-            identifiers={(DOMAIN, self._device.device_id)},
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.id)},
             manufacturer="Abode",
             model=self._device.type,
             name=self._device.name,

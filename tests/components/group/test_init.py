@@ -1,5 +1,4 @@
 """The tests for the Group components."""
-# pylint: disable=protected-access
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -31,7 +30,7 @@ from . import common
 from tests.common import MockConfigEntry, assert_setup_component
 
 
-async def test_setup_group_with_mixed_groupable_states(hass):
+async def test_setup_group_with_mixed_groupable_states(hass: HomeAssistant) -> None:
     """Try to set up a group with mixed groupable states."""
 
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -48,7 +47,7 @@ async def test_setup_group_with_mixed_groupable_states(hass):
     assert hass.states.get(f"{group.DOMAIN}.person_and_light").state == STATE_ON
 
 
-async def test_setup_group_with_a_non_existing_state(hass):
+async def test_setup_group_with_a_non_existing_state(hass: HomeAssistant) -> None:
     """Try to set up a group with a non existing state."""
     hass.states.async_set("light.Bowl", STATE_ON)
 
@@ -61,7 +60,7 @@ async def test_setup_group_with_a_non_existing_state(hass):
     assert grp.state == STATE_ON
 
 
-async def test_setup_group_with_non_groupable_states(hass):
+async def test_setup_group_with_non_groupable_states(hass: HomeAssistant) -> None:
     """Test setup with groups which are not groupable."""
     hass.states.async_set("cast.living_room", "Plex")
     hass.states.async_set("cast.bedroom", "Netflix")
@@ -75,14 +74,14 @@ async def test_setup_group_with_non_groupable_states(hass):
     assert grp.state is None
 
 
-async def test_setup_empty_group(hass):
+async def test_setup_empty_group(hass: HomeAssistant) -> None:
     """Try to set up an empty group."""
     grp = await group.Group.async_create_group(hass, "nothing", [])
 
     assert grp.state is None
 
 
-async def test_monitor_group(hass):
+async def test_monitor_group(hass: HomeAssistant) -> None:
     """Test if the group keeps track of states."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -101,7 +100,7 @@ async def test_monitor_group(hass):
     assert group_state.attributes.get(group.ATTR_AUTO)
 
 
-async def test_group_turns_off_if_all_off(hass):
+async def test_group_turns_off_if_all_off(hass: HomeAssistant) -> None:
     """Test if turn off if the last device that was on turns off."""
     hass.states.async_set("light.Bowl", STATE_OFF)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -118,7 +117,9 @@ async def test_group_turns_off_if_all_off(hass):
     assert group_state.state == STATE_OFF
 
 
-async def test_group_turns_on_if_all_are_off_and_one_turns_on(hass):
+async def test_group_turns_on_if_all_are_off_and_one_turns_on(
+    hass: HomeAssistant,
+) -> None:
     """Test if turn on if all devices were turned off and one turns on."""
     hass.states.async_set("light.Bowl", STATE_OFF)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -137,7 +138,9 @@ async def test_group_turns_on_if_all_are_off_and_one_turns_on(hass):
     assert group_state.state == STATE_ON
 
 
-async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(hass):
+async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(
+    hass: HomeAssistant,
+) -> None:
     """Group with all: true, stay off if one device turns on."""
     hass.states.async_set("light.Bowl", STATE_OFF)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -156,7 +159,7 @@ async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(hass):
     assert group_state.state == STATE_OFF
 
 
-async def test_allgroup_turn_on_if_last_turns_on(hass):
+async def test_allgroup_turn_on_if_last_turns_on(hass: HomeAssistant) -> None:
     """Group with all: true, turn on if all devices are on."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -175,7 +178,7 @@ async def test_allgroup_turn_on_if_last_turns_on(hass):
     assert group_state.state == STATE_ON
 
 
-async def test_expand_entity_ids(hass):
+async def test_expand_entity_ids(hass: HomeAssistant) -> None:
     """Test expand_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -191,7 +194,9 @@ async def test_expand_entity_ids(hass):
     )
 
 
-async def test_expand_entity_ids_does_not_return_duplicates(hass):
+async def test_expand_entity_ids_does_not_return_duplicates(
+    hass: HomeAssistant,
+) -> None:
     """Test that expand_entity_ids does not return duplicates."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -211,7 +216,7 @@ async def test_expand_entity_ids_does_not_return_duplicates(hass):
     )
 
 
-async def test_expand_entity_ids_recursive(hass):
+async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
     """Test expand_entity_ids method with a group that contains itself."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -230,12 +235,12 @@ async def test_expand_entity_ids_recursive(hass):
     )
 
 
-async def test_expand_entity_ids_ignores_non_strings(hass):
+async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
     """Test that non string elements in lists are ignored."""
     assert [] == group.expand_entity_ids(hass, [5, True])
 
 
-async def test_get_entity_ids(hass):
+async def test_get_entity_ids(hass: HomeAssistant) -> None:
     """Test get_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -251,7 +256,7 @@ async def test_get_entity_ids(hass):
     )
 
 
-async def test_get_entity_ids_with_domain_filter(hass):
+async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
     """Test if get_entity_ids works with a domain_filter."""
     hass.states.async_set("switch.AC", STATE_OFF)
 
@@ -266,17 +271,19 @@ async def test_get_entity_ids_with_domain_filter(hass):
     )
 
 
-async def test_get_entity_ids_with_non_existing_group_name(hass):
+async def test_get_entity_ids_with_non_existing_group_name(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non existing group."""
     assert [] == group.get_entity_ids(hass, "non_existing")
 
 
-async def test_get_entity_ids_with_non_group_state(hass):
+async def test_get_entity_ids_with_non_group_state(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non group state."""
     assert [] == group.get_entity_ids(hass, "switch.AC")
 
 
-async def test_group_being_init_before_first_tracked_state_is_set_to_on(hass):
+async def test_group_being_init_before_first_tracked_state_is_set_to_on(
+    hass: HomeAssistant,
+) -> None:
     """Test if the groups turn on.
 
     If no states existed and now a state it is tracking is being added
@@ -297,7 +304,9 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_on(hass):
     assert group_state.state == STATE_ON
 
 
-async def test_group_being_init_before_first_tracked_state_is_set_to_off(hass):
+async def test_group_being_init_before_first_tracked_state_is_set_to_off(
+    hass: HomeAssistant,
+) -> None:
     """Test if the group turns off.
 
     If no states existed and now a state it is tracking is being added
@@ -316,7 +325,7 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_off(hass):
     assert group_state.state == STATE_OFF
 
 
-async def test_groups_get_unique_names(hass):
+async def test_groups_get_unique_names(hass: HomeAssistant) -> None:
     """Two groups with same name should both have a unique entity id."""
 
     assert await async_setup_component(hass, "group", {})
@@ -327,7 +336,7 @@ async def test_groups_get_unique_names(hass):
     assert grp1.entity_id != grp2.entity_id
 
 
-async def test_expand_entity_ids_expands_nested_groups(hass):
+async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> None:
     """Test if entity ids epands to nested groups."""
 
     assert await async_setup_component(hass, "group", {})
@@ -350,7 +359,7 @@ async def test_expand_entity_ids_expands_nested_groups(hass):
     ] == sorted(group.expand_entity_ids(hass, ["group.group_of_groups"]))
 
 
-async def test_set_assumed_state_based_on_tracked(hass):
+async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
     """Test assumed state."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -377,7 +386,9 @@ async def test_set_assumed_state_based_on_tracked(hass):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_group_updated_after_device_tracker_zone_change(hass):
+async def test_group_updated_after_device_tracker_zone_change(
+    hass: HomeAssistant,
+) -> None:
     """Test group state when device tracker in group changes zone."""
     hass.states.async_set("device_tracker.Adam", STATE_HOME)
     hass.states.async_set("device_tracker.Eve", STATE_NOT_HOME)
@@ -395,7 +406,7 @@ async def test_group_updated_after_device_tracker_zone_change(hass):
     assert hass.states.get(f"{group.DOMAIN}.peeps").state == STATE_NOT_HOME
 
 
-async def test_is_on(hass):
+async def test_is_on(hass: HomeAssistant) -> None:
     """Test is_on method."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -419,7 +430,7 @@ async def test_is_on(hass):
     assert not group.is_on(hass, "non.existing")
 
 
-async def test_reloading_groups(hass):
+async def test_reloading_groups(hass: HomeAssistant) -> None:
     """Test reloading the group config."""
     assert await async_setup_component(
         hass,
@@ -471,7 +482,7 @@ async def test_reloading_groups(hass):
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
 
-async def test_modify_group(hass):
+async def test_modify_group(hass: HomeAssistant) -> None:
     """Test modifying a group."""
     group_conf = OrderedDict()
     group_conf["modify_group"] = {
@@ -497,7 +508,7 @@ async def test_modify_group(hass):
     assert group_state.attributes.get(ATTR_FRIENDLY_NAME) == "friendly_name"
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup method."""
     hass.states.async_set("light.Bowl", STATE_ON)
     hass.states.async_set("light.Ceiling", STATE_OFF)
@@ -540,7 +551,7 @@ async def test_setup(hass):
     assert group_state.attributes.get(group.ATTR_ORDER) == 0
 
 
-async def test_service_group_services(hass):
+async def test_service_group_services(hass: HomeAssistant) -> None:
     """Check if service are available."""
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
@@ -549,8 +560,63 @@ async def test_service_group_services(hass):
     assert hass.services.has_service("group", group.SERVICE_REMOVE)
 
 
-# pylint: disable=invalid-name
-async def test_service_group_set_group_remove_group(hass):
+async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -> None:
+    """Check if we can add and remove entities from group."""
+
+    hass.states.async_set("person.one", "Work")
+    hass.states.async_set("person.two", "Work")
+    hass.states.async_set("person.three", "home")
+
+    assert await async_setup_component(hass, "person", {})
+    with assert_setup_component(0, "group"):
+        await async_setup_component(hass, "group", {"group": {}})
+
+    assert hass.services.has_service("group", group.SERVICE_SET)
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_SET,
+        {
+            "object_id": "new_group",
+            "name": "New Group",
+            "entities": ["person.one", "person.two"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("group.new_group")
+    assert group_state.state == "not_home"
+    assert group_state.attributes["friendly_name"] == "New Group"
+    assert list(group_state.attributes["entity_id"]) == ["person.one", "person.two"]
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_SET,
+        {
+            "object_id": "new_group",
+            "add_entities": "person.three",
+        },
+    )
+    await hass.async_block_till_done()
+    group_state = hass.states.get("group.new_group")
+    assert group_state.state == "home"
+    assert "person.three" in list(group_state.attributes["entity_id"])
+
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_SET,
+        {
+            "object_id": "new_group",
+            "remove_entities": "person.one",
+        },
+    )
+    await hass.async_block_till_done()
+    group_state = hass.states.get("group.new_group")
+    assert group_state.state == "home"
+    assert "person.one" not in list(group_state.attributes["entity_id"])
+
+
+async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None:
     """Check if service are available."""
     with assert_setup_component(0, "group"):
         await async_setup_component(hass, "group", {"group": {}})
@@ -597,7 +663,7 @@ async def test_service_group_set_group_remove_group(hass):
     assert group_state is None
 
 
-async def test_group_order(hass):
+async def test_group_order(hass: HomeAssistant) -> None:
     """Test that order gets incremented when creating a new group."""
     hass.states.async_set("light.bowl", STATE_ON)
 
@@ -620,7 +686,7 @@ async def test_group_order(hass):
     assert hass.states.get("group.group_two").attributes["order"] == 2
 
 
-async def test_group_order_with_dynamic_creation(hass):
+async def test_group_order_with_dynamic_creation(hass: HomeAssistant) -> None:
     """Test that order gets incremented when creating a new group."""
     hass.states.async_set("light.bowl", STATE_ON)
 
@@ -672,7 +738,7 @@ async def test_group_order_with_dynamic_creation(hass):
     assert hass.states.get("group.new_group2").attributes["order"] == 4
 
 
-async def test_group_persons(hass):
+async def test_group_persons(hass: HomeAssistant) -> None:
     """Test group of persons."""
     hass.states.async_set("person.one", "Work")
     hass.states.async_set("person.two", "Work")
@@ -693,7 +759,7 @@ async def test_group_persons(hass):
     assert hass.states.get("group.group_zero").state == "home"
 
 
-async def test_group_persons_and_device_trackers(hass):
+async def test_group_persons_and_device_trackers(hass: HomeAssistant) -> None:
     """Test group of persons and device_tracker."""
     hass.states.async_set("person.one", "Work")
     hass.states.async_set("person.two", "Work")
@@ -718,7 +784,7 @@ async def test_group_persons_and_device_trackers(hass):
     assert hass.states.get("group.group_zero").state == "home"
 
 
-async def test_group_mixed_domains_on(hass):
+async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
     """Test group of mixed domains that is on."""
     hass.states.async_set("lock.alexander_garage_exit_door", "unlocked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
@@ -743,7 +809,7 @@ async def test_group_mixed_domains_on(hass):
     assert hass.states.get("group.group_zero").state == "on"
 
 
-async def test_group_mixed_domains_off(hass):
+async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     """Test group of mixed domains that is off."""
     hass.states.async_set("lock.alexander_garage_exit_door", "locked")
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
@@ -769,13 +835,13 @@ async def test_group_mixed_domains_off(hass):
 
 
 @pytest.mark.parametrize(
-    "states,group_state",
+    ("states", "group_state"),
     [
         (("locked", "locked", "unlocked"), "unlocked"),
         (("locked", "locked", "locked"), "locked"),
     ],
 )
-async def test_group_locks(hass, states, group_state):
+async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:
     """Test group of locks."""
     hass.states.async_set("lock.one", states[0])
     hass.states.async_set("lock.two", states[1])
@@ -796,7 +862,7 @@ async def test_group_locks(hass, states, group_state):
     assert hass.states.get("group.group_zero").state == group_state
 
 
-async def test_group_sensors(hass):
+async def test_group_sensors(hass: HomeAssistant) -> None:
     """Test group of sensors."""
     hass.states.async_set("sensor.one", "locked")
     hass.states.async_set("sensor.two", "on")
@@ -817,7 +883,7 @@ async def test_group_sensors(hass):
     assert hass.states.get("group.group_zero").state == "unknown"
 
 
-async def test_group_climate_mixed(hass):
+async def test_group_climate_mixed(hass: HomeAssistant) -> None:
     """Test group of climate with mixed states."""
     hass.states.async_set("climate.one", "off")
     hass.states.async_set("climate.two", "cool")
@@ -838,7 +904,7 @@ async def test_group_climate_mixed(hass):
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_group_climate_all_cool(hass):
+async def test_group_climate_all_cool(hass: HomeAssistant) -> None:
     """Test group of climate all set to cool."""
     hass.states.async_set("climate.one", "cool")
     hass.states.async_set("climate.two", "cool")
@@ -859,7 +925,7 @@ async def test_group_climate_all_cool(hass):
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_group_climate_all_off(hass):
+async def test_group_climate_all_off(hass: HomeAssistant) -> None:
     """Test group of climate all set to off."""
     hass.states.async_set("climate.one", "off")
     hass.states.async_set("climate.two", "off")
@@ -880,7 +946,7 @@ async def test_group_climate_all_off(hass):
     assert hass.states.get("group.group_zero").state == STATE_OFF
 
 
-async def test_group_alarm(hass):
+async def test_group_alarm(hass: HomeAssistant) -> None:
     """Test group of alarm control panels."""
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
@@ -905,7 +971,7 @@ async def test_group_alarm(hass):
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_group_alarm_disarmed(hass):
+async def test_group_alarm_disarmed(hass: HomeAssistant) -> None:
     """Test group of alarm control panels disarmed."""
     hass.states.async_set("alarm_control_panel.one", "disarmed")
     hass.states.async_set("alarm_control_panel.two", "disarmed")
@@ -928,7 +994,7 @@ async def test_group_alarm_disarmed(hass):
     assert hass.states.get("group.group_zero").state == STATE_OFF
 
 
-async def test_group_vacuum_off(hass):
+async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     """Test group of vacuums."""
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
@@ -952,7 +1018,7 @@ async def test_group_vacuum_off(hass):
     assert hass.states.get("group.group_zero").state == STATE_OFF
 
 
-async def test_group_vacuum_on(hass):
+async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     """Test group of vacuums."""
     hass.states.async_set("vacuum.one", "cleaning")
     hass.states.async_set("vacuum.two", "off")
@@ -973,7 +1039,7 @@ async def test_group_vacuum_on(hass):
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_device_tracker_not_home(hass):
+async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
     """Test group of device_tracker not_home."""
     hass.states.async_set("device_tracker.one", "not_home")
     hass.states.async_set("device_tracker.two", "not_home")
@@ -995,7 +1061,7 @@ async def test_device_tracker_not_home(hass):
     assert hass.states.get("group.group_zero").state == "not_home"
 
 
-async def test_light_removed(hass):
+async def test_light_removed(hass: HomeAssistant) -> None:
     """Test group of lights when one is removed."""
     hass.states.async_set("light.one", "off")
     hass.states.async_set("light.two", "off")
@@ -1020,7 +1086,7 @@ async def test_light_removed(hass):
     assert hass.states.get("group.group_zero").state == "off"
 
 
-async def test_switch_removed(hass):
+async def test_switch_removed(hass: HomeAssistant) -> None:
     """Test group of switches when one is removed."""
     hass.states.async_set("switch.one", "off")
     hass.states.async_set("switch.two", "off")
@@ -1052,7 +1118,7 @@ async def test_switch_removed(hass):
     assert hass.states.get("group.group_zero").state == "off"
 
 
-async def test_lights_added_after_group(hass):
+async def test_lights_added_after_group(hass: HomeAssistant) -> None:
     """Test lights added after group."""
 
     entity_ids = [
@@ -1084,7 +1150,7 @@ async def test_lights_added_after_group(hass):
     assert hass.states.get("group.living_room_downlights").state == "off"
 
 
-async def test_lights_added_before_group(hass):
+async def test_lights_added_before_group(hass: HomeAssistant) -> None:
     """Test lights added before group."""
 
     entity_ids = [
@@ -1114,7 +1180,7 @@ async def test_lights_added_before_group(hass):
     assert hass.states.get("group.living_room_downlights").state == "off"
 
 
-async def test_cover_added_after_group(hass):
+async def test_cover_added_after_group(hass: HomeAssistant) -> None:
     """Test cover added after group."""
 
     entity_ids = [
@@ -1148,7 +1214,7 @@ async def test_cover_added_after_group(hass):
     assert hass.states.get("group.shades").state == "closed"
 
 
-async def test_group_that_references_a_group_of_lights(hass):
+async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> None:
     """Group that references a group of lights."""
 
     entity_ids = [
@@ -1182,7 +1248,7 @@ async def test_group_that_references_a_group_of_lights(hass):
     assert hass.states.get("group.grouped_group").state == "off"
 
 
-async def test_group_that_references_a_group_of_covers(hass):
+async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> None:
     """Group that references a group of covers."""
 
     entity_ids = [
@@ -1218,7 +1284,7 @@ async def test_group_that_references_a_group_of_covers(hass):
     assert hass.states.get("group.grouped_group").state == "closed"
 
 
-async def test_group_that_references_two_groups_of_covers(hass):
+async def test_group_that_references_two_groups_of_covers(hass: HomeAssistant) -> None:
     """Group that references a group of covers."""
 
     entity_ids = [
@@ -1258,7 +1324,7 @@ async def test_group_that_references_two_groups_of_covers(hass):
     assert hass.states.get("group.grouped_group").state == "closed"
 
 
-async def test_group_that_references_two_types_of_groups(hass):
+async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) -> None:
     """Group that references a group of covers and device_trackers."""
 
     group_1_entity_ids = [
@@ -1302,7 +1368,7 @@ async def test_group_that_references_two_types_of_groups(hass):
     assert hass.states.get("group.grouped_group").state == "on"
 
 
-async def test_plant_group(hass):
+async def test_plant_group(hass: HomeAssistant) -> None:
     """Test plant states can be grouped."""
 
     entity_ids = [
@@ -1366,13 +1432,23 @@ async def test_plant_group(hass):
 
 
 @pytest.mark.parametrize(
-    "group_type,member_state,extra_options",
+    ("group_type", "member_state", "extra_options"),
     (
         ("binary_sensor", "on", {"all": False}),
         ("cover", "open", {}),
         ("fan", "on", {}),
         ("light", "on", {"all": False}),
         ("media_player", "on", {}),
+        (
+            "sensor",
+            "1",
+            {
+                "all": True,
+                "type": "max",
+                "round_digits": 2.0,
+                "state_class": "measurement",
+            },
+        ),
     ),
 )
 async def test_setup_and_remove_config_entry(
@@ -1420,7 +1496,7 @@ async def test_setup_and_remove_config_entry(
 
 
 @pytest.mark.parametrize(
-    "hide_members,hidden_by_initial,hidden_by",
+    ("hide_members", "hidden_by_initial", "hidden_by"),
     (
         (False, er.RegistryEntryHider.INTEGRATION, er.RegistryEntryHider.INTEGRATION),
         (False, None, None),
@@ -1431,7 +1507,7 @@ async def test_setup_and_remove_config_entry(
     ),
 )
 @pytest.mark.parametrize(
-    "group_type,extra_options",
+    ("group_type", "extra_options"),
     (
         ("binary_sensor", {"all": False}),
         ("cover", {}),

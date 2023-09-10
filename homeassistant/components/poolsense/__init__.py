@@ -1,8 +1,8 @@
 """The PoolSense integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
@@ -64,7 +64,7 @@ class PoolSenseEntity(CoordinatorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, coordinator, email, description: EntityDescription):
+    def __init__(self, coordinator, email, description: EntityDescription) -> None:
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -90,10 +90,10 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
-            except (PoolSenseError) as error:
+            except PoolSenseError as error:
                 _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error
 

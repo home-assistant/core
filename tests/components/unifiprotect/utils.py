@@ -1,11 +1,11 @@
 """Test helpers for UniFi Protect."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import Mock
 
 from pyunifiprotect import ProtectApiClient
@@ -150,7 +150,6 @@ def add_device(
 
     if regenerate_ids:
         regenerate_device_ids(device)
-    device._initial_data = device.dict()
 
     devices = getattr(bootstrap, f"{device.model.value}s")
     devices[device.id] = device

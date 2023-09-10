@@ -134,7 +134,7 @@ async def cleanup_device_registry(
     device_registry = dr.async_get(hass)
     for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
-            if DOMAIN == item[0] and item[1] not in device_manager.device_map:
+            if item[0] == DOMAIN and item[1] not in device_manager.device_map:
                 device_registry.async_remove_device(dev_id)
                 break
 
@@ -233,10 +233,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class DeviceListener(TuyaDeviceListener):
     """Device Update Listener."""
-
-    # pylint: disable=arguments-differ
-    # Library incorrectly defines methods as 'classmethod'
-    # https://github.com/tuya/tuya-iot-python-sdk/pull/48
 
     def __init__(
         self,

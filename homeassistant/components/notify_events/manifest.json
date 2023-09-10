@@ -1,9 +1,9 @@
 {
   "domain": "notify_events",
   "name": "Notify.Events",
-  "documentation": "https://www.home-assistant.io/integrations/notify_events",
   "codeowners": ["@matrozov", "@papajojo"],
-  "requirements": ["notify-events==1.0.4"],
+  "documentation": "https://www.home-assistant.io/integrations/notify_events",
   "iot_class": "cloud_push",
-  "loggers": ["notify_events"]
+  "loggers": ["notify_events"],
+  "requirements": ["notify-events==1.0.4"]
 }

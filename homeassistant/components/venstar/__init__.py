@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
@@ -123,11 +124,11 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None
                 f"Exception during Venstar runtime update: {ex}"
             ) from ex
 
-        return None
-
 
 class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     """Representation of a Venstar entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -145,12 +146,12 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._config.entry_id)},
-            "name": self._client.name,
-            "manufacturer": "Venstar",
-            "model": f"{self._client.model}-{self._client.get_type()}",
-            "sw_version": self._client.get_api_ver(),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config.entry_id)},
+            name=self._client.name,
+            manufacturer="Venstar",
+            model=f"{self._client.model}-{self._client.get_type()}",
+            sw_version=self._client.get_api_ver(),
+        )

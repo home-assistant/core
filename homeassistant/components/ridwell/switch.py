@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aioridwell.errors import RidwellError
-from aioridwell.model import EventState
+from aioridwell.model import EventState, RidwellAccount
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -12,15 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RidwellData
 from .const import DOMAIN
+from .coordinator import RidwellDataUpdateCoordinator
 from .entity import RidwellEntity
 
-SWITCH_TYPE_OPT_IN = "opt_in"
-
 SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key=SWITCH_TYPE_OPT_IN,
-    name="Opt-in to next pickup",
+    key="opt_in",
+    translation_key="opt_in",
     icon="mdi:calendar-check",
 )
 
@@ -29,16 +27,28 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
-    data: RidwellData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        RidwellSwitch(data.coordinator, account, SWITCH_DESCRIPTION)
-        for account in data.accounts.values()
+        RidwellSwitch(coordinator, account, SWITCH_DESCRIPTION)
+        for account in coordinator.accounts.values()
     )
 
 
 class RidwellSwitch(RidwellEntity, SwitchEntity):
-    """Define a Ridwell button."""
+    """Define a Ridwell switch."""
+
+    def __init__(
+        self,
+        coordinator: RidwellDataUpdateCoordinator,
+        account: RidwellAccount,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator, account)
+
+        self._attr_unique_id = f"{account.account_id}_{description.key}"
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:

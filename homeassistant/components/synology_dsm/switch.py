@@ -10,7 +10,7 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -33,7 +33,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="Home Mode",
+        translation_key="home_mode",
         icon="mdi:home-account",
     ),
 )
@@ -72,10 +72,6 @@ class SynoDSMSurveillanceHomeModeToggle(
         super().__init__(api, coordinator, description)
         self._version = version
 
-        self._attr_name = (
-            f"{self._api.network.hostname} Surveillance Station {description.name}"
-        )
-
     @property
     def is_on(self) -> bool:
         """Return the state."""
@@ -87,9 +83,7 @@ class SynoDSMSurveillanceHomeModeToggle(
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, True
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -98,9 +92,7 @@ class SynoDSMSurveillanceHomeModeToggle(
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
             self._api.information.serial,
         )
-        await self.hass.async_add_executor_job(
-            self._api.dsm.surveillance_station.set_home_mode, False
-        )
+        await self._api.dsm.surveillance_station.set_home_mode(False)
         await self.coordinator.async_request_refresh()
 
     @property

@@ -69,7 +69,8 @@ class TriggerInstance:
         event_config = event_trigger.TRIGGER_SCHEMA(event_config)
         if self.remove:
             self.remove()
-        # Note: No lock needed, event_trigger.async_attach_trigger is an synchronous function
+        # Note: No lock needed, event_trigger.async_attach_trigger
+        # is an synchronous function
         self.remove = await event_trigger.async_attach_trigger(
             self.trigger.hass,
             event_config,
@@ -222,8 +223,7 @@ async def async_setup_trigger(
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        set(),
-        {(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
+        connections={(CONNECTION_NETWORK_MAC, tasmota_trigger.cfg.mac)},
     )
 
     if device is None:

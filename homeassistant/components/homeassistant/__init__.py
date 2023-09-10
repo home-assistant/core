@@ -15,6 +15,7 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -29,17 +30,22 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+from .exposed_entities import ExposedEntities
 
 ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
+SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
+SERVICE_RELOAD_ALL = "reload_all"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     vol.Schema(
@@ -154,7 +160,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            asyncio.create_task(hass.async_stop())
+            # Track trask in hass.data. No need to cleanup, we're stopping.
+            hass.data["homeassistant_stop"] = asyncio.create_task(hass.async_stop())
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -177,7 +184,10 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
+            # Track trask in hass.data. No need to cleanup, we're stopping.
+            hass.data["homeassistant_stop"] = asyncio.create_task(
+                hass.async_stop(RESTART_EXIT_CODE)
+            )
 
     async def async_handle_update_service(call: ha.ServiceCall) -> None:
         """Service handler for updating an entity."""
@@ -252,6 +262,14 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
+    async def async_handle_reload_templates(call: ha.ServiceCall) -> None:
+        """Service handler to reload custom Jinja."""
+        await async_load_custom_templates(hass)
+
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES, async_handle_reload_templates
+    )
+
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
         reload_entries = set()
@@ -274,5 +292,58 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         async_handle_reload_config_entry,
         schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
+
+    async def async_handle_reload_all(call: ha.ServiceCall) -> None:
+        """Service handler for calling all integration reload services.
+
+        Calls all reload services on all active domains, which triggers the
+        reload of YAML configurations for the domain that support it.
+
+        Additionally, it also calls the `homeasssitant.reload_core_config`
+        service, as that reloads the core YAML configuration, the
+        `frontend.reload_themes` service that reloads the themes, and the
+        `homeassistant.reload_custom_templates` service that reloads any custom
+        jinja into memory.
+
+        We only do so, if there are no configuration errors.
+        """
+
+        if errors := await conf_util.async_check_ha_config_file(hass):
+            _LOGGER.error(
+                "The system cannot reload because the configuration is not valid: %s",
+                errors,
+            )
+            raise HomeAssistantError(
+                "Cannot quick reload all YAML configurations because the "
+                f"configuration is not valid: {errors}"
+            )
+
+        services = hass.services.async_services()
+        tasks = [
+            hass.services.async_call(
+                domain, SERVICE_RELOAD, context=call.context, blocking=True
+            )
+            for domain, domain_services in services.items()
+            if domain != "notify" and SERVICE_RELOAD in domain_services
+        ] + [
+            hass.services.async_call(
+                domain, service, context=call.context, blocking=True
+            )
+            for domain, service in (
+                (ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
+                ("frontend", "reload_themes"),
+                (ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES),
+            )
+        ]
+
+        await asyncio.gather(*tasks)
+
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
+    )
+
+    exposed_entities = ExposedEntities(hass)
+    await exposed_entities.async_initialize()
+    hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
 
     return True

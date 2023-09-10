@@ -1,9 +1,9 @@
 {
   "domain": "solaredge_local",
   "name": "SolarEdge Local",
-  "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
-  "requirements": ["solaredge-local==0.2.0"],
   "codeowners": ["@drobtravels", "@scheric"],
+  "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
   "iot_class": "local_polling",
-  "loggers": ["solaredge_local"]
+  "loggers": ["solaredge_local"],
+  "requirements": ["solaredge-local==0.2.3"]
 }

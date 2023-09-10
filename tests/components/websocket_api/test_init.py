@@ -9,9 +9,10 @@ from homeassistant.components.websocket_api import (
     const,
     messages,
 )
+from homeassistant.core import HomeAssistant
 
 
-async def test_invalid_message_format(websocket_client):
+async def test_invalid_message_format(websocket_client) -> None:
     """Test sending invalid JSON."""
     await websocket_client.send_json({"type": 5})
 
@@ -23,7 +24,7 @@ async def test_invalid_message_format(websocket_client):
     assert error["message"].startswith("Message incorrectly formatted")
 
 
-async def test_invalid_json(websocket_client):
+async def test_invalid_json(websocket_client) -> None:
     """Test sending invalid JSON."""
     await websocket_client.send_str("this is not JSON")
 
@@ -32,7 +33,7 @@ async def test_invalid_json(websocket_client):
     assert msg.type == WSMsgType.close
 
 
-async def test_quiting_hass(hass, websocket_client):
+async def test_quiting_hass(hass: HomeAssistant, websocket_client) -> None:
     """Test sending invalid JSON."""
     with patch.object(hass.loop, "stop"):
         await hass.async_stop()
@@ -42,7 +43,7 @@ async def test_quiting_hass(hass, websocket_client):
     assert msg.type == WSMsgType.CLOSE
 
 
-async def test_unknown_command(websocket_client):
+async def test_unknown_command(websocket_client) -> None:
     """Test get_panels command."""
     await websocket_client.send_json({"id": 5, "type": "unknown_command"})
 
@@ -51,7 +52,7 @@ async def test_unknown_command(websocket_client):
     assert msg["error"]["code"] == const.ERR_UNKNOWN_COMMAND
 
 
-async def test_handler_failing(hass, websocket_client):
+async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises."""
     async_register_command(
         hass,
@@ -68,7 +69,7 @@ async def test_handler_failing(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
 
 
-async def test_invalid_vol(hass, websocket_client):
+async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises invalid vol error."""
     async_register_command(
         hass,

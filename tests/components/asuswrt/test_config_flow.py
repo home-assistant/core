@@ -62,7 +62,7 @@ def mock_unique_id_fixture():
 @pytest.fixture(name="connect")
 def mock_controller_connect(mock_unique_id):
     """Mock a successful connection."""
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
+    with patch("homeassistant.components.asuswrt.bridge.AsusWrtLegacy") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
@@ -77,7 +77,7 @@ def mock_controller_connect(mock_unique_id):
     "unique_id",
     [{}, {"label_mac": MAC_ADDR}],
 )
-async def test_user(hass, mock_unique_id, unique_id):
+async def test_user(hass: HomeAssistant, mock_unique_id, unique_id) -> None:
     """Test user config."""
     mock_unique_id.update(unique_id)
     flow_result = await hass.config_entries.flow.async_init(
@@ -102,13 +102,13 @@ async def test_user(hass, mock_unique_id, unique_id):
 
 
 @pytest.mark.parametrize(
-    ["config", "error"],
+    ("config", "error"),
     [
         ({CONF_PASSWORD: None}, "pwd_or_ssh"),
         ({CONF_SSH_KEY: SSH_KEY}, "pwd_and_ssh"),
     ],
 )
-async def test_error_wrong_password_ssh(hass, config, error):
+async def test_error_wrong_password_ssh(hass: HomeAssistant, config, error) -> None:
     """Test we abort for wrong password and ssh file combination."""
     config_data = CONFIG_DATA.copy()
     config_data.update(config)
@@ -122,7 +122,7 @@ async def test_error_wrong_password_ssh(hass, config, error):
     assert result["errors"] == {"base": error}
 
 
-async def test_error_invalid_ssh(hass):
+async def test_error_invalid_ssh(hass: HomeAssistant) -> None:
     """Test we abort if invalid ssh file is provided."""
     config_data = CONFIG_DATA.copy()
     config_data.pop(CONF_PASSWORD)
@@ -142,7 +142,7 @@ async def test_error_invalid_ssh(hass):
         assert result["errors"] == {"base": "ssh_not_file"}
 
 
-async def test_error_invalid_host(hass):
+async def test_error_invalid_host(hass: HomeAssistant) -> None:
     """Test we abort if host name is invalid."""
     with patch(
         "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
@@ -158,7 +158,7 @@ async def test_error_invalid_host(hass):
         assert result["errors"] == {"base": "invalid_host"}
 
 
-async def test_abort_if_not_unique_id_setup(hass):
+async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
     """Test we abort if component without uniqueid is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -175,7 +175,7 @@ async def test_abort_if_not_unique_id_setup(hass):
 
 
 @pytest.mark.usefixtures("connect")
-async def test_update_uniqueid_exist(hass, mock_unique_id):
+async def test_update_uniqueid_exist(hass: HomeAssistant, mock_unique_id) -> None:
     """Test we update entry if uniqueid is already configured."""
     mock_unique_id.update({"label_mac": MAC_ADDR})
     existing_entry = MockConfigEntry(
@@ -202,7 +202,7 @@ async def test_update_uniqueid_exist(hass, mock_unique_id):
 
 
 @pytest.mark.usefixtures("connect")
-async def test_abort_invalid_unique_id(hass):
+async def test_abort_invalid_unique_id(hass: HomeAssistant) -> None:
     """Test we abort if uniqueid not available."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -221,14 +221,14 @@ async def test_abort_invalid_unique_id(hass):
 
 
 @pytest.mark.parametrize(
-    ["side_effect", "error"],
+    ("side_effect", "error"),
     [
         (OSError, "cannot_connect"),
         (TypeError, "unknown"),
         (None, "cannot_connect"),
     ],
 )
-async def test_on_connect_failed(hass, side_effect, error):
+async def test_on_connect_failed(hass: HomeAssistant, side_effect, error) -> None:
     """Test when we have errors connecting the router."""
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -236,11 +236,12 @@ async def test_on_connect_failed(hass, side_effect, error):
     )
 
     with PATCH_GET_HOST, patch(
-        "homeassistant.components.asuswrt.router.AsusWrt"
+        "homeassistant.components.asuswrt.bridge.AsusWrtLegacy"
     ) as asus_wrt:
         asus_wrt.return_value.connection.async_connect = AsyncMock(
             side_effect=side_effect
         )
+        asus_wrt.return_value.async_get_nvram = AsyncMock(return_value={})
         asus_wrt.return_value.is_connected = False
 
         result = await hass.config_entries.flow.async_configure(

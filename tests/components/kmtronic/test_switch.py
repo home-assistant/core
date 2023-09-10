@@ -5,13 +5,17 @@ from http import HTTPStatus
 
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_relay_on_off(hass, aioclient_mock):
+async def test_relay_on_off(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Tests the relay turns on correctly."""
 
     aioclient_mock.get(
@@ -75,7 +79,7 @@ async def test_relay_on_off(hass, aioclient_mock):
     assert state.state == "on"
 
 
-async def test_update(hass, aioclient_mock):
+async def test_update(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Tests switch refreshes status periodically."""
     now = dt_util.utcnow()
     future = now + timedelta(minutes=10)
@@ -106,7 +110,9 @@ async def test_update(hass, aioclient_mock):
     assert state.state == "on"
 
 
-async def test_failed_update(hass, aioclient_mock):
+async def test_failed_update(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Tests coordinator update fails."""
     now = dt_util.utcnow()
     future = now + timedelta(minutes=10)
@@ -150,7 +156,9 @@ async def test_failed_update(hass, aioclient_mock):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_relay_on_off_reversed(hass, aioclient_mock):
+async def test_relay_on_off_reversed(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Tests the relay turns on correctly when configured as reverse."""
 
     aioclient_mock.get(

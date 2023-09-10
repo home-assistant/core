@@ -4,7 +4,9 @@
       "can_reach_cert_server": "Reach Certificate Server",
       "can_reach_cloud": "Reach Home Assistant Cloud",
       "can_reach_cloud_auth": "Reach Authentication Server",
+      "certificate_status": "Certificate Status",
       "relayer_connected": "Relayer Connected",
+      "relayer_region": "Relayer Region",
       "remote_connected": "Remote Connected",
       "remote_enabled": "Remote Enabled",
       "remote_server": "Remote Server",
@@ -27,6 +29,16 @@
           "operation_took_too_long": "The operation took too long. Please try again later."
         }
       }
+    }
+  },
+  "services": {
+    "remote_connect": {
+      "name": "Remote connect",
+      "description": "Makes the instance UI accessible from outside of the local network by using Home Assistant Cloud."
+    },
+    "remote_disconnect": {
+      "name": "Remote disconnect",
+      "description": "Disconnects the Home Assistant UI from the Home Assistant Cloud. You will no longer be able to access your Home Assistant instance from outside your local network."
     }
   }
 }

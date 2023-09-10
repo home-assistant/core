@@ -1,9 +1,9 @@
 {
   "domain": "tank_utility",
   "name": "Tank Utility",
-  "documentation": "https://www.home-assistant.io/integrations/tank_utility",
-  "requirements": ["tank_utility==1.4.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/tank_utility",
   "iot_class": "cloud_polling",
-  "loggers": ["tank_utility"]
+  "loggers": ["tank_utility"],
+  "requirements": ["tank-utility==1.4.1"]
 }
