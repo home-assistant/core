@@ -45,7 +45,6 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             logger=_LOGGER,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
-        self._hass = hass
 
         # Server data
         self.unique_id = unique_id
