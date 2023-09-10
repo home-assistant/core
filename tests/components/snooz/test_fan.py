@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock, patch
 
 from pysnooz import (
     SnoozDeviceState,
@@ -222,7 +222,6 @@ async def test_restore_state(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
 async def test_restore_unknown_state(
@@ -255,49 +254,17 @@ async def test_command_results(
 ) -> None:
     """Test device command results."""
     mock_execute = Mock(spec=mock_connected_snooz.device.async_execute_command)
-
     mock_connected_snooz.device.async_execute_command = mock_execute
 
     mock_execute.return_value = SnoozCommandResult(
         SnoozCommandResultStatus.SUCCESSFUL, timedelta()
     )
-    mock_connected_snooz.device.trigger_state(SnoozDeviceState(on=True, volume=56))
 
-    await hass.services.async_call(
-        fan.DOMAIN,
-        fan.SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
-        blocking=True,
-    )
+    with patch.object(
+        MockSnoozDevice, "state", new_callable=PropertyMock
+    ) as mock_state:
+        mock_state.return_value = SnoozDeviceState(on=True, volume=56)
 
-    state = hass.states.get(snooz_fan_entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes[fan.ATTR_PERCENTAGE] == 56
-
-    mock_execute.return_value = SnoozCommandResult(
-        SnoozCommandResultStatus.CANCELLED, timedelta()
-    )
-    mock_connected_snooz.device.trigger_state(SnoozDeviceState(on=False, volume=15))
-
-    await hass.services.async_call(
-        fan.DOMAIN,
-        fan.SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
-        blocking=True,
-    )
-
-    # the device state shouldn't be written when cancelled
-    state = hass.states.get(snooz_fan_entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes[fan.ATTR_PERCENTAGE] == 56
-
-    mock_execute.return_value = SnoozCommandResult(
-        SnoozCommandResultStatus.UNEXPECTED_ERROR, timedelta()
-    )
-
-    with pytest.raises(HomeAssistantError) as failure:
         await hass.services.async_call(
             fan.DOMAIN,
             fan.SERVICE_TURN_ON,
@@ -305,7 +272,42 @@ async def test_command_results(
             blocking=True,
         )
 
-    assert failure.match("failed with status")
+        state = hass.states.get(snooz_fan_entity_id)
+        assert state is not None
+        assert state.state == STATE_ON
+        assert state.attributes[fan.ATTR_PERCENTAGE] == 56
+
+        mock_execute.return_value = SnoozCommandResult(
+            SnoozCommandResultStatus.CANCELLED, timedelta()
+        )
+        mock_state.return_value = SnoozDeviceState(on=False, volume=15)
+
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+            blocking=True,
+        )
+
+        # the device state shouldn't be written when cancelled
+        state = hass.states.get(snooz_fan_entity_id)
+        assert state is not None
+        assert state.state == STATE_ON
+        assert state.attributes[fan.ATTR_PERCENTAGE] == 56
+
+        mock_execute.return_value = SnoozCommandResult(
+            SnoozCommandResultStatus.UNEXPECTED_ERROR, timedelta()
+        )
+
+        with pytest.raises(HomeAssistantError) as failure:
+            await hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
+                blocking=True,
+            )
+
+        assert failure.match("failed with status")
 
 
 @pytest.fixture(name="snooz_fan_entity_id")

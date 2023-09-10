@@ -25,7 +25,7 @@ TEST_SNOOZ_LOCAL_NAME = "Snooz-ABCD"
 TEST_SNOOZ_DISPLAY_NAME = "Snooz ABCD"
 TEST_SNOOZ_MODEL = SnoozDeviceModel.ORIGINAL
 TEST_SNOOZ_FIRMWARE_VERSION = SnoozFirmwareVersion.V2
-TEST_PAIRING_TOKEN = "deadbeef"
+TEST_PAIRING_TOKEN = "deadbeefdeadbeef"
 
 NOT_SNOOZ_SERVICE_INFO = BluetoothServiceInfo(
     name="Definitely not snooz",
@@ -63,10 +63,6 @@ SNOOZ_SERVICE_INFO_NOT_PAIRING = BluetoothServiceInfo(
     source="local",
 )
 
-SNOOZ_DEVICE_NOT_PAIRING = generate_ble_device(
-    address=TEST_ADDRESS, name=TEST_SNOOZ_LOCAL_NAME
-)
-
 
 @dataclass
 class SnoozFixture:
@@ -86,11 +82,13 @@ async def create_mock_snooz(
 
     adv_data = SnoozAdvertisementData(model, firmware_version, TEST_PAIRING_TOKEN)
     device = MockSnoozDevice(
-        SNOOZ_DEVICE_NOT_PAIRING, adv_data, initial_state=initial_state
+        generate_ble_device(address=TEST_ADDRESS, name=TEST_SNOOZ_LOCAL_NAME),
+        adv_data,
+        initial_state=initial_state,
     )
 
-    if connected is True:
-        device.trigger_state(initial_state)
+    if not connected:
+        device.trigger_disconnect()
 
     return device
 
@@ -108,7 +106,7 @@ async def create_mock_snooz_config_entry(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
-            version=2,
+            version=version,
             unique_id=TEST_ADDRESS,
             data={
                 CONF_ADDRESS: device.address,

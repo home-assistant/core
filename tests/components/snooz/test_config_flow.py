@@ -292,9 +292,9 @@ async def _test_pairs(
         _hass, _callback, _matcher, _mode, _timeout
     ):
         await pairing_mode_entered.wait()
-        service_info = SNOOZ_SERVICE_INFO_PAIRING
-        assert _callback(service_info)
-        return service_info
+        assert _callback(SNOOZ_SERVICE_INFO_NOT_PAIRING) is False
+        assert _callback(SNOOZ_SERVICE_INFO_PAIRING)
+        return SNOOZ_SERVICE_INFO_PAIRING
 
     with patch(
         "homeassistant.components.snooz.config_flow.async_process_advertisements",

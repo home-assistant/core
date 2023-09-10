@@ -199,6 +199,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             if adv_data is None or not adv_data.is_pairing:
                 return False
 
+            assert self._discovery
             # copy the password from this advertisement to the discovery object
             self._discovery.device.password = adv_data.password
 

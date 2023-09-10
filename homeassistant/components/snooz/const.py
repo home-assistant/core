@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "snooz"
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.FAN]
 
 SERVICE_TRANSITION_ON = "transition_on"
 SERVICE_TRANSITION_OFF = "transition_off"
