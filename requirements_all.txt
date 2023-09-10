@@ -334,7 +334,7 @@ aiorecollect==2023.09.0
 aioridwell==2023.07.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.31
+aioruckus==0.34
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -2723,7 +2723,6 @@ xknxproject==3.2.0
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
-# homeassistant.components.ruckus_unleashed
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
