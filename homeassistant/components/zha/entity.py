@@ -106,9 +106,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
 
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs[:]:
