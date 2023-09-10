@@ -34,7 +34,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return data
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SwitchBot via API."""
 
@@ -56,8 +55,9 @@ class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                unique_id = info[CONF_API_TOKEN]
-                await self.async_set_unique_id(unique_id, raise_on_progress=False)
+                await self.async_set_unique_id(
+                    info[CONF_API_TOKEN], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=info)
 

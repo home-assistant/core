@@ -1,5 +1,6 @@
 """SwitchBot Cloud coordinator."""
 from logging import getLogger
+from typing import Any
 
 from async_timeout import timeout
 from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotAPI
@@ -12,8 +13,10 @@ from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = getLogger(__name__)
 
+Status = dict[str, Any] | None
 
-class SwitchBotCoordinator(DataUpdateCoordinator):
+
+class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
     _api: SwitchBotAPI
@@ -34,7 +37,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator):
         self._device_id = device.device_id
         self._should_poll = not isinstance(device, Remote)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""
         if not self._should_poll:
             return None

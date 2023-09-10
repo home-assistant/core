@@ -8,10 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 
@@ -32,8 +32,8 @@ async def async_setup_entry(
 class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
     """Representation of a SwitchBot switch."""
 
-    _attr_is_on: bool | None = None
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_name = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -68,19 +68,11 @@ class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot plug switch."""
 
-    def __init__(
-        self,
-        api: SwitchBotAPI,
-        device: Device | Remote,
-        coordinator: DataUpdateCoordinator,
-    ) -> None:
-        """Initialize the plug."""
-        super().__init__(api, device, coordinator)
-        self._attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
 
 def _make_instance(
-    api: SwitchBotAPI, device: Device | Remote, coordinator: DataUpdateCoordinator
+    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
 ) -> SwitchBotCloudSwitch:
     """Make a SwitchBotCloudSwitch or SwitchBotCloudRemoteSwitch."""
     if isinstance(device, Remote):
