@@ -5,10 +5,10 @@ from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
 
-from pysnooz import UnknownSnoozState
-from pysnooz.commands import (
+from pysnooz import (
     SnoozCommandData,
     SnoozCommandResultStatus,
+    UnknownSnoozState,
     set_volume,
     turn_off,
     turn_on,
@@ -21,6 +21,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -82,7 +83,7 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Initialize a Snooz fan entity."""
         self._device = data.device
         self._attr_unique_id = data.device.address
-        self._attr_device_info = data.device_info
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
 
     @callback
     def _async_write_state_changed(self) -> None:

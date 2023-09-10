@@ -1,19 +1,11 @@
 """Test Snooz configuration."""
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from . import (
-    SNOOZ_SERVICE_INFO_NOT_PAIRING,
-    SnoozFixture,
-    create_mock_snooz,
-    create_mock_snooz_config_entry,
-)
+from . import SnoozFixture
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -38,22 +30,3 @@ async def test_reloading_entry_cleans_up_connections(
     await hass.async_block_till_done()
 
     assert not mock_connected_snooz.device.is_connected
-
-
-async def test_v1_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Tests entry migration from v1 -> v2."""
-
-    async def _async_process_advertisements(
-        _hass, _callback, _matcher, _mode, _timeout
-    ):
-        # pairing mode is not required since we already stored the password
-        assert _callback(SNOOZ_SERVICE_INFO_NOT_PAIRING)
-        return SNOOZ_SERVICE_INFO_NOT_PAIRING
-
-    with patch(
-        "homeassistant.components.snooz.async_process_advertisements",
-        _async_process_advertisements,
-    ):
-        device = await create_mock_snooz()
-        entry = await create_mock_snooz_config_entry(hass, device, version=1)
-        assert entry == snapshot
