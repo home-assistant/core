@@ -70,6 +70,7 @@ async def async_setup_entry(
                 coordinator,
                 MediaPlayerEntityDescription(
                     key="media",
+                    translation_key="media",
                     name="Media",
                     icon="mdi:volume-high",
                     device_class=MediaPlayerDeviceClass.RECEIVER,
