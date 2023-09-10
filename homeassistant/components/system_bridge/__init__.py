@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import voluptuous as vol
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
