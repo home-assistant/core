@@ -1,4 +1,4 @@
-"""The test for the sensibo select platform."""
+"""The test for the Trafikverket sensor platform."""
 from __future__ import annotations
 
 from pytrafikverket.trafikverket_camera import CameraInfo
