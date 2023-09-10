@@ -7,8 +7,8 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from . import MinecraftServer
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .coordinator import MinecraftServerCoordinator
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,9 +52,11 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_PORT: port,
                 }
-                server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
-                await server.async_check_connection()
-                if not server.online:
+                coordinator = MinecraftServerCoordinator(
+                    self.hass, "dummy_unique_id", config_data
+                )
+                server_online = await coordinator.async_is_server_online()
+                if not server_online:
                     # Host or port invalid or server not reachable.
                     errors["base"] = "cannot_connect"
                 else:

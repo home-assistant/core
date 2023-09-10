@@ -1,7 +1,7 @@
 """The Minecraft Server sensor platform."""
 from __future__ import annotations
 
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MinecraftServer, MinecraftServerData
 from .const import (
     ATTR_PLAYERS_LIST,
     DOMAIN,
@@ -31,6 +30,7 @@ from .const import (
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
 )
+from .coordinator import MinecraftServerCoordinator, MinecraftServerData
 from .entity import MinecraftServerEntity
 
 
@@ -118,15 +118,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
-    server = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add sensor entities.
     async_add_entities(
         [
-            MinecraftServerSensorEntity(server, description)
+            MinecraftServerSensorEntity(coordinator, description)
             for description in SENSOR_DESCRIPTIONS
-        ],
-        True,
+        ]
     )
 
 
@@ -137,24 +136,25 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
 
     def __init__(
         self,
-        server: MinecraftServer,
+        coordinator: MinecraftServerCoordinator,
         description: MinecraftServerSensorEntityDescription,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(server)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{server.unique_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return sensor availability."""
-        return self._server.online
+    def native_value(self) -> StateType:
+        """Return sensor value."""
+        return self.entity_description.value_fn(self._coordinator.data)
 
-    async def async_update(self) -> None:
-        """Update sensor state."""
-        self._attr_native_value = self.entity_description.value_fn(self._server.data)
-
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return sensor state attributes, if available."""
+        extra_state_attributes = None
         if self.entity_description.attributes_fn:
-            self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self._server.data
+            extra_state_attributes = self.entity_description.attributes_fn(
+                self._coordinator.data
             )
+        return extra_state_attributes
