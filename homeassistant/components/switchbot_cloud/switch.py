@@ -59,8 +59,6 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
 
-    _attr_name = None
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

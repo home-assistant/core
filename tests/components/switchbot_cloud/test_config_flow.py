@@ -13,8 +13,6 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 
 async def _fill_out_form_and_assert_entry_created(
     hass: HomeAssistant, flow_id: str, mock_setup_entry: AsyncMock
