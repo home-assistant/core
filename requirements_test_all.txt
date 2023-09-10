@@ -1847,7 +1847,7 @@ surepy==0.8.0
 switchbot-api==1.1.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.4.9
+systembridgeconnector==3.8.2
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
