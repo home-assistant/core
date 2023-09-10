@@ -64,24 +64,21 @@ async def async_setup_entry(
     coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     data: SystemBridgeCoordinatorData = coordinator.data
 
-    entities: list[SystemBridgeMediaPlayer] = (
-        [
-            SystemBridgeMediaPlayer(
-                coordinator,
-                MediaPlayerEntityDescription(
-                    key="media",
-                    translation_key="media",
-                    icon="mdi:volume-high",
-                    device_class=MediaPlayerDeviceClass.RECEIVER,
-                ),
-                entry.data[CONF_PORT],
-            )
-        ]
-        if data.media is not None
-        else []
-    )
-
-    async_add_entities(entities)
+    if data.media is not None:
+        async_add_entities(
+            [
+                SystemBridgeMediaPlayer(
+                    coordinator,
+                    MediaPlayerEntityDescription(
+                        key="media",
+                        translation_key="media",
+                        icon="mdi:volume-high",
+                        device_class=MediaPlayerDeviceClass.RECEIVER,
+                    ),
+                    entry.data[CONF_PORT],
+                )
+            ]
+        )
 
 
 class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
