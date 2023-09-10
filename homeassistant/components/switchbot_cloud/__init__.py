@@ -3,11 +3,12 @@ from asyncio import gather
 from dataclasses import dataclass
 from logging import getLogger
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+from switchbot_api import CannotConnect, Device, Remote, SwitchBotAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
@@ -17,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 @dataclass
-class Data:
+class SwitchbotCloudData:
     """Data to use in platforms."""
 
     api: SwitchBotAPI
@@ -30,13 +31,16 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     secret = config.data[CONF_API_KEY]
 
     api = SwitchBotAPI(token=token, secret=secret)
-    devices = await api.list_devices()
+    try:
+        devices = await api.list_devices()
+    except CannotConnect as ex:
+        raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
     devices_and_coordinators = [
         (device, SwitchBotCoordinator(hass, api, device)) for device in devices
     ]
     hass.data.setdefault(DOMAIN, {})
-    data = Data(
+    data = SwitchbotCloudData(
         api=api,
         switches=[
             (device, coordinator)

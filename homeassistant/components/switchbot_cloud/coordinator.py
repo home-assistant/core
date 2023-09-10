@@ -18,7 +18,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator):
 
     _api: SwitchBotAPI
     _device_id: str
-    _is_remote = False
+    _should_poll = False
 
     def __init__(
         self, hass: HomeAssistant, api: SwitchBotAPI, device: Device | Remote
@@ -32,11 +32,11 @@ class SwitchBotCoordinator(DataUpdateCoordinator):
         )
         self._api = api
         self._device_id = device.device_id
-        self._is_remote = isinstance(device, Remote)
+        self._should_poll = not isinstance(device, Remote)
 
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
-        if self._is_remote:
+        if not self._should_poll:
             return None
         try:
             _LOGGER.debug("Refreshing %s", self._device_id)

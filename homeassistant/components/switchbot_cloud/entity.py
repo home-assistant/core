@@ -18,7 +18,7 @@ class SwitchBotCloudEntity(CoordinatorEntity):
     """Representation of a SwitchBot Cloud entity."""
 
     _api: SwitchBotAPI
-    _SwitchBot_state: dict[str, Any] | None = None
+    _switchbot_state: dict[str, Any] | None = None
 
     def __init__(
         self,

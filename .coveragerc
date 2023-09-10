@@ -1246,7 +1246,6 @@ omit =
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py
     homeassistant/components/switchbot/lock.py
-    homeassistant/components/switchbot_cloud/__init__.py
     homeassistant/components/switchbot_cloud/entity.py
     homeassistant/components/switchbot_cloud/switch.py
     homeassistant/components/switchmate/switch.py

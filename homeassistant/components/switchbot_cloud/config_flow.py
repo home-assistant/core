@@ -1,6 +1,5 @@
 """Config flow for SwitchBot via API integration."""
 
-from hashlib import sha256
 from logging import getLogger
 from typing import Any
 
@@ -57,7 +56,7 @@ class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                unique_id = sha256(info[CONF_API_TOKEN].encode()).hexdigest()
+                unique_id = info[CONF_API_TOKEN]
                 await self.async_set_unique_id(unique_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=info)
