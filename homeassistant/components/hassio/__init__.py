@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 import os
-from re import compile
+import re
 from typing import Any, NamedTuple
 
 import voluptuous as vol
@@ -150,7 +150,7 @@ SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
-VALID_ADDON_SLUG = vol.Match(compile(r"^[-_.A-Za-z0-9]+$"))
+VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
 
 def valid_addon(value: Any) -> str:
