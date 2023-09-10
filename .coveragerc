@@ -1071,9 +1071,10 @@ omit =
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
-    homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
+    homeassistant/components/screenlogic/coordinator.py
+    homeassistant/components/screenlogic/const.py
     homeassistant/components/screenlogic/entity.py
     homeassistant/components/screenlogic/light.py
     homeassistant/components/screenlogic/number.py
@@ -1267,6 +1268,7 @@ omit =
     homeassistant/components/system_bridge/__init__.py
     homeassistant/components/system_bridge/binary_sensor.py
     homeassistant/components/system_bridge/coordinator.py
+    homeassistant/components/system_bridge/notify.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/__init__.py
