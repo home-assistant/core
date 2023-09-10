@@ -39,7 +39,10 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         _LOGGER.debug("Initialized %s: %s", device.device_id, device.device_name)
 
     async def send_command(
-        self, command: Commands, command_type="command", parameters="default"
+        self,
+        command: Commands,
+        command_type: str = "command",
+        parameters: dict | str = "default",
     ):
         """Send command to device."""
         return await self._api.send_command(

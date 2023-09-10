@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, ENTRY_TITLE
@@ -23,17 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    await SwitchBotAPI(
-        token=data[CONF_API_TOKEN], secret=data[CONF_API_KEY]
-    ).list_devices()
-    return data
-
-
 class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SwitchBot via API."""
 
@@ -46,7 +34,9 @@ class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await SwitchBotAPI(
+                    token=user_input[CONF_API_TOKEN], secret=user_input[CONF_API_KEY]
+                ).list_devices()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -56,10 +46,10 @@ class SwitchBotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    info[CONF_API_TOKEN], raise_on_progress=False
+                    user_input[CONF_API_TOKEN], raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=ENTRY_TITLE, data=info)
+                return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
