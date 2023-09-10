@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -484,6 +485,12 @@ class UtilityMeterSensor(RestoreSensor):
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                if self._unit_of_measurement is None:
+                    _LOGGER.warning(
+                        "Source sensor %s has no unit of measurement. Please %s",
+                        self._sensor_source_id,
+                        _suggest_report_issue(self.hass, self._sensor_source_id),
+                    )
 
         if (
             adjustment := self.calculate_adjustment(old_state, new_state)
