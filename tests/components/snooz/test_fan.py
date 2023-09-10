@@ -5,10 +5,10 @@ from datetime import timedelta
 from unittest.mock import Mock, PropertyMock, patch
 
 from pysnooz import (
-    SnoozDeviceState,
-    UnknownSnoozState,
     SnoozCommandResult,
     SnoozCommandResultStatus,
+    SnoozDeviceState,
+    UnknownSnoozState,
 )
 from pysnooz.testing import MockSnoozDevice
 import pytest

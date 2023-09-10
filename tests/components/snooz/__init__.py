@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from unittest.mock import patch
+
 from pysnooz import (
     SnoozAdvertisementData,
     SnoozDeviceModel,
-    SnoozFirmwareVersion,
     SnoozDeviceState,
+    SnoozFirmwareVersion,
 )
-
 from pysnooz.testing import MockSnoozDevice
 
 from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION, DOMAIN

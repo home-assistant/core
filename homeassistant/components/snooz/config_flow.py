@@ -7,8 +7,8 @@ from typing import Any
 
 from pysnooz import (
     SnoozAdvertisementData,
-    parse_snooz_advertisement,
     get_device_display_name,
+    parse_snooz_advertisement,
 )
 import voluptuous as vol
 

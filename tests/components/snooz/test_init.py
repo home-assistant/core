@@ -1,9 +1,10 @@
 """Test Snooz configuration."""
 from __future__ import annotations
+
 from unittest.mock import patch
-from syrupy.assertion import SnapshotAssertion
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
@@ -40,6 +41,8 @@ async def test_reloading_entry_cleans_up_connections(
 
 
 async def test_v1_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+    """Tests entry migration from v1 -> v2."""
+
     async def _async_process_advertisements(
         _hass, _callback, _matcher, _mode, _timeout
     ):

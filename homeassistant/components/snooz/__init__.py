@@ -1,20 +1,20 @@
 """The Snooz component."""
 from __future__ import annotations
-import asyncio
 
+import asyncio
 import logging
+
 from pysnooz import (
     SnoozAdvertisementData,
     SnoozDeviceModel,
     SnoozFirmwareVersion,
     parse_snooz_advertisement,
 )
-
 from pysnooz.device import SnoozDevice
 
 from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
     BluetoothScanningMode,
+    BluetoothServiceInfo,
     async_ble_device_from_address,
     async_process_advertisements,
 )
@@ -29,12 +29,10 @@ from .models import SnoozConfigurationData
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Snooz device from a config entry."""
-    address: str = entry.data[CONF_ADDRESS]
-    token: str = entry.data[CONF_TOKEN]
-
     # transitions info logs are verbose. Only enable warnings
     logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
+    address: str = entry.data[CONF_ADDRESS]
     if not (ble_device := async_ble_device_from_address(hass, address)):
         raise ConfigEntryNotReady(
             f"Could not find Snooz with address {address}. Try power cycling the device"
@@ -119,7 +117,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         },
     )
 
-    LOGGER.debug(f"Migration complete. Model: {adv_data}")
+    LOGGER.debug(
+        f"Migration complete. model={adv_data.model}, firmware={adv_data.firmware_version}"
+    )
     return True
 
 
