@@ -235,7 +235,11 @@ class ManualTriggerEntity(TriggerBaseEntity):
         Ex: self._process_manual_data(payload)
         """
 
-        self.async_write_ha_state()
+        with contextlib.suppress(ValueError):
+            # If state is not valid this silently continue
+            # Faulty states should not be handled here but later
+            # in the respective platforms state update
+            self.async_write_ha_state()
         this = None
         if state := self.hass.states.get(self.entity_id):
             this = state.as_dict()
