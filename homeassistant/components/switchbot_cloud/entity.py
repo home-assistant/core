@@ -37,7 +37,7 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             manufacturer="SwitchBot",
             model=device.device_type,
         )
-        _LOGGER.debug("Initialized %s: %s", self._attr_unique_id, self._attr_name)
+        _LOGGER.debug("Initialized %s: %s", device.device_id, device.device_name)
 
     async def send_command(self, command, command_type="command", parameters="default"):
         """Send command to device."""
