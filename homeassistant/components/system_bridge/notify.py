@@ -59,7 +59,7 @@ class SystemBridgeNotificationService(BaseNotificationService):
         **kwargs: Any,
     ) -> None:
         """Send a message."""
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA, {}) or {}
 
         notification = Notification(
             actions=data.get(ATTR_ACTIONS),
