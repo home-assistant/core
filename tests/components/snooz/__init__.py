@@ -87,7 +87,9 @@ async def create_mock_snooz(
         initial_state=initial_state,
     )
 
-    if not connected:
+    if connected:
+        await device.async_get_info()
+    else:
         device.trigger_disconnect()
 
     return device
