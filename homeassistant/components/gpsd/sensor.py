@@ -49,9 +49,9 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GPSD component."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     # Will hopefully be possible with the next gps3 update
     # https://github.com/wadda/gps3/issues/11
@@ -81,9 +81,9 @@ class GpsdSensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str | None = None,
-        host: str | None = None,
-        port: int | None = None,
+        name: str,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize the GPSD sensor."""
         self.hass = hass
