@@ -44,7 +44,7 @@ class DiscoveredSnooz:
 class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Snooz."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""

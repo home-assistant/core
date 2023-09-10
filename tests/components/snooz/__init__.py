@@ -96,7 +96,7 @@ async def create_mock_snooz(
 
 
 async def create_mock_snooz_config_entry(
-    hass: HomeAssistant, device: MockSnoozDevice, version=2
+    hass: HomeAssistant, device: MockSnoozDevice, needs_adv_update: bool = False
 ) -> MockConfigEntry:
     """Create a mock config entry."""
 
@@ -106,16 +106,21 @@ async def create_mock_snooz_config_entry(
         "homeassistant.components.snooz.async_ble_device_from_address",
         return_value=generate_ble_device(device.address, device.name),
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            version=version,
-            unique_id=TEST_ADDRESS,
-            data={
-                CONF_ADDRESS: device.address,
-                CONF_TOKEN: TEST_PAIRING_TOKEN,
+        data = {
+            CONF_ADDRESS: device.address,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+        }
+
+        if not needs_adv_update:
+            data |= {
                 CONF_MODEL: device.model,
                 CONF_FIRMWARE_VERSION: device.firmware_version,
-            },
+            }
+
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=TEST_ADDRESS,
+            data=data,
         )
         entry.add_to_hass(hass)
 
