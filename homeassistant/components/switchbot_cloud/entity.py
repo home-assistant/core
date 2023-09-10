@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+from switchbot_api import Commands, Device, Remote, SwitchBotAPI
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,7 +39,9 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         )
         _LOGGER.debug("Initialized %s: %s", device.device_id, device.device_name)
 
-    async def send_command(self, command, command_type="command", parameters="default"):
+    async def send_command(
+        self, command: Commands, command_type="command", parameters="default"
+    ):
         """Send command to device."""
         return await self._api.send_command(
             self._attr_unique_id,
