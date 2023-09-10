@@ -1,4 +1,4 @@
-aiodiscover==1.4.16
+aiodiscover==1.5.1
 aiohttp-cors==0.7.0
 aiohttp==3.8.5
 astral==2.2
