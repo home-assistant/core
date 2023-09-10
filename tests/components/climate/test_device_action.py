@@ -5,9 +5,7 @@ import voluptuous_serialize
 
 import homeassistant.components.automation as automation
 from homeassistant.components.climate import DOMAIN, HVACMode, const, device_action
-from homeassistant.components.device_automation import (
-    DeviceAutomationType,
-)
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (

@@ -55,7 +55,6 @@ class PowerviewSensorDescription(
 SENSORS: Final = [
     PowerviewSensorDescription(
         key="charge",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
@@ -69,7 +68,7 @@ SENSORS: Final = [
     ),
     PowerviewSensorDescription(
         key="signal",
-        name="Signal",
+        translation_key="signal_strength",
         icon="mdi:signal",
         native_unit_of_measurement=PERCENTAGE,
         native_value_fn=lambda shade: round(
@@ -129,7 +128,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self.entity_description = description
-        self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 

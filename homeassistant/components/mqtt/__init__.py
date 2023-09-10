@@ -248,7 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client_available: asyncio.Future[bool]
     if DATA_MQTT_AVAILABLE not in hass.data:
-        client_available = hass.data[DATA_MQTT_AVAILABLE] = asyncio.Future()
+        client_available = hass.data[DATA_MQTT_AVAILABLE] = hass.loop.create_future()
     else:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 

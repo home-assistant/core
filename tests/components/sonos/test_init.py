@@ -1,13 +1,7 @@
 """Tests for the Sonos config flow."""
 import asyncio
 import logging
-import sys
 from unittest.mock import Mock, patch
-
-if sys.version_info[:2] < (3, 11):
-    from async_timeout import timeout as asyncio_timeout
-else:
-    from asyncio import timeout as asyncio_timeout
 
 import pytest
 
@@ -377,7 +371,7 @@ async def test_async_poll_manual_hosts_6(
             caplog.clear()
             # The discovery events should not fire, wait with a timeout.
             with pytest.raises(asyncio.TimeoutError):
-                async with asyncio_timeout(1.0):
+                async with asyncio.timeout(1.0):
                     await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text

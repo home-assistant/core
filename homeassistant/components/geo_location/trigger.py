@@ -7,13 +7,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HassJob,
-    HomeAssistant,
-    State,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
 from homeassistant.helpers.event import (

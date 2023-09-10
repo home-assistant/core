@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -27,9 +28,10 @@ def mock_path():
 
 
 @pytest.fixture
-def mock_device_registry_devices(device_registry):
+def mock_device_registry_devices(hass: HomeAssistant, device_registry):
     """Create device registry devices so the device tracker entities are enabled."""
     config_entry = MockConfigEntry(domain="something_else")
+    config_entry.add_to_hass(hass)
 
     for idx, device in enumerate(
         (

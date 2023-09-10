@@ -1,8 +1,8 @@
 """Provides the ezviz DataUpdateCoordinator."""
+import asyncio
 from datetime import timedelta
 import logging
 
-from async_timeout import timeout
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
     EzvizAuthTokenExpired,
@@ -37,7 +37,7 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from EZVIZ."""
         try:
-            async with timeout(self._api_timeout):
+            async with asyncio.timeout(self._api_timeout):
                 return await self.hass.async_add_executor_job(
                     self.ezviz_client.load_cameras
                 )

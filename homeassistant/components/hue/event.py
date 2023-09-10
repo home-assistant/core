@@ -6,10 +6,7 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.button import Button
-from aiohue.v2.models.relative_rotary import (
-    RelativeRotary,
-    RelativeRotaryDirection,
-)
+from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
 from homeassistant.components.event import (
     EventDeviceClass,
