@@ -557,6 +557,41 @@ DISCOVERY_SCHEMAS = [
             ),
         ),
     ),
+    # Namron 16A Touch Thermostat
+    ZWaveDiscoverySchema(
+        platform=Platform.CLIMATE,
+        hint="dynamic_current_temp",
+        manufacturer_id={0x0438},
+        product_id={0xD013, 0xD025},
+        product_type={0x0200},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_MODE},
+            property={THERMOSTAT_MODE_PROPERTY},
+            type={ValueType.NUMBER},
+        ),
+        data_template=DynamicCurrentTempClimateDataTemplate(
+            lookup_table={
+                "Room sensor": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=1,
+                ),
+                "Floor sensor": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                "Room and floor sensor": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=1,
+                ),
+            },
+            dependent_value=ZwaveValueID(
+                property_=10, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
+        ),
+    ),
     # FortrezZ SSA1/SSA2/SSA3
     ZWaveDiscoverySchema(
         platform=Platform.SELECT,
