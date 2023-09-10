@@ -69,3 +69,23 @@ async def test_adam_dhw_setpoint_change(
     mock_smile_adam_2.set_number_setpoint.assert_called_with(
         "max_dhw_temperature", "056ee145a816487eaa69243c3280f8bf", 55.0
     )
+
+
+async def test_adam_temperature_offset_change(
+    hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test changing of number entities."""
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
+            ATTR_VALUE: 1.0,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam.set_temperature_offset.call_count == 1
+    mock_smile_adam.set_temperature_offset.assert_called_with(
+        "temperature_offset", "6a3bf693d05e48e0b460c815a4fdd09d", 1.0
+    )
