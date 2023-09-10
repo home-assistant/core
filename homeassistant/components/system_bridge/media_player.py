@@ -127,83 +127,77 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         return features
 
     @property
+    def _systembridge_data(self) -> SystemBridgeCoordinatorData:
+        """Return data for the entity."""
+        return self.coordinator.data
+
+    @property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        if data.media.status is None:
+        if self._systembridge_data.media.status is None:
             return None
         return MEDIA_STATUS_MAP.get(
-            data.media.status,
+            self._systembridge_data.media.status,
             MediaPlayerState.IDLE,
         )
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        if data.media.duration is None:
+        if self._systembridge_data.media.duration is None:
             return None
-        return int(data.media.duration)
+        return int(self._systembridge_data.media.duration)
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        if data.media.position is None:
+        if self._systembridge_data.media.position is None:
             return None
-        return int(data.media.position)
+        return int(self._systembridge_data.media.position)
 
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        if data.media.updated_at is None:
+        if self._systembridge_data.media.updated_at is None:
             return None
-        return dt.datetime.fromtimestamp(data.media.updated_at)
+        return dt.datetime.fromtimestamp(self._systembridge_data.media.updated_at)
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.title
+        return self._systembridge_data.media.title
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.artist
+        return self._systembridge_data.media.artist
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.album_title
+        return self._systembridge_data.media.album_title
 
     @property
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.album_artist
+        return self._systembridge_data.media.album_artist
 
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.track_number
+        return self._systembridge_data.media.track_number
 
     @property
     def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        return data.media.shuffle
+        return self._systembridge_data.media.shuffle
 
     @property
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
-        data: SystemBridgeCoordinatorData = self.coordinator.data
-        if data.media.repeat is None:
+        if self._systembridge_data.media.repeat is None:
             return RepeatMode.OFF
-        return MEDIA_REPEAT_MAP.get(data.media.repeat)
+        return MEDIA_REPEAT_MAP.get(self._systembridge_data.media.repeat)
 
     async def async_media_play(self) -> None:
         """Send play command."""
