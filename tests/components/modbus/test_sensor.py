@@ -1082,7 +1082,7 @@ async def test_lazy_error_sensor(
                 0x0000,
                 0x000A,
             ],
-            "nan,10",
+            "0,10",
         ),
         (
             {
