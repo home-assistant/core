@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from screenlogicpy import ScreenLogicGateway
+from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const.common import ON_OFF
 from screenlogicpy.const.data import ATTR
 from screenlogicpy.const.msg import CODE
@@ -170,8 +170,13 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
         await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, state: ON_OFF) -> None:
-        if not await self.gateway.async_set_circuit(self._data_key, state.value):
+        try:
+            if not await self.gateway.async_set_circuit(self._data_key, state.value):
+                raise HomeAssistantError(
+                    f"Failed to set_circuit {self._data_key} {state.value}: Unexpected response"
+                )
+            _LOGGER.debug("Set circuit %s %s", self._data_key, state.value)
+        except ScreenLogicError as sle:
             raise HomeAssistantError(
-                f"Failed to set_circuit {self._data_key} {state.value}"
-            )
-        _LOGGER.debug("Set circuit %s %s", self._data_key, state.value)
+                f"Failed to set_circuit {self._data_key} {state.value}: {sle.msg}"
+            ) from sle

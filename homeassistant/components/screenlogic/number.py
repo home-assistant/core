@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
+from screenlogicpy import ScreenLogicError
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
@@ -15,6 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN
@@ -137,6 +139,10 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        if not (self.native_min_value <= value <= self.native_max_value):
+            raise ValueError(
+                f"Invalid value {value}. Must be in {self.native_min_value}-{self.native_max_value}"
+            )
 
         # Current API requires certain values to be set at the same time. This
         # gathers the existing values and updates the particular value being
@@ -151,8 +157,14 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
 
         args[self._data_key] = value
 
-        if await self._set_value_func(*args.values()):
+        try:
+            if not self._set_value_func(*args.values()):
+                raise HomeAssistantError(
+                    f"Failed to set {self._data_key} to {value}: Unexpected response"
+                )
             _LOGGER.debug("Set '%s' to %s", self._data_key, value)
             await self._async_refresh()
-        else:
-            _LOGGER.debug("Failed to set '%s' to %s", self._data_key, value)
+        except ScreenLogicError as sle:
+            raise HomeAssistantError(
+                f"Failed to set {self._data_key} to {value}: {sle.msg}"
+            ) from sle

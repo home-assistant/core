@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from screenlogicpy import ScreenLogicError
 from screenlogicpy.const.common import UNIT
 from screenlogicpy.const.data import ATTR, DEVICE, VALUE
 from screenlogicpy.const.msg import CODE
@@ -150,14 +151,22 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        if not await self.gateway.async_set_heat_temp(
-            int(self._data_key), int(temperature)
-        ):
+        try:
+            if not await self.gateway.async_set_heat_temp(
+                int(self._data_key), int(temperature)
+            ):
+                raise HomeAssistantError(
+                    f"Failed to set_temperature {temperature} on body"
+                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
+                )
+            _LOGGER.debug(
+                "Set temperature for body %s to %s", self._data_key, temperature
+            )
+        except ScreenLogicError as sle:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body"
-                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}"
-            )
-        _LOGGER.debug("Set temperature for body %s to %s", self._data_key, temperature)
+                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: {sle.msg}"
+            ) from sle
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
@@ -166,31 +175,45 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         else:
             mode = HEAT_MODE.parse(self.preset_mode)
 
-        if not await self.gateway.async_set_heat_mode(
-            int(self._data_key), int(mode.value)
-        ):
+        try:
+            if not await self.gateway.async_set_heat_mode(
+                int(self._data_key), mode.value
+            ):
+                raise HomeAssistantError(
+                    f"Failed to set_hvac_mode {mode.name} on body"
+                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
+                )
+            _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode.name)
+        except ScreenLogicError as sle:
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode.name} on body"
-                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}"
-            )
-        _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode.name)
+                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: {sle.msg}"
+            ) from sle
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        mode = HEAT_MODE.parse(preset_mode)
+        if (mode := HEAT_MODE.parse(preset_mode, default=None)) is None:
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+
         _LOGGER.debug("Setting last_preset to %s", mode.name)
         self._last_preset = mode.value
         if self.hvac_mode == HVACMode.OFF:
             return
 
-        if not await self.gateway.async_set_heat_mode(
-            int(self._data_key), int(mode.value)
-        ):
+        try:
+            if not await self.gateway.async_set_heat_mode(
+                int(self._data_key), mode.value
+            ):
+                raise HomeAssistantError(
+                    f"Failed to set_preset_mode {mode.name} on body"
+                    f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: Unexpected response"
+                )
+            _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode.name)
+        except ScreenLogicError as sle:
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode.name} on body"
-                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}"
-            )
-        _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode.name)
+                f" {self.entity_data[ATTR.BODY_TYPE][ATTR.VALUE]}: {sle.msg}"
+            ) from sle
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added."""
