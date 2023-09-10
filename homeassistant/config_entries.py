@@ -859,7 +859,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         flow_id = uuid_util.random_uuid_hex()
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future[None] = asyncio.Future()
+            init_done: asyncio.Future[None] = self.hass.loop.create_future()
             self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
 
         task = asyncio.create_task(
