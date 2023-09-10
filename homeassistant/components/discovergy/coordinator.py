@@ -8,7 +8,6 @@ from pydiscovergy import Discovergy
 from pydiscovergy.error import AccessTokenExpired, HTTPError
 from pydiscovergy.models import Meter, Reading
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,19 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
     """The Discovergy update coordinator."""
 
-    config_entry: ConfigEntry
     discovergy_client: Discovergy
     meter: Meter
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         meter: Meter,
         discovergy_client: Discovergy,
     ) -> None:
         """Initialize the Discovergy coordinator."""
-        self.config_entry = config_entry
         self.meter = meter
         self.discovergy_client = discovergy_client
 
