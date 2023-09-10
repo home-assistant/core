@@ -43,7 +43,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -320,9 +320,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities, requires_admin=True
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiSwitchEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

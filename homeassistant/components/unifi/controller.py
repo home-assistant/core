@@ -156,12 +156,29 @@ class UniFiController:
         return host
 
     @callback
+    @staticmethod
+    def register_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+        entity_class: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        requires_admin: bool = False,
+    ) -> None:
+        """Register platform for UniFi entity management."""
+        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not controller.is_admin:
+            return
+        controller.register_platform_add_entities(
+            entity_class, descriptions, async_add_entities
+        )
+
+    @callback
     def register_platform_add_entities(
         self,
         unifi_platform_entity: type[UnifiEntity],
         descriptions: tuple[UnifiEntityDescription, ...],
         async_add_entities: AddEntitiesCallback,
-        requires_admin: bool = False,
     ) -> None:
         """Subscribe to UniFi API handlers and create entities."""
 
@@ -203,9 +220,8 @@ class UniFiController:
                 )
             )
 
-        if self.is_admin or not requires_admin:
-            for description in descriptions:
-                async_load_entities(description)
+        for description in descriptions:
+            async_load_entities(description)
 
     @callback
     def async_unifi_ws_state_callback(self, state: WebsocketState) -> None:
