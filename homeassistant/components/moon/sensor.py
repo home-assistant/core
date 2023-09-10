@@ -32,6 +32,16 @@ MOON_ICONS = {
     STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
 }
 
+MOON_ICONS_SOUTHERN_HEMISPHERE = {
+    **MOON_ICONS,
+    STATE_FIRST_QUARTER: "mdi:moon-last-quarter",
+    STATE_LAST_QUARTER: "mdi:moon-first-quarter",
+    STATE_WANING_CRESCENT: "mdi:moon-waxing-crescent",
+    STATE_WANING_GIBBOUS: "mdi:moon-waxing-gibbous",
+    STATE_WAXING_CRESCENT: "mdi:moon-waning-crescent",
+    STATE_WAXING_GIBBOUS: "mdi:moon-waning-gibbous",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -90,4 +100,9 @@ class MoonSensorEntity(SensorEntity):
         else:
             self._attr_native_value = STATE_WANING_CRESCENT
 
-        self._attr_icon = MOON_ICONS.get(self._attr_native_value)
+        if self.hass.config.longitude > 0:
+            self._attr_icon = MOON_ICONS.get(self._attr_native_value)
+        else:
+            self._attr_icon = MOON_ICONS_SOUTHERN_HEMISPHERE.get(
+                self._attr_native_value
+            )
