@@ -194,7 +194,7 @@ aiobotocore==2.6.0
 aiocomelit==0.0.5
 
 # homeassistant.components.dhcp
-aiodiscover==1.4.16
+aiodiscover==1.5.1
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
