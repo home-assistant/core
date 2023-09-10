@@ -74,6 +74,11 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
         self._attr_name = device.name or mac.replace(":", "_")
 
     @property
+    def force_update(self) -> bool:
+        """Do not force updates if the state is the same."""
+        return False
+
+    @property
     def _device_info(self) -> VodafoneStationDeviceInfo:
         """Return fresh data for the device."""
         return self.coordinator.data.devices[self._device_mac]
