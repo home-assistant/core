@@ -344,7 +344,7 @@ aiounifi==61
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.1.0
+aiovodafone==0.2.0
 
 # homeassistant.components.watttime
 aiowatttime==0.1.1
