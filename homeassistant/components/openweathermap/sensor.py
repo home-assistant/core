@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -64,8 +63,6 @@ from .const import (
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
