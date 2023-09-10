@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from typing import Any
 
 from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
@@ -109,7 +110,7 @@ class GpsdSensor(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
