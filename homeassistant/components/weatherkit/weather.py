@@ -135,9 +135,9 @@ class WeatherKitWeather(
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._config = coordinator.config_entry.data
+        config_data = coordinator.config_entry.data
         self._attr_unique_id = (
-            f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
+            f"{config_data[CONF_LATITUDE]}-{config_data[CONF_LONGITUDE]}"
         )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,

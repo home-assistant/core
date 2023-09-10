@@ -35,7 +35,6 @@ async def init_integration(
             CONF_TEAM_ID: "ABCD123456",
             CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nwhateverkey\n-----END PRIVATE KEY-----",
         },
-        pref_disable_polling=True,
     )
 
     weather_response = load_json_object_fixture("weatherkit/weather_response.json")

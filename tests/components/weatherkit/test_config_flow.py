@@ -1,6 +1,7 @@
 """Test the Apple WeatherKit config flow."""
 from unittest.mock import AsyncMock, patch
 
+from apple_weatherkit import DataSetType
 from apple_weatherkit.client import (
     WeatherKitApiClientAuthenticationError,
     WeatherKitApiClientCommunicationError,
@@ -48,7 +49,7 @@ example_config_data = {
 
 async def _test_exception_generates_error(
     hass: HomeAssistant, exception: Exception, error: str
-):
+) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -57,13 +58,13 @@ async def _test_exception_generates_error(
         "apple_weatherkit.client.WeatherKitApiClient.get_availability",
         side_effect=exception,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             example_user_input,
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -78,43 +79,39 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         "homeassistant.components.weatherkit.config_flow.WeatherKitFlowHandler._test_config",
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             example_user_input,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
     location = example_user_input[CONF_LOCATION]
-    assert result2["title"] == f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
+    assert result["title"] == f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
 
-    assert result2["data"] == example_config_data
+    assert result["data"] == example_config_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    await _test_exception_generates_error(
-        hass, WeatherKitApiClientAuthenticationError, "invalid_auth"
-    )
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle connection errors."""
-    await _test_exception_generates_error(
-        hass, WeatherKitApiClientCommunicationError, "cannot_connect"
-    )
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (WeatherKitApiClientAuthenticationError, "invalid_auth"),
+        (WeatherKitApiClientCommunicationError, "cannot_connect"),
+        (WeatherKitUnsupportedLocationError, "unsupported_location"),
+        (WeatherKitApiClientError, "unknown"),
+    ],
+)
+async def test_error_handling(
+    hass: HomeAssistant, exception: Exception, expected_error: str
+) -> None:
+    """Test that we handle various exceptions and generate appropriate errors."""
+    await _test_exception_generates_error(hass, exception, expected_error)
 
 
 async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     """Test we handle when WeatherKit does not support the location."""
-    # Test throwing exception directly
-    await _test_exception_generates_error(
-        hass, WeatherKitUnsupportedLocationError, "unsupported_location"
-    )
-
-    # Test that no available data sets counts as unsupported as well
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -123,15 +120,22 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
         "apple_weatherkit.client.WeatherKitApiClient.get_availability",
         return_value=[],
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             example_user_input,
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unsupported_location"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_location"}
 
+    # Test that we can recover from this error by changing the location
+    with patch(
+        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            example_user_input,
+        )
 
-async def test_form_unknown_client_error(hass: HomeAssistant) -> None:
-    """Test we handle other client errors from the WeatherKit API."""
-    await _test_exception_generates_error(hass, WeatherKitApiClientError, "unknown")
+    assert result["type"] == FlowResultType.CREATE_ENTRY
