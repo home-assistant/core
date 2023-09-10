@@ -15,8 +15,6 @@ async def test_sensor(
 ) -> None:
     """Test the Trafikverket Camera sensor."""
 
-    state = hass.states.get("sensor.test_location_active")
-    assert state.state == "True"
     state = hass.states.get("sensor.test_location_direction")
     assert state.state == "180"
     state = hass.states.get("sensor.test_location_modified")

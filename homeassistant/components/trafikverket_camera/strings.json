@@ -48,9 +48,6 @@
       }
     },
     "sensor": {
-      "active": {
-        "name": "Active"
-      },
       "direction": {
         "name": "Direction"
       },

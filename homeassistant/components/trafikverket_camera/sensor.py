@@ -40,12 +40,6 @@ class TVCameraSensorEntityDescription(
 
 SENSOR_TYPES: tuple[TVCameraSensorEntityDescription, ...] = (
     TVCameraSensorEntityDescription(
-        key="active",
-        translation_key="active",
-        icon="mdi:camera-outline",
-        value_fn=lambda data: data.data.active,
-    ),
-    TVCameraSensorEntityDescription(
         key="direction",
         translation_key="direction",
         native_unit_of_measurement=DEGREE,
