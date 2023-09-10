@@ -100,7 +100,6 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             coordinator,
             api_port,
             description.key,
-            description.name,
         )
         self.entity_description = description
 
