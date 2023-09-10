@@ -84,17 +84,18 @@ class SwitcherCoverEntity(
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return self.cover_id.capitalize()
+        return self._cover_id.capitalize()
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.cover_id = cover_id
+        self._token = str(coordinator.config_entry.data.get(CONF_TOKEN))
+        self._cover_id = cover_id
 
         self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{self.cover_id}"
+            f"{coordinator.device_id}-{coordinator.mac_address}-{self._cover_id}"
         )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -111,9 +112,10 @@ class SwitcherCoverEntity(
     def _update_data(self) -> None:
         """Update data from device."""
         data: SwitcherShutter = self.coordinator.data
+        self._token = str(self.coordinator.config_entry.data.get(CONF_TOKEN))
         if not (
             data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
-            and self.cover_id == COVER2_ID
+            and self._cover_id == COVER2_ID
         ):
             self._attr_current_cover_position = data.position
             self._attr_is_closed = data.position == 0
@@ -136,7 +138,7 @@ class SwitcherCoverEntity(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
-                self.coordinator.config_entry.data.get(CONF_TOKEN),
+                self._token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -152,9 +154,9 @@ class SwitcherCoverEntity(
 
     def _get_shutter_index(self) -> int:
         """Return the current shutter index used for the API Call."""
-        if self.cover_id == COVER1_ID:
+        if self._cover_id == COVER1_ID:
             return 1
-        if self.cover_id == COVER2_ID:
+        if self._cover_id == COVER2_ID:
             return 2
         return 0
 

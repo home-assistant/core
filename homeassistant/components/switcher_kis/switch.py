@@ -204,7 +204,7 @@ class SwitcherBaselLightEntity(
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return self.light_id.capitalize()
+        return self._light_id.capitalize()
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, light_id: str
@@ -212,11 +212,12 @@ class SwitcherBaselLightEntity(
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
-        self.light_id = light_id
+        self._token = str(coordinator.config_entry.data.get(CONF_TOKEN))
+        self._light_id = light_id
 
         # Entity class attributes
         self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{self.light_id}"
+            f"{coordinator.device_id}-{coordinator.mac_address}-{self._light_id}"
         )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -226,6 +227,7 @@ class SwitcherBaselLightEntity(
     def _handle_coordinator_update(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
+        self._token = str(self.coordinator.config_entry.data.get(CONF_TOKEN))
         self.async_write_ha_state()
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
@@ -239,7 +241,7 @@ class SwitcherBaselLightEntity(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
-                self.coordinator.config_entry.data.get(CONF_TOKEN),
+                self._token,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
@@ -265,7 +267,7 @@ class SwitcherBaselLightEntity(
             self.coordinator.data.device_type.category
             == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
         ):
-            if self.light_id == LIGHT1_ID:
+            if self._light_id == LIGHT1_ID:
                 return bool(self.coordinator.data.light == LightState.ON)
             return bool(self.coordinator.data.light2 == LightState.ON)
 
@@ -273,16 +275,16 @@ class SwitcherBaselLightEntity(
             self.coordinator.data.device_type.category
             == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
         ):
-            if self.light_id == LIGHT1_ID:
+            if self._light_id == LIGHT1_ID:
                 return bool(self.coordinator.data.light == LightState.ON)
 
         return bool(self.coordinator.data.device_state == LightState.ON)
 
     def _get_light_index(self) -> int:
         """Return the current shutter index used for the API Call."""
-        if self.light_id == LIGHT1_ID:
+        if self._light_id == LIGHT1_ID:
             return 1
-        if self.light_id == LIGHT2_ID:
+        if self._light_id == LIGHT2_ID:
             return 2
         return 0
 
