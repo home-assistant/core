@@ -52,13 +52,13 @@ SENSOR_TYPES: Final = (
         key="wan_ip4_addr",
         translation_key="external_ipv4",
         icon="mdi:earth",
-        is_suitable=lambda info: info["wan_ip4_addr"] != "",
+        is_suitable=lambda info: info["wan_ip4_addr"] not in ["", "N/A"],
     ),
     VodafoneStationEntityDescription(
         key="wan_ip6_addr",
         translation_key="external_ipv6",
         icon="mdi:earth",
-        is_suitable=lambda info: info["wan_ip6_addr"] != "",
+        is_suitable=lambda info: info["wan_ip6_addr"] not in ["", "N/A"],
     ),
     VodafoneStationEntityDescription(
         key="down_str",
@@ -165,7 +165,7 @@ class VodafoneStationSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, serial_num)},
             name=f"Vodafone Station ({serial_num})",
             manufacturer="Vodafone",
-            model=sensors_data["sys_model_name"],
+            model=sensors_data.get("sys_model_name"),
             hw_version=sensors_data["sys_hardware_version"],
             sw_version=sensors_data["sys_firmware_version"],
         )
