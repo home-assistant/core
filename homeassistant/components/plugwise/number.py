@@ -60,6 +60,16 @@ NUMBER_TYPES = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    PlugwiseNumberEntityDescription(
+        key="temperature_offset",
+        translation_key="temperature_offset",
+        command=lambda api, number, dev_id, value: api.set_temperature_offset(
+            number, dev_id, value
+        ),
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 )
 
 
