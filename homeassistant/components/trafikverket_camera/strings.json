@@ -47,6 +47,11 @@
         }
       }
     },
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      }
+    },
     "sensor": {
       "direction": {
         "name": "Direction"
