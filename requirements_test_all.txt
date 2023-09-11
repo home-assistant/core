@@ -228,7 +228,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.2
+aiohomekit==3.0.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -309,7 +309,7 @@ aiorecollect==2023.09.0
 aioridwell==2023.07.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.31
+aioruckus==0.34
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -345,7 +345,7 @@ aiounifi==61
 aiovlc==0.1.0
 
 # homeassistant.components.vodafone_station
-aiovodafone==0.1.0
+aiovodafone==0.2.0
 
 # homeassistant.components.waqi
 aiowaqi==0.2.1
@@ -526,7 +526,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.0.1
+dbus-fast==2.2.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -636,7 +636,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==1.0.2
+flux-led==1.0.4
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -2014,7 +2014,6 @@ xknxproject==3.2.0
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
 # homeassistant.components.rest
-# homeassistant.components.ruckus_unleashed
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
@@ -2046,7 +2045,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.103.0
+zeroconf==0.104.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
