@@ -6,8 +6,8 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.zha.core.const import DATA_ZHA, DATA_ZHA_GATEWAY
 from homeassistant.components.zha.core.device import ZHADevice
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -65,7 +65,7 @@ async def test_diagnostics_for_config_entry(
     """Test diagnostics for config entry."""
     await zha_device_joined(zigpy_device)
 
-    gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    gateway = get_zha_gateway(hass)
     scan = {c: c for c in range(11, 26 + 1)}
 
     with patch.object(gateway.application_controller, "energy_scan", return_value=scan):

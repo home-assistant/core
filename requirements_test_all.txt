@@ -339,7 +339,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==61
+aiounifi==62
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -2045,7 +2045,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.107.0
+zeroconf==0.108.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
