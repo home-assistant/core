@@ -65,8 +65,8 @@ def mock_todoist_config() -> dict[str, Any]:
     return {}
 
 
-@pytest.fixture(name="setup_integration", autouse=True)
-async def mock_setup_integration(
+@pytest.fixture(name="setup_platform", autouse=True)
+async def mock_setup_platform(
     hass: HomeAssistant,
     api: AsyncMock,
     todoist_config: dict[str, Any],
@@ -153,7 +153,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     assert state.attributes["end_time"] == expected_end_time
 
 
-@pytest.mark.parametrize("setup_integration", [None])
+@pytest.mark.parametrize("setup_platform", [None])
 async def test_failed_coordinator_update(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test a failed data coordinator update is handled correctly."""
     api.get_tasks.side_effect = Exception("API error")
@@ -358,7 +358,7 @@ async def test_task_due_datetime(
 
 
 @pytest.mark.parametrize(
-    ("due", "todoist_config"),
+    ("due", "setup_platform"),
     [
         (
             Due(
@@ -368,7 +368,7 @@ async def test_task_due_datetime(
                 datetime="2023-03-31T00:00:00Z",
                 timezone="America/Regina",
             ),
-            {},
+            None,
         )
     ],
 )
@@ -378,6 +378,11 @@ async def test_config_entry(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test for a calendar created with a config entry."""
+
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state
+
     client = await hass_client()
     response = await client.get(
         get_events_url(
