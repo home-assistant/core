@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from pydiscovergy import Discovergy
-from pydiscovergy.error import AccessTokenExpired, HTTPError
+from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 from pydiscovergy.models import Meter, Reading
 
 from homeassistant.core import HomeAssistant
@@ -44,11 +44,11 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
         """Get last reading for meter."""
         try:
             return await self.discovergy_client.meter_last_reading(self.meter.meter_id)
-        except AccessTokenExpired as err:
+        except InvalidLogin as err:
             raise ConfigEntryAuthFailed(
                 f"Auth expired while fetching last reading for meter {self.meter.meter_id}"
             ) from err
-        except HTTPError as err:
+        except (HTTPError, DiscovergyClientError) as err:
             raise UpdateFailed(
                 f"Error while fetching last reading for meter {self.meter.meter_id}"
             ) from err

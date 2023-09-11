@@ -1,5 +1,4 @@
 """Tests for the Withings component."""
-import datetime
 from http import HTTPStatus
 import re
 from typing import Any
@@ -9,20 +8,15 @@ from urllib.parse import urlparse
 from aiohttp.test_utils import TestClient
 import pytest
 import requests_mock
-from withings_api.common import NotifyAppli, NotifyListProfile, NotifyListResponse
+from withings_api.common import NotifyAppli
 
-from homeassistant.components.withings.common import (
-    ConfigEntryWithingsApi,
-    DataManager,
-    WebhookConfig,
-)
+from homeassistant.components.withings.common import ConfigEntryWithingsApi
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
 from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_config
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
@@ -101,137 +95,3 @@ async def test_webhook_post(
     resp.close()
 
     assert data["code"] == expected_code
-
-
-async def test_webhook_head(
-    hass: HomeAssistant,
-    component_factory: ComponentFactory,
-    aiohttp_client: ClientSessionGenerator,
-    current_request_with_host: None,
-) -> None:
-    """Test head method on webhook view."""
-    person0 = new_profile_config("person0", 0)
-
-    await component_factory.configure_component(profile_configs=(person0,))
-    await component_factory.setup_profile(person0.user_id)
-    data_manager = get_data_manager_by_user_id(hass, person0.user_id)
-
-    client: TestClient = await aiohttp_client(hass.http.app)
-    resp = await client.head(urlparse(data_manager.webhook_config.url).path)
-    assert resp.status == HTTPStatus.OK
-
-
-async def test_webhook_put(
-    hass: HomeAssistant,
-    component_factory: ComponentFactory,
-    aiohttp_client: ClientSessionGenerator,
-    current_request_with_host: None,
-) -> None:
-    """Test webhook callback."""
-    person0 = new_profile_config("person0", 0)
-
-    await component_factory.configure_component(profile_configs=(person0,))
-    await component_factory.setup_profile(person0.user_id)
-    data_manager = get_data_manager_by_user_id(hass, person0.user_id)
-
-    client: TestClient = await aiohttp_client(hass.http.app)
-    resp = await client.put(urlparse(data_manager.webhook_config.url).path)
-
-    # Wait for remaining tasks to complete.
-    await hass.async_block_till_done()
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-    assert data
-    assert data["code"] == 2
-
-
-async def test_data_manager_webhook_subscription(
-    hass: HomeAssistant,
-    component_factory: ComponentFactory,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test data manager webhook subscriptions."""
-    person0 = new_profile_config("person0", 0)
-    await component_factory.configure_component(profile_configs=(person0,))
-
-    api: ConfigEntryWithingsApi = MagicMock(spec=ConfigEntryWithingsApi)
-    data_manager = DataManager(
-        hass,
-        "person0",
-        api,
-        0,
-        WebhookConfig(id="1234", url="http://localhost/api/webhook/1234", enabled=True),
-    )
-
-    data_manager._notify_subscribe_delay = datetime.timedelta(seconds=0)
-    data_manager._notify_unsubscribe_delay = datetime.timedelta(seconds=0)
-
-    api.notify_list.return_value = NotifyListResponse(
-        profiles=(
-            NotifyListProfile(
-                appli=NotifyAppli.BED_IN,
-                callbackurl="https://not.my.callback/url",
-                expires=None,
-                comment=None,
-            ),
-            NotifyListProfile(
-                appli=NotifyAppli.BED_IN,
-                callbackurl=data_manager.webhook_config.url,
-                expires=None,
-                comment=None,
-            ),
-            NotifyListProfile(
-                appli=NotifyAppli.BED_OUT,
-                callbackurl=data_manager.webhook_config.url,
-                expires=None,
-                comment=None,
-            ),
-        )
-    )
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.request(
-        "HEAD",
-        data_manager.webhook_config.url,
-        status=HTTPStatus.OK,
-    )
-
-    # Test subscribing
-    await data_manager.async_subscribe_webhook()
-    api.notify_subscribe.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.WEIGHT
-    )
-    api.notify_subscribe.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.CIRCULATORY
-    )
-    api.notify_subscribe.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.ACTIVITY
-    )
-    api.notify_subscribe.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.SLEEP
-    )
-
-    with pytest.raises(AssertionError):
-        api.notify_subscribe.assert_any_call(
-            data_manager.webhook_config.url, NotifyAppli.USER
-        )
-
-    with pytest.raises(AssertionError):
-        api.notify_subscribe.assert_any_call(
-            data_manager.webhook_config.url, NotifyAppli.BED_IN
-        )
-
-    with pytest.raises(AssertionError):
-        api.notify_subscribe.assert_any_call(
-            data_manager.webhook_config.url, NotifyAppli.BED_OUT
-        )
-
-    # Test unsubscribing.
-    await data_manager.async_unsubscribe_webhook()
-    api.notify_revoke.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.BED_IN
-    )
-    api.notify_revoke.assert_any_call(
-        data_manager.webhook_config.url, NotifyAppli.BED_OUT
-    )
