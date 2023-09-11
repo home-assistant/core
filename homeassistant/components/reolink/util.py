@@ -13,9 +13,8 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
     reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(
         config_entry.entry_id
     )
-    connected = (
+    return (
         reolink_data is not None
         and config_entry.state == config_entries.ConfigEntryState.LOADED
         and reolink_data.device_coordinator.last_update_success
     )
-    return connected
