@@ -15,6 +15,15 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
+EXAMPLE_CONFIG_DATA = {
+    CONF_LATITUDE: 35.4690101707532,
+    CONF_LONGITUDE: 135.74817234593166,
+    CONF_KEY_ID: "QABCDEFG123",
+    CONF_SERVICE_ID: "io.home-assistant.testing",
+    CONF_TEAM_ID: "ABCD123456",
+    CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nwhateverkey\n-----END PRIVATE KEY-----",
+}
+
 
 async def init_integration(
     hass: HomeAssistant,
@@ -27,14 +36,7 @@ async def init_integration(
         domain=DOMAIN,
         title="Home",
         unique_id="0123456",
-        data={
-            CONF_LATITUDE: 35.4690101707532,
-            CONF_LONGITUDE: 135.74817234593166,
-            CONF_KEY_ID: "QABCDEFG123",
-            CONF_SERVICE_ID: "io.home-assistant.testing",
-            CONF_TEAM_ID: "ABCD123456",
-            CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nwhateverkey\n-----END PRIVATE KEY-----",
-        },
+        data=EXAMPLE_CONFIG_DATA,
     )
 
     weather_response = load_json_object_fixture("weatherkit/weather_response.json")

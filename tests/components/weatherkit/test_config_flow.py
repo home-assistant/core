@@ -24,22 +24,15 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import EXAMPLE_CONFIG_DATA
+
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-example_user_input = {
+EXAMPLE_USER_INPUT = {
     CONF_LOCATION: {
         CONF_LATITUDE: 35.4690101707532,
         CONF_LONGITUDE: 135.74817234593166,
     },
-    CONF_KEY_ID: "QABCDEFG123",
-    CONF_SERVICE_ID: "io.home-assistant.testing",
-    CONF_TEAM_ID: "ABCD123456",
-    CONF_KEY_PEM: "-----BEGIN PRIVATE KEY-----\nwhateverkey\n-----END PRIVATE KEY-----",
-}
-
-example_config_data = {
-    CONF_LATITUDE: 35.4690101707532,
-    CONF_LONGITUDE: 135.74817234593166,
     CONF_KEY_ID: "QABCDEFG123",
     CONF_SERVICE_ID: "io.home-assistant.testing",
     CONF_TEAM_ID: "ABCD123456",
@@ -60,7 +53,7 @@ async def _test_exception_generates_error(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            example_user_input,
+            EXAMPLE_USER_INPUT,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -81,16 +74,16 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            example_user_input,
+            EXAMPLE_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
-    location = example_user_input[CONF_LOCATION]
+    location = EXAMPLE_USER_INPUT[CONF_LOCATION]
     assert result["title"] == f"{location[CONF_LATITUDE]}, {location[CONF_LONGITUDE]}"
 
-    assert result["data"] == example_config_data
+    assert result["data"] == EXAMPLE_CONFIG_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -122,7 +115,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            example_user_input,
+            EXAMPLE_USER_INPUT,
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -135,7 +128,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            example_user_input,
+            EXAMPLE_USER_INPUT,
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
