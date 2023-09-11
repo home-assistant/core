@@ -77,10 +77,7 @@ async def test_reauth(
 @pytest.mark.parametrize(
     ("error", "message"),
     [
-        (
-            InvalidLogin,
-            "invalid_auth",
-        ),
+        (InvalidLogin, "invalid_auth"),
         (HTTPError, "cannot_connect"),
         (DiscovergyClientError, "cannot_connect"),
         (Exception, "unknown"),
