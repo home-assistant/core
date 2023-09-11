@@ -526,7 +526,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.0.1
+dbus-fast==2.2.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -636,7 +636,7 @@ fjaraskupan==2.2.0
 flipr-api==1.5.0
 
 # homeassistant.components.flux_led
-flux-led==1.0.2
+flux-led==1.0.4
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
@@ -2042,7 +2042,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.103.0
+zeroconf==0.104.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
