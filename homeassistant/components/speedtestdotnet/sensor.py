@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -76,7 +76,7 @@ async def async_setup_entry(
     )
 
 
-class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor):
+class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
     entity_description: SpeedtestSensorEntityDescription
@@ -130,9 +130,3 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], RestoreSensor
                 self._attrs[ATTR_BYTES_SENT] = self.coordinator.data[ATTR_BYTES_SENT]
 
         return self._attrs
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if state := await self.async_get_last_sensor_data():
-            self._state = cast(float, state.native_value)
