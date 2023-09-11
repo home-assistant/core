@@ -33,8 +33,8 @@ class GroupMember(NamedTuple):
 class GroupEntityReference(NamedTuple):
     """Reference to a group entity."""
 
-    name: str
-    original_name: str
+    name: str | None
+    original_name: str | None
     entity_id: int
 
 
@@ -84,18 +84,27 @@ class ZHAGroupMember(LogMixin):
         entity_registry = er.async_get(self._zha_device.hass)
         zha_device_registry = self.device.gateway.device_registry
 
-        return [
-            GroupEntityReference(
-                entity_registry.async_get(entity_ref.reference_id).name,
-                entity_registry.async_get(entity_ref.reference_id).original_name,
-                entity_ref.reference_id,
-            )._asdict()
-            for entity_ref in zha_device_registry.get(self.device.ieee)
-            if list(entity_ref.cluster_handlers.values())[
-                0
-            ].cluster.endpoint.endpoint_id
-            == self.endpoint_id
-        ]
+        entity_info = []
+
+        for entity_ref in zha_device_registry.get(self.device.ieee):
+            entity = entity_registry.async_get(entity_ref.reference_id)
+            handler = list(entity_ref.cluster_handlers.values())[0]
+
+            if (
+                entity is None
+                or handler.cluster.endpoint.endpoint_id != self.endpoint_id
+            ):
+                continue
+
+            entity_info.append(
+                GroupEntityReference(
+                    name=entity.name,
+                    original_name=entity.original_name,
+                    entity_id=entity_ref.reference_id,
+                )._asdict()
+            )
+
+        return entity_info
 
     async def async_remove_from_group(self) -> None:
         """Remove the device endpoint from the provided zigbee group."""
