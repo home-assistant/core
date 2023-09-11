@@ -9,7 +9,7 @@ from .const import DOMAIN
 
 
 def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:
-    """Check if a existing entry has a proper connection."""
+    """Check if an existing entry has a proper connection."""
     reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(
         config_entry.entry_id
     )
