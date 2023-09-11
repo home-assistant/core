@@ -94,7 +94,7 @@ async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) ->
         "pydiscovergy.Discovergy.meters",
         side_effect=error,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_EMAIL: "test@example.com",
@@ -102,5 +102,5 @@ async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) ->
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": message}
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {"base": message}
