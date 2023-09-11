@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import UpdateType, WithingsEntityDescription, async_get_data_manager
+from .common import UpdateType, async_get_data_manager
 from .const import (
     SCORE_POINTS,
     UOM_BEATS_PER_MINUTE,
@@ -32,7 +32,7 @@ from .const import (
     UOM_MMHG,
     Measurement,
 )
-from .entity import BaseWithingsSensor
+from .entity import BaseWithingsSensor, WithingsEntityDescription
 
 
 @dataclass

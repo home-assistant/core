@@ -42,7 +42,6 @@ from homeassistant.util import dt as dt_util
 
 from . import const
 from .const import Measurement
-from .entity import WithingsEntityDescription
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
@@ -520,13 +519,6 @@ class DataManager:
             self.webhook_update_coordinator.update_data(
                 Measurement.IN_BED, data_category == NotifyAppli.BED_IN
             )
-
-
-def get_attribute_unique_id(
-    description: WithingsEntityDescription, user_id: int
-) -> str:
-    """Get a entity unique id for a user's attribute."""
-    return f"withings_{user_id}_{description.measurement.value}"
 
 
 async def async_get_data_manager(

@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .common import DataManager, UpdateType, get_attribute_unique_id
+from .common import DataManager, UpdateType
 from .const import DOMAIN, Measurement
 
 
@@ -41,8 +41,8 @@ class BaseWithingsSensor(Entity):
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
         self.entity_description = description
-        self._attr_unique_id = get_attribute_unique_id(
-            description, data_manager.user_id
+        self._attr_unique_id = (
+            f"withings_{data_manager.user_id}_{description.measurement.value}"
         )
         self._state_data: Any | None = None
         self._attr_device_info = DeviceInfo(
