@@ -925,19 +925,6 @@ def zone(
     ):
         return False
 
-    latitude = entity.attributes.get(ATTR_LATITUDE)
-    longitude = entity.attributes.get(ATTR_LONGITUDE)
-
-    if latitude is None:
-        raise ConditionErrorMessage(
-            "zone", f"entity {entity_id} has no 'latitude' attribute"
-        )
-
-    if longitude is None:
-        raise ConditionErrorMessage(
-            "zone", f"entity {entity_id} has no 'longitude' attribute"
-        )
-
     return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
     )
