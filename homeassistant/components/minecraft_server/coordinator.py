@@ -7,14 +7,14 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import aiodns
 from mcstatus.server import JavaServer
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL, SRV_RECORD_PREFIX
+from . import helpers
+from .const import SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,70 +56,19 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
         # 3rd party library instance
         self._server = JavaServer(self.host, self.port)
 
-    async def async_is_server_online(self) -> bool:
-        """Check server connection using a 'status' request and return result."""
-        server_online = False
-
-        # Check once if host is a SRV record. If so, update server data.
-        if not self.srv_record_checked:
-            await self._async_check_srv_record()
-
-        # Send a status request to the server.
-        try:
-            await self._server.async_status()
-            server_online = True
-        except OSError as error:
-            _LOGGER.debug(
-                (
-                    "Error occurred while trying to check the connection to '%s:%s' -"
-                    " OSError: %s"
-                ),
-                self.host,
-                self.port,
-                error,
-            )
-
-        return server_online
-
-    async def _async_check_srv_record(self) -> None:
-        """Check if the given host is a valid Minecraft SRV record."""
-        self.srv_record_checked = True
-        srv_record = None
-        srv_query = None
-
-        try:
-            srv_query = await aiodns.DNSResolver().query(
-                host=f"{SRV_RECORD_PREFIX}.{self.host}", qtype="SRV"
-            )
-        except aiodns.error.DNSError:
-            # 'host' is not a SRV record.
-            pass
-        else:
-            # 'host' is a valid SRV record, extract the data.
-            srv_record = {
-                CONF_HOST: srv_query[0].host,
-                CONF_PORT: srv_query[0].port,
-            }
-
-            if srv_record is not None:
-                _LOGGER.debug(
-                    "'%s' is a valid Minecraft SRV record ('%s:%s')",
-                    self.host,
-                    srv_record[CONF_HOST],
-                    srv_record[CONF_PORT],
-                )
-                # Overwrite host, port and 3rd party library instance
-                # with data extracted out of SRV record.
-                self.host = srv_record[CONF_HOST]
-                self.port = srv_record[CONF_PORT]
-                self._server = JavaServer(self.host, self.port)
-
     async def _async_update_data(self) -> MinecraftServerData:
         """Get server data from 3rd party library and update properties."""
 
-        # Check once if host is a SRV record. If so, update server data.
+        # Check once if host is a valid Minecraft SRV record.
         if not self.srv_record_checked:
-            await self._async_check_srv_record()
+            self.srv_record_checked = True
+            srv_record = await helpers.async_check_srv_record(self.host)
+            if srv_record is not None:
+                # Overwrite host, port and 3rd party library instance
+                # with data extracted out of the SRV record.
+                self.host = srv_record[CONF_HOST]
+                self.port = srv_record[CONF_PORT]
+                self._server = JavaServer(self.host, self.port)
 
         # Send status request to the server.
         try:
