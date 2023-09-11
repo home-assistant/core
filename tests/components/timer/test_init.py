@@ -1007,7 +1007,7 @@ async def test_restore_active_finished_outside_grace(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert entity.state == STATUS_IDLE
-    assert entity.extra_state_attributes[ATTR_DURATION] == "0:00:30"
+    assert entity.extra_state_attributes[ATTR_DURATION] == "0:01:00"
     assert ATTR_REMAINING not in entity.extra_state_attributes
     assert ATTR_FINISHES_AT not in entity.extra_state_attributes
     assert entity.extra_state_attributes[ATTR_RESTORE]
