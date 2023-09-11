@@ -28,10 +28,10 @@ async def test_auth_error_handling(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_weather_data",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         side_effect=WeatherKitApiClientAuthenticationError,
     ), patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         side_effect=WeatherKitApiClientAuthenticationError,
     ):
         entry.add_to_hass(hass)
@@ -51,10 +51,10 @@ async def test_client_error_handling(hass: HomeAssistant) -> None:
     )
 
     with pytest.raises(ConfigEntryNotReady), patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_weather_data",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         side_effect=WeatherKitApiClientError,
     ), patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         side_effect=WeatherKitApiClientError,
     ):
         entry.add_to_hass(hass)

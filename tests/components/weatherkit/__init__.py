@@ -58,10 +58,10 @@ async def init_integration(
         available_data_sets.append(DataSetType.HOURLY_FORECAST)
 
     with patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_weather_data",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         return_value=weather_response,
     ), patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         return_value=available_data_sets,
     ):
         entry.add_to_hass(hass)

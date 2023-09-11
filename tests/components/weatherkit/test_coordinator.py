@@ -17,7 +17,7 @@ async def test_failed_updates(hass: HomeAssistant) -> None:
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     with pytest.raises(UpdateFailed), patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_weather_data",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         side_effect=WeatherKitApiClientError,
     ):
         await coordinator._async_update_data()

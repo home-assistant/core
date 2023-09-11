@@ -13,6 +13,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+REQUESTED_DATA_SETS = [
+    DataSetType.CURRENT_WEATHER,
+    DataSetType.DAILY_FORECAST,
+    DataSetType.HOURLY_FORECAST,
+]
+
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
@@ -41,15 +47,9 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             self.config_entry.data[CONF_LONGITUDE],
         )
 
-        requested_data_sets = [
-            DataSetType.CURRENT_WEATHER,
-            DataSetType.DAILY_FORECAST,
-            DataSetType.HOURLY_FORECAST,
-        ]
-
         self.supported_data_sets = [
             data_set
-            for data_set in requested_data_sets
+            for data_set in REQUESTED_DATA_SETS
             if data_set in supported_data_sets
         ]
 

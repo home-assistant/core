@@ -48,7 +48,7 @@ async def _test_exception_generates_error(
     )
 
     with patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -110,7 +110,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -123,7 +123,7 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
 
     # Test that we can recover from this error by changing the location
     with patch(
-        "apple_weatherkit.client.WeatherKitApiClient.get_availability",
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
         return_value=[DataSetType.CURRENT_WEATHER],
     ):
         result = await hass.config_entries.flow.async_configure(
