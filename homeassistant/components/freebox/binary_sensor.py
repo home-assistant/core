@@ -78,7 +78,7 @@ class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:
-        """Initialize a Pir."""
+        """Initialize a Freebox binary sensor."""
         super().__init__(hass, router, node)
         self._command_trigger = self.get_command_id(
             node["type"]["endpoints"], "signal", "trigger"
