@@ -4,7 +4,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.containers import RoborockErrorCode, RoborockStateCode
+from roborock.containers import (
+    RoborockDockErrorCode,
+    RoborockDockTypeCode,
+    RoborockErrorCode,
+    RoborockStateCode,
+)
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -133,6 +138,35 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+    ),
+    # Only available on some newer models
+    RoborockSensorDescription(
+        key="clean_percent",
+        icon="mdi:progress-check",
+        translation_key="clean_percent",
+        value_fn=lambda data: data.status.clean_percent,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Only available with more than just the basic dock
+    RoborockSensorDescription(
+        key="dock_error",
+        icon="mdi:garage-open",
+        translation_key="dock_error",
+        value_fn=lambda data: data.status.dock_error_status.name
+        if data.status.dock_type != RoborockDockTypeCode.no_dock
+        else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=RoborockDockErrorCode.keys(),
+    ),
+    RoborockSensorDescription(
+        key="mop_clean_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.status.rdt,
+        translation_key="mop_drying_remaining_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

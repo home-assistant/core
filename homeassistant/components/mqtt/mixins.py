@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import Any, Protocol, cast, final
+from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
 
@@ -850,7 +850,8 @@ class MqttDiscoveryUpdate(Entity):
                 discovery_hash,
                 payload,
             )
-            assert self._discovery_data
+            if TYPE_CHECKING:
+                assert self._discovery_data
             old_payload: DiscoveryInfoType
             old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
@@ -877,7 +878,8 @@ class MqttDiscoveryUpdate(Entity):
                     send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
-            assert self._discovery_data is not None
+            if TYPE_CHECKING:
+                assert self._discovery_data is not None
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
