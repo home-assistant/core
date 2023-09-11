@@ -66,6 +66,9 @@ async def test_aemet_forecast_create_sensors(
     state = hass.states.get("sensor.aemet_hourly_forecast_wind_bearing")
     assert state is None
 
+    state = hass.states.get("sensor.aemet_hourly_forecast_wind_gust_speed")
+    assert state is None
+
     state = hass.states.get("sensor.aemet_hourly_forecast_wind_speed")
     assert state is None
 
