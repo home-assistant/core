@@ -63,13 +63,6 @@ def mock_multipan_platform():
 
 
 @pytest.fixture(autouse=True)
-def reduce_reconnect_timeout():
-    """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def mock_app():
     """Mock zigpy app interface."""
     mock_app = AsyncMock()

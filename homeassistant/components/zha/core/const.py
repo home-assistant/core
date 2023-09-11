@@ -186,6 +186,7 @@ DATA_ZHA = "zha"
 DATA_ZHA_CONFIG = "config"
 DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
+DATA_ZHA_DEVICE_TRIGGER_CACHE = "zha_device_trigger_cache"
 DATA_ZHA_GATEWAY = "zha_gateway"
 
 DEBUG_COMP_BELLOWS = "bellows"
