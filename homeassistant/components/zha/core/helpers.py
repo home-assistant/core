@@ -433,7 +433,6 @@ class ZHAData:
     device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
         default_factory=dict
     )
-    bridge_id: str | None = dataclasses.field(default=None)
 
 
 def get_zha_data(hass: HomeAssistant) -> ZHAData:

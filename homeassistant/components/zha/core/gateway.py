@@ -220,7 +220,6 @@ class ZHAGateway:
 
         zha_data = get_zha_data(self.hass)
         zha_data.gateway = self
-        zha_data.bridge_id = str(self.coordinator_ieee)
 
         self.coordinator_zha_device = self._async_get_or_create_device(
             self._find_coordinator_device(), restored=True
