@@ -21,7 +21,6 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from .const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
-    CONF_LOCK_DEFAULT_CODE,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
@@ -31,7 +30,7 @@ from .const import (
 class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Verisure."""
 
-    VERSION = 1
+    VERSION = 2
 
     email: str
     entry: ConfigEntry
@@ -306,16 +305,10 @@ class VerisureOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage Verisure options."""
-        errors = {}
+        errors: dict[str, Any] = {}
 
         if user_input is not None:
-            if len(user_input[CONF_LOCK_DEFAULT_CODE]) not in [
-                0,
-                user_input[CONF_LOCK_CODE_DIGITS],
-            ]:
-                errors["base"] = "code_format_mismatch"
-            else:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -323,14 +316,12 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,
-                        default=self.entry.options.get(
-                            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-                        ),
+                        description={
+                            "suggested_value": self.entry.options.get(
+                                CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+                            )
+                        },
                     ): int,
-                    vol.Optional(
-                        CONF_LOCK_DEFAULT_CODE,
-                        default=self.entry.options.get(CONF_LOCK_DEFAULT_CODE, ""),
-                    ): str,
                 }
             ),
             errors=errors,

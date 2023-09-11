@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 @pytest.fixture
@@ -86,8 +86,12 @@ async def test_exposed_areas(
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
     kitchen_device = device_registry.async_get_or_create(
-        config_entry_id="1234", connections=set(), identifiers={("demo", "id-1234")}
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
     )
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
@@ -246,7 +250,8 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
     for sentence in test_sentences:
         callback.reset_mock()
         result = await conversation.async_converse(hass, sentence, None, Context())
-        callback.assert_called_once_with(sentence)
+        assert callback.call_count == 1
+        assert callback.call_args[0][0] == sentence
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), sentence
@@ -265,3 +270,16 @@ async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
         ), sentence
 
     assert len(callback.mock_calls) == 0
+
+
+async def test_shopping_list_add_item(
+    hass: HomeAssistant, init_components, sl_setup
+) -> None:
+    """Test adding an item to the shopping list through the default agent."""
+    result = await conversation.async_converse(
+        hass, "add apples to my shopping list", None, Context()
+    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech == {
+        "plain": {"speech": "Added apples", "extra_data": None}
+    }

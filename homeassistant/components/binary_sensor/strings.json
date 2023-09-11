@@ -237,6 +237,13 @@
         "on": "Plugged in"
       }
     },
+    "power": {
+      "name": "Power",
+      "state": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
+    },
     "presence": {
       "name": "Presence",
       "state": {

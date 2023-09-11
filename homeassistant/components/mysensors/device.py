@@ -11,8 +11,9 @@ from mysensors.sensor import ChildSensor
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     CHILD_CALLBACK,

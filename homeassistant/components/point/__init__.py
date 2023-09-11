@@ -20,11 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
@@ -97,9 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         token_saver=token_saver,
     )
     try:
-        # pylint: disable-next=fixme
-        # TODO Remove authlib constraint when refactoring this code
-        await session.ensure_active_token()
+        # the call to user() implicitly calls ensure_active_token() in authlib
+        await session.user()
     except ConnectTimeout as err:
         _LOGGER.debug("Connection Timeout")
         raise ConfigEntryNotReady from err

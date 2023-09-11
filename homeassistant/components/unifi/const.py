@@ -8,7 +8,9 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.IMAGE,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,

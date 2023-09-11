@@ -63,7 +63,7 @@ SSDP_SCANNER = "scanner"
 UPNP_SERVER = "server"
 UPNP_SERVER_MIN_PORT = 40000
 UPNP_SERVER_MAX_PORT = 40100
-SCAN_INTERVAL = timedelta(minutes=2)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -153,7 +153,7 @@ async def async_register_callback(
 
 
 @bind_hass
-async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
+async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
 ) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
@@ -162,7 +162,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 
 
 @bind_hass
-async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
+async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
 ) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
@@ -575,7 +575,7 @@ class Scanner:
         info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(headers, info_desc)
 
-    async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
+    async def async_get_discovery_info_by_udn_st(
         self, udn: str, st: str
     ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
@@ -583,9 +583,7 @@ class Scanner:
             return await self._async_headers_to_discovery_info(headers)
         return None
 
-    async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
-        self, st: str
-    ) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -608,7 +606,7 @@ def discovery_info_from_headers_and_description(
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
-    ssdp_st = combined_headers.get("st")
+    ssdp_st = combined_headers.get_lower("st")
     if isinstance(info_desc, CaseInsensitiveDict):
         upnp_info = {**info_desc.as_dict()}
     else:
@@ -628,11 +626,11 @@ def discovery_info_from_headers_and_description(
     return SsdpServiceInfo(
         ssdp_usn=ssdp_usn,
         ssdp_st=ssdp_st,
-        ssdp_ext=combined_headers.get("ext"),
-        ssdp_server=combined_headers.get("server"),
-        ssdp_location=combined_headers.get("location"),
-        ssdp_udn=combined_headers.get("_udn"),
-        ssdp_nt=combined_headers.get("nt"),
+        ssdp_ext=combined_headers.get_lower("ext"),
+        ssdp_server=combined_headers.get_lower("server"),
+        ssdp_location=combined_headers.get_lower("location"),
+        ssdp_udn=combined_headers.get_lower("_udn"),
+        ssdp_nt=combined_headers.get_lower("nt"),
         ssdp_headers=combined_headers,
         upnp=upnp_info,
     )

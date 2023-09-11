@@ -57,6 +57,48 @@
       }
     }
   },
+  "entity": {
+    "lock": {
+      "door_locks": {
+        "name": "Door locks"
+      }
+    },
+    "sensor": {
+      "odometer": {
+        "name": "Odometer"
+      },
+      "average_fuel_consumption": {
+        "name": "Average fuel consumption"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "tire_pressure_front_left": {
+        "name": "Tire pressure front left"
+      },
+      "tire_pressure_front_right": {
+        "name": "Tire pressure front right"
+      },
+      "tire_pressure_rear_left": {
+        "name": "Tire pressure rear left"
+      },
+      "tire_pressure_rear_right": {
+        "name": "Tire pressure rear right"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "ev_range": {
+        "name": "EV range"
+      },
+      "ev_battery_level": {
+        "name": "EV battery level"
+      },
+      "ev_time_to_full_charge": {
+        "name": "EV time to full charge"
+      }
+    }
+  },
   "services": {
     "unlock_specific_door": {
       "name": "Unlock specific door",

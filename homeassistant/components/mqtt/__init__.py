@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import jinja2
 import voluptuous as vol
@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers import config_validation as cv, event as ev, template
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -248,7 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client_available: asyncio.Future[bool]
     if DATA_MQTT_AVAILABLE not in hass.data:
-        client_available = hass.data[DATA_MQTT_AVAILABLE] = asyncio.Future()
+        client_available = hass.data[DATA_MQTT_AVAILABLE] = hass.loop.create_future()
     else:
         client_available = hass.data[DATA_MQTT_AVAILABLE]
 
@@ -313,7 +313,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        assert msg_topic is not None
+        if TYPE_CHECKING:
+            assert msg_topic is not None
         await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
@@ -340,7 +341,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unsub()
             await hass.async_add_executor_job(write_dump)
 
-        event.async_call_later(hass, call.data["duration"], finish_dump)
+        ev.async_call_later(hass, call.data["duration"], finish_dump)
 
     hass.services.async_register(
         DOMAIN,

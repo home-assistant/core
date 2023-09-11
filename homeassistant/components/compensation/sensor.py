@@ -17,10 +17,13 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from .const import (
     CONF_COMPENSATION,
@@ -124,10 +127,12 @@ class CompensationSensor(SensorEntity):
         return ret
 
     @callback
-    def _async_compensation_sensor_state_listener(self, event: Event) -> None:
+    def _async_compensation_sensor_state_listener(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle sensor state changes."""
         new_state: State | None
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
@@ -140,7 +145,7 @@ class CompensationSensor(SensorEntity):
         else:
             value = None if new_state.state == STATE_UNKNOWN else new_state.state
         try:
-            x_value = float(value)
+            x_value = float(value)  # type: ignore[arg-type]
             if self._minimum is not None and x_value <= self._minimum[0]:
                 y_value = self._minimum[1]
             elif self._maximum is not None and x_value >= self._maximum[0]:

@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -78,7 +78,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
@@ -126,6 +126,7 @@ async def _async_setup_entity(
 class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset: datetime | None = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
@@ -161,15 +162,17 @@ class MqttSensor(MqttEntity, RestoreSensor):
             and not self._expiration_trigger
         ):
             expiration_at = last_state.last_changed + timedelta(seconds=_expire_after)
-            if expiration_at < (time_now := dt_util.utcnow()):
+            remain_seconds = (expiration_at - dt_util.utcnow()).total_seconds()
+
+            if remain_seconds <= 0:
                 # Skip reactivating the sensor
                 _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
                 return
             self._expired = False
             self._attr_native_value = last_sensor_data.native_value
 
-            self._expiration_trigger = async_track_point_in_utc_time(
-                self.hass, self._value_is_expired, expiration_at
+            self._expiration_trigger = async_call_later(
+                self.hass, remain_seconds, self._value_is_expired
             )
             _LOGGER.debug(
                 (
@@ -177,7 +180,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     " expiring %s"
                 ),
                 self.entity_id,
-                expiration_at - time_now,
+                remain_seconds,
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -234,10 +237,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     self._expiration_trigger()
 
                 # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=self._expire_after)
-
-                self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self._value_is_expired, expiration_at
+                self._expiration_trigger = async_call_later(
+                    self.hass, self._expire_after, self._value_is_expired
                 )
 
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)

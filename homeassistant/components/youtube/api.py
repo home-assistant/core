@@ -1,15 +1,17 @@
 """API for YouTube bound to Home Assistant OAuth."""
-from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import Resource, build
+from youtubeaio.types import AuthScope
+from youtubeaio.youtube import YouTube
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 class AsyncConfigEntryAuth:
     """Provide Google authentication tied to an OAuth2 based config entry."""
+
+    youtube: YouTube | None = None
 
     def __init__(
         self,
@@ -30,19 +32,10 @@ class AsyncConfigEntryAuth:
         await self.oauth_session.async_ensure_token_valid()
         return self.access_token
 
-    async def get_resource(self) -> Resource:
-        """Create executor job to get current resource."""
-        try:
-            credentials = Credentials(await self.check_and_refresh_token())
-        except RefreshError as ex:
-            self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
-            raise ex
-        return await self.hass.async_add_executor_job(self._get_resource, credentials)
-
-    def _get_resource(self, credentials: Credentials) -> Resource:
-        """Get current resource."""
-        return build(
-            "youtube",
-            "v3",
-            credentials=credentials,
-        )
+    async def get_resource(self) -> YouTube:
+        """Create resource."""
+        token = await self.check_and_refresh_token()
+        if self.youtube is None:
+            self.youtube = YouTube(session=async_get_clientsession(self.hass))
+        await self.youtube.set_user_authentication(token, [AuthScope.READ_ONLY])
+        return self.youtube

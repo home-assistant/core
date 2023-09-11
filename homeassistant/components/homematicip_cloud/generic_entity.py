@@ -10,7 +10,8 @@ from homematicip.aio.group import AsyncGroup
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import AsyncHome, HomematicipHAP
@@ -161,10 +162,10 @@ class HomematicipGenericEntity(Entity):
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
-        else:
+        else:  # noqa: PLR5501
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            if entity_id := self.registry_entry.entity_id:  # noqa: PLR5501
+            if entity_id := self.registry_entry.entity_id:
                 entity_registry = er.async_get(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)

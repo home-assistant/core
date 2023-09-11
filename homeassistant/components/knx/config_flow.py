@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
-from pathlib import Path
-import shutil
 from typing import Any, Final
 
 import voluptuous as vol
@@ -18,15 +16,13 @@ from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
-from xknx.secure.keyring import Keyring, XMLInterface, sync_load_keyring
+from xknx.secure.keyring import Keyring, XMLInterface
 
-from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowHandler, FlowResult
 from homeassistant.helpers import selector
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
@@ -60,6 +56,7 @@ from .const import (
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
+from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .schema import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
@@ -77,7 +74,6 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
-DEFAULT_KNX_KEYRING_FILENAME: Final = "keyring.knxkeys"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
@@ -499,10 +495,15 @@ class KNXCommonFlow(ABC, FlowHandler):
 
         if user_input is not None:
             password = user_input[CONF_KNX_KNXKEY_PASSWORD]
-            errors = await self._save_uploaded_knxkeys_file(
-                uploaded_file_id=user_input[CONF_KEYRING_FILE],
-                password=password,
-            )
+            try:
+                self._keyring = await save_uploaded_knxkeys_file(
+                    self.hass,
+                    uploaded_file_id=user_input[CONF_KEYRING_FILE],
+                    password=password,
+                )
+            except InvalidSecureConfiguration:
+                errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
+
             if not errors and self._keyring:
                 self.new_entry_data |= KNXConfigEntryData(
                     knxkeys_filename=f"{DOMAIN}/{DEFAULT_KNX_KEYRING_FILENAME}",
@@ -710,33 +711,6 @@ class KNXCommonFlow(ABC, FlowHandler):
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
         )
-
-    async def _save_uploaded_knxkeys_file(
-        self, uploaded_file_id: str, password: str
-    ) -> dict[str, str]:
-        """Validate the uploaded file and move it to the storage directory. Return errors."""
-
-        def _process_upload() -> tuple[Keyring | None, dict[str, str]]:
-            keyring: Keyring | None = None
-            errors = {}
-            with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
-                try:
-                    keyring = sync_load_keyring(
-                        path=file_path,
-                        password=password,
-                    )
-                except InvalidSecureConfiguration:
-                    errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
-                else:
-                    dest_path = Path(self.hass.config.path(STORAGE_DIR, DOMAIN))
-                    dest_path.mkdir(exist_ok=True)
-                    dest_file = dest_path / DEFAULT_KNX_KEYRING_FILENAME
-                    shutil.move(file_path, dest_file)
-            return keyring, errors
-
-        keyring, errors = await self.hass.async_add_executor_job(_process_upload)
-        self._keyring = keyring
-        return errors
 
 
 class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):

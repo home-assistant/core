@@ -10,7 +10,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import Host
 from reolink_aio.enums import SubType
-from reolink_aio.exceptions import ReolinkError, SubscriptionError
+from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components import webhook
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -24,8 +24,9 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
 
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
+FIRST_ONVIF_LONG_POLL_TIMEOUT = 90
 SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
@@ -60,6 +61,7 @@ class ReolinkHost:
         )
 
         self.webhook_id: str | None = None
+        self._onvif_supported: bool = True
         self._base_url: str = ""
         self._webhook_url: str = ""
         self._webhook_reachable: bool = False
@@ -95,6 +97,8 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
+        self._onvif_supported = self._api.supported(None, "ONVIF")
+
         enable_rtsp = None
         enable_onvif = None
         enable_rtmp = None
@@ -105,7 +109,7 @@ class ReolinkHost:
             )
             enable_rtsp = True
 
-        if not self._api.onvif_enabled:
+        if not self._api.onvif_enabled and self._onvif_supported:
             _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -153,21 +157,34 @@ class ReolinkHost:
 
         self._unique_id = format_mac(self._api.mac_address)
 
-        await self.subscribe()
-
-        if self._api.supported(None, "initial_ONVIF_state"):
+        if self._onvif_supported:
+            try:
+                await self.subscribe()
+            except NotSupportedError:
+                self._onvif_supported = False
+                self.unregister_webhook()
+                await self._api.unsubscribe()
+            else:
+                if self._api.supported(None, "initial_ONVIF_state"):
+                    _LOGGER.debug(
+                        "Waiting for initial ONVIF state on webhook '%s'",
+                        self._webhook_url,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Camera model %s most likely does not push its initial state"
+                        " upon ONVIF subscription, do not check",
+                        self._api.model,
+                    )
+                self._cancel_onvif_check = async_call_later(
+                    self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
+                )
+        if not self._onvif_supported:
             _LOGGER.debug(
-                "Waiting for initial ONVIF state on webhook '%s'", self._webhook_url
-            )
-        else:
-            _LOGGER.debug(
-                "Camera model %s most likely does not push its initial state"
-                "upon ONVIF subscription, do not check",
+                "Camera model %s does not support ONVIF, using fast polling instead",
                 self._api.model,
             )
-        self._cancel_onvif_check = async_call_later(
-            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif
-        )
+            await self._async_poll_all_motion()
 
         if self._api.sw_version_update_required:
             ir.async_create_issue(
@@ -205,7 +222,7 @@ class ReolinkHost:
         # ONVIF push is not received, start long polling and schedule check
         await self._async_start_long_polling()
         self._cancel_long_poll_check = async_call_later(
-            self._hass, FIRST_ONVIF_TIMEOUT, self._async_check_onvif_long_poll
+            self._hass, FIRST_ONVIF_LONG_POLL_TIMEOUT, self._async_check_onvif_long_poll
         )
 
         self._cancel_onvif_check = None
@@ -215,7 +232,7 @@ class ReolinkHost:
         if not self._long_poll_received:
             _LOGGER.debug(
                 "Did not receive state through ONVIF long polling after %i seconds",
-                FIRST_ONVIF_TIMEOUT,
+                FIRST_ONVIF_LONG_POLL_TIMEOUT,
             )
             ir.async_create_issue(
                 self._hass,
@@ -230,8 +247,44 @@ class ReolinkHost:
                     "network_link": "https://my.home-assistant.io/redirect/network/",
                 },
             )
+
+            if self._base_url.startswith("https"):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "https_webhook",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="https_webhook",
+                    translation_placeholders={
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+
+            if self._hass.config.api is not None and self._hass.config.api.use_ssl:
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "ssl",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="ssl",
+                    translation_placeholders={
+                        "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
+                        "base_url": self._base_url,
+                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, "ssl")
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
+            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
+            ir.async_delete_issue(self._hass, DOMAIN, "ssl")
 
         # If no ONVIF push or long polling state is received, start fast polling
         await self._async_poll_all_motion()
@@ -267,7 +320,19 @@ class ReolinkHost:
     async def _async_start_long_polling(self):
         """Start ONVIF long polling task."""
         if self._long_poll_task is None:
-            await self._api.subscribe(sub_type=SubType.long_poll)
+            try:
+                await self._api.subscribe(sub_type=SubType.long_poll)
+            except ReolinkError as err:
+                # make sure the long_poll_task is always created to try again later
+                if not self._lost_subscription:
+                    self._lost_subscription = True
+                    _LOGGER.error(
+                        "Reolink %s event long polling subscription lost: %s",
+                        self._api.nvr_name,
+                        str(err),
+                    )
+            else:
+                self._lost_subscription = False
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self):
@@ -316,10 +381,19 @@ class ReolinkHost:
 
     async def renew(self) -> None:
         """Renew the subscription of motion events (lease time is 15 minutes)."""
+        if not self._onvif_supported:
+            return
+
         try:
             await self._renew(SubType.push)
             if self._long_poll_task is not None:
-                await self._renew(SubType.long_poll)
+                if not self._api.subscribed(SubType.long_poll):
+                    _LOGGER.debug("restarting long polling task")
+                    # To prevent 5 minute request timeout
+                    await self._async_stop_long_polling()
+                    await self._async_start_long_polling()
+                else:
+                    await self._renew(SubType.long_poll)
         except SubscriptionError as err:
             if not self._lost_subscription:
                 self._lost_subscription = True
@@ -408,22 +482,6 @@ class ReolinkHost:
         webhook_path = webhook.async_generate_path(event_id)
         self._webhook_url = f"{self._base_url}{webhook_path}"
 
-        if self._base_url.startswith("https"):
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "https_webhook",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="https_webhook",
-                translation_placeholders={
-                    "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "https_webhook")
-
         _LOGGER.debug("Registered webhook: %s", event_id)
 
     def unregister_webhook(self):
@@ -451,13 +509,15 @@ class ReolinkHost:
                 await asyncio.sleep(LONG_POLL_ERROR_COOLDOWN)
                 continue
             except Exception as ex:
-                _LOGGER.exception("Error while requesting ONVIF pull point: %s", ex)
+                _LOGGER.exception(
+                    "Unexpected exception while requesting ONVIF pull point: %s", ex
+                )
                 await self._api.unsubscribe(sub_type=SubType.long_poll)
                 raise ex
 
             self._long_poll_error = False
 
-            if not self._long_poll_received and channels != []:
+            if not self._long_poll_received:
                 self._long_poll_received = True
                 ir.async_delete_issue(self._hass, DOMAIN, "webhook_url")
 

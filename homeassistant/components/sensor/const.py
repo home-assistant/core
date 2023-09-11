@@ -1,11 +1,11 @@
 """Constants for sensor."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -245,6 +245,12 @@ class SensorDeviceClass(StrEnum):
     """Amount of O3.
 
     Unit of measurement: `µg/m³`
+    """
+
+    PH = "ph"
+    """Potential hydrogen (acidity/alkalinity).
+
+    Unit of measurement: Unitless
     """
 
     PM1 = "pm1"
@@ -509,6 +515,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.PH: {None},
     SensorDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -576,6 +583,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.NITROGEN_MONOXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROUS_OXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.OZONE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.PH: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM1: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM10: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PM25: {SensorStateClass.MEASUREMENT},

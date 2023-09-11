@@ -40,6 +40,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .common import (
     CLIMATE_AIDOO_HVAC_UNIT_ENTITY,
@@ -722,14 +723,16 @@ async def test_thermostat_dry_and_fan_both_hvac_mode_and_preset(
     ]
 
 
-async def test_thermostat_warning_when_setting_dry_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_dry_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when setting Dry preset."""
+    """Test raise of repair issue and warning when setting Dry preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
+
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -743,20 +746,28 @@ async def test_thermostat_warning_when_setting_dry_preset(
         blocking=True,
     )
 
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )
 
 
-async def test_thermostat_warning_when_setting_fan_preset(
+async def test_thermostat_raise_repair_issue_and_warning_when_setting_fan_preset(
     hass: HomeAssistant,
     client,
     climate_airzone_aidoo_control_hvac_unit,
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when setting Fan preset."""
+    """Test raise of repair issue and warning when setting Fan preset."""
+    client.async_send_command.return_value = {"result": {"status": 1}}
     state = hass.states.get(CLIMATE_AIDOO_HVAC_UNIT_ENTITY)
     assert state
 
@@ -770,7 +781,14 @@ async def test_thermostat_warning_when_setting_fan_preset(
         blocking=True,
     )
 
+    issue_id = f"dry_fan_presets_deprecation_{CLIMATE_AIDOO_HVAC_UNIT_ENTITY}"
+    issue_registry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=issue_id,
+    )
     assert (
-        "Dry and Fan preset modes are deprecated and will be removed in a future release. Use the corresponding Dry and Fan HVAC modes instead"
+        "Dry and Fan preset modes are deprecated and will be removed in Home Assistant 2024.2. Please use the corresponding Dry and Fan HVAC modes instead"
         in caplog.text
     )

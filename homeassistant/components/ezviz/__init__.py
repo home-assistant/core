@@ -33,13 +33,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS_BY_TYPE: dict[str, list] = {
     ATTR_TYPE_CAMERA: [],
     ATTR_TYPE_CLOUD: [
+        Platform.ALARM_CONTROL_PANEL,
         Platform.BINARY_SENSOR,
+        Platform.BUTTON,
         Platform.CAMERA,
         Platform.IMAGE,
         Platform.LIGHT,
         Platform.NUMBER,
         Platform.SELECT,
         Platform.SENSOR,
+        Platform.SIREN,
         Platform.SWITCH,
         Platform.UPDATE,
     ],

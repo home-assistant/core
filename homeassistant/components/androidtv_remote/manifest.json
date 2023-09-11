@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "loggers": ["androidtvremote2"],
   "quality_scale": "platinum",
-  "requirements": ["androidtvremote2==0.0.12"],
+  "requirements": ["androidtvremote2==0.0.14"],
   "zeroconf": ["_androidtvremote2._tcp.local."]
 }
