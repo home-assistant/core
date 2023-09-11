@@ -55,7 +55,7 @@ async def test_form(
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.UNAUTHORIZED])
-async def test_form_invalid_auth(hass: HomeAssistant, api: AsyncMock) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +73,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, api: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])
-async def test_form_cannot_connect(hass: HomeAssistant, api: AsyncMock) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,6 +88,26 @@ async def test_form_cannot_connect(hass: HomeAssistant, api: AsyncMock) -> None:
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize("todoist_api_status", [HTTPStatus.UNAUTHORIZED])
+async def test_unknown_error(hass: HomeAssistant, api: AsyncMock) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    api.get_tasks.side_effect = ValueError("unexpected")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: TOKEN,
+        },
+    )
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("errors") == {"base": "unknown"}
 
 
 async def test_already_configured(hass: HomeAssistant, setup_integration: None) -> None:
