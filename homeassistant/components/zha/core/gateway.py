@@ -46,9 +46,6 @@ from .const import (
     CONF_RADIO_TYPE,
     CONF_USE_THREAD,
     CONF_ZIGPY,
-    DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID,
-    DATA_ZHA_GATEWAY,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -87,6 +84,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
+from .helpers import get_zha_data
 from .registries import GROUP_ENTITY_DOMAINS
 
 if TYPE_CHECKING:
@@ -123,8 +121,6 @@ class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
     # -- Set in async_initialize --
-    ha_device_registry: dr.DeviceRegistry
-    ha_entity_registry: er.EntityRegistry
     application_controller: ControllerApplication
     radio_description: str
 
@@ -132,7 +128,7 @@ class ZHAGateway:
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ) -> None:
         """Initialize the gateway."""
-        self._hass = hass
+        self.hass = hass
         self._config = config
         self._devices: dict[EUI64, ZHADevice] = {}
         self._groups: dict[int, ZHAGroup] = {}
@@ -149,12 +145,6 @@ class ZHAGateway:
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
 
-        discovery.PROBE.initialize(self._hass)
-        discovery.GROUP_PROBE.initialize(self._hass)
-
-        self.ha_device_registry = dr.async_get(self._hass)
-        self.ha_entity_registry = er.async_get(self._hass)
-
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
@@ -165,7 +155,7 @@ class ZHAGateway:
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
             CONF_DATABASE,
-            self._hass.config.path(DEFAULT_DATABASE_NAME),
+            self.hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
@@ -197,29 +187,15 @@ class ZHAGateway:
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
+        discovery.PROBE.initialize(self.hass)
+        discovery.GROUP_PROBE.initialize(self.hass)
+
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
             config=app_config,
             auto_form=False,
             start_radio=False,
         )
-
-        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-
-        self.async_load_devices()
-
-        # Groups are attached to the coordinator device so we need to load it early
-        coordinator = self._find_coordinator_device()
-        loaded_groups = False
-
-        # We can only load groups early if the coordinator's model info has been stored
-        # in the zigpy database
-        if coordinator.model is not None:
-            self.coordinator_zha_device = self._async_get_or_create_device(
-                coordinator, restored=True
-            )
-            self.async_load_groups()
-            loaded_groups = True
 
         for attempt in range(STARTUP_RETRIES):
             try:
@@ -242,14 +218,15 @@ class ZHAGateway:
             else:
                 break
 
+        zha_data = get_zha_data(self.hass)
+        zha_data.gateway = self
+
         self.coordinator_zha_device = self._async_get_or_create_device(
             self._find_coordinator_device(), restored=True
         )
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
 
-        # If ZHA groups could not load early, we can safely load them now
-        if not loaded_groups:
-            self.async_load_groups()
+        self.async_load_devices()
+        self.async_load_groups()
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
@@ -317,7 +294,7 @@ class ZHAGateway:
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(
-            self._hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
+            self.hass, fetch_updated_state(), "zha.gateway-fetch_updated_state"
         )
 
     def device_joined(self, device: zigpy.device.Device) -> None:
@@ -327,7 +304,7 @@ class ZHAGateway:
         address
         """
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_JOINED,
@@ -343,7 +320,7 @@ class ZHAGateway:
         """Handle a device initialization without quirks loaded."""
         manuf = device.manufacturer
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_RAW_INIT,
@@ -360,7 +337,7 @@ class ZHAGateway:
 
     def device_initialized(self, device: zigpy.device.Device) -> None:
         """Handle device joined and basic information discovered."""
-        self._hass.async_create_task(self.async_device_initialized(device))
+        self.hass.async_create_task(self.async_device_initialized(device))
 
     def device_left(self, device: zigpy.device.Device) -> None:
         """Handle device leaving the network."""
@@ -375,7 +352,7 @@ class ZHAGateway:
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+            self.hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_member_added(
@@ -387,7 +364,7 @@ class ZHAGateway:
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+            self.hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
         if len(zha_group.members) == 2:
             # we need to do this because there wasn't already
@@ -415,7 +392,7 @@ class ZHAGateway:
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is not None:
             async_dispatcher_send(
-                self._hass,
+                self.hass,
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
@@ -432,9 +409,11 @@ class ZHAGateway:
                 remove_tasks.append(entity_ref.remove_future)
             if remove_tasks:
                 await asyncio.wait(remove_tasks)
-        reg_device = self.ha_device_registry.async_get(device.device_id)
+
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(device.device_id)
         if reg_device is not None:
-            self.ha_device_registry.async_remove_device(reg_device.id)
+            device_registry.async_remove_device(reg_device.id)
 
     def device_removed(self, device: zigpy.device.Device) -> None:
         """Handle device being removed from the network."""
@@ -443,14 +422,14 @@ class ZHAGateway:
         if zha_device is not None:
             device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
-            async_dispatcher_send(self._hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
-            self._hass.async_create_task(
+            async_dispatcher_send(self.hass, f"{SIGNAL_REMOVE}_{str(zha_device.ieee)}")
+            self.hass.async_create_task(
                 self._async_remove_device(zha_device, entity_refs),
                 "ZHAGateway._async_remove_device",
             )
             if device_info is not None:
                 async_dispatcher_send(
-                    self._hass,
+                    self.hass,
                     ZHA_GW_MSG,
                     {
                         ATTR_TYPE: ZHA_GW_MSG_DEVICE_REMOVED,
@@ -504,9 +483,10 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
+        entity_registry = er.async_get(self.hass)
         assert self.coordinator_zha_device
         all_group_entity_entries = er.async_entries_for_device(
-            self.ha_entity_registry,
+            entity_registry,
             self.coordinator_zha_device.device_id,
             include_disabled_entities=True,
         )
@@ -524,7 +504,7 @@ class ZHAGateway:
             _LOGGER.debug(
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
-            self.ha_entity_registry.async_remove(entry.entity_id)
+            entity_registry.async_remove(entry.entity_id)
 
     @property
     def coordinator_ieee(self) -> EUI64:
@@ -598,9 +578,11 @@ class ZHAGateway:
     ) -> ZHADevice:
         """Get or create a ZHA device."""
         if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
-            zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
+            zha_device = ZHADevice.new(self.hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
-            device_registry_device = self.ha_device_registry.async_get_or_create(
+
+            device_registry = dr.async_get(self.hass)
+            device_registry_device = device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
                 connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
@@ -616,7 +598,7 @@ class ZHAGateway:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
-            zha_group = ZHAGroup(self._hass, self, zigpy_group)
+            zha_group = ZHAGroup(self.hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
         return zha_group
 
@@ -661,7 +643,7 @@ class ZHAGateway:
         device_info = zha_device.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.INITIALIZED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -675,7 +657,7 @@ class ZHAGateway:
         await zha_device.async_configure()
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -683,7 +665,7 @@ class ZHAGateway:
             },
         )
         await zha_device.async_initialize(from_cache=False)
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
 
     async def _async_device_rejoined(self, zha_device: ZHADevice) -> None:
         _LOGGER.debug(
@@ -697,7 +679,7 @@ class ZHAGateway:
         device_info = zha_device.device_info
         device_info[DEVICE_PAIRING_STATUS] = DevicePairingStatus.CONFIGURED.name
         async_dispatcher_send(
-            self._hass,
+            self.hass,
             ZHA_GW_MSG,
             {
                 ATTR_TYPE: ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -766,7 +748,15 @@ class ZHAGateway:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
-        await self.application_controller.shutdown()
+        # shutdown is called when the config entry unloads are processed
+        # there are cases where unloads are processed because of a failure of
+        # some sort and the application controller may not have been
+        # created yet
+        if (
+            hasattr(self, "application_controller")
+            and self.application_controller is not None
+        ):
+            await self.application_controller.shutdown()
 
     def handle_message(
         self,
