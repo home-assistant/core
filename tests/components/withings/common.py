@@ -23,11 +23,10 @@ import homeassistant.components.webhook as webhook
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
-    WithingsEntityDescription,
     get_all_data_managers,
-    get_attribute_unique_id,
 )
 import homeassistant.components.withings.const as const
+from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import (
@@ -324,6 +323,6 @@ async def async_get_entity_id(
 ) -> str | None:
     """Get an entity id for a user's attribute."""
     entity_registry = er.async_get(hass)
-    unique_id = get_attribute_unique_id(description, user_id)
+    unique_id = f"withings_{user_id}_{description.measurement.value}"
 
     return entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)
