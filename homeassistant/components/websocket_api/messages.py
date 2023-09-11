@@ -94,7 +94,9 @@ def _cached_event_message(event: Event) -> str:
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json({"id": IDEN_TEMPLATE, "type": "event", "event": event})
+    return message_to_json(
+        {"id": IDEN_TEMPLATE, "type": "event", "event": event.as_dict()}
+    )
 
 
 def cached_state_diff_message(iden: int, event: Event) -> str:
