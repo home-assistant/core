@@ -1,7 +1,7 @@
 """Test the Discovergy config flow."""
 from unittest.mock import Mock, patch
 
-from pydiscovergy.error import HTTPError, InvalidLogin
+from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 
 from homeassistant import data_entry_flow
 from homeassistant.components.discovergy.const import DOMAIN
@@ -102,6 +102,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch("pydiscovergy.Discovergy.meters", side_effect=HTTPError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_client_error(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch("pydiscovergy.Discovergy.meters", side_effect=DiscovergyClientError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
