@@ -1,51 +1,49 @@
 """Tests for the Withings component."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from withings_api.common import NotifyAppli
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import MockWithings, call_webhook
-from .conftest import USER_ID, WEBHOOK_ID, ComponentSetup
+from . import call_webhook, setup_integration
+from .conftest import USER_ID, WEBHOOK_ID
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_binary_sensor(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    withings: AsyncMock,
+    config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test binary sensor."""
-    await setup_integration()
-    mock = MockWithings()
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
-        return_value=mock,
-    ):
-        client = await hass_client_no_auth()
+    await setup_integration(hass, config_entry)
 
-        entity_id = "binary_sensor.henk_in_bed"
+    client = await hass_client_no_auth()
 
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    entity_id = "binary_sensor.henk_in_bed"
 
-        resp = await call_webhook(
-            hass,
-            WEBHOOK_ID,
-            {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
-            client,
-        )
-        assert resp.message_code == 0
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-        resp = await call_webhook(
-            hass,
-            WEBHOOK_ID,
-            {"userid": USER_ID, "appli": NotifyAppli.BED_OUT},
-            client,
-        )
-        assert resp.message_code == 0
-        await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_OFF
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+        client,
+    )
+    assert resp.message_code == 0
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_OUT},
+        client,
+    )
+    assert resp.message_code == 0
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF

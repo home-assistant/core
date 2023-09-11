@@ -53,6 +53,8 @@ NOT_AUTHENTICATED_ERROR = re.compile(
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
+SUBSCRIBE_DELAY = datetime.timedelta(seconds=5)
+UNSUBSCRIBE_DELAY = datetime.timedelta(seconds=1)
 
 
 class UpdateType(StrEnum):
@@ -229,8 +231,8 @@ class DataManager:
         self._user_id = user_id
         self._profile = profile
         self._webhook_config = webhook_config
-        self._notify_subscribe_delay = datetime.timedelta(seconds=5)
-        self._notify_unsubscribe_delay = datetime.timedelta(seconds=1)
+        self._notify_subscribe_delay = SUBSCRIBE_DELAY
+        self._notify_unsubscribe_delay = UNSUBSCRIBE_DELAY
 
         self._is_available = True
         self._cancel_interval_update_interval: CALLBACK_TYPE | None = None
