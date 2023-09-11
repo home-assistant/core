@@ -1,11 +1,8 @@
 """Test the Airthings Wave sensor."""
-from datetime import timedelta
 import logging
-from unittest.mock import patch
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from tests.components.airthings_ble import (
     CO2_V1,
@@ -19,15 +16,11 @@ from tests.components.airthings_ble import (
     WAVE_SERVICE_INFO,
     create_device,
     create_entry,
+    patch_airthings_device_update,
 )
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def _async_update_method():
-    """Mock the update method."""
-    return WAVE_DEVICE_INFO
 
 
 async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
@@ -58,16 +51,7 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
-        return_value=DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=_async_update_method,
-            update_interval=timedelta(seconds=0),
-        ),
-    ):
+    with patch_airthings_device_update():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -109,16 +93,7 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
-        return_value=DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=_async_update_method,
-            update_interval=timedelta(seconds=0),
-        ),
-    ):
+    with patch_airthings_device_update():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -168,16 +143,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
-        return_value=DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=_async_update_method,
-            update_interval=timedelta(seconds=0),
-        ),
-    ):
+    with patch_airthings_device_update():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -236,16 +202,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
-        return_value=DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=_async_update_method,
-            update_interval=timedelta(seconds=0),
-        ),
-    ):
+    with patch_airthings_device_update():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

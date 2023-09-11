@@ -38,6 +38,14 @@ def patch_airthings_ble(return_value=AirthingsDevice, side_effect=None):
     )
 
 
+def patch_airthings_device_update():
+    """Patch airthings-ble device."""
+    return patch(
+        "homeassistant.components.airthings_ble.AirthingsBluetoothDeviceData.update_device",
+        return_value=WAVE_DEVICE_INFO,
+    )
+
+
 WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="cc-cc-cc-cc-cc-cc",
     address="cc:cc:cc:cc:cc:cc",
