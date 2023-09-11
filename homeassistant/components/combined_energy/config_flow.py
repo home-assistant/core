@@ -60,7 +60,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         self._errors = {}
 
-        if user_input is not None:
+        if user_input:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             installation_id = user_input[CONF_INSTALLATION_ID]
