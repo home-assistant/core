@@ -53,8 +53,8 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter
-        self._attr_name = f"{ELECTRIC_METER} {self.meter.meter}"
-        self._attr_unique_id = f"{self.meter.esiid}_{self.meter.meter}"
+        self._attr_name = f"{ELECTRIC_METER} {meter.meter}"
+        self._attr_unique_id = f"{meter.esiid}_{meter.meter}"
 
     @property
     def extra_state_attributes(self):
