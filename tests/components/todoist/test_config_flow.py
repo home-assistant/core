@@ -91,7 +91,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, api: AsyncMock) -> None:
 
 
 async def test_already_configured(hass: HomeAssistant, setup_integration: None) -> None:
-    """Test handling the case where the API key is already used."""
+    """Test that only a single instance can be configured."""
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -99,11 +99,5 @@ async def test_already_configured(hass: HomeAssistant, setup_integration: None) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TOKEN: TOKEN,
-        },
-    )
-    assert result2.get("type") == FlowResultType.ABORT
-    assert result2.get("reason") == "already_configured"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"

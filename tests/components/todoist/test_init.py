@@ -1,7 +1,7 @@
 """Unit tests for the Todoist integration."""
+from collections.abc import Generator
 from http import HTTPStatus
-from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -12,9 +12,17 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_platforms() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.todoist.PLATFORMS", return_value=[]
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_load_unload(
     hass: HomeAssistant,
-    mock_setup_entry: Any,
     setup_integration: None,
     todoist_config_entry: MockConfigEntry | None,
 ) -> None:
@@ -31,7 +39,6 @@ async def test_load_unload(
 @pytest.mark.parametrize("todoist_api_status", [HTTPStatus.INTERNAL_SERVER_ERROR])
 async def test_init_failure(
     hass: HomeAssistant,
-    mock_setup_entry: Any,
     setup_integration: None,
     api: AsyncMock,
     todoist_config_entry: MockConfigEntry | None,
