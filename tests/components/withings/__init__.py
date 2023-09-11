@@ -1,6 +1,5 @@
 """Tests for the withings component."""
 from collections.abc import Iterable
-import json
 from typing import Any
 from urllib.parse import urlparse
 
@@ -22,7 +21,7 @@ from homeassistant.core import HomeAssistant
 
 from .common import WebhookResponse
 
-from tests.common import load_fixture
+from tests.common import load_json_object_fixture
 
 
 async def call_webhook(
@@ -63,7 +62,7 @@ class MockWithings:
 
     def user_get_device(self) -> UserGetDeviceResponse:
         """Get devices."""
-        fixture = json.loads(load_fixture(f"withings/{self.device_fixture}"))
+        fixture = load_json_object_fixture(f"withings/{self.device_fixture}")
         return UserGetDeviceResponse(**fixture)
 
     def measure_get_meas(
@@ -76,7 +75,7 @@ class MockWithings:
         lastupdate: DateType | None = None,
     ) -> MeasureGetMeasResponse:
         """Get measurements."""
-        fixture = json.loads(load_fixture(f"withings/{self.measurement_fixture}"))
+        fixture = load_json_object_fixture(f"withings/{self.measurement_fixture}")
         return MeasureGetMeasResponse(**fixture)
 
     def sleep_get_summary(
@@ -88,7 +87,7 @@ class MockWithings:
         lastupdate: DateType | None = arrow.utcnow(),
     ) -> SleepGetSummaryResponse:
         """Get sleep."""
-        fixture = json.loads(load_fixture(f"withings/{self.sleep_fixture}"))
+        fixture = load_json_object_fixture(f"withings/{self.sleep_fixture}")
         return SleepGetSummaryResponse(**fixture)
 
     def notify_list(
@@ -96,5 +95,5 @@ class MockWithings:
         appli: NotifyAppli | None = None,
     ) -> NotifyListResponse:
         """Get sleep."""
-        fixture = json.loads(load_fixture(f"withings/{self.notify_list_fixture}"))
+        fixture = load_json_object_fixture(f"withings/{self.notify_list_fixture}")
         return NotifyListResponse(**fixture)
