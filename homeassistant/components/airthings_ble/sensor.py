@@ -124,7 +124,9 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
     device_registry = device_async_get(hass)
     entity_registry = entity_async_get(hass)
 
-    device = device_registry.async_get_device(connections={(DOMAIN, address)})
+    device = device_registry.async_get_device(
+        connections={(CONNECTION_BLUETOOTH, address)}
+    )
 
     if not device:
         return
@@ -239,7 +241,7 @@ class AirthingsSensor(
                 (
                     CONNECTION_BLUETOOTH,
                     airthings_device.address,
-                ),
+                )
             },
             name=name,
             manufacturer=airthings_device.manufacturer,

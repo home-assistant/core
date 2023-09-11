@@ -7,6 +7,7 @@ from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 
 from tests.common import MockConfigEntry, MockEntity
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -188,7 +189,7 @@ def create_device(hass, entry):
     device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(DOMAIN, WAVE_SERVICE_INFO.address)},
+        connections={(CONNECTION_BLUETOOTH, WAVE_SERVICE_INFO.address)},
         manufacturer="Airthings AS",
         name="Airthings Wave Plus (123456)",
         model="Wave Plus",
