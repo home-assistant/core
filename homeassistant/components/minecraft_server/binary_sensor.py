@@ -58,7 +58,7 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
         description: MinecraftServerBinarySensorEntityDescription,
     ) -> None:
         """Initialize binary sensor base entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
         self._attr_is_on = False
@@ -69,6 +69,6 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
         return True
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return binary sensor state."""
         return self._coordinator.last_update_success
