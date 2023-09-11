@@ -114,6 +114,8 @@ class ProbeEndpoint:
             platform = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if platform and platform in zha_const.PLATFORMS:
+            platform = cast(Platform, platform)
+
             cluster_handlers = endpoint.unclaimed_cluster_handlers()
             platform_entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
                 platform,

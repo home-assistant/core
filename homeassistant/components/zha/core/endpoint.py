@@ -196,7 +196,7 @@ class Endpoint:
 
     def async_new_entity(
         self,
-        platform: Platform | str,
+        platform: Platform,
         entity_class: CALLABLE_T,
         unique_id: str,
         cluster_handlers: list[ClusterHandler],
