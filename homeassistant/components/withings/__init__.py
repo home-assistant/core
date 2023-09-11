@@ -47,10 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_id = webhook.async_generate_id()
         config_updates["data"] = {
             **entry.data,
-            **{
-                const.CONF_USE_WEBHOOK: False,
-                CONF_WEBHOOK_ID: webhook_id,
-            },
+            const.CONF_USE_WEBHOOK: False,
+            CONF_WEBHOOK_ID: webhook_id,
         }
 
     if config_updates:
