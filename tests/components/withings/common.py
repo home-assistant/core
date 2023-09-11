@@ -44,6 +44,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.components.withings import WebhookResponse
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -89,14 +90,6 @@ def new_profile_config(
         or NotifyListResponse(profiles=[]),
         api_response_notify_revoke=api_response_notify_revoke,
     )
-
-
-@dataclass
-class WebhookResponse:
-    """Response data from a webhook."""
-
-    message: str
-    message_code: int
 
 
 class ComponentFactory:
