@@ -11,6 +11,7 @@ import zigpy.state
 from homeassistant.components import zha
 from homeassistant.components.zha import api
 from homeassistant.components.zha.core.const import RadioType
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ async def test_async_get_network_settings_inactive(
     """Test reading settings with an inactive ZHA installation."""
     await setup_zha()
 
-    gateway = api._get_gateway(hass)
+    gateway = get_zha_gateway(hass)
     await zha.async_unload_entry(hass, gateway.config_entry)
 
     backup = zigpy.backups.NetworkBackup()
@@ -70,7 +71,7 @@ async def test_async_get_network_settings_missing(
     """Test reading settings with an inactive ZHA installation, no valid channel."""
     await setup_zha()
 
-    gateway = api._get_gateway(hass)
+    gateway = get_zha_gateway(hass)
     await gateway.config_entry.async_unload(hass)
 
     # Network settings were never loaded for whatever reason
