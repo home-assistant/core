@@ -101,7 +101,7 @@ class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
 
 
 class FreeboxPirSensor(FreeboxBinarySensor):
-    """Representation of a Freebox door opener binary sensor."""
+    """Representation of a Freebox motion binary sensor."""
 
     @property
     def device_class(self) -> BinarySensorDeviceClass:
