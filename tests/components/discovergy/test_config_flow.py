@@ -11,6 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.discovergy.const import GET_METERS
 
 
 async def test_form(hass: HomeAssistant, mock_meters: Mock) -> None:
@@ -86,14 +87,24 @@ async def test_reauth(
 async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) -> None:
     """Test to handle exceptions."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
     with patch(
         "pydiscovergy.Discovergy.meters",
         side_effect=error,
     ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": message}
+
+    with patch("pydiscovergy.Discovergy.meters", return_value=GET_METERS):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -102,5 +113,6 @@ async def test_form_fail(hass: HomeAssistant, error: Exception, message: str) ->
             },
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["errors"] == {"base": message}
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == "test@example.com"
+        assert "errors" not in result
