@@ -4,15 +4,21 @@ import contextlib
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+PLATFORMS: list[Platform] = [
+    Platform.LAWN_MOWER,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

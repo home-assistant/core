@@ -1,7 +1,7 @@
 """Husqvarna automower entity."""
 import logging
 
-from aioautomower import AutomowerSession
+from aioautomower import AutomowerSession, MowerActivities, MowerStates
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -12,14 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOCKED_STATES,
-    DOMAIN,
-    ERROR_ACTIVITIES,
-    ERROR_STATES,
-    MOWING_STATES,
-    PAUSED_STATES,
-)
+from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerEntity
 
@@ -28,6 +21,32 @@ SUPPORT_STATE_SERVICES = (
     | LawnMowerEntityFeature.PAUSE
     | LawnMowerEntityFeature.START_MOWING
 )
+
+DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
+ERROR_ACTIVITIES = (
+    MowerActivities.STOPPED_IN_GARDEN,
+    MowerActivities.UNKNOWN,
+    MowerActivities.NOT_APPLICABLE,
+)
+ERROR_STATES = [
+    MowerStates.FATAL_ERROR,
+    MowerStates.ERROR,
+    MowerStates.ERROR_AT_POWER_UP,
+    MowerStates.NOT_APPLICABLE,
+    MowerStates.UNKNOWN,
+    MowerStates.STOPPED,
+    MowerStates.OFF,
+]
+MOWING_ACTIVITIES = (
+    MowerActivities.MOWING,
+    MowerActivities.LEAVING,
+    MowerActivities.GOING_HOME,
+)
+PAUSED_STATES = [
+    MowerStates.PAUSED,
+    MowerStates.WAIT_UPDATING,
+    MowerStates.WAIT_POWER_UP,
+]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,10 +85,10 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
         mower_attributes = self.mower_attributes
         if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if mower_attributes.mower.activity in MOWING_STATES:
+        if mower_attributes.mower.activity in MOWING_ACTIVITIES:
             return LawnMowerActivity.MOWING
         if (mower_attributes.mower.state == "RESTRICTED") or (
-            mower_attributes.mower.activity in DOCKED_STATES
+            mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
         activity = LawnMowerActivity.ERROR
