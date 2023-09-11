@@ -336,8 +336,8 @@ async def test_bandwidth_sensors(
         "mac": "00:00:00:00:00:02",
         "name": "Wireless client",
         "oui": "Producer",
-        "rx_bytes-r": 2345000000,
-        "tx_bytes-r": 6789000000,
+        "rx_bytes-r": 2345000000.0,
+        "tx_bytes-r": 6789000000.0,
     }
     options = {
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
