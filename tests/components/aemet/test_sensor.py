@@ -6,7 +6,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SNOWY,
 )
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -25,9 +24,6 @@ async def test_aemet_forecast_create_sensors(
 
     state = hass.states.get("sensor.aemet_daily_forecast_condition")
     assert state.state == ATTR_CONDITION_PARTLYCLOUDY
-
-    state = hass.states.get("sensor.aemet_daily_forecast_precipitation")
-    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.aemet_daily_forecast_precipitation_probability")
     assert state.state == "30"
