@@ -42,6 +42,7 @@ from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
+    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -168,6 +169,26 @@ async def async_modbus_setup(
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
         slave = 0
+        if ATTR_UNIT in service.data:
+            slave = int(float(service.data[ATTR_UNIT]))
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_unit",
+                breaks_in_ha_version="2024.4.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_unit",
+                translation_placeholders={
+                    "config_key": "unit",
+                    "integration": DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`unit`: is deprecated and will be removed in version 2024.4"
+            )
+
         if ATTR_SLAVE in service.data:
             slave = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
@@ -190,6 +211,25 @@ async def async_modbus_setup(
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
         slave = 0
+        if ATTR_UNIT in service.data:
+            slave = int(float(service.data[ATTR_UNIT]))
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_unit",
+                breaks_in_ha_version="2024.4.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_unit",
+                translation_placeholders={
+                    "config_key": "unit",
+                    "integration": DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`unit`: is deprecated and will be removed in version 2024.4"
+            )
         if ATTR_SLAVE in service.data:
             slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
@@ -213,7 +253,8 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Required(ATTR_SLAVE, default=1): cv.positive_int,
+                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
+                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])
@@ -420,7 +461,7 @@ class ModbusHub:
 
     async def async_pb_call(
         self,
-        slave: int | None,
+        unit: int | None,
         address: int,
         value: int | list[int],
         use_call: str,
@@ -432,7 +473,7 @@ class ModbusHub:
             if not self._client:
                 return None
             result = await self.hass.async_add_executor_job(
-                self.pb_call, slave, address, value, use_call
+                self.pb_call, unit, address, value, use_call
             )
             if self._msg_wait:
                 # small delay until next request/response
