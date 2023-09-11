@@ -953,7 +953,7 @@ class Event:
                 {
                     "event_type": self.event_type,
                     "data": ReadOnlyDict(self.data),
-                    "origin": str(self.origin.value),
+                    "origin": self.origin.value,
                     "time_fired": self.time_fired.isoformat(),
                     "context": self.context.as_dict(),
                 }
