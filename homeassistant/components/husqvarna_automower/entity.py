@@ -1,7 +1,8 @@
 """Platform for Husqvarna Automower base entity."""
 
 import logging
-from typing import Any
+
+import aioautomower
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -22,24 +23,23 @@ class AutomowerEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator, context=idx)
         self.idx = idx
-        self.mower = coordinator.session.data["data"][self.idx]
-        self.mower_id = self.mower["id"]
-        self.mower_name = self.mower_attributes["system"]["name"]
-        self.model_name = self.mower_attributes["system"]["model"]
+        self.mower_id = coordinator.session.dataclass.data[idx].id
+        mower_name = self.mower_attributes.system.name
+        mower_model = self.mower_attributes.system.model
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.mower_id)},
-            name=self.mower_name,
+            name=mower_name,
             manufacturer="Husqvarna",
-            model=self.model_name,
+            model=mower_model,
             configuration_url=HUSQVARNA_URL,
             suggested_area="Garden",
         )
 
     @property
-    def mower_attributes(self) -> dict[str, Any]:
+    def mower_attributes(self) -> aioautomower.session.MowerAttributes:
         """Get the mower attributes of the current mower."""
-        return self.coordinator.session.data["data"][self.idx]["attributes"]
+        return self.coordinator.session.dataclass.data[self.idx].attributes
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""

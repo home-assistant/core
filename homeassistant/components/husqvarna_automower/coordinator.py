@@ -26,7 +26,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
         )
         self.session = aioautomower.AutomowerSession(
-            implementation.client_id, access_token
+            implementation.client_id, access_token, low_energy=False
         )
         self.session.register_token_callback(
             lambda token: hass.config_entries.async_update_entry(

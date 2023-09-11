@@ -20,6 +20,7 @@ from .const import (
     MOWING_STATES,
     PAUSED_STATES,
 )
+from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerEntity
 
 SUPPORT_STATE_SERVICES = (
@@ -36,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up lawn mower platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         HusqvarnaAutomowerEntity(coordinator, idx)
         for idx, ent in enumerate(coordinator.session.data["data"])
@@ -57,37 +58,37 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return self.mower_attributes["metadata"]["connected"]
+        return self.mower_attributes.metadata.connected
 
     @property
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
-        if mower_attributes["mower"]["state"] in PAUSED_STATES:
+        if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if mower_attributes["mower"]["activity"] in MOWING_STATES:
+        if mower_attributes.mower.activity in MOWING_STATES:
             return LawnMowerActivity.MOWING
-        if (mower_attributes["mower"]["state"] == "RESTRICTED") or (
-            mower_attributes["mower"]["activity"] in DOCKED_STATES
+        if (mower_attributes.mower.state == "RESTRICTED") or (
+            mower_attributes.mower.activity in DOCKED_STATES
         ):
             return LawnMowerActivity.DOCKED
         activity = LawnMowerActivity.ERROR
         if not (
-            (mower_attributes["mower"]["state"] in ERROR_STATES)
-            or mower_attributes["mower"]["activity"] in ERROR_ACTIVITIES
+            (mower_attributes.mower.state in ERROR_STATES)
+            or mower_attributes.mower.activity in ERROR_ACTIVITIES
         ):
             _LOGGER.warning(
                 "Unknown activity detected. Mower state is %s and mower activity is %s. \
                 Please report this issue",
-                mower_attributes["mower"]["state"],
-                mower_attributes["mower"]["activity"],
+                mower_attributes.mower.state,
+                mower_attributes.mower.activity,
             )
         return LawnMowerActivity(activity)
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return the specific state attributes of this mower."""
-        action = self.mower_attributes["planner"]["override"]["action"]
+        action = self.mower_attributes.planner.override.action
         action = action.lower() if action is not None else action
         return {
             "action": action,
