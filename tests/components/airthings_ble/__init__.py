@@ -5,8 +5,10 @@ from unittest.mock import patch
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 
+from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 
+from tests.common import MockConfigEntry, MockEntity
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
@@ -99,3 +101,62 @@ WAVE_DEVICE_INFO = AirthingsDevice(
     },
     address="cc:cc:cc:cc:cc:cc",
 )
+
+TEMPERATURE_V1 = MockEntity(
+    unique_id="Airthings Wave Plus 123456_temperature",
+    name="Airthings Wave Plus 123456 Temperature",
+)
+
+HUMIDITY_V2 = MockEntity(
+    unique_id="Airthings Wave Plus (123456)_humidity",
+    name="Airthings Wave Plus (123456) Humidity",
+)
+
+CO2_V1 = MockEntity(
+    unique_id="Airthings Wave Plus 123456_co2",
+    name="Airthings Wave Plus 123456 CO2",
+)
+
+CO2_V2 = MockEntity(
+    unique_id="Airthings Wave Plus (123456)_co2",
+    name="Airthings Wave Plus (123456) CO2",
+)
+
+VOC_V1 = MockEntity(
+    unique_id="Airthings Wave Plus 123456_co2",
+    name="Airthings Wave Plus 123456 CO2",
+)
+
+VOC_V2 = MockEntity(
+    unique_id="Airthings Wave Plus (123456)_voc",
+    name="Airthings Wave Plus (123456) VOC",
+)
+
+VOC_V3 = MockEntity(
+    unique_id="cc:cc:cc:cc:cc:cc_voc",
+    name="Airthings Wave Plus (123456) VOC",
+)
+
+
+def create_entry(hass):
+    """Create a config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        title="Airthings Wave Plus (123456)",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+def create_device(hass, entry):
+    """Create a device for the given entry."""
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, WAVE_SERVICE_INFO.address)},
+        manufacturer="Airthings AS",
+        name="Airthings Wave Plus (123456)",
+        model="Wave Plus",
+    )
+    return device
