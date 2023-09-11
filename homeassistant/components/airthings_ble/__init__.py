@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, async_get
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -37,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find Airthings device with address {address}"
         )
-
-    update_device_identifiers(hass, entry, address)
 
     async def _async_update_method():
         """Get data from Airthings BLE."""
@@ -67,33 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-def update_device_identifiers(hass: HomeAssistant, entry: ConfigEntry, address: str):
-    """Update device identifiers to new identifiers."""
-    device_registry = async_get(hass)
-    device_entry = device_registry.async_get_device(
-        connections={
-            (
-                CONNECTION_BLUETOOTH,
-                address,
-            )
-        }
-    )
-    if (
-        device_entry
-        and not device_entry.identifiers
-        and entry.entry_id in device_entry.config_entries
-    ):
-        new_identifiers = {(DOMAIN, address)}
-        _LOGGER.debug(
-            "Updating device id '%s' with new identifiers '%s'",
-            device_entry.id,
-            new_identifiers,
-        )
-        device_registry.async_update_device(
-            device_entry.id, new_identifiers=new_identifiers
-        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

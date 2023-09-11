@@ -124,7 +124,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
     device_registry = device_async_get(hass)
     entity_registry = entity_async_get(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, address)})
+    device = device_registry.async_get_device(connections={(DOMAIN, address)})
 
     if not device:
         return
@@ -151,7 +151,9 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
 
     def _migrate_unique_id(entity_id: str, new_unique_id: str):
         ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
-        _LOGGER.debug("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
+        _LOGGER.debug(
+            "Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id
+        )
 
     if unique_ids.get("v3"):
         # Already has the newest unique id format
@@ -238,12 +240,6 @@ class AirthingsSensor(
                     CONNECTION_BLUETOOTH,
                     airthings_device.address,
                 ),
-            },
-            identifiers={
-                (
-                    DOMAIN,
-                    airthings_device.address,
-                )
             },
             name=name,
             manufacturer=airthings_device.manufacturer,

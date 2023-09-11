@@ -188,7 +188,7 @@ def create_device(hass, entry):
     device_registry = hass.helpers.device_registry.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, WAVE_SERVICE_INFO.address)},
+        connections={(DOMAIN, WAVE_SERVICE_INFO.address)},
         manufacturer="Airthings AS",
         name="Airthings Wave Plus (123456)",
         model="Wave Plus",
