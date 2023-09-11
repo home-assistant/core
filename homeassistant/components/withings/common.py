@@ -28,7 +28,6 @@ from withings_api.common import (
 )
 
 from homeassistant.components import webhook
-from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -38,13 +37,12 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import const
-from .const import DOMAIN, Measurement
+from .const import Measurement
+from .entity import WithingsEntityDescription
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
@@ -62,20 +60,6 @@ class UpdateType(StrEnum):
 
     POLL = "poll"
     WEBHOOK = "webhook"
-
-
-@dataclass
-class WithingsEntityDescriptionMixin:
-    """Mixin for describing withings data."""
-
-    measurement: Measurement
-    measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
-    update_type: UpdateType
-
-
-@dataclass
-class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixin):
-    """Immutable class for describing withings data."""
 
 
 @dataclass
@@ -545,78 +529,6 @@ def get_attribute_unique_id(
     return f"withings_{user_id}_{description.measurement.value}"
 
 
-class BaseWithingsSensor(Entity):
-    """Base class for withings sensors."""
-
-    _attr_should_poll = False
-    entity_description: WithingsEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, data_manager: DataManager, description: WithingsEntityDescription
-    ) -> None:
-        """Initialize the Withings sensor."""
-        self._data_manager = data_manager
-        self.entity_description = description
-        self._attr_unique_id = get_attribute_unique_id(
-            description, data_manager.user_id
-        )
-        self._state_data: Any | None = None
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(data_manager.user_id))},
-            name=data_manager.profile,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self.entity_description.update_type == UpdateType.POLL:
-            return self._data_manager.poll_data_update_coordinator.last_update_success
-
-        if self.entity_description.update_type == UpdateType.WEBHOOK:
-            return self._data_manager.webhook_config.enabled and (
-                self.entity_description.measurement
-                in self._data_manager.webhook_update_coordinator.data
-            )
-
-        return True
-
-    @callback
-    def _on_poll_data_updated(self) -> None:
-        self._update_state_data(
-            self._data_manager.poll_data_update_coordinator.data or {}
-        )
-
-    @callback
-    def _on_webhook_data_updated(self) -> None:
-        self._update_state_data(
-            self._data_manager.webhook_update_coordinator.data or {}
-        )
-
-    def _update_state_data(self, data: dict[Measurement, Any]) -> None:
-        """Update the state data."""
-        self._state_data = data.get(self.entity_description.measurement)
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register update dispatcher."""
-        if self.entity_description.update_type == UpdateType.POLL:
-            self.async_on_remove(
-                self._data_manager.poll_data_update_coordinator.async_add_listener(
-                    self._on_poll_data_updated
-                )
-            )
-            self._on_poll_data_updated()
-
-        elif self.entity_description.update_type == UpdateType.WEBHOOK:
-            self.async_on_remove(
-                self._data_manager.webhook_update_coordinator.async_add_listener(
-                    self._on_webhook_data_updated
-                )
-            )
-            self._on_webhook_data_updated()
-
-
 async def async_get_data_manager(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> DataManager:
@@ -680,50 +592,3 @@ def get_all_data_managers(hass: HomeAssistant) -> tuple[DataManager, ...]:
 def async_remove_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Remove a data manager for a config entry."""
     del hass.data[const.DOMAIN][config_entry.entry_id][const.DATA_MANAGER]
-
-
-class WithingsLocalOAuth2Implementation(AuthImplementation):
-    """Oauth2 implementation that only uses the external url."""
-
-    async def _token_request(self, data: dict) -> dict:
-        """Make a token request and adapt Withings API reply."""
-        new_token = await super()._token_request(data)
-        # Withings API returns habitual token data under json key "body":
-        # {
-        #     "status": [{integer} Withings API response status],
-        #     "body": {
-        #         "access_token": [{string} Your new access_token],
-        #         "expires_in": [{integer} Access token expiry delay in seconds],
-        #         "token_type": [{string] HTTP Authorization Header format: Bearer],
-        #         "scope": [{string} Scopes the user accepted],
-        #         "refresh_token": [{string} Your new refresh_token],
-        #         "userid": [{string} The Withings ID of the user]
-        #     }
-        # }
-        # so we copy that to token root.
-        if body := new_token.pop("body", None):
-            new_token.update(body)
-        return new_token
-
-    async def async_resolve_external_data(self, external_data: Any) -> dict:
-        """Resolve the authorization code to tokens."""
-        return await self._token_request(
-            {
-                "action": "requesttoken",
-                "grant_type": "authorization_code",
-                "code": external_data["code"],
-                "redirect_uri": external_data["state"]["redirect_uri"],
-            }
-        )
-
-    async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
-        new_token = await self._token_request(
-            {
-                "action": "requesttoken",
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": token["refresh_token"],
-            }
-        )
-        return {**token, **new_token}
