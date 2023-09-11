@@ -151,7 +151,7 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
 
     def _migrate_unique_id(entity_id: str, new_unique_id: str):
         ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
-        _LOGGER.info("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
+        _LOGGER.debug("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
 
     if unique_ids.get("v3"):
         # Already has the newest unique id format
