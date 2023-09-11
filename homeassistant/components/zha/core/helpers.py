@@ -421,7 +421,7 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
 
 
-@dataclasses.dataclass(kw_only=True)
+@dataclasses.dataclass(kw_only=True, slots=True)
 class ZHAData:
     """ZHA component data stored in `hass.data`."""
 
