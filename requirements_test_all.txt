@@ -1628,7 +1628,7 @@ pytrafikverket==0.3.6
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.10.6
+pyunifiprotect==4.20.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2045,7 +2045,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.104.0
+zeroconf==0.105.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

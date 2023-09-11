@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MockWithings, call_webhook
 from .common import async_get_entity_id
-from .conftest import PERSON0, WEBHOOK_ID, ComponentSetup
+from .conftest import USER_ID, WEBHOOK_ID, ComponentSetup
 
 from tests.typing import ClientSessionGenerator
 
@@ -26,36 +26,36 @@ WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
 
 
 EXPECTED_DATA = (
-    (PERSON0, Measurement.WEIGHT_KG, 70.0),
-    (PERSON0, Measurement.FAT_MASS_KG, 5.0),
-    (PERSON0, Measurement.FAT_FREE_MASS_KG, 60.0),
-    (PERSON0, Measurement.MUSCLE_MASS_KG, 50.0),
-    (PERSON0, Measurement.BONE_MASS_KG, 10.0),
-    (PERSON0, Measurement.HEIGHT_M, 2.0),
-    (PERSON0, Measurement.FAT_RATIO_PCT, 0.07),
-    (PERSON0, Measurement.DIASTOLIC_MMHG, 70.0),
-    (PERSON0, Measurement.SYSTOLIC_MMGH, 100.0),
-    (PERSON0, Measurement.HEART_PULSE_BPM, 60.0),
-    (PERSON0, Measurement.SPO2_PCT, 0.95),
-    (PERSON0, Measurement.HYDRATION, 0.95),
-    (PERSON0, Measurement.PWV, 100.0),
-    (PERSON0, Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY, 160.0),
-    (PERSON0, Measurement.SLEEP_DEEP_DURATION_SECONDS, 322),
-    (PERSON0, Measurement.SLEEP_HEART_RATE_AVERAGE, 164.0),
-    (PERSON0, Measurement.SLEEP_HEART_RATE_MAX, 165.0),
-    (PERSON0, Measurement.SLEEP_HEART_RATE_MIN, 166.0),
-    (PERSON0, Measurement.SLEEP_LIGHT_DURATION_SECONDS, 334),
-    (PERSON0, Measurement.SLEEP_REM_DURATION_SECONDS, 336),
-    (PERSON0, Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE, 169.0),
-    (PERSON0, Measurement.SLEEP_RESPIRATORY_RATE_MAX, 170.0),
-    (PERSON0, Measurement.SLEEP_RESPIRATORY_RATE_MIN, 171.0),
-    (PERSON0, Measurement.SLEEP_SCORE, 222),
-    (PERSON0, Measurement.SLEEP_SNORING, 173.0),
-    (PERSON0, Measurement.SLEEP_SNORING_EPISODE_COUNT, 348),
-    (PERSON0, Measurement.SLEEP_TOSLEEP_DURATION_SECONDS, 162.0),
-    (PERSON0, Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS, 163.0),
-    (PERSON0, Measurement.SLEEP_WAKEUP_COUNT, 350),
-    (PERSON0, Measurement.SLEEP_WAKEUP_DURATION_SECONDS, 176.0),
+    (Measurement.WEIGHT_KG, 70.0),
+    (Measurement.FAT_MASS_KG, 5.0),
+    (Measurement.FAT_FREE_MASS_KG, 60.0),
+    (Measurement.MUSCLE_MASS_KG, 50.0),
+    (Measurement.BONE_MASS_KG, 10.0),
+    (Measurement.HEIGHT_M, 2.0),
+    (Measurement.FAT_RATIO_PCT, 0.07),
+    (Measurement.DIASTOLIC_MMHG, 70.0),
+    (Measurement.SYSTOLIC_MMGH, 100.0),
+    (Measurement.HEART_PULSE_BPM, 60.0),
+    (Measurement.SPO2_PCT, 0.95),
+    (Measurement.HYDRATION, 0.95),
+    (Measurement.PWV, 100.0),
+    (Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY, 160.0),
+    (Measurement.SLEEP_DEEP_DURATION_SECONDS, 322),
+    (Measurement.SLEEP_HEART_RATE_AVERAGE, 164.0),
+    (Measurement.SLEEP_HEART_RATE_MAX, 165.0),
+    (Measurement.SLEEP_HEART_RATE_MIN, 166.0),
+    (Measurement.SLEEP_LIGHT_DURATION_SECONDS, 334),
+    (Measurement.SLEEP_REM_DURATION_SECONDS, 336),
+    (Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE, 169.0),
+    (Measurement.SLEEP_RESPIRATORY_RATE_MAX, 170.0),
+    (Measurement.SLEEP_RESPIRATORY_RATE_MIN, 171.0),
+    (Measurement.SLEEP_SCORE, 222),
+    (Measurement.SLEEP_SNORING, 173.0),
+    (Measurement.SLEEP_SNORING_EPISODE_COUNT, 348),
+    (Measurement.SLEEP_TOSLEEP_DURATION_SECONDS, 162.0),
+    (Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS, 163.0),
+    (Measurement.SLEEP_WAKEUP_COUNT, 350),
+    (Measurement.SLEEP_WAKEUP_DURATION_SECONDS, 176.0),
 )
 
 
@@ -84,7 +84,7 @@ async def test_sensor_default_enabled_entities(
     await setup_integration()
     entity_registry: EntityRegistry = er.async_get(hass)
 
-    mock = MockWithings(PERSON0)
+    mock = MockWithings()
     with patch(
         "homeassistant.components.withings.common.ConfigEntryWithingsApi",
         return_value=mock,
@@ -93,31 +93,31 @@ async def test_sensor_default_enabled_entities(
         # Assert entities should exist.
         for attribute in SENSORS:
             entity_id = await async_get_entity_id(
-                hass, attribute, PERSON0.user_id, SENSOR_DOMAIN
+                hass, attribute, USER_ID, SENSOR_DOMAIN
             )
             assert entity_id
             assert entity_registry.async_is_registered(entity_id)
         resp = await call_webhook(
             hass,
             WEBHOOK_ID,
-            {"userid": PERSON0.user_id, "appli": NotifyAppli.SLEEP},
+            {"userid": USER_ID, "appli": NotifyAppli.SLEEP},
             client,
         )
         assert resp.message_code == 0
         resp = await call_webhook(
             hass,
             WEBHOOK_ID,
-            {"userid": PERSON0.user_id, "appli": NotifyAppli.WEIGHT},
+            {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
             client,
         )
         assert resp.message_code == 0
 
         assert resp.message_code == 0
 
-        for person, measurement, expected in EXPECTED_DATA:
+        for measurement, expected in EXPECTED_DATA:
             attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
             entity_id = await async_get_entity_id(
-                hass, attribute, person.user_id, SENSOR_DOMAIN
+                hass, attribute, USER_ID, SENSOR_DOMAIN
             )
             state_obj = hass.states.get(entity_id)
 
@@ -131,11 +131,11 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration()
 
-    mock = MockWithings(PERSON0)
+    mock = MockWithings()
     with patch(
         "homeassistant.components.withings.common.ConfigEntryWithingsApi",
         return_value=mock,
     ):
         for sensor in SENSORS:
-            entity_id = await async_get_entity_id(hass, sensor, 12345, SENSOR_DOMAIN)
+            entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
             assert hass.states.get(entity_id) == snapshot
