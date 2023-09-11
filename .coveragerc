@@ -1582,6 +1582,10 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
+    homeassistant/components/flexmeasures/__init__.py
+    homeassistant/components/flexmeasures/const.py
+    homeassistant/components/flexmeasures/exception.py
+
 
 [report]
 # Regexes for lines to exclude from consideration

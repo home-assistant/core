@@ -17,15 +17,15 @@ fi
 mkdir -p config
 
 if [ ! -n "$DEVCONTAINER" ] && [ ! -n "$VIRTUAL_ENV" ];then
-  python3 -m venv venv
+  python3.11 -m venv venv
   source venv/bin/activate
 fi
 
 script/bootstrap
 
 pre-commit install
-python3 -m pip install -e . --config-settings editable_mode=compat --constraint homeassistant/package_constraints.txt
-python3 -m script.translations develop --all
+python3.11 -m pip install -e . --config-settings editable_mode=compat --constraint homeassistant/package_constraints.txt
+python3.11 -m script.translations develop --all
 
 hass --script ensure_config -c config
 
