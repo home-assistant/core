@@ -33,14 +33,11 @@
         "editor.formatOnType": true,
         "files.trimTrailingWhitespace": true,
         "terminal.integrated.profiles.linux": {
-          "bash": {
-            "env": {
-              "PATH": "/home/vscode/.local/bin/"
-            },
-            "path": "/bin/bash"
+          "zsh": {
+            "path": "/usr/bin/zsh"
           }
         },
-        "terminal.integrated.defaultProfile.linux": "sh",
+        "terminal.integrated.defaultProfile.linux": "zsh",
         "yaml.customTags": [
           "!input scalar",
           "!secret scalar",
