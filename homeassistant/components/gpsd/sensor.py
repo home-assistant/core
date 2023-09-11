@@ -96,7 +96,7 @@ class GpsdSensor(SensorEntity):
         self.agps_thread.run_thread()
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
