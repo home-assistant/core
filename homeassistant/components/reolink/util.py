@@ -8,16 +8,16 @@ from . import ReolinkData
 from .const import DOMAIN
 
 
-def has_connection_problem(
+def is_connected(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
-    """Check if a existing entry has a connection problem."""
+    """Check if a existing entry has a proper connection."""
     reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(
         config_entry.entry_id
     )
-    connection_problem = (
+    is_connected = (
         reolink_data is not None
         and config_entry.state == config_entries.ConfigEntryState.LOADED
         and reolink_data.device_coordinator.last_update_success
     )
-    return connection_problem
+    return is_connected
