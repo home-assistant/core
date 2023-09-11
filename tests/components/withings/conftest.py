@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+from datetime import timedelta
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -122,5 +123,19 @@ def mock_withings():
     with patch(
         "homeassistant.components.withings.common.ConfigEntryWithingsApi",
         return_value=mock,
+    ):
+        yield mock
+
+
+@pytest.fixture(name="disable_webhook_delay")
+def disable_webhook_delay():
+    """Disable webhook delay."""
+
+    mock = AsyncMock()
+    with patch(
+        "homeassistant.components.withings.common.SUBSCRIBE_DELAY", timedelta(seconds=0)
+    ), patch(
+        "homeassistant.components.withings.common.UNSUBSCRIBE_DELAY",
+        timedelta(seconds=0),
     ):
         yield mock

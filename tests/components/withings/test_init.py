@@ -236,33 +236,29 @@ async def test_set_convert_unique_id_to_string(hass: HomeAssistant) -> None:
 async def test_data_manager_webhook_subscription(
     hass: HomeAssistant,
     withings: AsyncMock,
+    disable_webhook_delay,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test data manager webhook subscriptions."""
     await setup_integration(hass, config_entry)
-    with patch(
-        "homeassistant.components.withings.common.SUBSCRIBE_DELAY", timedelta(seconds=0)
-    ), patch(
-        "homeassistant.components.withings.common.UNSUBSCRIBE_DELAY",
-        timedelta(seconds=0),
-    ):
-        await hass_client_no_auth()
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
-        await hass.async_block_till_done()
+    await hass_client_no_auth()
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
 
-        assert withings.notify_subscribe.call_count == 4
+    assert withings.notify_subscribe.call_count == 4
 
-        webhook_url = "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+    webhook_url = "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
-        withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
-        withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.CIRCULATORY)
-        withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
-        withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.CIRCULATORY)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
 
-        withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
-        withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
+    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -278,6 +274,7 @@ async def test_requests(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
+    disable_webhook_delay,
 ) -> None:
     """Test we handle request methods Withings sends."""
     await setup_integration(hass, config_entry)
@@ -289,3 +286,4 @@ async def test_requests(
         path=urlparse(webhook_url).path,
     )
     assert response.status == 200
+    await hass.config_entries.async_unload(config_entry.entry_id)

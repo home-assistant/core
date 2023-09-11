@@ -80,6 +80,7 @@ async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     withings: AsyncMock,
     config_entry: MockConfigEntry,
+    disable_webhook_delay,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test entities enabled by default."""
@@ -107,8 +108,6 @@ async def test_sensor_default_enabled_entities(
     )
     assert resp.message_code == 0
 
-    assert resp.message_code == 0
-
     for measurement, expected in EXPECTED_DATA:
         attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
         entity_id = await async_get_entity_id(hass, attribute, USER_ID, SENSOR_DOMAIN)
@@ -122,6 +121,7 @@ async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
+    disable_webhook_delay,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""

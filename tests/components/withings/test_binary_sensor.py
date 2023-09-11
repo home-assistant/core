@@ -16,6 +16,7 @@ from tests.typing import ClientSessionGenerator
 async def test_binary_sensor(
     hass: HomeAssistant,
     withings: AsyncMock,
+    disable_webhook_delay,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
@@ -47,3 +48,4 @@ async def test_binary_sensor(
     assert resp.message_code == 0
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
+    await hass.config_entries.async_unload(config_entry.entry_id)
