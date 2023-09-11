@@ -17,6 +17,7 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -104,6 +105,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SCAN_INTERVAL = timedelta(minutes=1)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Todoist calendar platform config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    projects = await coordinator.async_get_projects()
+    labels = await coordinator.async_get_labels()
+
+    entities = []
+    for project in projects:
+        project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
+        entities.append(TodoistProjectEntity(coordinator, project_data, labels))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 async def async_setup_platform(

@@ -473,6 +473,7 @@ FLOWS = {
         "tibber",
         "tile",
         "tilt_ble",
+        "todoist",
         "tolo",
         "tomorrowio",
         "toon",
