@@ -1,23 +1,32 @@
 """Test WeatherKit data coordinator."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from apple_weatherkit.client import WeatherKitApiClientError
-import pytest
 
-from homeassistant.components.weatherkit.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from . import init_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_failed_updates(hass: HomeAssistant) -> None:
     """Test that we properly handle failed updates."""
-    entry = await init_integration(hass)
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    await init_integration(hass)
 
-    with pytest.raises(UpdateFailed), patch(
+    with patch(
         "homeassistant.components.weatherkit.WeatherKitApiClient.get_weather_data",
         side_effect=WeatherKitApiClientError,
     ):
-        await coordinator._async_update_data()
+        async_fire_time_changed(
+            hass,
+            utcnow() + timedelta(minutes=15),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("weather.home")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

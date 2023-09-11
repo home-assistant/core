@@ -160,7 +160,7 @@ class WeatherKitWeather(
     @property
     def current_weather(self) -> dict[str, Any]:
         """Return current weather data."""
-        return self.coordinator.data.get("currentWeather")
+        return self.data["currentWeather"]
 
     @property
     def condition(self) -> str | None:
