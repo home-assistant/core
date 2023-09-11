@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for WeatherKit integration. Updated every 15 minutes."""
+"""DataUpdateCoordinator for WeatherKit integration."""
 from __future__ import annotations
 
 from datetime import timedelta

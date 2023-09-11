@@ -36,13 +36,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    async_add_entities(
-        [
-            WeatherKitWeather(
-                coordinator,
-            ),
-        ]
-    )
+    async_add_entities([WeatherKitWeather(coordinator)])
 
 
 condition_code_to_hass = {

@@ -81,9 +81,9 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Flatten location
-                user_input[CONF_LATITUDE] = user_input[CONF_LOCATION][CONF_LATITUDE]
-                user_input[CONF_LONGITUDE] = user_input[CONF_LOCATION][CONF_LONGITUDE]
-                del user_input[CONF_LOCATION]
+                location = user_input.pop(CONF_LOCATION)
+                user_input[CONF_LATITUDE] = location[CONF_LATITUDE]
+                user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
 
                 return self.async_create_entry(
                     title=f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}",
