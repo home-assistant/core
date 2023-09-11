@@ -1,10 +1,11 @@
 """Test the Airthings Wave sensor."""
+from datetime import timedelta
 import logging
+from unittest.mock import patch
 
 from homeassistant.components.airthings_ble.const import DOMAIN
-from homeassistant.components.airthings_ble.sensor import async_migrate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from tests.components.airthings_ble import (
     CO2_V1,
@@ -19,12 +20,18 @@ from tests.components.airthings_ble import (
     create_device,
     create_entry,
 )
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_update_method():
+    """Mock the update method."""
+    return WAVE_DEVICE_INFO
+
+
 async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
-    """User has a v1 unique id, we should migrate it to v3."""
+    """Verify that we can migrate from v1 (pre 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass)
     device = create_device(hass, entry)
 
@@ -33,9 +40,7 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
 
     entity_registry = hass.helpers.entity_registry.async_get(hass)
 
-    await hass.async_block_till_done()
-
-    entity_registry.async_get_or_create(
+    sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
         platform="sensor",
         unique_id=TEMPERATURE_V1.unique_id,
@@ -43,20 +48,39 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
         device_id=device.id,
     )
 
-    # Migrate the entities
-    async_migrate(hass, WAVE_SERVICE_INFO.address, "temperature")
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
-    entities = async_entries_for_device(
-        entity_registry,
-        device_id=device.id,
+    inject_bluetooth_service_info(
+        hass,
+        WAVE_SERVICE_INFO,
     )
 
-    assert len(entities) == 1
-    assert entities[0].unique_id == WAVE_DEVICE_INFO.address + "_temperature"
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
+        return_value=DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=_async_update_method,
+            update_interval=timedelta(seconds=0),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) > 0
+
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id
+        == WAVE_DEVICE_INFO.address + "_temperature"
+    )
 
 
 async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
-    """User has a v2 unique id, we should migrate it to v3."""
+    """Verify that we can migrate from v2 (introduced in 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass)
     device = create_device(hass, entry)
 
@@ -67,7 +91,7 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    entity_registry.async_get_or_create(
+    sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
         platform="sensor",
         unique_id=HUMIDITY_V2.unique_id,
@@ -75,20 +99,39 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
         device_id=device.id,
     )
 
-    # Migrate the entities
-    async_migrate(hass, WAVE_SERVICE_INFO.address, "humidity")
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
-    entities = async_entries_for_device(
-        entity_registry,
-        device_id=device.id,
+    inject_bluetooth_service_info(
+        hass,
+        WAVE_SERVICE_INFO,
     )
 
-    assert len(entities) == 1
-    assert entities[0].unique_id == WAVE_DEVICE_INFO.address + "_humidity"
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
+        return_value=DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=_async_update_method,
+            update_interval=timedelta(seconds=0),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) > 0
+
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id
+        == WAVE_DEVICE_INFO.address + "_humidity"
+    )
 
 
 async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
-    """User has a v1 and a v2 unique ids, we should migrate v1 to v3."""
+    """Test if migration works when we have both v1 (pre 2023.9.0) and v2 (introduced in 2023.9.0) unique ids."""
     entry = create_entry(hass)
     device = create_device(hass, entry)
 
@@ -115,8 +158,30 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
         device_id=device.id,
     )
 
-    # Migrate the entities
-    async_migrate(hass, WAVE_SERVICE_INFO.address, "co2")
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+    inject_bluetooth_service_info(
+        hass,
+        WAVE_SERVICE_INFO,
+    )
+
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
+        return_value=DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=_async_update_method,
+            update_interval=timedelta(seconds=0),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) > 0
 
     assert (
         entity_registry.async_get(v1.entity_id).unique_id
@@ -126,7 +191,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
 
 async def test_migration_with_all_unique_ids(hass: HomeAssistant):
-    """User has all unique ids, we should not migrate anything."""
+    """Test if migration works when we have all unique ids."""
     entry = create_entry(hass)
     device = create_device(hass, entry)
 
@@ -161,8 +226,30 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
         device_id=device.id,
     )
 
-    # Migrate the entities
-    async_migrate(hass, WAVE_SERVICE_INFO.address, "voc")
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+    inject_bluetooth_service_info(
+        hass,
+        WAVE_SERVICE_INFO,
+    )
+
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.airthings_ble.DataUpdateCoordinator",
+        return_value=DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=_async_update_method,
+            update_interval=timedelta(seconds=0),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) > 0
 
     assert entity_registry.async_get(v1.entity_id).unique_id == v1.unique_id
     assert entity_registry.async_get(v2.entity_id).unique_id == v2.unique_id
