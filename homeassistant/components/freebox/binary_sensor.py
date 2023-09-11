@@ -73,7 +73,7 @@ async def async_setup_entry(
 
 
 class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
-    """Representation of a Freebox motion binary sensor."""
+    """Representation of a Freebox binary sensor."""
 
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
