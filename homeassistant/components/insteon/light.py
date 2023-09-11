@@ -55,12 +55,9 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
     def __init__(self, device: InsteonDevice, group: int) -> None:
         """Init the InsteonDimmerEntity entity."""
         super().__init__(device=device, group=group)
-        try:
-            if not self._insteon_device_group.is_dimmable:
-                self._attr_color_mode = ColorMode.ONOFF
-                self._attr_supported_color_modes = {ColorMode.ONOFF}
-        except AttributeError:
-            pass
+        if not self._insteon_device_group.is_dimmable:
+            self._attr_color_mode = ColorMode.ONOFF
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def brightness(self):
