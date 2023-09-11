@@ -1,9 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -292,6 +290,9 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         """Return True if entity is available."""
         return self._coordinator.last_update_success
 
+    def _handle_coordinator_update(self) -> None:
+        """Call on coordinator update."""
+
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
@@ -301,6 +302,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
     async def async_update(self) -> None:
         """Get the latest data from OWM and updates the states."""
         await self._coordinator.async_request_refresh()
+        self._handle_coordinator_update()
 
 
 class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
@@ -316,28 +318,20 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
         """Initialize the sensor."""
         super().__init__(name, unique_id, description, weather_coordinator)
         self._weather_coordinator = weather_coordinator
+        self._update_attr()
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the device."""
-        if self.entity_description.key == ATTR_API_NATIONAL_WEATHER_ALERTS:
-            if not self._weather_coordinator.data.get(
-                self.entity_description.key, None
-            ):
-                return 0
-            return len(
-                self._weather_coordinator.data.get(self.entity_description.key, None)
-            )
-        return self._weather_coordinator.data.get(self.entity_description.key, None)
+    def _update_attr(self) -> None:
+        """Update _attr."""
+        data = self._weather_coordinator.data.get(self.entity_description.key, None)
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra state attributes."""
         if self.entity_description.key == ATTR_API_NATIONAL_WEATHER_ALERTS:
-            data = self._weather_coordinator.data.get(self.entity_description.key, None)
-            variable_safe = []
             if data is None:
-                return {"alerts": None}
+                self._attr_native_value = 0
+                self._attr_extra_state_attributes = {"alerts": None}
+                return
+            self._attr_native_value = len(data)
+
+            variable_safe = []
             for alert in data:
                 alert_data = {
                     "sender": alert.sender,
@@ -349,8 +343,14 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
                 }
                 variable_safe.append(alert_data)
 
-            return {"alerts": variable_safe}
-        return None
+            self._attr_extra_state_attributes = {"alerts": variable_safe}
+            return
+
+        self._attr_native_value = data
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        self._update_attr()
 
 
 class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
