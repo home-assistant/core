@@ -94,7 +94,7 @@ class CombinedEnergyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                        CONF_NAME, default=user_input[CONF_NAME]
                     ): str,
                     vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
                     vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
