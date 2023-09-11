@@ -7,8 +7,8 @@ from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.common import WithingsEntityDescription
 from homeassistant.components.withings.const import Measurement
+from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.components.withings.sensor import SENSORS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
