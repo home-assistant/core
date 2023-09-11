@@ -93,6 +93,16 @@ _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
 
+def get_device_automation_triggers(
+    device: zigpy.device.Device,
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Get the supported device automation triggers for a zigpy device."""
+    return {
+        ("device_offline", "device_offline"): {"device_event_type": "device_offline"},
+        **getattr(device, "device_automation_triggers", {}),
+    }
+
+
 class DeviceStatus(Enum):
     """Status of a device."""
 
@@ -311,16 +321,7 @@ class ZHADevice(LogMixin):
     @cached_property
     def device_automation_triggers(self) -> dict[tuple[str, str], dict[str, str]]:
         """Return the device automation triggers for this device."""
-        triggers = {
-            ("device_offline", "device_offline"): {
-                "device_event_type": "device_offline"
-            }
-        }
-
-        if hasattr(self._zigpy_device, "device_automation_triggers"):
-            triggers.update(self._zigpy_device.device_automation_triggers)
-
-        return triggers
+        return get_device_automation_triggers(self._zigpy_device)
 
     @property
     def available_signal(self) -> str:

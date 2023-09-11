@@ -335,6 +335,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "Apple iTunes"
+        },
+        "weatherkit": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Apple WeatherKit"
         }
       }
     },
@@ -6288,7 +6294,7 @@
     "waqi": {
       "name": "World Air Quality Index (WAQI)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "waterfurnace": {
