@@ -1,5 +1,4 @@
 """Fixtures for tests."""
-from collections.abc import Awaitable, Callable
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -20,13 +19,10 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockWithings
 from .common import ComponentFactory
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-ComponentSetup = Callable[[], Awaitable[MockWithings]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
