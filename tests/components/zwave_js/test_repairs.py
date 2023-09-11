@@ -170,39 +170,6 @@ async def test_invalid_issue(
     assert len(msg["result"]["issues"]) == 0
 
 
-async def test_abort_init(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    client,
-    multisensor_6_state,
-    integration,
-) -> None:
-    """Test aborting device_config_file_changed issue in init step."""
-    dev_reg = dr.async_get(hass)
-    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
-
-    # Unload config entry so we can't connect to the node
-    await hass.config_entries.async_unload(integration.entry_id)
-
-    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
-    assert device
-    issue_id = f"device_config_file_changed.{device.id}"
-
-    await async_process_repairs_platforms(hass)
-    await hass_ws_client(hass)
-    http_client = await hass_client()
-
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    assert data["type"] == "abort"
-    assert data["reason"] == "cannot_connect"
-    assert data["description_placeholders"] == {"device_name": device.name}
-
-
 async def test_abort_confirm(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

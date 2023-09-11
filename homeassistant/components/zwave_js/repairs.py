@@ -22,13 +22,6 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        try:
-            async_get_node_from_device_id(self.hass, self.device_id)
-        except ValueError:
-            return self.async_abort(
-                reason="cannot_connect",
-                description_placeholders={"device_name": self.device_name},
-            )
         return await self.async_step_confirm()
 
     async def async_step_confirm(
