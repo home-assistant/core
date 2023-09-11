@@ -28,7 +28,7 @@ from .core.const import (
     UNKNOWN,
 )
 from .core.device import ZHADevice
-from .core.helpers import async_get_zha_device, get_zha_data
+from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -63,9 +63,9 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     zha_data = get_zha_data(hass)
-    gateway = zha_data.gateway
+    app = get_zha_gateway(hass).application_controller
 
-    energy_scan = await gateway.application_controller.energy_scan(
+    energy_scan = await app.energy_scan(
         channels=Channels.ALL_CHANNELS, duration_exp=4, count=1
     )
 
@@ -73,7 +73,7 @@ async def async_get_config_entry_diagnostics(
         {
             "config": zha_data.yaml_config,
             "config_entry": config_entry.as_dict(),
-            "application_state": shallow_asdict(gateway.application_controller.state),
+            "application_state": shallow_asdict(app.state),
             "energy_scan": {
                 channel: 100 * energy / 255 for channel, energy in energy_scan.items()
             },

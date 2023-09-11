@@ -321,7 +321,7 @@ class GroupProbe:
             return
 
         zha_data = get_zha_data(self._hass)
-        assert zha_data.gateway is not None
+        zha_gateway = get_zha_gateway(self._hass)
 
         for domain in entity_domains:
             entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
@@ -334,7 +334,7 @@ class GroupProbe:
                         group.get_domain_entity_ids(domain),
                         f"{domain}_zha_group_0x{group.group_id:04x}",
                         group.group_id,
-                        zha_data.gateway.coordinator_zha_device,
+                        zha_gateway.coordinator_zha_device,
                     ),
                 )
             )
