@@ -258,7 +258,6 @@ async def test_data_manager_webhook_subscription(
 
     withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
     withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
-    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -286,4 +285,3 @@ async def test_requests(
         path=urlparse(webhook_url).path,
     )
     assert response.status == 200
-    await hass.config_entries.async_unload(config_entry.entry_id)
