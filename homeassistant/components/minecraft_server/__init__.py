@@ -20,18 +20,20 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-
-    # Create and store coordinator instance.
-    config_entry_id = entry.entry_id
     _LOGGER.debug(
         "Creating coordinator instance for '%s' (%s)",
         entry.data[CONF_NAME],
         entry.data[CONF_HOST],
     )
+
+    # Create coordinator instance.
+    config_entry_id = entry.entry_id
     coordinator = MinecraftServerCoordinator(hass, config_entry_id, entry.data)
-    domain_data[config_entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
+
+    # Store coordinator instance.
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data[config_entry_id] = coordinator
 
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
