@@ -143,8 +143,8 @@ async def test_remove_stale_device(
         device_registry, config_entry.entry_id
     )
     assert len(device_entry) == 2
-    assert device_entry[0].identifiers == {(DOMAIN, 1234567)}
-    assert device_entry[1].identifiers == {(DOMAIN, 7654321)}
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
+    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
@@ -163,4 +163,4 @@ async def test_remove_stale_device(
         device_registry, config_entry.entry_id
     )
     assert len(device_entry) == 1
-    assert device_entry[0].identifiers == {(DOMAIN, 1234567)}
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
