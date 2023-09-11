@@ -10,13 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_INSTALLATION_ID,
-    DATA_API_CLIENT,
-    DATA_INSTALLATION,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_INSTALLATION_ID, DATA_API_CLIENT, DATA_INSTALLATION, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -34,10 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         installation = await api.installation()
     except CombinedEnergyAuthError as ex:
-        LOGGER.error("Authentication failed accessing API: %s", ex)
         raise ConfigEntryAuthFailed from ex
     except CombinedEnergyError as ex:
-        LOGGER.error("Could not retrieve details from Combined Energy")
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
