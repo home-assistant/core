@@ -937,7 +937,7 @@ class TemplateStateBase(State):
     __delitem__ = _readonly
 
     # Inheritance is done so functions that check against State keep working
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
