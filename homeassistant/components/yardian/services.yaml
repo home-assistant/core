@@ -5,8 +5,6 @@ start_irrigation:
       domain: switch
   fields:
     duration:
-      name: Duration
-      description: Duration for this sprinkler to be turned on
       required: true
       default: 6
       selector:
@@ -14,7 +12,6 @@ start_irrigation:
           min: 1
           max: 1440
           unit_of_measurement: "minutes"
-
 stop_irrigation:
   target:
     entity:
