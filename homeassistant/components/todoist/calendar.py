@@ -121,7 +121,7 @@ async def async_setup_entry(
         project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
         entities.append(TodoistProjectEntity(coordinator, project_data, labels))
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
     async_register_services(hass, coordinator)
 
 
