@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -23,8 +22,11 @@ async def async_setup_entry(
     """Set up the local calendar platform."""
     coordinator: EGSUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entity = EGSCalendar(coordinator, entry.entry_id)
-    async_add_entities([entity], True)
+    entities = [
+        EGSFreeGamesCalendar(coordinator, entry.entry_id),
+        EGSDiscountGameCalendar(coordinator, entry.entry_id),
+    ]
+    async_add_entities(entities, True)
 
 
 class EGSCalendar(CalendarEntity):
@@ -36,12 +38,14 @@ class EGSCalendar(CalendarEntity):
         self,
         coordinator: EGSUpdateCoordinator,
         unique_id: str,
+        cal_type: str,
     ) -> None:
         """Initialize EGSCalendar."""
+        self._cal_type = cal_type
         self._coordinator = coordinator
         self._event: CalendarEvent | None = None
-        self._attr_name = "Epic Games Store Free Games"
-        self._attr_unique_id = unique_id
+        self._attr_name = f"Epic Games Store {cal_type.title()} Games"
+        self._attr_unique_id = f"{unique_id}-{cal_type}"
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -51,41 +55,54 @@ class EGSCalendar(CalendarEntity):
     @property  # type: ignore[misc]
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        return {**(super().state_attributes or {}), **self._coordinator.data}
+        return {
+            **(super().state_attributes or {}),
+            "games": self._coordinator.data[self._cal_type],
+        }
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._coordinator.data.values()
+        events: list[dict[str, Any]] = self._coordinator.data[self._cal_type]
         return [_get_calendar_event(event) for event in events]
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        event = self._coordinator.data.get("free_games") or self._coordinator.data.get(
-            "next_free_games"
-        )
+        event: list[dict[str, Any]] = self._coordinator.data[self._cal_type]
         if event:
-            self._event = _get_calendar_event(event)
+            self._event = _get_calendar_event(event[0])
+
+
+class EGSFreeGamesCalendar(EGSCalendar):
+    """A calendar entity by Epic Games Store."""
+
+    def __init__(
+        self,
+        coordinator: EGSUpdateCoordinator,
+        unique_id: str,
+    ) -> None:
+        """Initialize EGSCalendar."""
+        super().__init__(coordinator, unique_id, "free")
+
+
+class EGSDiscountGameCalendar(EGSCalendar):
+    """A calendar entity by Epic Games Store."""
+
+    def __init__(
+        self,
+        coordinator: EGSUpdateCoordinator,
+        unique_id: str,
+    ) -> None:
+        """Initialize EGSCalendar."""
+        super().__init__(coordinator, unique_id, "discount")
 
 
 def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     return CalendarEvent(
-        summary=(
-            "Current"
-            if event["start_at"]
-            <= datetime.now().replace(tzinfo=ZoneInfo("UTC"))
-            < event["end_at"]
-            else "Upcoming"
-        )
-        + " free games",
-        start=event["start_at"],
-        end=event["end_at"],
-        description="\n\n\n".join(
-            [
-                f"- {game['title']} : \n{game['description']}\n\n{game['url']}"
-                for game in event["games"]
-            ]
-        ),
+        summary=event["title"],
+        start=event["discount_start_at"],
+        end=event["discount_end_at"],
+        description=f"{event['description']}\n\n{event['url']}",
     )
