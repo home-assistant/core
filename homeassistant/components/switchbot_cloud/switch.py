@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        _make_instance(data.api, device, coordinator)
+        _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.switches
     )
 
@@ -62,7 +62,6 @@ class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        return
 
 
 class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
@@ -71,7 +70,8 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
 
-def _make_instance(
+@callback
+def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
 ) -> SwitchBotCloudSwitch:
     """Make a SwitchBotCloudSwitch or SwitchBotCloudRemoteSwitch."""

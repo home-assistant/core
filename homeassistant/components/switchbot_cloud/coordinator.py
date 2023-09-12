@@ -2,7 +2,7 @@
 from logging import getLogger
 from typing import Any
 
-from async_timeout import timeout
+from asyncio import timeout
 from switchbot_api import CannotConnect, Device, Remote, SwitchBotAPI
 
 from homeassistant.core import HomeAssistant

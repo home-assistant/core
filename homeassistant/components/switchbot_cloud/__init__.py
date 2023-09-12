@@ -40,6 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     api = SwitchBotAPI(token=token, secret=secret)
     try:
         devices = await api.list_devices()
+    except InvalidAuth as ex:
+       _LOGGER.error("Invalid authentication while connecting to SwitchBot API: %s", ex)
+       return False
     except CannotConnect as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
