@@ -658,6 +658,21 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     [
         (
             {
+                CONF_SLAVE_COUNT: 1,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.FLOAT32,
+            },
+            [
+                0x5102,
+                0x0304,
+                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
+                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+            ],
+            False,
+            ["34899771392", "0"],
+        ),
+        (
+            {
                 CONF_SLAVE_COUNT: 0,
                 CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
             },
