@@ -1,8 +1,8 @@
 """SwitchBot Cloud coordinator."""
+from asyncio import timeout
 from logging import getLogger
 from typing import Any
 
-from asyncio import timeout
 from switchbot_api import CannotConnect, Device, Remote, SwitchBotAPI
 
 from homeassistant.core import HomeAssistant

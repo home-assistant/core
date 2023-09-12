@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from switchbot_api import CannotConnect, Device, PowerState
+import pytest
+from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -12,66 +13,88 @@ from homeassistant.core import HomeAssistant
 from . import configure_integration
 
 
-async def test_setup_entry_success(hass: HomeAssistant) -> None:
+@pytest.fixture
+def mock_list_devices():
+    """Mock list_devices."""
+    with patch.object(SwitchBotAPI, "list_devices") as mock_list_devices:
+        yield mock_list_devices
+
+
+@pytest.fixture
+def mock_get_status():
+    """Mock get_status."""
+    with patch.object(SwitchBotAPI, "get_status") as mock_get_status:
+        yield mock_get_status
+
+
+async def test_setup_entry_success(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
     """Test successful setup of entry."""
-    with patch.object(SwitchBotAPI, "list_devices") as mock_list_devices, patch.object(
-        SwitchBotAPI, "get_status"
-    ) as mock_get_status:
-        mock_list_devices.return_value = [
-            Device(
-                deviceId="test-id",
-                deviceName="test-name",
-                deviceType="Plug",
-                hubDeviceId="test-hub-id",
-            )
-        ]
-        mock_get_status.return_value = {"power": PowerState.ON.value}
-        entry = configure_integration(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="test-id",
+            deviceName="test-name",
+            deviceType="Plug",
+            hubDeviceId="test-hub-id",
+        )
+    ]
+    mock_get_status.return_value = {"power": PowerState.ON.value}
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
-        mock_list_devices.assert_called_once()
-        mock_get_status.assert_called()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    mock_list_devices.assert_called_once()
+    mock_get_status.assert_called()
 
 
-async def test_setup_entry_fails_when_listing_devices(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("error", "state"),
+    [
+        (InvalidAuth, ConfigEntryState.SETUP_ERROR),
+        (CannotConnect, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_entry_fails_when_listing_devices(
+    hass: HomeAssistant,
+    error: Exception,
+    state: ConfigEntryState,
+    mock_list_devices,
+    mock_get_status,
+) -> None:
     """Test error handling when list_devices in setup of entry."""
-    with patch.object(SwitchBotAPI, "list_devices") as mock_list_devices, patch.object(
-        SwitchBotAPI, "get_status"
-    ) as mock_get_status:
-        mock_list_devices.side_effect = CannotConnect
-        entry = configure_integration(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ConfigEntryState.SETUP_RETRY
+    mock_list_devices.side_effect = error
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == state
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
-        mock_list_devices.assert_called_once()
-        mock_get_status.assert_not_called()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    mock_list_devices.assert_called_once()
+    mock_get_status.assert_not_called()
 
 
-async def test_setup_entry_fails_when_refreshing(hass: HomeAssistant) -> None:
+async def test_setup_entry_fails_when_refreshing(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
     """Test error handling in get_status in setup of entry."""
-    with patch.object(SwitchBotAPI, "list_devices") as mock_list_devices, patch.object(
-        SwitchBotAPI, "get_status"
-    ) as mock_get_status:
-        mock_list_devices.return_value = [
-            Device(
-                deviceId="test-id",
-                deviceName="test-name",
-                deviceType="Plug",
-                hubDeviceId="test-hub-id",
-            )
-        ]
-        mock_get_status.side_effect = CannotConnect
-        entry = configure_integration(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ConfigEntryState.LOADED
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="test-id",
+            deviceName="test-name",
+            deviceType="Plug",
+            hubDeviceId="test-hub-id",
+        )
+    ]
+    mock_get_status.side_effect = CannotConnect
+    entry = configure_integration(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.LOADED
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
-        mock_list_devices.assert_called_once()
-        mock_get_status.assert_called()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    mock_list_devices.assert_called_once()
+    mock_get_status.assert_called()
