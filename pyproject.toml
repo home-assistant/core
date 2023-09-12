@@ -109,6 +109,7 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
     "orjson",
