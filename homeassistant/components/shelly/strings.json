@@ -120,7 +120,7 @@
       "valve_status": {
         "state": {
           "checking": "Checking",
-          "closed": "Closed",
+          "closed": "[%key:common::state::closed%]",
           "closing": "Closing",
           "failure": "Failure",
           "opened": "Opened",
