@@ -629,43 +629,29 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         attribute: str,
         name: str,
         default_unit: str,
-        device_class: str,
+        device_class: SensorDeviceClass,
         state_class: str | None,
         entity_category: EntityCategory | None,
     ) -> None:
         """Init the class."""
         super().__init__(device)
         self._attribute = attribute
-        self._name = name
-        self._device_class = device_class
+        self._attr_name = f"{device.label} {name}"
+        self._attr_unique_id = f"{device.device_id}.{attribute}"
+        self._attr_device_class = device_class
         self._default_unit = default_unit
         self._attr_state_class = state_class
         self._attr_entity_category = entity_category
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.label} {self._name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         value = self._device.status.attributes[self._attribute].value
 
-        if self._device_class != SensorDeviceClass.TIMESTAMP:
+        if self.device_class != SensorDeviceClass.TIMESTAMP:
             return value
 
         return dt_util.parse_datetime(value)
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
     @property
     def native_unit_of_measurement(self):
@@ -681,16 +667,8 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self._index = index
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.label} {THREE_AXIS_NAMES[self._index]}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
+        self._attr_name = f"{device.label} {THREE_AXIS_NAMES[index]}"
+        self._attr_unique_id = f"{device.device_id} {THREE_AXIS_NAMES[index]}"
 
     @property
     def native_value(self):
@@ -713,19 +691,16 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        if self.report_name != "power":
+        self._attr_name = f"{device.label} {report_name}"
+        self._attr_unique_id = f"{device.device_id}.{report_name}_meter"
+        if self.report_name == "power":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
+        else:
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.label} {self.report_name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self.report_name}_meter"
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
     @property
     def native_value(self):
@@ -736,20 +711,6 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         if self.report_name == "power":
             return value[self.report_name]
         return value[self.report_name] / 1000
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        if self.report_name == "power":
-            return SensorDeviceClass.POWER
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        if self.report_name == "power":
-            return UnitOfPower.WATT
-        return UnitOfEnergy.KILO_WATT_HOUR
 
     @property
     def extra_state_attributes(self):

@@ -23,7 +23,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
@@ -164,6 +163,7 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     entity_description: NWSSensorEntityDescription
     _attr_entity_registry_enabled_default = False
     _attr_attribution = ATTRIBUTION
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
@@ -176,13 +176,17 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         """Initialise the platform with a data instance."""
         super().__init__(nws_data.coordinator_observation)
         self._nws = nws_data.api
-        self._latitude = entry_data[CONF_LATITUDE]
-        self._longitude = entry_data[CONF_LONGITUDE]
+        latitude = entry_data[CONF_LATITUDE]
+        longitude = entry_data[CONF_LONGITUDE]
         self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
+        self._attr_device_info = device_info(latitude, longitude)
+        self._attr_unique_id = (
+            f"{base_unique_id(latitude, longitude)}_{description.key}"
+        )
 
     @property
     def native_value(self) -> float | None:
@@ -221,11 +225,6 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         return value
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
-
-    @property
     def available(self) -> bool:
         """Return if state is available."""
         if self.coordinator.last_update_success_time:
@@ -236,8 +235,3 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         else:
             last_success_time = False
         return self.coordinator.last_update_success or last_success_time
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return device_info(self._latitude, self._longitude)
