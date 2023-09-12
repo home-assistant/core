@@ -4,18 +4,12 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
-<<<<<<< HEAD
 from holidays import (
-    DateLike,
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
     list_supported_countries,
 )
-=======
-import holidays
-from holidays import HolidayBase
->>>>>>> 8650e49c09 (Add date range to workday)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
