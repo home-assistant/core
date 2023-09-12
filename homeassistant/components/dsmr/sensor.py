@@ -567,12 +567,19 @@ class DSMREntity(RestoreSensor):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
-        LOGGER.info(self._attr_native_value)
-        LOGGER.info(await self.async_get_last_sensor_data())
+        LOGGER.info(
+            f"self._attr_native_value at async_added_to_hass: {self._attr_native_value}"
+        )
+        LOGGER.info(
+            f"self.async_get_last_sensor_data at async_added_to_hass: {await self.async_get_last_sensor_data()}"
+        )
         if self._attr_native_value is not None:
             return
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            LOGGER.info(
+                f"Right, we are going to set the _native_uom to {sensor_data.native_unit_of_measurement}"
+            )
             self._native_unit_of_measurement = sensor_data.native_unit_of_measurement
 
     @callback
@@ -642,11 +649,11 @@ class DSMREntity(RestoreSensor):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         unit_of_measurement = self.get_dsmr_object_attr("unit")
-        LOGGER.info(unit_of_measurement)
+        LOGGER.info(f'self.get_dsmr_object_attr("unit"): {unit_of_measurement}')
         if unit_of_measurement in UNIT_CONVERSION:
             return UNIT_CONVERSION[unit_of_measurement]
         if unit_of_measurement is None:
-            LOGGER.info(self._native_unit_of_measurement)
+            LOGGER.info(f"self._native_unit_of_measurement: {unit_of_measurement}")
             return self._native_unit_of_measurement
         return unit_of_measurement
 
