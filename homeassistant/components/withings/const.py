@@ -1,6 +1,7 @@
 """Constants used by the Withings component."""
 from enum import StrEnum
 
+DEFAULT_TITLE = "Withings"
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
 
