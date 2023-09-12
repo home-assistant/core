@@ -72,7 +72,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
             rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self.vera_device.set_color(rgb)
         elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
-            self.vera_device.set_attr_brightness(kwargs[ATTR_BRIGHTNESS])
+            self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
         else:
             self.vera_device.switch_on()
 
@@ -92,6 +92,6 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         if self.vera_device.is_dimmable:
             # If it is dimmable, both functions exist. In case color
             # is not supported, it will return None
-            self._attr_brightness = self.vera_device.get_attr_brightness()
+            self._attr_brightness = self.vera_device.get_brightness()
             rgb = self.vera_device.get_color()
             self._attr_hs_color = color_util.color_RGB_to_hs(*rgb) if rgb else None
