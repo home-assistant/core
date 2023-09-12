@@ -946,27 +946,23 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
+    ("register_words", "do_exception"),
     [
         (
             [0x8000],
             True,
-            "17",
-            STATE_UNAVAILABLE,
         ),
     ],
 )
 async def test_lazy_error_sensor(
-    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == start_expect
+    assert hass.states.get(ENTITY_ID).state == "17"
     await do_next_cycle(hass, mock_do_cycle, 5)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
