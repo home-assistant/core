@@ -113,12 +113,10 @@ class ImapMessage:
     @property
     def message_id(self) -> str | None:
         """Get the message ID."""
-        id_header: list[str] = [
-            value
-            for header, value in self.email_message.items()
-            if header == "Message-ID"
-        ]
-        return id_header[0] if id_header else None
+        for header, value in self.email_message.items():
+            if header == "Message-ID":
+                return value
+        return None
 
     @property
     def date(self) -> datetime | None:
