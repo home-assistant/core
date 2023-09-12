@@ -191,9 +191,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotLoginException:
             errors["base"] = "config"
 
-        if errors:
-            return await self._show_setup_form(user_input, errors)
-
         config_data = {
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
@@ -204,6 +201,12 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         info = await self.hass.async_add_executor_job(api.get_info)
+        if info is None:
+            errors["base"] = "info"
+
+        if errors:
+            return await self._show_setup_form(user_input, errors)
+
         await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured(updates=config_data)
 
