@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
@@ -49,7 +50,11 @@ from homeassistant.exceptions import (
     InvalidStateError,
     NoEntitySpecifiedError,
 )
-from homeassistant.loader import bind_hass
+from homeassistant.loader import (
+    IntegrationNotLoaded,
+    async_get_loaded_integration,
+    bind_hass,
+)
 from homeassistant.util import ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
@@ -1215,8 +1220,21 @@ class Entity(ABC):
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
         report_issue = ""
+
+        integration = None
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform:
+            with suppress(IntegrationNotLoaded):
+                integration = async_get_loaded_integration(
+                    self.hass, self.platform.platform_name
+                )
+
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom integration author."
+            if integration and integration.issue_tracker:
+                report_issue = f"create a bug report at {integration.issue_tracker}"
+            else:
+                report_issue = "report it to the custom integration author"
         else:
             report_issue = (
                 "create a bug report at "
