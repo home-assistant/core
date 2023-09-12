@@ -9,9 +9,9 @@ attrs==23.1.0
 awesomeversion==22.9.0
 bcrypt==4.0.1
 bleak-retry-connector==3.1.3
-bleak==0.21.0
+bleak==0.21.1
 bluetooth-adapters==0.16.1
-bluetooth-auto-recovery==1.2.2
+bluetooth-auto-recovery==1.2.3
 bluetooth-data-tools==1.11.0
 certifi>=2021.5.30
 ciso8601==2.3.0
@@ -19,10 +19,10 @@ cryptography==41.0.3
 dbus-fast==1.95.2
 fnv-hash-fast==0.4.1
 ha-av==10.1.1
-hass-nabucasa==0.70.0
+hass-nabucasa==0.71.0
 hassil==1.2.5
 home-assistant-bluetooth==1.10.3
-home-assistant-frontend==20230908.0
+home-assistant-frontend==20230911.0
 home-assistant-intents==2023.8.2
 httpx==0.24.1
 ifaddr==0.2.0

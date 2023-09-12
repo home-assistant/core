@@ -6,7 +6,6 @@ import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import TransientConnectionError
 
-from homeassistant.components.zha import async_setup_entry
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_RADIO_TYPE,
@@ -22,7 +21,7 @@ from .test_light import LIGHT_ON_OFF
 
 from tests.common import MockConfigEntry
 
-DATA_RADIO_TYPE = "deconz"
+DATA_RADIO_TYPE = "ezsp"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
 
 
@@ -137,7 +136,7 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
 )
 async def test_setup_with_v3_cleaning_uri(
-    hass: HomeAssistant, path: str, cleaned_path: str
+    hass: HomeAssistant, path: str, cleaned_path: str, mock_zigpy_connect
 ) -> None:
     """Test migration of config entry from v3, applying corrections to the port path."""
     config_entry_v3 = MockConfigEntry(
@@ -150,14 +149,9 @@ async def test_setup_with_v3_cleaning_uri(
     )
     config_entry_v3.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.zha.ZHAGateway", return_value=AsyncMock()
-    ) as mock_gateway:
-        mock_gateway.return_value.coordinator_ieee = "mock_ieee"
-        mock_gateway.return_value.radio_description = "mock_radio"
-
-        assert await async_setup_entry(hass, config_entry_v3)
-        hass.data[DOMAIN]["zha_gateway"] = mock_gateway.return_value
+    await hass.config_entries.async_setup(config_entry_v3.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry_v3.entry_id)
 
     assert config_entry_v3.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert config_entry_v3.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
