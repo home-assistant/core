@@ -256,8 +256,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             "longitude": call.data[ATTR_LONGITUDE],
         }
 
-        if call.data.get(ATTR_ELEVATION):
-            service_data["elevation"] = call.data[ATTR_ELEVATION]
+        if elevation := call.data.get(ATTR_ELEVATION):
+            service_data["elevation"] = elevation
 
         await hass.config.async_update(**service_data)
 
