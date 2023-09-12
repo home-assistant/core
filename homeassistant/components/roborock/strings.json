@@ -164,10 +164,10 @@
       "dnd_end_time": {
         "name": "Do not disturb end"
       },
-      "off_peak_start_time": {
+      "off_peak_start": {
         "name": "Off-peak start"
       },
-      "off_peak_end_time": {
+      "off_peak_end": {
         "name": "Off-peak end"
       }
     },
