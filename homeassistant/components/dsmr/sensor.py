@@ -582,6 +582,9 @@ class DSMREntity(RestoreSensor):
             LOGGER.info(
                 f"Right, we are going to set the _native_uom to {sensor_data.native_unit_of_measurement}"
             )
+            LOGGER.info(
+                f"Right, we are going to set the _native_value to {sensor_data.native_value}"
+            )
             self._native_unit_of_measurement = sensor_data.native_unit_of_measurement
             self._native_value = cast(float, sensor_data.native_value)
 
