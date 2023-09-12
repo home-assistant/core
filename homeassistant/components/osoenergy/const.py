@@ -1,7 +1,6 @@
 """Constants for OSO Energy."""
 from typing import Any
 
-from homeassistant.components.water_heater import STATE_PERFORMANCE
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 
 ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
