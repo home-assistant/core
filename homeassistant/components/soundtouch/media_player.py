@@ -103,6 +103,11 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._volume = None
         self._zone = None
 
+    @property
+    def device(self):
+        """Return SoundTouch device."""
+        return self._device
+
     def update(self) -> None:
         """Retrieve the latest data."""
         self._status = self._device.status()
