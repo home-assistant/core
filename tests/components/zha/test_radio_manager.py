@@ -32,9 +32,7 @@ def disable_platform_only():
 @pytest.fixture(autouse=True)
 def reduce_reconnect_timeout():
     """Reduces reconnect timeout to speed up tests."""
-    with patch(
-        "homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.0001
-    ), patch("homeassistant.components.zha.radio_manager.RETRY_DELAY_S", 0.0001):
+    with patch("homeassistant.components.zha.radio_manager.RETRY_DELAY_S", 0.0001):
         yield
 
 
@@ -99,7 +97,7 @@ def mock_connect_zigpy_app() -> Generator[MagicMock, None, None]:
     )
 
     with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield mock_connect_app

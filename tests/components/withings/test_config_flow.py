@@ -86,6 +86,7 @@ async def test_config_non_unique_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
+    disable_webhook_delay,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup a non-unique profile."""
@@ -154,6 +155,7 @@ async def test_config_reauth_profile(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
+    disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test reauth an existing profile re-creates the config entry."""
