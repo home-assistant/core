@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     httpx_client=get_async_client(self.hass),
                     authentication=BasicAuth(),
                 ).meters()
-            except discovergyError.HTTPError:
+            except (discovergyError.HTTPError, discovergyError.DiscovergyClientError):
                 errors["base"] = "cannot_connect"
             except discovergyError.InvalidLogin:
                 errors["base"] = "invalid_auth"
