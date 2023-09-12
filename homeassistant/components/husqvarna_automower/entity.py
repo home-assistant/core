@@ -21,7 +21,7 @@ class AutomowerEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
 
     def __init__(self, coordinator: AutomowerDataUpdateCoordinator, idx: int) -> None:
         """Initialize AutomowerEntity."""
-        super().__init__(coordinator, context=idx)
+        super().__init__(coordinator, idx)
         self.idx = idx
         self.mower_id = coordinator.session.dataclass.data[idx].id
         mower_name = self.mower_attributes.system.name
