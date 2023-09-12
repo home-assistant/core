@@ -72,7 +72,9 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
     def __init__(self, session: AutomowerSession, idx: int) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(session, idx)
-        self._attr_unique_id = f"{self.mower_id}_lawn_mower"
+        self._attr_unique_id = (
+            f"{self.coordinator.session.api_key}_{self.mower_id}_lawn_mower"
+        )
 
     @property
     def available(self) -> bool:

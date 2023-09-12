@@ -21,9 +21,8 @@ class HusqvarnaConfigFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow."""
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(data.get("auth_implementation"))
         self._abort_if_unique_id_configured()
-
         return self.async_create_entry(
             title=NAME,
             data=data,
