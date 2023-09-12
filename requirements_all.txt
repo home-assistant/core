@@ -1088,7 +1088,7 @@ jaraco.abode==3.3.0
 jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
-jsonpath==0.82
+jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
