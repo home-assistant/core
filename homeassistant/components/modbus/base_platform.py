@@ -31,7 +31,6 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -116,8 +115,9 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
-            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
+        self._cancel_call = async_call_later(
+            self.hass, timedelta(milliseconds=100), self.async_update
+        )
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
@@ -188,10 +188,14 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             registers.reverse()
         return registers
 
-    def __process_raw_value(self, entry: float | int | str) -> float | int | str | None:
+    def __process_raw_value(
+        self, entry: float | int | str | bytes
+    ) -> float | int | str | bytes | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
         if self._nan_value and entry in (self._nan_value, -self._nan_value):
             return None
+        if isinstance(entry, bytes):
+            return entry
         val: float | int = self._scale * entry + self._offset
         if self._min_value is not None and val < self._min_value:
             return self._min_value
@@ -232,13 +236,19 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
                 if isinstance(v_temp, int) and self._precision == 0:
                     v_result.append(str(v_temp))
                 elif v_temp is None:
-                    v_result.append("")  # pragma: no cover
+                    v_result.append("0")
                 elif v_temp != v_temp:  # noqa: PLR0124
                     # NaN float detection replace with None
-                    v_result.append("nan")  # pragma: no cover
+                    v_result.append("0")
                 else:
                     v_result.append(f"{float(v_temp):.{self._precision}f}")
             return ",".join(map(str, v_result))
+
+        # NaN float detection replace with None
+        if val[0] != val[0]:  # noqa: PLR0124
+            return None
+        if byte_string == b"nan\x00":
+            return None
 
         # Apply scale, precision, limits to floats and ints
         val_result = self.__process_raw_value(val[0])
@@ -249,15 +259,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
         if val_result is None:
             return None
-        # NaN float detection replace with None
-        if val_result != val_result:  # noqa: PLR0124
-            return None  # pragma: no cover
         if isinstance(val_result, int) and self._precision == 0:
             return str(val_result)
-        if isinstance(val_result, str):
-            if val_result == "nan":
-                val_result = None  # pragma: no cover
-            return val_result
+        if isinstance(val_result, bytes):
+            return val_result.decode()
         return f"{float(val_result):.{self._precision}f}"
 
 

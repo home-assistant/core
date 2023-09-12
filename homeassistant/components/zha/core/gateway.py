@@ -149,12 +149,6 @@ class ZHAGateway:
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
 
-        discovery.PROBE.initialize(self._hass)
-        discovery.GROUP_PROBE.initialize(self._hass)
-
-        self.ha_device_registry = dr.async_get(self._hass)
-        self.ha_entity_registry = er.async_get(self._hass)
-
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
@@ -197,29 +191,18 @@ class ZHAGateway:
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
+        discovery.PROBE.initialize(self._hass)
+        discovery.GROUP_PROBE.initialize(self._hass)
+
+        self.ha_device_registry = dr.async_get(self._hass)
+        self.ha_entity_registry = er.async_get(self._hass)
+
         app_controller_cls, app_config = self.get_application_controller_data()
         self.application_controller = await app_controller_cls.new(
             config=app_config,
             auto_form=False,
             start_radio=False,
         )
-
-        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-
-        self.async_load_devices()
-
-        # Groups are attached to the coordinator device so we need to load it early
-        coordinator = self._find_coordinator_device()
-        loaded_groups = False
-
-        # We can only load groups early if the coordinator's model info has been stored
-        # in the zigpy database
-        if coordinator.model is not None:
-            self.coordinator_zha_device = self._async_get_or_create_device(
-                coordinator, restored=True
-            )
-            self.async_load_groups()
-            loaded_groups = True
 
         for attempt in range(STARTUP_RETRIES):
             try:
@@ -242,14 +225,15 @@ class ZHAGateway:
             else:
                 break
 
+        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
+        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
+
         self.coordinator_zha_device = self._async_get_or_create_device(
             self._find_coordinator_device(), restored=True
         )
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
 
-        # If ZHA groups could not load early, we can safely load them now
-        if not loaded_groups:
-            self.async_load_groups()
+        self.async_load_devices()
+        self.async_load_groups()
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
@@ -766,7 +750,15 @@ class ZHAGateway:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
-        await self.application_controller.shutdown()
+        # shutdown is called when the config entry unloads are processed
+        # there are cases where unloads are processed because of a failure of
+        # some sort and the application controller may not have been
+        # created yet
+        if (
+            hasattr(self, "application_controller")
+            and self.application_controller is not None
+        ):
+            await self.application_controller.shutdown()
 
     def handle_message(
         self,
