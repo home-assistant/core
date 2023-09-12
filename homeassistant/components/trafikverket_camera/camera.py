@@ -48,7 +48,7 @@ class TVCamera(TrafikverketCameraEntity, Camera):
         entry_id: str,
     ) -> None:
         """Initialize the camera."""
-        TrafikverketCameraEntity.__init__(self, coordinator, entry_id)
+        super().__init__(coordinator, entry_id)
         Camera.__init__(self)
         self._attr_unique_id = entry_id
 

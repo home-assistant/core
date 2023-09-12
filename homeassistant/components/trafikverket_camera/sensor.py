@@ -101,17 +101,6 @@ class TrafikverketCameraSensor(TrafikverketCameraNonCameraEntity, SensorEntity):
 
     entity_description: TVCameraSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TVDataUpdateCoordinator,
-        entry_id: str,
-        description: TVCameraSensorEntityDescription,
-    ) -> None:
-        """Initiate Trafikverket Camera Sensor."""
-        self.entity_description = description
-        super().__init__(coordinator, entry_id)
-        self._attr_unique_id = f"{entry_id}-{description.key}"
-
     @callback
     def _update_attr(self) -> None:
         """Update _attr."""
