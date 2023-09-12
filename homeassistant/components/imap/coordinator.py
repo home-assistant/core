@@ -113,6 +113,7 @@ class ImapMessage:
     @property
     def message_id(self) -> str | None:
         """Get the message ID."""
+        value: str
         for header, value in self.email_message.items():
             if header == "Message-ID":
                 return value
