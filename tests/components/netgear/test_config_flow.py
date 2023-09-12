@@ -159,6 +159,19 @@ async def test_user_connect_error(hass: HomeAssistant, service_failed) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
 
+    service_mock.return_value.login_try_port = Mock(return_value=True)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "info"}
 
 async def test_user_incomplete_info(hass: HomeAssistant, service_incomplete) -> None:
     """Test user step with incomplete device info."""
