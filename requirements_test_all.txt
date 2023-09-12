@@ -28,7 +28,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.7.1
 
 # homeassistant.components.tasmota
-HATasmota==0.7.2
+HATasmota==0.7.3
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -529,7 +529,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.2.0
+dbus-fast==2.6.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.7
@@ -760,7 +760,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.70.0
+hass-nabucasa==0.71.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
@@ -793,7 +793,7 @@ home-assistant-intents==2023.8.2
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.14
+homematicip==1.0.15
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1913,7 +1913,7 @@ twitchAPI==3.10.0
 uasiren==0.0.1
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.5.1
+ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
@@ -2054,10 +2054,10 @@ zeversolar==0.3.1
 zha-quirks==0.0.103
 
 # homeassistant.components.zha
-zigpy-deconz==0.21.0
+zigpy-deconz==0.21.1
 
 # homeassistant.components.zha
-zigpy-xbee==0.18.1
+zigpy-xbee==0.18.2
 
 # homeassistant.components.zha
 zigpy-zigate==0.11.0
@@ -2069,7 +2069,7 @@ zigpy-znp==0.11.4
 zigpy==0.57.1
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.51.1
+zwave-js-server-python==0.51.2
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

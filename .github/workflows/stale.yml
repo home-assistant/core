@@ -42,7 +42,7 @@ jobs:
         id: token
         # Pinned to a specific version of the action for security reasons
         # v1.7.0
-        uses: tibdex/github-app-token@0d49dd721133f900ebd5e0dff2810704e8defbc6
+        uses: tibdex/github-app-token@0914d50df753bbc42180d982a6550f195390069f
         with:
           app_id: ${{ secrets.ISSUE_TRIAGE_APP_ID }}
           private_key: ${{ secrets.ISSUE_TRIAGE_APP_PEM }}
