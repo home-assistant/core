@@ -162,6 +162,7 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
+    _attr_entity_registry_enabled_default = False
     _attr_attribution = ATTRIBUTION
 
     def __init__(
@@ -235,11 +236,6 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
         else:
             last_success_time = False
         return self.coordinator.last_update_success or last_success_time
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
 
     @property
     def device_info(self) -> DeviceInfo:

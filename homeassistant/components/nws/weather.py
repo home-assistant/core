@@ -146,6 +146,7 @@ class NWSWeather(CoordinatorWeatherEntity):
         self.station = self.nws.station
 
         self.mode = mode
+        self._attr_entity_registry_enabled_default = mode == DAYNIGHT
 
         self.observation: dict[str, Any] | None = None
         self._forecast_hourly: list[dict[str, Any]] | None = None
@@ -372,11 +373,6 @@ class NWSWeather(CoordinatorWeatherEntity):
         """
         await self.coordinator.async_request_refresh()
         await self.coordinator_forecast_legacy.async_request_refresh()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.mode == DAYNIGHT
 
     @property
     def device_info(self) -> DeviceInfo:
