@@ -31,10 +31,7 @@ async def async_setup_entry(
     """Set up entry for a Yardian irrigation switches."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        YardianSwitch(
-            coordinator,
-            i,
-        )
+        YardianSwitch(coordinator, i, hass.data[DOMAIN]["config"].get("duration", {}))
         for i in range(len(coordinator.data.zones))
     )
 
@@ -55,12 +52,15 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
     _attr_icon = "mdi:water"
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: YardianUpdateCoordinator, zone_id) -> None:
+    def __init__(
+        self, coordinator: YardianUpdateCoordinator, zone_id, duration_config
+    ) -> None:
         """Initialize a Yardian Switch Device."""
         super().__init__(coordinator)
         self._zone_id = zone_id
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
         self._attr_device_info = coordinator.device_info
+        self._duration_config = duration_config
 
     @property
     def name(self) -> str:
@@ -79,9 +79,10 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        duration = self._duration_config.get(self.entity_id, DEFAULT_WATERING_DURATION)
         await self.coordinator.controller.start_irrigation(
             self._zone_id,
-            kwargs.get("duration", DEFAULT_WATERING_DURATION),
+            kwargs.get("duration", duration),
         )
         await self.coordinator.async_request_refresh()
 
