@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -35,14 +36,14 @@ SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "percent"
 REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
-        name="Marginal operating emissions rate",
+        translation_key="marginal_operating_emissions_rate",
         icon="mdi:blur",
         native_unit_of_measurement=f"{UnitOfMass.POUNDS} CO2/MWh",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
-        name="Relative marginal emissions intensity",
+        translation_key="relative_marginal_emissions_intensity",
         icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -77,13 +78,14 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-
-        self._attr_name = (
-            f"{description.name} ({entry.data[CONF_BALANCING_AUTHORITY_ABBREV]})"
-        )
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._entry = entry
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.data[CONF_BALANCING_AUTHORITY_ABBREV],
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

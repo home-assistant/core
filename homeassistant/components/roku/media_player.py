@@ -85,11 +85,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = coordinator.data.info.serial_number
+
     async_add_entities(
         [
             RokuMediaPlayer(
-                device_id=unique_id,
                 coordinator=coordinator,
             )
         ],

@@ -94,19 +94,17 @@ class FolderSensor(SensorEntity):
         self._folder_label = folder_label
         self._state = None
         self._unsub_timer = None
-        self._version = version
 
         self._short_server_id = server_id.split("-")[0]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._short_server_id} {self._folder_id} {self._folder_label}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._short_server_id}-{self._folder_id}"
+        self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
+        self._attr_unique_id = f"{self._short_server_id}-{folder_id}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._server_id)},
+            manufacturer="Syncthing Team",
+            name=f"Syncthing ({syncthing.url})",
+            sw_version=version,
+        )
 
     @property
     def native_value(self):
@@ -131,17 +129,6 @@ class FolderSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._server_id)},
-            manufacturer="Syncthing Team",
-            name=f"Syncthing ({self._syncthing.url})",
-            sw_version=self._version,
-        )
 
     async def async_update_status(self):
         """Request folder status and update state."""

@@ -1,6 +1,8 @@
 """The tests for the MQTT device_tracker platform."""
+from datetime import UTC, datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import device_tracker, mqtt
@@ -199,9 +201,10 @@ async def test_duplicate_device_tracker_removal(
 async def test_device_tracker_discovery_update(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for a discovery update event."""
+    freezer.move_to("2023-08-22 19:15:00+00:00")
     await mqtt_mock_entry()
     async_fire_mqtt_message(
         hass,
@@ -213,7 +216,9 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Beer"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 15, tzinfo=UTC)
 
+    freezer.move_to("2023-08-22 19:16:00+00:00")
     async_fire_mqtt_message(
         hass,
         "homeassistant/device_tracker/bla/config",
@@ -224,6 +229,21 @@ async def test_device_tracker_discovery_update(
     state = hass.states.get("device_tracker.beer")
     assert state is not None
     assert state.name == "Cider"
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
+
+    freezer.move_to("2023-08-22 19:20:00+00:00")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Cider", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Cider"
+    # Entity was not updated as the state was not changed
+    assert state.last_updated == datetime(2023, 8, 22, 19, 16, tzinfo=UTC)
 
 
 async def test_cleanup_device_tracker(

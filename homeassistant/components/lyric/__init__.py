@@ -1,6 +1,7 @@
 """The Honeywell Lyric integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -10,7 +11,6 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(exception) from exception
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 await lyric.get_locations()
             return lyric
         except LyricAuthenticationException as exception:
@@ -117,6 +117,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     """Defines a base Honeywell Lyric entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

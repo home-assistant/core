@@ -1,11 +1,11 @@
 """The Nina integration."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import re
 from typing import Any
 
-from async_timeout import timeout
 from pynina import ApiError, Nina
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +16,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     _LOGGER,
+    ALL_MATCH_REGEX,
+    CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
@@ -42,8 +44,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data.pop(CONF_FILTER_CORONA, None)
         hass.config_entries.async_update_entry(entry, data=new_data)
 
+    if CONF_AREA_FILTER not in entry.data:
+        new_data = {**entry.data, CONF_AREA_FILTER: ALL_MATCH_REGEX}
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
     coordinator = NINADataUpdateCoordinator(
-        hass, regions, entry.data[CONF_HEADLINE_FILTER]
+        hass,
+        regions,
+        entry.data[CONF_HEADLINE_FILTER],
+        entry.data[CONF_AREA_FILTER],
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -77,6 +86,7 @@ class NinaWarningData:
     sender: str
     severity: str
     recommended_actions: str
+    affected_areas: str
     sent: str
     start: str
     expires: str
@@ -89,12 +99,17 @@ class NINADataUpdateCoordinator(
     """Class to manage fetching NINA data API."""
 
     def __init__(
-        self, hass: HomeAssistant, regions: dict[str, str], headline_filter: str
+        self,
+        hass: HomeAssistant,
+        regions: dict[str, str],
+        headline_filter: str,
+        area_filter: str,
     ) -> None:
         """Initialize."""
         self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
         self.headline_filter: str = headline_filter
+        self.area_filter: str = area_filter
 
         for region in regions:
             self._nina.addRegion(region)
@@ -103,7 +118,7 @@ class NINADataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
-        async with timeout(10):
+        async with asyncio.timeout(10):
             try:
                 await self._nina.update()
             except ApiError as err:
@@ -147,6 +162,21 @@ class NINADataUpdateCoordinator(
                 if re.search(
                     self.headline_filter, raw_warn.headline, flags=re.IGNORECASE
                 ):
+                    _LOGGER.debug(
+                        f"Ignore warning ({raw_warn.id}) by headline filter ({self.headline_filter}) with headline: {raw_warn.headline}"
+                    )
+                    continue
+
+                affected_areas_string: str = ", ".join(
+                    [str(area) for area in raw_warn.affected_areas]
+                )
+
+                if not re.search(
+                    self.area_filter, affected_areas_string, flags=re.IGNORECASE
+                ):
+                    _LOGGER.debug(
+                        f"Ignore warning ({raw_warn.id}) by area filter ({self.area_filter}) with area: {affected_areas_string}"
+                    )
                     continue
 
                 warning_data: NinaWarningData = NinaWarningData(
@@ -156,6 +186,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.sender,
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
+                    affected_areas_string,
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",

@@ -340,6 +340,7 @@ async def test_device_info_ismartgate(
     assert device.name == "mycontroller"
     assert device.model == "ismartgatePRO"
     assert device.sw_version == "555"
+    assert device.configuration_url == "https://abc321.blah.blah"
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
@@ -375,3 +376,4 @@ async def test_device_info_gogogate2(
     assert device.name == "mycontroller"
     assert device.model == "gogogate2"
     assert device.sw_version == "222"
+    assert device.configuration_url == "http://127.0.0.1"
