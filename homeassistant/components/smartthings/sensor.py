@@ -667,7 +667,7 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self._index = index
-        self._attr_name = f"{device} {THREE_AXIS_NAMES[index]}"
+        self._attr_name = f"{device.label} {THREE_AXIS_NAMES[index]}"
         self._attr_unique_id = f"{device.device_id} {THREE_AXIS_NAMES[index]}"
 
     @property
