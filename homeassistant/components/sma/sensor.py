@@ -66,7 +66,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor = pysma_sensor
-        self._enabled_default = self._sensor.enabled
+        self._attr_entity_registry_enabled_default = self._sensor.enabled
         self._config_entry_unique_id = config_entry_unique_id
         self._attr_device_info = device_info
 
@@ -107,11 +107,6 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         return (
             f"{self._config_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
         )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
