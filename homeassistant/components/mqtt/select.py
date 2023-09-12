@@ -115,7 +115,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
         self._attr_options = config[CONF_OPTIONS]
 
         self._command_template = MqttCommandTemplate(
@@ -152,7 +152,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -171,13 +171,15 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
+        if self._attr_assumed_state and (
+            last_state := await self.async_get_last_state()
+        ):
             self._attr_current_option = last_state.state
 
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
         payload = self._command_template(option)
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_current_option = option
             self.async_write_ha_state()
 
@@ -188,8 +190,3 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
