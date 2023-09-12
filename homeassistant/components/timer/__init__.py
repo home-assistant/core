@@ -317,11 +317,11 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._state = STATUS_ACTIVE
         start = dt_util.utcnow().replace(microsecond=0)
 
-        # Set remaining to new value if needed
+        # Set remaining and running duration unless resuming or restarting
         if duration:
             self._remaining = self._running_duration = duration
         elif not self._remaining:
-            self._remaining = self._duration
+            self._remaining = self._running_duration = self._duration
 
         self._end = start + self._remaining
 
@@ -339,9 +339,13 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Timer {self.entity_id} is not running, only active timers can be changed"
             )
-        if self._remaining and (self._remaining + duration) > self._duration:
+        if (
+            self._remaining
+            and self._running_duration
+            and (self._remaining + duration) > self._running_duration
+        ):
             raise HomeAssistantError(
-                f"Not possible to change timer {self.entity_id} beyond configured duration"
+                f"Not possible to change timer {self.entity_id} beyond duration"
             )
         if self._remaining and (self._remaining + duration) < timedelta():
             raise HomeAssistantError(

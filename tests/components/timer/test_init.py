@@ -319,7 +319,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
     with pytest.raises(
         HomeAssistantError,
-        match="Not possible to change timer timer.test1 beyond configured duration",
+        match="Not possible to change timer timer.test1 beyond duration",
     ):
         await hass.services.async_call(
             DOMAIN,
