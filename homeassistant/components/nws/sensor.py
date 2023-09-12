@@ -161,7 +161,6 @@ class NWSSensor(CoordinatorEntity[NwsDataUpdateCoordinator], SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
-    _attr_entity_registry_enabled_default = False
     _attr_attribution = ATTRIBUTION
     _attr_entity_registry_enabled_default = False
 
