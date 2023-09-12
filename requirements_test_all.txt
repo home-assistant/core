@@ -1499,7 +1499,7 @@ pysabnzbd==1.1.1
 pyschlage==2023.9.0
 
 # homeassistant.components.sensibo
-pysensibo==1.0.34
+pysensibo==1.0.35
 
 # homeassistant.components.serial
 # homeassistant.components.zha
