@@ -795,13 +795,11 @@ async def test_setup_source(hass: HomeAssistant) -> None:
         "test_domain.platform_config_source": {
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.config_entry_source": {
             "config_entry": platform.config_entry.entry_id,
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_CONFIG_ENTRY,
         },
     }
 
