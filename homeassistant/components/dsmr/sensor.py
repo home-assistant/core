@@ -541,6 +541,7 @@ class DSMREntity(RestoreSensor):
     entity_description: DSMRSensorEntityDescription
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _native_unit_of_measurement: str | None = None
 
     def __init__(
         self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
@@ -570,9 +571,7 @@ class DSMREntity(RestoreSensor):
             return
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_unit_of_measurement = (
-                sensor_data.native_unit_of_measurement
-            )
+            self._native_unit_of_measurement = sensor_data.native_unit_of_measurement
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
@@ -644,7 +643,7 @@ class DSMREntity(RestoreSensor):
         if unit_of_measurement in UNIT_CONVERSION:
             return UNIT_CONVERSION[unit_of_measurement]
         if unit_of_measurement is None:
-            return self._attr_native_unit_of_measurement
+            return self._native_unit_of_measurement
         return unit_of_measurement
 
     @staticmethod
