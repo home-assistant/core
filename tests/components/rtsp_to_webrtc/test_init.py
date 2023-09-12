@@ -14,6 +14,7 @@ from homeassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .conftest import SERVER_URL, STREAM_SOURCE, ComponentSetup
 
@@ -25,6 +26,12 @@ from tests.typing import WebSocketGenerator
 # and is only a pass through.
 OFFER_SDP = "v=0\r\no=carol 28908764872 28908764872 IN IP4 100.3.6.6\r\n..."
 ANSWER_SDP = "v=0\r\no=bob 2890844730 2890844730 IN IP4 host.example.com\r\n..."
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_setup_success(

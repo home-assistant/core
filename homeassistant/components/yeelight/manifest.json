@@ -17,7 +17,7 @@
   "iot_class": "local_push",
   "loggers": ["async_upnp_client", "yeelight"],
   "quality_scale": "platinum",
-  "requirements": ["yeelight==0.7.10", "async-upnp-client==0.33.1"],
+  "requirements": ["yeelight==0.7.13", "async-upnp-client==0.35.0"],
   "zeroconf": [
     {
       "type": "_miio._udp.local.",

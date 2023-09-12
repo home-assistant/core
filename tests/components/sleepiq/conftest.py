@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
+    BED_PRESETS,
     Side,
     SleepIQActuator,
     SleepIQBed,
@@ -118,6 +119,7 @@ def mock_asyncsleepiq_single_foundation(
         preset.preset = PRESET_R_STATE
         preset.side = Side.NONE
         preset.side_full = "Right"
+        preset.options = BED_PRESETS
         yield client
 
 
@@ -157,10 +159,12 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
         preset_l.preset = PRESET_L_STATE
         preset_l.side = Side.LEFT
         preset_l.side_full = "Left"
+        preset_l.options = BED_PRESETS
 
         preset_r.preset = PRESET_R_STATE
         preset_r.side = Side.RIGHT
         preset_r.side_full = "Right"
+        preset_r.options = BED_PRESETS
 
         yield client
 

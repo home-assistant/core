@@ -76,8 +76,6 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
 
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
 
 
@@ -315,8 +313,6 @@ def data_ids_exist_in_events_with_fast_in_distinct(
 
 def _event_data_id_exist(data_id: int | None) -> Select:
     """Check if a event data id exists in the events table."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     return select(func.min(Events.data_id)).where(Events.data_id == data_id)
 
 
@@ -659,8 +655,6 @@ def find_statistics_runs_to_purge(
 
 def find_latest_statistics_runs_run_id() -> StatementLambdaElement:
     """Find the latest statistics_runs run_id."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(StatisticsRuns.run_id)))
 
 
@@ -678,10 +672,24 @@ def find_legacy_event_state_and_attributes_and_data_ids_to_purge(
     )
 
 
+def find_legacy_detached_states_and_attributes_to_purge(
+    purge_before: float,
+) -> StatementLambdaElement:
+    """Find states rows with event_id set but not linked event_id in Events."""
+    return lambda_stmt(
+        lambda: select(States.state_id, States.attributes_id)
+        .outerjoin(Events, States.event_id == Events.event_id)
+        .filter(States.event_id.isnot(None))
+        .filter(
+            (States.last_updated_ts < purge_before) | States.last_updated_ts.is_(None)
+        )
+        .filter(Events.event_id.is_(None))
+        .limit(SQLITE_MAX_BIND_VARS)
+    )
+
+
 def find_legacy_row() -> StatementLambdaElement:
     """Check if there are still states in the table with an event_id."""
-    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-    # pylint: disable-next=not-callable
     return lambda_stmt(lambda: select(func.max(States.event_id)))
 
 
@@ -690,6 +698,7 @@ def find_events_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             Events.event_id,
+            Events.time_fired_ts,
             Events.context_id,
             Events.context_user_id,
             Events.context_parent_id,
@@ -788,6 +797,7 @@ def find_states_context_ids_to_migrate() -> StatementLambdaElement:
     return lambda_stmt(
         lambda: select(
             States.state_id,
+            States.last_updated_ts,
             States.context_id,
             States.context_user_id,
             States.context_parent_id,

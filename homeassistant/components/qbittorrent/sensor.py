@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_IDLE,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,12 +84,17 @@ async def async_setup_platform(
     )
     ir.async_create_issue(
         hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.6.0",
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2023.11.0",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "qBittorrent",
+        },
     )
 
 

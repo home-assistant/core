@@ -324,18 +324,29 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         all_identifiers = set(self.atv.all_identifiers)
         discovered_ip_address = str(self.atv.address)
         for entry in self._async_current_entries():
-            if not all_identifiers.intersection(
+            existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
-            ):
+            )
+            if not all_identifiers.intersection(existing_identifiers):
                 continue
-            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
+            combined_identifiers = existing_identifiers | all_identifiers
+            if entry.data.get(
+                CONF_ADDRESS
+            ) != discovered_ip_address or combined_identifiers != set(
+                entry.data.get(CONF_IDENTIFIERS, [])
+            ):
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
+                    data={
+                        **entry.data,
+                        CONF_ADDRESS: discovered_ip_address,
+                        CONF_IDENTIFIERS: list(combined_identifiers),
+                    },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                if entry.source != config_entries.SOURCE_IGNORE:
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
             if not allow_exist:
                 raise DeviceAlreadyConfigured()
 
@@ -396,8 +407,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Protocol specific arguments
         pair_args = {}
-        if self.protocol == Protocol.DMAP:
+        if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
+        if self.protocol == Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process

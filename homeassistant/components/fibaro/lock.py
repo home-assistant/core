@@ -52,4 +52,5 @@ class FibaroLock(FibaroDevice, LockEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._attr_is_locked = self.current_binary_state

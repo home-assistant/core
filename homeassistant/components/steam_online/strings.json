@@ -35,11 +35,5 @@
     "error": {
       "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
     }
-  },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Steam YAML configuration has been removed",
-      "description": "Configuring Steam using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

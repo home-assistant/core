@@ -13,7 +13,6 @@ SIGNIFICANT_DOMAINS = {
 }
 SIGNIFICANT_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in SIGNIFICANT_DOMAINS]
 IGNORE_DOMAINS = {"zone", "scene"}
-IGNORE_DOMAINS_ENTITY_ID_LIKE = [f"{domain}.%" for domain in IGNORE_DOMAINS]
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",

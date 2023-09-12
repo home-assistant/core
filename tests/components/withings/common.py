@@ -20,15 +20,13 @@ from homeassistant import data_entry_flow
 import homeassistant.components.api as api
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 import homeassistant.components.webhook as webhook
-from homeassistant.components.withings import async_unload_entry
 from homeassistant.components.withings.common import (
     ConfigEntryWithingsApi,
     DataManager,
-    WithingsEntityDescription,
     get_all_data_managers,
-    get_attribute_unique_id,
 )
 import homeassistant.components.withings.const as const
+from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import (
@@ -45,6 +43,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+from tests.components.withings import WebhookResponse
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -90,14 +89,6 @@ def new_profile_config(
         or NotifyListResponse(profiles=[]),
         api_response_notify_revoke=api_response_notify_revoke,
     )
-
-
-@dataclass
-class WebhookResponse:
-    """Response data from a webhook."""
-
-    message: str
-    message_code: int
 
 
 class ComponentFactory:
@@ -290,7 +281,7 @@ class ComponentFactory:
         config_entries = get_config_entries_for_user_id(self._hass, profile.user_id)
 
         for config_entry in config_entries:
-            await async_unload_entry(self._hass, config_entry)
+            await config_entry.async_unload(self._hass)
 
         await self._hass.async_block_till_done()
 
@@ -332,6 +323,6 @@ async def async_get_entity_id(
 ) -> str | None:
     """Get an entity id for a user's attribute."""
     entity_registry = er.async_get(hass)
-    unique_id = get_attribute_unique_id(description, user_id)
+    unique_id = f"withings_{user_id}_{description.measurement.value}"
 
     return entity_registry.async_get_entity_id(platform, const.DOMAIN, unique_id)

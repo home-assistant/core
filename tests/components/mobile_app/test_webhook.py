@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -26,6 +27,12 @@ from tests.components.conversation.conftest import mock_agent
 
 # To avoid autoflake8 removing the import
 mock_agent = mock_agent
+
+
+@pytest.fixture
+async def homeassistant(hass):
+    """Load the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 def encrypt_payload(secret_key, payload, encode_json=True):
@@ -850,7 +857,9 @@ async def test_webhook_handle_scan_tag(
     hass: HomeAssistant, create_registrations, webhook_client
 ) -> None:
     """Test that we can scan tags."""
-    device = dr.async_get(hass).async_get_device({(DOMAIN, "mock-device-id")})
+    device = dr.async_get(hass).async_get_device(
+        identifiers={(DOMAIN, "mock-device-id")}
+    )
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)
@@ -1014,20 +1023,24 @@ async def test_reregister_sensor(
 
 
 async def test_webhook_handle_conversation_process(
-    hass: HomeAssistant, create_registrations, webhook_client, mock_agent
+    hass: HomeAssistant, homeassistant, create_registrations, webhook_client, mock_agent
 ) -> None:
     """Test that we can converse."""
     webhook_client.server.app.router._frozen = False
 
-    resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={
-            "type": "conversation_process",
-            "data": {
-                "text": "Turn the kitchen light off",
+    with patch(
+        "homeassistant.components.conversation.AgentManager.async_get_agent",
+        return_value=mock_agent,
+    ):
+        resp = await webhook_client.post(
+            "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+            json={
+                "type": "conversation_process",
+                "data": {
+                    "text": "Turn the kitchen light off",
+                },
             },
-        },
-    )
+        )
 
     assert resp.status == HTTPStatus.OK
     json = await resp.json()

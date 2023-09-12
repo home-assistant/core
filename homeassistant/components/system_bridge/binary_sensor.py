@@ -23,13 +23,16 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
+    # SystemBridgeBinarySensor does not support UNDEFINED or None,
+    # restrict the type to str.
+    name: str = ""
+
     value: Callable = round
 
 
 BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
-        name="New version available",
         device_class=BinarySensorDeviceClass.UPDATE,
         value=lambda data: data.system.version_newer_available,
     ),
@@ -38,7 +41,6 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
 BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
-        name="Battery is charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value=lambda data: data.battery.is_charging,
     ),
@@ -88,7 +90,6 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
             coordinator,
             api_port,
             description.key,
-            description.name,
         )
         self.entity_description = description
 

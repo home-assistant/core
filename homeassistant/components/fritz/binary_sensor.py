@@ -80,7 +80,10 @@ class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if isinstance(
-            state := self.coordinator.data.get(self.entity_description.key), bool
+            state := self.coordinator.data["entity_states"].get(
+                self.entity_description.key
+            ),
+            bool,
         ):
             return state
         return None

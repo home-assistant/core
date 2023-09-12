@@ -12,5 +12,11 @@
         }
       }
     }
+  },
+  "services": {
+    "scan": {
+      "name": "Scan",
+      "description": "Processes an image immediately."
+    }
   }
 }

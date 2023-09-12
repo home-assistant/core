@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -121,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 

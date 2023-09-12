@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sia",
   "iot_class": "local_push",
   "loggers": ["pysiaalarm"],
-  "requirements": ["pysiaalarm==3.0.2"]
+  "requirements": ["pysiaalarm==3.1.1"]
 }

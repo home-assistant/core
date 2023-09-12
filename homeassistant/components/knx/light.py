@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from xknx import XKNX
-from xknx.devices.light import Light as XknxLight, XYYColor
+from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
 
 from homeassistant import config_entries
 from homeassistant.components.light import (
@@ -56,16 +56,20 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
     group_address_tunable_white_state = None
     group_address_color_temp = None
     group_address_color_temp_state = None
-    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE:
-        group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
-        group_address_color_temp_state = config.get(
-            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
-        )
-    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
+    color_temperature_type = ColorTemperatureType.UINT_2_BYTE
+    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
         group_address_tunable_white = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = config.get(
             LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
         )
+    else:
+        # absolute uint or float
+        group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
+        group_address_color_temp_state = config.get(
+            LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
+        )
+        if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE_FLOAT:
+            color_temperature_type = ColorTemperatureType.FLOAT_2_BYTE
 
     return XknxLight(
         xknx,
@@ -140,6 +144,7 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
         group_address_brightness_white_state=individual_color_addresses(
             LightSchema.CONF_WHITE, LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
         ),
+        color_temperature_type=color_temperature_type,
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
     )
@@ -239,7 +244,7 @@ class KNXLight(KnxEntity, LightEntity):
         """Return the color temperature in Kelvin."""
         if self._device.supports_color_temperature:
             if kelvin := self._device.current_color_temperature:
-                return kelvin
+                return int(kelvin)
         if self._device.supports_tunable_white:
             relative_ct = self._device.current_tunable_white
             if relative_ct is not None:

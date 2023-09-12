@@ -26,6 +26,12 @@ CONFIG = {
 ENDPOINT_URL = f"https://westus.{mf.FACE_API_URL}"
 
 
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
+
+
 @pytest.fixture
 def store_mock():
     """Mock update store."""

@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.alexa import config, smart_home, smart_home_http
+from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
@@ -16,7 +16,7 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
 
 
-class MockConfig(smart_home_http.AlexaConfig):
+class MockConfig(smart_home.AlexaConfig):
     """Mock Alexa config."""
 
     entity_config = {

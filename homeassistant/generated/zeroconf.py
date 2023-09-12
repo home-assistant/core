@@ -279,6 +279,16 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_amzn-alexa._tcp.local.": [
+        {
+            "domain": "roomba",
+            "name": "irobot-*",
+        },
+        {
+            "domain": "roomba",
+            "name": "roomba-*",
+        },
+    ],
     "_androidtvremote2._tcp.local.": [
         {
             "domain": "androidtv_remote",
@@ -437,6 +447,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "loqed",
+            "name": "loqed*",
         },
         {
             "domain": "nam",
@@ -667,6 +681,12 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [

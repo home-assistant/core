@@ -35,11 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_VERIFY_SSL],
         )
     except LoginRequired as err:
-        _LOGGER.error("Invalid credentials")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Invalid credentials") from err
     except RequestException as err:
-        _LOGGER.error("Failed to connect")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Failed to connect") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

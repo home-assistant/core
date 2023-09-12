@@ -113,7 +113,15 @@ async def async_setup_entry(
         # main sensors are created even if the entity type is not known
         entities.append(FibaroSensor(device, entity_description))
 
-    for platform in (Platform.COVER, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH):
+    for platform in (
+        Platform.BINARY_SENSOR,
+        Platform.CLIMATE,
+        Platform.COVER,
+        Platform.LIGHT,
+        Platform.LOCK,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ):
         for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             for entity_description in ADDITIONAL_SENSOR_TYPES:
                 if entity_description.key in device.properties:
@@ -146,6 +154,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
 
     def update(self) -> None:
         """Update the state."""
+        super().update()
         with suppress(TypeError):
             self._attr_native_value = self.fibaro_device.value.float_value()
 
@@ -170,6 +179,7 @@ class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
 
     def update(self) -> None:
         """Update the state."""
+        super().update()
         with suppress(KeyError, ValueError):
             self._attr_native_value = convert(
                 self.fibaro_device.properties[self.entity_description.key],

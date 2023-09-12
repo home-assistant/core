@@ -66,7 +66,9 @@ async def test_exclude_attributes(
     await async_wait_recording_done(hass)
     assert len(calls) == 1
 
-    states = await hass.async_add_executor_job(get_significant_states, hass, now)
+    states = await hass.async_add_executor_job(
+        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+    )
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:

@@ -55,6 +55,7 @@ from zwave_js_server.model.utils import (
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http import require_admin
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
@@ -65,7 +66,6 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
@@ -98,6 +98,7 @@ COMMAND_CLASS_ID = "command_class_id"
 TYPE = "type"
 PROPERTY = "property"
 PROPERTY_KEY = "property_key"
+ENDPOINT = "endpoint"
 VALUE = "value"
 
 # constants for log config commands
@@ -513,6 +514,7 @@ async def websocket_network_status(
             "is_heal_network_active": controller.is_heal_network_active,
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
+            "status": controller.status,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -1137,6 +1139,7 @@ async def websocket_remove_node(
         node = event["node"]
         node_details = {
             "node_id": node.node_id,
+            "reason": event["reason"],
         }
 
         connection.send_message(
@@ -1608,6 +1611,7 @@ async def websocket_refresh_node_cc_values(
         vol.Required(TYPE): "zwave_js/set_config_parameter",
         vol.Required(DEVICE_ID): str,
         vol.Required(PROPERTY): int,
+        vol.Optional(ENDPOINT, default=0): int,
         vol.Optional(PROPERTY_KEY): int,
         vol.Required(VALUE): vol.Any(int, BITMASK_SCHEMA),
     }
@@ -1623,12 +1627,13 @@ async def websocket_set_config_parameter(
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
     property_ = msg[PROPERTY]
+    endpoint = msg[ENDPOINT]
     property_key = msg.get(PROPERTY_KEY)
     value = msg[VALUE]
 
     try:
         zwave_value, cmd_status = await async_set_config_parameter(
-            node, value, property_, property_key=property_key
+            node, value, property_, property_key=property_key, endpoint=endpoint
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
         code = ERR_UNKNOWN_ERROR
@@ -1673,6 +1678,7 @@ async def websocket_get_config_parameters(
         result[value_id] = {
             "property": zwave_value.property_,
             "property_key": zwave_value.property_key,
+            "endpoint": zwave_value.endpoint,
             "configuration_value_type": zwave_value.configuration_value_type.value,
             "metadata": {
                 "description": metadata.description,
@@ -1725,7 +1731,7 @@ async def websocket_subscribe_log_updates(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        hass.async_create_task(driver.async_stop_listening_logs())
+        hass.async_create_task(client.async_stop_listening_logs())
         for unsub in unsubs:
             unsub()
 
@@ -1766,7 +1772,7 @@ async def websocket_subscribe_log_updates(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    await driver.async_start_listening_logs()
+    await client.async_start_listening_logs()
     connection.send_result(msg[ID])
 
 
@@ -2144,10 +2150,9 @@ class FirmwareUploadView(HomeAssistantView):
         super().__init__()
         self._dev_reg = dev_reg
 
+    @require_admin
     async def post(self, request: web.Request, device_id: str) -> web.Response:
         """Handle upload."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
         hass = request.app["hass"]
 
         try:
@@ -2343,7 +2348,7 @@ def _get_node_statistics_dict(
         """Convert a node to a device id."""
         driver = node.client.driver
         assert driver
-        device = dev_reg.async_get_device({get_device_id(driver, node)})
+        device = dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
         assert device
         return device.id
 

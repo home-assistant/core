@@ -12,7 +12,8 @@ from devolo_plc_api.device_api import (
 from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,7 +33,7 @@ _DataT = TypeVar(
 )
 
 
-class DevoloEntity(CoordinatorEntity[DataUpdateCoordinator[_DataT]]):
+class DevoloEntity(Entity):
     """Representation of a devolo home network device."""
 
     _attr_has_entity_name = True
@@ -40,12 +41,9 @@ class DevoloEntity(CoordinatorEntity[DataUpdateCoordinator[_DataT]]):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator[_DataT],
         device: Device,
     ) -> None:
         """Initialize a devolo home network device."""
-        super().__init__(coordinator)
-
         self.device = device
         self.entry = entry
 
@@ -59,3 +57,19 @@ class DevoloEntity(CoordinatorEntity[DataUpdateCoordinator[_DataT]]):
         )
         self._attr_translation_key = self.entity_description.key
         self._attr_unique_id = f"{device.serial_number}_{self.entity_description.key}"
+
+
+class DevoloCoordinatorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[_DataT]], DevoloEntity
+):
+    """Representation of a coordinated devolo home network device."""
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator[_DataT],
+        device: Device,
+    ) -> None:
+        """Initialize a devolo home network device."""
+        super().__init__(coordinator)
+        DevoloEntity.__init__(self, entry, device)

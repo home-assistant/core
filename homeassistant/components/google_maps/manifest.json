@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google_maps",
   "iot_class": "cloud_polling",
   "loggers": ["locationsharinglib"],
-  "requirements": ["locationsharinglib==5.0.0"]
+  "requirements": ["locationsharinglib==5.0.1"]
 }

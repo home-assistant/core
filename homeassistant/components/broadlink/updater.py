@@ -6,7 +6,7 @@ import logging
 from broadlink.exceptions import AuthorizationError, BroadlinkException
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class BroadlinkUpdateManager(ABC):
 
         except (BroadlinkException, OSError) as err:
             if self.available and (
-                dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
+                dt_util.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
                 or isinstance(err, (AuthorizationError, OSError))
             ):
                 self.available = False
@@ -84,7 +84,7 @@ class BroadlinkUpdateManager(ABC):
                 self.device.api.host[0],
             )
         self.available = True
-        self.last_update = dt.utcnow()
+        self.last_update = dt_util.utcnow()
         return data
 
     @abstractmethod

@@ -129,7 +129,7 @@ class LocalCalendarEntity(CalendarEntity):
                 recurrence_range=range_value,
             )
         except EventStoreError as err:
-            raise HomeAssistantError("Error while deleting event: {err}") from err
+            raise HomeAssistantError(f"Error while deleting event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -153,7 +153,7 @@ class LocalCalendarEntity(CalendarEntity):
                 recurrence_range=range_value,
             )
         except EventStoreError as err:
-            raise HomeAssistantError("Error while updating event: {err}") from err
+            raise HomeAssistantError(f"Error while updating event: {err}") from err
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -196,7 +196,7 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     else:
         start = event.start
         end = event.end
-        if (end - start) <= timedelta(days=0):
+        if (end - start) < timedelta(days=0):
             end = start + timedelta(days=1)
 
     return CalendarEvent(

@@ -18,7 +18,7 @@ class NodeDictClass(dict):
     """Wrapper class to be able to add attributes on a dict."""
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class Input:
     """Input that should be substituted."""
 

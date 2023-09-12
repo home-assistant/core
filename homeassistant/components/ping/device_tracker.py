@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import subprocess
 
 from icmplib import async_multiping
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
@@ -22,6 +21,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -44,7 +44,14 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 class HostSubProcess:
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, hass, config, privileged):
+    def __init__(
+        self,
+        ip_address: str,
+        dev_id: str,
+        hass: HomeAssistant,
+        config: ConfigType,
+        privileged: bool | None,
+    ) -> None:
         """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
@@ -52,7 +59,7 @@ class HostSubProcess:
         self._count = config[CONF_PING_COUNT]
         self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
 
-    def ping(self):
+    def ping(self) -> bool | None:
         """Send an ICMP echo request and return True if success."""
         with subprocess.Popen(
             self._ping_cmd,
@@ -108,7 +115,7 @@ async def async_setup_scanner(
             for (dev_id, ip) in config[CONF_HOSTS].items()
         ]
 
-        async def async_update(now):
+        async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
             results = await gather_with_concurrency(
                 CONCURRENT_PING_LIMIT,
@@ -124,7 +131,7 @@ async def async_setup_scanner(
 
     else:
 
-        async def async_update(now):
+        async def async_update(now: datetime) -> None:
             """Update all the hosts on every interval time."""
             responses = await async_multiping(
                 list(ip_to_dev_id),
@@ -141,14 +148,14 @@ async def async_setup_scanner(
                 )
             )
 
-    async def _async_update_interval(now):
+    async def _async_update_interval(now: datetime) -> None:
         try:
             await async_update(now)
         finally:
             if not hass.is_stopping:
                 async_track_point_in_utc_time(
-                    hass, _async_update_interval, util.dt.utcnow() + interval
+                    hass, _async_update_interval, now + interval
                 )
 
-    await _async_update_interval(None)
+    await _async_update_interval(dt_util.now())
     return True

@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {

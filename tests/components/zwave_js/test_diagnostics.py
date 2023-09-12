@@ -18,11 +18,11 @@ from homeassistant.components.zwave_js.helpers import (
     get_value_id_from_unique_id,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import PROPERTY_ULTRAVIOLET
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -57,9 +57,27 @@ async def test_device_diagnostics(
     version_state,
 ) -> None:
     """Test the device level diagnostics data dump."""
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, multisensor_6)}
+    )
     assert device
+
+    # Create mock config entry for fake entity
+    mock_config_entry = MockConfigEntry(domain="test_integration")
+    mock_config_entry.add_to_hass(hass)
+
+    # Add an entity entry to the device that is not part of this config entry
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create(
+        "test",
+        "test_integration",
+        "test_unique_id",
+        suggested_object_id="unrelated_entity",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+    )
+    assert ent_reg.async_get("test.unrelated_entity")
 
     # Update a value and ensure it is reflected in the node state
     event = Event(
@@ -92,16 +110,33 @@ async def test_device_diagnostics(
     }
     # Assert that we only have the entities that were discovered for this device
     # Entities that are created outside of discovery (e.g. node status sensor and
-    # ping button) should not be in dump.
+    # ping button) as well as helper entities created from other integrations should
+    # not be in dump.
     assert len(diagnostics_data["entities"]) == len(
         list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
     )
-    assert diagnostics_data["state"] == multisensor_6.data
+    assert any(
+        entity.entity_id == "test.unrelated_entity"
+        for entity in er.async_entries_for_device(ent_reg, device.id)
+    )
+    # Explicitly check that the entity that is not part of this config entry is not
+    # in the dump.
+    assert not any(
+        entity["entity_id"] == "test.unrelated_entity"
+        for entity in diagnostics_data["entities"]
+    )
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "values": {id: val.data for id, val in multisensor_6.values.items()},
+        "endpoints": {
+            str(idx): endpoint.data for idx, endpoint in multisensor_6.endpoints.items()
+        },
+    }
 
 
 async def test_device_diagnostics_error(hass: HomeAssistant, integration) -> None:
     """Test the device diagnostics raises exception when an invalid device is used."""
-    dev_reg = async_get_dev_reg(hass)
+    dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={("test", "test")}
     )
@@ -122,13 +157,15 @@ async def test_device_diagnostics_missing_primary_value(
     integration,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that the device diagnostics handles an entity with a missing primary value."""
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
+    """Test that device diagnostics handles an entity with a missing primary value."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, multisensor_6)}
+    )
     assert device
 
     entity_id = "sensor.multisensor_6_air_temperature"
-    ent_reg = async_get_ent_reg(hass)
+    ent_reg = er.async_get(hass)
     entry = ent_reg.async_get(entity_id)
 
     # check that the primary value for the entity exists in the diagnostics
@@ -199,7 +236,11 @@ async def test_device_diagnostics_secret_value(
         """Find ultraviolet property value in data."""
         return next(
             val
-            for val in data["values"]
+            for val in (
+                data["values"]
+                if isinstance(data["values"], list)
+                else data["values"].values()
+            )
             if val["commandClass"] == CommandClass.SENSOR_MULTILEVEL
             and val["property"] == PROPERTY_ULTRAVIOLET
         )
@@ -212,8 +253,8 @@ async def test_device_diagnostics_secret_value(
     client.driver.controller.nodes[node.node_id] = node
     client.driver.controller.emit("node added", {"node": node})
     await hass.async_block_till_done()
-    dev_reg = async_get_dev_reg(hass)
-    device = dev_reg.async_get_device({get_device_id(client.driver, node)})
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
     assert device
 
     diagnostics_data = await get_diagnostics_for_device(

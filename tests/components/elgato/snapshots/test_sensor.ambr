@@ -44,7 +44,7 @@
     'original_name': 'Battery',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': 'GW24L1A02987_battery',
     'unit_of_measurement': '%',
   })

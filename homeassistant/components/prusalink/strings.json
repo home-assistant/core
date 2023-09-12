@@ -20,8 +20,8 @@
       "printer_state": {
         "state": {
           "cancelling": "Cancelling",
-          "idle": "Idle",
-          "paused": "Paused",
+          "idle": "[%key:common::state::idle%]",
+          "paused": "[%key:common::state::paused%]",
           "pausing": "Pausing",
           "printing": "Printing"
         }
@@ -29,8 +29,14 @@
       "heatbed_temperature": {
         "name": "Heatbed temperature"
       },
+      "heatbed_target_temperature": {
+        "name": "Heatbed target temperature"
+      },
       "nozzle_temperature": {
         "name": "Nozzle temperature"
+      },
+      "nozzle_target_temperature": {
+        "name": "Nozzle target temperature"
       },
       "progress": {
         "name": "Progress"
@@ -38,11 +44,20 @@
       "filename": {
         "name": "Filename"
       },
+      "material": {
+        "name": "Material"
+      },
       "print_start": {
         "name": "Print start"
       },
       "print_finish": {
         "name": "Print finish"
+      },
+      "print_speed": {
+        "name": "Print speed"
+      },
+      "z_height": {
+        "name": "Z-Height"
       }
     },
     "button": {

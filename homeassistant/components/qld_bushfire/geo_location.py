@@ -126,7 +126,10 @@ class QldBushfireFeedEntityManager:
     def _init_regular_updates(self) -> None:
         """Schedule regular updates at the specified interval."""
         track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+            self._hass,
+            lambda now: self._feed_manager.update(),
+            self._scan_interval,
+            cancel_on_shutdown=True,
         )
 
     def get_entry(self, external_id: str) -> QldBushfireAlertFeedEntry | None:

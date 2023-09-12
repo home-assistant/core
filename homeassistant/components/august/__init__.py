@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import ValuesView
+from datetime import datetime
 from itertools import chain
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
+from yalexs.const import DEFAULT_BRAND
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.lock import Lock, LockDetail
@@ -16,16 +19,16 @@ from yalexs_ble import YaleXSBLEDiscovery
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import aiohttp_client, device_registry as dr, discovery_flow
 
 from .activity import ActivityStream
-from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
+from .const import CONF_BRAND, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
@@ -43,8 +46,11 @@ YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
-
-    august_gateway = AugustGateway(hass)
+    # Create an aiohttp session instead of using the default one since the
+    # default one is likely to trigger august's WAF if another integration
+    # is also using Cloudflare
+    session = aiohttp_client.async_create_clientsession(hass)
+    august_gateway = AugustGateway(hass, session)
 
     try:
         await august_gateway.async_setup(entry.data)
@@ -122,19 +128,29 @@ def _async_trigger_ble_lock_discovery(
 class AugustData(AugustSubscriberMixin):
     """August data object."""
 
-    def __init__(self, hass, config_entry, august_gateway):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        august_gateway: AugustGateway,
+    ) -> None:
         """Init August data object."""
         super().__init__(hass, MIN_TIME_BETWEEN_DETAIL_UPDATES)
         self._config_entry = config_entry
         self._hass = hass
         self._august_gateway = august_gateway
-        self.activity_stream = None
+        self.activity_stream: ActivityStream | None = None
         self._api = august_gateway.api
-        self._device_detail_by_id = {}
-        self._doorbells_by_id = {}
-        self._locks_by_id = {}
-        self._house_ids = set()
-        self._pubnub_unsub = None
+        self._device_detail_by_id: dict[str, LockDetail | DoorbellDetail] = {}
+        self._doorbells_by_id: dict[str, Doorbell] = {}
+        self._locks_by_id: dict[str, Lock] = {}
+        self._house_ids: set[str] = set()
+        self._pubnub_unsub: CALLBACK_TYPE | None = None
+
+    @property
+    def brand(self) -> str:
+        """Brand of the device."""
+        return self._config_entry.data.get(CONF_BRAND, DEFAULT_BRAND)
 
     async def async_setup(self):
         """Async setup of august device data and activities."""
@@ -185,7 +201,11 @@ class AugustData(AugustSubscriberMixin):
         )
         await self.activity_stream.async_setup()
         pubnub.subscribe(self.async_pubnub_message)
-        self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
+        self._pubnub_unsub = async_create_pubnub(
+            user_data["UserID"],
+            pubnub,
+            self.brand,
+        )
 
         if self._locks_by_id:
             # Do not prevent setup as the sync can timeout
@@ -220,14 +240,18 @@ class AugustData(AugustSubscriberMixin):
                 )
 
     @callback
-    def async_pubnub_message(self, device_id, date_time, message):
+    def async_pubnub_message(
+        self, device_id: str, date_time: datetime, message: dict[str, Any]
+    ) -> None:
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
+        activity_stream = self.activity_stream
+        assert activity_stream is not None
         if activities:
-            self.activity_stream.async_process_newer_device_activities(activities)
+            activity_stream.async_process_newer_device_activities(activities)
             self.async_signal_device_id_update(device.device_id)
-        self.activity_stream.async_schedule_house_id_refresh(device.house_id)
+        activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
     def async_stop(self):

@@ -342,6 +342,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -386,6 +387,7 @@ async def test_supervisor_discovery_cannot_connect(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -416,6 +418,7 @@ async def test_clean_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -486,6 +489,7 @@ async def test_abort_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -514,6 +518,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -536,6 +541,7 @@ async def test_abort_hassio_discovery_for_other_addon(
             },
             name="Other Z-Wave JS",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
@@ -741,6 +747,7 @@ async def test_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -825,6 +832,7 @@ async def test_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -912,6 +920,7 @@ async def test_abort_usb_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 

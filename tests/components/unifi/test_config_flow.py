@@ -21,7 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -74,9 +74,14 @@ DEVICES = [
 ]
 
 WLANS = [
-    {"name": "SSID 1"},
-    {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
-    {"name": "SSID 4", "name_combine_enabled": False},
+    {"_id": "1", "name": "SSID 1"},
+    {
+        "_id": "2",
+        "name": "SSID 2",
+        "name_combine_enabled": False,
+        "name_combine_suffix": "_IOT",
+    },
+    {"_id": "3", "name": "SSID 4", "name_combine_enabled": False},
 ]
 
 DPI_GROUPS = [
@@ -398,7 +403,7 @@ async def test_reauth_flow_update_configuration(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
 

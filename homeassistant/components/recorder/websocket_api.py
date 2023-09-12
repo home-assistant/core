@@ -30,7 +30,6 @@ from homeassistant.util.unit_conversion import (
     VolumeConverter,
 )
 
-from .const import MAX_QUEUE_BACKLOG
 from .models import StatisticPeriod
 from .statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
@@ -155,7 +154,7 @@ def _ws_get_statistics_during_period(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
@@ -201,7 +200,7 @@ async def ws_handle_get_statistics_during_period(
         end_time = None
 
     if (types := msg.get("types")) is None:
-        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+        types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -226,7 +225,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
         vol.Optional("units"): UNIT_SCHEMA,
         vol.Optional("types"): vol.All(
-            [vol.Any("last_reset", "max", "mean", "min", "state", "sum")],
+            [vol.Any("change", "last_reset", "max", "mean", "min", "state", "sum")],
             vol.Coerce(set),
         ),
     }
@@ -504,7 +503,7 @@ def ws_info(
 
     recorder_info = {
         "backlog": backlog,
-        "max_backlog": MAX_QUEUE_BACKLOG,
+        "max_backlog": instance.max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,

@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.select import (
@@ -167,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
@@ -302,12 +301,9 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
-            _LOGGER.warning(
-                "Invalid option: %s (possible options: %s)",
-                option,
-                ", ".join(self.options),
+            raise HomeAssistantError(
+                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
             )
-            return
         self._attr_current_option = option
         self.async_write_ha_state()
 

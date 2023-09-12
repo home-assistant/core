@@ -130,6 +130,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """
 
     _attr_force_update = True
+    _attr_name = None
 
     def __init__(
         self,

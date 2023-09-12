@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sfr_box import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -32,19 +31,24 @@ async def test_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device({(DOMAIN, "e4:5d:51:00:11:22")})
-    assert device_entry == snapshot
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
+    # Ensure entities are correctly registered
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
     assert entity_entries == snapshot
 
-    for entity in entity_entries:
-        entity_registry.async_update_entity(entity.entity_id, **{"disabled_by": None})
-
+    # Some entities are disabled, enable them and reload before checking states
+    for ent in entity_entries:
+        entity_registry.async_update_entity(ent.entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for entity in entity_entries:
-        assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot

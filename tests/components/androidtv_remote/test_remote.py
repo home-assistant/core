@@ -1,5 +1,4 @@
 """Tests for the Android TV Remote remote platform."""
-from collections.abc import Callable
 from unittest.mock import MagicMock, call
 
 from androidtvremote2 import ConnectionClosed
@@ -19,49 +18,25 @@ async def test_remote_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote receives push updates and state is updated."""
-    is_on_updated_callback: Callable | None = None
-    current_app_updated_callback: Callable | None = None
-    is_available_updated_callback: Callable | None = None
-
-    def mocked_add_is_on_updated_callback(callback: Callable):
-        nonlocal is_on_updated_callback
-        is_on_updated_callback = callback
-
-    def mocked_add_current_app_updated_callback(callback: Callable):
-        nonlocal current_app_updated_callback
-        current_app_updated_callback = callback
-
-    def mocked_add_is_available_updated_callback(callback: Callable):
-        nonlocal is_available_updated_callback
-        is_available_updated_callback = callback
-
-    mock_api.add_is_on_updated_callback.side_effect = mocked_add_is_on_updated_callback
-    mock_api.add_current_app_updated_callback.side_effect = (
-        mocked_add_current_app_updated_callback
-    )
-    mock_api.add_is_available_updated_callback.side_effect = (
-        mocked_add_is_available_updated_callback
-    )
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    is_on_updated_callback(False)
+    mock_api._on_is_on_updated(False)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_OFF)
 
-    is_on_updated_callback(True)
+    mock_api._on_is_on_updated(True)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_ON)
 
-    current_app_updated_callback("activity1")
+    mock_api._on_current_app_updated("activity1")
     assert (
         hass.states.get(REMOTE_ENTITY).attributes.get("current_activity") == "activity1"
     )
 
-    is_available_updated_callback(False)
+    mock_api._on_is_available_updated(False)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_UNAVAILABLE)
 
-    is_available_updated_callback(True)
+    mock_api._on_is_available_updated(True)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_ON)
 
 
@@ -69,40 +44,32 @@ async def test_remote_toggles(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote toggles."""
-    is_on_updated_callback: Callable | None = None
-
-    def mocked_add_is_on_updated_callback(callback: Callable):
-        nonlocal is_on_updated_callback
-        is_on_updated_callback = callback
-
-    mock_api.add_is_on_updated_callback.side_effect = mocked_add_is_on_updated_callback
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "turn_off",
         {"entity_id": REMOTE_ENTITY},
         blocking=True,
     )
-    is_on_updated_callback(False)
+    mock_api._on_is_on_updated(False)
 
     mock_api.send_key_command.assert_called_with("POWER", "SHORT")
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "turn_on",
         {"entity_id": REMOTE_ENTITY},
         blocking=True,
     )
-    is_on_updated_callback(True)
+    mock_api._on_is_on_updated(True)
 
     mock_api.send_key_command.assert_called_with("POWER", "SHORT")
     assert mock_api.send_key_command.call_count == 2
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "turn_on",
         {"entity_id": REMOTE_ENTITY, "activity": "activity1"},
@@ -122,7 +89,7 @@ async def test_remote_send_command(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "send_command",
         {
@@ -145,7 +112,7 @@ async def test_remote_send_command_multiple(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "send_command",
         {
@@ -169,7 +136,7 @@ async def test_remote_send_command_with_hold_secs(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         "remote",
         "send_command",
         {

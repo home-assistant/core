@@ -52,6 +52,7 @@ _VALID_STATES = [
     STATE_CLOSING,
     "true",
     "false",
+    "none",
 ]
 
 CONF_POSITION_TEMPLATE = "position_template"
@@ -181,8 +182,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_closing = False
         self._tilt_value = None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         if self._template:
             self.add_template_attribute(
                 "_position", self._template, None, self._update_state
@@ -203,7 +205,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 self._update_tilt,
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_state(self, result):
@@ -238,6 +240,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     @callback
     def _update_position(self, result):
+        if result is None:
+            self._position = None
+            return
+
         try:
             state = float(result)
         except ValueError as err:
@@ -256,6 +262,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     @callback
     def _update_tilt(self, result):
+        if result is None:
+            self._tilt_value = None
+            return
+
         try:
             state = float(result)
         except ValueError as err:

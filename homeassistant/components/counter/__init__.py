@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Self
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -44,6 +45,7 @@ SERVICE_DECREMENT = "decrement"
 SERVICE_INCREMENT = "increment"
 SERVICE_RESET = "reset"
 SERVICE_CONFIGURE = "configure"
+SERVICE_SET_VALUE = "set_value"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -117,13 +119,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
     component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
     component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
+    component.async_register_entity_service(
+        SERVICE_SET_VALUE,
+        {vol.Required(VALUE): cv.positive_int},
+        "async_set_value",
+    )
     component.async_register_entity_service(
         SERVICE_CONFIGURE,
         {
@@ -238,10 +245,6 @@ class Counter(collection.CollectionEntity, RestoreEntity):
             and (state := await self.async_get_last_state()) is not None
         ):
             self._state = self.compute_next_state(int(state.state))
-            self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
-            self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
-            self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
-            self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
     @callback
     def async_decrement(self) -> None:
@@ -262,8 +265,40 @@ class Counter(collection.CollectionEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @callback
+    def async_set_value(self, value: int) -> None:
+        """Set counter to value."""
+        if (maximum := self._config.get(CONF_MAXIMUM)) is not None and value > maximum:
+            raise ValueError(
+                f"Value {value} for {self.entity_id} exceeding the maximum value of {maximum}"
+            )
+
+        if (minimum := self._config.get(CONF_MINIMUM)) is not None and value < minimum:
+            raise ValueError(
+                f"Value {value} for {self.entity_id} exceeding the minimum value of {minimum}"
+            )
+
+        if (step := self._config.get(CONF_STEP)) is not None and value % step != 0:
+            raise ValueError(
+                f"Value {value} for {self.entity_id} is not a multiple of the step size {step}"
+            )
+
+        self._state = value
+        self.async_write_ha_state()
+
+    @callback
     def async_configure(self, **kwargs) -> None:
         """Change the counter's settings with a service."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_configure_service",
+            breaks_in_ha_version="2023.12.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_configure_service",
+        )
+
         new_state = kwargs.pop(VALUE, self._state)
         self._config = {**self._config, **kwargs}
         self._state = self.compute_next_state(new_state)

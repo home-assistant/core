@@ -6,12 +6,17 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from afsapi import AFSAPI, ConnectionError as FSConnectionError, InvalidPinException
+from afsapi import (
+    AFSAPI,
+    ConnectionError as FSConnectionError,
+    InvalidPinException,
+    NotImplementedException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -55,41 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _name: str
     _webfsapi_url: str
     _reauth_entry: config_entries.ConfigEntry | None = None  # Only used in reauth flows
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Handle the import of legacy configuration.yaml entries."""
-
-        device_url = f"http://{import_info[CONF_HOST]}:{import_info[CONF_PORT]}/device"
-        try:
-            webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        try:
-            afsapi = AFSAPI(webfsapi_url, import_info[CONF_PIN])
-
-            unique_id = await afsapi.get_radio_id()
-        except FSConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidPinException:
-            return self.async_abort(reason="invalid_auth")
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(unique_id, raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_info[CONF_NAME] or "Radio",
-            data={
-                CONF_WEBFSAPI_URL: webfsapi_url,
-                CONF_PIN: import_info[CONF_PIN],
-            },
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,13 +111,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(exception)
             return self.async_abort(reason="unknown")
 
+        # try to login with default pin
+        afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
         try:
-            # try to login with default pin
-            afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
-
-            unique_id = await afsapi.get_radio_id()
+            await afsapi.get_friendly_name()
         except InvalidPinException:
             return self.async_abort(reason="invalid_auth")
+
+        try:
+            unique_id = await afsapi.get_radio_id()
+        except NotImplementedException:
+            unique_id = None
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
@@ -175,7 +149,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {"name": self._name}
 
-        unique_id = await afsapi.get_radio_id()
+        try:
+            unique_id = await afsapi.get_radio_id()
+        except NotImplementedException:
+            unique_id = None
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
@@ -240,7 +217,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-            unique_id = await afsapi.get_radio_id()
+            try:
+                unique_id = await afsapi.get_radio_id()
+            except NotImplementedException:
+                unique_id = None
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self._async_create_entry(user_input[CONF_PIN])

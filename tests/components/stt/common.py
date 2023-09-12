@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.stt import Provider
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from tests.common import MockPlatform, mock_platform
@@ -53,4 +55,20 @@ def mock_stt_platform(
     loaded_platform = MockSTTPlatform(async_get_engine, get_engine)
     mock_platform(hass, f"{integration}.stt", loaded_platform)
 
+    return loaded_platform
+
+
+def mock_stt_entity_platform(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    integration: str,
+    async_setup_entry: Callable[
+        [HomeAssistant, ConfigEntry, AddEntitiesCallback],
+        Coroutine[Any, Any, None],
+    ]
+    | None = None,
+) -> MockPlatform:
+    """Specialize the mock platform for stt."""
+    loaded_platform = MockPlatform(async_setup_entry=async_setup_entry)
+    mock_platform(hass, f"{integration}.stt", loaded_platform)
     return loaded_platform

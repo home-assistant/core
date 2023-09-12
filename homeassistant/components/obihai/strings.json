@@ -24,11 +24,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "issues": {
-    "manual_migration": {
-      "title": "Obihai YAML configuration is being removed",
-      "description": "Configuration of the Obihai platform in YAML is deprecated and will be removed in Home Assistant 2023.6; Your existing configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file."
-    }
   }
 }

@@ -1,22 +1,50 @@
 """Support for Rituals Perfume Genie binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from pyrituals import Diffuser
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN
+from .const import DOMAIN
+from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
-CHARGING_SUFFIX = " Battery Charging"
+
+@dataclass
+class RitualsentityDescriptionMixin:
+    """Mixin values for Rituals entities."""
+
+    is_on_fn: Callable[[Diffuser], bool]
+    has_fn: Callable[[Diffuser], bool]
+
+
+@dataclass
+class RitualsBinarySensorEntityDescription(
+    BinarySensorEntityDescription, RitualsentityDescriptionMixin
+):
+    """Class describing Rituals binary sensor entities."""
+
+
+ENTITY_DESCRIPTIONS = (
+    RitualsBinarySensorEntityDescription(
+        key="charging",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda diffuser: diffuser.charging,
+        has_fn=lambda diffuser: diffuser.has_battery,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,29 +53,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser binary sensors."""
-    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
-    coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
+    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
     async_add_entities(
-        DiffuserBatteryChargingBinarySensor(diffuser, coordinators[hublot])
-        for hublot, diffuser in diffusers.items()
-        if diffuser.has_battery
+        RitualsBinarySensorEntity(coordinator, description)
+        for coordinator in coordinators.values()
+        for description in ENTITY_DESCRIPTIONS
+        if description.has_fn(coordinator.diffuser)
     )
 
 
-class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
-    """Representation of a diffuser battery charging binary sensor."""
+class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
+    """Defines a Rituals binary sensor entity."""
 
-    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
-    ) -> None:
-        """Initialize the battery charging binary sensor."""
-        super().__init__(diffuser, coordinator, CHARGING_SUFFIX)
+    entity_description: RitualsBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:
-        """Return the state of the battery charging binary sensor."""
-        return self._diffuser.charging
+        """Return the state of the binary sensor."""
+        return self.entity_description.is_on_fn(self.coordinator.diffuser)

@@ -1,6 +1,7 @@
 """Provide functionality to record stream."""
 from __future__ import annotations
 
+from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import os
@@ -19,8 +20,6 @@ from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
 from .fmp4utils import read_init, transform_init
 
 if TYPE_CHECKING:
-    import deque
-
     from homeassistant.components.camera import DynamicStreamSettings
 
 _LOGGER = logging.getLogger(__name__)

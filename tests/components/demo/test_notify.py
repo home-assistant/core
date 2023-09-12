@@ -16,6 +16,11 @@ from tests.common import assert_setup_component, async_capture_events
 CONFIG = {notify.DOMAIN: {"platform": "demo"}}
 
 
+@pytest.fixture(autouse=True)
+def autouse_disable_platforms(disable_platforms):
+    """Auto use the disable_platforms fixture."""
+
+
 @pytest.fixture
 def events(hass):
     """Fixture that catches notify events."""

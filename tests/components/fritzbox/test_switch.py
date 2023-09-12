@@ -20,6 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from . import FritzDeviceSwitchMock, setup_config_entry
@@ -60,6 +62,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Temperature",
             UnitOfTemperature.CELSIUS,
             SensorStateClass.MEASUREMENT,
+            EntityCategory.DIAGNOSTIC,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_power",
@@ -67,6 +70,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Power",
             UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_energy",
@@ -74,6 +78,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Energy",
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_voltage",
@@ -81,6 +86,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Voltage",
             UnitOfElectricPotential.VOLT,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current",
@@ -88,9 +94,11 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
             f"{CONF_FAKE_NAME} Current",
             UnitOfElectricCurrent.AMPERE,
             SensorStateClass.MEASUREMENT,
+            None,
         ],
     )
 
+    entity_registry = er.async_get(hass)
     for sensor in sensors:
         state = hass.states.get(sensor[0])
         assert state
@@ -98,6 +106,10 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         assert state.attributes[ATTR_FRIENDLY_NAME] == sensor[2]
         assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == sensor[3]
         assert state.attributes[ATTR_STATE_CLASS] == sensor[4]
+        assert state.attributes[ATTR_STATE_CLASS] == sensor[4]
+        entry = entity_registry.async_get(sensor[0])
+        assert entry
+        assert entry.entity_category is sensor[5]
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
@@ -107,7 +119,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_on.call_count == 1
@@ -120,7 +132,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_switch_state_off.call_count == 1
