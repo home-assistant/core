@@ -43,7 +43,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         try:
             _LOGGER.debug("Refreshing %s", self._device_id)
             async with timeout(10):
-                status = await self._api.get_status(self._device_id)
+                status: Status = await self._api.get_status(self._device_id)
                 _LOGGER.debug("Refreshing %s with %s", self._device_id, status)
                 return status
         except CannotConnect as err:

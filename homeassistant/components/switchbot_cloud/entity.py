@@ -43,9 +43,9 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         command: Commands,
         command_type: str = "command",
         parameters: dict | str = "default",
-    ):
+    ) -> None:
         """Send command to device."""
-        return await self._api.send_command(
+        await self._api.send_command(
             self._attr_unique_id,
             command,
             command_type,
