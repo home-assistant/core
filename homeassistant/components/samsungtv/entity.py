@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -20,7 +20,7 @@ class SamsungTVEntity(Entity):
         """Initialize the SamsungTV entity."""
         self._bridge = bridge
         self._mac = config_entry.data.get(CONF_MAC)
-        self._attr_name = config_entry.data.get(CONF_NAME)
+        self._attr_name = self._mac or "None"
         self._attr_unique_id = config_entry.unique_id
         self._attr_device_info = DeviceInfo(
             # Instead of setting the device name to the entity name, samsungtv
