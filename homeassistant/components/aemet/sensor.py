@@ -30,6 +30,7 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
@@ -98,6 +99,12 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_FORECAST_WIND_BEARING,
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FORECAST_WIND_MAX_SPEED,
+        name="Wind max speed",
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key=ATTR_API_FORECAST_WIND_SPEED,
@@ -206,13 +213,14 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wind max speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_WIND_SPEED,
         name="Wind speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
