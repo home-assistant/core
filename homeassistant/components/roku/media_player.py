@@ -125,9 +125,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def __init__(self, coordinator: RokuDataUpdateCoordinator) -> None:
         """Initialize the Roku device."""
         super().__init__(coordinator=coordinator)
-        if self.coordinator.data.info.device_type == "tv":
+        if coordinator.data.info.device_type == "tv":
             self._attr_device_class = MediaPlayerDeviceClass.TV
-        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
+        else:
+            self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
