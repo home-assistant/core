@@ -18,6 +18,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfPressure,
     UnitOfTemperature,
 )
@@ -29,6 +30,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
+    RegistryEntry,
     async_entries_for_device,
     async_get as entity_async_get,
 )
@@ -116,64 +118,36 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
 
 
 @callback
-def async_migrate(hass: HomeAssistant, address: str, sensor_name: str):
+def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
     """Migrate entities to new unique ids (with BLE Address)."""
-
     ent_reg = entity_async_get(hass)
-
-    device_registry = device_async_get(hass)
-    entity_registry = entity_async_get(hass)
-
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_BLUETOOTH, address)}
-    )
-
-    if not device:
+    unique_id_trailer = f"_{sensor_name}"
+    new_unique_id = f"{address}{unique_id_trailer}"
+    if ent_reg.async_get_entity_id(DOMAIN, Platform.SENSOR, new_unique_id):
+        # New unique id already exists
         return
-
+    dev_reg = device_async_get(hass)
+    if not (
+        device := dev_reg.async_get_device(
+            connections={(CONNECTION_BLUETOOTH, address)}
+        )
+    ):
+        return
     entities = async_entries_for_device(
-        entity_registry,
+        ent_reg,
         device_id=device.id,
         include_disabled_entities=True,
     )
-
-    filtered_entities = (
-        entity for entity in entities if entity.unique_id.endswith(sensor_name)
-    )
-
-    unique_ids: dict[str, str] = {}
-
-    for entity in filtered_entities:
-        if entity.unique_id.startswith(address):
-            unique_ids["v3"] = entity.entity_id
-        elif "(" in entity.unique_id:
-            unique_ids["v2"] = entity.entity_id
-        else:
-            unique_ids["v1"] = entity.entity_id
-
-    def _migrate_unique_id(entity_id: str, new_unique_id: str):
-        ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
-        _LOGGER.debug(
-            "Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id
-        )
-
-    if unique_ids.get("v3"):
-        # Already has the newest unique id format
+    matching_reg_entry: RegistryEntry | None = None
+    for entry in entities:
+        if entry.unique_id.endswith(unique_id_trailer):
+            if not matching_reg_entry or "(" not in entry.unique_id:
+                matching_reg_entry = entry
+    if not matching_reg_entry:
         return
-
-    new_unique_id = f"{address}_{sensor_name}"
-
-    # Try to migrate the pre 2023.9.0 unique id first
-    if entity_id := unique_ids.get("v1"):
-        _migrate_unique_id(
-            entity_id=entity_id,
-            new_unique_id=new_unique_id,
-        )
-
-    # If pre 2023.9.0 unique id is not found, try to migrate the unique id
-    # introduced in 2023.9.0
-    elif entity_id := unique_ids.get("v2"):
-        _migrate_unique_id(entity_id=entity_id, new_unique_id=new_unique_id)
+    entity_id = matching_reg_entry.entity_id
+    ent_reg.async_update_entity(entity_id=entity_id, new_unique_id=new_unique_id)
+    _LOGGER.debug("Migrated entity '%s' to unique id '%s'", entity_id, new_unique_id)
 
 
 async def async_setup_entry(

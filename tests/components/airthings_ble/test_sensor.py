@@ -117,18 +117,18 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     await hass.async_block_till_done()
 
-    v1 = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform="sensor",
-        unique_id=CO2_V1.unique_id,
-        config_entry=entry,
-        device_id=device.id,
-    )
-
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
         platform="sensor",
         unique_id=CO2_V2.unique_id,
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    v1 = entity_registry.async_get_or_create(
+        domain=DOMAIN,
+        platform="sensor",
+        unique_id=CO2_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
     )
