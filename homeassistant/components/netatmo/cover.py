@@ -51,6 +51,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
@@ -97,11 +98,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         await self._cover.async_set_target_position(kwargs[ATTR_POSITION])
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the device class."""
-        return CoverDeviceClass.SHUTTER
 
     @callback
     def async_update_callback(self) -> None:
