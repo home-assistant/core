@@ -215,6 +215,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         }
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._flash_times = {
             key: config.get(key)
@@ -461,11 +462,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 ATTR_RGBWW_COLOR, self.rgbww_color
             )
             self._attr_xy_color = last_attributes.get(ATTR_XY_COLOR, self.xy_color)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def color_mode(self) -> ColorMode | str | None:
