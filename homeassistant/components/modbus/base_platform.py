@@ -115,7 +115,9 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        self._cancel_call = async_call_later(self.hass, 1, self.async_update)
+        self._cancel_call = async_call_later(
+            self.hass, timedelta(milliseconds=100), self.async_update
+        )
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
