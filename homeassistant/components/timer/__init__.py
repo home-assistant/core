@@ -281,10 +281,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
-            self._duration = cv.time_period(state.attributes[ATTR_DURATION])
             return
 
-        self._duration = cv.time_period_str(self._config[CONF_DURATION])
         self._running_duration = cv.time_period(state.attributes[ATTR_DURATION])
         # If the timer was paused, we restore the remaining time
         if self._state == STATUS_PAUSED:
