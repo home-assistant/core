@@ -7,6 +7,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
+from typing import cast
 
 from dsmr_parser import obis_references
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -542,6 +543,7 @@ class DSMREntity(RestoreSensor):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _native_unit_of_measurement: str | None = None
+    _native_value: StateType = None
 
     def __init__(
         self, entity_description: DSMRSensorEntityDescription, entry: ConfigEntry
@@ -581,6 +583,7 @@ class DSMREntity(RestoreSensor):
                 f"Right, we are going to set the _native_uom to {sensor_data.native_unit_of_measurement}"
             )
             self._native_unit_of_measurement = sensor_data.native_unit_of_measurement
+            self._native_value = cast(float, sensor_data.native_value)
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
@@ -630,7 +633,7 @@ class DSMREntity(RestoreSensor):
         """Return the state of sensor, if available, translate if needed."""
         value: StateType
         if (value := self.get_dsmr_object_attr("value")) is None:
-            return None
+            return self._native_value
 
         if (
             self.entity_description.obis_reference
