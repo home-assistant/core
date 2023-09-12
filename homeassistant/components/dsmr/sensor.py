@@ -18,8 +18,8 @@ from dsmr_parser.objects import DSMRObject
 import serial
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -535,7 +535,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
-class DSMREntity(SensorEntity):
+class DSMREntity(RestoreSensor):
     """Entity reading values from DSMR telegram."""
 
     entity_description: DSMRSensorEntityDescription
@@ -563,6 +563,16 @@ class DSMREntity(SensorEntity):
             name=device_name,
         )
         self._attr_unique_id = f"{device_serial}_{entity_description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        if self._attr_native_value is not None:
+            return
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_unit_of_measurement = (
+                sensor_data.native_unit_of_measurement
+            )
 
     @callback
     def update_data(self, telegram: dict[str, DSMRObject] | None) -> None:
@@ -633,6 +643,8 @@ class DSMREntity(SensorEntity):
         unit_of_measurement = self.get_dsmr_object_attr("unit")
         if unit_of_measurement in UNIT_CONVERSION:
             return UNIT_CONVERSION[unit_of_measurement]
+        if unit_of_measurement is None:
+            return self._attr_native_unit_of_measurement
         return unit_of_measurement
 
     @staticmethod
