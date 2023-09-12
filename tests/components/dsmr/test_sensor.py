@@ -28,10 +28,10 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, patch
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data, patch
 
 
 async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> None:
@@ -144,6 +144,59 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfVolume.CUBIC_METERS
     )
+
+
+async def test_restore_last_unit_of_measurement(
+    hass: HomeAssistant, dsmr_connection_fixture
+) -> None:
+    """Test restoring last unit of measurement."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("sensor.electricity_meter_power_consumption", "6.0"),
+                {"native_value": 6.0, "native_unit_of_measurement": UnitOfPower.WATT},
+            ),
+            (
+                State("sensor.electricity_meter_power_production", "6.0"),
+                {
+                    "native_value": 6.0,
+                    "native_unit_of_measurement": UnitOfPower.KILO_WATT,
+                },
+            ),
+        ],
+    )
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.electricity_meter_power_consumption")
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.electricity_meter_power_production")
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.KILO_WATT
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -> None:
