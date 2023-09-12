@@ -8,7 +8,7 @@ from typing import Any
 from withings_api.common import AuthScope
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -21,6 +21,7 @@ class WithingsFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = DOMAIN
+    VERSION = 2
 
     reauth_entry: ConfigEntry | None = None
 
@@ -60,8 +61,9 @@ class WithingsFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
+        user_id = str(data[CONF_TOKEN]["userid"])
         if not self.reauth_entry:
-            await self.async_set_unique_id(data[CONF_ACCESS_TOKEN]["userid"])
+            await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
@@ -70,7 +72,7 @@ class WithingsFlowHandler(
                 options={CONF_USE_WEBHOOK: False},
             )
 
-        if self.reauth_entry.unique_id == data[CONF_ACCESS_TOKEN]["userid"]:
+        if self.reauth_entry.unique_id == user_id:
             self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
             await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")

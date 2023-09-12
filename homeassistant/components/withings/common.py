@@ -530,7 +530,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile: str = config_entry.data[const.PROFILE]
+        profile: str = config_entry.title
 
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
@@ -549,7 +549,7 @@ async def async_get_data_manager(
                 url=webhook.async_generate_url(
                     hass, config_entry.data[CONF_WEBHOOK_ID]
                 ),
-                enabled=config_entry.data[const.CONF_USE_WEBHOOK],
+                enabled=config_entry.options[const.CONF_USE_WEBHOOK],
             ),
         )
 

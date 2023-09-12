@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -17,6 +16,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.webhook import (
+    async_generate_id,
     async_unregister as async_unregister_webhook,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +39,7 @@ from .common import (
     get_data_manager_by_webhook_id,
     json_message_response,
 )
+from .const import CONF_USE_WEBHOOK, CONFIG
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -101,31 +102,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entry."""
+
+    if entry.version == 1:
+        new_data = entry.data.copy()
+        new_options = {
+            CONF_USE_WEBHOOK: new_data.pop(CONF_USE_WEBHOOK, False),
+        }
+        title = new_data.pop("profile")
+        unique_id = str(entry.unique_id)
+        if CONF_WEBHOOK_ID not in new_data:
+            new_data[CONF_WEBHOOK_ID] = async_generate_id()
+
+        entry.version = 2
+
+        hass.config_entries.async_update_entry(
+            entry, title=title, data=new_data, options=new_options, unique_id=unique_id
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
-    config_updates: dict[str, Any] = {}
-
-    # Add a unique id if it's an older config entry.
-    if entry.unique_id != entry.data["token"]["userid"] or not isinstance(
-        entry.unique_id, str
+    if (
+        hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK] is not None
+        and hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK]
+        != entry.options[CONF_USE_WEBHOOK]
     ):
-        config_updates["unique_id"] = str(entry.data["token"]["userid"])
-
-    # Add the webhook configuration.
-    if CONF_WEBHOOK_ID not in entry.data:
-        webhook_id = webhook.async_generate_id()
-        config_updates["data"] = {
-            **entry.data,
-            **{
-                const.CONF_USE_WEBHOOK: hass.data[DOMAIN][const.CONFIG][
-                    const.CONF_USE_WEBHOOK
-                ],
-                CONF_WEBHOOK_ID: webhook_id,
-            },
-        }
-
-    if config_updates:
-        hass.config_entries.async_update_entry(entry, **config_updates)
+        new_options = entry.options.copy()
+        new_options |= {CONF_USE_WEBHOOK: hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK]}
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     data_manager = await async_get_data_manager(hass, entry)
 
