@@ -196,9 +196,6 @@ async def async_modbus_setup(
         slave = 0
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
-            _LOGGER.warning(
-                "`unit`: is deprecated and will be removed in version 2024.4"
-            )
         if ATTR_SLAVE in service.data:
             slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
