@@ -8,14 +8,13 @@ from typing import Generic, TypeVar
 from combined_energy import CombinedEnergy
 from combined_energy.exceptions import CombinedEnergyAuthError, CombinedEnergyError
 from combined_energy.helpers import ReadingsIterator
-from combined_energy.models import ConnectionStatus, DeviceReadings
+from combined_energy.models import DeviceReadings
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONNECTIVITY_UPDATE_DELAY,
     LOG_SESSION_REFRESH_DELAY,
     LOGGER,
     READINGS_INCREMENT,
@@ -68,23 +67,12 @@ class CombinedEnergyDataService(Generic[_T]):
         return self.data
 
 
-class CombinedEnergyConnectivityDataService(
-    CombinedEnergyDataService[ConnectionStatus]
-):
-    """Get and update the latest connectivity status data."""
-
-    @property
-    def update_interval(self) -> timedelta:
-        """Update interval."""
-        return CONNECTIVITY_UPDATE_DELAY
-
-    async def update_data(self) -> ConnectionStatus:
-        """Update data."""
-        return await self.api.communication_status()
-
-
 class CombinedEnergyLogSessionService(CombinedEnergyDataService[None]):
-    """Triggers a log session refresh event keep readings data flowing."""
+    """Triggers a log session refresh event keep readings data flowing.
+
+    If this is not done periodically, the log session will expire and
+    readings data stops being returned.
+    """
 
     def async_setup(self) -> None:
         """Configure data service coordinator."""
