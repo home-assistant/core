@@ -58,6 +58,8 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
+    _attr_entity_registry_enabled_default = False
+
     def __init__(
         self, latitude: float, longitude: float, delta: float, country: str
     ) -> None:
@@ -192,8 +194,3 @@ class BuienradarCam(Camera):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Disable entity by default."""
-        return False
