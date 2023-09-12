@@ -1,24 +1,28 @@
-"""Tests for the diagnostics of the twinly component."""
+"""Tests for the diagnostics of the twinkly component."""
+from collections.abc import Awaitable, Callable
+
+from syrupy import SnapshotAssertion
+
 from homeassistant.core import HomeAssistant
 
 from . import ClientMock
-from .test_light import _create_entries
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+ComponentSetup = Callable[[], Awaitable[ClientMock]]
+
+DOMAIN = "twinkly"
+
 
 async def test_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_integration: ComponentSetup,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the diagnostics data."""
-    client = ClientMock()
-    entity, _, _, config_entry = await _create_entries(hass, client)
-    config_entry.unique_id = entity.unique_id
+    """Test diagnostics."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert diag["entry"]["title"] == "Mock Title"
-    assert diag["device_info"]["sw_version"] == "2.8.10"
-    assert diag["entry"]["data"]["host"] == "**REDACTED**"
-    assert "effect_list" in diag["attributes"]
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
