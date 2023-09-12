@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             severity=IssueSeverity.ERROR,
             translation_key="bad_country",
             translation_placeholders={"title": entry.title},
-            data={"entry_id": entry.entry_id},
+            data={"entry_id": entry.entry_id, "country": None},
         )
         raise ConfigEntryError(f"Selected country {country} is not valid")
 
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             severity=IssueSeverity.ERROR,
             translation_key="bad_province",
             translation_placeholders={CONF_COUNTRY: country, "title": entry.title},
-            data={"entry_id": entry.entry_id},
+            data={"entry_id": entry.entry_id, "country": country},
         )
         raise ConfigEntryError(
             f"Selected province {province} for country {country} is not valid"
