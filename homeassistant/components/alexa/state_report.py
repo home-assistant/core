@@ -378,8 +378,9 @@ async def async_send_changereport_message(
 
     response_text = await response.text()
 
-    _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
-    _LOGGER.debug("Received (%s): %s", response.status, response_text)
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
         return
@@ -531,8 +532,9 @@ async def async_send_doorbell_event_message(
 
     response_text = await response.text()
 
-    _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
-    _LOGGER.debug("Received (%s): %s", response.status, response_text)
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
+        _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
     if response.status == HTTPStatus.ACCEPTED:
         return

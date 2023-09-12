@@ -47,8 +47,10 @@ build.json @home-assistant/supervisor
 /tests/components/airq/ @Sibgatulin @dl2080
 /homeassistant/components/airthings/ @danielhiversen
 /tests/components/airthings/ @danielhiversen
-/homeassistant/components/airthings_ble/ @vincegio
-/tests/components/airthings_ble/ @vincegio
+/homeassistant/components/airthings_ble/ @vincegio @LaStrada
+/tests/components/airthings_ble/ @vincegio @LaStrada
+/homeassistant/components/airtouch4/ @samsinnamon
+/tests/components/airtouch4/ @samsinnamon
 /homeassistant/components/airvisual/ @bachya
 /tests/components/airvisual/ @bachya
 /homeassistant/components/airvisual_pro/ @bachya
@@ -1062,8 +1064,8 @@ build.json @home-assistant/supervisor
 /tests/components/rss_feed_template/ @home-assistant/core
 /homeassistant/components/rtsp_to_webrtc/ @allenporter
 /tests/components/rtsp_to_webrtc/ @allenporter
-/homeassistant/components/ruckus_unleashed/ @gabe565 @lanrat
-/tests/components/ruckus_unleashed/ @gabe565 @lanrat
+/homeassistant/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
+/tests/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1361,9 +1363,9 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velux/ @Julius2342
 /homeassistant/components/venstar/ @garbled1
 /tests/components/venstar/ @garbled1
-/homeassistant/components/verisure/ @frenck @niro1987
-/tests/components/verisure/ @frenck @niro1987
-/homeassistant/components/versasense/ @flamm3blemuff1n
+/homeassistant/components/verisure/ @frenck
+/tests/components/verisure/ @frenck
+/homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
@@ -1391,7 +1393,8 @@ build.json @home-assistant/supervisor
 /tests/components/wake_word/ @home-assistant/core @synesthesiam
 /homeassistant/components/wallbox/ @hesselonline
 /tests/components/wallbox/ @hesselonline
-/homeassistant/components/waqi/ @andrey-git
+/homeassistant/components/waqi/ @joostlek
+/tests/components/waqi/ @joostlek
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
 /homeassistant/components/watson_tts/ @rutkai
@@ -1401,6 +1404,8 @@ build.json @home-assistant/supervisor
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
 /tests/components/weather/ @home-assistant/core
+/homeassistant/components/weatherkit/ @tjhorner
+/tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webostv/ @thecode
