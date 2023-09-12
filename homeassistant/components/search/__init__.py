@@ -15,7 +15,10 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import entity_sources as get_entity_sources
+from homeassistant.helpers.entity import (
+    EntityInfo,
+    entity_sources as get_entity_sources,
+)
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "search"
@@ -97,7 +100,7 @@ class Searcher:
         hass: HomeAssistant,
         device_reg: dr.DeviceRegistry,
         entity_reg: er.EntityRegistry,
-        entity_sources: dict[str, dict[str, str]],
+        entity_sources: dict[str, EntityInfo],
     ) -> None:
         """Search results."""
         self.hass = hass

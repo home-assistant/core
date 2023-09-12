@@ -12,7 +12,16 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NotRequired,
+    TypedDict,
+    TypeVar,
+    final,
+)
 
 import voluptuous as vol
 
@@ -60,8 +69,6 @@ _T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
-SOURCE_CONFIG_ENTRY = "config_entry"
-SOURCE_PLATFORM_CONFIG = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -76,9 +83,9 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @bind_hass
-def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources."""
-    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    _entity_sources: dict[str, EntityInfo] = hass.data[DATA_ENTITY_SOURCE]
     return _entity_sources
 
 
@@ -179,6 +186,14 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+
+
+class EntityInfo(TypedDict):
+    """Entity info."""
+
+    domain: str
+    custom_component: bool
+    config_entry: NotRequired[str]
 
 
 class EntityPlatformState(Enum):
@@ -1061,18 +1076,15 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info = {
+        info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            info["source"] = SOURCE_CONFIG_ENTRY
             info["config_entry"] = self.platform.config_entry.entry_id
-        else:
-            info["source"] = SOURCE_PLATFORM_CONFIG
 
-        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
