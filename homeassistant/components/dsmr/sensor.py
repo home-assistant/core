@@ -659,7 +659,9 @@ class DSMREntity(RestoreSensor):
         if unit_of_measurement in UNIT_CONVERSION:
             return UNIT_CONVERSION[unit_of_measurement]
         if unit_of_measurement is None:
-            LOGGER.info(f"self._native_unit_of_measurement: {unit_of_measurement}")
+            LOGGER.info(
+                f"self._native_unit_of_measurement: {self._native_unit_of_measurement}"
+            )
             return self._native_unit_of_measurement
         return unit_of_measurement
 
