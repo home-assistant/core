@@ -5,7 +5,7 @@ import pytest
 from wled import WLEDConnectionError
 
 from homeassistant.components import zeroconf
-from homeassistant.components.wled.const import CONF_KEEP_MASTER_LIGHT, DOMAIN
+from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -270,10 +270,10 @@ async def test_options_flow(
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_KEEP_MASTER_LIGHT: True},
+        user_input={CONF_KEEP_MAIN_LIGHT: True},
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
-        CONF_KEEP_MASTER_LIGHT: True,
+        CONF_KEEP_MAIN_LIGHT: True,
     }
