@@ -171,23 +171,6 @@ async def async_modbus_setup(
         slave = 0
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_unit",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_unit",
-                translation_placeholders={
-                    "config_key": "unit",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
-            _LOGGER.warning(
-                "`unit`: is deprecated and will be removed in version 2024.4"
-            )
 
         if ATTR_SLAVE in service.data:
             slave = int(float(service.data[ATTR_SLAVE]))
@@ -213,20 +196,6 @@ async def async_modbus_setup(
         slave = 0
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_unit",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_unit",
-                translation_placeholders={
-                    "config_key": "unit",
-                    "integration": DOMAIN,
-                    "url": "https://www.home-assistant.io/integrations/modbus",
-                },
-            )
             _LOGGER.warning(
                 "`unit`: is deprecated and will be removed in version 2024.4"
             )
