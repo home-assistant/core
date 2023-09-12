@@ -140,9 +140,10 @@ def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
     )
     matching_reg_entry: RegistryEntry | None = None
     for entry in entities:
-        if entry.unique_id.endswith(unique_id_trailer):
-            if not matching_reg_entry or "(" not in entry.unique_id:
-                matching_reg_entry = entry
+        if entry.unique_id.endswith(unique_id_trailer) and (
+            not matching_reg_entry or "(" not in entry.unique_id
+        ):
+            matching_reg_entry = entry
     if not matching_reg_entry:
         return
     entity_id = matching_reg_entry.entity_id
