@@ -139,8 +139,8 @@ class HyperionCamera(Camera):
             identifiers={(DOMAIN, self._device_id)},
             manufacturer=HYPERION_MANUFACTURER_NAME,
             model=HYPERION_MODEL_NAME,
-            name=self._instance_name,
-            configuration_url=self._client.remote_url,
+            name=instance_name,
+            configuration_url=hyperion_client.remote_url,
         )
 
     @property
