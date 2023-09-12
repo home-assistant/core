@@ -9,6 +9,9 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "Smile Username"
+        },
+        "data_description": {
+          "host": "Leave empty if using Auto Discovery"
         }
       }
     },
@@ -61,8 +64,8 @@
           "preset_mode": {
             "state": {
               "asleep": "Night",
-              "away": "[%key:common::state::not_home%]",
-              "home": "[%key:common::state::home%]",
+              "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+              "home": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::home%]",
               "no_frost": "Anti-frost",
               "vacation": "Vacation"
             }
@@ -79,6 +82,9 @@
       },
       "max_dhw_temperature": {
         "name": "Domestic hot water setpoint"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
