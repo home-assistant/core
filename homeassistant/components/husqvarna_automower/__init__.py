@@ -4,7 +4,7 @@ import contextlib
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
@@ -25,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
     implementation = await async_get_config_entry_implementation(hass, entry)
-    entry_dict = entry.as_dict()
-    access_token = entry_dict["data"]["token"]
+    access_token = entry.data.get(CONF_TOKEN)
     coordinator = AutomowerDataUpdateCoordinator(
         hass,
         implementation,
