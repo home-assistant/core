@@ -133,6 +133,7 @@ class HyperionComponentSwitch(SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
     _attr_has_entity_name = True
+    # These component controls are for advanced users and are disabled by default.
     _attr_entity_registry_enabled_default = False
 
     def __init__(
