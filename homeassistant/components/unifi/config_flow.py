@@ -300,7 +300,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_configure_entity_sources(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Set which categories should provide entities."""
+        """Select sources for entities."""
         if user_input is not None:
             self.options.update(user_input)
             return await self.async_step_device_tracker()
