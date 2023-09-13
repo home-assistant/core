@@ -2,6 +2,7 @@
 import logging
 from typing import Any
 
+from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -21,7 +22,8 @@ class HusqvarnaConfigFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow."""
-        await self.async_set_unique_id(data.get("auth_implementation"))
+        user_id = data.get(CONF_TOKEN, {}).get("user_id")
+        await self.async_set_unique_id(user_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=NAME,
