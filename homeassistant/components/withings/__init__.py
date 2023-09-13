@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data_manager = await async_get_data_manager(hass, entry)
 
-    _LOGGER.debug("Confirming %s is authenticated to withings", data_manager.profile)
+    _LOGGER.debug("Confirming %s is authenticated to withings", entry.title)
     await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
