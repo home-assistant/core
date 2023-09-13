@@ -220,8 +220,6 @@ class AqualinkEntity(Entity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=dev.manufacturer,
             model=dev.model,
-            # Instead of setting the device name to the entity name, iaqualink
-            # should be updated to set has_entity_name = True
             name=dev.label,
             via_device=(DOMAIN, dev.system.serial),
         )
