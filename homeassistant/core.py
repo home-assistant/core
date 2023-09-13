@@ -6,7 +6,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections import UserDict
+from collections import UserDict, defaultdict
 from collections.abc import (
     Callable,
     Collection,
@@ -1432,7 +1432,7 @@ class States(UserDict[str, State]):
     def __init__(self) -> None:
         """Initialize the container."""
         super().__init__()
-        self._domain_index: dict[str, dict[str, State]] = {}
+        self._domain_index: defaultdict[str, dict[str, State]] = defaultdict(dict)
 
     def values(self) -> ValuesView[State]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -1440,13 +1440,8 @@ class States(UserDict[str, State]):
 
     def __setitem__(self, key: str, entry: State) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
-            del self._domain_index[old_entry.domain][old_entry.entity_id]
-        super().__setitem__(key, entry)
-        if not (domain_index := self._domain_index.get(entry.domain)):
-            domain_index = self._domain_index[entry.domain] = {}
-        domain_index[entry.entity_id] = entry
+        self.data[key] = entry
+        self._domain_index[entry.domain][entry.entity_id] = entry
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
@@ -1456,12 +1451,14 @@ class States(UserDict[str, State]):
 
     def domain_entity_ids(self, key: str) -> KeysView[str] | tuple[()]:
         """Get all entity_ids for a domain."""
+        # Avoid polluting _domain_index with non-existing domains
         if key not in self._domain_index:
             return ()
         return self._domain_index[key].keys()
 
     def domain_states(self, key: str) -> ValuesView[State] | tuple[()]:
         """Get all states for a domain."""
+        # Avoid polluting _domain_index with non-existing domains
         if key not in self._domain_index:
             return ()
         return self._domain_index[key].values()
