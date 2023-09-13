@@ -424,7 +424,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.0.1
+apple_weatherkit==1.0.2
 
 # homeassistant.components.apprise
 apprise==1.4.5
@@ -456,7 +456,7 @@ asterisk-mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.35.0
+async-upnp-client==0.35.1
 
 # homeassistant.components.esphome
 async_interrupt==1.1.1
@@ -1085,7 +1085,7 @@ jaraco.abode==3.3.0
 jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
-jsonpath==0.82
+jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
@@ -1241,7 +1241,7 @@ motioneye-client==0.3.14
 mullvad-api==1.0.0
 
 # homeassistant.components.tts
-mutagen==1.46.0
+mutagen==1.47.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
@@ -1675,7 +1675,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.11.0
+pyenphase==1.11.4
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -1870,7 +1870,7 @@ pymyq==3.1.4
 pymysensors==0.24.0
 
 # homeassistant.components.netgear
-pynetgear==0.10.9
+pynetgear==0.10.10
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2163,7 +2163,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.33.2
+python-roborock==0.34.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2379,7 +2379,7 @@ sense-energy==0.12.1
 sense_energy==0.12.1
 
 # homeassistant.components.sensirion_ble
-sensirion-ble==0.1.0
+sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3

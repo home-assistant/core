@@ -599,10 +599,10 @@ def _serialize_entity_sources(
     entity_infos: dict[str, entity.EntityInfo]
 ) -> dict[str, Any]:
     """Prepare a websocket response from a dict of entity sources."""
-    result = {}
-    for entity_id, entity_info in entity_infos.items():
-        result[entity_id] = {"domain": entity_info["domain"]}
-    return result
+    return {
+        entity_id: {"domain": entity_info["domain"]}
+        for entity_id, entity_info in entity_infos.items()
+    }
 
 
 @callback

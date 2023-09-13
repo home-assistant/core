@@ -3,7 +3,7 @@ aiohttp-cors==0.7.0
 aiohttp==3.8.5
 astral==2.2
 async-timeout==4.0.3
-async-upnp-client==0.35.0
+async-upnp-client==0.35.1
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==22.9.0
@@ -29,7 +29,7 @@ ifaddr==0.2.0
 janus==1.0.0
 Jinja2==3.1.2
 lru-dict==1.2.0
-mutagen==1.46.0
+mutagen==1.47.0
 orjson==3.9.7
 packaging>=23.1
 paho-mqtt==1.6.1

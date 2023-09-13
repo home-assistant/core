@@ -294,6 +294,7 @@ class MqttCover(MqttEntity, CoverEntity):
         ):
             # Force into optimistic mode.
             self._optimistic = True
+        self._attr_assumed_state = bool(self._optimistic)
 
         if (
             config[CONF_TILT_STATE_OPTIMISTIC]
@@ -487,11 +488,6 @@ class MqttCover(MqttEntity, CoverEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return bool(self._optimistic)
 
     @property
     def is_closed(self) -> bool | None:
