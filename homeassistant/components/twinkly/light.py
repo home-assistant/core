@@ -26,7 +26,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_VERSION,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -53,12 +52,9 @@ async def async_setup_entry(
 
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]
+    software_version = hass.data[DOMAIN][config_entry.entry_id][ATTR_SW_VERSION]
 
-    software_version = await client.get_firmware_version()
-    if ATTR_VERSION in software_version:
-        device_info[ATTR_SW_VERSION] = software_version[ATTR_VERSION]
-
-    entity = TwinklyLight(config_entry, client, device_info)
+    entity = TwinklyLight(config_entry, client, device_info, software_version)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -73,6 +69,7 @@ class TwinklyLight(LightEntity):
         conf: ConfigEntry,
         client: Twinkly,
         device_info,
+        software_version: str | None = None,
     ) -> None:
         """Initialize a TwinklyLight entity."""
         self._attr_unique_id: str = conf.data[CONF_ID]
@@ -103,7 +100,7 @@ class TwinklyLight(LightEntity):
         self._attr_available = False
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
-        self._software_version = device_info.get(ATTR_SW_VERSION)
+        self._software_version = software_version
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
 
