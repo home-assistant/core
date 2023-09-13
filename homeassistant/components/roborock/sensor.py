@@ -91,6 +91,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key="cleaning_time",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.status.clean_time,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -99,6 +100,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:history",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
         key="status",
@@ -114,6 +116,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:texture-box",
         translation_key="cleaning_area",
         value_fn=lambda data: data.status.square_meter_clean_area,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=AREA_SQUARE_METERS,
     ),
     RoborockSensorDescription(
@@ -121,6 +124,7 @@ SENSOR_DESCRIPTIONS = [
         icon="mdi:texture-box",
         translation_key="total_cleaning_area",
         value_fn=lambda data: data.clean_summary.square_meter_clean_area,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=AREA_SQUARE_METERS,
     ),
     RoborockSensorDescription(
