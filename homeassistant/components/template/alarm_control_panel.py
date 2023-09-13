@@ -139,11 +139,11 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass,
         object_id,
         config,
         unique_id,
-    ) -> None:
+    ):
         """Initialize the panel."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
