@@ -11,12 +11,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature
+from homeassistant.const import PRECISION_HALVES, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, DOMAINS_AND_TYPES
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Set up the Broadlink climate entities."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
-    if device.api.type in {"HYS"}:
+    if device.api.type in DOMAINS_AND_TYPES[Platform.CLIMATE]:
         async_add_entities([BroadlinkThermostat(device)])
 
 
@@ -45,10 +45,6 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the climate entity."""
         super().__init__(device)
-        self._attr_hvac_action = None
-        self._attr_hvac_mode = None
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
         self._attr_unique_id = device.unique_id
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
