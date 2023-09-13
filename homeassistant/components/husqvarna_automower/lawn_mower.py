@@ -1,8 +1,8 @@
 """Husqvarna automower entity."""
 import logging
 
-from aioautomower import AutomowerSession, MowerActivities, MowerStates
-
+from aioautomower.const import MowerActivities, MowerStates
+from aioautomower.session import AutomowerSession
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -103,15 +103,6 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
                 mower_attributes.mower.activity,
             )
         return LawnMowerActivity(activity)
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the specific state attributes of this mower."""
-        action = self.mower_attributes.planner.override.action
-        action = action.lower() if action is not None else action
-        return {
-            "action": action,
-        }
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
