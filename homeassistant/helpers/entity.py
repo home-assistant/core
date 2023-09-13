@@ -199,7 +199,6 @@ class EntityInfo(TypedDict):
     domain: str
     custom_component: bool
     config_entry: NotRequired[str]
-    recorder_excluded_attributes: frozenset[str]
 
 
 class EntityPlatformState(Enum):
@@ -299,7 +298,7 @@ class Entity(ABC):
     _platform_state = EntityPlatformState.NOT_ADDED
 
     # Attributes to exclude from recording
-    _recorder_excluded_attributes: frozenset[str] = frozenset()
+    _unstored_attributes: frozenset[str] = frozenset()
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -878,11 +877,13 @@ class Entity(ABC):
             self._context_set = None
 
         try:
-            # The get guards against integrations not using an EntityComponent and can
-            # be removed in HA Core 2024.1
-            entity_info = entity_sources(hass).get(self.entity_id)
             hass.states.async_set(
-                entity_id, state, attr, self.force_update, self._context, entity_info
+                entity_id,
+                state,
+                attr,
+                self.force_update,
+                self._context,
+                self._unstored_attributes,
             )
         except InvalidStateError:
             _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
@@ -1091,7 +1092,6 @@ class Entity(ABC):
         info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
-            "recorder_excluded_attributes": self._recorder_excluded_attributes,
         }
 
         if self.platform.config_entry:

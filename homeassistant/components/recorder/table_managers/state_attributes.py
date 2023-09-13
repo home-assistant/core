@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event
+from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..const import SQLITE_MAX_BIND_VARS
@@ -40,12 +41,14 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
         self._exclude_attributes_by_domain = exclude_attributes_by_domain
+        self._entity_sources = entity_sources(recorder.hass)
 
     def serialize_from_event(self, event: Event) -> bytes | None:
         """Serialize event data."""
         try:
             return StateAttributes.shared_attrs_bytes_from_event(
                 event,
+                self._entity_sources,
                 self._exclude_attributes_by_domain,
                 self.recorder.dialect_name,
             )

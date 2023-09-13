@@ -95,7 +95,6 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
-    from .helpers.entity import EntityInfo
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -1250,7 +1249,7 @@ class State:
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
-        entity_info: EntityInfo | None = None,
+        unstored_attributes: frozenset[str] | None = None,
     ) -> None:
         """Initialize a new state."""
         state = str(state)
@@ -1269,7 +1268,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-        self.entity_info = entity_info
+        self.unstored_attributes = unstored_attributes
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
@@ -1640,7 +1639,7 @@ class StateMachine:
         attributes: Mapping[str, Any] | None = None,
         force_update: bool = False,
         context: Context | None = None,
-        entity_info: EntityInfo | None = None,
+        unstored_attributes: frozenset[str] | None = None,
     ) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -1692,18 +1691,14 @@ class StateMachine:
             now,
             context,
             old_state is None,
-            entity_info,
+            unstored_attributes,
         )
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
-            {
-                "entity_id": entity_id,
-                "old_state": old_state,
-                "new_state": state,
-            },
+            {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             EventOrigin.local,
             context,
             time_fired=now,
