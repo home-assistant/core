@@ -16,64 +16,40 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import log
 from .const import DATA_COOR, DATA_DEVICE, DOMAIN
-from .kindhome_solarbeaker_ble import KindhomeBluetoothDevice, KindhomeSolarBeakerData, KindhomeSolarbeakerState
+from .kindhome_solarbeaker_ble import KindhomeBluetoothDevice, KindhomeSolarBeakerState, KindhomeSolarbeakerMotorState
 
 _LOGGER = logging.getLogger(__name__)
-
-# Modify these constants according to your solar marquee's Bluetooth profile and attributes
-DEVICE_ADDRESS = "XX:XX:XX:XX:XX:XX"
-BLE_MARQUEE_SERVICE_UUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-BLE_ROLL_OUT_CHARACTERISTIC = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-BLE_ROLL_UP_CHARACTERISTIC = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-
-_TODO_SOLARBEAKER_NAME = "Kindhome solarbeaker"
-
 
 async def async_setup_entry(
         hass: HomeAssistant,
         entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the brunt platform."""
     device: KindhomeBluetoothDevice = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
-    coordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COOR]
-
     log(_LOGGER, "async_setup_entry", device)
-
-
-    log(_LOGGER, "async_setup_entry", coordinator.data)
-
     async_add_entities(
-        [KindhomeSolarbeakerEntity(hass, coordinator, device)]
+        [KindhomeSolarbeakerEntity(hass, device)]
     )
 
 
-class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[KindhomeSolarBeakerData]], CoverEntity):
+class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[KindhomeSolarBeakerState]], CoverEntity):
     supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     should_poll = False
     device_class = CoverDeviceClass.AWNING
 
-    def __init__(self, hass, coordinator: DataUpdateCoordinator[KindhomeSolarBeakerData], device: KindhomeBluetoothDevice):
+    def __init__(self, hass, device: KindhomeBluetoothDevice):
         self.hass = hass
         self.device: KindhomeBluetoothDevice = device
-        self.coordinator = coordinator
-        self._attr_unique_id = f"kindhome_solarbeaker_{self.device.address}"
-
-        # self._is_open = None
-        # self._is_opening = False
-        # self._is_closing = False
-        # self._is_closed = False
+        self._attr_unique_id = self.device.device_id
 
     @property
     def name(self):
-        return self.device.get_device_name()
+        return self.device.device_name
 
     @property
     def device_info(self) -> DeviceInfo:
         return {
-            "identifiers": {(DOMAIN, self._attr_unique_id)},
+            "identifiers": {(DOMAIN, self.device.device_id)},
             "name": self.name,
         }
 
@@ -83,54 +59,35 @@ class KindhomeSolarbeakerEntity(CoordinatorEntity[DataUpdateCoordinator[Kindhome
 
     @property
     def is_opening(self):
-        return self.device.state == KindhomeSolarbeakerState.MOTOR_FORWARD
+        return self.device.state.motor_state == KindhomeSolarbeakerMotorState.MOTOR_FORWARD
 
     @property
     def is_closing(self):
-        return self.device.state == KindhomeSolarbeakerState.MOTOR_BACKWARD
+        return self.device.state.motor_state == KindhomeSolarbeakerMotorState.MOTOR_BACKWARD
 
     @property
     def is_closed(self):
-        return self.device.state == KindhomeSolarbeakerState.CLOSED
+        return self.device.state.motor_state == KindhomeSolarbeakerMotorState.CLOSED
 
 
     async def async_open_cover(self, **kwargs):
-
-        # self._is_closed = False
-        # self._is_closing = False
-        # self._is_opening = True
         await self.device.move_forward()
-        # log(_LOGGER, "async_open_cover", "opened cover")
-        # self.async_write_ha_state()
-        # log(_LOGGER, "async_open_cover", "wrote state")
 
     async def async_close_cover(self, **kwargs):
         """Close the marquee."""
-        #
-        # self._is_closed = True
-        #
-        # self._is_opening = False
-        # self._is_closing = True
         await self.device.move_backward()
-        # log(_LOGGER, "async_close_cover", "closed the cover")
-        # self.async_write_ha_state()
-        # log(_LOGGER, "async_close_cover", "wrote state")
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         log(_LOGGER, "async_stop_cover", "stopping the cover")
         await self.device.stop()
-        #
-        # self._is_opening = False
-        # self._is_closing = False
-        # self.async_write_ha_state()
 
 
     # If I want to fetch by polling
-    async def request_coordinator_refresh(self) -> None:
-        FAST_INTERVAL = 20
-        self.coordinator.update_interval = FAST_INTERVAL
-        await self.coordinator.async_request_refresh()
+    # async def request_coordinator_refresh(self) -> None:
+    #     FAST_INTERVAL = 20
+    #     self.coordinator.update_interval = FAST_INTERVAL
+    #     await self.coordinator.async_request_refresh()
 
 
     # If Im gonna be fetching by pushing

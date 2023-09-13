@@ -27,11 +27,12 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _create_config_entry(self, address):
-        # TODO maybe here I should do connection test
+    def _create_config_entry(self, address, name = None):
+        # TODO maybe here I should do get the name
         title = f"{TITLE} {address}"
         return self.async_create_entry(title=title, data={
-            "address": address
+            "address": address,
+            # "name": name
         })
 
     def __init__(self) -> None:
@@ -65,7 +66,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         log(_LOGGER, "async_step_bluetooth_confirm", f"user_input = {user_input}")
         if user_input is not None:
-            return self._create_config_entry(self._discover_info.address)
+            return self._create_config_entry(self._discover_info.address, self._discover_info.name)
 
         title = f"{self._discover_info.name} ({self._discover_info.address})"
         log(_LOGGER, "async_step_bluetooth_confirm",

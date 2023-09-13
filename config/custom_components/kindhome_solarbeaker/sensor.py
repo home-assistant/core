@@ -1,0 +1,103 @@
+"""Platform for sensor integration."""
+# This file shows the setup for the sensors associated with the cover.
+# They are setup in the same way with the call to the async_setup_entry function
+# via HA from the module __init__. Each sensor has a device_class, this tells HA how
+# to display it in the UI (for know types). The unit_of_measurement property tells HA
+# what the unit is, so it can display the correct range. For predefined types (such as
+# battery), the unit_of_measurement should match what's expected.
+import random
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ILLUMINANCE,
+    PERCENTAGE,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import logging
+from . import KindhomeBluetoothDevice
+from config.custom_components.kindhome_solarbeaker.utils import log
+from .const import DOMAIN, DATA_DEVICE
+
+
+_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the brunt platform."""
+    device: KindhomeBluetoothDevice = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
+    log(_LOGGER, "async_setup_entry", device)
+
+    async_add_entities(
+        [BatterySensor(device)]
+    )
+
+
+# This base class shows the common properties and methods for a sensor as used in this
+# example. See each sensor for further details about properties and methods that
+# have been overridden.
+class SensorBase(Entity):
+    """Base representation of a Hello World Sensor."""
+
+    should_poll = False
+
+    def __init__(self, device):
+        """Initialize the sensor."""
+        self.device: KindhomeBluetoothDevice = device
+
+    # To link this entity to the cover device, this property must return an
+    # identifiers value matching that used in the cover, but no other information such
+    # as name. If name is returned, this entity will then also become a device in the
+    # HA UI.
+    @property
+    def device_info(self) -> DeviceInfo:
+        return {
+            "identifiers": {(DOMAIN, self.device.device_id)},
+        }
+
+    @property
+    def available(self) -> bool:
+        """Return True if roller and hub is available."""
+        return self.device.available()
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        self.device.register_callback(self.async_write_ha_state)
+
+
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        self.device.remove_callback(self.async_write_ha_state)
+
+
+class BatterySensor(SensorBase):
+    """Representation of a Sensor."""
+
+    device_class = DEVICE_CLASS_BATTERY
+    _attr_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, device):
+        """Initialize the sensor."""
+        super().__init__(device)
+
+        # As per the sensor, this must be a unique value within this domain. This is done
+        # by using the device ID, and appending "_battery"
+        self._attr_unique_id = f"{self.device.device_id}_battery"
+
+        # The name of the entity
+        self._attr_name = f"{self.device.device_name} Battery"
+
+
+
+    # The value of this sensor. As this is a DEVICE_CLASS_BATTERY, this value must be
+    # the battery level as a percentage (between 0 and 100)
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.device.battery_level

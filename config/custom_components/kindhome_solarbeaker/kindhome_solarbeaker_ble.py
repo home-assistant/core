@@ -1,6 +1,7 @@
+import dataclasses
 import logging
 from enum import Enum
-
+import dataclasses
 from bleak import BleakClient, BLEDevice, BleakGATTCharacteristic
 
 from config.custom_components.kindhome_solarbeaker.const import SERVICE_UUID
@@ -14,8 +15,10 @@ GET_MOTOR_STATE_CHAR_UUID = "d3d46a35-4394-e9aa-5a43-e7921120aaed"
 GET_ACCELEROMETER_STATE_CHAR_UUID = "6d5c4b3a-2f1e-0d9c-8b7a-6f5e4d3c2b1a"
 SECURITY_CODE = 0x45  # Hard coded for now
 
+GET_BATTERY_LEVEL_CHAR_UUID = "00002a19-0000-1000-8000-00805f9b34fb"
 
-class KindhomeSolarbeakerState(Enum):
+
+class KindhomeSolarbeakerMotorState(Enum):
     MOTOR_STOP = 0
     MOTOR_FORWARD = 1
     MOTOR_BACKWARD = 2
@@ -23,34 +26,23 @@ class KindhomeSolarbeakerState(Enum):
     CLOSED = 4
     UNDEFINED = -1
 
+    @staticmethod
+    def state_byte_to_state_enum(value):
+        log(_LOGGER, "state_byte_to_state_enum", f"value={value}")
+        for state in KindhomeSolarbeakerMotorState:
+            if state.value == value:
+                log(_LOGGER, "state_byte_to_state_enum", f"{state}={state.value}")
+                return state
+        return KindhomeSolarbeakerMotorState.UNDEFINED
 
-class KindhomeSolarBeakerData:
-    pass
+
+@dataclasses.dataclass
+class KindhomeSolarBeakerState:
+    motor_state: KindhomeSolarbeakerMotorState
+    battery_level: int
 
 
 class KindhomeBluetoothDevice:
-    def _publish_update(self):
-        for c in self._callbacks:
-            c()
-
-    def state_byte_to_state_enum(self, value):
-        log(_LOGGER, "state_byte_to_state_enum", f"value={value}")
-        for state in KindhomeSolarbeakerState:
-            log(_LOGGER, "state_byte_to_state_enum", f"{state}={state.value}")
-            if state.value == value:
-                return state
-        return KindhomeSolarbeakerState.UNDEFINED
-
-    async def _subscribe_to_state(self):
-        def _state_notification_callback(sender: BleakGATTCharacteristic, data: bytearray):
-            log(_LOGGER, "_state_notification_callback", f"state data: {sender}: {data}")
-            assert len(data) == 1
-            new_state = self.state_byte_to_state_enum(int.from_bytes(data, "little"))
-            log(_LOGGER, "_state_notification_callback", f"{new_state}")
-            self.state = new_state
-            self._publish_update()
-
-        await self.bleak_client.start_notify(GET_MOTOR_STATE_CHAR_UUID, _state_notification_callback)
 
     def __init__(self, ble_device: BLEDevice):
         self.address = ble_device.address
@@ -58,10 +50,45 @@ class KindhomeBluetoothDevice:
 
         self.bleak_client = BleakClient(self.ble_device)
         self._callbacks = set()
-        self.state: KindhomeSolarbeakerState = KindhomeSolarbeakerState.MOTOR_STOP
+        self.device_name = ble_device.name
+        self.state: KindhomeSolarBeakerState = KindhomeSolarBeakerState(KindhomeSolarbeakerMotorState.UNDEFINED, 0)
 
-    def get_device_name(self) -> str:
-        return "Test name"
+    def _publish_updates(self):
+        for c in self._callbacks:
+            c()
+
+    async def _subscribe_to_motor(self):
+        def _motor_state_notification_callback(sender, data: bytearray):
+            log(_LOGGER, "_motor_state_notification_callback", f"state data: {sender}: {data}")
+            assert len(data) == 1
+            new_motor_state = KindhomeSolarbeakerMotorState.state_byte_to_state_enum(int.from_bytes(data, "little"))
+            log(_LOGGER, "_motor_state_notification_callback", f"{new_motor_state}")
+            self.state = dataclasses.replace(self.state, motor_state=new_motor_state)
+            self._publish_updates()
+
+        await self.bleak_client.start_notify(GET_MOTOR_STATE_CHAR_UUID, _motor_state_notification_callback)
+
+    async def _subsribe_to_battery(self):
+        def _battery_notification_callback(sender, data: bytearray):
+            log(_LOGGER, "_battery_notification_callback", f"data: {sender}: {data}")
+            assert len(data) == 1
+            battery_level_percentage = data[0]
+            self.state = dataclasses.replace(self.state, battery_level=battery_level_percentage)
+            self._publish_updates()
+
+        await self.bleak_client.start_notify(GET_BATTERY_LEVEL_CHAR_UUID, _battery_notification_callback)
+
+    async def _subscribe_to_state_changes(self):
+        await self._subscribe_to_motor()
+        await self._subsribe_to_battery()
+
+    @property
+    def battery_level(self):
+        return self.state.battery_level
+
+    @property
+    def device_id(self):
+        return f"kindhome_solarbeaker_{self.address}"
 
     def available(self):
         return True
@@ -70,7 +97,20 @@ class KindhomeBluetoothDevice:
         await self.bleak_client.connect()
         await self.bleak_client.pair()
         log(_LOGGER, "connect", "paired!")
-        await self._subscribe_to_state()
+
+    async def get_state_and_subscribe_to_changes(self):
+        assert self.bleak_client.is_connected
+
+        # TODO I dont know how to get initial state!
+        # initial_motor_state_val = await self.bleak_client.read_gatt_char(GET_MOTOR_STATE_CHAR_UUID)
+        # initial_motor_state_enum = KindhomeSolarbeakerMotorState.state_byte_to_state_enum(initial_motor_state_val)
+        #
+        # initial_battery_level_bytes = await self.bleak_client.read_gatt_char(GET_BATTERY_LEVEL_CHAR_UUID)
+        # initial_battery = initial_battery_level_bytes[0]
+
+
+        self.state = KindhomeSolarBeakerState(KindhomeSolarbeakerMotorState.UNDEFINED, 0)
+        await self._subscribe_to_state_changes()
         log(_LOGGER, "subscribed to state", "!")
 
     async def move_forward(self):
@@ -81,9 +121,6 @@ class KindhomeBluetoothDevice:
 
     async def stop(self):
         await self.bleak_client.write_gatt_char(MOVE_CHAR_UUID, bytearray([0, SECURITY_CODE]))
-
-    # async def poll_data(self) -> KindhomeSolarBeakerData:
-    #     pass
 
     def register_callback(self, callback):
         self._callbacks.add(callback)

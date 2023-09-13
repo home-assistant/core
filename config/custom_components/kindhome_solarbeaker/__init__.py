@@ -16,7 +16,7 @@ from .utils import log
 _LOGGER = logging.getLogger(__name__)
 
 def create_async_update_method(device: KindhomeBluetoothDevice):
-    # async def async_update_data() -> KindhomeSolarBeakerData:
+    # async def async_update_data() -> KindhomeSolarBeakerState:
     #     log(_LOGGER, "async_update_data", "polling for state!")
     #     async with async_timeout.timeout(10):
     #         data = await device.poll_data()
@@ -26,8 +26,6 @@ def create_async_update_method(device: KindhomeBluetoothDevice):
 
     # TODO should this task also reconnect?
     return None
-
-
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -47,19 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     log(_LOGGER, "async_setup_entry", device.address)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="kindhome_solarbeaker",
-        update_method=create_async_update_method(device),
-        update_interval=UPDATE_INTERVAL,
-    )
-
-    # TODO do I want to use it?
-    # await coordinator.async_config_entry_first_refresh()
-
     try:
         await device.connect()
+        await device.get_state_and_subscribe_to_changes()
+
     except TimeoutError:
         _LOGGER.error(f"Error connecting to {device.ble_device}")
         # hass.components.persistent_notification.async_create(
@@ -69,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Error connecting to {device.ble_device}")
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {DATA_DEVICE: device, DATA_COOR: coordinator}
+    hass.data[DOMAIN][entry.entry_id] = {DATA_DEVICE: device}
 
 
     # Here I can create a task that tries to connect in a loop
