@@ -2,8 +2,6 @@
 from typing import Any
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_ACTION,
     ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -89,29 +87,3 @@ class BroadlinkThermostat(ClimateEntity, BroadlinkEntity, RestoreEntity):
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added."""
-        await super().async_added_to_hass()
-        await self._async_restore_state()
-
-    async def _async_restore_state(self) -> None:
-        """Restore latest state."""
-        if (old_state := await self.async_get_last_state()) is not None:
-            if old_state.state in [mode.value for mode in HVACMode]:
-                self._attr_hvac_mode = HVACMode(old_state.state)
-            if old_state.attributes is not None:
-                if old_state.attributes.get(ATTR_HVAC_ACTION) in [
-                    action.value for action in HVACAction
-                ]:
-                    self._attr_hvac_action = HVACAction(
-                        old_state.attributes[ATTR_HVAC_ACTION]
-                    )
-                if old_state.attributes.get(ATTR_TEMPERATURE) is not None:
-                    self._attr_target_temperature = float(
-                        old_state.attributes[ATTR_TEMPERATURE]
-                    )
-                if old_state.attributes.get(ATTR_CURRENT_TEMPERATURE) is not None:
-                    self._attr_current_temperature = float(
-                        old_state.attributes[ATTR_CURRENT_TEMPERATURE]
-                    )
