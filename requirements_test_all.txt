@@ -410,7 +410,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.35.0
+async-upnp-client==0.35.1
 
 # homeassistant.components.esphome
 async_interrupt==1.1.1
@@ -760,7 +760,7 @@ ha-philipsjs==3.1.0
 habitipy==0.2.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.70.0
+hass-nabucasa==0.71.0
 
 # homeassistant.components.conversation
 hassil==1.2.5
@@ -793,7 +793,7 @@ home-assistant-intents==2023.8.2
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.14
+homematicip==1.0.15
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -832,7 +832,7 @@ influxdb==5.3.1
 inkbird-ble==0.5.6
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.3.5
+insteon-frontend-home-assistant==0.4.0
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
@@ -850,7 +850,7 @@ jaraco.abode==3.3.0
 jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
-jsonpath==0.82
+jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
@@ -1245,7 +1245,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.11.0
+pyenphase==1.11.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1302,7 +1302,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.4.3
+pyinsteon==1.5.1
 
 # homeassistant.components.ipma
 pyipma==3.0.6
@@ -1392,7 +1392,7 @@ pymyq==3.1.4
 pymysensors==0.24.0
 
 # homeassistant.components.netgear
-pynetgear==0.10.9
+pynetgear==0.10.10
 
 # homeassistant.components.nobo_hub
 pynobo==1.6.0

@@ -141,6 +141,7 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_sheets.*
+homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
