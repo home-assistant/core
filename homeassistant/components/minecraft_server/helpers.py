@@ -29,7 +29,7 @@ async def async_check_srv_record(host: str) -> dict[str, Any] | None:
             CONF_PORT: srv_query[0].port,
         }
         _LOGGER.debug(
-            "'%s' is a valid SRV record ('%s:%s')",
+            "'%s' is a valid Minecraft SRV record ('%s:%s')",
             host,
             srv_record[CONF_HOST],
             srv_record[CONF_PORT],

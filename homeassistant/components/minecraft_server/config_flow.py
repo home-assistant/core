@@ -92,9 +92,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check server connection using a 'status' request and return result."""
 
         # Check if host is a SRV record. If so, update server data.
-        srv_record = await helpers.async_check_srv_record(host)
-
-        if srv_record is not None:
+        if srv_record := await helpers.async_check_srv_record(host):
             # Use extracted host and port from SRV record.
             host = srv_record[CONF_HOST]
             port = srv_record[CONF_PORT]

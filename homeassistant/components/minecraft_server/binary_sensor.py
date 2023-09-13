@@ -71,4 +71,4 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
     @property
     def is_on(self) -> bool:
         """Return binary sensor state."""
-        return self._coordinator.last_update_success
+        return self.coordinator.last_update_success

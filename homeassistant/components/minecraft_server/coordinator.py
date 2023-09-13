@@ -35,6 +35,8 @@ class MinecraftServerData:
 class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
     """Minecraft Server data update coordinator."""
 
+    _srv_record_checked = False
+
     def __init__(
         self, hass: HomeAssistant, unique_id: str, config_data: Mapping[str, Any]
     ) -> None:
@@ -48,27 +50,24 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
 
         # Server data
         self.unique_id = unique_id
-        self.name = config_data[CONF_NAME]
-        self.host = config_data[CONF_HOST]
-        self.port = config_data[CONF_PORT]
-        self.srv_record_checked = False
+        self._host = config_data[CONF_HOST]
+        self._port = config_data[CONF_PORT]
 
         # 3rd party library instance
-        self._server = JavaServer(self.host, self.port)
+        self._server = JavaServer(self._host, self._port)
 
     async def _async_update_data(self) -> MinecraftServerData:
         """Get server data from 3rd party library and update properties."""
 
         # Check once if host is a valid Minecraft SRV record.
-        if not self.srv_record_checked:
-            self.srv_record_checked = True
-            srv_record = await helpers.async_check_srv_record(self.host)
-            if srv_record is not None:
+        if not self._srv_record_checked:
+            self._srv_record_checked = True
+            if srv_record := await helpers.async_check_srv_record(self._host):
                 # Overwrite host, port and 3rd party library instance
                 # with data extracted out of the SRV record.
-                self.host = srv_record[CONF_HOST]
-                self.port = srv_record[CONF_PORT]
-                self._server = JavaServer(self.host, self.port)
+                self._host = srv_record[CONF_HOST]
+                self._port = srv_record[CONF_PORT]
+                self._server = JavaServer(self._host, self._port)
 
         # Send status request to the server.
         try:
@@ -78,8 +77,8 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
 
         # Got answer to request, update properties.
         players_list = []
-        if status_response.players.sample is not None:
-            for player in status_response.players.sample:
+        if players := status_response.players.sample:
+            for player in players:
                 players_list.append(player.name)
             players_list.sort()
 

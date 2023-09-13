@@ -147,7 +147,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return sensor value."""
-        return self.entity_description.value_fn(self._coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -155,6 +155,6 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         extra_state_attributes = None
         if self.entity_description.attributes_fn:
             extra_state_attributes = self.entity_description.attributes_fn(
-                self._coordinator.data
+                self.coordinator.data
             )
         return extra_state_attributes
