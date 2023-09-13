@@ -300,7 +300,11 @@ class Pipeline:
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> Pipeline:
-        """Create an instance from a JSON serialization."""
+        """Create an instance from a JSON serialization.
+
+        This function was added in HA Core 2023.10, previous versions will raise
+        if there are unexpected items in the serialized data.
+        """
         return cls(
             conversation_engine=data["conversation_engine"],
             conversation_language=data["conversation_language"],
