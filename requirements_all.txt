@@ -406,7 +406,7 @@ alpha-vantage==2.3.1
 amberelectric==1.0.4
 
 # homeassistant.components.amcrest
-amcrest==1.9.7
+amcrest==1.9.8
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.70
