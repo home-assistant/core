@@ -34,7 +34,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         """Initialize AquaLink sensor."""
         super().__init__(dev)
         self._attr_name = dev.label
-        if self.dev.name.endswith("_temp"):
+        if dev.name.endswith("_temp"):
             self._attr_native_unit_of_measurement = (
                 UnitOfTemperature.FAHRENHEIT
                 if dev.system.temp_unit == "F"

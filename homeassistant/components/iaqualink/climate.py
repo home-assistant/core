@@ -50,7 +50,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         self._attr_name = dev.label.split(" ")[0]
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
-            if self.dev.unit == "F"
+            if dev.unit == "F"
             else UnitOfTemperature.CELSIUS
         )
         self._attr_min_temp = dev.min_temperature
