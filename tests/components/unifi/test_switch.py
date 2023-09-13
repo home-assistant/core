@@ -6,7 +6,6 @@ from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -34,12 +33,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
-from .test_controller import (
-    CONTROLLER_HOST,
-    ENTRY_CONFIG,
-    SITE,
-    setup_unifi_integration,
-)
+from .test_controller import CONTROLLER_HOST, SITE, setup_unifi_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1434,38 +1428,6 @@ async def test_poe_port_switches(
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
-
-
-async def test_remove_poe_client_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test old PoE client switches are removed."""
-
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        domain=UNIFI_DOMAIN,
-        title="Mock Title",
-        data=ENTRY_CONFIG,
-        source="test",
-        options={},
-        entry_id="1",
-    )
-
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create(
-        SWITCH_DOMAIN,
-        UNIFI_DOMAIN,
-        "poe-123",
-        config_entry=config_entry,
-    )
-
-    await setup_unifi_integration(hass, aioclient_mock)
-
-    assert not [
-        entry
-        for entry in ent_reg.entities.values()
-        if entry.config_entry_id == config_entry.entry_id
-    ]
 
 
 async def test_wlan_switches(
