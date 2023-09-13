@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from freebox_api.exceptions import HttpRequestError
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -84,13 +82,10 @@ class FreeboxHomeEntity(Entity):
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
             return False
-        try:
-            await self._router.home.set_home_endpoint_value(
-                self._id, command_id, {"value": value}
-            )
-        except HttpRequestError as error:
-            _LOGGER.warning("The Freebox API ClientError during value set %s", error)
-            return False
+
+        await self._router.home.set_home_endpoint_value(
+            self._id, command_id, {"value": value}
+        )
         return True
 
     async def get_home_endpoint_value(self, command_id: Any) -> Any | None:
@@ -98,13 +93,8 @@ class FreeboxHomeEntity(Entity):
         if command_id is None:
             _LOGGER.error("Unable to GET a value through the API. Command is None")
             return None
-        try:
-            node = await self._router.home.get_home_endpoint_value(self._id, command_id)
-        except HttpRequestError as error:
-            _LOGGER.warning(
-                "The Freebox API ClientError during a value retrieval %s", error
-            )
-            return None
+
+        node = await self._router.home.get_home_endpoint_value(self._id, command_id)
         return node.get("value")
 
     def get_command_id(self, nodes, ep_type, name) -> int | None:
