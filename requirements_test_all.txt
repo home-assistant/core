@@ -390,7 +390,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.0.1
+apple_weatherkit==1.0.2
 
 # homeassistant.components.apprise
 apprise==1.4.5
@@ -850,7 +850,7 @@ jaraco.abode==3.3.0
 jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
-jsonpath==0.82
+jsonpath==0.82.2
 
 # homeassistant.components.justnimbus
 justnimbus==0.6.0
@@ -1248,7 +1248,7 @@ pyeconet==0.1.20
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.11.0
+pyenphase==1.11.3
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1598,7 +1598,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.33.2
+python-roborock==0.34.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
