@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import logging
+from operator import attrgetter
 from types import MappingProxyType
 from typing import Any
 
@@ -508,9 +509,7 @@ class HKDevice:
 
         # Accessories need to be created in the correct order or setting up
         # relationships with ATTR_VIA_DEVICE may fail.
-        for accessory in sorted(
-            self.entity_map.accessories, key=lambda accessory: accessory.aid
-        ):
+        for accessory in sorted(self.entity_map.accessories, key=attrgetter("aid")):
             device_info = self.device_info_for_accessory(accessory)
 
             device = device_registry.async_get_or_create(

@@ -10,6 +10,7 @@ import serial.tools.list_ports
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+import zigpy.device
 from zigpy.exceptions import NetworkNotFormed
 import zigpy.types
 
@@ -59,13 +60,6 @@ def mock_multipan_platform():
         "homeassistant.components.zha.silabs_multiprotocol.async_using_multipan",
         return_value=False,
     ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def reduce_reconnect_timeout():
-    """Reduces reconnect timeout to speed up tests."""
-    with patch("homeassistant.components.zha.radio_manager.CONNECT_DELAY_S", 0.01):
         yield
 
 
@@ -1181,6 +1175,7 @@ async def test_onboarding_auto_formation_new_hardware(
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",

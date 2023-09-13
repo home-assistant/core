@@ -5,36 +5,13 @@ from unittest.mock import MagicMock
 
 import speedtest
 
-from homeassistant.components.speedtestdotnet.const import (
-    CONF_SERVER_ID,
-    CONF_SERVER_NAME,
-    DOMAIN,
-)
+from homeassistant.components.speedtestdotnet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-async def test_successful_config_entry(hass: HomeAssistant) -> None:
-    """Test that SpeedTestDotNet is configured successfully."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
-            CONF_SERVER_ID: "1",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN]
 
 
 async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:

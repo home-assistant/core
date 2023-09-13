@@ -171,7 +171,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DataType.FLOAT32,
                 DataType.FLOAT64,
                 DataType.STRING,
-                DataType.STRING,
                 DataType.CUSTOM,
             ]
         ),
@@ -337,7 +336,7 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
-        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
+        vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
