@@ -17,8 +17,10 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -106,6 +108,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Todoist calendar platform config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    projects = await coordinator.async_get_projects()
+    labels = await coordinator.async_get_labels()
+
+    entities = []
+    for project in projects:
+        project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
+        entities.append(TodoistProjectEntity(coordinator, project_data, labels))
+
+    async_add_entities(entities)
+    async_register_services(hass, coordinator)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -119,7 +138,7 @@ async def async_setup_platform(
     project_id_lookup = {}
 
     api = TodoistAPIAsync(token)
-    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api)
+    coordinator = TodoistCoordinator(hass, _LOGGER, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
     async def _shutdown_coordinator(_: Event) -> None:
@@ -177,12 +196,29 @@ async def async_setup_platform(
 
     async_add_entities(project_devices, update_before_add=True)
 
+    async_register_services(hass, coordinator)
+
+
+def async_register_services(
+    hass: HomeAssistant, coordinator: TodoistCoordinator
+) -> None:
+    """Register services."""
+
+    if hass.services.has_service(DOMAIN, SERVICE_NEW_TASK):
+        return
+
     session = async_get_clientsession(hass)
 
     async def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
-        project_name = call.data[PROJECT_NAME]
-        project_id = project_id_lookup[project_name]
+        project_name = call.data[PROJECT_NAME].lower()
+        projects = await coordinator.async_get_projects()
+        project_id: str | None = None
+        for project in projects:
+            if project_name == project.name.lower():
+                project_id = project.id
+        if project_id is None:
+            raise HomeAssistantError(f"Invalid project name '{project_name}'")
 
         # Create the task
         content = call.data[CONTENT]
@@ -192,7 +228,7 @@ async def async_setup_platform(
             data["labels"] = task_labels
 
         if ASSIGNEE in call.data:
-            collaborators = await api.get_collaborators(project_id)
+            collaborators = await coordinator.api.get_collaborators(project_id)
             collaborator_id_lookup = {
                 collab.name.lower(): collab.id for collab in collaborators
             }
@@ -225,7 +261,7 @@ async def async_setup_platform(
             date_format = "%Y-%m-%dT%H:%M:%S"
             data["due_datetime"] = datetime.strftime(due_date, date_format)
 
-        api_task = await api.add_task(content, **data)
+        api_task = await coordinator.api.add_task(content, **data)
 
         # @NOTE: The rest-api doesn't support reminders, this works manually using
         # the sync api, in order to keep functional parity with the component.
@@ -263,7 +299,7 @@ async def async_setup_platform(
                     }
                 ]
             }
-            headers = create_headers(token=token, with_content=True)
+            headers = create_headers(token=coordinator.token, with_content=True)
             return await session.post(sync_url, headers=headers, json=reminder_data)
 
         if _reminder_due:

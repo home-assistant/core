@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -21,16 +21,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .controller import UniFiController
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
 )
-
-if TYPE_CHECKING:
-    from .controller import UniFiController
 
 LOGGER = logging.getLogger(__name__)
 
@@ -88,9 +85,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        UnifiDeviceUpdateEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiDeviceUpdateEntity,
+        ENTITY_DESCRIPTIONS,
     )
 
 

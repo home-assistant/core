@@ -858,21 +858,48 @@ async def test_integration_with_entity(
         mock_add_entities,
     )
 
+    entity_key_events = []
+
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock entity key listener."""
+        entity_key_events.append(data)
+
+    cancel_async_add_entity_key_listener = processor.async_add_entity_key_listener(
+        _async_entity_key_listener,
+        PassiveBluetoothEntityKey(key="humidity", device_id="primary"),
+    )
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_entities.mock_calls) == 1
+
+    # should have triggered the entity key listener since the
+    # the device is becoming available
+    assert len(entity_key_events) == 1
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Second call with just the remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 1
 
+    # should not have triggered the entity key listener since there
+    # there is no update with the entity key
+    assert len(entity_key_events) == 1
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Third call with primary and remote sensor entities adds the primary sensor entities
     assert len(mock_add_entities.mock_calls) == 2
 
+    # should not have triggered the entity key listener since there
+    # there is an update with the entity key
+    assert len(entity_key_events) == 2
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Forth call with both primary and remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 2
+
+    # should not have triggered the entity key listener since there
+    # there is an update with the entity key
+    assert len(entity_key_events) == 3
 
     entities = [
         *mock_add_entities.mock_calls[0][1][0],
@@ -892,6 +919,7 @@ async def test_integration_with_entity(
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id="remote"
     )
+    cancel_async_add_entity_key_listener()
     cancel_coordinator()
 
 

@@ -1,7 +1,7 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1197,6 +1197,48 @@ async def test_trigger_entity(
     "config",
     [
         {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "value_template": "{{ trigger.event.data.beer }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "last": "{{now().strftime('%D %X')}}",
+                                "history_1": "{{this.attributes.last|default('Not yet set')}}",
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_entity_runs_once(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity handles a trigger once."""
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "2"
+    assert state.attributes.get("last") == ANY
+    assert state.attributes.get("history_1") == "Not yet set"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "sensors": {
@@ -1582,3 +1624,47 @@ async def test_trigger_entity_restore_state(
     assert state.attributes["entity_picture"] == "/local/dogs.png"
     assert state.attributes["plus_one"] == 3
     assert state.attributes["another"] == 1
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [
+                        {
+                            "variables": {
+                                "my_variable": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Hello Name",
+                            "state": "{{ my_variable + 1 }}",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_action(
+    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+) -> None:
+    """Test trigger entity with an action works."""
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 1}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "3"
+    assert state.context is context

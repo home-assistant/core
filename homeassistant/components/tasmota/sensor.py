@@ -88,12 +88,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_COLOR_GREEN: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
     hc.SENSOR_CURRENT: {
-        ICON: "mdi:alpha-a-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_CURRENTNEUTRAL: {
-        ICON: "mdi:alpha-a-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -103,11 +101,14 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_DISTANCE: {
-        ICON: "mdi:leak",
         DEVICE_CLASS: SensorDeviceClass.DISTANCE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
+    hc.SENSOR_ENERGY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
     hc.SENSOR_FREQUENCY: {
         DEVICE_CLASS: SensorDeviceClass.FREQUENCY,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -122,10 +123,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_STATUS_IP: {ICON: "mdi:ip-network"},
     hc.SENSOR_STATUS_LINK_COUNT: {ICON: "mdi:counter"},
-    hc.SENSOR_MOISTURE: {
-        DEVICE_CLASS: SensorDeviceClass.MOISTURE,
-        ICON: "mdi:cup-water",
-    },
+    hc.SENSOR_MOISTURE: {DEVICE_CLASS: SensorDeviceClass.MOISTURE},
     hc.SENSOR_STATUS_MQTT_COUNT: {ICON: "mdi:counter"},
     hc.SENSOR_PB0_3: {ICON: "mdi:flask"},
     hc.SENSOR_PB0_5: {ICON: "mdi:flask"},
@@ -146,7 +144,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_POWERFACTOR: {
-        ICON: "mdi:alpha-f-circle-outline",
         DEVICE_CLASS: SensorDeviceClass.POWER_FACTOR,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -162,7 +159,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.PRESSURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_PROXIMITY: {DEVICE_CLASS: SensorDeviceClass.DISTANCE, ICON: "mdi:ruler"},
+    hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
@@ -195,11 +192,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
     hc.SENSOR_VOLTAGE: {
-        ICON: "mdi:alpha-v-circle-outline",
+        DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_WEIGHT: {
-        ICON: "mdi:scale",
         DEVICE_CLASS: SensorDeviceClass.WEIGHT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
@@ -220,7 +216,6 @@ SENSOR_UNIT_MAP = {
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
     hc.PERCENTAGE: PERCENTAGE,
-    hc.POWER_FACTOR: None,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
     hc.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,

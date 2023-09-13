@@ -1,11 +1,14 @@
 """Tests for the Withings component."""
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import urlparse
 
 import pytest
 import voluptuous as vol
-from withings_api.common import UnauthorizedException
+from withings_api.common import NotifyAppli, UnauthorizedException
 
 import homeassistant.components.webhook as webhook
+from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
 from homeassistant.components.withings.common import ConfigEntryWithingsApi, DataManager
 from homeassistant.config import async_process_ha_core_config
@@ -19,10 +22,14 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_config
+from .conftest import WEBHOOK_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
 
 
 def config_schema_validate(withings_config) -> dict:
@@ -224,3 +231,57 @@ async def test_set_convert_unique_id_to_string(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert config_entry.unique_id == "1234"
+
+
+async def test_data_manager_webhook_subscription(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test data manager webhook subscriptions."""
+    await setup_integration(hass, config_entry)
+    await hass_client_no_auth()
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert withings.notify_subscribe.call_count == 4
+
+    webhook_url = "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.CIRCULATORY)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
+    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
+
+    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
+    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "PUT",
+        "HEAD",
+    ],
+)
+async def test_requests(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    method: str,
+    disable_webhook_delay,
+) -> None:
+    """Test we handle request methods Withings sends."""
+    await setup_integration(hass, config_entry)
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+
+    response = await client.request(
+        method=method,
+        path=urlparse(webhook_url).path,
+    )
+    assert response.status == 200

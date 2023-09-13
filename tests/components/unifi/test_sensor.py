@@ -336,8 +336,8 @@ async def test_bandwidth_sensors(
         "mac": "00:00:00:00:00:02",
         "name": "Wireless client",
         "oui": "Producer",
-        "rx_bytes-r": 2345000000,
-        "tx_bytes-r": 6789000000,
+        "rx_bytes-r": 2345000000.0,
+        "tx_bytes-r": 6789000000.0,
     }
     options = {
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
@@ -566,7 +566,7 @@ async def test_poe_port_switches(
 ) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get("sensor.mock_name_port_1_poe_power")
@@ -788,8 +788,8 @@ async def test_outlet_power_readings(
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 9
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get(f"sensor.{entity_id}")
@@ -809,3 +809,104 @@ async def test_outlet_power_readings(
 
         sensor_data = hass.states.get(f"sensor.{entity_id}")
         assert sensor_data.state == expected_update_value
+
+
+async def test_device_uptime(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Verify that uptime sensors are working as expected."""
+    device = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "has_fan": True,
+        "fan_level": 0,
+        "ip": "10.0.1.1",
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "type": "usw",
+        "upgradable": True,
+        "uptime": 60,
+        "version": "4.0.42.10433",
+    }
+
+    now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.device_uptime").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Verify normal new event doesn't change uptime
+    # 4 seconds has passed
+
+    device["uptime"] = 64
+    now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    # Verify new event change uptime
+    # 1 month has passed
+
+    device["uptime"] = 60
+    now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_uptime").state == "2021-02-01T01:00:00+00:00"
+
+
+async def test_device_temperature(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Verify that temperature sensors are working as expected."""
+    device = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "general_temperature": 30,
+        "has_fan": True,
+        "has_temperature": True,
+        "fan_level": 0,
+        "ip": "10.0.1.1",
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "type": "usw",
+        "upgradable": True,
+        "uptime": 60,
+        "version": "4.0.42.10433",
+    }
+
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert hass.states.get("sensor.device_temperature").state == "30"
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.device_temperature").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Verify new event change temperature
+    device["general_temperature"] = 60
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.device_temperature").state == "60"
