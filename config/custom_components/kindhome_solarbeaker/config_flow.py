@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Tuple
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class ConnectionError(HomeAssistantError):
     pass
 
@@ -27,12 +28,12 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def _create_config_entry(self, address, name = None):
+    def _create_config_entry(self, address, name=None):
         # TODO maybe here I should do get the name
         title = f"{TITLE} {address}"
         return self.async_create_entry(title=title, data={
             "address": address,
-            # "name": name
+            "name": name
         })
 
     def __init__(self) -> None:
@@ -89,9 +90,11 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
+            name = self._discovered_devices[address]
+
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return self._create_config_entry(address)
+            return self._create_config_entry(address, name)
 
         current_addresses = self._async_current_ids()
 
@@ -101,9 +104,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
             if supported(discovery_info):
-                self._discovered_devices[address] = (
-                    discovery_info.address
-                )
+                self._discovered_devices[address] = discovery_info.name
 
         if not self._discovered_devices:
             log(_LOGGER, "async_step_user", "no devices found, aborting!")
@@ -112,6 +113,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+                {vol.Required(CONF_ADDRESS): vol.In(
+                    [f"{name}: {address}" for address, name in self._discovered_devices.items()])}
             ),
         )
