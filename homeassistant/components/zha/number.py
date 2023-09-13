@@ -965,8 +965,8 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
 
 
 class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
-    """Min or Max Heat Setpoint setting on thermostats.
-    """
+    """Min or Max Heat Setpoint setting on thermostats."""
+
     _attr_icon: str = "mdi:thermostat"
     _attr_native_step: float = 0.5
 
@@ -993,7 +993,9 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="max_heat_setpoint_limit"):
+class MaxHeatSetpointLimit(
+    ZCLHeatSetpointLimitEntity, id_suffix="max_heat_setpoint_limit"
+):
     """Max Heat Setpoint setting on thermostats.
 
     Optional Thermostat attribute
@@ -1007,7 +1009,9 @@ class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="max_heat_setpo
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity, id_suffix="min_heat_setpoint_limit"):
+class MinHeatSetpointLimit(
+    ZCLHeatSetpointLimitEntity, id_suffix="min_heat_setpoint_limit"
+):
     """Min Heat Setpoint setting on thermostats.
 
     Optional Thermostat attribute
