@@ -1326,8 +1326,8 @@ build.json @home-assistant/supervisor
 /tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
-/homeassistant/components/twinkly/ @dr1rrb @Robbie1221
-/tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/twinkly/ @dr1rrb @Robbie1221 @Olen
+/tests/components/twinkly/ @dr1rrb @Robbie1221 @Olen
 /homeassistant/components/twitch/ @joostlek
 /tests/components/twitch/ @joostlek
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
