@@ -49,7 +49,6 @@ class SelectableCapability(MusicCastCapabilityEntity, SelectEntity):
     ) -> None:
         """Initialize the MusicCast Select entity."""
         MusicCastCapabilityEntity.__init__(self, coordinator, capability, zone_id)
-        SelectEntity.__init__(self)
         self._attr_options = list(capability.options.values())
         self._attr_translation_key = TRANSLATION_KEY_MAPPING.get(capability.id)
 
