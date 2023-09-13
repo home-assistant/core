@@ -63,8 +63,6 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             self._attr_device_class = SensorDeviceClass.HUMIDITY
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             self._attr_device_class = SensorDeviceClass.POWER
-        else:
-            self._attr_device_class = None
         if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             self._attr_native_unit_of_measurement = LIGHT_LUX
         elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
