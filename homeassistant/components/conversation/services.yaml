@@ -14,3 +14,5 @@ process:
       example: homeassistant
       selector:
         conversation_agent:
+
+reload:
