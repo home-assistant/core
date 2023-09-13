@@ -1,7 +1,7 @@
 """Support for Aqualink pool feature switches."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from iaqualink.device import AqualinkSwitch
 
@@ -36,8 +36,6 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
         """Initialize AquaLink switch."""
         super().__init__(dev)
         name = self._attr_name = dev.label
-        if TYPE_CHECKING:
-            assert isinstance(name, str)
         if name == "Cleaner":
             self._attr_icon = "mdi:robot-vacuum"
         elif name == "Waterfall" or name.endswith("Dscnt"):
