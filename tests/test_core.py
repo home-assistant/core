@@ -15,6 +15,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -1031,17 +1032,18 @@ async def test_statemachine_is_state(hass: HomeAssistant) -> None:
 
 
 async def test_statemachine_entity_ids(hass: HomeAssistant) -> None:
-    """Test get_entity_ids method."""
+    """Test async_entity_ids method."""
+    assert hass.states.async_entity_ids() == []
+    assert hass.states.async_entity_ids("light") == []
+    assert hass.states.async_entity_ids(("light", "switch", "other")) == []
+
     hass.states.async_set("light.bowl", "on", {})
     hass.states.async_set("SWITCH.AC", "off", {})
-    ent_ids = hass.states.async_entity_ids()
-    assert len(ent_ids) == 2
-    assert "light.bowl" in ent_ids
-    assert "switch.ac" in ent_ids
-
-    ent_ids = hass.states.async_entity_ids("light")
-    assert len(ent_ids) == 1
-    assert "light.bowl" in ent_ids
+    assert hass.states.async_entity_ids() == unordered(["light.bowl", "switch.ac"])
+    assert hass.states.async_entity_ids("light") == ["light.bowl"]
+    assert hass.states.async_entity_ids(("light", "switch", "other")) == unordered(
+        ["light.bowl", "switch.ac"]
+    )
 
     states = sorted(state.entity_id for state in hass.states.async_all())
     assert states == ["light.bowl", "switch.ac"]
@@ -1902,6 +1904,9 @@ async def test_chained_logging_misses_log_timeout(
 
 async def test_async_all(hass: HomeAssistant) -> None:
     """Test async_all."""
+    assert hass.states.async_all() == []
+    assert hass.states.async_all("light") == []
+    assert hass.states.async_all(["light", "switch"]) == []
 
     hass.states.async_set("switch.link", "on")
     hass.states.async_set("light.bowl", "on")
@@ -1925,6 +1930,10 @@ async def test_async_all(hass: HomeAssistant) -> None:
 
 async def test_async_entity_ids_count(hass: HomeAssistant) -> None:
     """Test async_entity_ids_count."""
+
+    assert hass.states.async_entity_ids_count() == 0
+    assert hass.states.async_entity_ids_count("light") == 0
+    assert hass.states.async_entity_ids_count({"light", "vacuum"}) == 0
 
     hass.states.async_set("switch.link", "on")
     hass.states.async_set("light.bowl", "on")
