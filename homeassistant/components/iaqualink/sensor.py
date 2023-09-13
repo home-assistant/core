@@ -32,7 +32,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
 
     def __init__(self, dev: AqualinkSensor) -> None:
         """Initialize AquaLink sensor."""
-        AqualinkEntity.__init__(self, dev)
+        super().__init__(dev)
         self._attr_name = dev.label
         if self.dev.name.endswith("_temp"):
             self._attr_native_unit_of_measurement = (

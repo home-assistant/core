@@ -34,7 +34,7 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
 
     def __init__(self, dev: AqualinkSwitch) -> None:
         """Initialize AquaLink switch."""
-        AqualinkEntity.__init__(self, dev)
+        super().__init__(dev)
         self._attr_name = dev.label
         name = self.name
         if TYPE_CHECKING:

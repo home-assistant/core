@@ -35,7 +35,7 @@ class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):
 
     def __init__(self, dev: AqualinkBinarySensor) -> None:
         """Initialize AquaLink binary sensor."""
-        AqualinkEntity.__init__(self, dev)
+        super().__init__(dev)
         self._attr_name = dev.label
         self._attr_device_class = (
             BinarySensorDeviceClass.COLD if self.name == "Freeze Protection" else None
