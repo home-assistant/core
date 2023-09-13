@@ -1,7 +1,6 @@
 """Config flow for Minecraft Server integration."""
 from contextlib import suppress
 import logging
-from typing import Any
 
 from mcstatus import JavaServer
 import voluptuous as vol
@@ -57,14 +56,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_PORT: port,
                 }
-                server_online = await self.async_is_server_online(config_data)
-                if not server_online:
-                    # Host or port invalid or server not reachable.
-                    errors["base"] = "cannot_connect"
-                else:
+                if await self._async_is_server_online(host, port):
                     # Configuration data are available and no error was detected,
                     # create configuration entry.
                     return self.async_create_entry(title=title, data=config_data)
+
+                # Host or port invalid or server not reachable.
+                errors["base"] = "cannot_connect"
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
@@ -90,26 +88,22 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_is_server_online(self, config_data: dict[str, Any]) -> bool:
+    async def _async_is_server_online(self, host: str, port: int) -> bool:
         """Check server connection using a 'status' request and return result."""
-        server_online = False
 
         # Check if host is a SRV record. If so, update server data.
-        srv_record = await helpers.async_check_srv_record(config_data[CONF_HOST])
+        srv_record = await helpers.async_check_srv_record(host)
 
         if srv_record is not None:
             # Use extracted host and port from SRV record.
             host = srv_record[CONF_HOST]
             port = srv_record[CONF_PORT]
-        else:
-            # Use host and port from user input.
-            host = config_data[CONF_HOST]
-            port = config_data[CONF_PORT]
 
         # Send a status request to the server.
         server = JavaServer(host, port)
         try:
             await server.async_status()
+            return True
         except OSError as error:
             _LOGGER.debug(
                 (
@@ -120,7 +114,5 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 port,
                 error,
             )
-        else:
-            server_online = True
 
-        return server_online
+        return False
