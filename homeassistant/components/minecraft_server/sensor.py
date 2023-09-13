@@ -1,14 +1,14 @@
 """The Minecraft Server sensor platform."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -143,18 +143,19 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        self._attr_native_value = description.value_fn(coordinator.data)
 
-    @property
-    def native_value(self) -> StateType:
-        """Return sensor value."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        if func := description.attributes_fn:
+            self._attr_extra_state_attributes = func(coordinator.data)
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return sensor state attributes, if available."""
-        extra_state_attributes = None
-        if self.entity_description.attributes_fn:
-            extra_state_attributes = self.entity_description.attributes_fn(
-                self.coordinator.data
-            )
-        return extra_state_attributes
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self.coordinator.data
+        )
+
+        if func := self.entity_description.attributes_fn:
+            self._attr_extra_state_attributes = func(self.coordinator.data)
+
+        self.async_write_ha_state()
