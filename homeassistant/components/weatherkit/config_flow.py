@@ -120,7 +120,7 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             location[CONF_LONGITUDE],
         )
 
-        if len(availability) == 0:
+        if not availability:
             raise WeatherKitUnsupportedLocationError(
                 "API does not support this location"
             )
