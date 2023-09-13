@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
@@ -45,7 +46,10 @@ def _days_until_expiration(domain: Domain) -> int | None:
     if domain.expiration_date is None:
         return None
     # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
-    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+    return cast(
+        int,
+        (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
+    )
 
 
 def _ensure_timezone(timestamp: datetime | None) -> datetime | None:

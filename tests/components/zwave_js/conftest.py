@@ -3,7 +3,7 @@ import asyncio
 import copy
 import io
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -650,6 +650,12 @@ def nice_ibt4zwave_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
 
 
+@pytest.fixture(name="logic_group_zdb5100_state", scope="session")
+def logic_group_zdb5100_state_fixture():
+    """Load the Logic Group ZDB5100 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
+
+
 # model fixtures
 
 
@@ -687,9 +693,17 @@ def mock_client_fixture(
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
+
+        async def async_send_command_side_effect(message, require_schema=None):
+            """Return the command response."""
+            if message["command"] == "node.has_device_config_changed":
+                return {"changed": False}
+            return DEFAULT
+
         client.async_send_command.return_value = {
             "result": {"success": True, "status": 255}
         }
+        client.async_send_command.side_effect = async_send_command_side_effect
 
         yield client
 
@@ -1252,5 +1266,13 @@ def energy_production_fixture(client, energy_production_state):
 def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
     """Mock a Nice IBT4ZWAVE cover node."""
     node = Node(client, copy.deepcopy(nice_ibt4zwave_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="logic_group_zdb5100")
+def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
+    """Mock a ZDB5100 light node."""
+    node = Node(client, copy.deepcopy(logic_group_zdb5100_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

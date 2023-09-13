@@ -187,11 +187,11 @@ async def test_camera_stream_source_configured(
         "yuv420p -r 30 -b:v 299k -bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f "
         "rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
-        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316 -map 0:a:0 "
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
         "-vn -c:a libopus -application lowdelay -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type "
         "110 -ssrc {a_ssrc} -f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtcpport=51108&pkt_size=188"
+        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -344,7 +344,7 @@ async def test_camera_stream_source_found(
         "yuv420p -r 30 -b:v 299k -bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f "
         "rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
-        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316"
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -507,11 +507,11 @@ async def test_camera_stream_source_configured_and_copy_codec(
         "-map 0:v:0 -an -c:v copy -tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
-        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316 -map 0:a:0 "
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
         "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
         "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtcpport=51108&pkt_size=188"
+        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -580,11 +580,11 @@ async def test_camera_stream_source_configured_and_override_profile_names(
         "-map 0:v:0 -an -c:v h264_v4l2m2m -profile:v 4 -tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
-        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316 -map 0:a:0 "
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
         "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
         "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtcpport=51108&pkt_size=188"
+        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -654,11 +654,11 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
         "-map 0:v:0 -an -c:v h264_omx -profile:v high -tune zerolatency -pix_fmt yuv420p -r 30 -b:v 299k "
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
-        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316 -map 0:a:0 "
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
         "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
         "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtcpport=51108&pkt_size=188"
+        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
     )
 
     ffmpeg_with_invalid_pid.open.assert_called_with(

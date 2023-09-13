@@ -1,4 +1,5 @@
 """The tests for the Modbus climate component."""
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -597,16 +598,15 @@ async def test_restore_state_climate(
     ],
 )
 async def test_lazy_error_climate(
-    hass: HomeAssistant, mock_do_cycle, start_expect, end_expect
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, start_expect, end_expect
 ) -> None:
     """Run test for sensor."""
     hass.states.async_set(ENTITY_ID, 17)
     await hass.async_block_till_done()
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 
