@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.withings.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -143,12 +143,15 @@ async def test_config_reauth_profile(
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, config_entry)
 
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -203,12 +206,15 @@ async def test_config_reauth_wrong_account(
     """Test reauth with wrong account."""
     await setup_integration(hass, config_entry)
 
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

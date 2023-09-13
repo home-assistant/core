@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_TOKEN,
     CONF_WEBHOOK_ID,
     Platform,
 )
@@ -109,13 +110,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_options = {
             CONF_USE_WEBHOOK: new_data.get(CONF_USE_WEBHOOK, False),
         }
-        title = new_data.pop("profile")
-        unique_id = str(entry.unique_id)
+        unique_id = str(entry.data[CONF_TOKEN]["userid"])
         if CONF_WEBHOOK_ID not in new_data:
             new_data[CONF_WEBHOOK_ID] = async_generate_id()
 
         hass.config_entries.async_update_entry(
-            entry, title=title, data=new_data, options=new_options, unique_id=unique_id
+            entry, data=new_data, options=new_options, unique_id=unique_id
         )
     use_webhook = hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK]
     if use_webhook is not None and use_webhook != entry.options[CONF_USE_WEBHOOK]:

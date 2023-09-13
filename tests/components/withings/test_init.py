@@ -192,7 +192,6 @@ async def test_config_flow_upgrade(
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)
 
-    assert entry.title == "henk"
     assert entry.unique_id == "123"
     assert entry.data["token"]["userid"] == 123
     assert CONF_WEBHOOK_ID in entry.data
