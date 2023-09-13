@@ -20,16 +20,6 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._token: str | None = None
 
-    async def _show_setup_form(
-        self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=_get_data_schema(),
-            errors=errors or {},
-        )
-
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by import."""
         if self._async_current_entries(True):
@@ -46,7 +36,11 @@ class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_get_data_schema(),
+                errors={},
+            )
 
         self._token = user_input.get(CONF_TOKEN, "")
 
