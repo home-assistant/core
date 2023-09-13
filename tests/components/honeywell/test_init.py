@@ -130,7 +130,15 @@ async def test_remove_stale_device(
 ) -> None:
     """Test that the stale device is removed."""
     location.devices_by_id[another_device.deviceid] = another_device
+
     config_entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("OtherDomain", "device_id")},
+    )
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
@@ -142,9 +150,12 @@ async def test_remove_stale_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 2
+    assert len(device_entry) == 3
     assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
     assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
+    assert any(
+        ("OtherDomain", "device_id") in device.identifiers for device in device_entry
+    )
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
@@ -162,5 +173,8 @@ async def test_remove_stale_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 1
+    assert len(device_entry) == 2
     assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
+    assert any(
+        ("OtherDomain", "device_id") in device.identifiers for device in device_entry
+    )
