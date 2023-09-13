@@ -884,6 +884,7 @@ async def test_stop_restart(
 
     caplog.set_level(logging.INFO)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
     hass.states.async_set(entity_id, 17)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "17"
