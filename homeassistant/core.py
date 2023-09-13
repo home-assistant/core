@@ -26,6 +26,7 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
+from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -1230,20 +1231,6 @@ class State:
     object_id: Object id of this state.
     """
 
-    __slots__ = (
-        "entity_id",
-        "state",
-        "attributes",
-        "last_changed",
-        "last_updated",
-        "context",
-        "domain",
-        "object_id",
-        "_as_dict",
-        "_as_dict_json",
-        "_as_compressed_state_json",
-    )
-
     def __init__(
         self,
         entity_id: str,
@@ -1273,8 +1260,6 @@ class State:
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
-        self._as_dict_json: str | None = None
-        self._as_compressed_state_json: str | None = None
 
     @property
     def name(self) -> str:
@@ -1309,12 +1294,12 @@ class State:
             )
         return self._as_dict
 
+    @cached_property
     def as_dict_json(self) -> str:
         """Return a JSON string of the State."""
-        if not self._as_dict_json:
-            self._as_dict_json = json_dumps(self.as_dict())
-        return self._as_dict_json
+        return json_dumps(self.as_dict())
 
+    @cached_property
     def as_compressed_state(self) -> dict[str, Any]:
         """Build a compressed dict of a state for adds.
 
@@ -1339,6 +1324,7 @@ class State:
             )
         return compressed_state
 
+    @cached_property
     def as_compressed_state_json(self) -> str:
         """Build a compressed JSON key value pair of a state for adds.
 
@@ -1346,11 +1332,7 @@ class State:
 
         It is used for sending multiple states in a single message.
         """
-        if not self._as_compressed_state_json:
-            self._as_compressed_state_json = json_dumps(
-                {self.entity_id: self.as_compressed_state()}
-            )[1:-1]
-        return self._as_compressed_state_json
+        return json_dumps({self.entity_id: self.as_compressed_state})[1:-1]
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
