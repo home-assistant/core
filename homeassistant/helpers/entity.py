@@ -4,15 +4,25 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import Enum, auto
 import functools as ft
 import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Any, Final, Literal, TypedDict, TypeVar, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NotRequired,
+    TypedDict,
+    TypeVar,
+    final,
+)
 
 import voluptuous as vol
 
@@ -34,18 +44,26 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    InvalidStateError,
+    NoEntitySpecifiedError,
+)
+from homeassistant.loader import (
+    IntegrationNotLoaded,
+    async_get_loaded_integration,
+    bind_hass,
+)
+from homeassistant.util import ensure_unique_string, slugify
 
 from . import device_registry as dr, entity_registry as er
-from .device_registry import DeviceEntryType
+from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import UNDEFINED, EventType, StateType, UndefinedType
 
 if TYPE_CHECKING:
     from .entity_platform import EntityPlatform
@@ -56,8 +74,6 @@ _T = TypeVar("_T")
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
-SOURCE_CONFIG_ENTRY = "config_entry"
-SOURCE_PLATFORM_CONFIG = "platform_config"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -72,9 +88,9 @@ def async_setup(hass: HomeAssistant) -> None:
 
 @callback
 @bind_hass
-def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources."""
-    _entity_sources: dict[str, dict[str, str]] = hass.data[DATA_ENTITY_SOURCE]
+    _entity_sources: dict[str, EntityInfo] = hass.data[DATA_ENTITY_SOURCE]
     return _entity_sources
 
 
@@ -174,26 +190,15 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.unit_of_measurement
 
 
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    configuration_url: str | None
-    connections: set[tuple[str, str]]
-    default_manufacturer: str
-    default_model: str
-    default_name: str
-    entry_type: DeviceEntryType | None
-    identifiers: set[tuple[str, str]]
-    manufacturer: str | None
-    model: str | None
-    name: str | None
-    suggested_area: str | None
-    sw_version: str | None
-    hw_version: str | None
-    via_device: tuple[str, str]
-
-
 ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
+
+
+class EntityInfo(TypedDict):
+    """Entity info."""
+
+    domain: str
+    custom_component: bool
+    config_entry: NotRequired[str]
 
 
 class EntityPlatformState(Enum):
@@ -287,7 +292,7 @@ class Entity(ABC):
 
     # Context
     _context: Context | None = None
-    _context_set: datetime | None = None
+    _context_set: float | None = None
 
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
@@ -675,7 +680,7 @@ class Entity(ABC):
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
-        self._context_set = dt_util.utcnow()
+        self._context_set = self.hass.loop.time()
 
     async def async_update_ha_state(self, force_refresh: bool = False) -> None:
         """Update Home Assistant with current state of entity.
@@ -775,30 +780,9 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
-        if self._platform_state == EntityPlatformState.REMOVED:
-            # Polling returned after the entity has already been removed
-            return
-
-        hass = self.hass
-        entity_id = self.entity_id
+    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+        """Calculate state string and attribute mapping."""
         entry = self.registry_entry
-
-        if entry and entry.disabled_by:
-            if not self._disabled_reported:
-                self._disabled_reported = True
-                _LOGGER.warning(
-                    (
-                        "Entity %s is incorrectly being triggered for updates while it"
-                        " is disabled. This is a bug in the %s integration"
-                    ),
-                    entity_id,
-                    self.platform.platform_name,
-                )
-            return
-
-        start = timer()
 
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
@@ -837,6 +821,33 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
+        return (state, attr)
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if self._platform_state == EntityPlatformState.REMOVED:
+            # Polling returned after the entity has already been removed
+            return
+
+        hass = self.hass
+        entity_id = self.entity_id
+
+        if (entry := self.registry_entry) and entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    (
+                        "Entity %s is incorrectly being triggered for updates while it"
+                        " is disabled. This is a bug in the %s integration"
+                    ),
+                    entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
+        start = timer()
+        state, attr = self._async_generate_attributes()
         end = timer()
 
         if end - start > 0.4 and not self._slow_reported:
@@ -856,12 +867,21 @@ class Entity(ABC):
 
         if (
             self._context_set is not None
-            and dt_util.utcnow() - self._context_set > self.context_recent_time
+            and hass.loop.time() - self._context_set
+            > self.context_recent_time.total_seconds()
         ):
             self._context = None
             self._context_set = None
 
-        hass.states.async_set(entity_id, state, attr, self.force_update, self._context)
+        try:
+            hass.states.async_set(
+                entity_id, state, attr, self.force_update, self._context
+            )
+        except InvalidStateError:
+            _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
+            hass.states.async_set(
+                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
+            )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
@@ -1061,18 +1081,15 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info = {
+        info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            info["source"] = SOURCE_CONFIG_ENTRY
             info["config_entry"] = self.platform.config_entry.entry_id
-        else:
-            info["source"] = SOURCE_PLATFORM_CONFIG
 
-        self.hass.data[DATA_ENTITY_SOURCE][self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = info
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
@@ -1097,7 +1114,9 @@ class Entity(ABC):
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(self, event: Event) -> None:
+    async def _async_registry_updated(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry update."""
         data = event.data
         if data["action"] == "remove":
@@ -1144,7 +1163,9 @@ class Entity(ABC):
         self._unsub_device_updates = None
 
     @callback
-    def _async_device_registry_updated(self, event: Event) -> None:
+    def _async_device_registry_updated(
+        self, event: EventType[EventDeviceRegistryUpdatedData]
+    ) -> None:
         """Handle device registry update."""
         data = event.data
 
@@ -1199,8 +1220,21 @@ class Entity(ABC):
     def _suggest_report_issue(self) -> str:
         """Suggest to report an issue."""
         report_issue = ""
+
+        integration = None
+        # The check for self.platform guards against integrations not using an
+        # EntityComponent and can be removed in HA Core 2024.1
+        if self.platform:
+            with suppress(IntegrationNotLoaded):
+                integration = async_get_loaded_integration(
+                    self.hass, self.platform.platform_name
+                )
+
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom integration author."
+            if integration and integration.issue_tracker:
+                report_issue = f"create a bug report at {integration.issue_tracker}"
+            else:
+                report_issue = "report it to the custom integration author"
         else:
             report_issue = (
                 "create a bug report at "

@@ -1,13 +1,13 @@
 """The Airzone integration."""
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
-import async_timeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,7 +35,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
+        async with timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:
                 await self.airzone.update()
             except AirzoneError as error:

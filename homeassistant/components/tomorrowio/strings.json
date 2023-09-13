@@ -62,6 +62,16 @@
           "ice_pellets": "Ice Pellets"
         }
       },
+      "primary_pollutant": {
+        "state": {
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
       "uv_index": {
         "state": {
           "low": "Low",

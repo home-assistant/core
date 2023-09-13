@@ -94,7 +94,9 @@ def _cached_event_message(event: Event) -> str:
     The IDEN_TEMPLATE is used which will be replaced
     with the actual iden in cached_event_message
     """
-    return message_to_json({"id": IDEN_TEMPLATE, "type": "event", "event": event})
+    return message_to_json(
+        {"id": IDEN_TEMPLATE, "type": "event", "event": event.as_dict()}
+    )
 
 
 def cached_state_diff_message(iden: int, event: Event) -> str:
@@ -180,7 +182,10 @@ def _state_diff(
             if old_attributes.get(key) != value:
                 additions.setdefault(COMPRESSED_STATE_ATTRIBUTES, {})[key] = value
         if removed := set(old_attributes).difference(new_attributes):
-            diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: removed}
+            # sets are not JSON serializable by default so we convert to list
+            # here if there are any values to avoid jumping into the json_encoder_default
+            # for every state diff with a removed attribute
+            diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: list(removed)}
     return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}
 
 

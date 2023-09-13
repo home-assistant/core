@@ -140,7 +140,7 @@ async def test_abort_if_authorization_timeout(
     flow.hass = hass
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_timeout.timeout",
+        "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
         side_effect=asyncio.TimeoutError,
     ):
         result = await flow.async_step_user()
@@ -331,7 +331,7 @@ async def test_abort_on_oauth_timeout_error(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_timeout.timeout",
+        "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
         side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

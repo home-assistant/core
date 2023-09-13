@@ -190,7 +190,7 @@ PLATFORM_SCHEMA_MODERN_BASIC = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
@@ -242,6 +242,7 @@ async def async_setup_entity_basic(
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _topic: dict[str, str | None]
@@ -329,6 +330,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             optimistic or topic[CONF_COLOR_MODE_STATE_TOPIC] is None
         )
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_rgb_color = optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_rgbw_color = optimistic or topic[CONF_RGBW_STATE_TOPIC] is None
         self._optimistic_rgbww_color = (
@@ -666,11 +668,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_HS_COLOR)
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.

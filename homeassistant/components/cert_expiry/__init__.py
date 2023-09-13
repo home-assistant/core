@@ -5,11 +5,7 @@ from datetime import datetime, timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -65,10 +61,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         name = f"{self.host}{display_port}"
 
         super().__init__(
-            hass,
-            _LOGGER,
-            name=name,
-            update_interval=SCAN_INTERVAL,
+            hass, _LOGGER, name=name, update_interval=SCAN_INTERVAL, always_update=False
         )
 
     async def _async_update_data(self) -> datetime | None:

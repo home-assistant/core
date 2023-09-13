@@ -3,9 +3,8 @@
   "name": "NINA",
   "codeowners": ["@DeerMaximum"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/nina",
   "iot_class": "cloud_polling",
   "loggers": ["pynina"],
-  "requirements": ["PyNINA==0.3.1"]
+  "requirements": ["PyNINA==0.3.2"]
 }

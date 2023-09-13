@@ -43,13 +43,35 @@
   },
   "entity": {
     "sensor": {
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
       "transmission_status": {
+        "name": "Status",
         "state": {
           "idle": "[%key:common::state::idle%]",
           "up_down": "Up/Down",
           "seeding": "Seeding",
           "downloading": "Downloading"
         }
+      },
+      "active_torrents": {
+        "name": "Active torrents"
+      },
+      "paused_torrents": {
+        "name": "Paused torrents"
+      },
+      "total_torrents": {
+        "name": "Total torrents"
+      },
+      "completed_torrents": {
+        "name": "Completed torrents"
+      },
+      "started_torrents": {
+        "name": "Started torrents"
       }
     }
   },

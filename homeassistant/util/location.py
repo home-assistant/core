@@ -89,7 +89,6 @@ def vincenty(
     if point1[0] == point2[0] and point1[1] == point2[1]:
         return 0.0
 
-    # pylint: disable=invalid-name
     U1 = math.atan((1 - FLATTENING) * math.tan(math.radians(point1[0])))
     U2 = math.atan((1 - FLATTENING) * math.tan(math.radians(point2[0])))
     L = math.radians(point2[1] - point1[1])

@@ -1,5 +1,5 @@
 """Support to emulate keyboard presses on host machine."""
-from pykeyboard import PyKeyboard  # pylint: disable=import-error
+from pykeyboard import PyKeyboard
 import voluptuous as vol
 
 from homeassistant.const import (

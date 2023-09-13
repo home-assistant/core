@@ -59,7 +59,7 @@ async def test_entity_registry(
 
     state = hass.states.get(PROSEGUR_ALARM_ENTITY)
 
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == f"contract {CONTRACT}"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == f"Contract {CONTRACT}"
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 
