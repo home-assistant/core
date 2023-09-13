@@ -6,7 +6,16 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Collection, Coroutine, Iterable, Mapping
+from collections import UserDict
+from collections.abc import (
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    KeysView,
+    Mapping,
+    ValuesView,
+)
 import concurrent.futures
 from contextlib import suppress
 import datetime
@@ -1413,15 +1422,59 @@ class State:
         )
 
 
+class States(UserDict[str, State]):
+    """Container for states, maps entity_id -> State.
+
+    Maintains an additional index:
+    - domain -> dict[str, State]
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._domain_index: dict[str, dict[str, State]] = {}
+
+    def values(self) -> ValuesView[State]:
+        """Return the underlying values to avoid __iter__ overhead."""
+        return self.data.values()
+
+    def __setitem__(self, key: str, entry: State) -> None:
+        """Add an item."""
+        if key in self:
+            old_entry = self[key]
+            del self._domain_index[old_entry.domain][old_entry.entity_id]
+        super().__setitem__(key, entry)
+        if not (domain_index := self._domain_index.get(entry.domain)):
+            domain_index = self._domain_index[entry.domain] = {}
+        domain_index[entry.entity_id] = entry
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        entry = self[key]
+        del self._domain_index[entry.domain][entry.entity_id]
+        super().__delitem__(key)
+
+    def domain_entity_ids(self, key: str) -> KeysView[str] | tuple[()]:
+        """Get all entity_ids for a domain."""
+        if key not in self._domain_index:
+            return ()
+        return self._domain_index[key].keys()
+
+    def domain_states(self, key: str) -> ValuesView[State] | tuple[()]:
+        """Get all states for a domain."""
+        if key not in self._domain_index:
+            return ()
+        return self._domain_index[key].values()
+
+
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_domain_index", "_reservations", "_bus", "_loop")
+    __slots__ = ("_states", "_reservations", "_bus", "_loop")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
-        self._states: dict[str, State] = {}
-        self._domain_index: dict[str, dict[str, State]] = {}
+        self._states = States()
         self._reservations: set[str] = set()
         self._bus = bus
         self._loop = loop
@@ -1445,13 +1498,12 @@ class StateMachine:
             return list(self._states)
 
         if isinstance(domain_filter, str):
-            return list(self._domain_index.get(domain_filter.lower(), ()))
+            return list(self._states.domain_entity_ids(domain_filter.lower()))
 
-        states: list[str] = []
+        entity_ids: list[str] = []
         for domain in domain_filter:
-            if domain_index := self._domain_index.get(domain):
-                states.extend(domain_index)
-        return states
+            entity_ids.extend(self._states.domain_entity_ids(domain))
+        return entity_ids
 
     @callback
     def async_entity_ids_count(
@@ -1465,9 +1517,11 @@ class StateMachine:
             return len(self._states)
 
         if isinstance(domain_filter, str):
-            return len(self._domain_index.get(domain_filter.lower(), ()))
+            return len(self._states.domain_entity_ids(domain_filter.lower()))
 
-        return sum(len(self._domain_index.get(domain, ())) for domain in domain_filter)
+        return sum(
+            len(self._states.domain_entity_ids(domain)) for domain in domain_filter
+        )
 
     def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
@@ -1487,12 +1541,11 @@ class StateMachine:
             return list(self._states.values())
 
         if isinstance(domain_filter, str):
-            return list(self._domain_index.get(domain_filter.lower(), {}).values())
+            return list(self._states.domain_states(domain_filter.lower()))
 
         states: list[State] = []
         for domain in domain_filter:
-            if domain_index := self._domain_index.get(domain):
-                states.extend(domain_index.values())
+            states.extend(self._states.domain_states(domain))
         return states
 
     def get(self, entity_id: str) -> State | None:
@@ -1534,7 +1587,6 @@ class StateMachine:
         if old_state is None:
             return False
 
-        self._domain_index[old_state.domain].pop(entity_id)
         old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
@@ -1656,10 +1708,6 @@ class StateMachine:
         if old_state is not None:
             old_state.expire()
         self._states[entity_id] = state
-        if not (domain_index := self._domain_index.get(state.domain)):
-            domain_index = {}
-            self._domain_index[state.domain] = domain_index
-        domain_index[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
