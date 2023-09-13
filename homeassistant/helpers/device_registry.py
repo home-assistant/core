@@ -392,14 +392,14 @@ class DeviceRegistryItems(UserDict[str, _EntryTypeT]):
 
     def __setitem__(self, key: str, entry: _EntryTypeT) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             for connection in old_entry.connections:
                 del self._connections[connection]
             for identifier in old_entry.identifiers:
                 del self._identifiers[identifier]
-        # type ignore linked to mypy issue: https://github.com/python/mypy/issues/13596
-        super().__setitem__(key, entry)  # type: ignore[assignment]
+        data[key] = entry
         for connection in entry.connections:
             self._connections[connection] = entry
         for identifier in entry.identifiers:
