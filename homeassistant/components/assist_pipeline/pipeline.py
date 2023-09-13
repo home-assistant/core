@@ -276,6 +276,15 @@ def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
     return pipeline_data.pipeline_store.data.values()
 
 
+async def async_update_pipeline(
+    hass: HomeAssistant, pipeline: Pipeline, updates: dict[str, Any]
+) -> None:
+    """Update a pipeline."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+
+    await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
+
+
 class PipelineEventType(StrEnum):
     """Event types emitted during a pipeline run."""
 

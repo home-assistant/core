@@ -7,6 +7,11 @@ import logging
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import STT_LANGUAGES, VoiceError
 
+from homeassistant.components.assist_pipeline import (
+    async_get_pipelines,
+    async_setup_pipeline_store,
+    async_update_pipeline,
+)
 from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
@@ -77,6 +82,19 @@ class CloudProviderEntity(SpeechToTextEntity):
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+        # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
+        # Added in 2023.10.0.
+        await async_setup_pipeline_store(self.hass)
+        pipelines = async_get_pipelines(self.hass)
+        for pipeline in pipelines:
+            if pipeline.stt_engine != "cloud":
+                continue
+            updates = pipeline.to_json() | {"stt_engine": self.entity_id}
+            updates.pop("id")
+            await async_update_pipeline(self.hass, pipeline, updates)
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
