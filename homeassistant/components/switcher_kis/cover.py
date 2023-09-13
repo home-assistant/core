@@ -45,20 +45,24 @@ async def async_setup_entry(
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
-            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
+            async_add_entities(
+                [SwitcherCoverEntity(coordinator, config_entry, COVER1_ID)]
+            )
         elif (
             coordinator.data.device_type.category
             == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
         ):
-            async_add_entities([SwitcherCoverEntity(coordinator, COVER1_ID)])
+            async_add_entities(
+                [SwitcherCoverEntity(coordinator, config_entry, COVER1_ID)]
+            )
         elif (
             coordinator.data.device_type.category
             == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
         ):
             async_add_entities(
                 [
-                    SwitcherCoverEntity(coordinator, COVER1_ID),
-                    SwitcherCoverEntity(coordinator, COVER2_ID),
+                    SwitcherCoverEntity(coordinator, config_entry, COVER1_ID),
+                    SwitcherCoverEntity(coordinator, config_entry, COVER2_ID),
                 ]
             )
 
@@ -87,11 +91,15 @@ class SwitcherCoverEntity(
         return self._cover_id.capitalize()
 
     def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, cover_id: str
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        cover_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._token = str(coordinator.config_entry.data.get(CONF_TOKEN))
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
         self._cover_id = cover_id
 
         self._attr_unique_id = (
@@ -112,7 +120,7 @@ class SwitcherCoverEntity(
     def _update_data(self) -> None:
         """Update data from device."""
         data: SwitcherShutter = self.coordinator.data
-        self._token = str(self.coordinator.config_entry.data.get(CONF_TOKEN))
+        self._token = self._config.options.get(CONF_TOKEN, "")
         if not (
             data.device_type.category == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
             and self._cover_id == COVER2_ID

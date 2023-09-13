@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitcherDataUpdateCoordinator
-from .const import SIGNAL_DEVICE_ADD
+from .const import CONF_TOKEN, SIGNAL_DEVICE_ADD
 
 POWER_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -66,12 +66,12 @@ async def async_setup_entry(
         """Add sensors from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             async_add_entities(
-                SwitcherSensorEntity(coordinator, description)
+                SwitcherSensorEntity(coordinator, config_entry, description)
                 for description in POWER_PLUG_SENSORS
             )
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities(
-                SwitcherSensorEntity(coordinator, description)
+                SwitcherSensorEntity(coordinator, config_entry, description)
                 for description in WATER_HEATER_SENSORS
             )
 
@@ -90,10 +90,13 @@ class SwitcherSensorEntity(
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
         self.entity_description = description
 
         self._attr_unique_id = (
@@ -107,3 +110,8 @@ class SwitcherSensorEntity(
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return getattr(self.coordinator.data, self.entity_description.key)  # type: ignore[no-any-return]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._token = self._config.options.get(CONF_TOKEN, "")

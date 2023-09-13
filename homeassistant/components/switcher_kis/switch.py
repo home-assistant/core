@@ -80,17 +80,25 @@ async def async_setup_entry(
     def async_add_switch(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add switch from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
-            async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
+            async_add_entities(
+                [SwitcherPowerPlugSwitchEntity(coordinator, config_entry)]
+            )
         elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
-            async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
+            async_add_entities(
+                [SwitcherWaterHeaterSwitchEntity(coordinator, config_entry)]
+            )
         elif (
             coordinator.data.device_type.category
             == DeviceCategory.SHUTTER_SINGLE_LIGHT_DUAL
         ):
             async_add_entities(
                 [
-                    SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT1_ID),
-                    SwitcherShutterSingleLightDualSwitchEntity(coordinator, LIGHT2_ID),
+                    SwitcherShutterSingleLightDualSwitchEntity(
+                        coordinator, config_entry, LIGHT1_ID
+                    ),
+                    SwitcherShutterSingleLightDualSwitchEntity(
+                        coordinator, config_entry, LIGHT2_ID
+                    ),
                 ]
             )
         elif (
@@ -98,7 +106,11 @@ async def async_setup_entry(
             == DeviceCategory.SHUTTER_DUAL_LIGHT_SINGLE
         ):
             async_add_entities(
-                [SwitcherShutterDualLightSingleSwitchEntity(coordinator, LIGHT1_ID)]
+                [
+                    SwitcherShutterDualLightSingleSwitchEntity(
+                        coordinator, config_entry, LIGHT1_ID
+                    )
+                ]
             )
 
     config_entry.async_on_unload(
@@ -114,10 +126,14 @@ class SwitcherBaseSwitchEntity(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: SwitcherDataUpdateCoordinator, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
 
         # Entity class attributes
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
@@ -129,6 +145,7 @@ class SwitcherBaseSwitchEntity(
     def _handle_coordinator_update(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
+        self._token = self._config.options.get(CONF_TOKEN, "")
         self.async_write_ha_state()
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
@@ -207,12 +224,16 @@ class SwitcherBaselLightEntity(
         return self._light_id.capitalize()
 
     def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, light_id: str
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        light_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None
-        self._token = str(coordinator.config_entry.data.get(CONF_TOKEN))
+        self._config = config_entry
+        self._token: str = self._config.options.get(CONF_TOKEN, "")
         self._light_id = light_id
 
         # Entity class attributes
@@ -227,7 +248,7 @@ class SwitcherBaselLightEntity(
     def _handle_coordinator_update(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
-        self._token = str(self.coordinator.config_entry.data.get(CONF_TOKEN))
+        self._token = self._config.options.get(CONF_TOKEN, "")
         self.async_write_ha_state()
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
