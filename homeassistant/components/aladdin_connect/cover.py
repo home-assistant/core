@@ -51,7 +51,7 @@ def remove_stale_devices(
 
     for device_entry in device_entries:
         device_id: str | None = None
-        dont_remove: bool | None = None
+        dont_remove: bool = False
 
         for identifier in device_entry.identifiers:
             if identifier[0] != DOMAIN:
@@ -61,7 +61,7 @@ def remove_stale_devices(
             device_id = identifier[1]
             break
 
-        if dont_remove is not None:
+        if dont_remove is True:
             continue
 
         if device_id is None or device_id not in all_device_ids:
