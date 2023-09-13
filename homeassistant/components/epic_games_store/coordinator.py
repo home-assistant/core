@@ -93,8 +93,8 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
 
             return_data["free" if game_free else "discount"].append(
                 {
-                    "title": game_title,
-                    "description": game_description,
+                    "title": game_title.replace("\xa0", " "),
+                    "description": game_description.replace("\xa0", " "),
                     "released_at": game_released_at,
                     "original_price": game_price.replace("\xa0", " "),
                     "publisher": game_publisher,
@@ -116,7 +116,6 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
 
 def is_free_game(game: dict[str, Any]) -> bool:
     """Return if the game is free or will be free."""
-    _LOGGER.warning(game)
     return (
         # Current free game(s)
         game["promotions"]["promotionalOffers"]
