@@ -21,7 +21,6 @@ class WithingsFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = DOMAIN
-    VERSION = 2
 
     reauth_entry: ConfigEntry | None = None
 

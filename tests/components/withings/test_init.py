@@ -162,7 +162,6 @@ async def test_requests(
     [
         MockConfigEntry(
             domain=DOMAIN,
-            version=1,
             unique_id="123",
             data={
                 "token": {"userid": 123},
@@ -173,7 +172,6 @@ async def test_requests(
         ),
         MockConfigEntry(
             domain=DOMAIN,
-            version=1,
             unique_id="123",
             data={
                 "token": {"userid": 123},
@@ -183,10 +181,10 @@ async def test_requests(
         ),
     ],
 )
-async def test_v1_v2_config_flow_migration(
+async def test_config_flow_upgrade(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test config flow migration."""
+    """Test config flow upgrade."""
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -194,7 +192,6 @@ async def test_v1_v2_config_flow_migration(
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)
 
-    assert entry.version == 2
     assert entry.title == "henk"
     assert entry.unique_id == "123"
     assert entry.data["token"]["userid"] == 123

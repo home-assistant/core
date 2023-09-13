@@ -83,7 +83,6 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Create Withings entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
-        version=2,
         title=TITLE,
         unique_id=str(USER_ID),
         data={
