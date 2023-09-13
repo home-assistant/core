@@ -20,7 +20,6 @@ SERVICE_SCHEMA_START_IRRIGATION = {
     vol.Required("duration"): cv.positive_int,
 }
 SERVICE_STOP_IRRIGATION = "stop_irrigation"
-SERVICE_SCHEMA_STOP_IRRIGATION = {}
 
 
 async def async_setup_entry(
@@ -42,7 +41,7 @@ async def async_setup_entry(
         "async_turn_on",
     )
     platform.async_register_entity_service(
-        SERVICE_STOP_IRRIGATION, SERVICE_SCHEMA_STOP_IRRIGATION, "async_turn_off"
+        SERVICE_STOP_IRRIGATION, {}, "async_turn_off"
     )
 
 
