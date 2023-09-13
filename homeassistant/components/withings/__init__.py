@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_USE_WEBHOOK not in entry.options:
         new_data = entry.data.copy()
         new_options = {
-            CONF_USE_WEBHOOK: new_data.pop(CONF_USE_WEBHOOK, False),
+            CONF_USE_WEBHOOK: new_data.get(CONF_USE_WEBHOOK, False),
         }
         title = new_data.pop("profile")
         unique_id = str(entry.unique_id)
