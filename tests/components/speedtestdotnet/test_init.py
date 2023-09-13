@@ -31,7 +31,7 @@ async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_entry_lifecucle(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_entry_lifecycle(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test the SpeedTestDotNet entry lifecycle."""
     entry = MockConfigEntry(
         domain=DOMAIN,
