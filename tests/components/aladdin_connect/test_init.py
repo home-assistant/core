@@ -165,7 +165,7 @@ async def test_stale_device_removal(
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={("OtherDomain", "device_id")},
+        identifiers={("OtherDomain", "533255-1")},
     )
 
     with patch(
@@ -187,7 +187,7 @@ async def test_stale_device_removal(
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
     assert any((DOMAIN, "533255-2") in device.identifiers for device in device_entry)
     assert any(
-        ("OtherDomain", "device_id") in device.identifiers for device in device_entry
+        ("OtherDomain", "533255-1") in device.identifiers for device in device_entry
     )
 
     assert await config_entry.async_unload(hass)
@@ -211,5 +211,5 @@ async def test_stale_device_removal(
     assert len(device_entry) == 2
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
     assert any(
-        ("OtherDomain", "device_id") in device.identifiers for device in device_entry
+        ("OtherDomain", "533255-1") in device.identifiers for device in device_entry
     )
