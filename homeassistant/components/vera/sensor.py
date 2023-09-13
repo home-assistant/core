@@ -55,35 +55,22 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         self.last_changed_time = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this entity."""
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
-            return SensorDeviceClass.TEMPERATURE
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+            self._attr_device_class = SensorDeviceClass.ILLUMINANCE
+        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+            self._attr_device_class = SensorDeviceClass.HUMIDITY
+        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+            self._attr_device_class = SensorDeviceClass.POWER
         if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return SensorDeviceClass.ILLUMINANCE
-        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
-            return SensorDeviceClass.HUMIDITY
-        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            return SensorDeviceClass.POWER
-        return None
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of this entity, if any."""
-
-        if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
-            return self._temperature_units
-        if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return LIGHT_LUX
-        if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
-            return "level"
-        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
-            return PERCENTAGE
-        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
-            return UnitOfPower.WATT
-        return None
+            self._attr_native_unit_of_measurement = LIGHT_LUX
+        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+            self._attr_native_unit_of_measurement = "level"
+        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+            self._attr_native_unit_of_measurement = PERCENTAGE
+        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
 
     def update(self) -> None:
         """Update the state."""
@@ -94,9 +81,9 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             vera_temp_units = self.vera_device.vera_controller.temperature_units
 
             if vera_temp_units == "F":
-                self._temperature_units = UnitOfTemperature.FAHRENHEIT
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:
-                self._temperature_units = UnitOfTemperature.CELSIUS
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             self._attr_native_value = self.vera_device.light
