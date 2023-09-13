@@ -961,7 +961,7 @@ motioneye-client==0.3.14
 mullvad-api==1.0.0
 
 # homeassistant.components.tts
-mutagen==1.46.0
+mutagen==1.47.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
