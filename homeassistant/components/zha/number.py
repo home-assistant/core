@@ -22,7 +22,6 @@ from .core.const import (
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_THERMOSTAT,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -964,6 +963,7 @@ class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
     _attr_multiplier: float = 0.01
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
     """Min or Max Heat Setpoint setting on thermostats."""
 
