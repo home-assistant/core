@@ -450,11 +450,12 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
 
     def __setitem__(self, key: str, entry: RegistryEntry) -> None:
         """Add an item."""
-        if key in self:
-            old_entry = self[key]
+        data = self.data
+        if key in data:
+            old_entry = data[key]
             del self._entry_ids[old_entry.id]
             del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
-        super().__setitem__(key, entry)
+        data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
 
