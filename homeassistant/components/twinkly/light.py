@@ -140,7 +140,9 @@ class TwinklyLight(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
-        if AwesomeVersion(self._software_version) < AwesomeVersion(MIN_EFFECT_VERSION):
+        if self._software_version and AwesomeVersion(
+            self._software_version
+        ) < AwesomeVersion(MIN_EFFECT_VERSION):
             self._attr_supported_features = (
                 self.supported_features & ~LightEntityFeature.EFFECT
             )
