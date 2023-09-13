@@ -96,8 +96,10 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "scope": ",".join(scopes),
             },
             "profile": TITLE,
-            "use_webhook": True,
             "webhook_id": WEBHOOK_ID,
+        },
+        options={
+            "use_webhook": True,
         },
     )
 
