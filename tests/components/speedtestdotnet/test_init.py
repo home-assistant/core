@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 
 import speedtest
 
-from homeassistant.components.speedtestdotnet.const import DOMAIN
+from homeassistant.components.speedtestdotnet.const import (
+    CONF_SERVER_ID,
+    CONF_SERVER_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -27,15 +31,23 @@ async def test_setup_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test removing SpeedTestDotNet."""
+async def test_entry_lifecucle(hass: HomeAssistant, mock_api: MagicMock) -> None:
+    """Test the SpeedTestDotNet entry lifecycle."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        data={},
+        options={
+            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
+            CONF_SERVER_ID: "1",
+        },
     )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert hass.data[DOMAIN]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
