@@ -140,12 +140,13 @@ class TwinklyLight(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""
-        if self._software_version and AwesomeVersion(
-            self._software_version
-        ) < AwesomeVersion(MIN_EFFECT_VERSION):
-            self._attr_supported_features = (
-                self.supported_features & ~LightEntityFeature.EFFECT
-            )
+        if self._software_version:
+            if AwesomeVersion(self._software_version) < AwesomeVersion(
+                MIN_EFFECT_VERSION
+            ):
+                self._attr_supported_features = (
+                    self.supported_features & ~LightEntityFeature.EFFECT
+                )
             device_registry = dr.async_get(self.hass)
             device_entry = device_registry.async_get_device(
                 {(DOMAIN, self._attr_unique_id)}, set()
