@@ -46,7 +46,7 @@ class BaseWithingsSensor(Entity):
         )
         self._state_data: Any | None = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(data_manager.user_id))},
+            identifiers={(DOMAIN, str(data_manager.user_id))}, manufacturer="Withings"
         )
 
     @property
