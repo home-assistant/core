@@ -197,12 +197,11 @@ class LightTemplate(TemplateEntity, LightEntity):
         if len(self._supported_color_modes) == 1:
             self._fixed_color_mode = next(iter(self._supported_color_modes))
 
-        supported_features = LightEntityFeature(0)
+        self._attr_supported_features = LightEntityFeature(0)
         if self._effect_script is not None:
-            supported_features |= LightEntityFeature.EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
-            supported_features |= LightEntityFeature.TRANSITION
-        self._attr_supported_features = supported_features
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @property
     def brightness(self) -> int | None:
@@ -641,4 +640,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if render in (None, "None", ""):
             self._supports_transition = False
             return
+        self._attr_supported_features &= LightEntityFeature.EFFECT
         self._supports_transition = bool(render)
+        if self._supports_transition:
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
