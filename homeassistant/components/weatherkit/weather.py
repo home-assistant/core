@@ -5,6 +5,18 @@ from typing import Any, cast
 from apple_weatherkit import DataSetType
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
     Forecast,
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
@@ -40,71 +52,71 @@ async def async_setup_entry(
 
 
 condition_code_to_hass = {
-    "BlowingDust": "windy",
-    "Clear": "sunny",
-    "Cloudy": "cloudy",
-    "Foggy": "fog",
-    "Haze": "fog",
-    "MostlyClear": "sunny",
-    "MostlyCloudy": "cloudy",
-    "PartlyCloudy": "partlycloudy",
-    "Smoky": "fog",
-    "Breezy": "windy",
-    "Windy": "windy",
-    "Drizzle": "rainy",
-    "HeavyRain": "pouring",
-    "IsolatedThunderstorms": "lightning",
-    "Rain": "rainy",
-    "SunShowers": "rainy",
-    "ScatteredThunderstorms": "lightning",
-    "StrongStorms": "lightning",
-    "Thunderstorms": "lightning",
-    "Frigid": "snowy",
-    "Hail": "hail",
-    "Hot": "sunny",
-    "Flurries": "snowy",
-    "Sleet": "snowy",
-    "Snow": "snowy",
-    "SunFlurries": "snowy",
-    "WintryMix": "snowy",
-    "Blizzard": "snowy",
-    "BlowingSnow": "snowy",
-    "FreezingDrizzle": "snowy-rainy",
-    "FreezingRain": "snowy-rainy",
-    "HeavySnow": "snowy",
-    "Hurricane": "exceptional",
-    "TropicalStorm": "exceptional",
+    "BlowingDust": ATTR_CONDITION_WINDY,
+    "Clear": ATTR_CONDITION_SUNNY,
+    "Cloudy": ATTR_CONDITION_CLOUDY,
+    "Foggy": ATTR_CONDITION_FOG,
+    "Haze": ATTR_CONDITION_FOG,
+    "MostlyClear": ATTR_CONDITION_SUNNY,
+    "MostlyCloudy": ATTR_CONDITION_CLOUDY,
+    "PartlyCloudy": ATTR_CONDITION_PARTLYCLOUDY,
+    "Smoky": ATTR_CONDITION_FOG,
+    "Breezy": ATTR_CONDITION_WINDY,
+    "Windy": ATTR_CONDITION_WINDY,
+    "Drizzle": ATTR_CONDITION_RAINY,
+    "HeavyRain": ATTR_CONDITION_POURING,
+    "IsolatedThunderstorms": ATTR_CONDITION_LIGHTNING,
+    "Rain": ATTR_CONDITION_RAINY,
+    "SunShowers": ATTR_CONDITION_RAINY,
+    "ScatteredThunderstorms": ATTR_CONDITION_LIGHTNING,
+    "StrongStorms": ATTR_CONDITION_LIGHTNING,
+    "Thunderstorms": ATTR_CONDITION_LIGHTNING,
+    "Frigid": ATTR_CONDITION_SNOWY,
+    "Hail": ATTR_CONDITION_HAIL,
+    "Hot": ATTR_CONDITION_SUNNY,
+    "Flurries": ATTR_CONDITION_SNOWY,
+    "Sleet": ATTR_CONDITION_SNOWY,
+    "Snow": ATTR_CONDITION_SNOWY,
+    "SunFlurries": ATTR_CONDITION_SNOWY,
+    "WintryMix": ATTR_CONDITION_SNOWY,
+    "Blizzard": ATTR_CONDITION_SNOWY,
+    "BlowingSnow": ATTR_CONDITION_SNOWY,
+    "FreezingDrizzle": ATTR_CONDITION_SNOWY_RAINY,
+    "FreezingRain": ATTR_CONDITION_SNOWY_RAINY,
+    "HeavySnow": ATTR_CONDITION_SNOWY,
+    "Hurricane": ATTR_CONDITION_EXCEPTIONAL,
+    "TropicalStorm": ATTR_CONDITION_EXCEPTIONAL,
 }
 
 
-def _map_daily_forecast(forecast) -> Forecast:
+def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
     return {
-        "datetime": forecast.get("forecastStart"),
-        "condition": condition_code_to_hass[forecast.get("conditionCode")],
-        "native_temperature": forecast.get("temperatureMax"),
-        "native_templow": forecast.get("temperatureMin"),
-        "native_precipitation": forecast.get("precipitationAmount"),
-        "precipitation_probability": forecast.get("precipitationChance") * 100,
-        "uv_index": forecast.get("maxUvIndex"),
+        "datetime": forecast["forecastStart"],
+        "condition": condition_code_to_hass[forecast["conditionCode"]],
+        "native_temperature": forecast["temperatureMax"],
+        "native_templow": forecast["temperatureMin"],
+        "native_precipitation": forecast["precipitationAmount"],
+        "precipitation_probability": forecast["precipitationChance"] * 100,
+        "uv_index": forecast["maxUvIndex"],
     }
 
 
-def _map_hourly_forecast(forecast) -> Forecast:
+def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
     return {
-        "datetime": forecast.get("forecastStart"),
-        "condition": condition_code_to_hass[forecast.get("conditionCode")],
-        "native_temperature": forecast.get("temperature"),
-        "native_apparent_temperature": forecast.get("temperatureApparent"),
+        "datetime": forecast["forecastStart"],
+        "condition": condition_code_to_hass[forecast["conditionCode"]],
+        "native_temperature": forecast["temperature"],
+        "native_apparent_temperature": forecast["temperatureApparent"],
         "native_dew_point": forecast.get("temperatureDewPoint"),
-        "native_pressure": forecast.get("pressure"),
+        "native_pressure": forecast["pressure"],
         "native_wind_gust_speed": forecast.get("windGust"),
-        "native_wind_speed": forecast.get("windSpeed"),
+        "native_wind_speed": forecast["windSpeed"],
         "wind_bearing": forecast.get("windDirection"),
-        "humidity": forecast.get("humidity") * 100,
+        "humidity": forecast["humidity"] * 100,
         "native_precipitation": forecast.get("precipitationAmount"),
-        "precipitation_probability": forecast.get("precipitationChance") * 100,
-        "cloud_coverage": forecast.get("cloudCover") * 100,
-        "uv_index": forecast.get("uvIndex"),
+        "precipitation_probability": forecast["precipitationChance"] * 100,
+        "cloud_coverage": forecast["cloudCover"] * 100,
+        "uv_index": forecast["uvIndex"],
     }
 
 
@@ -142,10 +154,11 @@ class WeatherKitWeather(
     @property
     def supported_features(self) -> WeatherEntityFeature:
         """Determine supported features based on available data sets reported by WeatherKit."""
-        if not self.coordinator.supported_data_sets:
-            return WeatherEntityFeature(0)
-
         features = WeatherEntityFeature(0)
+
+        if not self.coordinator.supported_data_sets:
+            return features
+
         if DataSetType.DAILY_FORECAST in self.coordinator.supported_data_sets:
             features |= WeatherEntityFeature.FORECAST_DAILY
         if DataSetType.HOURLY_FORECAST in self.coordinator.supported_data_sets:

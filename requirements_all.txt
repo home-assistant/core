@@ -424,7 +424,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.0.1
+apple_weatherkit==1.0.2
 
 # homeassistant.components.apprise
 apprise==1.4.5
@@ -1675,7 +1675,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.11.2
+pyenphase==1.11.3
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2163,7 +2163,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.33.2
+python-roborock==0.34.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2379,7 +2379,7 @@ sense-energy==0.12.1
 sense_energy==0.12.1
 
 # homeassistant.components.sensirion_ble
-sensirion-ble==0.1.0
+sensirion-ble==0.1.1
 
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
