@@ -215,17 +215,22 @@ class AqualinkEntity(Entity):
     def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
+        self._attr_unique_id = f"{self.dev.system.serial}_{self.dev.name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer=dev.manufacturer,
+            model=dev.model,
+            # Instead of setting the device name to the entity name, iaqualink
+            # should be updated to set has_entity_name = True
+            name=cast(str | None, self.name),
+            via_device=(DOMAIN, dev.system.serial),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return f"{self.dev.system.serial}_{self.dev.name}"
 
     @property
     def assumed_state(self) -> bool:
@@ -236,16 +241,3 @@ class AqualinkEntity(Entity):
     def available(self) -> bool:
         """Return whether the device is available or not."""
         return self.dev.system.online is True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self.dev.manufacturer,
-            model=self.dev.model,
-            # Instead of setting the device name to the entity name, iaqualink
-            # should be updated to set has_entity_name = True
-            name=cast(str | None, self.name),
-            via_device=(DOMAIN, self.dev.system.serial),
-        )

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from iaqualink.device import AqualinkLight
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -37,10 +39,20 @@ async def async_setup_entry(
 class HassAqualinkLight(AqualinkEntity, LightEntity):
     """Representation of a light."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the light."""
-        return self.dev.label
+    def __init__(self, dev: AqualinkLight) -> None:
+        """Initialize AquaLink light."""
+        AqualinkEntity.__init__(self, dev)
+        self._attr_name = dev.label
+        self._attr_effect_list = (
+            list(dev.supported_effects) if dev.supports_effect else []
+        )
+        self._attr_color_mode = (
+            ColorMode.BRIGHTNESS if dev.supports_brightness else ColorMode.ONOFF
+        )
+        self._attr_supported_color_modes = {self._attr_color_mode}
+        self._attr_supported_features = (
+            LightEntityFeature.EFFECT if dev.supports_effect else LightEntityFeature(0)
+        )
 
     @property
     def is_on(self) -> bool:
@@ -81,28 +93,3 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
     def effect(self) -> str:
         """Return the current light effect if supported."""
         return self.dev.effect
-
-    @property
-    def effect_list(self) -> list[str]:
-        """Return supported light effects."""
-        return list(self.dev.supported_effects)
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        if self.dev.supports_brightness:
-            return ColorMode.BRIGHTNESS
-        return ColorMode.ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
-        return {self.color_mode}
-
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Return the list of features supported by the light."""
-        if self.dev.supports_effect:
-            return LightEntityFeature.EFFECT
-
-        return LightEntityFeature(0)
