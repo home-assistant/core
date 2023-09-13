@@ -1139,6 +1139,7 @@ omit =
     homeassistant/components/smarty/*
     homeassistant/components/sms/__init__.py
     homeassistant/components/sms/const.py
+    homeassistant/components/sms/coordinator.py
     homeassistant/components/sms/gateway.py
     homeassistant/components/sms/notify.py
     homeassistant/components/sms/sensor.py
