@@ -43,16 +43,14 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         """Initialize AquaLink light."""
         super().__init__(dev)
         self._attr_name = dev.label
-        self._attr_effect_list = (
-            list(dev.supported_effects) if dev.supports_effect else []
-        )
-        self._attr_color_mode = (
-            ColorMode.BRIGHTNESS if dev.supports_brightness else ColorMode.ONOFF
-        )
-        self._attr_supported_color_modes = {self._attr_color_mode}
-        self._attr_supported_features = (
-            LightEntityFeature.EFFECT if dev.supports_effect else LightEntityFeature(0)
-        )
+        if dev.supports_effect:
+            self._attr_effect_list = list(dev.supported_effects)
+            self._attr_supported_features = LightEntityFeature.EFFECT
+        color_mode = ColorMode.ONOFF
+        if dev.supports_brightness:
+            color_mode = ColorMode.BRIGHTNESS
+        self._attr_color_mode = color_mode
+        self._attr_supported_color_modes = {color_mode}
 
     @property
     def is_on(self) -> bool:
