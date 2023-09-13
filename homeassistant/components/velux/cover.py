@@ -38,7 +38,7 @@ async def async_setup_platform(
 
 class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
-    
+
     _is_blind = False
 
     def __init__(self, node: OpeningDevice) -> None:
