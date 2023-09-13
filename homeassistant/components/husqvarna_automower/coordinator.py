@@ -3,9 +3,8 @@ import logging
 
 import aioautomower
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -17,7 +16,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Husqvarna data."""
 
     def __init__(
-        self, hass: HomeAssistant, implementation, access_token, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        implementation,
+        session: OAuth2Session,
     ) -> None:
         """Initialize data updater."""
         super().__init__(
@@ -26,13 +28,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
         )
         self.session = aioautomower.AutomowerSession(
-            implementation.client_id, access_token, low_energy=False
-        )
-        self.session.register_token_callback(
-            lambda token: hass.config_entries.async_update_entry(
-                entry,
-                data={"auth_implementation": DOMAIN, CONF_TOKEN: token},
-            )
+            implementation.client_id,
+            session.token,
+            low_energy=False,
+            handle_token=False,
         )
 
     async def _async_update_data(self) -> None:

@@ -3,13 +3,15 @@
 import contextlib
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    async_get_config_entry_implementation,
-)
+from aiohttp import ClientError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+
+from . import api
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 
@@ -24,13 +26,23 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    implementation = await async_get_config_entry_implementation(hass, entry)
-    access_token = entry.data.get(CONF_TOKEN)
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass), session
+    )
+    try:
+        await session.async_ensure_token_valid()
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
     coordinator = AutomowerDataUpdateCoordinator(
         hass,
         implementation,
-        access_token,
-        entry=entry,
+        session,
     )
     await coordinator.async_config_entry_first_refresh()
 
