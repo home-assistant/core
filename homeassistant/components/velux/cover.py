@@ -38,23 +38,25 @@ async def async_setup_platform(
 
 class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
+    
+    _is_blind = False
 
     def __init__(self, node: OpeningDevice) -> None:
-        """Initialize VeluxCOver."""
+        """Initialize VeluxCover."""
         super().__init__(node)
-        self._is_blind = isinstance(node, Blind)
         self._attr_device_class = CoverDeviceClass.WINDOW
-        if isinstance(self.node, Awning):
+        if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
-        if isinstance(self.node, Blind):
+        if isinstance(node, Blind):
             self._attr_device_class = CoverDeviceClass.BLIND
-        if isinstance(self.node, GarageDoor):
+            self._is_blind = True
+        if isinstance(node, GarageDoor):
             self._attr_device_class = CoverDeviceClass.GARAGE
-        if isinstance(self.node, Gate):
+        if isinstance(node, Gate):
             self._attr_device_class = CoverDeviceClass.GATE
-        if isinstance(self.node, RollerShutter):
+        if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if isinstance(self.node, Window):
+        if isinstance(node, Window):
             self._attr_device_class = CoverDeviceClass.WINDOW
 
     @property
