@@ -1,27 +1,29 @@
 """Fixtures for tests."""
-from collections.abc import Awaitable, Callable, Coroutine
+from datetime import timedelta
 import time
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from withings_api import (
+    MeasureGetMeasResponse,
+    NotifyListResponse,
+    SleepGetSummaryResponse,
+    UserGetDeviceResponse,
+)
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.withings.common import ConfigEntryWithingsApi
 from homeassistant.components.withings.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockWithings
 from .common import ComponentFactory
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-ComponentSetup = Callable[[], Awaitable[MockWithings]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -100,33 +102,40 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     )
 
 
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Coroutine[Any, Any, MockWithings]]:
-    """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
+@pytest.fixture(name="withings")
+def mock_withings():
+    """Mock withings."""
 
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
+    mock = AsyncMock(spec=ConfigEntryWithingsApi)
+    mock.user_get_device.return_value = UserGetDeviceResponse(
+        **load_json_object_fixture("withings/get_device.json")
     )
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
+    mock.measure_get_meas.return_value = MeasureGetMeasResponse(
+        **load_json_object_fixture("withings/get_meas.json")
+    )
+    mock.sleep_get_summary.return_value = SleepGetSummaryResponse(
+        **load_json_object_fixture("withings/get_sleep.json")
+    )
+    mock.notify_list.return_value = NotifyListResponse(
+        **load_json_object_fixture("withings/notify_list.json")
     )
 
-    async def func() -> MockWithings:
-        mock = MockWithings()
-        with patch(
-            "homeassistant.components.withings.common.ConfigEntryWithingsApi",
-            return_value=mock,
-        ):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
-        return mock
+    with patch(
+        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
+        return_value=mock,
+    ):
+        yield mock
 
-    return func
+
+@pytest.fixture(name="disable_webhook_delay")
+def disable_webhook_delay():
+    """Disable webhook delay."""
+
+    mock = AsyncMock()
+    with patch(
+        "homeassistant.components.withings.common.SUBSCRIBE_DELAY", timedelta(seconds=0)
+    ), patch(
+        "homeassistant.components.withings.common.UNSUBSCRIBE_DELAY",
+        timedelta(seconds=0),
+    ):
+        yield mock

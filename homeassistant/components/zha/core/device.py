@@ -25,6 +25,7 @@ from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -420,7 +421,9 @@ class ZHADevice(LogMixin):
         """Update device sw version."""
         if self.device_id is None:
             return
-        self._zha_gateway.ha_device_registry.async_update_device(
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
             self.device_id, sw_version=f"0x{sw_version:08x}"
         )
 
@@ -658,7 +661,8 @@ class ZHADevice(LogMixin):
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names
 
-        reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
             device_info["device_reg_id"] = reg_device.id
