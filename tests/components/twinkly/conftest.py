@@ -20,7 +20,7 @@ TITLE = "Twinkly"
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Create YouTube entry in Home Assistant."""
+    """Create Twinkly entry in Home Assistant."""
     client = ClientMock()
     return MockConfigEntry(
         domain=DOMAIN,
@@ -44,7 +44,6 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    # assert await async_setup_component(hass, "application_credentials", {})
     async def func() -> ClientMock:
         mock = ClientMock()
         with patch("homeassistant.components.twinkly.Twinkly", return_value=mock):

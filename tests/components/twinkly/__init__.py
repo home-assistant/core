@@ -28,7 +28,6 @@ class ClientMock:
         self.mode = None
         self.version = "2.8.10"
 
-        # self.id = str(uuid4())
         self.id = TEST_UID
         self.device_info = {
             "uuid": self.id,
