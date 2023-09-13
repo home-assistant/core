@@ -45,16 +45,24 @@ def remove_stale_devices(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids: list = []
+    all_device_ids: set = set()
     for door in devices:
-        all_device_ids.append(f"{door.get('device_id')}-{door.get('door_number')}")
+        all_device_ids.add(f"{door.get('device_id')}-{door.get('door_number')}")
 
     for device_entry in device_entries:
         device_id: str | None = None
+        dont_remove: bool | None = None
 
         for identifier in device_entry.identifiers:
+            if identifier[0] != DOMAIN:
+                dont_remove = True
+                continue
+
             device_id = identifier[1]
             break
+
+        if dont_remove is not None:
+            continue
 
         if device_id is None or device_id not in all_device_ids:
             # If device_id is None an invalid device entry was found for this config entry.
