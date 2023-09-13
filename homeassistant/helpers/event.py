@@ -75,6 +75,8 @@ _LOGGER = logging.getLogger(__name__)
 RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
+CLOCK_RESOLUTION = time.get_clock_info("monotonic").resolution
+
 _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
 _P = ParamSpec("_P")
 
@@ -1495,7 +1497,7 @@ def async_track_time_interval(
     """Add a listener that fires repetitively at every timedelta interval."""
     remove: CALLBACK_TYPE
     interval_listener_job: HassJob[[datetime], None]
-    interval_seconds = interval.total_seconds()
+    interval_seconds = interval.total_seconds() + CLOCK_RESOLUTION
 
     job = HassJob(
         action, f"track time interval {interval}", cancel_on_shutdown=cancel_on_shutdown
