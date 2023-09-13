@@ -40,7 +40,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -571,8 +570,7 @@ class StateAttributes(Base):
         exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
         if base_platform_attrs := exclude_attrs_by_domain.get(domain):
             exclude_attrs |= base_platform_attrs
-        entity_info: EntityInfo | None = event.data.get("entity_info")
-        if entity_info:
+        if entity_info := state.entity_info:
             if entity_attrs := entity_info["recorder_excluded_attributes"]:
                 exclude_attrs |= entity_attrs
             if integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"]):
