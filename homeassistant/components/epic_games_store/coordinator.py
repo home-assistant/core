@@ -42,7 +42,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
         except Exception as error:
             raise UpdateFailed(error) from error
 
-        _LOGGER.error(data)
+        _LOGGER.debug(data)
 
         discount_games = filter(
             lambda game:
@@ -60,35 +60,6 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
             data["data"]["Catalog"]["searchStore"]["elements"],
         )
 
-        # free_games = filter(
-        #     lambda game: (
-        #         (
-        #             # Current free game(s)
-        #             game["promotions"]["promotionalOffers"][0]["promotionalOffers"][0][
-        #                 "discountSetting"
-        #             ]["discountPercentage"]
-        #             == 0
-        #             and
-        #             # Checking current price, maybe not necessary
-        #             game["price"]["totalPrice"]["discountPrice"] == 0
-        #         )
-        #         or (
-        #             # Upcoming free game(s)
-        #             game["promotions"]["upcomingPromotionalOffers"][0][
-        #                 "promotionalOffers"
-        #             ][0]["discountSetting"]["discountPercentage"]
-        #             == 0
-        #         )
-        #     ),
-        #     list(discount_games),
-        # )
-
-        _LOGGER.debug(discount_games)
-        # _LOGGER.info(len(data["data"]["Catalog"]["searchStore"]["elements"]))
-        # _LOGGER.info(len(list(discount_games)))
-        # _LOGGER.info(len(list(free_games)))
-
-        # OLD sensor like data
         return_data: dict[str, list[dict[str, Any]]] = self.data or {}
         for game in discount_games:
             game_free = is_free_game(game)
@@ -110,7 +81,6 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
             game_promotions = game["promotions"]["promotionalOffers"]
             upcoming_promotions = game["promotions"]["upcomingPromotionalOffers"]
 
-            # prefix = ""
             promotion_data = {}
             if game_promotions and game["price"]["totalPrice"]["discountPrice"] == 0:
                 promotion_data = game_promotions[0]["promotionalOffers"][0]
@@ -139,29 +109,8 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
                     ),
                 }
             )
-            # OLD sensor like data
-            # return_data[f"{prefix}free_games"] = return_data.get(
-            #     f"{prefix}free_games",
-            #     {
-            #         "start_at": dt_util.parse_datetime(promotion_data["startDate"]),
-            #         "end_at": dt_util.parse_datetime(promotion_data["endDate"]),
-            #         "games": [],
-            #     },
-            # )
-            # return_data[f"{prefix}free_games"]["games"].append(
-            #     {
-            #         "title": game_title,
-            #         "description": game_description,
-            #         "released_at": game_released_at,
-            #         "original_price": game_price.replace("\xa0", " "),
-            #         "publisher": game_publisher,
-            #         "url": game_url,
-            #         "img_portrait": game_img_portrait,
-            #         "img_landscape": game_img_landscape,
-            #     }
-            # )
 
-        _LOGGER.warning(return_data)
+        _LOGGER.debug(return_data)
         return return_data
 
 

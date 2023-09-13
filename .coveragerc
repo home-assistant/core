@@ -337,7 +337,6 @@ omit =
     homeassistant/components/ephember/climate.py
     homeassistant/components/epic_games_store/__init__.py
     homeassistant/components/epic_games_store/coordinator.py
-    homeassistant/components/epic_games_store/sensor.py
     homeassistant/components/epson/__init__.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py

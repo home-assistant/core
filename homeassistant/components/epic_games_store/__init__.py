@@ -12,7 +12,6 @@ from .coordinator import EGSUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.CALENDAR,
-    # Platform.SENSOR,
 ]
 
 
