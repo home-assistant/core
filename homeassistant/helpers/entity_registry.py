@@ -430,7 +430,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         return data
 
 
-class EntityRegistryItems(UserDict[str, "RegistryEntry"]):
+class EntityRegistryItems(UserDict[str, RegistryEntry]):
     """Container for entity registry items, maps entity_id -> entry.
 
     Maintains two additional indexes:
