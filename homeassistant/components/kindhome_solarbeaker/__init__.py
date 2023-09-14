@@ -1,4 +1,4 @@
-"""The kindhome solarbeaker integration."""
+"""Support for Kindhome solarbeaker."""
 import logging
 
 from homeassistant.components import bluetooth
@@ -7,28 +7,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DATA_COOR, DATA_DEVICE, DOMAIN, PLATFORMS, TITLE, UPDATE_INTERVAL
-from .kindhome_solarbeaker_ble import KindhomeBluetoothDevice
+from .const import DATA_DEVICE, DOMAIN, PLATFORMS, TITLE
+from .kindhome_solarbeaker_ble import KindhomeSolarbeakerDevice
 from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
 
-def create_async_update_method(device: KindhomeBluetoothDevice):
-    # async def async_update_data() -> KindhomeSolarBeakerState:
-    #     log(_LOGGER, "async_update_data", "polling for state!")
-    #     async with async_timeout.timeout(10):
-    #         data = await device.poll_data()
-    #         return data
-    #
-    # return async_update_data
-
-    # TODO should this task also reconnect?
-    return None
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up battery sensor and kindhome cover from Kindhome solarbeaker config entry."""
     assert entry.entry_id is not None
     log(_LOGGER, "async_setup_entry", entry.data)
 
@@ -41,40 +29,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         raise ConfigEntryNotReady("Error creating ble device from address")
 
-    device = KindhomeBluetoothDevice(ble_device)
+    device = KindhomeSolarbeakerDevice(ble_device)
 
-    log(_LOGGER, "async_setup_entry", device.address)
+    log(_LOGGER, "async_setup_entry", f"successfully setup {device.device_name}")
 
     try:
         await device.connect()
         await device.get_state_and_subscribe_to_changes()
 
-    except TimeoutError:
+    except TimeoutError as e:
         _LOGGER.error(f"Error connecting to {device.ble_device}")
         # hass.components.persistent_notification.async_create(
         #     f"Connection error: error connecting to {device.ble_device}",
         #     title=TITLE,
         # )
-        raise ConfigEntryNotReady(f"Error connecting to {device.ble_device}")
+        raise ConfigEntryNotReady(f"Error connecting to {device.ble_device}") from e
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_DEVICE: device}
 
-
     # Here I can create a task that tries to connect in a loop
     # homeassistant/components/velbus/__init__.py
-
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
     log(_LOGGER, "async_unload_entry", "unloading entry!")
 
-    """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-

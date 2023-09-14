@@ -1,5 +1,6 @@
+"""Config flow for Kindhome Solarbeaker integration."""
 import logging
-from typing import Any, Tuple
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,17 +11,12 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, TITLE
-from .kindhome_solarbeaker_ble import supported
+from .kindhome_solarbeaker_ble import KindhomeSolarbeakerDevice
 from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ConnectionError(HomeAssistantError):
-    pass
 
 
 class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -29,47 +25,52 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def _create_config_entry(self, address, name=None):
-        # TODO maybe here I should do get the name
         title = f"{TITLE} {address}"
-        return self.async_create_entry(title=title, data={
-            "address": address,
-            "name": name
-        })
+        return self.async_create_entry(
+            title=title, data={"address": address, "name": name}
+        )
 
     def __init__(self) -> None:
+        """Initialize the config flow."""
         log(_LOGGER, "KindhomeSolarbeakerConfigFlow.__init__", "called!")
         self._discover_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, str] = {}
 
     async def async_step_bluetooth(
-            self, discovery_info: BluetoothServiceInfoBleak
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
+        """Check if discovered should be presented to user to be confirmed."""
         log(_LOGGER, "async_step_bluetooth", f"called! {discovery_info.as_dict()}")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        log(_LOGGER, "async_step_bluetooth", f"address: {discovery_info.address} hasn't been configured")
+        log(
+            _LOGGER,
+            "async_step_bluetooth",
+            f"address: {discovery_info.address} hasn't been configured",
+        )
 
-        if not supported(discovery_info):
+        if not KindhomeSolarbeakerDevice.supported(discovery_info):
             return self.async_abort(reason="not_supported")
 
         self._discover_info = discovery_info
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Confirm discovery."""
+        """Confirm device setup."""
         log(_LOGGER, "async_step_bluetooth_confirm", "called!")
         assert self._discover_info is not None
 
         log(_LOGGER, "async_step_bluetooth_confirm", f"user_input = {user_input}")
         if user_input is not None:
-            return self._create_config_entry(self._discover_info.address, self._discover_info.name)
+            return self._create_config_entry(
+                self._discover_info.address, self._discover_info.name
+            )
 
         title = f"{self._discover_info.name} ({self._discover_info.address})"
-        log(_LOGGER, "async_step_bluetooth_confirm",
-            f"title = {title}")
+        log(_LOGGER, "async_step_bluetooth_confirm", f"title = {title}")
 
         self._set_confirm_only()
         placeholders = {"name": title}
@@ -78,9 +79,8 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
-    # TODO Dont know what that does
     async def async_step_user(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user step to pick discovered device."""
 
@@ -101,7 +101,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
-            if supported(discovery_info):
+            if KindhomeSolarbeakerDevice.supported(discovery_info):
                 self._discovered_devices[address] = discovery_info.name
 
         if not self._discovered_devices:
@@ -111,7 +111,13 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(
-                    [f"{name}: {address}" for address, name in self._discovered_devices.items()])}
+                {
+                    vol.Required(CONF_ADDRESS): vol.In(
+                        [
+                            f"{name}: {address}"
+                            for address, name in self._discovered_devices.items()
+                        ]
+                    )
+                }
             ),
         )
