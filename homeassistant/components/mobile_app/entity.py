@@ -69,7 +69,9 @@ class MobileAppEntity(RestoreEntity):
         """Return if entity should be enabled by default."""
         return not self._config.get(ATTR_SENSOR_DISABLED)
 
-    @property
+    @property  # type: ignore[override,unused-ignore]
+    # Because the device class is received later from the mobile app
+    # we do not want to cache the property
     def device_class(self):
         """Return the device class."""
         return self._config.get(ATTR_SENSOR_DEVICE_CLASS)

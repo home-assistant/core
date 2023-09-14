@@ -51,6 +51,7 @@ async def test_event() -> None:
         event.event_types
 
     # Test retrieving data from entity description
+    del event.device_class
     event.entity_description = EventEntityDescription(
         key="test_event",
         event_types=["short_press", "long_press"],
@@ -63,6 +64,7 @@ async def test_event() -> None:
     event._attr_event_types = ["short_press", "long_press", "double_press"]
     assert event.event_types == ["short_press", "long_press", "double_press"]
     event._attr_device_class = EventDeviceClass.BUTTON
+    del event.device_class
     assert event.device_class == EventDeviceClass.BUTTON
 
     # Test triggering an event

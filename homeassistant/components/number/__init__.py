@@ -12,6 +12,7 @@ from typing import Any, Self, final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -231,7 +232,7 @@ class NumberEntity(Entity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

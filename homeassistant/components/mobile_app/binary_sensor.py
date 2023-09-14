@@ -67,7 +67,7 @@ async def async_setup_entry(
     )
 
 
-class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
+class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):  # type: ignore[misc]
     """Representation of an mobile app binary sensor."""
 
     @property
