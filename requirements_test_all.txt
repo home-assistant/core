@@ -1669,6 +1669,9 @@ pywizlight==0.5.14
 # homeassistant.components.ws66i
 pyws66i==1.1
 
+# homeassistant.components.yardian
+pyyardian==1.1.0
+
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
 
@@ -2048,7 +2051,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.108.0
+zeroconf==0.111.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
