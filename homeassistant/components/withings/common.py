@@ -38,7 +38,6 @@ from .api import ConfigEntryWithingsApi
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
-_RETRY_COEFFICIENT = 0.5
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,

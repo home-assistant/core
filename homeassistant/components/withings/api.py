@@ -99,12 +99,17 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> MeasureGetMeasResponse:
         """Get measurements."""
 
-        def call_super() -> MeasureGetMeasResponse:
-            return self.measure_get_meas(
-                meastype, category, startdate, enddate, offset, lastupdate
+        return await self._do_retry(
+            await self._hass.async_add_executor_job(
+                self.measure_get_meas,
+                meastype,
+                category,
+                startdate,
+                enddate,
+                offset,
+                lastupdate,
             )
-
-        return await self._do_retry(await self._hass.async_add_executor_job(call_super))
+        )
 
     async def async_sleep_get_summary(
         self,
@@ -116,22 +121,25 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> SleepGetSummaryResponse:
         """Get sleep data."""
 
-        def call_super() -> SleepGetSummaryResponse:
-            return self.sleep_get_summary(
-                data_fields, startdateymd, enddateymd, offset, lastupdate
+        return await self._do_retry(
+            await self._hass.async_add_executor_job(
+                self.sleep_get_summary,
+                data_fields,
+                startdateymd,
+                enddateymd,
+                offset,
+                lastupdate,
             )
-
-        return await self._do_retry(await self._hass.async_add_executor_job(call_super))
+        )
 
     async def async_notify_list(
         self, appli: NotifyAppli | None = None
     ) -> NotifyListResponse:
         """List webhooks."""
 
-        def call_super() -> NotifyListResponse:
-            return self.notify_list(appli)
-
-        return await self._do_retry(await self._hass.async_add_executor_job(call_super))
+        return await self._do_retry(
+            await self._hass.async_add_executor_job(self.notify_list, appli)
+        )
 
     async def async_notify_subscribe(
         self,
@@ -141,17 +149,19 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> None:
         """Subscribe to webhook."""
 
-        def call_super() -> None:
-            return self.notify_subscribe(callbackurl, appli, comment)
-
-        return await self._do_retry(await self._hass.async_add_executor_job(call_super))
+        return await self._do_retry(
+            await self._hass.async_add_executor_job(
+                self.notify_subscribe, callbackurl, appli, comment
+            )
+        )
 
     async def async_notify_revoke(
         self, callbackurl: str | None = None, appli: NotifyAppli | None = None
     ) -> None:
         """Revoke webhook."""
 
-        def call_super() -> None:
-            return self.notify_revoke(callbackurl, appli)
-
-        return await self._do_retry(await self._hass.async_add_executor_job(call_super))
+        return await self._do_retry(
+            await self._hass.async_add_executor_job(
+                self.notify_revoke, callbackurl, appli
+            )
+        )
