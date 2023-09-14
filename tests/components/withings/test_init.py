@@ -117,17 +117,19 @@ async def test_data_manager_webhook_subscription(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
 
-    assert withings.notify_subscribe.call_count == 4
+    assert withings.async_notify_subscribe.call_count == 4
 
     webhook_url = "http://example.local:8123/api/webhook/55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
 
-    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
-    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.CIRCULATORY)
-    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
-    withings.notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.WEIGHT)
+    withings.async_notify_subscribe.assert_any_call(
+        webhook_url, NotifyAppli.CIRCULATORY
+    )
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.ACTIVITY)
+    withings.async_notify_subscribe.assert_any_call(webhook_url, NotifyAppli.SLEEP)
 
-    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
-    withings.notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+    withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
+    withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
 
 
 @pytest.mark.parametrize(
