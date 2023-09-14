@@ -338,6 +338,7 @@ class Entity(ABC):
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize an Entity subclass."""
+        super().__init_subclass__(**kwargs)
         cls.__unstored_attributes = (
             cls._component_unstored_attributes | cls._platform_unstored_attributes
         )
