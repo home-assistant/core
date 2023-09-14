@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.components.airthings_ble import (
@@ -35,7 +36,7 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=TEMPERATURE_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -77,7 +78,7 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=HUMIDITY_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -119,7 +120,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=CO2_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -127,7 +128,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     v1 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=CO2_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -170,7 +171,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v1 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -178,7 +179,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -186,7 +187,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v3 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V3.unique_id,
         config_entry=entry,
         device_id=device.id,
