@@ -15,7 +15,7 @@ SERVICE_TYPE_DEVICE_NAMES = {
     "today_gas": "Gas market price",
 }
 
-CONF_GAS_MODIFYER = "gas_modifyer"
-CONF_ENERGY_MODIFYER = "energy_modifyer"
+CONF_GAS_MODIFIER = "gas_modifier"
+CONF_ENERGY_MODIFIER = "energy_modifier"
 
-DEFAULT_MODIFYER = '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}'
+DEFAULT_MODIFIER = '{% set s = {"BTW": 1.21 } %}{{ price * s.BTW | float | round(5)}}'

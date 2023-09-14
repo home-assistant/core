@@ -12,9 +12,9 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
 
 from .const import (
-    CONF_ENERGY_MODIFYER,
-    CONF_GAS_MODIFYER,
-    DEFAULT_MODIFYER,
+    CONF_ENERGY_MODIFIER,
+    CONF_GAS_MODIFIER,
+    DEFAULT_MODIFIER,
     DOMAIN,
     LOGGER,
 )
@@ -23,18 +23,18 @@ from .const import (
 class EnergyZeroFlowHandlerMixin:
     """Mixin class with shared methods for EnergyZero config flow handlers."""
 
-    _gas_modifyer: str | None = None
-    _energy_modifyer: str | None = None
+    _gas_modifier: str | None = None
+    _energy_modifier: str | None = None
 
     async def async_validate_data(self) -> str | None:
         """Validate the user input."""
         data = self._get_data()
 
-        for modifyer in (CONF_GAS_MODIFYER, CONF_ENERGY_MODIFYER):
-            if not await self._valid_template(data[modifyer]):
+        for modifier in (CONF_GAS_MODIFIER, CONF_ENERGY_MODIFIER):
+            if not await self._valid_template(data[modifier]):
                 return "invalid_template"
 
-            if "price" not in data[modifyer]:
+            if "price" not in data[modifier]:
                 return "missing_price"
 
         return None
@@ -42,11 +42,11 @@ class EnergyZeroFlowHandlerMixin:
     def _get_schema(self):
         return vol.Schema(
             {
-                vol.Optional(CONF_GAS_MODIFYER, default=self._gas_modifyer): vol.All(
+                vol.Optional(CONF_GAS_MODIFIER, default=self._gas_modifier): vol.All(
                     vol.Coerce(str)
                 ),
                 vol.Optional(
-                    CONF_ENERGY_MODIFYER, default=self._energy_modifyer
+                    CONF_ENERGY_MODIFIER, default=self._energy_modifier
                 ): vol.All(vol.Coerce(str)),
             }
         )
@@ -70,8 +70,8 @@ class EnergyZeroFlowHandlerMixin:
 
         if (
             user_input is None
-            and self._energy_modifyer is not None
-            and self._gas_modifyer is not None
+            and self._energy_modifier is not None
+            and self._gas_modifier is not None
         ):
             return original.async_show_form(
                 step_id="init",
@@ -96,25 +96,25 @@ class EnergyZeroFlowHandlerMixin:
         )
 
     def _set_data(self, user_input: dict[str, Any] | None):
-        self._gas_modifyer = (
-            user_input[CONF_GAS_MODIFYER]
+        self._gas_modifier = (
+            user_input[CONF_GAS_MODIFIER]
             if user_input is not None
-            and CONF_GAS_MODIFYER in user_input
-            and user_input[CONF_GAS_MODIFYER] not in (None, "")
-            else DEFAULT_MODIFYER
+            and CONF_GAS_MODIFIER in user_input
+            and user_input[CONF_GAS_MODIFIER] not in (None, "")
+            else DEFAULT_MODIFIER
         )
-        self._energy_modifyer = (
-            user_input[CONF_ENERGY_MODIFYER]
+        self._energy_modifier = (
+            user_input[CONF_ENERGY_MODIFIER]
             if user_input is not None
-            and CONF_ENERGY_MODIFYER in user_input
-            and user_input[CONF_ENERGY_MODIFYER] not in (None, "")
-            else DEFAULT_MODIFYER
+            and CONF_ENERGY_MODIFIER in user_input
+            and user_input[CONF_ENERGY_MODIFIER] not in (None, "")
+            else DEFAULT_MODIFIER
         )
 
     def _get_data(self) -> dict[str, Any]:
         return {
-            CONF_GAS_MODIFYER: self._gas_modifyer,
-            CONF_ENERGY_MODIFYER: self._energy_modifyer,
+            CONF_GAS_MODIFIER: self._gas_modifier,
+            CONF_ENERGY_MODIFIER: self._energy_modifier,
         }
 
 

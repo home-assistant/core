@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_ENERGY_MODIFYER, CONF_GAS_MODIFYER, DEFAULT_MODIFYER, DOMAIN
+from .const import CONF_ENERGY_MODIFIER, CONF_GAS_MODIFIER, DEFAULT_MODIFIER, DOMAIN
 from .coordinator import EnergyZeroDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -15,18 +15,18 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EnergyZero from a config entry."""
 
-    gas_modifyer = (
-        entry.options[CONF_GAS_MODIFYER]
-        if CONF_GAS_MODIFYER in entry.options
-        else DEFAULT_MODIFYER
+    gas_modifier = (
+        entry.options[CONF_GAS_MODIFIER]
+        if CONF_GAS_MODIFIER in entry.options
+        else DEFAULT_MODIFIER
     )
-    energy_modifyer = (
-        entry.options[CONF_ENERGY_MODIFYER]
-        if CONF_ENERGY_MODIFYER in entry.options
-        else DEFAULT_MODIFYER
+    energy_modifier = (
+        entry.options[CONF_ENERGY_MODIFIER]
+        if CONF_ENERGY_MODIFIER in entry.options
+        else DEFAULT_MODIFIER
     )
 
-    coordinator = EnergyZeroDataUpdateCoordinator(hass, gas_modifyer, energy_modifyer)
+    coordinator = EnergyZeroDataUpdateCoordinator(hass, gas_modifier, energy_modifier)
 
     try:
         await coordinator.async_config_entry_first_refresh()

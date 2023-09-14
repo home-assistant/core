@@ -39,8 +39,8 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        gas_modifyer: str,
-        energy_modifyer: str,
+        gas_modifier: str,
+        energy_modifier: str,
     ) -> None:
         """Initialize global EnergyZero data updater."""
         super().__init__(
@@ -50,8 +50,8 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.gas_modifyer = Template(gas_modifyer, hass)
-        self.energy_modifyer = Template(energy_modifyer, hass)
+        self.gas_modifier = Template(gas_modifier, hass)
+        self.energy_modifier = Template(energy_modifier, hass)
 
         self.energyzero = EnergyZero(
             session=async_get_clientsession(hass),
@@ -87,17 +87,17 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         except EnergyZeroConnectionError as err:
             raise UpdateFailed("Error communicating with EnergyZero API") from err
 
-        self._apply_template(self.energy_modifyer, energy_today.prices)
+        self._apply_template(self.energy_modifier, energy_today.prices)
 
         if energy_tomorrow is not None:
-            self._apply_template(self.energy_modifyer, energy_tomorrow.prices)
+            self._apply_template(self.energy_modifier, energy_tomorrow.prices)
 
         energy_all = Electricity(
             prices=energy_today.prices
             | (energy_tomorrow.prices if energy_tomorrow is not None else {})
         )
         if gas_today is not None:
-            self._apply_template(self.gas_modifyer, gas_today.prices)
+            self._apply_template(self.gas_modifier, gas_today.prices)
 
         return EnergyZeroData(
             energy=energy_all,

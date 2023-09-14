@@ -4,8 +4,8 @@
       "init": {
         "title": "EnergyZero configuration",
         "data": {
-          "gas_modifyer": "Gas Price Modifyer Template (Optional)",
-          "energy_modifyer": "Energy Price Modifyer Template (Optional)"
+          "gas_modifier": "Gas Price Modifier Template (Optional)",
+          "energy_modifier": "Energy Price Modifier Template (Optional)"
         }
       }
     },

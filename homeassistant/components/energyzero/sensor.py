@@ -189,7 +189,7 @@ class EnergyZeroSensorEntity(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self) -> dict[str, None | str | dict[datetime, float]]:
+    def extra_state_attributes(self) -> None | dict[str, None | str | dict[datetime, float]]:
         """Return the state attributes."""
         if self.entity_description.key != "average_price":
             return None
@@ -198,7 +198,7 @@ class EnergyZeroSensorEntity(
 
         return {
             "energy": data.energy.prices,
-            "energy_template": self.coordinator.energy_modifyer.template,
+            "energy_template": self.coordinator.energy_modifier.template,
             "gas": data.gas_today.prices if data.gas_today is not None else None,
-            "gas_template": self.coordinator.gas_modifyer.template,
+            "gas_template": self.coordinator.gas_modifier.template,
         }

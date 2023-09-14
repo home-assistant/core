@@ -57,7 +57,7 @@ async def async_get_config_entry_diagnostics(
             "percentage_of_max": coordinator.data.energy_today.pct_of_max_price,
             "hours_priced_equal_or_lower": coordinator.data.energy_today.hours_priced_equal_or_lower,
             "all_prices": serialize_prices(coordinator.data.energy.prices),
-            "template": coordinator.energy_modifyer.template,
+            "template": coordinator.energy_modifier.template,
         },
         "gas": {
             "current_hour_price": get_gas_price(coordinator.data, 0),
@@ -65,6 +65,6 @@ async def async_get_config_entry_diagnostics(
             "all_prices": serialize_prices(coordinator.data.gas_today.prices)
             if coordinator.data.gas_today
             else None,
-            "template": coordinator.gas_modifyer.template,
+            "template": coordinator.gas_modifier.template,
         },
     }
