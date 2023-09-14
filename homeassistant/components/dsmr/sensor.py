@@ -575,7 +575,7 @@ class DSMREntity(RestoreSensor):
         LOGGER.info(
             f"self.async_get_last_sensor_data at async_added_to_hass: {await self.async_get_last_sensor_data()}"
         )
-        if self._attr_native_value is not None:
+        if self._native_unit_of_measurement is not None:
             return
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
