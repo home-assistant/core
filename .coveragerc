@@ -1157,6 +1157,7 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/__init__.py
     homeassistant/components/solarlog/sensor.py
+    homeassistant/components/solarlog/coordinator.py
     homeassistant/components/solax/__init__.py
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/__init__.py
