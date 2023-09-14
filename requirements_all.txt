@@ -1756,7 +1756,7 @@ pyinsteon==1.5.1
 pyintesishome==1.8.0
 
 # homeassistant.components.ipma
-pyipma==3.0.6
+pyipma==3.0.7
 
 # homeassistant.components.ipp
 pyipp==0.14.4
