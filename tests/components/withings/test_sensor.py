@@ -1,23 +1,24 @@
 """Tests for the Withings component."""
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.common import WithingsEntityDescription
 from homeassistant.components.withings.const import Measurement
+from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.components.withings.sensor import SENSORS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MockWithings, call_webhook
+from . import call_webhook, setup_integration
 from .common import async_get_entity_id
-from .conftest import USER_ID, WEBHOOK_ID, ComponentSetup
+from .conftest import USER_ID, WEBHOOK_ID
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
@@ -77,65 +78,55 @@ def async_assert_state_equals(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
-    setup_integration: ComponentSetup,
+    withings: AsyncMock,
+    config_entry: MockConfigEntry,
+    disable_webhook_delay,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test entities enabled by default."""
-    await setup_integration()
+    await setup_integration(hass, config_entry)
     entity_registry: EntityRegistry = er.async_get(hass)
 
-    mock = MockWithings()
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
-        return_value=mock,
-    ):
-        client = await hass_client_no_auth()
-        # Assert entities should exist.
-        for attribute in SENSORS:
-            entity_id = await async_get_entity_id(
-                hass, attribute, USER_ID, SENSOR_DOMAIN
-            )
-            assert entity_id
-            assert entity_registry.async_is_registered(entity_id)
-        resp = await call_webhook(
-            hass,
-            WEBHOOK_ID,
-            {"userid": USER_ID, "appli": NotifyAppli.SLEEP},
-            client,
-        )
-        assert resp.message_code == 0
-        resp = await call_webhook(
-            hass,
-            WEBHOOK_ID,
-            {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
-            client,
-        )
-        assert resp.message_code == 0
+    client = await hass_client_no_auth()
+    # Assert entities should exist.
+    for attribute in SENSORS:
+        entity_id = await async_get_entity_id(hass, attribute, USER_ID, SENSOR_DOMAIN)
+        assert entity_id
+        assert entity_registry.async_is_registered(entity_id)
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.SLEEP},
+        client,
+    )
+    assert resp.message_code == 0
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
+        client,
+    )
+    assert resp.message_code == 0
 
-        assert resp.message_code == 0
+    for measurement, expected in EXPECTED_DATA:
+        attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
+        entity_id = await async_get_entity_id(hass, attribute, USER_ID, SENSOR_DOMAIN)
+        state_obj = hass.states.get(entity_id)
 
-        for measurement, expected in EXPECTED_DATA:
-            attribute = WITHINGS_MEASUREMENTS_MAP[measurement]
-            entity_id = await async_get_entity_id(
-                hass, attribute, USER_ID, SENSOR_DOMAIN
-            )
-            state_obj = hass.states.get(entity_id)
-
-            async_assert_state_equals(entity_id, state_obj, expected, attribute)
+        async_assert_state_equals(entity_id, state_obj, expected, attribute)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
-    hass: HomeAssistant, setup_integration: ComponentSetup, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
-    await setup_integration()
+    await setup_integration(hass, config_entry)
 
-    mock = MockWithings()
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
-        return_value=mock,
-    ):
-        for sensor in SENSORS:
-            entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
-            assert hass.states.get(entity_id) == snapshot
+    for sensor in SENSORS:
+        entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
+        assert hass.states.get(entity_id) == snapshot
