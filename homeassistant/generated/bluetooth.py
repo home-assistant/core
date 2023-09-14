@@ -252,6 +252,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "local_name": "mib*",
     },
     {
+        "connectable": True,
+        "domain": "kindhome_solarbeaker",
+        "service_uuid": "75c276c3-8f97-20bc-a143-b354244886d4",
+    },
+    {
         "domain": "ld2410_ble",
         "local_name": "HLK-LD2410B_*",
     },

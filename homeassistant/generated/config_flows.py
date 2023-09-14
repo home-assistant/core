@@ -230,6 +230,7 @@ FLOWS = {
         "keenetic_ndms2",
         "kegtron",
         "keymitt_ble",
+        "kindhome_solarbeaker",
         "kmtronic",
         "knx",
         "kodi",

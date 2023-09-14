@@ -2801,6 +2801,12 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "kindhome_solarbeaker": {
+      "name": "Kindhome solarbreaker",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "kira": {
       "name": "Kira",
       "integration_type": "hub",
