@@ -303,8 +303,12 @@ class Entity(ABC):
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
 
-    # Attributes to exclude from recording
-    _unstored_attributes: frozenset[str] = frozenset()
+    __unstored_attributes: frozenset[str]
+    # Attributes to exclude from recording, only set by base components, e.g. light
+    _component_unstored_attributes: frozenset[str] = frozenset()
+    # Additional integration specific attributes to exclude from recording
+    _platform_unstored_attributes: frozenset[str] = frozenset()
+
     _state_info: StateInfo
 
     # Entity Properties
@@ -330,6 +334,12 @@ class Entity(ABC):
     _attr_translation_key: str | None
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize an Entity subclass."""
+        cls.__unstored_attributes = (
+            cls._component_unstored_attributes | cls._platform_unstored_attributes
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -1106,7 +1116,7 @@ class Entity(ABC):
 
         entity_sources(self.hass)[self.entity_id] = entiy_info
 
-        self._state_info = {"unstored_attributes": self._unstored_attributes}
+        self._state_info = {"unstored_attributes": self.__unstored_attributes}
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
