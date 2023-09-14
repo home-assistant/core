@@ -671,11 +671,11 @@ def test_state_as_dict_json() -> None:
         '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
         '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
-    as_dict_json_1 = state.as_dict_json()
+    as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
     # 2nd time to verify cache
-    assert state.as_dict_json() == expected
-    assert state.as_dict_json() is as_dict_json_1
+    assert state.as_dict_json == expected
+    assert state.as_dict_json is as_dict_json_1
 
 
 def test_state_as_compressed_state() -> None:
@@ -694,12 +694,12 @@ def test_state_as_compressed_state() -> None:
         "lc": last_time.timestamp(),
         "s": "on",
     }
-    as_compressed_state = state.as_compressed_state()
+    as_compressed_state = state.as_compressed_state
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state == expected
 
 
 def test_state_as_compressed_state_unique_last_updated() -> None:
@@ -720,12 +720,12 @@ def test_state_as_compressed_state_unique_last_updated() -> None:
         "lu": last_updated.timestamp(),
         "s": "on",
     }
-    as_compressed_state = state.as_compressed_state()
+    as_compressed_state = state.as_compressed_state
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state == expected
 
 
 def test_state_as_compressed_state_json() -> None:
@@ -740,13 +740,13 @@ def test_state_as_compressed_state_json() -> None:
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
     expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
-    as_compressed_state = state.as_compressed_state_json()
+    as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state_json() == expected
-    assert state.as_compressed_state_json() is as_compressed_state
+    assert state.as_compressed_state_json == expected
+    assert state.as_compressed_state_json is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass: HomeAssistant) -> None:
