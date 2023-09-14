@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SWITCH_TYPES = [
     SwitchEntityDescription(
         key="allow_or_block",
-        name="Allowed on network",
+        translation_key="allowed_on_network",
         icon="mdi:block-helper",
         entity_category=EntityCategory.CONFIG,
     )
@@ -50,7 +50,7 @@ class NetgearSwitchEntityDescription(
 ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="access_control",
-        name="Access Control",
+        translation_key="access_control",
         icon="mdi:block-helper",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_block_device_enable_status,
@@ -58,7 +58,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="traffic_meter",
-        name="Traffic Meter",
+        translation_key="traffic_meter",
         icon="mdi:wifi-arrow-up-down",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_traffic_meter_enabled,
@@ -66,7 +66,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="parental_control",
-        name="Parental Control",
+        translation_key="parental_control",
         icon="mdi:account-child-outline",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_parental_control_enable_status,
@@ -74,7 +74,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="qos",
-        name="Quality of Service",
+        translation_key="quality_of_service",
         icon="mdi:wifi-star",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_qos_enable_status,
@@ -82,7 +82,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="2g_guest_wifi",
-        name="2.4G Guest Wifi",
+        translation_key="2g_guest_wifi",
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_2g_guest_access_enabled,
@@ -90,7 +90,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="5g_guest_wifi",
-        name="5G Guest Wifi",
+        translation_key="5g_guest_wifi",
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_5g_guest_access_enabled,
@@ -98,7 +98,7 @@ ROUTER_SWITCH_TYPES = [
     ),
     NetgearSwitchEntityDescription(
         key="smart_connect",
-        name="Smart Connect",
+        translation_key="smart_connect",
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_smart_connect_enabled,
