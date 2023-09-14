@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 from withings_api.common import NotifyAppli
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import call_webhook, enable_webhooks, setup_integration
@@ -28,7 +28,7 @@ async def test_binary_sensor(
 
     entity_id = "binary_sensor.henk_in_bed"
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     resp = await call_webhook(
         hass,

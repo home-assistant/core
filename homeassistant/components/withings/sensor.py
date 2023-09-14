@@ -23,8 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import UpdateType, async_get_data_manager
+from . import BaseWithingsDataUpdateCoordinator
+from .common import UpdateType
 from .const import (
+    DOMAIN,
     SCORE_POINTS,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
@@ -394,11 +396,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    data_manager = await async_get_data_manager(hass, entry)
+    coordinator: BaseWithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [WithingsHealthSensor(data_manager, attribute) for attribute in SENSORS]
+    entities = [WithingsHealthSensor(coordinator, attribute) for attribute in SENSORS]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
@@ -409,4 +411,4 @@ class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     @property
     def native_value(self) -> None | str | int | float:
         """Return the state of the entity."""
-        return self._state_data
+        return self.coordinator.data[self.entity_description.measurement]

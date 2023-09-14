@@ -36,6 +36,7 @@ from homeassistant.util import dt as dt_util
 from . import const
 from .api import ConfigEntryWithingsApi
 from .const import Measurement
+from .coordinator import SUBSCRIBE_DELAY, UNSUBSCRIBE_DELAY
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
@@ -43,8 +44,6 @@ NOT_AUTHENTICATED_ERROR = re.compile(
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
-SUBSCRIBE_DELAY = datetime.timedelta(seconds=5)
-UNSUBSCRIBE_DELAY = datetime.timedelta(seconds=1)
 
 
 class UpdateType(StrEnum):

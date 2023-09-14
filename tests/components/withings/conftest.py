@@ -123,7 +123,7 @@ def mock_withings():
     )
 
     with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi",
+        "homeassistant.components.withings.ConfigEntryWithingsApi",
         return_value=mock,
     ):
         yield mock
@@ -135,9 +135,10 @@ def disable_webhook_delay():
 
     mock = AsyncMock()
     with patch(
-        "homeassistant.components.withings.common.SUBSCRIBE_DELAY", timedelta(seconds=0)
+        "homeassistant.components.withings.coordinator.SUBSCRIBE_DELAY",
+        timedelta(seconds=0),
     ), patch(
-        "homeassistant.components.withings.common.UNSUBSCRIBE_DELAY",
+        "homeassistant.components.withings.coordinator.UNSUBSCRIBE_DELAY",
         timedelta(seconds=0),
     ):
         yield mock

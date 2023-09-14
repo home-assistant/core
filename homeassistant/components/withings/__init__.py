@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -28,19 +29,24 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
 from . import const
+from .api import ConfigEntryWithingsApi
 from .common import (
     _LOGGER,
     async_get_data_manager,
     async_remove_data_manager,
-    get_data_manager_by_webhook_id,
     json_message_response,
 )
 from .const import CONF_USE_WEBHOOK, CONFIG
+from .coordinator import (
+    BaseWithingsDataUpdateCoordinator,
+    PollingWithingsDataUpdateCoordinator,
+    WebhookWithingsDataUpdateCoordinator,
+)
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -123,31 +129,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_options |= {CONF_USE_WEBHOOK: use_webhook}
         hass.config_entries.async_update_entry(entry, options=new_options)
 
-    data_manager = await async_get_data_manager(hass, entry)
-
-    _LOGGER.debug("Confirming %s is authenticated to withings", entry.title)
-    await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
-
-    webhook.async_register(
-        hass,
-        const.DOMAIN,
-        "Withings notify",
-        data_manager.webhook_config.id,
-        async_webhook_handler,
+    client = ConfigEntryWithingsApi(
+        hass=hass,
+        config_entry=entry,
+        implementation=await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        ),
     )
 
-    # Perform first webhook subscription check.
-    if data_manager.webhook_config.enabled:
-        data_manager.async_start_polling_webhook_subscriptions()
+    coordinator: BaseWithingsDataUpdateCoordinator
+    if entry.options[CONF_USE_WEBHOOK]:
+        webhook_coordinator = WebhookWithingsDataUpdateCoordinator(hass, client)
 
         @callback
         def async_call_later_callback(now) -> None:
-            hass.async_create_task(
-                data_manager.subscription_update_coordinator.async_refresh()
-            )
+            hass.async_create_task(webhook_coordinator.async_subscribe_webhooks())
 
-        # Start subscription check in the background, outside this component's setup.
         entry.async_on_unload(async_call_later(hass, 1, async_call_later_callback))
+        webhook.async_register(
+            hass,
+            DOMAIN,
+            "Withings notify",
+            entry.data[CONF_WEBHOOK_ID],
+            async_get_webhook_handler(webhook_coordinator),
+        )
+        coordinator = webhook_coordinator
+    else:
+        coordinator = PollingWithingsDataUpdateCoordinator(hass, client)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -171,44 +183,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_webhook_handler(
-    hass: HomeAssistant, webhook_id: str, request: Request
-) -> Response | None:
-    """Handle webhooks calls."""
-    # Handle http head calls to the path.
-    # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
-    if request.method.upper() == "HEAD":
-        return Response()
+def async_get_webhook_handler(
+    coordinator: WebhookWithingsDataUpdateCoordinator,
+) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
+    """Return webhook handler."""
 
-    if request.method.upper() != "POST":
-        return json_message_response("Invalid method", message_code=2)
+    async def async_webhook_handler(
+        hass: HomeAssistant, webhook_id: str, request: Request
+    ) -> Response | None:
+        # Handle http head calls to the path.
+        # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.
+        if request.method.upper() == "HEAD":
+            return Response()
 
-    # Handle http post calls to the path.
-    if not request.body_exists:
-        return json_message_response("No request body", message_code=12)
+        if request.method.upper() != "POST":
+            return json_message_response("Invalid method", message_code=2)
 
-    params = await request.post()
+        # Handle http post calls to the path.
+        if not request.body_exists:
+            return json_message_response("No request body", message_code=12)
 
-    if "appli" not in params:
-        return json_message_response("Parameter appli not provided", message_code=20)
+        params = await request.post()
 
-    try:
-        appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
-    except ValueError:
-        return json_message_response("Invalid appli provided", message_code=21)
+        if "appli" not in params:
+            return json_message_response(
+                "Parameter appli not provided", message_code=20
+            )
 
-    data_manager = get_data_manager_by_webhook_id(hass, webhook_id)
-    if not data_manager:
-        _LOGGER.error(
-            (
-                "Webhook id %s not handled by data manager. This is a bug and should be"
-                " reported"
-            ),
-            webhook_id,
-        )
-        return json_message_response("User not found", message_code=1)
+        try:
+            appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
+        except ValueError:
+            return json_message_response("Invalid appli provided", message_code=21)
 
-    # Run this in the background and return immediately.
-    hass.async_create_task(data_manager.async_webhook_data_updated(appli))
+        await coordinator.async_webhook_data_updated(appli)
 
-    return json_message_response("Success", message_code=0)
+        return json_message_response("Success", message_code=0)
+
+    return async_webhook_handler

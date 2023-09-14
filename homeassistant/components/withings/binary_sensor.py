@@ -14,9 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import UpdateType, async_get_data_manager
-from .const import Measurement
-from .entity import BaseWithingsSensor, WithingsEntityDescription
+from . import WebhookWithingsDataUpdateCoordinator
+from .common import UpdateType
+from .const import DOMAIN, Measurement
+from .entity import WebhookWithingsSensor, WithingsEntityDescription
 
 
 @dataclass
@@ -46,17 +47,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    data_manager = await async_get_data_manager(hass, entry)
-
-    entities = [
-        WithingsHealthBinarySensor(data_manager, attribute)
-        for attribute in BINARY_SENSORS
+    coordinator: WebhookWithingsDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
     ]
 
-    async_add_entities(entities, True)
+    if isinstance(coordinator, WebhookWithingsDataUpdateCoordinator):
+        entities = [
+            WithingsHealthBinarySensor(coordinator, attribute)
+            for attribute in BINARY_SENSORS
+        ]
+
+        async_add_entities(entities)
 
 
-class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
+class WithingsHealthBinarySensor(WebhookWithingsSensor, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsBinarySensorEntityDescription
@@ -64,4 +68,4 @@ class WithingsHealthBinarySensor(BaseWithingsSensor, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._state_data
+        return self.coordinator.in_bed
