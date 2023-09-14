@@ -393,6 +393,14 @@ class WithingsHealthSensor(BaseWithingsEntity, SensorEntity):
         """Return the state of the entity."""
         return self.coordinator.data[self.entity_description.measurement]
 
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return (
+            super().available
+            and self.entity_description.measurement in self.coordinator.data
+        )
+
 
 class PollingWithingsHealthSensor(PollingWithingsEntity, WithingsHealthSensor):
     """Implementation of a Withings polling sensor."""
