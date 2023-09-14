@@ -87,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators
-        if coordinator.last_update_success
-    }  # Only add coordinators that succeeded
+    }
 
     if not hass.data[DOMAIN][entry.entry_id]:
         # Don't start if no coordinators succeeded.

@@ -131,11 +131,22 @@ async def async_setup_entry(
     ]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockTimeDescription]
-    ] = [
-        (coordinator, description)
-        for coordinator in coordinators.values()
-        for description in TIME_DESCRIPTIONS
-    ]
+    ] = []
+    valid_entities: list[RoborockTimeEntity] = []
+    for coordinator in coordinators.values():
+        for description in TIME_DESCRIPTIONS:
+            unique_id = f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+            if coordinator.api.is_available:
+                possible_entities.append((coordinator, description))
+            elif unique_id in coordinator.supported_entities:
+                valid_entities.append(
+                    RoborockTimeEntity(
+                        unique_id,
+                        coordinator,
+                        description,
+                    )
+                )
+
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
@@ -144,7 +155,6 @@ async def async_setup_entry(
         ),
         return_exceptions=True,
     )
-    valid_entities: list[RoborockTimeEntity] = []
     for (coordinator, description), result in zip(possible_entities, results):
         unique_id = (
             f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
@@ -183,6 +193,7 @@ class RoborockTimeEntity(RoborockEntity, TimeEntity):
             coordinator.api,
             coordinator.supported_entities,
         )
+        coordinator.needed_cache_keys.append(entity_description.cache_key)
 
     @property
     def native_value(self) -> time | None:

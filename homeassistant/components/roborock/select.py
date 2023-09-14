@@ -81,7 +81,8 @@ async def async_setup_entry(
         for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
         if f"{description.key}_{slugify(device_id)}" in coordinator.supported_entities
-        or description.options_lambda(coordinator.roborock_device_info.props.status)
+        or coordinator.api.is_available
+        and description.options_lambda(coordinator.roborock_device_info.props.status)
         is not None
     )
 
@@ -100,7 +101,15 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(unique_id, coordinator)
-        self._attr_options = self.entity_description.options_lambda(self._device_status)
+
+    @property
+    def options(self) -> list[str]:
+        """Return the potential options."""
+        return (
+            self.entity_description.options_lambda(self._device_status)
+            if self.api.is_available
+            else []
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""

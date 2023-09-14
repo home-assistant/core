@@ -117,11 +117,22 @@ async def async_setup_entry(
     ]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockSwitchDescription]
-    ] = [
-        (coordinator, description)
-        for coordinator in coordinators.values()
-        for description in SWITCH_DESCRIPTIONS
-    ]
+    ] = []
+    valid_entities: list[RoborockSwitch] = []
+    for coordinator in coordinators.values():
+        for description in SWITCH_DESCRIPTIONS:
+            unique_id = f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+            if coordinator.api.is_available:
+                possible_entities.append((coordinator, description))
+            elif unique_id in coordinator.supported_entities:
+                valid_entities.append(
+                    RoborockSwitch(
+                        unique_id,
+                        coordinator,
+                        description,
+                    )
+                )
+
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
@@ -130,7 +141,6 @@ async def async_setup_entry(
         ),
         return_exceptions=True,
     )
-    valid_entities: list[RoborockSwitch] = []
     for (coordinator, description), result in zip(possible_entities, results):
         unique_id = (
             f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
@@ -171,6 +181,7 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
             coordinator.api,
             coordinator.supported_entities,
         )
+        coordinator.needed_cache_keys.append(entity_description.cache_key)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
@@ -187,9 +198,7 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return (
-            self.get_cache(self.entity_description.cache_key).value.get(
-                self.entity_description.attribute
-            )
-            == 1
-        )
+        val = self.get_cache(self.entity_description.cache_key).value
+        if val is not None:
+            return val.get(self.entity_description.attribute) == 1
+        return None
