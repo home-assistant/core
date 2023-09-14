@@ -306,7 +306,8 @@ class Entity(ABC):
     __unstored_attributes: frozenset[str]
     # Attributes to exclude from recording, only set by base components, e.g. light
     _component_unstored_attributes: frozenset[str] = frozenset()
-    # Additional integration specific attributes to exclude from recording
+    # Additional integration specific attributes to exclude from recording, set by
+    # platforms, e.g. a derived class in hue.light
     _platform_unstored_attributes: frozenset[str] = frozenset()
 
     _state_info: StateInfo
