@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, SIGNAL_UPDATE_SCHEDULE
+from .const import DOMAIN, FLEXMEASURES_SCHEDULE, SCHEDULE, SIGNAL_UPDATE_SCHEDULE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up sensor."""
-    hass.data[DOMAIN]["schedule"] = {"schedule": [], "start": None}
+    hass.data[DOMAIN][SCHEDULE] = {"schedule": [], "start": None}
 
     async_add_entities([FlexMeasuresScheduleSensor()], True)
 
@@ -33,7 +33,7 @@ class FlexMeasuresScheduleSensor(SensorEntity):
 
     def __init__(self) -> None:
         """Sensor to store the schedule created by FlexMeasures."""
-        self._attr_unique_id = "flexmeasures_schedule"
+        self._attr_unique_id = FLEXMEASURES_SCHEDULE
 
     @property
     def name(self) -> str:
@@ -44,7 +44,7 @@ class FlexMeasuresScheduleSensor(SensorEntity):
     def native_value(self) -> float:
         """Average power."""
 
-        commands = self.hass.data[DOMAIN]["schedule"]["schedule"]
+        commands = self.hass.data[DOMAIN][SCHEDULE]["schedule"]
         if len(commands) == 0:
             return 0
         return sum(command["value"] for command in commands) / len(commands)
@@ -52,7 +52,7 @@ class FlexMeasuresScheduleSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the FlexMeasures Schedule sensor."""
-        return self.hass.data[DOMAIN]["schedule"]
+        return self.hass.data[DOMAIN][SCHEDULE]
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
