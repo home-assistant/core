@@ -203,7 +203,7 @@ def _set_query_mock_v2(
     return query_api
 
 
-async def _setup(hass, config_ext, queries, expected_sensors):
+async def _setup(hass: HomeAssistant, config_ext, queries, expected_sensors) -> None:
     """Create client and test expected sensors."""
     config = {
         DOMAIN: config_ext,
@@ -321,7 +321,7 @@ async def test_minimal_config(
                     {
                         "name": "test",
                         "unique_id": "unique_test_id",
-                        "value_template": "value",
+                        "value_template": "123",
                         "unit_of_measurement": "unit",
                         "query": "query",
                         "database": "db2",
@@ -349,7 +349,7 @@ async def test_minimal_config(
                         "name": "test",
                         "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
-                        "value_template": "value",
+                        "value_template": "123",
                         "query": "query",
                     }
                 ],
@@ -435,7 +435,13 @@ async def test_config_failure(hass: HomeAssistant, config_ext) -> None:
     indirect=["mock_client"],
 )
 async def test_state_for_inconsistent_field(
-    hass: HomeAssistant, caplog, mock_client, config_ext, queries, set_query_mock, make_resultset
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
+    make_resultset,
 ) -> None:
     """Test state of sensor if configuration field doesn't match query result field."""
     set_query_mock(mock_client, return_value=make_resultset(42))
