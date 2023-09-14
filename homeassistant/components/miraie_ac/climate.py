@@ -175,18 +175,6 @@ class MirAIeClimateEntity(ClimateEntity):
         self._update_entity()
         _LOGGER.debug("MirAIe device added: %s", device.friendly_name)
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_id)},
-            name=self._friendly_name,
-            manufacturer=self.device.brand,
-            model=self.device.model_number,
-            sw_version=self.device.firmware_version,
-            suggested_area=self.device.area_name,
-        )
-
     def set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
