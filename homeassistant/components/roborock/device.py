@@ -22,12 +22,17 @@ class RoborockEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, unique_id: str, device_info: DeviceInfo, api: RoborockClient
+        self,
+        unique_id: str,
+        device_info: DeviceInfo,
+        api: RoborockClient,
+        supported_entities: set,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._api = api
+        supported_entities.add(unique_id)
 
     @property
     def api(self) -> RoborockClient:
@@ -53,6 +58,11 @@ class RoborockEntity(Entity):
 
         return response
 
+    @property
+    def available(self) -> bool:
+        """Returns if we have been able to communicate with the api and super().available."""
+        return super().available and self.api.is_available
+
 
 class RoborockCoordinatedEntity(
     RoborockEntity, CoordinatorEntity[RoborockDataUpdateCoordinator]
@@ -72,6 +82,7 @@ class RoborockCoordinatedEntity(
             unique_id=unique_id,
             device_info=coordinator.device_info,
             api=coordinator.api,
+            supported_entities=coordinator.supported_entities,
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id

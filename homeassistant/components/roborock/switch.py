@@ -132,12 +132,19 @@ async def async_setup_entry(
     )
     valid_entities: list[RoborockSwitch] = []
     for (coordinator, description), result in zip(possible_entities, results):
-        if result is None or isinstance(result, Exception):
+        unique_id = (
+            f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+        )
+        if (
+            result is None
+            or isinstance(result, Exception)
+            and unique_id not in coordinator.supported_entities
+        ):
             _LOGGER.debug("Not adding entity because of %s", result)
         else:
             valid_entities.append(
                 RoborockSwitch(
-                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    unique_id,
                     coordinator,
                     description,
                 )
@@ -158,7 +165,12 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            unique_id,
+            coordinator.device_info,
+            coordinator.api,
+            coordinator.supported_entities,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""

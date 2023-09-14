@@ -77,7 +77,8 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in SELECT_DESCRIPTIONS
-        if description.options_lambda(coordinator.roborock_device_info.props.status)
+        if f"{description.key}_{slugify(device_id)}" in coordinator.supported_entities
+        or description.options_lambda(coordinator.roborock_device_info.props.status)
         is not None
     )
 

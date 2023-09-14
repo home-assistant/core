@@ -154,7 +154,8 @@ async def async_setup_entry(
         )
         for device_id, coordinator in coordinators.items()
         for description in SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.roborock_device_info.props) is not None
+        if f"{description.key}_{slugify(device_id)}" in coordinator.supported_entities
+        or description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
 

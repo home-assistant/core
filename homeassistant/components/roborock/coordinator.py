@@ -51,6 +51,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             model=self.roborock_device_info.product.model,
             sw_version=self.roborock_device_info.device.fv,
         )
+        self.supported_entities: set[str] = set()
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""

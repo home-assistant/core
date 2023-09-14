@@ -96,7 +96,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
             hour=cache.value.get("start_hour"), minute=cache.value.get("start_minute")
         ),
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
+        # entity_registry_enabled_default=False,
     ),
     RoborockTimeDescription(
         key="off_peak_end",
@@ -115,7 +115,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
             hour=cache.value.get("end_hour"), minute=cache.value.get("end_minute")
         ),
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
+        # entity_registry_enabled_default=False,
     ),
 ]
 
@@ -146,7 +146,12 @@ async def async_setup_entry(
     )
     valid_entities: list[RoborockTimeEntity] = []
     for (coordinator, description), result in zip(possible_entities, results):
-        if result is None or isinstance(result, RoborockException):
+        unique_id = (
+            f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}"
+        )
+        if (
+            result is None or isinstance(result, RoborockException)
+        ) and unique_id not in coordinator.supported_entities:
             _LOGGER.debug("Not adding entity because of %s", result)
         else:
             valid_entities.append(
@@ -172,7 +177,12 @@ class RoborockTimeEntity(RoborockEntity, TimeEntity):
     ) -> None:
         """Create a time entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            unique_id,
+            coordinator.device_info,
+            coordinator.api,
+            coordinator.supported_entities,
+        )
 
     @property
     def native_value(self) -> time | None:

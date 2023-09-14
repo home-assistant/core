@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
+    CONF_CACHED_INFORMATION,
     CONF_USER_DATA,
     DOMAIN,
 )
@@ -25,8 +26,20 @@ def bypass_api_fixture() -> None:
     ), patch(
         "homeassistant.components.roborock.RoborockMqttClient._send_command"
     ), patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
+        return_value=HOME_DATA,
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
+        return_value=NETWORK_INFO,
+    ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
+    ), patch(
+        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
+    ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ), patch(
         "roborock.api.AttributeCache.async_value"
     ), patch(
@@ -45,7 +58,9 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USERNAME: USER_EMAIL,
             CONF_USER_DATA: USER_DATA.as_dict(),
             CONF_BASE_URL: BASE_URL,
+            CONF_CACHED_INFORMATION: {},
         },
+        version=2,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry
@@ -53,25 +68,11 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 async def setup_entry(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up the Roborock platform."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data",
-        return_value=HOME_DATA,
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient.get_networking",
-        return_value=NETWORK_INFO,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
-        return_value=PROP,
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
-    ), patch(
-        "homeassistant.components.roborock.RoborockMqttClient._wait_response"
-    ), patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     return mock_roborock_entry
