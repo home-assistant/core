@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum
 from functools import cache, partial, wraps
@@ -690,12 +690,10 @@ async def async_get_all_descriptions(
 
 
 @callback
-def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
+def remove_entity_service_fields(data: Mapping[Any, Any]) -> dict[Any, Any]:
     """Remove entity service fields."""
     return {
-        key: val
-        for key, val in call.data.items()
-        if key not in cv.ENTITY_SERVICE_FIELDS
+        key: val for key, val in data.items() if key not in cv.ENTITY_SERVICE_FIELDS
     }
 
 
@@ -817,7 +815,7 @@ async def entity_service_call(
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: dict | ServiceCall = remove_entity_service_fields(call)
+        data: dict | ServiceCall = remove_entity_service_fields(call.data)
     # If the service function is not a string, we pass the service call
     else:
         data = call

@@ -29,6 +29,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -397,11 +398,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
-        base: dict[str | vol.Optional, Any] = {
-            entity_field: data.pop(entity_field)
-            for entity_field in cv.ENTITY_SERVICE_FIELDS
-            if entity_field in data
-        }
+        base: dict[str | vol.Optional, Any] = remove_entity_service_fields(data)
 
         preprocess_turn_on_alternatives(hass, data)
         base["params"] = data

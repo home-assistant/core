@@ -96,7 +96,7 @@ async def _async_lock(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for locking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_lock(**remove_entity_service_fields(service_call))
+    await entity.async_lock(**remove_entity_service_fields(service_call.data))
 
 
 async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
@@ -108,7 +108,7 @@ async def _async_unlock(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for unlocking {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_unlock(**remove_entity_service_fields(service_call))
+    await entity.async_unlock(**remove_entity_service_fields(service_call.data))
 
 
 async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
@@ -120,7 +120,7 @@ async def _async_open(entity: LockEntity, service_call: ServiceCall) -> None:
         raise ValueError(
             f"Code '{code}' for opening {entity.entity_id} doesn't match pattern {entity.code_format}"
         )
-    await entity.async_open(**remove_entity_service_fields(service_call))
+    await entity.async_open(**remove_entity_service_fields(service_call.data))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
