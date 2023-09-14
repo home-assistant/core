@@ -49,3 +49,30 @@ async def test_binary_sensor(
     assert resp.message_code == 0
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_polling_binary_sensor(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    polling_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test binary sensor."""
+    await setup_integration(hass, polling_config_entry)
+
+    client = await hass_client_no_auth()
+
+    entity_id = "binary_sensor.henk_in_bed"
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+        client,
+    )
+    assert resp.message_code == 0
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN

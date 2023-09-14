@@ -14,8 +14,8 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import enable_webhooks, setup_integration
-from .conftest import WEBHOOK_ID
+from . import call_webhook, setup_integration
+from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -110,7 +110,6 @@ async def test_data_manager_webhook_subscription(
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test data manager webhook subscriptions."""
-    await enable_webhooks(hass)
     await setup_integration(hass, config_entry)
     await hass_client_no_auth()
     await hass.async_block_till_done()
@@ -130,6 +129,25 @@ async def test_data_manager_webhook_subscription(
 
     withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_IN)
     withings.async_notify_revoke.assert_any_call(webhook_url, NotifyAppli.BED_OUT)
+
+
+async def test_webhook_subscription_polling_config(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    polling_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test webhook subscriptions not run when polling."""
+    await setup_integration(hass, polling_config_entry)
+    await hass_client_no_auth()
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert withings.notify_revoke.call_count == 0
+    assert withings.notify_subscribe.call_count == 0
+    assert withings.notify_list.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -157,6 +175,28 @@ async def test_requests(
         path=urlparse(webhook_url).path,
     )
     assert response.status == 200
+
+
+async def test_webhooks_request_data(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    webhook_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    disable_webhook_delay,
+) -> None:
+    """Test calling a webhook requests data."""
+    await setup_integration(hass, webhook_config_entry)
+    client = await hass_client_no_auth()
+
+    assert withings.measure_get_meas.call_count == 1
+
+    await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
+        client,
+    )
+    assert withings.measure_get_meas.call_count == 2
 
 
 @pytest.mark.parametrize(
