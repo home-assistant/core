@@ -1750,9 +1750,6 @@ sense_energy==0.12.1
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
 
-# homeassistant.components.victron_ble
-sensor-state-data==2.15.1
-
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
 
@@ -1954,7 +1951,7 @@ velbus-aio==2023.2.0
 venstarcolortouch==0.19
 
 # homeassistant.components.victron_ble
-victron-ble==0.6.0
+victron-ble-ha-parser==0.1.0
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.4.1

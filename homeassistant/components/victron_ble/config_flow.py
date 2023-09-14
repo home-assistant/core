@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from victron_ble_ha_parser import VictronBluetoothDeviceData
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,7 +15,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from . import VictronBluetoothDeviceData
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

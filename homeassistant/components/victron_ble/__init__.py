@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from victron_ble.parser import VictronBluetoothDeviceData
+from victron_ble_ha_parser import VictronBluetoothDeviceData
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
