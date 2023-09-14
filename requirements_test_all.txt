@@ -393,7 +393,7 @@ apcaccess==0.0.13
 apple_weatherkit==1.0.2
 
 # homeassistant.components.apprise
-apprise==1.4.5
+apprise==1.5.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -443,7 +443,7 @@ bellows==0.36.3
 bimmer-connected==0.14.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.1.3
+bleak-retry-connector==3.2.1
 
 # homeassistant.components.bluetooth
 bleak==0.21.1
@@ -552,7 +552,7 @@ denonavr==0.11.3
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.0
+devolo-plc-api==1.4.1
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1700,7 +1700,7 @@ renault-api==0.2.0
 renson-endura-delta==1.5.0
 
 # homeassistant.components.reolink
-reolink-aio==0.7.9
+reolink-aio==0.7.10
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -2051,7 +2051,7 @@ youtubeaio==1.1.5
 zamg==0.3.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.111.0
+zeroconf==0.112.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

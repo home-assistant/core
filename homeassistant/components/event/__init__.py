@@ -7,6 +7,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Self, final
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -114,7 +115,7 @@ class EventEntity(RestoreEntity):
     __last_event_type: str | None = None
     __last_event_attributes: dict[str, Any] | None = None
 
-    @property
+    @cached_property
     def device_class(self) -> EventDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

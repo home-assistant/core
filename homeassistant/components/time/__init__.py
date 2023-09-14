@@ -8,6 +8,7 @@ from typing import final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -75,7 +76,7 @@ class TimeEntity(Entity):
     _attr_device_class: None = None
     _attr_state: None = None
 
-    @property
+    @cached_property
     @final
     def device_class(self) -> None:
         """Return the device class for the entity."""

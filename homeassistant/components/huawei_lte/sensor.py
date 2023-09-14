@@ -760,7 +760,9 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             return self.entity_description.icon_fn(self.state)
         return self.entity_description.icon
 
-    @property
+    @property  # type: ignore[override]
+    # The device class might change at run time of the signal
+    # is not a number, so we override here.
     def device_class(self) -> SensorDeviceClass | None:
         """Return device class for sensor."""
         if self.entity_description.device_class_fn:

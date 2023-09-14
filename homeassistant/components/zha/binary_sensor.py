@@ -8,6 +8,7 @@ import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -195,7 +196,7 @@ class IASZone(BinarySensor):
         zone_type = self._cluster_handler.cluster.get("zone_type")
         return IAS_ZONE_NAME_MAPPING.get(zone_type, "iaszone")
 
-    @property
+    @cached_property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return device class from component DEVICE_CLASSES."""
         zone_type = self._cluster_handler.cluster.get("zone_type")
