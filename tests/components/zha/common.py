@@ -9,7 +9,10 @@ import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.components.zha.core.helpers import async_get_zha_config_value
+from homeassistant.components.zha.core.helpers import (
+    async_get_zha_config_value,
+    get_zha_gateway,
+)
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -83,14 +86,6 @@ def update_attribute_cache(cluster):
         attribute_reports=attrs
     )
     cluster.handle_message(hdr, msg)
-
-
-def get_zha_gateway(hass):
-    """Return ZHA gateway from hass.data."""
-    try:
-        return hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-    except KeyError:
-        return None
 
 
 def make_attribute(attrid, value, status=0):
@@ -167,15 +162,11 @@ def find_entity_ids(domain, zha_device, hass):
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = (
-        f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ', '_')}"
-    )
+    entity_id = f"{domain}.coordinator_manufacturer_coordinator_model_{group.name.lower().replace(' ', '_')}"
 
     entity_ids = hass.states.async_entity_ids(domain)
-
-    if entity_id in entity_ids:
-        return entity_id
-    return None
+    assert entity_id in entity_ids
+    return entity_id
 
 
 async def async_enable_traffic(hass, zha_devices, enabled=True):

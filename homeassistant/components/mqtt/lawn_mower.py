@@ -113,7 +113,6 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _command_templates: dict[str, Callable[[PublishPayloadType], PublishPayloadType]]
     _command_topics: dict[str, str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
-    _optimistic: bool = False
 
     def __init__(
         self,
@@ -134,7 +133,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
 
         self._value_template = MqttValueTemplate(
             config.get(CONF_ACTIVITY_VALUE_TEMPLATE), entity=self
@@ -198,7 +197,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
         if self._config.get(CONF_ACTIVITY_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -217,19 +216,16 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
+        if self._attr_assumed_state and (
+            last_state := await self.async_get_last_state()
+        ):
             with contextlib.suppress(ValueError):
                 self._attr_activity = LawnMowerActivity(last_state.state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def _async_operate(self, option: str, activity: LawnMowerActivity) -> None:
         """Execute operation."""
         payload = self._command_templates[option](option)
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_activity = activity
             self.async_write_ha_state()
 

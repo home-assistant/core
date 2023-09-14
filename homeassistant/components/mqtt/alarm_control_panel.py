@@ -161,8 +161,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Init the MQTT Alarm Control Panel."""
-        self._state: str | None = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -182,6 +180,16 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         for feature in self._config[CONF_SUPPORTED_FEATURES]:
             self._attr_supported_features |= _SUPPORTED_FEATURES[feature]
+
+        if (code := self._config.get(CONF_CODE)) is None:
+            self._attr_code_format = None
+        elif code == REMOTE_CODE or (
+            isinstance(code, str) and re.search("^\\d+$", code)
+        ):
+            self._attr_code_format = alarm.CodeFormat.NUMBER
+        else:
+            self._attr_code_format = alarm.CodeFormat.TEXT
+        self._attr_code_arm_required = bool(self._config[CONF_CODE_ARM_REQUIRED])
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -205,7 +213,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             ):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
-            self._state = str(payload)
+            self._attr_state = str(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -224,26 +232,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def code_format(self) -> alarm.CodeFormat | None:
-        """Return one or more digits/characters."""
-        code: str | None
-        if (code := self._config.get(CONF_CODE)) is None:
-            return None
-        if code == REMOTE_CODE or (isinstance(code, str) and re.search("^\\d+$", code)):
-            return alarm.CodeFormat.NUMBER
-        return alarm.CodeFormat.TEXT
-
-    @property
-    def code_arm_required(self) -> bool:
-        """Whether the code is required for arm actions."""
-        return bool(self._config[CONF_CODE_ARM_REQUIRED])
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.

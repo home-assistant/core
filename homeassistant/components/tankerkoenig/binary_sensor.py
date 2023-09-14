@@ -12,8 +12,9 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TankerkoenigCoordinatorEntity, TankerkoenigDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import TankerkoenigDataUpdateCoordinator
+from .entity import TankerkoenigCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 

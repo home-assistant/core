@@ -120,15 +120,17 @@ class HaBleakScannerWrapper(BaseBleakScanner):
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
-    ) -> None:
+    ) -> Callable[[], None]:
         """Register a detection callback.
 
         The callback is called when a device is discovered or has a property changed.
 
-        This method takes the callback and registers it with the long running sscanner.
+        This method takes the callback and registers it with the long running scanner.
         """
         self._advertisement_data_callback = callback
         self._setup_detection_callback()
+        assert self._detection_cancel is not None
+        return self._detection_cancel
 
     def _setup_detection_callback(self) -> None:
         """Set up the detection callback."""

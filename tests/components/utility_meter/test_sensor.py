@@ -1460,6 +1460,39 @@ def test_calculate_adjustment_invalid_new_state(
     assert "Invalid state unknown" in caplog.text
 
 
+async def test_unit_of_measurement_missing_invalid_new_state(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a suggestion is created when new_state is missing unit_of_measurement."""
+    yaml_config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+            }
+        }
+    }
+    source_entity_id = yaml_config[DOMAIN]["energy_bill"]["source"]
+
+    assert await async_setup_component(hass, DOMAIN, yaml_config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(source_entity_id, 4, {ATTR_UNIT_OF_MEASUREMENT: None})
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert (
+        f"Source sensor {source_entity_id} has no unit of measurement." in caplog.text
+    )
+
+
 async def test_device_id(hass: HomeAssistant) -> None:
     """Test for source entity device for Utility Meter."""
     device_registry = dr.async_get(hass)

@@ -3,6 +3,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,6 +30,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temp_max",
@@ -47,6 +49,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity_max",
@@ -65,6 +68,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_max",
@@ -83,6 +87,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wind Speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="wind_max",

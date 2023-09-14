@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
+from .models import ELKM1Data
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA = {
     vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
@@ -65,8 +66,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ElkM1 alarm platform."""
-    elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    elk = elk_data["elk"]
+
+    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk = elk_data.elk
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities)
@@ -115,7 +117,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     )
     _element: Area
 
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
+    def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
         self._elk = elk

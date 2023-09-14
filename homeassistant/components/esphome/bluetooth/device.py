@@ -21,6 +21,7 @@ class ESPHomeBluetoothDevice:
     _ble_connection_free_futures: list[asyncio.Future[int]] = field(
         default_factory=list
     )
+    loop: asyncio.AbstractEventLoop = field(default_factory=asyncio.get_running_loop)
 
     @callback
     def async_update_ble_connection_limits(self, free: int, limit: int) -> None:
@@ -49,6 +50,6 @@ class ESPHomeBluetoothDevice:
         """Wait until there are free BLE connections."""
         if self.ble_connections_free > 0:
             return self.ble_connections_free
-        fut: asyncio.Future[int] = asyncio.Future()
+        fut: asyncio.Future[int] = self.loop.create_future()
         self._ble_connection_free_futures.append(fut)
         return await fut

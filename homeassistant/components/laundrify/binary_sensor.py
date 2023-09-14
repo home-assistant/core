@@ -51,17 +51,14 @@ class LaundrifyPowerPlug(
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = device["_id"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Configure the Device of this Entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device["_id"])},
-            name=self._device["name"],
+        unique_id = device["_id"]
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device["name"],
             manufacturer=MANUFACTURER,
             model=MODEL,
-            sw_version=self._device["firmwareVersion"],
+            sw_version=device["firmwareVersion"],
         )
 
     @property

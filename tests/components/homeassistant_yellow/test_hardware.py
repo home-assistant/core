@@ -54,7 +54,7 @@ async def test_hardware_info(
                 "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Yellow",
-                "url": None,
+                "url": "https://yellow.home-assistant.io/documentation/",
             }
         ]
     }

@@ -20,9 +20,11 @@ from homeassistant.components.zha.core.const import (
     ZHA_OPTIONS,
 )
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -32,7 +34,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     patch_zha_config,
     send_attributes_report,
     update_attribute_cache,
@@ -1781,7 +1782,8 @@ async def test_zha_group_light_entity(
     assert device_3_entity_id not in zha_group.member_entity_ids
 
     # make sure the entity registry entry is still there
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(group_entity_id) is not None
 
     # add a member back and ensure that the group entity was created again
     await zha_group.async_add_members([GroupMember(device_light_3.ieee, 1)])
@@ -1811,10 +1813,10 @@ async def test_zha_group_light_entity(
     assert len(zha_group.members) == 3
 
     # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+    assert entity_registry.async_get(group_entity_id) is not None
     await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
     assert hass.states.get(group_entity_id) is None
-    assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is None
+    assert entity_registry.async_get(group_entity_id) is None
 
 
 @patch(
@@ -1914,7 +1916,8 @@ async def test_group_member_assume_state(
         assert hass.states.get(group_entity_id).state == STATE_OFF
 
         # remove the group and ensure that there is no entity and that the entity registry is cleaned up
-        assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is not None
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(group_entity_id) is not None
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None
-        assert zha_gateway.ha_entity_registry.async_get(group_entity_id) is None
+        assert entity_registry.async_get(group_entity_id) is None

@@ -330,6 +330,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             optimistic or topic[CONF_COLOR_MODE_STATE_TOPIC] is None
         )
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_rgb_color = optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_rgbw_color = optimistic or topic[CONF_RGBW_STATE_TOPIC] is None
         self._optimistic_rgbww_color = (
@@ -667,11 +668,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_HS_COLOR)
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.

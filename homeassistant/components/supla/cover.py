@@ -95,6 +95,8 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
 class SuplaDoorEntity(SuplaEntity, CoverEntity):
     """Representation of a Supla door."""
 
+    _attr_device_class = CoverDeviceClass.GARAGE
+
     @property
     def is_closed(self) -> bool | None:
         """Return if the door is closed or not."""
@@ -120,8 +122,3 @@ class SuplaDoorEntity(SuplaEntity, CoverEntity):
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the door."""
         await self.async_action("OPEN_CLOSE")
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return CoverDeviceClass.GARAGE

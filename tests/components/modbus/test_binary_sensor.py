@@ -1,4 +1,5 @@
 """Thetests for the Modbus sensor component."""
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -199,14 +200,13 @@ async def test_all_binary_sensor(hass: HomeAssistant, expected, mock_do_cycle) -
     ],
 )
 async def test_lazy_error_binary_sensor(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
+    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle: FrozenDateTimeFactory
 ) -> None:
     """Run test for given config."""
-    now = mock_do_cycle
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
+    await do_next_cycle(hass, mock_do_cycle, 11)
     assert hass.states.get(ENTITY_ID).state == end_expect
 
 

@@ -77,6 +77,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_preset_modes = PRESET_MODES
 
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
@@ -85,6 +86,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self._temperature_unit = temperature_unit
         self._schedule_mode = None
         self._target_temperature = None
+        self._attr_unique_id = thermostat.serial_number
 
     @property
     def temperature_unit(self) -> str:
@@ -101,11 +103,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
             return self._thermostat.celsius
 
         return self._thermostat.fahrenheit
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._thermostat.serial_number
 
     @property
     def available(self) -> bool:
@@ -159,11 +156,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     def preset_mode(self):
         """Return current preset mode."""
         return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return PRESET_MODES
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Update the hold mode of the thermostat."""

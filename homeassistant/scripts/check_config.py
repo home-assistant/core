@@ -30,7 +30,6 @@ import homeassistant.util.yaml.loader as yaml_loader
 REQUIREMENTS = ("colorlog==6.7.0",)
 
 _LOGGER = logging.getLogger(__name__)
-# pylint: disable=protected-access
 MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
@@ -166,13 +165,13 @@ def check(config_dir, secrets=False):
         "secret_cache": {},
     }
 
-    # pylint: disable=possibly-unused-variable
+    # pylint: disable-next=possibly-unused-variable
     def mock_load(filename, secrets=None):
         """Mock hass.util.load_yaml to save config file names."""
         res["yaml_files"][filename] = True
         return MOCKS["load"][1](filename, secrets)
 
-    # pylint: disable=possibly-unused-variable
+    # pylint: disable-next=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -201,7 +200,7 @@ def check(config_dir, secrets=False):
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
-        res["secret_cache"] = secrets._cache
+        res["secret_cache"] = secrets._cache  # pylint: disable=protected-access
         return secrets
 
     try:

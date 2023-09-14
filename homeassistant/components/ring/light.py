@@ -55,8 +55,8 @@ class RingLight(RingEntityMixin, LightEntity):
     def __init__(self, config_entry_id, device):
         """Initialize the light."""
         super().__init__(config_entry_id, device)
-        self._unique_id = device.id
-        self._light_on = device.lights == ON_STATE
+        self._attr_unique_id = device.id
+        self._attr_is_on = device.lights == ON_STATE
         self._no_updates_until = dt_util.utcnow()
 
     @callback
@@ -65,18 +65,8 @@ class RingLight(RingEntityMixin, LightEntity):
         if self._no_updates_until > dt_util.utcnow():
             return
 
-        self._light_on = self._device.lights == ON_STATE
+        self._attr_is_on = self._device.lights == ON_STATE
         self.async_write_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def is_on(self):
-        """If the switch is currently on or off."""
-        return self._light_on
 
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
@@ -86,7 +76,7 @@ class RingLight(RingEntityMixin, LightEntity):
             _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
             return
 
-        self._light_on = new_state == ON_STATE
+        self._attr_is_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.async_write_ha_state()
 

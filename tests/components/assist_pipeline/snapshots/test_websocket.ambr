@@ -77,6 +77,9 @@
     }),
   })
 # ---
+# name: test_audio_pipeline.7
+  None
+# ---
 # name: test_audio_pipeline_debug
   dict({
     'language': 'en',
@@ -154,6 +157,9 @@
       'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
     }),
   })
+# ---
+# name: test_audio_pipeline_debug.7
+  None
 # ---
 # name: test_audio_pipeline_no_wake_word_engine
   dict({
@@ -364,6 +370,9 @@
     }),
   })
 # ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.9
+  None
+# ---
 # name: test_audio_pipeline_with_wake_word_timeout
   dict({
     'language': 'en',
@@ -392,6 +401,9 @@
     'message': 'Wake word was not detected',
   })
 # ---
+# name: test_audio_pipeline_with_wake_word_timeout.3
+  None
+# ---
 # name: test_intent_failed
   dict({
     'language': 'en',
@@ -410,6 +422,9 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
   })
+# ---
+# name: test_intent_failed.2
+  None
 # ---
 # name: test_intent_timeout
   dict({
@@ -431,6 +446,9 @@
   })
 # ---
 # name: test_intent_timeout.2
+  None
+# ---
+# name: test_intent_timeout.3
   dict({
     'code': 'timeout',
     'message': 'Timeout running pipeline',
@@ -482,6 +500,9 @@
     }),
   })
 # ---
+# name: test_stt_stream_failed.2
+  None
+# ---
 # name: test_text_only_pipeline
   dict({
     'language': 'en',
@@ -523,6 +544,9 @@
     }),
   })
 # ---
+# name: test_text_only_pipeline.3
+  None
+# ---
 # name: test_text_pipeline_timeout
   dict({
     'code': 'timeout',
@@ -546,4 +570,7 @@
     'tts_input': 'Lights are on.',
     'voice': 'james_earl_jones',
   })
+# ---
+# name: test_tts_failed.2
+  None
 # ---

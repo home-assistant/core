@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import Callable
 import datetime as dt
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 
@@ -128,11 +128,11 @@ def update_entity_discovery_data(
     hass: HomeAssistant, discovery_payload: DiscoveryInfoType, entity_id: str
 ) -> None:
     """Update discovery data."""
-    assert (
-        discovery_data := get_mqtt_data(hass).debug_info_entities[entity_id][
-            "discovery_data"
-        ]
-    ) is not None
+    discovery_data = get_mqtt_data(hass).debug_info_entities[entity_id][
+        "discovery_data"
+    ]
+    if TYPE_CHECKING:
+        assert discovery_data is not None
     discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
 
 

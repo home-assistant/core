@@ -202,6 +202,10 @@ MOCK_STATUS_RPC = {
     "devicepower:0": {"external": {"present": True}},
     "temperature:0": {"tC": 22.9},
     "illuminance:0": {"lux": 345},
+    "em1:0": {"act_power": 85.3},
+    "em1:1": {"act_power": 123.3},
+    "em1data:0": {"total_act_energy": 123456.4},
+    "em1data:1": {"total_act_energy": 987654.3},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},

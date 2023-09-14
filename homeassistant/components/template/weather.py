@@ -301,8 +301,9 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             return "Powered by Home Assistant"
         return self._attribution
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
 
         if self._condition_template:
             self.add_template_attribute(
@@ -398,7 +399,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
                 validator=partial(self._validate_forecast, "twice_daily"),
             )
 
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_forecast(

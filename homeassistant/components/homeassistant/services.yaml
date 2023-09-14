@@ -13,6 +13,11 @@ set_location:
       example: 117.22743
       selector:
         text:
+    elevation:
+      required: false
+      example: 120
+      selector:
+        text:
 
 stop:
 toggle:

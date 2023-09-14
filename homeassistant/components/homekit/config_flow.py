@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
+from operator import itemgetter
 import random
 import re
 import string
@@ -638,7 +639,7 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
     for device_id in results:
         entry = dev_reg.async_get(device_id)
         unsorted[device_id] = entry.name or device_id if entry else device_id
-    return dict(sorted(unsorted.items(), key=lambda item: item[1]))
+    return dict(sorted(unsorted.items(), key=itemgetter(1)))
 
 
 def _exclude_by_entity_registry(

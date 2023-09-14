@@ -5,8 +5,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
-from homeassistant.components.airly import set_update_interval
 from homeassistant.components.airly.const import DOMAIN
+from homeassistant.components.airly.coordinator import set_update_interval
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant

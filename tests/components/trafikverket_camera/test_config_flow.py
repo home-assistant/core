@@ -10,6 +10,7 @@ from pytrafikverket.exceptions import (
     NoCameraFound,
     UnknownError,
 )
+from pytrafikverket.trafikverket_camera import CameraInfo
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import CONF_LOCATION, DOMAIN
@@ -20,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -31,6 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_camera",
+        return_value=get_camera,
     ), patch(
         "homeassistant.components.trafikverket_camera.async_setup_entry",
         return_value=True,
@@ -39,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_KEY: "1234567890",
-                CONF_LOCATION: "Test location",
+                CONF_LOCATION: "Test loc",
             },
         )
         await hass.async_block_till_done()

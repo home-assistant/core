@@ -124,9 +124,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
             ):
                 if hvac_mode_kw in mode_value_config:
-                    self._hvac_mode_mapping.append(
-                        (mode_value_config[hvac_mode_kw], hvac_mode)
-                    )
+                    values = mode_value_config[hvac_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._hvac_mode_mapping.append((value, hvac_mode))
                     self._attr_hvac_modes.append(hvac_mode)
 
         else:

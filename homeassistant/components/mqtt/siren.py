@@ -194,6 +194,7 @@ class MqttSiren(MqttEntity, SirenEntity):
 
         self._attr_supported_features = _supported_features
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
+        self._attr_assumed_state = bool(self._optimistic)
         self._attr_is_on = False if self._optimistic else None
 
         command_template: Template | None = config.get(CONF_COMMAND_TEMPLATE)
@@ -300,11 +301,6 @@ class MqttSiren(MqttEntity, SirenEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

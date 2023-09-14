@@ -20,12 +20,12 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 import homeassistant.components.zha.core.registries as zha_regs
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
     DEV_SIG_ATTRIBUTES,

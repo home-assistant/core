@@ -77,8 +77,8 @@ class TriggerBaseEntity(Entity):
     """Template Base entity based on trigger data."""
 
     domain: str
-    extra_template_keys: tuple | None = None
-    extra_template_keys_complex: tuple | None = None
+    extra_template_keys: tuple[str, ...] | None = None
+    extra_template_keys_complex: tuple[str, ...] | None = None
     _unique_id: str | None
 
     def __init__(
@@ -94,7 +94,7 @@ class TriggerBaseEntity(Entity):
         self._config = config
 
         self._static_rendered = {}
-        self._to_render_simple = []
+        self._to_render_simple: list[str] = []
         self._to_render_complex: list[str] = []
 
         for itm in (
@@ -119,6 +119,7 @@ class TriggerBaseEntity(Entity):
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
     @property
     def name(self) -> str | None:
@@ -129,11 +130,6 @@ class TriggerBaseEntity(Entity):
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self._unique_id
-
-    @property
-    def device_class(self):  # type: ignore[no-untyped-def]
-        """Return device class of the entity."""
-        return self._config.get(CONF_DEVICE_CLASS)
 
     @property
     def icon(self) -> str | None:

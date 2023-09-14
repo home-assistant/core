@@ -40,7 +40,7 @@
     'original_name': 'Nightlight',
     'platform': 'wled',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
     'unit_of_measurement': None,
   })
@@ -189,7 +189,7 @@
     'original_name': 'Sync receive',
     'platform': 'wled',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
     'unit_of_measurement': None,
   })
@@ -264,7 +264,7 @@
     'original_name': 'Sync send',
     'platform': 'wled',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
     'unit_of_measurement': None,
   })

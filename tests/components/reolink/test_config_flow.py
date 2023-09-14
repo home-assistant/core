@@ -1,18 +1,22 @@
 """Test the Reolink config flow."""
+from datetime import timedelta
 import json
-from unittest.mock import MagicMock
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
-from homeassistant.components.reolink import const
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util.dt import utcnow
 
 from .conftest import (
     TEST_HOST,
@@ -27,12 +31,14 @@ from .conftest import (
     TEST_USERNAME2,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry", "reolink_connect")
+pytestmark = pytest.mark.usefixtures("reolink_connect")
 
 
-async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
+async def test_config_flow_manual_success(
+    hass: HomeAssistant, mock_setup_entry: MagicMock
+) -> None:
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -66,7 +72,7 @@ async def test_config_flow_manual_success(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_errors(
-    hass: HomeAssistant, reolink_connect: MagicMock
+    hass: HomeAssistant, reolink_connect: MagicMock, mock_setup_entry: MagicMock
 ) -> None:
     """Successful flow manually initialized by the user after some errors."""
     result = await hass.config_entries.flow.async_init(
@@ -192,7 +198,7 @@ async def test_config_flow_errors(
     }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -230,7 +236,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_change_connection_settings(hass: HomeAssistant) -> None:
+async def test_change_connection_settings(
+    hass: HomeAssistant, mock_setup_entry: MagicMock
+) -> None:
     """Test changing connection settings by issuing a second user config flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -273,7 +281,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
@@ -333,7 +341,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
-async def test_dhcp_flow(hass: HomeAssistant) -> None:
+async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Successful flow from DHCP discovery."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
@@ -371,8 +379,44 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_dhcp_abort_flow(hass: HomeAssistant) -> None:
-    """Test dhcp discovery aborts if already configured."""
+@pytest.mark.parametrize(
+    ("last_update_success", "attr", "value", "expected"),
+    [
+        (
+            False,
+            None,
+            None,
+            TEST_HOST2,
+        ),
+        (
+            True,
+            None,
+            None,
+            TEST_HOST,
+        ),
+        (
+            False,
+            "get_state",
+            AsyncMock(side_effect=ReolinkError("Test error")),
+            TEST_HOST,
+        ),
+        (
+            False,
+            "mac_address",
+            "aa:aa:aa:aa:aa:aa",
+            TEST_HOST,
+        ),
+    ],
+)
+async def test_dhcp_ip_update(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    last_update_success: bool,
+    attr: str,
+    value: Any,
+    expected: str,
+) -> None:
+    """Test dhcp discovery aborts if already configured where the IP is updated if appropriate."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -392,12 +436,24 @@ async def test_dhcp_abort_flow(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    if not last_update_success:
+        # ensure the last_update_succes is False for the device_coordinator.
+        reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
+        async_fire_time_changed(
+            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(minutes=1)
+        )
+        await hass.async_block_till_done()
 
     dhcp_data = dhcp.DhcpServiceInfo(
-        ip=TEST_HOST,
+        ip=TEST_HOST2,
         hostname="Reolink",
         macaddress=TEST_MAC,
     )
+
+    if attr is not None:
+        setattr(reolink_connect, attr, value)
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
@@ -405,3 +461,6 @@ async def test_dhcp_abort_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert config_entry.data[CONF_HOST] == expected

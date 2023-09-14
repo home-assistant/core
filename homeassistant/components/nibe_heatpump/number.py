@@ -56,7 +56,6 @@ class Number(CoilEntity, NumberEntity):
 
         self._attr_native_step = 1 / coil.factor
         self._attr_native_unit_of_measurement = coil.unit
-        self._attr_native_value = None
 
     def _async_read_coil(self, data: CoilData) -> None:
         if data.value is None:

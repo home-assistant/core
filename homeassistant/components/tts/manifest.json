@@ -8,5 +8,5 @@
   "integration_type": "entity",
   "loggers": ["mutagen"],
   "quality_scale": "internal",
-  "requirements": ["mutagen==1.46.0"]
+  "requirements": ["mutagen==1.47.0"]
 }

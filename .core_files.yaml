@@ -55,6 +55,7 @@ base_platforms: &base_platforms
 components: &components
   - homeassistant/components/alexa/**
   - homeassistant/components/application_credentials/**
+  - homeassistant/components/assist_pipeline/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**

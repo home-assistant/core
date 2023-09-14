@@ -52,6 +52,47 @@ class TadoSensorEntityDescription(
     data_category: str | None = None
 
 
+def format_condition(condition: str) -> str:
+    """Return condition from dict CONDITIONS_MAP."""
+    for key, value in CONDITIONS_MAP.items():
+        if condition in value:
+            return key
+    return condition
+
+
+def get_tado_mode(data) -> str | None:
+    """Return Tado Mode based on Presence attribute."""
+    if "presence" in data:
+        return data["presence"]
+    return None
+
+
+def get_automatic_geofencing(data) -> bool:
+    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            return False
+        return True
+    return False
+
+
+def get_geofencing_mode(data) -> str:
+    """Return Geofencing Mode based on Presence and Presence Locked attributes."""
+    tado_mode = ""
+    tado_mode = data.get("presence", "unknown")
+
+    geofencing_switch_mode = ""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            geofencing_switch_mode = "manual"
+        else:
+            geofencing_switch_mode = "auto"
+    else:
+        geofencing_switch_mode = "manual"
+
+    return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
+
+
 HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="outdoor temperature",
@@ -86,22 +127,19 @@ HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="tado mode",
         translation_key="tado_mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_tado_mode(data),
+        state_fn=get_tado_mode,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="geofencing mode",
         translation_key="geofencing_mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_geofencing_mode(data),
+        state_fn=get_geofencing_mode,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="automatic geofencing",
         translation_key="automatic_geofencing",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_automatic_geofencing(data),
+        state_fn=get_automatic_geofencing,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
 ]
@@ -161,47 +199,6 @@ ZONE_SENSORS = {
     ],
     TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
 }
-
-
-def format_condition(condition: str) -> str:
-    """Return condition from dict CONDITIONS_MAP."""
-    for key, value in CONDITIONS_MAP.items():
-        if condition in value:
-            return key
-    return condition
-
-
-def get_tado_mode(data) -> str | None:
-    """Return Tado Mode based on Presence attribute."""
-    if "presence" in data:
-        return data["presence"]
-    return None
-
-
-def get_automatic_geofencing(data) -> bool:
-    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
-    if "presenceLocked" in data:
-        if data["presenceLocked"]:
-            return False
-        return True
-    return False
-
-
-def get_geofencing_mode(data) -> str:
-    """Return Geofencing Mode based on Presence and Presence Locked attributes."""
-    tado_mode = ""
-    tado_mode = data.get("presence", "unknown")
-
-    geofencing_switch_mode = ""
-    if "presenceLocked" in data:
-        if data["presenceLocked"]:
-            geofencing_switch_mode = "manual"
-        else:
-            geofencing_switch_mode = "auto"
-    else:
-        geofencing_switch_mode = "manual"
-
-    return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
 
 
 async def async_setup_entry(

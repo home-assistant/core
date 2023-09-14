@@ -43,8 +43,8 @@
   },
   "device_automation": {
     "trigger_type": {
-      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
-      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+      "turn_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turn_off": "[%key:common::device_automation::trigger_type::turned_off%]"
     }
   },
   "services": {

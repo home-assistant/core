@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -126,6 +127,11 @@ class OpenUvEntity(CoordinatorEntity):
             f"{coordinator.latitude}_{coordinator.longitude}_{description.key}"
         )
         self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.latitude}_{coordinator.longitude}")},
+            name="OpenUV",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

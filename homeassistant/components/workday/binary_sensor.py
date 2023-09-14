@@ -129,7 +129,13 @@ async def async_setup_entry(
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
 
-    obj_holidays: HolidayBase = country_holidays(country, subdiv=province, years=year)
+    cls: HolidayBase = country_holidays(country, subdiv=province, years=year)
+    obj_holidays: HolidayBase = country_holidays(
+        country,
+        subdiv=province,
+        years=year,
+        language=cls.default_language,
+    )
 
     # Add custom holidays
     try:

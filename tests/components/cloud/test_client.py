@@ -365,6 +365,11 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     response = await cloud.client.async_cloud_connection_info({})
 
     assert response == {
-        "remote": {"connected": False, "enabled": False, "instance_domain": None},
+        "remote": {
+            "connected": False,
+            "enabled": False,
+            "instance_domain": None,
+            "alias": None,
+        },
         "version": HA_VERSION,
     }

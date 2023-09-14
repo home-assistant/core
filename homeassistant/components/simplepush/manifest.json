@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/simplepush",
   "iot_class": "cloud_polling",
   "loggers": ["simplepush"],
-  "requirements": ["simplepush==2.1.1"]
+  "requirements": ["simplepush==2.2.3"]
 }

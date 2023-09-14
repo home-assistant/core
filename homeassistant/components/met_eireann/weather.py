@@ -94,24 +94,20 @@ class MetEireannWeather(
         self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._hourly = hourly
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = " Hourly"
-
-        if name is not None:
-            return f"{name}{name_appendix}"
-
-        return f"{DEFAULT_NAME}{name_appendix}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return not self._hourly
+        name_appendix = " Hourly" if hourly else ""
+        if (name := self._config.get(CONF_NAME)) is not None:
+            self._attr_name = f"{name}{name_appendix}"
+        else:
+            self._attr_name = f"{DEFAULT_NAME}{name_appendix}"
+        self._attr_entity_registry_enabled_default = not hourly
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN,)},
+            manufacturer="Met Éireann",
+            model="Forecast",
+            configuration_url="https://www.met.ie",
+        )
 
     @property
     def condition(self):
@@ -191,15 +187,3 @@ class MetEireannWeather(
     def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(True)
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return DeviceInfo(
-            name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},
-            manufacturer="Met Éireann",
-            model="Forecast",
-            configuration_url="https://www.met.ie",
-        )

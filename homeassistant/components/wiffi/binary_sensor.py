@@ -39,13 +39,13 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
     def __init__(self, device, metric, options):
         """Initialize the entity."""
         super().__init__(device, metric, options)
-        self._value = metric.value
+        self._attr_is_on = metric.value
         self.reset_expiration_date()
 
     @property
-    def is_on(self):
-        """Return the state of the entity."""
-        return self._value
+    def available(self):
+        """Return true if value is valid."""
+        return self._attr_is_on is not None
 
     @callback
     def _update_value_callback(self, device, metric):
@@ -54,5 +54,5 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
-        self._value = metric.value
+        self._attr_is_on = metric.value
         self.async_write_ha_state()

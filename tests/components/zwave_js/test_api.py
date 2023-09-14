@@ -3298,22 +3298,21 @@ async def test_subscribe_log_updates(
     }
 
     # Test FailedZWaveCommand is caught
-    with patch(
-        "zwave_js_server.model.driver.Driver.async_start_listening_logs",
-        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
-    ):
-        await ws_client.send_json(
-            {
-                ID: 2,
-                TYPE: "zwave_js/subscribe_log_updates",
-                ENTRY_ID: entry.entry_id,
-            }
-        )
-        msg = await ws_client.receive_json()
+    client.async_start_listening_logs.side_effect = FailedZWaveCommand(
+        "failed_command", 1, "error message"
+    )
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_log_updates",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
 
-        assert not msg["success"]
-        assert msg["error"]["code"] == "zwave_error"
-        assert msg["error"]["message"] == "Z-Wave error 1: error message"
+    assert not msg["success"]
+    assert msg["error"]["code"] == "zwave_error"
+    assert msg["error"]["message"] == "Z-Wave error 1: error message"
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
@@ -3680,7 +3679,6 @@ async def test_abort_firmware_update(
     ws_client = await hass_ws_client(hass)
     device = get_device(hass, multisensor_6)
 
-    client.async_send_command.return_value = {}
     await ws_client.send_json(
         {
             ID: 1,
@@ -3691,8 +3689,8 @@ async def test_abort_firmware_update(
     msg = await ws_client.receive_json()
     assert msg["success"]
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.abort_firmware_update"
     assert args["nodeId"] == multisensor_6.node_id
 

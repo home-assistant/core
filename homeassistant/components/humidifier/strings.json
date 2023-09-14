@@ -33,7 +33,7 @@
           "state": {
             "humidifying": "Humidifying",
             "drying": "Drying",
-            "idle": "Idle",
+            "idle": "[%key:common::state::idle%]",
             "off": "[%key:common::state::off%]"
           }
         },
@@ -60,7 +60,7 @@
             "away": "Away",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "Home",
+            "home": "[%key:common::state::home%]",
             "sleep": "Sleep",
             "auto": "Auto",
             "baby": "Baby"

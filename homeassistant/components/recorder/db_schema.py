@@ -40,6 +40,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -558,7 +559,7 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, dict[str, str]],
+        entity_sources: dict[str, EntityInfo],
         exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:

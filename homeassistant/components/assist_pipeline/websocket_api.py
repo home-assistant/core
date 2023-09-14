@@ -332,7 +332,7 @@ async def websocket_list_languages(
             dialect = language_util.Dialect.parse(language_tag)
             languages.add(dialect.language)
         if pipeline_languages is not None:
-            pipeline_languages &= languages
+            pipeline_languages = language_util.intersect(pipeline_languages, languages)
         else:
             pipeline_languages = languages
 
@@ -342,11 +342,15 @@ async def websocket_list_languages(
             dialect = language_util.Dialect.parse(language_tag)
             languages.add(dialect.language)
         if pipeline_languages is not None:
-            pipeline_languages &= languages
+            pipeline_languages = language_util.intersect(pipeline_languages, languages)
         else:
             pipeline_languages = languages
 
     connection.send_result(
         msg["id"],
-        {"languages": pipeline_languages},
+        {
+            "languages": sorted(pipeline_languages)
+            if pipeline_languages
+            else pipeline_languages
+        },
     )

@@ -57,7 +57,7 @@ async def test_config_flow(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[1])
     assert pvpc_aioclient_mock.call_count == 1
 
@@ -74,7 +74,7 @@ async def test_config_flow(
 
     # Check removal
     registry = er.async_get(hass)
-    registry_entity = registry.async_get("sensor.test")
+    registry_entity = registry.async_get("sensor.esios_pvpc")
     assert await hass.config_entries.async_remove(registry_entity.config_entry_id)
 
     # and add it again with UI
@@ -89,7 +89,7 @@ async def test_config_flow(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[1])
     assert pvpc_aioclient_mock.call_count == 2
     assert state.attributes["period"] == "P3"
@@ -110,7 +110,7 @@ async def test_config_flow(
         user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[1])
     assert pvpc_aioclient_mock.call_count == 3
     assert state.attributes["period"] == "P3"
@@ -121,7 +121,7 @@ async def test_config_flow(
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.test")
+    state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[0], value="unavailable")
     assert "period" not in state.attributes
     assert pvpc_aioclient_mock.call_count == 4

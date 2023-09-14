@@ -21,14 +21,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    aiohttp_client,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
@@ -39,13 +34,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_MANUFACTURER,
-    BLOCK_SWITCH,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
@@ -163,6 +156,24 @@ class UniFiController:
         return host
 
     @callback
+    @staticmethod
+    def register_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+        entity_class: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        requires_admin: bool = False,
+    ) -> None:
+        """Register platform for UniFi entity management."""
+        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not controller.is_admin:
+            return
+        controller.register_platform_add_entities(
+            entity_class, descriptions, async_add_entities
+        )
+
+    @callback
     def register_platform_add_entities(
         self,
         unifi_platform_entity: type[UnifiEntity],
@@ -251,30 +262,9 @@ class UniFiController:
         assert self.config_entry.unique_id is not None
         self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
-        # Restore clients that are not a part of active clients list.
-        entity_registry = er.async_get(self.hass)
-        for entry in async_entries_for_config_entry(
-            entity_registry, self.config_entry.entry_id
-        ):
-            if entry.domain == Platform.DEVICE_TRACKER:
-                mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == Platform.SWITCH and entry.unique_id.startswith(
-                BLOCK_SWITCH
-            ):
-                mac = entry.unique_id.split("-", 1)[1]
-            else:
-                continue
-
-            if mac in self.api.clients or mac not in self.api.clients_all:
-                continue
-
-            client = self.api.clients_all[mac]
-            self.api.clients.process_raw([dict(client.raw)])
-            LOGGER.debug(
-                "Restore disconnected client %s (%s)",
-                entry.entity_id,
-                client.mac,
-            )
+        for mac in self.option_block_clients:
+            if mac not in self.api.clients and mac in self.api.clients_all:
+                self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
         self.wireless_clients.update_clients(set(self.api.clients.values()))
 

@@ -57,6 +57,7 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._mapdata = mapdata
         self._available = neato is not None
         self._robot_serial: str = self.robot.serial
+        self._attr_unique_id = self.robot.serial
         self._generated_at: str | None = None
         self._image_url: str | None = None
         self._image: bytes | None = None
@@ -108,11 +109,6 @@ class NeatoCleaningMap(NeatoEntity, Camera):
         self._image_url = image_url
         self._generated_at = map_data.get("generated_at")
         self._available = True
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return self._robot_serial
 
     @property
     def available(self) -> bool:

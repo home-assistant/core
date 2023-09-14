@@ -468,7 +468,7 @@ async def test_options_flow_hides_members(
 
 COVER_ATTRS = [{"supported_features": 0}, {}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
-FAN_ATTRS = [{"supported_features": 0}, {"assumed_state": True}]
+FAN_ATTRS = [{"supported_features": 0}, {}]
 LIGHT_ATTRS = [
     {
         "icon": "mdi:lightbulb-group",

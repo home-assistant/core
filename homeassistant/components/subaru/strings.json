@@ -28,7 +28,7 @@
         "title": "[%key:component::subaru::config::step::user::title%]",
         "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },

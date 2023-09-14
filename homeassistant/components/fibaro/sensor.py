@@ -113,7 +113,15 @@ async def async_setup_entry(
         # main sensors are created even if the entity type is not known
         entities.append(FibaroSensor(device, entity_description))
 
-    for platform in (Platform.COVER, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH):
+    for platform in (
+        Platform.BINARY_SENSOR,
+        Platform.CLIMATE,
+        Platform.COVER,
+        Platform.LIGHT,
+        Platform.LOCK,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ):
         for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][platform]:
             for entity_description in ADDITIONAL_SENSOR_TYPES:
                 if entity_description.key in device.properties:

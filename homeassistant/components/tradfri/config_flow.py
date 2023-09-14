@@ -122,7 +122,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if same_hub_entries:
             await asyncio.wait(
                 [
-                    self.hass.config_entries.async_remove(entry_id)
+                    asyncio.create_task(self.hass.config_entries.async_remove(entry_id))
                     for entry_id in same_hub_entries
                 ]
             )

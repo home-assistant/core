@@ -1,6 +1,7 @@
 """Support for Waze travel time sensor."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -47,6 +48,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+PARALLEL_UPDATES = 1
+
+MS_BETWEEN_API_CALLS = 0.5
 
 
 async def async_setup_entry(
@@ -144,6 +149,7 @@ class WazeTravelTime(SensorEntity):
         self._waze_data.origin = find_coordinates(self.hass, self._origin)
         self._waze_data.destination = find_coordinates(self.hass, self._destination)
         await self._waze_data.async_update()
+        await asyncio.sleep(MS_BETWEEN_API_CALLS)
 
 
 class WazeTravelTimeData:

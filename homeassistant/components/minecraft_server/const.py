@@ -26,14 +26,6 @@ KEY_MOTD = "motd"
 
 MANUFACTURER = "Mojang AB"
 
-NAME_LATENCY = "Latency Time"
-NAME_PLAYERS_MAX = "Players Max"
-NAME_PLAYERS_ONLINE = "Players Online"
-NAME_PROTOCOL_VERSION = "Protocol Version"
-NAME_STATUS = "Status"
-NAME_VERSION = "Version"
-NAME_MOTD = "World Message"
-
 SCAN_INTERVAL = 60
 
 SIGNAL_NAME_PREFIX = f"signal_{DOMAIN}"

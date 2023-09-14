@@ -20,7 +20,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COMMAND,
+    CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_URL,
@@ -28,7 +30,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.NOTIFY,
     Platform.SENSOR,
 ]
 
@@ -142,7 +149,24 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Set up all platforms except notify
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
+
+    # Set up notify platform
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME: f"{DOMAIN}_{coordinator.data.system.hostname}",
+                CONF_ENTITY_ID: entry.entry_id,
+            },
+            hass.data[DOMAIN][entry.entry_id],
+        )
+    )
 
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
@@ -277,7 +301,9 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
     if unload_ok:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             entry.entry_id

@@ -607,7 +607,7 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, unique_store_key, data)
+        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[
@@ -693,8 +693,7 @@ async def webhook_update_sensor_states(
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
         async_dispatcher_send(
             hass,
-            SIGNAL_SENSOR_UPDATE,
-            unique_store_key,
+            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
             sensor,
         )
 

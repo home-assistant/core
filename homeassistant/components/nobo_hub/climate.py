@@ -74,6 +74,8 @@ class NoboZone(ClimateEntity):
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -85,8 +87,6 @@ class NoboZone(ClimateEntity):
         self._id = zone_id
         self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
-        self._attr_hvac_mode = HVACMode.AUTO
-        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.AUTO]
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},

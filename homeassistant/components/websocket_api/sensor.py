@@ -34,7 +34,7 @@ class APICount(SensorEntity):
         self.count = 0
 
     async def async_added_to_hass(self) -> None:
-        """Added to hass."""
+        """Handle addition to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_WEBSOCKET_CONNECTED, self._update_count

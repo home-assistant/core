@@ -9,6 +9,9 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "Smile Username"
+        },
+        "data_description": {
+          "host": "Leave empty if using Auto Discovery"
         }
       }
     },
@@ -79,6 +82,9 @@
       },
       "max_dhw_temperature": {
         "name": "Domestic hot water setpoint"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {

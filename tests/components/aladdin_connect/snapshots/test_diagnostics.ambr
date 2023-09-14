@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'doors': list([
+      dict({
+        'battery_level': 0,
+        'ble_strength': 0,
+        'device_id': '**REDACTED**',
+        'door_number': 1,
+        'link_status': 'Connected',
+        'model': '02',
+        'name': 'home',
+        'rssi': -67,
+        'serial': '**REDACTED**',
+        'status': 'open',
+        'vendor': 'GENIE',
+      }),
+    ]),
+  })
+# ---

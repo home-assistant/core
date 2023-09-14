@@ -260,6 +260,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_target_humidity = (
             optimistic or self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is None
         )
@@ -464,11 +465,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.

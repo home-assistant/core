@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import binary_sensor, template
@@ -23,6 +24,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_fire_time_changed,
     mock_restore_cache,
@@ -121,6 +123,55 @@ async def test_setup(hass: HomeAssistant, start_ha, entity_id) -> None:
     assert state.name == "virtual thingy"
     assert state.state == ON
     assert state.attributes["device_class"] == "motion"
+
+
+@pytest.mark.parametrize(
+    "config_entry_extra_options",
+    [
+        {},
+        {"device_class": "battery"},
+    ],
+)
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry_extra_options: dict[str, str],
+) -> None:
+    """Test the config flow."""
+    state_template = (
+        "{{ states('binary_sensor.one') == 'on' or "
+        "   states('binary_sensor.two') == 'on' }}"
+    )
+    input_entities = ["one", "two"]
+    input_states = {"one": "on", "two": "off"}
+    template_type = binary_sensor.DOMAIN
+
+    for input_entity in input_entities:
+        hass.states.async_set(
+            f"{template_type}.{input_entity}",
+            input_states[input_entity],
+            {},
+        )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": state_template,
+            "template_type": template_type,
+        }
+        | config_entry_extra_options,
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{template_type}.my_template")
+    assert state is not None
+    assert state == snapshot
 
 
 @pytest.mark.parametrize("count", [0])

@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 import os
+import re
 from typing import Any, NamedTuple
 
 import voluptuous as vol
@@ -32,6 +33,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    async_get_hass,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -148,10 +150,25 @@ SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
+VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
+
+def valid_addon(value: Any) -> str:
+    """Validate value is a valid addon slug."""
+    value = VALID_ADDON_SLUG(value)
+
+    hass: HomeAssistant | None = None
+    with suppress(HomeAssistantError):
+        hass = async_get_hass()
+
+    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
+        raise vol.Invalid("Not a valid add-on slug")
+    return value
+
 
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.string})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
@@ -174,7 +191,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
     }
 )
 
@@ -189,7 +206,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.slug]),
     }
 )
 
@@ -240,6 +257,7 @@ MAP_SERVICE_API = {
 }
 
 HARDWARE_INTEGRATIONS = {
+    "green": "homeassistant_green",
     "odroid-c2": "hardkernel",
     "odroid-c4": "hardkernel",
     "odroid-m1": "hardkernel",

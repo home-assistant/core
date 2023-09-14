@@ -1,5 +1,5 @@
 """Test the SSDP integration."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -447,7 +447,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -455,7 +455,7 @@ async def test_start_stop_scanner(mock_source_set, hass: HomeAssistant) -> None:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert ssdp_listener.async_start.call_count == 1
     assert ssdp_listener.async_search.call_count == 4
@@ -785,7 +785,7 @@ async def test_ipv4_does_additional_search_for_sonos(
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    async_fire_time_changed(hass, dt_util.utcnow() + ssdp.SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert ssdp_listener.async_search.call_count == 6

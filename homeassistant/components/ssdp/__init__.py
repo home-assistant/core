@@ -23,13 +23,7 @@ from async_upnp_client.const import (
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.server import (
-    SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE,
-    SSDP_SEARCH_RESPONDER_OPTIONS,
-    UpnpServer,
-    UpnpServerDevice,
-    UpnpServerService,
-)
+from async_upnp_client.server import UpnpServer, UpnpServerDevice, UpnpServerService
 from async_upnp_client.ssdp import (
     SSDP_PORT,
     determine_source_target,
@@ -63,7 +57,7 @@ SSDP_SCANNER = "scanner"
 UPNP_SERVER = "server"
 UPNP_SERVER_MIN_PORT = 40000
 UPNP_SERVER_MAX_PORT = 40100
-SCAN_INTERVAL = timedelta(minutes=2)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
 
@@ -606,7 +600,7 @@ def discovery_info_from_headers_and_description(
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
-    ssdp_st = combined_headers.get("st")
+    ssdp_st = combined_headers.get_lower("st")
     if isinstance(info_desc, CaseInsensitiveDict):
         upnp_info = {**info_desc.as_dict()}
     else:
@@ -626,11 +620,11 @@ def discovery_info_from_headers_and_description(
     return SsdpServiceInfo(
         ssdp_usn=ssdp_usn,
         ssdp_st=ssdp_st,
-        ssdp_ext=combined_headers.get("ext"),
-        ssdp_server=combined_headers.get("server"),
-        ssdp_location=combined_headers.get("location"),
-        ssdp_udn=combined_headers.get("_udn"),
-        ssdp_nt=combined_headers.get("nt"),
+        ssdp_ext=combined_headers.get_lower("ext"),
+        ssdp_server=combined_headers.get_lower("server"),
+        ssdp_location=combined_headers.get_lower("location"),
+        ssdp_udn=combined_headers.get_lower("_udn"),
+        ssdp_nt=combined_headers.get_lower("nt"),
         ssdp_headers=combined_headers,
         upnp=upnp_info,
     )
@@ -796,11 +790,6 @@ class Server:
                     http_port=http_port,
                     server_device=HassUpnpServiceDevice,
                     boot_id=boot_id,
-                    options={
-                        SSDP_SEARCH_RESPONDER_OPTIONS: {
-                            SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE: True
-                        }
-                    },
                 )
             )
         results = await asyncio.gather(
