@@ -1,6 +1,8 @@
 """Support for Kindhome Solarbeaker."""
 import logging
 
+from bleak import BleakError
+
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,18 +40,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.get_state_and_subscribe_to_changes()
 
     except TimeoutError as e:
-        _LOGGER.error(f"Error connecting to {device.ble_device}")
         # hass.components.persistent_notification.async_create(
         #     f"Connection error: error connecting to {device.ble_device}",
         #     title=TITLE,
         # )
-        raise ConfigEntryNotReady(f"Error connecting to {device.ble_device}") from e
-
+        raise ConfigEntryNotReady(
+            f"Timeout while trying to connect to {device.ble_device}"
+        ) from e
+    except BleakError as e:
+        raise ConfigEntryNotReady(
+            f"Error while trying to connect to {device.ble_device}"
+        ) from e
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_DEVICE: device}
-
-    # Here I can create a task that tries to connect in a loop
-    # homeassistant/components/velbus/__init__.py
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

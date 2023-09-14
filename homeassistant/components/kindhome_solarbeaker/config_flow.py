@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, TITLE
+from .const import DOMAIN
 from .kindhome_solarbeaker_ble import KindhomeSolarbeakerDevice
 from .utils import log
 
@@ -25,7 +25,7 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def _create_config_entry(self, address, name=None):
-        title = f"{TITLE} {address}"
+        title = f"{name} ({address})"
         return self.async_create_entry(
             title=title, data={"address": address, "name": name}
         )

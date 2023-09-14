@@ -8,8 +8,6 @@
 
 import logging
 
-from kindhome_solarbeaker_ble import KindhomeSolarbeakerDevice
-
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,6 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_DEVICE, DOMAIN
+from .kindhome_solarbeaker_ble import KindhomeSolarbeakerDevice
 from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,11 +36,9 @@ async def async_setup_entry(
     async_add_entities([BatterySensor(device)])
 
 
-# This base class shows the common properties and methods for a sensor as used in this
-# example. See each sensor for further details about properties and methods that
-# have been overridden.
+# Base class in case other sensors need to be created.
 class SensorBase(Entity):
-    """Base representation of a Hello World Sensor."""
+    """Base representation of a Kindhome Solarbeaker Sensor."""
 
     should_poll = False
 
@@ -79,15 +76,9 @@ class BatterySensor(SensorBase):
         """Initialize the sensor."""
         super().__init__(device)
 
-        # As per the sensor, this must be a unique value within this domain. This is done
-        # by using the device ID, and appending "_battery"
         self._attr_unique_id = f"{self.device.device_id}_battery"
-
-        # The name of the entity
         self._attr_name = f"{self.device.device_name} Battery"
 
-    # The value of this sensor. As this is a DEVICE_CLASS_BATTERY, this value must be
-    # the battery level as a percentage (between 0 and 100)
     @property
     def state(self):
         """Return the state of the sensor."""
