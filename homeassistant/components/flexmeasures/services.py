@@ -21,6 +21,7 @@ from .const import (
     RESOLUTION,
     SERVICE_CHANGE_CONTROL_TYPE,
     SIGNAL_UPDATE_SCHEDULE,
+    SOC_UNIT,
 )
 from .exception import UndefinedCEMError, UnknownControlType
 
@@ -87,25 +88,44 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         start = time_ceil(datetime.now(tz=tzinfo), resolution)
 
-        input_arguments = {
-            "sensor_id": get_from_option_or_config("power_sensor", entry),
-            "start": start,
-            "duration": get_from_option_or_config("schedule_duration", entry),
-            "soc_unit": "MWh",
-            "soc_min": get_from_option_or_config("soc_min", entry),
-            "soc_max": get_from_option_or_config("soc_max", entry),
-            "consumption_price_sensor": get_from_option_or_config(
+        # input_arguments = {
+        #     "sensor_id": get_from_option_or_config("power_sensor", entry),
+        #     "start": start,
+        #     "duration": get_from_option_or_config("schedule_duration", entry),
+        #     "soc_unit": SOC_UNIT,
+        #     "soc_min": get_from_option_or_config("soc_min", entry),
+        #     "soc_max": get_from_option_or_config("soc_max", entry),
+        #     "consumption_price_sensor": get_from_option_or_config(
+        #         "consumption_price_sensor", entry
+        #     ),
+        #     "production_price_sensor": get_from_option_or_config(
+        #         "production_price_sensor", entry
+        #     ),
+        # }
+
+        # LOGGER.info(input_arguments)
+
+        flex_model = client.storage_schedule_flex_model(
+            soc_at_start=call.data.get("soc_at_start"),
+            soc_unit=SOC_UNIT,
+            soc_max=get_from_option_or_config("soc_max", entry),
+            soc_min=get_from_option_or_config("soc_min", entry),
+            soc_targets=call.data.get("soc_targets"),
+        )
+        flex_context = client.storage_schedule_flex_context(
+            consumption_price_sensor=get_from_option_or_config(
                 "consumption_price_sensor", entry
             ),
-            "production_price_sensor": get_from_option_or_config(
+            production_price_sensor=get_from_option_or_config(
                 "production_price_sensor", entry
             ),
-        }
-
-        LOGGER.info(input_arguments)
-
+        )
         schedule = await client.trigger_and_get_schedule(
-            soc_at_start=call.data.get("soc_at_start"), **input_arguments
+            sensor_id=get_from_option_or_config("power_sensor", entry),
+            start=start,
+            duration=get_from_option_or_config("schedule_duration", entry),
+            flex_model=flex_model,
+            flex_context=flex_context,
         )
 
         schedule = [
