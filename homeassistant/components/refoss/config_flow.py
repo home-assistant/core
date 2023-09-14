@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from refoss_ha.util import get_mac_address
-
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
+
+
+def _get_unique_id(data: dict[str, Any]):
+    """Return unique ID."""
+    return f"{data[CONF_NAME]}_{data[CONF_LATITUDE]}_{data[CONF_LONGITUDE]}"
 
 
 class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,15 +25,21 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """async_step_user for Refoss."""
-        mac = get_mac_address()
 
-        entry = await self.async_set_unique_id(mac)
+        latitude = self.hass.config.latitude
+        longitude = self.hass.config.longitude
 
         data = {
-            CONF_MAC: mac,
+            CONF_NAME: DEFAULT_NAME,
+            CONF_LATITUDE: latitude,
+            CONF_LONGITUDE: longitude,
         }
 
-        if entry is not None:
-            self._abort_if_unique_id_configured(updates=data, reload_on_update=True)
+        await self.async_set_unique_id(unique_id=_get_unique_id(data))
 
-        return self.async_create_entry(title="Refoss", data=data)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=DEFAULT_NAME,
+            data=data,
+        )

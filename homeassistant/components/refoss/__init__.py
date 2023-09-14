@@ -8,8 +8,9 @@ from refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
 from refoss_ha.socket_server import SocketServerProtocol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -30,24 +31,17 @@ class HomeAssistantRefossData(NamedTuple):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup  entry."""
-    if not entry.data.get(CONF_MAC):
-        LOGGER.debug(
-            (
-                "The config entry %s probably comes from a custom integration, please"
-                " remove it if you want to use core refoss integration"
-            ),
-            entry.title,
-        )
-        return False
-
     hass.data.setdefault(DOMAIN, {})
 
-    device_ids: set[str] = set()
-    socketserver: SocketServerProtocol = await get_refoss_socket_server(hass)
-    device_manager = RefossDeviceManager(socket_server=socketserver)
-    await device_manager.async_start_broadcast_msg()
-    listener = DeviceListener(hass, device_manager, device_ids)
-    device_manager.add_device_listener(listener)
+    try:
+        device_ids: set[str] = set()
+        socketserver: SocketServerProtocol = await get_refoss_socket_server(hass)
+        device_manager = RefossDeviceManager(socket_server=socketserver)
+        await device_manager.async_start_broadcast_msg()
+        listener = DeviceListener(hass, device_manager, device_ids)
+        device_manager.add_device_listener(listener)
+    except Exception as err:
+        raise ConfigEntryNotReady(err) from err
 
     hass.data[DOMAIN][entry.entry_id] = HomeAssistantRefossData(
         device_listener=listener,
@@ -102,16 +96,16 @@ class DeviceListener(RefossDeviceListener):
         self.device_manager = device_manager
         self.device_ids = device_ids
 
-    def update_device(self, device: BaseDevice) -> None:
+    async def update_device(self, device: BaseDevice) -> None:
         """Update device status."""
         if device.uuid in self.device_ids:
             dispatcher_send(
                 self.hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}"
             )
 
-    def add_device(self, device: BaseDevice) -> None:
+    async def add_device(self, device: BaseDevice) -> None:
         """Add device."""
-        self.async_remove_device(device.uuid)
+        await self.async_remove_device(device.uuid)
 
         self.device_ids.add(device.uuid)
         dispatcher_send(self.hass, REFOSS_DISCOVERY_NEW, [device.uuid])
@@ -119,7 +113,7 @@ class DeviceListener(RefossDeviceListener):
         LOGGER.debug("Add device: %s", device.device_type)
 
     @callback
-    def async_remove_device(self, device_id: str) -> None:
+    async def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
