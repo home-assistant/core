@@ -59,8 +59,34 @@ def mock_expires_at() -> int:
     return time.time() + 3600
 
 
-@pytest.fixture(name="config_entry")
-def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+@pytest.fixture(name="polling_config_entry")
+def mock_config_entry_polling(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=str(USER_ID),
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": str(USER_ID),
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
+        },
+        options={
+            "use_webhook": False,
+        },
+    )
+
+
+@pytest.fixture(name="webhook_config_entry")
+def mock_config_entry_webhook(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Create Withings entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,

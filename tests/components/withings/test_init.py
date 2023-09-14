@@ -13,7 +13,7 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import enable_webhooks, setup_integration
+from . import setup_integration
 from .conftest import WEBHOOK_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -24,12 +24,11 @@ async def test_data_manager_webhook_subscription(
     hass: HomeAssistant,
     withings: AsyncMock,
     disable_webhook_delay,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test data manager webhook subscriptions."""
-    await enable_webhooks(hass)
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
     await hass_client_no_auth()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
@@ -58,13 +57,13 @@ async def test_data_manager_webhook_subscription(
 async def test_requests(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
     disable_webhook_delay,
 ) -> None:
     """Test we handle request methods Withings sends."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
@@ -136,7 +135,7 @@ async def test_config_flow_upgrade(
 async def test_webhook_post(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     disable_webhook_delay,
     body: dict[str, Any],
@@ -144,7 +143,7 @@ async def test_webhook_post(
     current_request_with_host: None,
 ) -> None:
     """Test webhook callback."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 

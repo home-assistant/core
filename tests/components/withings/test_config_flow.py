@@ -82,12 +82,12 @@ async def test_config_non_unique_profile(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     disable_webhook_delay,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup a non-unique profile."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -135,21 +135,21 @@ async def test_config_reauth_profile(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     withings: AsyncMock,
     disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test reauth an existing profile reauthenticates the config entry."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
+            "entry_id": webhook_config_entry.entry_id,
         },
-        data=config_entry.data,
+        data=webhook_config_entry.data,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
@@ -198,21 +198,21 @@ async def test_config_reauth_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     withings: AsyncMock,
     disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test reauth with wrong account."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, webhook_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
+            "entry_id": webhook_config_entry.entry_id,
         },
-        data=config_entry.data,
+        data=webhook_config_entry.data,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
@@ -261,15 +261,15 @@ async def test_options_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
+    polling_config_entry: MockConfigEntry,
     withings: AsyncMock,
     disable_webhook_delay,
     current_request_with_host,
 ) -> None:
     """Test options flow."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, polling_config_entry)
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(polling_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
