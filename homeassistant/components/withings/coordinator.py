@@ -16,11 +16,12 @@ from withings_api.common import (
     query_measure_groups,
 )
 
-from homeassistant.components.webhook import async_generate_url
+from homeassistant.components.webhook import async_generate_path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -228,8 +229,9 @@ class WebhookWithingsDataUpdateCoordinator(BaseWithingsDataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
         """Initialize the Withings polling data coordinator."""
         super().__init__(hass, client, "Webhook Withings")
-        self._webhook_url = async_generate_url(
-            hass, self.config_entry.data[CONF_WEBHOOK_ID]
+        self._webhook_url = "{}{}".format(
+            get_url(hass, allow_internal=False, prefer_external=True),
+            async_generate_path(self.config_entry.data[CONF_WEBHOOK_ID]),
         )
 
     async def async_subscribe_webhooks(self) -> None:
