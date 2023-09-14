@@ -19,8 +19,10 @@ import homeassistant.util.dt as dt_util
 from .const import (
     DOMAIN,
     RESOLUTION,
+    SCHEDULE_STATE,
     SERVICE_CHANGE_CONTROL_TYPE,
     SIGNAL_UPDATE_SCHEDULE,
+    SOC_UNIT,
 )
 from .exception import UndefinedCEMError, UnknownControlType
 
@@ -87,25 +89,36 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         tzinfo = dt_util.get_time_zone(hass.config.time_zone)
         start = time_ceil(datetime.now(tz=tzinfo), resolution)
 
-        input_arguments = {
-            "sensor_id": get_from_option_or_config("power_sensor", entry),
-            "start": start,
-            "duration": get_from_option_or_config("schedule_duration", entry),
-            "soc_unit": "MWh",
-            "soc_min": get_from_option_or_config("soc_min", entry),
-            "soc_max": get_from_option_or_config("soc_max", entry),
-            "consumption_price_sensor": get_from_option_or_config(
+        flex_model = client.create_storage_flex_model(
+            soc_at_start=call.data.get("soc_at_start"),
+            soc_unit=SOC_UNIT,
+            soc_max=get_from_option_or_config("soc_max", entry),
+            soc_min=get_from_option_or_config("soc_min", entry),
+            soc_targets=call.data.get("soc_targets"),
+        )
+        flex_context = client.create_storage_flex_context(
+            consumption_price_sensor=get_from_option_or_config(
                 "consumption_price_sensor", entry
             ),
-            "production_price_sensor": get_from_option_or_config(
+            production_price_sensor=get_from_option_or_config(
                 "production_price_sensor", entry
             ),
-        }
-
-        LOGGER.info(input_arguments)
-
+        )
+        LOGGER.info(
+            {
+                "sensor_id": get_from_option_or_config("power_sensor", entry),
+                "start": start,
+                "duration": get_from_option_or_config("schedule_duration", entry),
+                "flex_model": flex_model,
+                "flex_context": flex_context,
+            }
+        )
         schedule = await client.trigger_and_get_schedule(
-            soc_at_start=call.data.get("soc_at_start"), **input_arguments
+            sensor_id=get_from_option_or_config("power_sensor", entry),
+            start=start,
+            duration=get_from_option_or_config("schedule_duration", entry),
+            flex_model=flex_model,
+            flex_context=flex_context,
         )
 
         schedule = [
@@ -113,9 +126,9 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             for i, value in enumerate(schedule["values"])
         ]
 
-        hass.data[DOMAIN]["schedule"]["schedule"] = schedule
-        hass.data[DOMAIN]["schedule"]["start"] = start
-        hass.data[DOMAIN]["schedule"]["duration"] = get_from_option_or_config(
+        hass.data[DOMAIN][SCHEDULE_STATE]["schedule"] = schedule
+        hass.data[DOMAIN][SCHEDULE_STATE]["start"] = start
+        hass.data[DOMAIN][SCHEDULE_STATE]["duration"] = get_from_option_or_config(
             "schedule_duration", entry
         )
 
