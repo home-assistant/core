@@ -168,7 +168,6 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         super().__init__(coordinator, router, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{self._mac}-{entity_description.key}"
-        self._attr_is_on = None
         self.async_update_device()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
