@@ -12,8 +12,3 @@ start_irrigation:
           min: 1
           max: 1440
           unit_of_measurement: "minutes"
-stop_irrigation:
-  target:
-    entity:
-      integration: yardian
-      domain: switch
