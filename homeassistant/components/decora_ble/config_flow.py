@@ -1,7 +1,6 @@
 """Config flow for Decora BLE."""
 from __future__ import annotations
 
-import logging
 from typing import Any, Optional
 
 from decora_bleak import DECORA_SERVICE_UUID, DecoraBLEDevice
@@ -17,9 +16,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_API_KEY, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
