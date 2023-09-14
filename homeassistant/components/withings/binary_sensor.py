@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BaseWithingsDataUpdateCoordinator, WebhookWithingsDataUpdateCoordinator
 from .const import DOMAIN, Measurement
-from .entity import WebhookWithingsSensor, WithingsEntityDescription
+from .entity import WebhookWithingsEntity, WithingsEntityDescription
 
 
 @dataclass
@@ -56,7 +56,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class WithingsHealthBinarySensor(WebhookWithingsSensor, BinarySensorEntity):
+class WithingsHealthBinarySensor(WebhookWithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsBinarySensorEntityDescription

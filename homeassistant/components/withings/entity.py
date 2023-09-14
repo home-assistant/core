@@ -35,7 +35,7 @@ class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixi
     """Immutable class for describing withings data."""
 
 
-class BaseWithingsSensor(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT]):
+class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT]):
     """Base class for withings sensors."""
 
     entity_description: WithingsEntityDescription
@@ -56,11 +56,11 @@ class BaseWithingsSensor(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT])
         )
 
 
-class PollingWithingsSensor(BaseWithingsSensor[PollingWithingsDataUpdateCoordinator]):
+class PollingWithingsEntity(BaseWithingsEntity[PollingWithingsDataUpdateCoordinator]):
     """Sensor used for polling."""
 
 
-class WebhookWithingsSensor(BaseWithingsSensor[WebhookWithingsDataUpdateCoordinator]):
+class WebhookWithingsEntity(BaseWithingsEntity[WebhookWithingsDataUpdateCoordinator]):
     """Sensor used for Webhooks."""
 
     _attr_should_poll = False

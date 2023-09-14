@@ -38,9 +38,9 @@ from .const import (
     Measurement,
 )
 from .entity import (
-    BaseWithingsSensor,
-    PollingWithingsSensor,
-    WebhookWithingsSensor,
+    BaseWithingsEntity,
+    PollingWithingsEntity,
+    WebhookWithingsEntity,
     WithingsEntityDescription,
 )
 
@@ -383,7 +383,7 @@ async def async_setup_entry(
         )
 
 
-class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
+class WithingsHealthSensor(BaseWithingsEntity, SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsSensorEntityDescription
@@ -394,13 +394,13 @@ class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
         return self.coordinator.data[self.entity_description.measurement]
 
 
-class PollingWithingsHealthSensor(PollingWithingsSensor, WithingsHealthSensor):
+class PollingWithingsHealthSensor(PollingWithingsEntity, WithingsHealthSensor):
     """Implementation of a Withings polling sensor."""
 
     entity_description: WithingsSensorEntityDescription
 
 
-class WebhookWithingsHealthSensor(WebhookWithingsSensor, WithingsHealthSensor):
+class WebhookWithingsHealthSensor(WebhookWithingsEntity, WithingsHealthSensor):
     """Implementation of a Withings webhook sensor."""
 
     entity_description: WithingsSensorEntityDescription
