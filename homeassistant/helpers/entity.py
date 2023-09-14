@@ -1107,13 +1107,13 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        entiy_info: EntityInfo = {
+        entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            entiy_info["config_entry"] = self.platform.config_entry.entry_id
+            entity_info["config_entry"] = self.platform.config_entry.entry_id
 
         entity_sources(self.hass)[self.entity_id] = entiy_info
 
