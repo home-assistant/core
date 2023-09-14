@@ -154,7 +154,10 @@ class HERETravelTimeSensor(
             )
             self.async_write_ha_state()
 
-    @property
+    @property  # type: ignore[override]
+    # This property is not cached because the attribute can change
+    # at run time. This is not expected, but it is currently how
+    # the HERE integration works.
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self.coordinator.data is not None:

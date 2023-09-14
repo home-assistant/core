@@ -11,6 +11,7 @@ from typing import Any, ParamSpec, TypeVar, final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -250,7 +251,7 @@ class CoverEntity(Entity):
         """
         return self._attr_current_cover_tilt_position
 
-    @property
+    @cached_property
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
