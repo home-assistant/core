@@ -15,7 +15,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .helpers import get_previous_option
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,3 +217,8 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+def get_previous_option(config: ConfigEntry, option: str):
+    """Get default from previous options or otherwise from initial config."""
+    return config.options.get(option, config.data[option])

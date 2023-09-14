@@ -10,7 +10,7 @@ from homeassistant.components.flexmeasures.const import (
     RESOLUTION,
     SERVICE_CHANGE_CONTROL_TYPE,
 )
-from homeassistant.components.flexmeasures.helpers import time_ceil
+from homeassistant.components.flexmeasures.services import time_ceil
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 

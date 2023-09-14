@@ -11,14 +11,13 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# from .api import S2FlexMeasuresClient, async_register_s2_api
-from .const import DOMAIN
-from .helpers import get_from_option_or_config
-from .services import async_setup_services, async_unload_services
+from .const import DOMAIN, FRBC_CONFIG
+from .services import (
+    async_setup_services,
+    async_unload_services,
+    get_from_option_or_config,
+)
 from .websockets import WebsocketAPIView
-
-ATTR_NAME = "name"
-DEFAULT_NAME = "World"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # store config
-    hass.data[DOMAIN]["frbc_config"] = {
+    hass.data[DOMAIN][FRBC_CONFIG] = {
         "power_sensor_id": get_from_option_or_config("power_sensor", entry),  # 1
         "price_sensor_id": get_from_option_or_config(
             "consumption_price_sensor", entry
