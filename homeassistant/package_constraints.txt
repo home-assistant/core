@@ -6,7 +6,7 @@ async-timeout==4.0.3
 async-upnp-client==0.35.1
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
-awesomeversion==22.9.0
+awesomeversion==23.8.0
 bcrypt==4.0.1
 bleak-retry-connector==3.1.3
 bleak==0.21.1
