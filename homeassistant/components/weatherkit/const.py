@@ -5,7 +5,10 @@ LOGGER: Logger = getLogger(__package__)
 
 NAME = "Apple WeatherKit"
 DOMAIN = "weatherkit"
-ATTRIBUTION = "Data provided by Apple Weather. https://developer.apple.com/weatherkit/data-source-attribution/"
+ATTRIBUTION = (
+    "Data provided by Apple Weather. "
+    "https://developer.apple.com/weatherkit/data-source-attribution/"
+)
 
 CONF_KEY_ID = "key_id"
 CONF_SERVICE_ID = "service_id"

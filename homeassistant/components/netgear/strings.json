@@ -4,14 +4,15 @@
       "user": {
         "description": "Default host: {host}\nDefault username: {username}",
         "data": {
-          "host": "Host (Optional)",
-          "username": "Username (Optional)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
-      "config": "Connection or login error: please check your configuration"
+      "config": "Connection or login error: please check your configuration",
+      "info": "Failed to get info from router"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

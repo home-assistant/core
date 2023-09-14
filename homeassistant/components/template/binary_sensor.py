@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -236,9 +235,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._device_class: BinarySensorDeviceClass | None = config.get(
-            CONF_DEVICE_CLASS
-        )
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
         self._state: bool | None = None
         self._delay_cancel = None
@@ -320,11 +317,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the sensor class of the binary sensor."""
-        return self._device_class
 
 
 class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):

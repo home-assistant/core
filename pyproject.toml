@@ -28,7 +28,7 @@ dependencies    = [
     "async-timeout==4.0.3",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
-    "awesomeversion==22.9.0",
+    "awesomeversion==23.8.0",
     "bcrypt==4.0.1",
     "certifi>=2021.5.30",
     "ciso8601==2.3.0",
@@ -109,6 +109,7 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
     "orjson",
@@ -288,6 +289,7 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
     # Ref: <https://github.com/antonagestam/pylint-mypy-overlap>

@@ -512,6 +512,7 @@ async def test_reset_last_message(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["text"]
+    assert data["initial"]
     assert (
         valid_date
         and isinstance(data["date"], datetime)
@@ -628,7 +629,7 @@ async def test_message_is_truncated(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
-        ("{% bad template }}", None, "Error rendering imap custom template"),
+        ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
     ids=["subject_test", "sender_filter", "template_error"],
 )

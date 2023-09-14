@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -97,6 +98,42 @@ async def async_setup_entry(
             for device in data.devices.values()
         ]
     )
+    remove_stale_devices(hass, entry, data.devices)
+
+
+def remove_stale_devices(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    devices: dict[str, SomeComfortDevice],
+) -> None:
+    """Remove stale devices from device registry."""
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    all_device_ids: set = set()
+    for device in devices.values():
+        all_device_ids.add(device.deviceid)
+
+    for device_entry in device_entries:
+        device_id: str | None = None
+        remove = True
+
+        for identifier in device_entry.identifiers:
+            if identifier[0] != DOMAIN:
+                remove = False
+                continue
+
+            device_id = identifier[1]
+            break
+
+        if remove and (device_id is None or device_id not in all_device_ids):
+            # If device_id is None an invalid device entry was found for this config entry.
+            # If the device_id is not in existing device ids it's a stale device entry.
+            # Remove config entry from this device entry in either case.
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=config_entry.entry_id
+            )
 
 
 class HoneywellUSThermostat(ClimateEntity):
