@@ -1115,7 +1115,7 @@ class Entity(ABC):
         if self.platform.config_entry:
             entity_info["config_entry"] = self.platform.config_entry.entry_id
 
-        entity_sources(self.hass)[self.entity_id] = entiy_info
+        entity_sources(self.hass)[self.entity_id] = entity_info
 
         self._state_info = {"unstored_attributes": self.__unstored_attributes}
 
