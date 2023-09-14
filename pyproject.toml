@@ -44,7 +44,7 @@ dependencies    = [
     "cryptography==41.0.3",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==23.2.0",
-    "orjson==3.9.2",
+    "orjson==3.9.7",
     "packaging>=23.1",
     "pip>=21.3.1",
     "python-slugify==4.0.1",
@@ -109,6 +109,7 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
     "orjson",
@@ -288,6 +289,7 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
     # Ref: <https://github.com/antonagestam/pylint-mypy-overlap>

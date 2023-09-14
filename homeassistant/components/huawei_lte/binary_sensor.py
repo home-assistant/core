@@ -52,14 +52,11 @@ async def async_setup_entry(
 class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntity):
     """Huawei LTE binary sensor device base class."""
 
+    _attr_entity_registry_enabled_default = False
+
     key: str = field(init=False)
     item: str = field(init=False)
     _raw_state: str | None = field(default=None, init=False)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return False
 
     @property
     def _device_unique_id(self) -> str:
@@ -106,6 +103,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     """Huawei LTE mobile connection binary sensor."""
 
     _attr_name: str = field(default="Mobile connection", init=False)
+    _attr_entity_registry_enabled_default = True
 
     def __post_init__(self) -> None:
         """Initialize identifiers."""
@@ -134,11 +132,6 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     def icon(self) -> str:
         """Return mobile connectivity sensor icon."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

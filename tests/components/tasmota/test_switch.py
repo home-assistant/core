@@ -283,3 +283,35 @@ async def test_entity_id_update_discovery_update(
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, Platform.SWITCH, config
     )
+
+
+async def test_no_device_name(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test name of switches when no device name is set.
+
+    When the device name is not set, Tasmota uses friendly name 1 as device naem.
+    This test ensures that case is handled correctly.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["dn"] = "Relay 1"
+    config["fn"][0] = "Relay 1"
+    config["fn"][1] = "Relay 2"
+    config["rl"][0] = 1
+    config["rl"][1] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.relay_1")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Relay 1"
+
+    state = hass.states.get("switch.relay_1_relay_2")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Relay 1 Relay 2"
