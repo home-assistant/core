@@ -32,6 +32,8 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
     assert entry is not None
     assert device is not None
 
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_temperature"
+
     entity_registry = hass.helpers.entity_registry.async_get(hass)
 
     sensor = entity_registry.async_get_or_create(
@@ -58,10 +60,7 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(sensor.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_temperature"
-    )
+    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
 async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
@@ -71,6 +70,8 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert entry is not None
     assert device is not None
+
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_humidity"
 
     entity_registry = hass.helpers.entity_registry.async_get(hass)
 
@@ -100,10 +101,7 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(sensor.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_humidity"
-    )
+    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
 async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
@@ -113,6 +111,8 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert entry is not None
     assert device is not None
+
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_co2"
 
     entity_registry = hass.helpers.entity_registry.async_get(hass)
 
@@ -150,11 +150,8 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(v1.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_co2"
-    )
-    assert entity_registry.async_get(v2.entity_id).unique_id == v2.unique_id
+    assert entity_registry.async_get(v1.entity_id).unique_id == new_unique_id
+    assert entity_registry.async_get(v2.entity_id).unique_id == CO2_V2.unique_id
 
 
 async def test_migration_with_all_unique_ids(hass: HomeAssistant):
@@ -209,6 +206,6 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert entity_registry.async_get(v1.entity_id).unique_id == v1.unique_id
-    assert entity_registry.async_get(v2.entity_id).unique_id == v2.unique_id
-    assert entity_registry.async_get(v3.entity_id).unique_id == v3.unique_id
+    assert entity_registry.async_get(v1.entity_id).unique_id == VOC_V1.unique_id
+    assert entity_registry.async_get(v2.entity_id).unique_id == VOC_V2.unique_id
+    assert entity_registry.async_get(v3.entity_id).unique_id == VOC_V3.unique_id
