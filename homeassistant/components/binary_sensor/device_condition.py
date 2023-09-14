@@ -36,6 +36,10 @@ CONF_IS_COLD = "is_cold"
 CONF_IS_NOT_COLD = "is_not_cold"
 CONF_IS_CONNECTED = "is_connected"
 CONF_IS_NOT_CONNECTED = "is_not_connected"
+CONF_IS_EMPTY = "is_empty"
+CONF_IS_NOT_EMPTY = "is_not_empty"
+CONF_IS_FULL = "is_full"
+CONF_IS_NOT_FULL = "is_not_full"
 CONF_IS_GAS = "is_gas"
 CONF_IS_NO_GAS = "is_no_gas"
 CONF_IS_HOT = "is_hot"
@@ -83,6 +87,8 @@ IS_ON = [
     CONF_IS_CO,
     CONF_IS_COLD,
     CONF_IS_CONNECTED,
+    CONF_IS_EMPTY,
+    CONF_IS_FULL,
     CONF_IS_GAS,
     CONF_IS_HOT,
     CONF_IS_LIGHT,
@@ -111,6 +117,8 @@ IS_OFF = [
     CONF_IS_NOT_CHARGING,
     CONF_IS_NOT_COLD,
     CONF_IS_NOT_CONNECTED,
+    CONF_IS_NOT_EMPTY,
+    CONF_IS_NOT_FULL,
     CONF_IS_NOT_HOT,
     CONF_IS_LOCKED,
     CONF_IS_NOT_MOIST,
@@ -159,6 +167,14 @@ ENTITY_CONDITIONS = {
     BinarySensorDeviceClass.DOOR: [
         {CONF_TYPE: CONF_IS_OPEN},
         {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
+    BinarySensorDeviceClass.EMPTY: [
+        {CONF_TYPE: CONF_IS_EMPTY},
+        {CONF_TYPE: CONF_IS_NOT_EMPTY},
+    ],
+    BinarySensorDeviceClass.FULL: [
+        {CONF_TYPE: CONF_IS_FULL},
+        {CONF_TYPE: CONF_IS_NOT_FULL},
     ],
     BinarySensorDeviceClass.GARAGE_DOOR: [
         {CONF_TYPE: CONF_IS_OPEN},

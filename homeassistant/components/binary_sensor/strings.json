@@ -12,6 +12,10 @@
       "is_not_cold": "{entity_name} is not cold",
       "is_connected": "{entity_name} is connected",
       "is_not_connected": "{entity_name} is disconnected",
+      "is_empty": "{entity_name} is empty",
+      "is_not_empty": "{entity_name} is not empty",
+      "is_full": "{entity_name} is full",
+      "is_not_full": "{entity_name} is not full",
       "is_gas": "{entity_name} is detecting gas",
       "is_no_gas": "{entity_name} is not detecting gas",
       "is_hot": "{entity_name} is hot",
@@ -66,6 +70,10 @@
       "not_cold": "{entity_name} became not cold",
       "connected": "{entity_name} connected",
       "not_connected": "{entity_name} disconnected",
+      "empty": "{entity_name} became empty",
+      "not_empty": "{entity_name} became not empty",
+      "full": "{entity_name} became full",
+      "not_full": "{entity_name} became not full",
       "gas": "{entity_name} started detecting gas",
       "no_gas": "{entity_name} stopped detecting gas",
       "hot": "{entity_name} became hot",
@@ -158,6 +166,20 @@
       "state": {
         "off": "[%key:common::state::closed%]",
         "on": "[%key:common::state::open%]"
+      }
+    },
+    "empty": {
+      "name": "Empty",
+      "state": {
+        "off": "Not empty",
+        "on": "Empty"
+      }
+    },
+    "full": {
+      "name": "Full",
+      "state": {
+        "off": "Not Full",
+        "on": "Full"
       }
     },
     "garage_door": {

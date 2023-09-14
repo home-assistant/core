@@ -28,6 +28,10 @@ CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
 CONF_NOT_CONNECTED = "not_connected"
+CONF_EMPTY = "empty"
+CONF_NOT_EMPTY = "not_empty"
+CONF_FULL = "full"
+CONF_NOT_FULL = "not_full"
 CONF_GAS = "gas"
 CONF_NO_GAS = "no_gas"
 CONF_HOT = "hot"
@@ -94,6 +98,14 @@ ENTITY_TRIGGERS = {
     BinarySensorDeviceClass.DOOR: [
         {CONF_TYPE: CONF_OPENED},
         {CONF_TYPE: CONF_NOT_OPENED},
+    ],
+    BinarySensorDeviceClass.EMPTY: [
+        {CONF_TYPE: CONF_EMPTY},
+        {CONF_TYPE: CONF_NOT_EMPTY},
+    ],
+    BinarySensorDeviceClass.FULL: [
+        {CONF_TYPE: CONF_FULL},
+        {CONF_TYPE: CONF_NOT_FULL},
     ],
     BinarySensorDeviceClass.GARAGE_DOOR: [
         {CONF_TYPE: CONF_OPENED},
