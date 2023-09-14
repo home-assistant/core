@@ -28,13 +28,14 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -128,12 +129,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
+    async def async_handle_open_cover_service(
+        cover: CoverEntity, call: ServiceCall
+    ) -> None:
+        """Handle opening a cover."""
+        if cover._cover_option_invert_cover_state:
+            await cover.async_close_cover(**remove_entity_service_fields(call.data))
+            return
+        await cover.async_open_cover(**remove_entity_service_fields(call.data))
+
+    async def async_handle_close_cover_service(
+        cover: CoverEntity, call: ServiceCall
+    ) -> None:
+        """Handle closing a cover."""
+        if cover._cover_option_invert_cover_state:
+            await cover.async_open_cover(**remove_entity_service_fields(call.data))
+            return
+        await cover.async_close_cover(**remove_entity_service_fields(call.data))
+
+    async def async_handle_set_cover_position(
+        cover: CoverEntity, call: ServiceCall
+    ) -> None:
+        """Handle setting the position of a cover."""
+        data = remove_entity_service_fields(call.data)
+        if cover._cover_option_invert_cover_state:
+            data[ATTR_POSITION] = 100 - call.data[ATTR_POSITION]
+
+        await cover.async_set_cover_position(**data)
+
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, {}, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER,
+        {},
+        async_handle_open_cover_service,
+        [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, {}, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER,
+        {},
+        async_handle_close_cover_service,
+        [CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
@@ -143,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Coerce(int), vol.Range(min=0, max=100)
             )
         },
-        "async_set_cover_position",
+        async_handle_set_cover_position,
         [CoverEntityFeature.SET_POSITION],
     )
 
@@ -234,6 +269,15 @@ class CoverEntity(Entity):
 
     _cover_is_last_toggle_direction_open = True
 
+    _cover_option_invert_cover_state = False
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the number entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
+
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
@@ -263,17 +307,18 @@ class CoverEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the state of the cover."""
+        invert_state = self._cover_option_invert_cover_state
         if self.is_opening:
             self._cover_is_last_toggle_direction_open = True
-            return STATE_OPENING
+            return STATE_CLOSING if invert_state else STATE_OPENING
         if self.is_closing:
             self._cover_is_last_toggle_direction_open = False
-            return STATE_CLOSING
+            return STATE_OPENING if invert_state else STATE_CLOSING
 
         if (closed := self.is_closed) is None:
             return None
 
-        return STATE_CLOSED if closed else STATE_OPEN
+        return STATE_CLOSED if closed ^ invert_state else STATE_OPEN
 
     @final
     @property
@@ -283,6 +328,8 @@ class CoverEntity(Entity):
 
         if (current := self.current_cover_position) is not None:
             data[ATTR_CURRENT_POSITION] = current
+            if self._cover_option_invert_cover_state:
+                data[ATTR_CURRENT_POSITION] = 100 - data[ATTR_CURRENT_POSITION]
 
         if (current_tilt := self.current_cover_tilt_position) is not None:
             data[ATTR_CURRENT_TILT_POSITION] = current_tilt
@@ -441,3 +488,15 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if cover_options := self.registry_entry.options.get(DOMAIN):
+            self._cover_option_invert_cover_state = cover_options.get(
+                "invert_cover_state", False
+            )
+            return
+
+        self._cover_option_invert_cover_state = False

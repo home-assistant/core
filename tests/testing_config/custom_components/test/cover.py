@@ -30,13 +30,11 @@ def init(empty=False):
         else [
             MockCover(
                 name="Simple cover",
-                is_on=True,
                 unique_id="unique_cover",
                 supported_features=SUPPORT_OPEN | SUPPORT_CLOSE,
             ),
             MockCover(
                 name="Set position cover",
-                is_on=True,
                 unique_id="unique_set_pos_cover",
                 current_cover_position=50,
                 supported_features=SUPPORT_OPEN
@@ -46,7 +44,6 @@ def init(empty=False):
             ),
             MockCover(
                 name="Simple tilt cover",
-                is_on=True,
                 unique_id="unique_tilt_cover",
                 supported_features=SUPPORT_OPEN
                 | SUPPORT_CLOSE
@@ -55,7 +52,6 @@ def init(empty=False):
             ),
             MockCover(
                 name="Set tilt position cover",
-                is_on=True,
                 unique_id="unique_set_pos_tilt_cover",
                 current_cover_tilt_position=50,
                 supported_features=SUPPORT_OPEN
@@ -67,7 +63,6 @@ def init(empty=False):
             ),
             MockCover(
                 name="All functions cover",
-                is_on=True,
                 unique_id="unique_all_functions_cover",
                 current_cover_position=50,
                 current_cover_tilt_position=50,
