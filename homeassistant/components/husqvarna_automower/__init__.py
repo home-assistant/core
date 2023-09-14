@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await session.async_ensure_token_valid()
     except ClientError as err:
         raise ConfigEntryNotReady from err
+
     coordinator = AutomowerDataUpdateCoordinator(
         hass,
         implementation,
