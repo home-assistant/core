@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.components.airthings_ble import (
@@ -31,11 +32,13 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
     assert entry is not None
     assert device is not None
 
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_temperature"
+
     entity_registry = hass.helpers.entity_registry.async_get(hass)
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=TEMPERATURE_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -57,10 +60,7 @@ async def test_migration_from_v1_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(sensor.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_temperature"
-    )
+    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
 async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
@@ -77,7 +77,7 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     sensor = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=HUMIDITY_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -99,10 +99,9 @@ async def test_migration_from_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(sensor.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_humidity"
-    )
+    # Migration should happen, v2 unique id should be updated to the new format
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_humidity"
+    assert entity_registry.async_get(sensor.entity_id).unique_id == new_unique_id
 
 
 async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
@@ -119,7 +118,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=CO2_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -127,7 +126,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     v1 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=CO2_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -149,11 +148,10 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert (
-        entity_registry.async_get(v1.entity_id).unique_id
-        == WAVE_DEVICE_INFO.address + "_co2"
-    )
-    assert entity_registry.async_get(v2.entity_id).unique_id == v2.unique_id
+    # Migration should happen, v1 unique id should be updated to the new format
+    new_unique_id = f"{WAVE_DEVICE_INFO.address}_co2"
+    assert entity_registry.async_get(v1.entity_id).unique_id == new_unique_id
+    assert entity_registry.async_get(v2.entity_id).unique_id == CO2_V2.unique_id
 
 
 async def test_migration_with_all_unique_ids(hass: HomeAssistant):
@@ -170,7 +168,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v1 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V1.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -178,7 +176,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v2 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V2.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -186,7 +184,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     v3 = entity_registry.async_get_or_create(
         domain=DOMAIN,
-        platform="sensor",
+        platform=Platform.SENSOR,
         unique_id=VOC_V3.unique_id,
         config_entry=entry,
         device_id=device.id,
@@ -208,6 +206,7 @@ async def test_migration_with_all_unique_ids(hass: HomeAssistant):
 
     assert len(hass.states.async_all()) > 0
 
-    assert entity_registry.async_get(v1.entity_id).unique_id == v1.unique_id
-    assert entity_registry.async_get(v2.entity_id).unique_id == v2.unique_id
-    assert entity_registry.async_get(v3.entity_id).unique_id == v3.unique_id
+    # No migration should happen, unique id should be the same as before
+    assert entity_registry.async_get(v1.entity_id).unique_id == VOC_V1.unique_id
+    assert entity_registry.async_get(v2.entity_id).unique_id == VOC_V2.unique_id
+    assert entity_registry.async_get(v3.entity_id).unique_id == VOC_V3.unique_id
