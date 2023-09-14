@@ -7,30 +7,17 @@ from __future__ import annotations
 import asyncio
 
 from aiohttp.web import Request, Response
-import voluptuous as vol
 from withings_api.common import NotifyAppli
 
 from homeassistant.components import webhook
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.webhook import (
     async_generate_id,
     async_unregister as async_unregister_webhook,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_TOKEN,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 
 from . import const
 from .common import (
@@ -40,67 +27,10 @@ from .common import (
     get_data_manager_by_webhook_id,
     json_message_response,
 )
-from .const import CONF_USE_WEBHOOK, CONFIG
+from .const import CONF_USE_WEBHOOK
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(const.CONF_PROFILES),
-            cv.deprecated(CONF_CLIENT_ID),
-            cv.deprecated(CONF_CLIENT_SECRET),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(CONF_CLIENT_SECRET): vol.All(
-                        cv.string, vol.Length(min=1)
-                    ),
-                    vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
-                    vol.Optional(const.CONF_PROFILES): vol.All(
-                        cv.ensure_list,
-                        vol.Unique(),
-                        vol.Length(min=1),
-                        [vol.All(cv.string, vol.Length(min=1))],
-                    ),
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Withings component."""
-    if not (conf := config.get(DOMAIN)):
-        # Apply the defaults.
-        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-        hass.data[DOMAIN] = {const.CONFIG: conf}
-        return True
-
-    hass.data[DOMAIN] = {const.CONFIG: conf}
-
-    # Setup the oauth2 config flow.
-    if CONF_CLIENT_ID in conf:
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                conf[CONF_CLIENT_ID],
-                conf[CONF_CLIENT_SECRET],
-            ),
-        )
-        _LOGGER.warning(
-            "Configuration of Withings integration OAuth2 credentials in YAML "
-            "is deprecated and will be removed in a future release; Your "
-            "existing OAuth Application Credentials have been imported into "
-            "the UI automatically and can be safely removed from your "
-            "configuration.yaml file"
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -117,11 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, unique_id=unique_id
         )
-    use_webhook = hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK]
-    if use_webhook is not None and use_webhook != entry.options[CONF_USE_WEBHOOK]:
-        new_options = entry.options.copy()
-        new_options |= {CONF_USE_WEBHOOK: use_webhook}
-        hass.config_entries.async_update_entry(entry, options=new_options)
 
     data_manager = await async_get_data_manager(hass, entry)
 

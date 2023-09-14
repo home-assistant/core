@@ -20,10 +20,7 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .common import ComponentFactory
-
 from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -36,22 +33,6 @@ SCOPES = [
 TITLE = "henk"
 USER_ID = 12345
 WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
-
-
-@pytest.fixture
-def component_factory(
-    hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-):
-    """Return a factory for initializing the withings component."""
-    with patch(
-        "homeassistant.components.withings.common.ConfigEntryWithingsApi"
-    ) as api_class_mock:
-        yield ComponentFactory(
-            hass, api_class_mock, hass_client_no_auth, aioclient_mock
-        )
 
 
 @pytest.fixture(name="scopes")
