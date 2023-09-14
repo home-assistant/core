@@ -143,19 +143,20 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
-        self._attr_native_value = description.value_fn(coordinator.data)
-
-        if func := description.attributes_fn:
-            self._attr_extra_state_attributes = func(coordinator.data)
+        self._update_properties()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._update_properties()
+        self.async_write_ha_state()
+
+    @callback
+    def _update_properties(self) -> None:
+        """Update sensor properties."""
         self._attr_native_value = self.entity_description.value_fn(
             self.coordinator.data
         )
 
         if func := self.entity_description.attributes_fn:
             self._attr_extra_state_attributes = func(self.coordinator.data)
-
-        self.async_write_ha_state()
