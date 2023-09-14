@@ -3,7 +3,7 @@
 import logging
 
 from sensor_state_data import DeviceKey
-from victron_ble.parser import Keys, Units
+from victron_ble_ha_parser import Keys, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
