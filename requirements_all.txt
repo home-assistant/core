@@ -427,7 +427,7 @@ apcaccess==0.0.13
 apple_weatherkit==1.0.2
 
 # homeassistant.components.apprise
-apprise==1.4.5
+apprise==1.5.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -675,7 +675,7 @@ denonavr==0.11.3
 devolo-home-control-api==0.18.2
 
 # homeassistant.components.devolo_home_network
-devolo-plc-api==1.4.0
+devolo-plc-api==1.4.1
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -2769,7 +2769,7 @@ zamg==0.3.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.108.0
+zeroconf==0.111.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
