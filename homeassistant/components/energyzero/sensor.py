@@ -191,6 +191,9 @@ class EnergyZeroSensorEntity(
     @property
     def extra_state_attributes(self) -> dict[str, None | str | dict[datetime, float]]:
         """Return the state attributes."""
+        if self.entity_description.key != "average_price":
+            return None
+
         data = self.coordinator.data
 
         return {
