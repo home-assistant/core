@@ -46,14 +46,6 @@ homeassistant.util.decorator
    :undoc-members:
    :show-inheritance:
 
-homeassistant.util.distance
----------------------------
-
-.. automodule:: homeassistant.util.distance
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 homeassistant.util.dt
 ---------------------
 
