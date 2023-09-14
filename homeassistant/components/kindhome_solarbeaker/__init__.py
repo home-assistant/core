@@ -1,4 +1,4 @@
-"""Support for Kindhome solarbeaker."""
+"""Support for Kindhome Solarbeaker."""
 import logging
 
 from homeassistant.components import bluetooth
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up battery sensor and kindhome cover from Kindhome solarbeaker config entry."""
+    """Set up battery sensor and kindhome cover from Kindhome Solarbeaker config entry."""
     assert entry.entry_id is not None
     log(_LOGGER, "async_setup_entry", entry.data)
 

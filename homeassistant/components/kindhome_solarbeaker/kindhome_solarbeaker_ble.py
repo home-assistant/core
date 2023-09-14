@@ -9,21 +9,21 @@ from bleak import BleakClient, BLEDevice
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from .const import SERVICE_UUID
 from .utils import log
 
 _LOGGER = logging.getLogger(__name__)
 
+
+SERVICE_UUID = "75c276c3-8f97-20bc-a143-b354244886d4"
 MOVE_CHAR_UUID = "6acf4f08-cc9d-d495-6b41-aa7e60c4e8a6"
 GET_MOTOR_STATE_CHAR_UUID = "d3d46a35-4394-e9aa-5a43-e7921120aaed"
-GET_ACCELEROMETER_STATE_CHAR_UUID = "6d5c4b3a-2f1e-0d9c-8b7a-6f5e4d3c2b1a"
 SECURITY_CODE = 0x45  # Hard coded for now
 
 GET_BATTERY_LEVEL_CHAR_UUID = "00002a19-0000-1000-8000-00805f9b34fb"
 
 
 class KindhomeSolarbeakerMotorState(Enum):
-    """Represents states of motor."""
+    """Represents state of motor."""
 
     MOTOR_STOP = 0
     MOTOR_FORWARD = 1
@@ -52,7 +52,7 @@ class KindhomeSolarBeakerState:
 
 
 class KindhomeSolarbeakerDevice:
-    """Represents a kindhome solarbeaker bluetooth device."""
+    """Represents a Kindhome Solarbeaker bluetooth device."""
 
     def __init__(self, ble_device: BLEDevice) -> None:
         """Initialize the device data (without connecting)."""

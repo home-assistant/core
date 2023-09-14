@@ -13,7 +13,7 @@
       }
     },
     "abort": {
-      "no_devices_found": "No kindhome solarbeaker devices found!",
+      "no_devices_found": "No Kindhome Solarbeaker devices found!",
       "already_in_progress": "custom already in progress description",
       "already_configured": "custom already configured description"
     }

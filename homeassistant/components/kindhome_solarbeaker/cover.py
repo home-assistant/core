@@ -26,14 +26,14 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the kindhome solarbeaker cover."""
+    """Set up the Kindhome Solarbeaker cover."""
     device: KindhomeSolarbeakerDevice = hass.data[DOMAIN][entry.entry_id][DATA_DEVICE]
     log(_LOGGER, "async_setup_entry", device)
     async_add_entities([KindhomeSolarbeakerCoverEntity(hass, device)])
 
 
 class KindhomeSolarbeakerCoverEntity(CoverEntity):
-    """Cover entity representing kindhome solarbeaker."""
+    """Cover entity representing Kindhome Solarbeaker."""
 
     supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
