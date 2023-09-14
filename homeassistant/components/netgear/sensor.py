@@ -380,9 +380,9 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self._attribute = attribute
-        self.entity_description = SENSOR_TYPES[self._attribute]
-        self._attr_unique_id = f"{self._mac}-{self._attribute}"
-        self._state = self._device.get(self._attribute)
+        self.entity_description = SENSOR_TYPES[attribute]
+        self._attr_unique_id = f"{self._mac}-{attribute}"
+        self._state = device.get(attribute)
 
     @property
     def native_value(self):

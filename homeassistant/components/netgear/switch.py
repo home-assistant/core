@@ -167,7 +167,7 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self._mac}-{self.entity_description.key}"
+        self._attr_unique_id = f"{self._mac}-{entity_description.key}"
         self._attr_is_on = None
         self.async_update_device()
 
