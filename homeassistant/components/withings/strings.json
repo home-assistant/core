@@ -1,11 +1,6 @@
 {
   "config": {
     "step": {
-      "profile": {
-        "title": "User Profile.",
-        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
-        "data": { "profile": "Profile Name" }
-      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
