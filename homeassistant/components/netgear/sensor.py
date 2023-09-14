@@ -36,7 +36,8 @@ from .const import (
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterCoordinatorEntity
+from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -379,10 +380,9 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self._attribute = attribute
-        self.entity_description = SENSOR_TYPES[self._attribute]
-        self._name = f"{self.get_device_name()} {self.entity_description.name}"
-        self._unique_id = f"{self._mac}-{self._attribute}"
-        self._state = self._device.get(self._attribute)
+        self.entity_description = SENSOR_TYPES[attribute]
+        self._attr_unique_id = f"{self._mac}-{attribute}"
+        self._state = device.get(attribute)
 
     @property
     def native_value(self):
@@ -413,8 +413,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
         self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()

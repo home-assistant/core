@@ -74,7 +74,7 @@ async def async_setup_entry(  # noqa: C901
         """Fetch data from API endpoint."""
         assert device.device
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(30):
                 return await device.device.async_check_firmware_available()
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err

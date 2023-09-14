@@ -203,7 +203,6 @@ class DataManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        profile: str,
         api: ConfigEntryWithingsApi,
         user_id: int,
         webhook_config: WebhookConfig,
@@ -212,7 +211,6 @@ class DataManager:
         self._hass = hass
         self._api = api
         self._user_id = user_id
-        self._profile = profile
         self._webhook_config = webhook_config
         self._notify_subscribe_delay = SUBSCRIBE_DELAY
         self._notify_unsubscribe_delay = UNSUBSCRIBE_DELAY
@@ -255,11 +253,6 @@ class DataManager:
     def user_id(self) -> int:
         """Get the user_id of the authenticated user."""
         return self._user_id
-
-    @property
-    def profile(self) -> str:
-        """Get the profile."""
-        return self._profile
 
     def async_start_polling_webhook_subscriptions(self) -> None:
         """Start polling webhook subscriptions (if enabled) to reconcile their setup."""
@@ -530,12 +523,11 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile: str = config_entry.data[const.PROFILE]
-
-        _LOGGER.debug("Creating withings data manager for profile: %s", profile)
+        _LOGGER.debug(
+            "Creating withings data manager for profile: %s", config_entry.title
+        )
         config_entry_data[const.DATA_MANAGER] = DataManager(
             hass,
-            profile,
             ConfigEntryWithingsApi(
                 hass=hass,
                 config_entry=config_entry,
@@ -549,7 +541,7 @@ async def async_get_data_manager(
                 url=webhook.async_generate_url(
                     hass, config_entry.data[CONF_WEBHOOK_ID]
                 ),
-                enabled=config_entry.data[const.CONF_USE_WEBHOOK],
+                enabled=config_entry.options[const.CONF_USE_WEBHOOK],
             ),
         )
 
