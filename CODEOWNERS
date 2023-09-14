@@ -565,8 +565,11 @@ build.json @home-assistant/supervisor
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
+<<<<<<< HEAD
 /homeassistant/components/fyta/ @dontinelli
 /tests/components/fyta/ @dontinelli
+=======
+>>>>>>> 69c198c14c (Add support for gaposa component)
 /homeassistant/components/gaposa/ @mwatson2
 /tests/components/gaposa/ @mwatson2
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
