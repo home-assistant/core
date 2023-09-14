@@ -310,7 +310,10 @@ class Entity(ABC):
     # platforms, e.g. a derived class in hue.light
     _platform_unstored_attributes: frozenset[str] = frozenset()
 
-    _state_info: StateInfo
+    # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    _state_info: StateInfo = None  # type: ignore[assignment]
 
     # Entity Properties
     _attr_assumed_state: bool = False
