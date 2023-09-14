@@ -1,9 +1,8 @@
-"""Test the Minecraft Server config flow."""
+"""Tests for the Minecraft Server config flow."""
 
 from unittest.mock import AsyncMock, patch
 
 import aiodns
-from mcstatus.status_response import JavaStatusResponse
 
 from homeassistant.components.minecraft_server.const import (
     DEFAULT_NAME,
@@ -15,39 +14,27 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import TEST_HOST, TEST_JAVA_STATUS_RESPONSE
+
 
 class QueryMock:
     """Mock for result of aiodns.DNSResolver.query."""
 
     def __init__(self) -> None:
         """Set up query result mock."""
-        self.host = "mc.dummyserver.com"
+        self.host = TEST_HOST
         self.port = 23456
         self.priority = 1
         self.weight = 1
         self.ttl = None
 
 
-JAVA_STATUS_RESPONSE_RAW = {
-    "description": {"text": "Dummy Description"},
-    "version": {"name": "Dummy Version", "protocol": 123},
-    "players": {
-        "online": 3,
-        "max": 10,
-        "sample": [
-            {"name": "Player 1", "id": "1"},
-            {"name": "Player 2", "id": "2"},
-            {"name": "Player 3", "id": "3"},
-        ],
-    },
-}
-
 USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:{DEFAULT_PORT}",
+    CONF_HOST: f"{TEST_HOST}:{DEFAULT_PORT}",
 }
 
-USER_INPUT_SRV = {CONF_NAME: DEFAULT_NAME, CONF_HOST: "dummyserver.com"}
+USER_INPUT_SRV = {CONF_NAME: DEFAULT_NAME, CONF_HOST: TEST_HOST}
 
 USER_INPUT_IPV4 = {
     CONF_NAME: DEFAULT_NAME,
@@ -61,12 +48,12 @@ USER_INPUT_IPV6 = {
 
 USER_INPUT_PORT_TOO_SMALL = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: "mc.dummyserver.com:1023",
+    CONF_HOST: f"{TEST_HOST}:1023",
 }
 
 USER_INPUT_PORT_TOO_LARGE = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: "mc.dummyserver.com:65536",
+    CONF_HOST: f"{TEST_HOST}:65536",
 }
 
 
@@ -129,9 +116,7 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None
         side_effect=AsyncMock(return_value=[QueryMock()]),
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=JavaStatusResponse(
-            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
-        ),
+        return_value=TEST_JAVA_STATUS_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_SRV
@@ -150,9 +135,7 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=JavaStatusResponse(
-            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
-        ),
+        return_value=TEST_JAVA_STATUS_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -161,7 +144,7 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT[CONF_HOST]
         assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
-        assert result["data"][CONF_HOST] == "mc.dummyserver.com"
+        assert result["data"][CONF_HOST] == TEST_HOST
 
 
 async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
@@ -171,9 +154,7 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=JavaStatusResponse(
-            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
-        ),
+        return_value=TEST_JAVA_STATUS_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
@@ -192,9 +173,7 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
         side_effect=aiodns.error.DNSError,
     ), patch(
         "mcstatus.server.JavaServer.async_status",
-        return_value=JavaStatusResponse(
-            None, None, None, None, JAVA_STATUS_RESPONSE_RAW, None
-        ),
+        return_value=TEST_JAVA_STATUS_RESPONSE,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6

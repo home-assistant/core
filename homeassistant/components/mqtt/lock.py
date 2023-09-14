@@ -159,6 +159,7 @@ class MqttLock(MqttEntity, LockEntity):
         self._optimistic = (
             config[CONF_OPTIMISTIC] or self._config.get(CONF_STATE_TOPIC) is None
         )
+        self._attr_assumed_state = bool(self._optimistic)
 
         self._compiled_pattern = config.get(CONF_CODE_FORMAT)
         self._attr_code_format = (
@@ -220,11 +221,6 @@ class MqttLock(MqttEntity, LockEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.

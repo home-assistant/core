@@ -138,16 +138,13 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
 
     _attr_name = None
+    _attr_supported_features = SUPPORT_IROBOT
+    _attr_available = True  # Always available, otherwise setup will fail
 
     def __init__(self, roomba, blid):
         """Initialize the iRobot handler."""
         super().__init__(roomba, blid)
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_IROBOT
 
     @property
     def battery_level(self):
@@ -158,11 +155,6 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     def state(self):
         """Return the state of the vacuum cleaner."""
         return self._robot_state
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True  # Always available, otherwise setup will fail
 
     @property
     def extra_state_attributes(self):

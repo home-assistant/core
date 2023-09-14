@@ -929,15 +929,13 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "__dict__")
-
     _state: State
 
     __setitem__ = _readonly
     __delitem__ = _readonly
 
     # Inheritance is done so functions that check against State keep working
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
