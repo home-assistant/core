@@ -141,11 +141,3 @@ homeassistant.util.unit\_system
    :members:
    :undoc-members:
    :show-inheritance:
-
-homeassistant.util.volume
--------------------------
-
-.. automodule:: homeassistant.util.volume
-   :members:
-   :undoc-members:
-   :show-inheritance:
