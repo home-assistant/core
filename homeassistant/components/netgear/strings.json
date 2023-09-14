@@ -29,5 +29,116 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "link_type": {
+        "name": "Link type"
+      },
+      "link_rate": {
+        "name": "Link rate"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      },
+      "ssid": {
+        "name": "ssid"
+      },
+      "access_point_mac": {
+        "name": "Access point mac"
+      },
+      "upload_today": {
+        "name": "Upload today"
+      },
+      "download_today": {
+        "name": "Download today"
+      },
+      "upload_yesterday": {
+        "name": "Upload yesterday"
+      },
+      "download_yesterday": {
+        "name": "Download yesterday"
+      },
+      "upload_week": {
+        "name": "Upload week"
+      },
+      "upload_week_average": {
+        "name": "Upload week average"
+      },
+      "download_week": {
+        "name": "Download week"
+      },
+      "download_week_average": {
+        "name": "Download week average"
+      },
+      "upload_month": {
+        "name": "Upload month"
+      },
+      "upload_month_average": {
+        "name": "Upload month average"
+      },
+      "download_month": {
+        "name": "Download month"
+      },
+      "download_month_average": {
+        "name": "Download month average"
+      },
+      "upload_last_month": {
+        "name": "Upload last month"
+      },
+      "upload_last_month_average": {
+        "name": "Upload last month average"
+      },
+      "download_last_month": {
+        "name": "Download last month"
+      },
+      "download_last_month_average": {
+        "name": "Download last month average"
+      },
+      "uplink_bandwidth": {
+        "name": "Uplink bandwidth"
+      },
+      "downlink_bandwidth": {
+        "name": "Downlink bandwidth"
+      },
+      "average_ping": {
+        "name": "Average ping"
+      },
+      "cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "memory_utilization": {
+        "name": "Memory utilization"
+      },
+      "ethernet_link_status": {
+        "name": "Ethernet link status"
+      }
+    },
+    "switch": {
+      "allowed_on_network": {
+        "name": "Allowed on network"
+      },
+      "access_control": {
+        "name": "Access control"
+      },
+      "traffic_meter": {
+        "name": "Traffic meter"
+      },
+      "parental_control": {
+        "name": "Parental control"
+      },
+      "quality_of_service": {
+        "name": "Quality of service"
+      },
+      "2g_guest_wifi": {
+        "name": "2.4G guest WiFi"
+      },
+      "5g_guest_wifi": {
+        "name": "5G guest WiFi"
+      },
+      "smart_connect": {
+        "name": "Smart connect"
+      }
+    }
   }
 }
