@@ -35,10 +35,10 @@ from .const import (
     DEPARTURE_TIME,
     DOMAIN,
     TIME_TYPES,
-    TRAFFIC_MODEL,
+    TRAFFIC_MODELS,
     TRANSIT_PREFS,
-    TRANSPORT_TYPE,
-    TRAVEL_MODE,
+    TRANSPORT_TYPES,
+    TRAVEL_MODES,
     UNITS,
     UNITS_IMPERIAL,
     UNITS_METRIC,
@@ -51,7 +51,8 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MODE): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(TRAVEL_MODE),
+                options=TRAVEL_MODES,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_MODE,
             )
@@ -65,21 +66,24 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_AVOID, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + sorted(AVOID),
+                options=[NONE_SENTINEL] + AVOID,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_AVOID,
             )
         ),
         vol.Required(CONF_UNITS): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(UNITS),
+                options=UNITS,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_UNITS,
             )
         ),
         vol.Required(CONF_TIME_TYPE): SelectSelector(
             SelectSelectorConfig(
-                options=sorted(TIME_TYPES),
+                options=TIME_TYPES,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TIME_TYPE,
             )
@@ -87,14 +91,16 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIME, default=""): cv.string,
         vol.Optional(CONF_TRAFFIC_MODEL, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + sorted(TRAFFIC_MODEL),
+                options=[NONE_SENTINEL] + TRAFFIC_MODELS,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRAFFIC_MODEL,
             )
         ),
         vol.Optional(CONF_TRANSIT_MODE, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + sorted(TRANSPORT_TYPE),
+                options=[NONE_SENTINEL] + TRANSPORT_TYPES,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRANSIT_MODE,
             )
@@ -103,7 +109,8 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_TRANSIT_ROUTING_PREFERENCE, default=NONE_SENTINEL
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + sorted(TRANSIT_PREFS),
+                options=[NONE_SENTINEL] + TRANSIT_PREFS,
+                sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
             )

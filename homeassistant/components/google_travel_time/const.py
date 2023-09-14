@@ -79,9 +79,9 @@ ALL_LANGUAGES = [
 
 AVOID = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSPORT_TYPE = ["bus", "subway", "train", "tram", "rail"]
-TRAVEL_MODE = ["driving", "walking", "bicycling", "transit"]
-TRAFFIC_MODEL = ["best_guess", "pessimistic", "optimistic"]
+TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
+TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
+TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
 
 # googlemaps library uses "metric" or "imperial" terminology in distance_matrix
 UNITS_METRIC = "metric"
