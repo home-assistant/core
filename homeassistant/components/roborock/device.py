@@ -95,7 +95,7 @@ class RoborockCoordinatedEntity(
             status = data.status
             if status:
                 return status
-        return self.api.status_type()
+        return Status({})
 
     async def send(
         self,
