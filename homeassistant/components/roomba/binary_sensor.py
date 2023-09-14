@@ -1,5 +1,8 @@
 """Roomba binary sensor entities."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +32,7 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
 
     _attr_icon = "mdi:delete-variant"
     _attr_translation_key = "bin_full"
+    _attr_device_class = BinarySensorDeviceClass.FULL
 
     @property
     def unique_id(self):
