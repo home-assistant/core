@@ -201,6 +201,12 @@ class EntityInfo(TypedDict):
     config_entry: NotRequired[str]
 
 
+class StateInfo(TypedDict):
+    """State info."""
+
+    unstored_attributes: frozenset[str]
+
+
 class EntityPlatformState(Enum):
     """The platform state of an entity."""
 
@@ -299,6 +305,7 @@ class Entity(ABC):
 
     # Attributes to exclude from recording
     _unstored_attributes: frozenset[str] = frozenset()
+    _state_info: StateInfo
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -883,7 +890,7 @@ class Entity(ABC):
                 attr,
                 self.force_update,
                 self._context,
-                self._unstored_attributes,
+                self._state_info,
             )
         except InvalidStateError:
             _LOGGER.exception("Failed to set state, fall back to %s", STATE_UNKNOWN)
@@ -1089,15 +1096,17 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        info: EntityInfo = {
+        entiy_info: EntityInfo = {
             "domain": self.platform.platform_name,
             "custom_component": "custom_components" in type(self).__module__,
         }
 
         if self.platform.config_entry:
-            info["config_entry"] = self.platform.config_entry.entry_id
+            entiy_info["config_entry"] = self.platform.config_entry.entry_id
 
-        entity_sources(self.hass)[self.entity_id] = info
+        entity_sources(self.hass)[self.entity_id] = entiy_info
+
+        self._state_info = {"unstored_attributes": self._unstored_attributes}
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
