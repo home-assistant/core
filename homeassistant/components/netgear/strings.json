@@ -42,7 +42,7 @@
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "ssid": {
-        "name": "ssid"
+        "name": "SSID"
       },
       "access_point_mac": {
         "name": "Access point mac"
@@ -131,10 +131,10 @@
         "name": "Quality of service"
       },
       "2g_guest_wifi": {
-        "name": "2.4G guest WiFi"
+        "name": "2.4GHz guest Wi-Fi"
       },
       "5g_guest_wifi": {
-        "name": "5G guest WiFi"
+        "name": "5GHz guest Wi-Fi"
       },
       "smart_connect": {
         "name": "Smart connect"
