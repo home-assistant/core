@@ -22,9 +22,11 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
     Returns:
         The gas market price value.
     """
-    if not data.gas:
+    if not data.gas_today:
         return None
-    return data.gas.price_at_time(data.gas.utcnow() + timedelta(hours=hours))
+    return data.gas_today.price_at_time(
+        data.gas_today.utcnow() + timedelta(hours=hours)
+    )
 
 
 def serialize_prices(prices: dict[datetime, float]) -> dict[str, float]:
@@ -60,8 +62,8 @@ async def async_get_config_entry_diagnostics(
         "gas": {
             "current_hour_price": get_gas_price(coordinator.data, 0),
             "next_hour_price": get_gas_price(coordinator.data, 1),
-            "all_prices": serialize_prices(coordinator.data.gas.prices)
-            if coordinator.data.gas
+            "all_prices": serialize_prices(coordinator.data.gas_today.prices)
+            if coordinator.data.gas_today
             else None,
             "template": coordinator.gas_modifyer.template,
         },

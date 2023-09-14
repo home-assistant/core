@@ -51,17 +51,17 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_gas",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
-        value_fn=lambda data: data.gas.current_price if data.gas else None,
+        value_fn=lambda data: data.gas_today.current_price if data.gas_today else None,
     ),
     EnergyZeroSensorEntityDescription(
         key="next_hour_price",
         translation_key="next_hour_price",
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
-        value_fn=lambda data: data.gas.price_at_time(
-            data.gas.utcnow() + timedelta(hours=1)
+        value_fn=lambda data: data.gas_today.price_at_time(
+            data.gas_today.utcnow() + timedelta(hours=1)
         )
-        if data.gas
+        if data.gas_today
         else None,
     ),
     EnergyZeroSensorEntityDescription(
@@ -189,13 +189,13 @@ class EnergyZeroSensorEntity(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self) -> dict[str, None | dict[datetime, float]]:
+    def extra_state_attributes(self) -> dict[str, None | str | dict[datetime, float]]:
         """Return the state attributes."""
         data = self.coordinator.data
 
         return {
             "energy": data.energy.prices,
             "energy_template": self.coordinator.energy_modifyer.template,
-            "gas": data.gas.prices if data.gas is not None else None,
+            "gas": data.gas_today.prices if data.gas_today is not None else None,
             "gas_template": self.coordinator.gas_modifyer.template,
         }

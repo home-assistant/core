@@ -28,7 +28,7 @@ class EnergyZeroData(NamedTuple):
     energy: Electricity
     energy_today: Electricity
     energy_tomorrow: Electricity | None
-    gas: Gas | None
+    gas_today: Gas | None
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
@@ -103,7 +103,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             energy=energy_all,
             energy_today=energy_today,
             energy_tomorrow=energy_tomorrow,
-            gas=gas_today,
+            gas_today=gas_today,
         )
 
     def _apply_template(
