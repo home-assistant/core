@@ -4,7 +4,6 @@
   "codeowners": ["@natekspencer", "@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/weatherflow",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyweatherflowudp"],
