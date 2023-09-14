@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             "Withings notify",
             entry.data[CONF_WEBHOOK_ID],
-            async_get_webhook_handler(webhook_coordinator),
+            get_webhook_handler(webhook_coordinator),
         )
         coordinator = webhook_coordinator
     else:
@@ -175,7 +175,7 @@ def json_message_response(message: str, message_code: int) -> Response:
     return HomeAssistantView.json({"message": message, "code": message_code})
 
 
-def async_get_webhook_handler(
+def get_webhook_handler(
     coordinator: WebhookWithingsDataUpdateCoordinator,
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
