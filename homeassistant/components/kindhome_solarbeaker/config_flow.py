@@ -37,7 +37,6 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
         })
 
     def __init__(self) -> None:
-        """Initialize the config flow."""
         log(_LOGGER, "KindhomeSolarbeakerConfigFlow.__init__", "called!")
         self._discover_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, str] = {}
@@ -45,7 +44,6 @@ class KindhomeSolarbeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bluetooth(
             self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
-        """Handle the bluetooth discovery step."""
         log(_LOGGER, "async_step_bluetooth", f"called! {discovery_info.as_dict()}")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
