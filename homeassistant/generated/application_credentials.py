@@ -11,6 +11,7 @@ APPLICATION_CREDENTIALS = [
     "google_mail",
     "google_sheets",
     "home_connect",
+    "husqvarna_automower",
     "lametric",
     "lyric",
     "neato",

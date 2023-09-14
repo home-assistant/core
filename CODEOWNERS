@@ -549,6 +549,8 @@ build.json @home-assistant/supervisor
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
 /homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
+/homeassistant/components/husqvarna_automower/ @Thomas55555
+/tests/components/husqvarna_automower/ @Thomas55555
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @ptcryan
