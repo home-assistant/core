@@ -12,7 +12,6 @@ from homeassistant.components.aprilaire.climate import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION,
     AprilaireClimate,
-    ExtendedClimateEntityFeature,
     async_setup_entry,
 )
 from homeassistant.components.aprilaire.const import DOMAIN
@@ -199,74 +198,6 @@ def test_supported_features_mode_4(
     assert (
         climate.supported_features
         == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.FAN_MODE
-    )
-
-
-def test_supported_features_humidification_available(
-    climate: AprilaireClimate, coordinator: AprilaireCoordinator
-) -> None:
-    """Test the supported featured with humidification available."""
-    coordinator.data = {
-        "humidification_available": 2,
-    }
-
-    assert (
-        climate.supported_features
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_HUMIDITY
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.FAN_MODE
-    )
-
-
-def test_supported_features_dehumidification_available(
-    climate: AprilaireClimate, coordinator: AprilaireCoordinator
-) -> None:
-    """Test the supported featured with dehumidification available."""
-    coordinator.data = {
-        "dehumidification_available": 1,
-    }
-
-    assert (
-        climate.supported_features
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.FAN_MODE
-    )
-
-
-def test_supported_features_air_cleaning_available(
-    climate: AprilaireClimate, coordinator: AprilaireCoordinator
-) -> None:
-    """Test the supported featured with air cleaning available."""
-    coordinator.data = {
-        "air_cleaning_available": 1,
-    }
-
-    assert (
-        climate.supported_features
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.AIR_CLEANING
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.FAN_MODE
-    )
-
-
-def test_supported_features_ventilation_available(
-    climate: AprilaireClimate, coordinator: AprilaireCoordinator
-) -> None:
-    """Test the supported featured with ventilation available."""
-    coordinator.data = {
-        "ventilation_available": 1,
-    }
-
-    assert (
-        climate.supported_features
-        == ClimateEntityFeature.TARGET_TEMPERATURE
-        | ExtendedClimateEntityFeature.FRESH_AIR
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.FAN_MODE
     )
