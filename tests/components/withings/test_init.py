@@ -14,7 +14,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import call_webhook, setup_integration
+from . import call_webhook, enable_webhooks, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -106,11 +106,12 @@ async def test_data_manager_webhook_subscription(
     hass: HomeAssistant,
     withings: AsyncMock,
     disable_webhook_delay,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test data manager webhook subscriptions."""
-    await setup_integration(hass, config_entry)
+    await enable_webhooks(hass)
+    await setup_integration(hass, webhook_config_entry)
     await hass_client_no_auth()
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
@@ -160,13 +161,14 @@ async def test_webhook_subscription_polling_config(
 async def test_requests(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     method: str,
     disable_webhook_delay,
 ) -> None:
     """Test we handle request methods Withings sends."""
-    await setup_integration(hass, config_entry)
+    await enable_webhooks(hass)
+    await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
@@ -185,10 +187,11 @@ async def test_webhooks_request_data(
     disable_webhook_delay,
 ) -> None:
     """Test calling a webhook requests data."""
+    await enable_webhooks(hass)
     await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
 
-    assert withings.measure_get_meas.call_count == 1
+    assert withings.async_measure_get_meas.call_count == 1
 
     await call_webhook(
         hass,
@@ -196,7 +199,7 @@ async def test_webhooks_request_data(
         {"userid": USER_ID, "appli": NotifyAppli.WEIGHT},
         client,
     )
-    assert withings.measure_get_meas.call_count == 2
+    assert withings.async_measure_get_meas.call_count == 2
 
 
 @pytest.mark.parametrize(

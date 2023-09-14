@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WebhookWithingsDataUpdateCoordinator
+from . import BaseWithingsDataUpdateCoordinator, WebhookWithingsDataUpdateCoordinator
 from .common import UpdateType
 from .const import DOMAIN, Measurement
 from .entity import WebhookWithingsSensor, WithingsEntityDescription
@@ -47,9 +47,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: WebhookWithingsDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: BaseWithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     if isinstance(coordinator, WebhookWithingsDataUpdateCoordinator):
         entities = [

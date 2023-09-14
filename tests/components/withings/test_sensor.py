@@ -79,12 +79,12 @@ def async_assert_state_equals(
 async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    polling_config_entry: MockConfigEntry,
     disable_webhook_delay,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test entities enabled by default."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, polling_config_entry)
     entity_registry: EntityRegistry = er.async_get(hass)
 
     client = await hass_client_no_auth()
@@ -122,10 +122,10 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     withings: AsyncMock,
     disable_webhook_delay,
-    config_entry: MockConfigEntry,
+    polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, config_entry)
+    await setup_integration(hass, polling_config_entry)
 
     for sensor in SENSORS:
         entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
