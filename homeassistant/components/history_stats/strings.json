@@ -1,0 +1,8 @@
+{
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads history stats sensors from the YAML-configuration."
+    }
+  }
+}

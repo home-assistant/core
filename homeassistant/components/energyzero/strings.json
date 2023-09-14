@@ -13,14 +13,34 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "EnergyZero configuration test",
-        "data": {
-          "gas_modifyer": "Gas Price Modifyer Template (Optional)",
-          "energy_modifyer": "Energy Price Modifyer Template (Optional)"
-        }
+  "entity": {
+    "sensor": {
+      "current_hour_price": {
+        "name": "Current hour"
+      },
+      "next_hour_price": {
+        "name": "Next hour"
+      },
+      "average_price": {
+        "name": "Average - today"
+      },
+      "max_price": {
+        "name": "Highest price - today"
+      },
+      "min_price": {
+        "name": "Lowest price - today"
+      },
+      "highest_price_time": {
+        "name": "Time of highest price - today"
+      },
+      "lowest_price_time": {
+        "name": "Time of lowest price - today"
+      },
+      "percentage_of_max": {
+        "name": "Current percentage of highest price - today"
+      },
+      "hours_priced_equal_or_lower": {
+        "name": "Hours priced equal or lower than current - today"
       }
     }
   }

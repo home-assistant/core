@@ -42,11 +42,6 @@
         "name": "WAN status"
       }
     },
-    "button": {
-      "reboot": {
-        "name": "[%key:component::button::entity_component::restart::name%]"
-      }
-    },
     "sensor": {
       "dsl_attenuation_down": {
         "name": "DSL attenuation down"
@@ -89,7 +84,7 @@
       "dsl_training": {
         "name": "DSL training",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "g_994_training": "G.994 Training",
           "g_992_started": "G.992 Started",
           "g_922_channel_analysis": "G.922 Channel Analysis",
@@ -109,12 +104,6 @@
           "gprs": "GPRS",
           "unknown": "Unknown"
         }
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "wan_mode": {
         "name": "WAN mode",

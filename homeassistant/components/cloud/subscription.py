@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientError
-import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 
 from .client import CloudClient
@@ -18,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_subscription_info(cloud: Cloud[CloudClient]) -> dict[str, Any] | None:
     """Fetch the subscription info."""
     try:
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             return await cloud_api.async_subscription_info(cloud)
     except asyncio.TimeoutError:
         _LOGGER.error(
@@ -39,7 +38,7 @@ async def async_migrate_paypal_agreement(
 ) -> dict[str, Any] | None:
     """Migrate a paypal agreement from legacy."""
     try:
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             return await cloud_api.async_migrate_paypal_agreement(cloud)
     except asyncio.TimeoutError:
         _LOGGER.error(

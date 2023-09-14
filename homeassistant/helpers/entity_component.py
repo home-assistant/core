@@ -19,7 +19,14 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
@@ -217,18 +224,21 @@ class EntityComponent(Generic[_EntityT]):
         schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> None:
+        async def handle_service(call: ServiceCall) -> ServiceResponse:
             """Handle the service."""
-            await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass, self._platforms.values(), func, call, required_features
             )
 
-        self.hass.services.async_register(self.domain, name, handle_service, schema)
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
 
     async def async_setup_platform(
         self,

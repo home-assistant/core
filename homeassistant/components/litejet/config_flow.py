@@ -9,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
@@ -53,6 +54,21 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Create a LiteJet config entry based upon user input."""
         if self._async_current_entries():
+            if self.context["source"] == config_entries.SOURCE_IMPORT:
+                async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    f"deprecated_yaml_{DOMAIN}",
+                    breaks_in_ha_version="2024.2.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "LiteJet",
+                    },
+                )
             return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
@@ -62,6 +78,20 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 system = await pylitejet.open(port)
             except SerialException:
+                if self.context["source"] == config_entries.SOURCE_IMPORT:
+                    async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        "deprecated_yaml_serial_exception",
+                        breaks_in_ha_version="2024.2.0",
+                        is_fixable=False,
+                        issue_domain=DOMAIN,
+                        severity=IssueSeverity.ERROR,
+                        translation_key="deprecated_yaml_serial_exception",
+                        translation_placeholders={
+                            "url": "/config/integrations/dashboard/add?domain=litejet"
+                        },
+                    )
                 errors[CONF_PORT] = "open_failed"
             else:
                 await system.close()
@@ -78,7 +108,24 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
         """Import litejet config from configuration.yaml."""
-        return self.async_create_entry(title=import_data[CONF_PORT], data=import_data)
+        new_data = {CONF_PORT: import_data[CONF_PORT]}
+        result = await self.async_step_user(new_data)
+        if result["type"] == FlowResultType.CREATE_ENTRY:
+            async_create_issue(
+                self.hass,
+                HOMEASSISTANT_DOMAIN,
+                f"deprecated_yaml_{DOMAIN}",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "LiteJet",
+                },
+            )
+        return result
 
     @staticmethod
     @callback

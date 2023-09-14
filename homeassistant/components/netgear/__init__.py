@@ -62,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    configuration_url = None
+    if host := entry.data[CONF_HOST]:
+        configuration_url = f"http://{host}/"
+
     assert entry.unique_id
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -72,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=router.model,
         sw_version=router.firmware_version,
         hw_version=router.hardware_version,
-        configuration_url=f"http://{entry.data[CONF_HOST]}/",
+        configuration_url=configuration_url,
     )
 
     async def async_update_devices() -> bool:

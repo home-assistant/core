@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_PLATFORM,
     CONF_TYPE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -32,10 +33,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -440,7 +438,9 @@ async def test_validate_trigger_unsupported_device(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
+    automations = hass.states.async_entity_ids(AUTOMATION_DOMAIN)
+    assert len(automations) == 1
+    assert hass.states.get(automations[0]).state == STATE_UNAVAILABLE
 
 
 async def test_validate_trigger_unsupported_trigger(
@@ -481,7 +481,9 @@ async def test_validate_trigger_unsupported_trigger(
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
+    automations = hass.states.async_entity_ids(AUTOMATION_DOMAIN)
+    assert len(automations) == 1
+    assert hass.states.get(automations[0]).state == STATE_UNAVAILABLE
 
 
 async def test_attach_trigger_no_matching_event(

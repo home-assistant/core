@@ -16,5 +16,35 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "services": {
+    "set_lock_state": {
+      "name": "Set lock state",
+      "description": "Sets lock state.",
+      "fields": {
+        "flap_id": {
+          "name": "Flap ID",
+          "description": "Flap ID to lock/unlock."
+        },
+        "lock_state": {
+          "name": "Lock state",
+          "description": "New lock state."
+        }
+      }
+    },
+    "set_pet_location": {
+      "name": "Set pet location",
+      "description": "Sets pet location.",
+      "fields": {
+        "pet_name": {
+          "name": "Pet name",
+          "description": "Name of pet."
+        },
+        "location": {
+          "name": "[%key:common::config_flow::data::location%]",
+          "description": "Pet location (Inside or Outside)."
+        }
+      }
+    }
   }
 }

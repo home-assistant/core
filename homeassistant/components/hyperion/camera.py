@@ -27,11 +27,11 @@ from homeassistant.components.camera import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -44,7 +44,6 @@ from .const import (
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
-    NAME_SUFFIX_HYPERION_CAMERA,
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
@@ -107,6 +106,9 @@ async def async_setup_entry(
 class HyperionCamera(Camera):
     """ComponentBinarySwitch switch class."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self,
         server_id: str,
@@ -120,7 +122,6 @@ class HyperionCamera(Camera):
         self._unique_id = get_hyperion_unique_id(
             server_id, instance_num, TYPE_HYPERION_CAMERA
         )
-        self._name = f"{instance_name} {NAME_SUFFIX_HYPERION_CAMERA}".strip()
         self._device_id = get_hyperion_device_id(server_id, instance_num)
         self._instance_name = instance_name
         self._client = hyperion_client
@@ -139,11 +140,6 @@ class HyperionCamera(Camera):
     def unique_id(self) -> str:
         """Return a unique id for this instance."""
         return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._name
 
     @property
     def is_on(self) -> bool:

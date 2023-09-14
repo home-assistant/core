@@ -66,3 +66,21 @@ async def test_already_configured(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_onboarding_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the onboarding configuration flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "onboarding"}
+    )
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Google Translate text-to-speech"
+    assert result.get("data") == {
+        CONF_LANG: "en",
+        CONF_TLD: "com",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1

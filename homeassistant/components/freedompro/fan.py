@@ -11,12 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FreedomproDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -33,10 +33,12 @@ async def async_setup_entry(
 
 
 class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntity):
-    """Representation of an Freedompro fan."""
+    """Representation of a Freedompro fan."""
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_is_on = False
+    _attr_percentage = 0
 
     def __init__(
         self,
@@ -59,8 +61,6 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             model=device["type"],
             name=device["name"],
         )
-        self._attr_is_on = False
-        self._attr_percentage = 0
         if "rotationSpeed" in self._characteristics:
             self._attr_supported_features = FanEntityFeature.SET_SPEED
 

@@ -46,8 +46,9 @@ from homeassistant.helpers import (
     discovery,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
@@ -413,9 +414,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_info = DeviceInfo(
             configuration_url=router.url,
             connections=router.device_connections,
-            default_manufacturer=DEFAULT_MANUFACTURER,
             identifiers=router.device_identifiers,
-            manufacturer=entry.data.get(CONF_MANUFACTURER),
+            manufacturer=entry.data.get(CONF_MANUFACTURER, DEFAULT_MANUFACTURER),
             name=router.device_name,
         )
         hw_version = None

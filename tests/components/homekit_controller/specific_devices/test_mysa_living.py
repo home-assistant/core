@@ -1,7 +1,7 @@
 """Make sure that Mysa Living is enumerated properly."""
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from ..common import (
@@ -55,7 +55,7 @@ async def test_mysa_living_setup(hass: HomeAssistant) -> None:
                     entity_id="sensor.mysa_85dda9_current_temperature",
                     friendly_name="Mysa-85dda9 Current Temperature",
                     unique_id="00:00:00:00:00:00_1_20_25",
-                    unit_of_measurement=TEMP_CELSIUS,
+                    unit_of_measurement=UnitOfTemperature.CELSIUS,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="24.1",
                 ),

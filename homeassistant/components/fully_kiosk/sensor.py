@@ -51,7 +51,6 @@ class FullySensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[FullySensorEntityDescription, ...] = (
     FullySensorEntityDescription(
         key="batteryLevel",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -59,23 +58,23 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
     ),
     FullySensorEntityDescription(
         key="currentPage",
-        name="Current page",
+        translation_key="current_page",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_fn=truncate_url,
     ),
     FullySensorEntityDescription(
         key="screenOrientation",
-        name="Screen orientation",
+        translation_key="screen_orientation",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
         key="foregroundApp",
-        name="Foreground app",
+        translation_key="foreground_app",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FullySensorEntityDescription(
         key="internalStorageFreeSpace",
-        name="Internal storage free space",
+        translation_key="internal_storage_free_space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -84,7 +83,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
     ),
     FullySensorEntityDescription(
         key="internalStorageTotalSpace",
-        name="Internal storage total space",
+        translation_key="internal_storage_total_space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -93,7 +92,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
     ),
     FullySensorEntityDescription(
         key="ramFreeMemory",
-        name="Free memory",
+        translation_key="ram_free_memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -102,7 +101,7 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
     ),
     FullySensorEntityDescription(
         key="ramTotalMemory",
-        name="Total memory",
+        translation_key="ram_total_memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,

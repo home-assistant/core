@@ -1,4 +1,9 @@
-"""Support for Legacy MQTT vacuum."""
+"""Support for Legacy MQTT vacuum.
+
+The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
+and is will be removed with HA Core 2024.2.0
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -126,7 +131,7 @@ PLATFORM_SCHEMA_LEGACY_MODERN = (
             ),
             vol.Inclusive(CONF_FAN_SPEED_TEMPLATE, "fan_speed"): cv.template,
             vol.Inclusive(CONF_FAN_SPEED_TOPIC, "fan_speed"): valid_publish_topic,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
             ): cv.string,
@@ -210,6 +215,7 @@ async def async_setup_entity_legacy(
 class MqttVacuum(MqttEntity, VacuumEntity):
     """Representation of a MQTT-controlled legacy vacuum."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
@@ -414,9 +420,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         )
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
+        """Publish a command."""
 
-        if self._command_topic is None or self.supported_features & feature == 0:
+        if self._command_topic is None:
             return
 
         await self.async_publish(

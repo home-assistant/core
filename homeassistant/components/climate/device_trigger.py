@@ -142,7 +142,7 @@ async def async_attach_trigger(
         numeric_state_config[
             numeric_state_trigger.CONF_VALUE_TEMPLATE
         ] = "{{ state.attributes.current_temperature }}"
-    else:
+    else:  # trigger_type == "current_humidity_changed"
         numeric_state_config[
             numeric_state_trigger.CONF_VALUE_TEMPLATE
         ] = "{{ state.attributes.current_humidity }}"

@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_detected_entity
+  None
+# ---
+# name: test_ws_detect
+  dict({
+    'event': dict({
+      'timestamp': 2048.0,
+      'ww_id': 'test_ww',
+    }),
+    'id': 1,
+    'type': 'event',
+  })
+# ---

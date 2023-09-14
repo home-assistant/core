@@ -49,7 +49,7 @@ async def test_setup_no_mqtt(
 async def test_setup_with_pub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the setup with subscription."""
     # Should start off with no listeners for all events
-    assert hass.bus.async_listeners().get("*") is None
+    assert not hass.bus.async_listeners().get("*")
 
     assert await add_eventstream(hass, pub_topic="bar")
     await hass.async_block_till_done()

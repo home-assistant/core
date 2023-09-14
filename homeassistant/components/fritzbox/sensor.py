@@ -48,6 +48,8 @@ class FritzSensorEntityDescription(
 ):
     """Description for Fritz!Smarthome sensor entities."""
 
+    entity_category_fn: Callable[[FritzhomeDevice], EntityCategory | None] | None = None
+
 
 def suitable_eco_temperature(device: FritzhomeDevice) -> bool:
     """Check suitablity for eco temperature sensor."""
@@ -74,6 +76,13 @@ def suitable_temperature(device: FritzhomeDevice) -> bool:
     return device.has_temperature_sensor and not device.has_thermostat
 
 
+def entity_category_temperature(device: FritzhomeDevice) -> EntityCategory | None:
+    """Determine proper entity category for temperature sensor."""
+    if device.has_switch or device.has_lightbulb:
+        return EntityCategory.DIAGNOSTIC
+    return None
+
+
 def value_nextchange_preset(device: FritzhomeDevice) -> str:
     """Return native value for next scheduled preset sensor."""
     if device.nextchange_temperature == device.eco_temperature:
@@ -91,17 +100,15 @@ def value_scheduled_preset(device: FritzhomeDevice) -> str:
 SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category_fn=entity_category_temperature,
         suitable=suitable_temperature,
         native_value=lambda device: device.temperature,
     ),
     FritzSensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -110,7 +117,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     ),
     FritzSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -119,7 +125,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     ),
     FritzSensorEntityDescription(
         key="power_consumption",
-        translation_key="power_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -128,7 +133,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     ),
     FritzSensorEntityDescription(
         key="voltage",
-        translation_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -137,7 +141,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     ),
     FritzSensorEntityDescription(
         key="electric_current",
-        translation_key="electric_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -146,7 +149,6 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     ),
     FritzSensorEntityDescription(
         key="total_energy",
-        translation_key="total_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -231,3 +233,10 @@ class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.data)
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return the category of the entity, if any."""
+        if self.entity_description.entity_category_fn is not None:
+            return self.entity_description.entity_category_fn(self.data)
+        return super().entity_category

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from holidays import country_holidays, list_supported_countries
+from holidays import HolidayBase, country_holidays, list_supported_countries
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -76,9 +76,13 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
         if dt_util.parse_date(add_date) is None:
             raise AddDatesError("Incorrect date")
 
+    cls: HolidayBase = country_holidays(user_input[CONF_COUNTRY])
     year: int = dt_util.now().year
-    obj_holidays = country_holidays(
-        user_input[CONF_COUNTRY], user_input.get(CONF_PROVINCE), year
+    obj_holidays: HolidayBase = country_holidays(
+        user_input[CONF_COUNTRY],
+        subdiv=user_input.get(CONF_PROVINCE),
+        years=year,
+        language=cls.default_language,
     )
 
     for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
@@ -154,6 +158,33 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> WorkdayOptionsFlowHandler:
         """Get the options flow for this handler."""
         return WorkdayOptionsFlowHandler(config_entry)
+
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+        """Import a configuration from config.yaml."""
+
+        abort_match = {
+            CONF_COUNTRY: config[CONF_COUNTRY],
+            CONF_EXCLUDES: config[CONF_EXCLUDES],
+            CONF_OFFSET: config[CONF_OFFSET],
+            CONF_WORKDAYS: config[CONF_WORKDAYS],
+            CONF_ADD_HOLIDAYS: config[CONF_ADD_HOLIDAYS],
+            CONF_REMOVE_HOLIDAYS: config[CONF_REMOVE_HOLIDAYS],
+            CONF_PROVINCE: config.get(CONF_PROVINCE),
+        }
+        new_config = config.copy()
+        new_config[CONF_PROVINCE] = config.get(CONF_PROVINCE)
+        LOGGER.debug("Importing with %s", new_config)
+
+        self._async_abort_entries_match(abort_match)
+
+        self.data[CONF_NAME] = config.get(CONF_NAME, DEFAULT_NAME)
+        self.data[CONF_COUNTRY] = config[CONF_COUNTRY]
+        LOGGER.debug(
+            "No duplicate, next step with name %s for country %s",
+            self.data[CONF_NAME],
+            self.data[CONF_COUNTRY],
+        )
+        return await self.async_step_options(user_input=new_config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

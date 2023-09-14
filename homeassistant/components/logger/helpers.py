@@ -5,10 +5,10 @@ from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType

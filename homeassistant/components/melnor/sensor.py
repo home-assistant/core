@@ -87,7 +87,6 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=lambda device: device.battery_level,
@@ -97,7 +96,7 @@ DEVICE_ENTITY_DESCRIPTIONS: list[MelnorSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         key="rssi",
-        name="RSSI",
+        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         state_fn=lambda device: device.rssi,
@@ -108,13 +107,13 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
     MelnorZoneSensorEntityDescription(
         device_class=SensorDeviceClass.TIMESTAMP,
         key="manual_cycle_end",
-        name="Manual Cycle End",
+        translation_key="manual_cycle_end",
         state_fn=watering_seconds_left,
     ),
     MelnorZoneSensorEntityDescription(
         device_class=SensorDeviceClass.TIMESTAMP,
         key="next_cycle",
-        name="Next Cycle",
+        translation_key="next_cycle",
         state_fn=next_cycle,
     ),
 ]

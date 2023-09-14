@@ -27,5 +27,145 @@
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "Enabling API was successful"
     }
+  },
+  "entity": {
+    "number": {
+      "status_light_brightness": {
+        "name": "Status light brightness"
+      }
+    },
+    "sensor": {
+      "dsmr_version": {
+        "name": "DSMR version"
+      },
+      "meter_model": {
+        "name": "Smart meter model"
+      },
+      "unique_meter_id": {
+        "name": "Smart meter identifier"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "active_tariff": {
+        "name": "Active tariff"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "total_power_import_kwh": {
+        "name": "Total power import"
+      },
+      "total_power_import_t1_kwh": {
+        "name": "Total power import tariff 1"
+      },
+      "total_power_import_t2_kwh": {
+        "name": "Total power import tariff 2"
+      },
+      "total_power_import_t3_kwh": {
+        "name": "Total power import tariff 3"
+      },
+      "total_power_import_t4_kwh": {
+        "name": "Total power import tariff 4"
+      },
+      "total_power_export_kwh": {
+        "name": "Total power export"
+      },
+      "total_power_export_t1_kwh": {
+        "name": "Total power export tariff 1"
+      },
+      "total_power_export_t2_kwh": {
+        "name": "Total power export tariff 2"
+      },
+      "total_power_export_t3_kwh": {
+        "name": "Total power export tariff 3"
+      },
+      "total_power_export_t4_kwh": {
+        "name": "Total power export tariff 4"
+      },
+      "active_power_w": {
+        "name": "Active power"
+      },
+      "active_power_l1_w": {
+        "name": "Active power phase 1"
+      },
+      "active_power_l2_w": {
+        "name": "Active power phase 2"
+      },
+      "active_power_l3_w": {
+        "name": "Active power phase 3"
+      },
+      "active_voltage_l1_v": {
+        "name": "Active voltage phase 1"
+      },
+      "active_voltage_l2_v": {
+        "name": "Active voltage phase 2"
+      },
+      "active_voltage_l3_v": {
+        "name": "Active voltage phase 3"
+      },
+      "active_current_l1_a": {
+        "name": "Active current phase 1"
+      },
+      "active_current_l2_a": {
+        "name": "Active current phase 2"
+      },
+      "active_current_l3_a": {
+        "name": "Active current phase 3"
+      },
+      "active_frequency_hz": {
+        "name": "Active frequency"
+      },
+      "voltage_sag_l1_count": {
+        "name": "Voltage sags detected phase 1"
+      },
+      "voltage_sag_l2_count": {
+        "name": "Voltage sags detected phase 2"
+      },
+      "voltage_sag_l3_count": {
+        "name": "Voltage sags detected phase 3"
+      },
+      "voltage_swell_l1_count": {
+        "name": "Voltage swells detected phase 1"
+      },
+      "voltage_swell_l2_count": {
+        "name": "Voltage swells detected phase 2"
+      },
+      "voltage_swell_l3_count": {
+        "name": "Voltage swells detected phase 3"
+      },
+      "any_power_fail_count": {
+        "name": "Power failures detected"
+      },
+      "long_power_fail_count": {
+        "name": "Long power failures detected"
+      },
+      "active_power_average_w": {
+        "name": "Active average demand"
+      },
+      "monthly_power_peak_w": {
+        "name": "Peak demand current month"
+      },
+      "total_gas_m3": {
+        "name": "Total gas"
+      },
+      "gas_unique_id": {
+        "name": "Gas meter identifier"
+      },
+      "active_liter_lpm": {
+        "name": "Active water usage"
+      },
+      "total_liter_m3": {
+        "name": "Total water usage"
+      }
+    },
+    "switch": {
+      "switch_lock": {
+        "name": "Switch lock"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      }
+    }
   }
 }

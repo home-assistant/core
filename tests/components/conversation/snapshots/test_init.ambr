@@ -1,20 +1,20 @@
 # serializer version: 1
 # name: test_get_agent_info
   dict({
-    'id': 'mock-entry',
-    'name': 'Mock Title',
-  })
-# ---
-# name: test_get_agent_info.1
-  dict({
     'id': 'homeassistant',
     'name': 'Home Assistant',
   })
 # ---
-# name: test_get_agent_info.2
+# name: test_get_agent_info.1
   dict({
     'id': 'mock-entry',
     'name': 'Mock Title',
+  })
+# ---
+# name: test_get_agent_info.2
+  dict({
+    'id': 'homeassistant',
+    'name': 'Home Assistant',
   })
 # ---
 # name: test_get_agent_info.3
@@ -30,6 +30,7 @@
         'id': 'homeassistant',
         'name': 'Home Assistant',
         'supported_languages': list([
+          'af',
           'ar',
           'bg',
           'bn',
@@ -41,6 +42,8 @@
           'el',
           'en',
           'es',
+          'et',
+          'eu',
           'fa',
           'fi',
           'fr',
@@ -222,12 +225,129 @@
     ]),
   })
 # ---
+# name: test_turn_on_intent[turn kitchen on-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[turn kitchen on-homeassistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[turn on kitchen-None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_turn_on_intent[turn on kitchen-homeassistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_ws_get_agent_info
   dict({
-    'attribution': dict({
-      'name': 'Mock assistant',
-      'url': 'https://assist.me',
-    }),
+    'attribution': None,
   })
 # ---
 # name: test_ws_get_agent_info.1
@@ -247,5 +367,119 @@
   dict({
     'code': 'invalid_format',
     'message': "invalid agent ID for dictionary value @ data['agent_id']. Got 'not_exist'",
+  })
+# ---
+# name: test_ws_hass_agent_debug
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'slots': dict({
+          'name': 'my cool light',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOff',
+        }),
+        'slots': dict({
+          'name': 'my cool light',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
+      dict({
+        'details': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': '',
+            'value': 'light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+      }),
+      dict({
+        'details': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': 'lights',
+            'value': 'light',
+          }),
+          'state': dict({
+            'name': 'state',
+            'text': 'on',
+            'value': 'on',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassGetState',
+        }),
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+          'state': 'on',
+        }),
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': False,
+          }),
+        }),
+      }),
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug.1
+  dict({
+    'name': dict({
+      'name': 'name',
+      'text': 'my cool light',
+      'value': 'my cool light',
+    }),
   })
 # ---

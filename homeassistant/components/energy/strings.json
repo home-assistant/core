@@ -39,11 +39,11 @@
     },
     "entity_unexpected_unit_gas_price": {
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::title%]",
-      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy::description%]"
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]"
     },
     "entity_unexpected_unit_water_price": {
-      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
-      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy::description%]"
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::title%]",
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]"
     },
     "entity_unexpected_state_class": {
       "title": "Unexpected state class",

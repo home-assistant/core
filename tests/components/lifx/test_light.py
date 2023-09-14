@@ -100,7 +100,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
+        connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
@@ -123,7 +123,6 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
-        identifiers=set(),
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}

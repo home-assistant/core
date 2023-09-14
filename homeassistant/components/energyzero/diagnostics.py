@@ -53,6 +53,7 @@ async def async_get_config_entry_diagnostics(
             "highest_price_time": coordinator.data.energy_today.highest_price_time,
             "lowest_price_time": coordinator.data.energy_today.lowest_price_time,
             "percentage_of_max": coordinator.data.energy_today.pct_of_max_price,
+            "hours_priced_equal_or_lower": coordinator.data.energy_today.hours_priced_equal_or_lower,
             "all_prices": serialize_prices(coordinator.data.energy.prices),
             "template": coordinator.energy_modifyer.template,
         },
