@@ -111,7 +111,9 @@ class ReolinkHost:
             )
             enable_rtsp = True
 
-        if not self._api.onvif_enabled and (self._onvif_push_supported or self._onvif_long_poll_supported):
+        if not self._api.onvif_enabled and (
+            self._onvif_push_supported or self._onvif_long_poll_supported
+        ):
             _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -198,7 +200,9 @@ class ReolinkHost:
                 await self._async_poll_all_motion()
             else:
                 self._cancel_long_poll_check = async_call_later(
-                    self._hass, FIRST_ONVIF_LONG_POLL_TIMEOUT, self._async_check_onvif_long_poll
+                    self._hass,
+                    FIRST_ONVIF_LONG_POLL_TIMEOUT,
+                    self._async_check_onvif_long_poll,
                 )
 
         if self._api.sw_version_update_required:
