@@ -34,13 +34,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import const
 from .common import (
-    _LOGGER,
     async_get_data_manager,
     async_remove_data_manager,
     get_data_manager_by_webhook_id,
     json_message_response,
 )
-from .const import CONF_USE_WEBHOOK, CONFIG
+from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -92,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_CLIENT_SECRET],
             ),
         )
-        _LOGGER.warning(
+        LOGGER.warning(
             "Configuration of Withings integration OAuth2 credentials in YAML "
             "is deprecated and will be removed in a future release; Your "
             "existing OAuth Application Credentials have been imported into "
@@ -125,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data_manager = await async_get_data_manager(hass, entry)
 
-    _LOGGER.debug("Confirming %s is authenticated to withings", entry.title)
+    LOGGER.debug("Confirming %s is authenticated to withings", entry.title)
     await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
@@ -205,7 +204,7 @@ async def async_webhook_handler(
 
     data_manager = get_data_manager_by_webhook_id(hass, webhook_id)
     if not data_manager:
-        _LOGGER.error(
+        LOGGER.error(
             (
                 "Webhook id %s not handled by data manager. This is a bug and should be"
                 " reported"
