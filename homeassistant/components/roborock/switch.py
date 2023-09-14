@@ -198,7 +198,9 @@ class RoborockSwitch(RoborockEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        val = self.get_cache(self.entity_description.cache_key).value
-        if val is not None:
-            return val.get(self.entity_description.attribute) == 1
-        return None
+        return (
+            self.get_cache(self.entity_description.cache_key).value.get(
+                self.entity_description.attribute
+            )
+            == 1
+        )
