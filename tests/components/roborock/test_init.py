@@ -1,5 +1,6 @@
 """Test for Roborock init."""
 from dataclasses import asdict
+from datetime import timedelta
 from unittest.mock import patch
 
 from roborock.exceptions import RoborockException
@@ -16,10 +17,11 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from .mock_data import BASE_URL, NETWORK_INFO, PROP, USER_DATA, USER_EMAIL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload_entry(
@@ -151,7 +153,7 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
     """Test that if networking fails, and both devices can't get props, setup with both unavailable."""
     mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
         CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
+            network_info=NETWORK_INFO, supported_entities={"status_abc123"}
         )
     )
     mock_roborock_entry.data[CONF_CACHED_INFORMATION]["device_2"] = asdict(
@@ -169,6 +171,13 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    assert len(hass.states.async_all("sensor")) == 1
+    assert hass.states.get("sensor.roborock_s7_maxv_status").state == "unavailable"
+    # Recover
+    future = dt_util.utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.roborock_s7_maxv_status").state == "charging"
 
 
 async def test_cloud_client_fails_props(
