@@ -202,11 +202,11 @@ class APIStatesView(HomeAssistantView):
         user: User = request["hass_user"]
         hass: HomeAssistant = request.app["hass"]
         if user.is_admin:
-            states = (state.as_dict_json() for state in hass.states.async_all())
+            states = (state.as_dict_json for state in hass.states.async_all())
         else:
             entity_perm = user.permissions.check_entity
             states = (
-                state.as_dict_json()
+                state.as_dict_json
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, "read")
             )
@@ -233,7 +233,7 @@ class APIEntityStateView(HomeAssistantView):
 
         if state := hass.states.get(entity_id):
             return web.Response(
-                body=state.as_dict_json(),
+                body=state.as_dict_json,
                 content_type=CONTENT_TYPE_JSON,
             )
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
