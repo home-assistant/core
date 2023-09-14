@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -167,6 +168,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [ClimateEntityFeature.TURN_OFF],
     )
     component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
+    )
+    component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
         "async_set_hvac_mode",
@@ -180,13 +187,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT,
         {vol.Required(ATTR_AUX_HEAT): cv.boolean},
-        async_service_aux_heat,
+        "async_service_aux_heat",
         [ClimateEntityFeature.AUX_HEAT],
     )
     component.async_register_entity_service(
         SERVICE_SET_TEMPERATURE,
         SET_TEMPERATURE_SCHEMA,
-        async_service_temperature_set,
+        "async_service_temperature_set",
         [
             ClimateEntityFeature.TARGET_TEMPERATURE,
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
@@ -756,7 +763,26 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
-            break
+            return
+
+        raise NotImplementedError
+
+    @property
+    def _is_turn_on_supported(self) -> bool:
+        if (
+            type(self).async_turn_on is not ClimateEntity.async_turn_on
+            or type(self).turn_on is not ClimateEntity.turn_on
+        ):
+            return True
+
+        if len(self.hvac_modes) == 2 and HVACMode.OFF in self.hvac_modes:
+            return True
+
+        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
+            if mode in self.hvac_modes:
+                return True
+
+        return False
 
     def turn_off(self) -> None:
         """Turn the entity off."""
@@ -772,6 +798,41 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
+            return
+
+        raise NotImplementedError
+
+    @property
+    def _is_turn_off_supported(self) -> bool:
+        if (
+            type(self).async_turn_off is not ClimateEntity.async_turn_off
+            or type(self).turn_off is not ClimateEntity.turn_off
+        ):
+            return True
+
+        if HVACMode.OFF in self.hvac_modes:
+            return True
+
+        return False
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
+        raise NotImplementedError
+
+    async def async_toggle(self) -> None:
+        """Toggle the entity."""
+        if type(self).toggle is not ClimateEntity.toggle:
+            await self.hass.async_add_executor_job(self.toggle)
+            return
+
+        if not (self._is_turn_on_supported and self._is_turn_off_supported):
+            raise NotImplementedError
+
+        # We assume that since turn_off is supported, HVACMode.OFF is as well.
+        if self.hvac_mode == HVACMode.OFF:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:

@@ -86,6 +86,8 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
     )
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO]
+    _attr_hvac_mode = HVACMode.OFF
     _attr_preset_mode = "home"
     _attr_preset_modes = ["home", "away"]
     _attr_fan_mode = "auto"
@@ -94,27 +96,9 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_swing_modes = ["auto", "off"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVACMode.*.
-        """
-        return HVACMode.HEAT
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return [HVACMode.OFF, HVACMode.HEAT]
-
-    def turn_on(self) -> None:
-        """Turn on."""
-
-    def turn_off(self) -> None:
-        """Turn off."""
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        self._attr_hvac_mode = hvac_mode
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
@@ -127,28 +111,6 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
-
-
-async def test_sync_turn_on(hass: HomeAssistant) -> None:
-    """Test if async turn_on calls sync turn_on."""
-    climate = MockClimateEntity()
-    climate.hass = hass
-
-    climate.turn_on = MagicMock()
-    await climate.async_turn_on()
-
-    assert climate.turn_on.called
-
-
-async def test_sync_turn_off(hass: HomeAssistant) -> None:
-    """Test if async turn_off calls sync turn_off."""
-    climate = MockClimateEntity()
-    climate.hass = hass
-
-    climate.turn_off = MagicMock()
-    await climate.async_turn_off()
-
-    assert climate.turn_off.called
 
 
 def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
@@ -684,3 +646,65 @@ async def test_no_warning_integration_has_migrated(
         " implements HVACMode(s): off, heat and therefore implicitly supports the off, heat methods"
         not in caplog.text
     )
+
+
+async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
+    """Test base class implementation."""
+    climate = MockClimateEntity()
+    climate.hass = hass
+
+    await climate.async_turn_on()
+    assert climate.hvac_mode == HVACMode.AUTO
+
+    await climate.async_turn_off()
+    assert climate.hvac_mode == HVACMode.OFF
+
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.AUTO
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.OFF
+
+    climate._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.FAN_ONLY]
+
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.HEAT
+
+
+class MockSyncClimateEntity(ClimateEntity):
+    """Mock Climate device to use in tests."""
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVACMode.*.
+        """
+        return HVACMode.HEAT
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVACMode.OFF, HVACMode.HEAT]
+
+    def turn_on(self) -> None:
+        """Turn on."""
+
+    def turn_off(self) -> None:
+        """Turn off."""
+
+    def toggle(self) -> None:
+        """Toggle."""
+
+
+async def test_sync_toggle(hass: HomeAssistant) -> None:
+    """Test if async toggle calls sync toggle."""
+    climate = MockSyncClimateEntity()
+    climate.hass = hass
+
+    climate.toggle = Mock()
+    await climate.async_toggle()
+
+    assert climate.toggle.called
