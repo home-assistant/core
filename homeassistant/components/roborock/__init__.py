@@ -143,6 +143,7 @@ async def setup_device(
     )
     # Verify we can communicate locally - if we can't, switch to cloud api
     await coordinator.verify_api()
+    coordinator.api.is_available = True
     exception = None
     try:
         await coordinator.async_config_entry_first_refresh()
