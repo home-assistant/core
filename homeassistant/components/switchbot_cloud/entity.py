@@ -1,5 +1,4 @@
 """Base class for SwitchBot via API entities."""
-import logging
 from typing import Any
 
 from switchbot_api import Commands, Device, Remote, SwitchBotAPI
@@ -9,8 +8,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
@@ -36,7 +33,6 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
             manufacturer="SwitchBot",
             model=device.device_type,
         )
-        _LOGGER.debug("Initialized %s: %s", device.device_id, device.device_name)
 
     async def send_command(
         self,
