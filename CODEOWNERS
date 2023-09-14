@@ -1469,6 +1469,10 @@ build.json @home-assistant/supervisor
 /homeassistant/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
 /tests/components/zwave_me/ @lawfulchaos @Z-Wave-Me @PoltoS
 
+/homeassistant/components/kindhome_solarbeaker/ @matiutd888
+/tests/components/kindhome_solarbeaker/ @matiutd888
+
+
 # Individual files
 /homeassistant/components/demo/weather.py @fabaff
 
