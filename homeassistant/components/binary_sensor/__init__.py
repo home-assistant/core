@@ -117,38 +117,7 @@ class BinarySensorDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
-
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the BinarySensorDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
-DEVICE_CLASS_BATTERY = BinarySensorDeviceClass.BATTERY.value
-DEVICE_CLASS_BATTERY_CHARGING = BinarySensorDeviceClass.BATTERY_CHARGING.value
-DEVICE_CLASS_CO = BinarySensorDeviceClass.CO.value
-DEVICE_CLASS_COLD = BinarySensorDeviceClass.COLD.value
-DEVICE_CLASS_CONNECTIVITY = BinarySensorDeviceClass.CONNECTIVITY.value
-DEVICE_CLASS_DOOR = BinarySensorDeviceClass.DOOR.value
-DEVICE_CLASS_GARAGE_DOOR = BinarySensorDeviceClass.GARAGE_DOOR.value
-DEVICE_CLASS_GAS = BinarySensorDeviceClass.GAS.value
-DEVICE_CLASS_HEAT = BinarySensorDeviceClass.HEAT.value
-DEVICE_CLASS_LIGHT = BinarySensorDeviceClass.LIGHT.value
-DEVICE_CLASS_LOCK = BinarySensorDeviceClass.LOCK.value
-DEVICE_CLASS_MOISTURE = BinarySensorDeviceClass.MOISTURE.value
-DEVICE_CLASS_MOTION = BinarySensorDeviceClass.MOTION.value
-DEVICE_CLASS_MOVING = BinarySensorDeviceClass.MOVING.value
-DEVICE_CLASS_OCCUPANCY = BinarySensorDeviceClass.OCCUPANCY.value
-DEVICE_CLASS_OPENING = BinarySensorDeviceClass.OPENING.value
-DEVICE_CLASS_PLUG = BinarySensorDeviceClass.PLUG.value
-DEVICE_CLASS_POWER = BinarySensorDeviceClass.POWER.value
-DEVICE_CLASS_PRESENCE = BinarySensorDeviceClass.PRESENCE.value
-DEVICE_CLASS_PROBLEM = BinarySensorDeviceClass.PROBLEM.value
-DEVICE_CLASS_RUNNING = BinarySensorDeviceClass.RUNNING.value
-DEVICE_CLASS_SAFETY = BinarySensorDeviceClass.SAFETY.value
-DEVICE_CLASS_SMOKE = BinarySensorDeviceClass.SMOKE.value
-DEVICE_CLASS_SOUND = BinarySensorDeviceClass.SOUND.value
-DEVICE_CLASS_TAMPER = BinarySensorDeviceClass.TAMPER.value
-DEVICE_CLASS_UPDATE = BinarySensorDeviceClass.UPDATE.value
-DEVICE_CLASS_VIBRATION = BinarySensorDeviceClass.VIBRATION.value
-DEVICE_CLASS_WINDOW = BinarySensorDeviceClass.WINDOW.value
 
 # mypy: disallow-any-generics
 
