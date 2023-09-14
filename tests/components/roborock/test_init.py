@@ -148,7 +148,7 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
 async def test_get_networking_fails_both_cached_connection_fails_for_both(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
 ) -> None:
-    """Test that if networking fails, and both devices can't get props, retry."""
+    """Test that if networking fails, and both devices can't get props, setup with both unavailable."""
     mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
         CachedCoordinatorInformation(
             network_info=NETWORK_INFO, supported_entities=set()
@@ -168,14 +168,13 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
         side_effect=RoborockException(),
     ):
         await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
 
-async def test_get_networking_fails_both_cached_connection_fails_forone(
+async def test_cloud_client_fails_props(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry, bypass_api_fixture
 ) -> None:
-    """Test that if networking fails, and one device doesn't get pros, still setup."""
-
+    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, set up."""
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.ping",
         side_effect=RoborockException(),

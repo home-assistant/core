@@ -79,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for device in device_map.values()
         )
     )
+    # Valid coordinators are those where we had networking cached or we could get networking
     valid_coordinators: list[RoborockDataUpdateCoordinator] = [
         coord for coord in coordinators if coord is not None
     ]
