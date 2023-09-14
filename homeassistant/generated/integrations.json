@@ -335,6 +335,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "Apple iTunes"
+        },
+        "weatherkit": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Apple WeatherKit"
         }
       }
     },
@@ -4326,6 +4332,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "private_ble_device": {
+      "name": "Private BLE Device",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "profiler": {
       "name": "Profiler",
       "integration_type": "hub",
@@ -5802,7 +5814,7 @@
     "todoist": {
       "name": "Todoist",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "tolo": {
@@ -5936,7 +5948,7 @@
       "name": "Trend",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_push"
+      "iot_class": "calculated"
     },
     "tuya": {
       "name": "Tuya",
@@ -6288,7 +6300,7 @@
     "waqi": {
       "name": "World Air Quality Index (WAQI)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "waterfurnace": {

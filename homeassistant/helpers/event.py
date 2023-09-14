@@ -915,7 +915,11 @@ class TrackTemplateResultInfo:
         """Return the representation."""
         return f"<TrackTemplateResultInfo {self._info}>"
 
-    def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
+    def async_setup(
+        self,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+    ) -> None:
         """Activation of template tracking."""
         block_render = False
         super_template = self._track_templates[0] if self._has_super_template else None
@@ -925,7 +929,7 @@ class TrackTemplateResultInfo:
             template = super_template.template
             variables = super_template.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict
+                variables, strict=strict, log_fn=log_fn
             )
 
             # If the super template did not render to True, don't update other templates
@@ -946,17 +950,18 @@ class TrackTemplateResultInfo:
             template = track_template_.template
             variables = track_template_.variables
             self._info[template] = info = template.async_render_to_info(
-                variables, strict=strict
+                variables, strict=strict, log_fn=log_fn
             )
 
             if info.exception:
-                if raise_on_template_error:
-                    raise info.exception
-                _LOGGER.error(
-                    "Error while processing template: %s",
-                    track_template_.template,
-                    exc_info=info.exception,
-                )
+                if not log_fn:
+                    _LOGGER.error(
+                        "Error while processing template: %s",
+                        track_template_.template,
+                        exc_info=info.exception,
+                    )
+                else:
+                    log_fn(logging.ERROR, str(info.exception))
 
         self._track_state_changes = async_track_state_change_filtered(
             self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
@@ -1189,7 +1194,7 @@ class TrackTemplateResultInfo:
             )
             _LOGGER.debug(
                 (
-                    "Template group %s listens for %s, re-render blocker by super"
+                    "Template group %s listens for %s, re-render blocked by super"
                     " template: %s"
                 ),
                 self._track_templates,
@@ -1231,8 +1236,8 @@ def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Sequence[TrackTemplate],
     action: TrackTemplateResultListener,
-    raise_on_template_error: bool = False,
     strict: bool = False,
+    log_fn: Callable[[int, str], None] | None = None,
     has_super_template: bool = False,
 ) -> TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
@@ -1257,13 +1262,11 @@ def async_track_template_result(
         An iterable of TrackTemplate.
     action
         Callable to call with results.
-    raise_on_template_error
-        When set to True, if there is an exception
-        processing the template during setup, the system
-        will raise the exception instead of setting up
-        tracking.
     strict
         When set to True, raise on undefined variables.
+    log_fn
+        If not None, template error messages will logging by calling log_fn
+        instead of the normal logging facility.
     has_super_template
         When set to True, the first template will block rendering of other
         templates if it doesn't render as True.
@@ -1274,7 +1277,7 @@ def async_track_template_result(
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
-    tracker.async_setup(raise_on_template_error, strict=strict)
+    tracker.async_setup(strict=strict, log_fn=log_fn)
     return tracker
 
 
@@ -1432,6 +1435,13 @@ def async_track_point_in_utc_time(
 track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_time)
 
 
+def _run_async_call_action(
+    hass: HomeAssistant, job: HassJob[[datetime], Coroutine[Any, Any, None] | None]
+) -> None:
+    """Run action."""
+    hass.async_run_hass_job(job, time_tracker_utcnow())
+
+
 @callback
 @bind_hass
 def async_call_at(
@@ -1441,26 +1451,12 @@ def async_call_at(
     loop_time: float,
 ) -> CALLBACK_TYPE:
     """Add a listener that is called at <loop_time>."""
-
-    @callback
-    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
-        """Call the action."""
-        hass.async_run_hass_job(job, time_tracker_utcnow())
-
     job = (
         action
         if isinstance(action, HassJob)
         else HassJob(action, f"call_at {loop_time}")
     )
-    cancel_callback = hass.loop.call_at(loop_time, run_action, job)
-
-    @callback
-    def unsub_call_later_listener() -> None:
-        """Cancel the call_later."""
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_call_later_listener
+    return hass.loop.call_at(loop_time, _run_async_call_action, hass, job).cancel
 
 
 @callback
@@ -1474,26 +1470,13 @@ def async_call_later(
     """Add a listener that is called in <delay>."""
     if isinstance(delay, timedelta):
         delay = delay.total_seconds()
-
-    @callback
-    def run_action(job: HassJob[[datetime], Coroutine[Any, Any, None] | None]) -> None:
-        """Call the action."""
-        hass.async_run_hass_job(job, time_tracker_utcnow())
-
     job = (
         action
         if isinstance(action, HassJob)
         else HassJob(action, f"call_later {delay}")
     )
-    cancel_callback = hass.loop.call_at(hass.loop.time() + delay, run_action, job)
-
-    @callback
-    def unsub_call_later_listener() -> None:
-        """Cancel the call_later."""
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_call_later_listener
+    loop = hass.loop
+    return loop.call_at(loop.time() + delay, _run_async_call_action, hass, job).cancel
 
 
 call_later = threaded_listener_factory(async_call_later)

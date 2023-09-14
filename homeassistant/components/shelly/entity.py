@@ -551,7 +551,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
@@ -625,7 +625,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
 
     entity_description: RpcEntityDescription
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
