@@ -19,6 +19,10 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
+    # config flow sets this to either UUID, serial number or None
+    if (device_id := entry.unique_id) is None:
+        device_id = entry.entry_id
+
     coordinator = IPPDataUpdateCoordinator(
         hass,
         host=entry.data[CONF_HOST],
@@ -26,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         base_path=entry.data[CONF_BASE_PATH],
         tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
+        device_id=device_id,
     )
     await coordinator.async_config_entry_first_refresh()
 

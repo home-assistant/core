@@ -28,7 +28,7 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS_KEYS,
     DOMAIN,
-    HOME_COMPATIBLE_PLATFORMS,
+    HOME_COMPATIBLE_CATEGORIES,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -156,7 +156,12 @@ class FreeboxRouter:
         fbx_disks: list[dict[str, Any]] = await self._api.storage.get_disks() or []
 
         for fbx_disk in fbx_disks:
-            self.disks[fbx_disk["id"]] = fbx_disk
+            disk: dict[str, Any] = {**fbx_disk}
+            disk_part: dict[int, dict[str, Any]] = {}
+            for fbx_disk_part in fbx_disk["partitions"]:
+                disk_part[fbx_disk_part["id"]] = fbx_disk_part
+            disk["partitions"] = disk_part
+            self.disks[fbx_disk["id"]] = disk
 
     async def _update_raids_sensors(self) -> None:
         """Update Freebox raids."""
@@ -190,7 +195,7 @@ class FreeboxRouter:
 
         new_device = False
         for home_node in home_nodes:
-            if home_node["category"] in HOME_COMPATIBLE_PLATFORMS:
+            if home_node["category"] in HOME_COMPATIBLE_CATEGORIES:
                 if self.home_devices.get(home_node["id"]) is None:
                     new_device = True
                 self.home_devices[home_node["id"]] = home_node

@@ -58,7 +58,7 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
-        == "Channel 1"
+        == "Test name channel 1"
     )
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHEM-3")
@@ -68,7 +68,7 @@ async def test_block_get_block_channel_name(mock_block_device, monkeypatch) -> N
             mock_block_device,
             mock_block_device.blocks[DEVICE_BLOCK_ID],
         )
-        == "Channel A"
+        == "Test name channel A"
     )
 
     monkeypatch.setitem(
@@ -207,7 +207,7 @@ async def test_get_block_input_triggers(mock_block_device, monkeypatch) -> None:
 async def test_get_rpc_channel_name(mock_rpc_device) -> None:
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "test switch_0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Switch 3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name switch_3"
 
 
 async def test_get_rpc_input_triggers(mock_rpc_device, monkeypatch) -> None:

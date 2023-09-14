@@ -51,6 +51,7 @@ from .const import (
 )
 from .entity import ISYAuxControlEntity
 from .helpers import convert_isy_value_to_hass
+from .models import IsyData
 
 ISY_MAX_SIZE = (2**32) / 2
 ON_RANGE = (1, 255)  # Off is not included
@@ -81,7 +82,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ISY/IoX number entities from config entry."""
-    isy_data = hass.data[DOMAIN][config_entry.entry_id]
+    isy_data: IsyData = hass.data[DOMAIN][config_entry.entry_id]
     device_info = isy_data.devices
     entities: list[
         ISYVariableNumberEntity | ISYAuxControlNumberEntity | ISYBacklightNumberEntity

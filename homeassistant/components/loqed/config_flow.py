@@ -123,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=user_data_schema,
                 description_placeholders={
-                    "config_url": "https://integrations.production.loqed.com/personal-access-tokens",
+                    "config_url": "https://integrations.loqed.com/personal-access-tokens",
                 },
             )
 
@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=user_data_schema,
             errors=errors,
             description_placeholders={
-                "config_url": "https://integrations.production.loqed.com/personal-access-tokens",
+                "config_url": "https://integrations.loqed.com/personal-access-tokens",
             },
         )
 

@@ -150,13 +150,13 @@ async def async_setup_entry(
 class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     """Provides Nexia Climate support."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
     ) -> None:
         """Initialize the thermostat."""
-        super().__init__(
-            coordinator, zone, name=zone.get_name(), unique_id=zone.zone_id
-        )
+        super().__init__(coordinator, zone, zone.zone_id)
         unit = self._thermostat.get_unit()
         min_humidity, max_humidity = self._thermostat.get_humidity_setpoint_limits()
         min_setpoint, max_setpoint = self._thermostat.get_setpoint_limits()

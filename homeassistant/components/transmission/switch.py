@@ -1,4 +1,5 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -10,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TransmissionClient
 from .const import DOMAIN, SWITCH_TYPES
 
 _LOGGING = logging.getLogger(__name__)
@@ -22,8 +24,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Transmission switch."""
 
-    tm_client = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
+    tm_client: TransmissionClient = hass.data[DOMAIN][config_entry.entry_id]
+    name: str = config_entry.data[CONF_NAME]
 
     dev = []
     for switch_type, switch_name in SWITCH_TYPES.items():
@@ -38,14 +40,20 @@ class TransmissionSwitch(SwitchEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, switch_type, switch_name, tm_client, client_name):
+    def __init__(
+        self,
+        switch_type: str,
+        switch_name: str,
+        tm_client: TransmissionClient,
+        client_name: str,
+    ) -> None:
         """Initialize the Transmission switch."""
         self._attr_name = switch_name
         self.type = switch_type
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
-        self.unsub_update = None
+        self.unsub_update: Callable[[], None] | None = None
         self._attr_unique_id = f"{tm_client.config_entry.entry_id}-{switch_type}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -55,7 +63,7 @@ class TransmissionSwitch(SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state == STATE_ON
 
@@ -93,10 +101,10 @@ class TransmissionSwitch(SwitchEntity):
         )
 
     @callback
-    def _schedule_immediate_update(self):
+    def _schedule_immediate_update(self) -> None:
         self.async_schedule_update_ha_state(True)
 
-    async def will_remove_from_hass(self):
+    async def will_remove_from_hass(self) -> None:
         """Unsubscribe from update dispatcher."""
         if self.unsub_update:
             self.unsub_update()
