@@ -127,7 +127,12 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
     """Test that if networking fails, and one device doesn't get props, still setup."""
     mock_roborock_entry.data[CONF_CACHED_INFORMATION]["abc123"] = asdict(
         CachedCoordinatorInformation(
-            network_info=NETWORK_INFO, supported_entities=set()
+            network_info=NETWORK_INFO,
+            supported_entities={
+                "dnd_start_time_abc123",
+                "dnd_switch_abc123",
+                "volume_abc123",
+            },
         )
     )
     mock_roborock_entry.data[CONF_CACHED_INFORMATION]["device_2"] = asdict(
@@ -145,6 +150,14 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
     ):
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get("time.roborock_s7_maxv_do_not_disturb_begin").state
+        == "unavailable"
+    )
+    assert (
+        hass.states.get("switch.roborock_s7_maxv_do_not_disturb").state == "unavailable"
+    )
+    assert hass.states.get("number.roborock_s7_maxv_volume").state == "unavailable"
 
 
 async def test_get_networking_fails_both_cached_connection_fails_for_both(
