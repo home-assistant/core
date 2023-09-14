@@ -717,7 +717,7 @@ google-nest-sdm==3.0.2
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.23.0
+govee-ble==0.24.0
 
 # homeassistant.components.gree
 greeclimate==1.4.1
