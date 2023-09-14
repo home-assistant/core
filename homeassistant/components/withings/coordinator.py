@@ -24,7 +24,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .common import ConfigEntryWithingsApi
+from .api import ConfigEntryWithingsApi
 from .const import Measurement
 
 _LOGGER = logging.getLogger(__name__)

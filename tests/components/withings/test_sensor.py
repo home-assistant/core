@@ -7,7 +7,7 @@ from syrupy import SnapshotAssertion
 from withings_api.common import NotifyAppli
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.withings.const import Measurement
+from homeassistant.components.withings.const import DOMAIN, Measurement
 from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.components.withings.sensor import SENSORS
 from homeassistant.core import HomeAssistant, State
@@ -15,7 +15,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import call_webhook, setup_integration
-from .common import async_get_entity_id
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -58,6 +57,19 @@ EXPECTED_DATA = (
     (Measurement.SLEEP_WAKEUP_COUNT, 350),
     (Measurement.SLEEP_WAKEUP_DURATION_SECONDS, 176.0),
 )
+
+
+async def async_get_entity_id(
+    hass: HomeAssistant,
+    description: WithingsEntityDescription,
+    user_id: int,
+    platform: str,
+) -> str | None:
+    """Get an entity id for a user's attribute."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"withings_{user_id}_{description.measurement.value}"
+
+    return entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
 
 
 def async_assert_state_equals(

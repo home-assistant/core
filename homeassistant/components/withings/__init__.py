@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 """
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 
 from aiohttp.web import Request, Response
@@ -16,6 +15,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
     async_generate_id,
     async_unregister as async_unregister_webhook,
@@ -35,13 +35,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import const
 from .api import ConfigEntryWithingsApi
-from .common import (
-    _LOGGER,
-    async_get_data_manager,
-    async_remove_data_manager,
-    json_message_response,
-)
-from .const import CONF_USE_WEBHOOK, CONFIG
+from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
 from .coordinator import (
     BaseWithingsDataUpdateCoordinator,
     PollingWithingsDataUpdateCoordinator,
@@ -98,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_CLIENT_SECRET],
             ),
         )
-        _LOGGER.warning(
+        LOGGER.warning(
             "Configuration of Withings integration OAuth2 credentials in YAML "
             "is deprecated and will be removed in a future release; Your "
             "existing OAuth Application Credentials have been imported into "
@@ -168,19 +162,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    data_manager = await async_get_data_manager(hass, entry)
-    data_manager.async_stop_polling_webhook_subscriptions()
+    if entry.options[CONF_USE_WEBHOOK]:
+        async_unregister_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
-    async_unregister_webhook(hass, data_manager.webhook_config.id)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
-    await asyncio.gather(
-        data_manager.async_unsubscribe_webhook(),
-        hass.config_entries.async_unload_platforms(entry, PLATFORMS),
-    )
 
-    async_remove_data_manager(hass, entry)
-
-    return True
+def json_message_response(message: str, message_code: int) -> Response:
+    """Produce common json output."""
+    return HomeAssistantView.json({"message": message, "code": message_code})
 
 
 def async_get_webhook_handler(

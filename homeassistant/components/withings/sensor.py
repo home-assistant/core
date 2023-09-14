@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BaseWithingsDataUpdateCoordinator
-from .common import UpdateType
 from .const import (
     DOMAIN,
     SCORE_POINTS,
@@ -52,7 +51,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.FAT_MASS_KG.value,
@@ -62,7 +60,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.FAT_FREE_MASS_KG.value,
@@ -72,7 +69,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.MUSCLE_MASS_KG.value,
@@ -82,7 +78,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.BONE_MASS_KG.value,
@@ -92,7 +87,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.HEIGHT_M.value,
@@ -103,7 +97,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.TEMP_C.value,
@@ -112,7 +105,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.BODY_TEMP_C.value,
@@ -122,7 +114,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SKIN_TEMP_C.value,
@@ -132,7 +123,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.FAT_RATIO_PCT.value,
@@ -141,7 +131,6 @@ SENSORS = [
         translation_key="fat_ratio",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.DIASTOLIC_MMHG.value,
@@ -150,7 +139,6 @@ SENSORS = [
         translation_key="diastolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SYSTOLIC_MMGH.value,
@@ -159,7 +147,6 @@ SENSORS = [
         translation_key="systolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.HEART_PULSE_BPM.value,
@@ -169,7 +156,6 @@ SENSORS = [
         native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
         icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SPO2_PCT.value,
@@ -178,7 +164,6 @@ SENSORS = [
         translation_key="spo2",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.HYDRATION.value,
@@ -190,7 +175,6 @@ SENSORS = [
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.PWV.value,
@@ -200,7 +184,6 @@ SENSORS = [
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_BREATHING_DISTURBANCES_INTENSITY.value,
@@ -209,7 +192,6 @@ SENSORS = [
         translation_key="breathing_disturbances_intensity",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_DEEP_DURATION_SECONDS.value,
@@ -221,7 +203,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_TOSLEEP_DURATION_SECONDS.value,
@@ -233,7 +214,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_TOWAKEUP_DURATION_SECONDS.value,
@@ -245,7 +225,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_HEART_RATE_AVERAGE.value,
@@ -256,7 +235,6 @@ SENSORS = [
         icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_HEART_RATE_MAX.value,
@@ -268,7 +246,6 @@ SENSORS = [
         icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_HEART_RATE_MIN.value,
@@ -279,7 +256,6 @@ SENSORS = [
         icon="mdi:heart-pulse",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_LIGHT_DURATION_SECONDS.value,
@@ -291,7 +267,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_REM_DURATION_SECONDS.value,
@@ -303,7 +278,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_RESPIRATORY_RATE_AVERAGE.value,
@@ -313,7 +287,6 @@ SENSORS = [
         native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_RESPIRATORY_RATE_MAX.value,
@@ -323,7 +296,6 @@ SENSORS = [
         native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_RESPIRATORY_RATE_MIN.value,
@@ -333,7 +305,6 @@ SENSORS = [
         native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_SCORE.value,
@@ -344,7 +315,6 @@ SENSORS = [
         icon="mdi:medal",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_SNORING.value,
@@ -353,7 +323,6 @@ SENSORS = [
         translation_key="snoring",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_SNORING_EPISODE_COUNT.value,
@@ -362,7 +331,6 @@ SENSORS = [
         translation_key="snoring_episode_count",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_WAKEUP_COUNT.value,
@@ -373,7 +341,6 @@ SENSORS = [
         icon="mdi:sleep-off",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
     WithingsSensorEntityDescription(
         key=Measurement.SLEEP_WAKEUP_DURATION_SECONDS.value,
@@ -385,7 +352,6 @@ SENSORS = [
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        update_type=UpdateType.POLL,
     ),
 ]
 

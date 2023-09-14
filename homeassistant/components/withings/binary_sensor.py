@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BaseWithingsDataUpdateCoordinator, WebhookWithingsDataUpdateCoordinator
-from .common import UpdateType
 from .const import DOMAIN, Measurement
 from .entity import WebhookWithingsSensor, WithingsEntityDescription
 
@@ -35,7 +34,6 @@ BINARY_SENSORS = [
         measure_type=NotifyAppli.BED_IN,
         translation_key="in_bed",
         icon="mdi:bed",
-        update_type=UpdateType.WEBHOOK,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
 ]

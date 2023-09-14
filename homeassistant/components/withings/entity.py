@@ -15,7 +15,6 @@ from . import (
     PollingWithingsDataUpdateCoordinator,
     WebhookWithingsDataUpdateCoordinator,
 )
-from .common import UpdateType
 from .const import DOMAIN, Measurement
 
 _BaseWithingsDataUpdateCoordinatorT = TypeVar(
@@ -29,7 +28,6 @@ class WithingsEntityDescriptionMixin:
 
     measurement: Measurement
     measure_type: NotifyAppli | GetSleepSummaryField | MeasureType
-    update_type: UpdateType
 
 
 @dataclass
