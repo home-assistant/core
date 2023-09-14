@@ -23,7 +23,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BaseWithingsDataUpdateCoordinator
+from . import (
+    BaseWithingsDataUpdateCoordinator,
+    PollingWithingsDataUpdateCoordinator,
+    WebhookWithingsDataUpdateCoordinator,
+)
 from .const import (
     DOMAIN,
     SCORE_POINTS,
@@ -33,7 +37,12 @@ from .const import (
     UOM_MMHG,
     Measurement,
 )
-from .entity import BaseWithingsSensor, WithingsEntityDescription
+from .entity import (
+    BaseWithingsSensor,
+    PollingWithingsSensor,
+    WebhookWithingsSensor,
+    WithingsEntityDescription,
+)
 
 
 @dataclass
@@ -364,9 +373,14 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     coordinator: BaseWithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [WithingsHealthSensor(coordinator, attribute) for attribute in SENSORS]
-
-    async_add_entities(entities)
+    if isinstance(coordinator, PollingWithingsDataUpdateCoordinator):
+        async_add_entities(
+            PollingWithingsHealthSensor(coordinator, attribute) for attribute in SENSORS
+        )
+    elif isinstance(coordinator, WebhookWithingsDataUpdateCoordinator):
+        async_add_entities(
+            WebhookWithingsHealthSensor(coordinator, attribute) for attribute in SENSORS
+        )
 
 
 class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
@@ -378,3 +392,15 @@ class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     def native_value(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self.coordinator.data[self.entity_description.measurement]
+
+
+class PollingWithingsHealthSensor(PollingWithingsSensor, WithingsHealthSensor):
+    """Implementation of a Withings polling sensor."""
+
+    entity_description: WithingsSensorEntityDescription
+
+
+class WebhookWithingsHealthSensor(WebhookWithingsSensor, WithingsHealthSensor):
+    """Implementation of a Withings webhook sensor."""
+
+    entity_description: WithingsSensorEntityDescription

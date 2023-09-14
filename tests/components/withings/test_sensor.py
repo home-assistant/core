@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -10,14 +11,16 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.withings.const import DOMAIN, Measurement
 from homeassistant.components.withings.entity import WithingsEntityDescription
 from homeassistant.components.withings.sensor import SENSORS
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.util import dt as dt_util
 
 from . import call_webhook, enable_webhooks, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 WITHINGS_MEASUREMENTS_MAP: dict[Measurement, WithingsEntityDescription] = {
@@ -143,3 +146,22 @@ async def test_all_entities(
     for sensor in SENSORS:
         entity_id = await async_get_entity_id(hass, sensor, USER_ID, SENSOR_DOMAIN)
         assert hass.states.get(entity_id) == snapshot
+
+
+async def test_update_failed(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, polling_config_entry)
+
+    withings.async_measure_get_meas.side_effect = Exception
+    future = dt_util.utcnow() + timedelta(minutes=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.henk_weight")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

@@ -6,8 +6,9 @@ from urllib.parse import urlparse
 
 import pytest
 import voluptuous as vol
-from withings_api.common import NotifyAppli
+from withings_api.common import AuthFailedException, NotifyAppli, UnauthorizedException
 
+from homeassistant import config_entries
 from homeassistant.components.webhook import async_generate_url
 from homeassistant.components.withings import CONFIG_SCHEMA, DOMAIN, async_setup, const
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
@@ -200,6 +201,36 @@ async def test_webhooks_request_data(
         client,
     )
     assert withings.async_measure_get_meas.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        UnauthorizedException(401),
+        AuthFailedException(500),
+    ],
+)
+async def test_triggering_reauth(
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    polling_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test triggering reauth."""
+    await setup_integration(hass, polling_config_entry)
+
+    withings.async_measure_get_meas.side_effect = error
+    future = dt_util.utcnow() + timedelta(minutes=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
 
 
 @pytest.mark.parametrize(
