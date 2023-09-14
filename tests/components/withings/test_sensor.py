@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import call_webhook, setup_integration
+from . import call_webhook, enable_webhooks, setup_integration
 from .conftest import USER_ID, WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -91,12 +91,13 @@ def async_assert_state_equals(
 async def test_sensor_default_enabled_entities(
     hass: HomeAssistant,
     withings: AsyncMock,
-    polling_config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     disable_webhook_delay,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test entities enabled by default."""
-    await setup_integration(hass, polling_config_entry)
+    await enable_webhooks(hass)
+    await setup_integration(hass, webhook_config_entry)
     entity_registry: EntityRegistry = er.async_get(hass)
 
     client = await hass_client_no_auth()

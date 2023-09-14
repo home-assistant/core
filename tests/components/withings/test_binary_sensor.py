@@ -1,6 +1,8 @@
 """Tests for the Withings component."""
 from unittest.mock import AsyncMock
 
+from aiohttp.client_exceptions import ClientResponseError
+import pytest
 from withings_api.common import NotifyAppli
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -67,10 +69,10 @@ async def test_polling_binary_sensor(
 
     assert hass.states.get(entity_id) is None
 
-    resp = await call_webhook(
-        hass,
-        WEBHOOK_ID,
-        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
-        client,
-    )
-    assert resp.message_code == 0
+    with pytest.raises(ClientResponseError):
+        await call_webhook(
+            hass,
+            WEBHOOK_ID,
+            {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+            client,
+        )

@@ -263,7 +263,7 @@ async def test_config_flow_upgrade(
 async def test_webhook_post(
     hass: HomeAssistant,
     withings: AsyncMock,
-    config_entry: MockConfigEntry,
+    webhook_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     disable_webhook_delay,
     body: dict[str, Any],
@@ -271,7 +271,8 @@ async def test_webhook_post(
     current_request_with_host: None,
 ) -> None:
     """Test webhook callback."""
-    await setup_integration(hass, config_entry)
+    await enable_webhooks(hass)
+    await setup_integration(hass, webhook_config_entry)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
