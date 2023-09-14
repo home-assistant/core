@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from pyaprilaire.const import Attribute
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .coordinator import AprilaireCoordinator
 
 
-class BaseAprilaireEntity(CoordinatorEntity, Entity):
+class BaseAprilaireEntity(CoordinatorEntity[AprilaireCoordinator], Entity):
     """Base for Aprilaire entities."""
 
     _attr_available = False
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, coordinator: AprilaireCoordinator) -> None:
         """Initialize the entity."""
@@ -53,11 +55,6 @@ class BaseAprilaireEntity(CoordinatorEntity, Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not need to poll."""
-        return False
 
     @property
     def unique_id(self) -> str | None:

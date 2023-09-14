@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import IntFlag
 from typing import Any
 
 from pyaprilaire.const import Attribute
@@ -64,14 +63,6 @@ FAN_MODE_MAP = {
 }
 
 
-class ExtendedClimateEntityFeature(IntFlag):
-    """Supported features of the Aprilaire climate entity."""
-
-    TARGET_DEHUMIDITY = 2 << 10
-    FRESH_AIR = 2 << 11
-    AIR_CLEANING = 2 << 12
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -118,15 +109,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         if self._coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
             features = features | ClimateEntityFeature.TARGET_HUMIDITY
-
-        if self._coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.TARGET_DEHUMIDITY
-
-        if self._coordinator.data.get(Attribute.AIR_CLEANING_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.AIR_CLEANING
-
-        if self._coordinator.data.get(Attribute.VENTILATION_AVAILABLE) == 1:
-            features = features | ExtendedClimateEntityFeature.FRESH_AIR
 
         features = features | ClimateEntityFeature.PRESET_MODE
 
@@ -210,9 +192,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def target_temperature_step(self) -> float | None:
         """Get the step for the target temperature based on the unit."""
         return (
-            PRECISION_HALVES
+            0.5
             if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
-            else PRECISION_WHOLE
+            else 1
         )
 
     @property
