@@ -33,8 +33,8 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "device_info": hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_INFO]
-            | {ATTR_SW_VERSION: hass.data[DOMAIN][entry.entry_id][ATTR_SW_VERSION]},
+            "device_info": hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_INFO],
+            ATTR_SW_VERSION: hass.data[DOMAIN][entry.entry_id][ATTR_SW_VERSION],
             "attributes": attributes,
         },
         TO_REDACT,
