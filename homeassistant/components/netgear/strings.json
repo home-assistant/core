@@ -60,28 +60,28 @@
         "name": "Download yesterday"
       },
       "upload_week": {
-        "name": "Upload week"
+        "name": "Upload this week"
       },
       "upload_week_average": {
-        "name": "Upload week average"
+        "name": "Upload this week average"
       },
       "download_week": {
-        "name": "Download week"
+        "name": "Download this week"
       },
       "download_week_average": {
-        "name": "Download week average"
+        "name": "Download this week average"
       },
       "upload_month": {
-        "name": "Upload month"
+        "name": "Upload this month"
       },
       "upload_month_average": {
-        "name": "Upload month average"
+        "name": "Upload this month average"
       },
       "download_month": {
-        "name": "Download month"
+        "name": "Download this month"
       },
       "download_month_average": {
-        "name": "Download month average"
+        "name": "Download this month average"
       },
       "upload_last_month": {
         "name": "Upload last month"
