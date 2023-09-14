@@ -168,11 +168,12 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        unit = 0
+        slave = 0
         if ATTR_UNIT in service.data:
-            unit = int(float(service.data[ATTR_UNIT]))
+            slave = int(float(service.data[ATTR_UNIT]))
+
         if ATTR_SLAVE in service.data:
-            unit = int(float(service.data[ATTR_SLAVE]))
+            slave = int(float(service.data[ATTR_SLAVE]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         hub = hub_collect[
@@ -180,29 +181,32 @@ async def async_modbus_setup(
         ]
         if isinstance(value, list):
             await hub.async_pb_call(
-                unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
+                slave,
+                address,
+                [int(float(i)) for i in value],
+                CALL_TYPE_WRITE_REGISTERS,
             )
         else:
             await hub.async_pb_call(
-                unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+                slave, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        unit = 0
+        slave = 0
         if ATTR_UNIT in service.data:
-            unit = int(float(service.data[ATTR_UNIT]))
+            slave = int(float(service.data[ATTR_UNIT]))
         if ATTR_SLAVE in service.data:
-            unit = int(float(service.data[ATTR_SLAVE]))
+            slave = int(float(service.data[ATTR_SLAVE]))
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         hub = hub_collect[
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
         ]
         if isinstance(state, list):
-            await hub.async_pb_call(unit, address, state, CALL_TYPE_WRITE_COILS)
+            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
         else:
-            await hub.async_pb_call(unit, address, state, CALL_TYPE_WRITE_COIL)
+            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COIL)
 
     for x_write in (
         (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
@@ -405,10 +409,10 @@ class ModbusHub:
         return True
 
     def pb_call(
-        self, unit: int | None, address: int, value: int | list[int], use_call: str
+        self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusResponse | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": unit} if unit else {}
+        kwargs = {"slave": slave} if slave else {}
         entry = self._pb_request[use_call]
         try:
             result: ModbusResponse = entry.func(address, value, **kwargs)

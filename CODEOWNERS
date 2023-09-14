@@ -1324,8 +1324,8 @@ build.json @home-assistant/supervisor
 /tests/components/tuya/ @Tuya @zlinoliver @frenck
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
-/homeassistant/components/twinkly/ @dr1rrb @Robbie1221
-/tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/twinkly/ @dr1rrb @Robbie1221 @Olen
+/tests/components/twinkly/ @dr1rrb @Robbie1221 @Olen
 /homeassistant/components/twitch/ @joostlek
 /tests/components/twitch/ @joostlek
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
@@ -1361,10 +1361,10 @@ build.json @home-assistant/supervisor
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342
-/homeassistant/components/venstar/ @garbled1
-/tests/components/venstar/ @garbled1
-/homeassistant/components/verisure/ @frenck @niro1987
-/tests/components/verisure/ @frenck @niro1987
+/homeassistant/components/venstar/ @garbled1 @jhollowe
+/tests/components/venstar/ @garbled1 @jhollowe
+/homeassistant/components/verisure/ @frenck
+/tests/components/verisure/ @frenck
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
@@ -1404,6 +1404,8 @@ build.json @home-assistant/supervisor
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
 /tests/components/weather/ @home-assistant/core
+/homeassistant/components/weatherkit/ @tjhorner
+/tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webostv/ @thecode
@@ -1456,6 +1458,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/yandex_transport/ @rishatik92 @devbis
 /tests/components/yandex_transport/ @rishatik92 @devbis
 /homeassistant/components/yardian/ @h3l1o5
+/tests/components/yardian/ @h3l1o5
 /homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward

@@ -2,6 +2,7 @@
   "domain": "todoist",
   "name": "Todoist",
   "codeowners": ["@boralyl"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/todoist",
   "iot_class": "cloud_polling",
   "loggers": ["todoist"],

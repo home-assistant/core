@@ -1,23 +1,23 @@
 """Tests for the withings component."""
-from collections.abc import Iterable
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 from urllib.parse import urlparse
 
-import arrow
-from withings_api import DateType
-from withings_api.common import (
-    GetSleepSummaryField,
-    MeasureGetMeasGroupCategory,
-    MeasureGetMeasResponse,
-    MeasureType,
-    SleepGetSummaryResponse,
-    UserGetDeviceResponse,
-)
-
 from homeassistant.components.webhook import async_generate_url
+from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from .common import ProfileConfig, WebhookResponse
+from tests.common import MockConfigEntry
+
+
+@dataclass
+class WebhookResponse:
+    """Response data from a webhook."""
+
+    message: str
+    message_code: int
 
 
 async def call_webhook(
@@ -40,46 +40,26 @@ async def call_webhook(
     return WebhookResponse(message=data["message"], message_code=data["code"])
 
 
-class MockWithings:
-    """Mock object for Withings."""
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
 
-    def __init__(self, user_profile: ProfileConfig):
-        """Initialize mock."""
-        self.api_response_user_get_device = user_profile.api_response_user_get_device
-        self.api_response_measure_get_meas = user_profile.api_response_measure_get_meas
-        self.api_response_sleep_get_summary = (
-            user_profile.api_response_sleep_get_summary
-        )
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
 
-    def user_get_device(self) -> UserGetDeviceResponse:
-        """Get devices."""
-        if isinstance(self.api_response_user_get_device, Exception):
-            raise self.api_response_user_get_device
-        return self.api_response_user_get_device
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
-    def measure_get_meas(
-        self,
-        meastype: MeasureType | None = None,
-        category: MeasureGetMeasGroupCategory | None = None,
-        startdate: DateType | None = None,
-        enddate: DateType | None = None,
-        offset: int | None = None,
-        lastupdate: DateType | None = None,
-    ) -> MeasureGetMeasResponse:
-        """Get measurements."""
-        if isinstance(self.api_response_measure_get_meas, Exception):
-            raise self.api_response_measure_get_meas
-        return self.api_response_measure_get_meas
 
-    def sleep_get_summary(
-        self,
-        data_fields: Iterable[GetSleepSummaryField],
-        startdateymd: Optional[DateType] = arrow.utcnow(),
-        enddateymd: Optional[DateType] = arrow.utcnow(),
-        offset: Optional[int] = None,
-        lastupdate: Optional[DateType] = arrow.utcnow(),
-    ) -> SleepGetSummaryResponse:
-        """Get sleep."""
-        if isinstance(self.api_response_sleep_get_summary, Exception):
-            raise self.api_response_sleep_get_summary
-        return self.api_response_sleep_get_summary
+async def enable_webhooks(hass: HomeAssistant) -> None:
+    """Enable webhooks."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_USE_WEBHOOK: True,
+            }
+        },
+    )
