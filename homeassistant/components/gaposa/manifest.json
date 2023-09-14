@@ -1,0 +1,15 @@
+{
+  "domain": "gaposa",
+  "name": "Gaposa",
+  "codeowners": ["@mwatson2"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/gaposa",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["GAPOSA"],
+  "requirements": ["pygaposa==0.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}
