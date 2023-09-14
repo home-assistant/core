@@ -39,7 +39,7 @@
         "name": "Link rate"
       },
       "signal_strength": {
-        "name": "Signal strength"
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       },
       "ssid": {
         "name": "ssid"
