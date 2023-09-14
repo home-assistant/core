@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "{profile}",
     "step": {
       "profile": {
         "title": "User Profile.",
@@ -12,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+        "description": "The Withings integration needs to re-authenticate your account"
       }
     },
     "error": {

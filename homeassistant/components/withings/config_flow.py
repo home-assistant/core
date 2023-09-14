@@ -8,8 +8,9 @@ from typing import Any
 import voluptuous as vol
 from withings_api.common import AuthScope
 
+from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -77,7 +78,7 @@ class WithingsFlowHandler(
 
             return self.async_create_entry(
                 title=DEFAULT_TITLE,
-                data=data,
+                data={**data, CONF_WEBHOOK_ID: async_generate_id()},
                 options={CONF_USE_WEBHOOK: False},
             )
 
