@@ -390,7 +390,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
-apple_weatherkit==1.0.2
+apple_weatherkit==1.0.3
 
 # homeassistant.components.apprise
 apprise==1.5.0
@@ -1649,7 +1649,7 @@ pyvizio==0.1.61
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.4.0
+pywaze==0.5.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1741,11 +1741,9 @@ screenlogicpy==0.9.0
 # homeassistant.components.backup
 securetar==2023.3.0
 
-# homeassistant.components.sense
-sense-energy==0.12.1
-
 # homeassistant.components.emulated_kasa
-sense_energy==0.12.1
+# homeassistant.components.sense
+sense-energy==0.12.2
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2036,7 +2034,7 @@ yalexs==1.9.0
 yeelight==0.7.13
 
 # homeassistant.components.yolink
-yolink-api==0.3.0
+yolink-api==0.3.1
 
 # homeassistant.components.youless
 youless-api==1.0.1
