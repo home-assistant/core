@@ -52,10 +52,12 @@ SUPPORT_FLAGS_LCC = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 SUPPORT_FLAGS_TCC = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
@@ -179,6 +181,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         ):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
+        # Setup supported fan modes
+        self._attr_fan_modes = device.settings.attributes.get("fan", {}).get(
+            "allowedModes", []
+        )
+
         super().__init__(
             coordinator,
             location,
@@ -267,6 +274,16 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
             return device.maxHeatSetpoint
         return device.maxCoolSetpoint
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return current fan mode."""
+        device = self.device
+        return (
+            device.settings.attributes.get("fan", {})
+            .get("changeableValues", {})
+            .get("mode", None)
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -387,6 +404,15 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 thermostatSetpointStatus=PRESET_HOLD_UNTIL,
                 nextPeriodTime=time_period,
             )
+        except LYRIC_EXCEPTIONS as exception:
+            _LOGGER.error(exception)
+        await self.coordinator.async_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan (On, Auto, Circulate) mode."""
+        _LOGGER.debug("Set preset mode: %s", fan_mode)
+        try:
+            await self._update_fan(self.location, self.device, mode=fan_mode)
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
