@@ -1,7 +1,11 @@
 """DataUpdateCoordinator for coolmaster integration."""
 import logging
+from typing import Any
+
+from pycoolmasternet_async import CoolMasterNet
 
 from homeassistant.components.climate import SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -9,10 +13,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
+class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator[Any]):
     """Class to manage fetching Coolmaster data."""
 
-    def __init__(self, hass, coolmaster):
+    def __init__(self, hass: HomeAssistant, coolmaster: CoolMasterNet) -> None:
         """Initialize global Coolmaster data updater."""
         self._coolmaster = coolmaster
 
@@ -23,7 +27,7 @@ class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> Any:
         """Fetch data from Coolmaster."""
         try:
             return await self._coolmaster.status()
