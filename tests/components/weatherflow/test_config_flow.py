@@ -102,8 +102,8 @@ async def test_devices_with_mocks_timeout(
     """Test getting user input."""
 
     async def time_jump(hass: HomeAssistant):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=100))
+        await asyncio.sleep(10)
 
     # Start the time forarder task
     task = asyncio.create_task(time_jump(hass))
