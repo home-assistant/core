@@ -18,7 +18,13 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    TemplateVarsType,
+    UndefinedType,
+)
 
 if TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessage
@@ -292,7 +298,7 @@ class MqttValueTemplate:
 class EntityMonitor:
     """Monitors entity state changes."""
 
-    _singleton: object = object()
+    _singleton: UndefinedType = UNDEFINED
 
     def __init__(self, entity: Entity, attributes: set[str]) -> None:
         """Initialize entity monitor."""
