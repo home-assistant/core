@@ -77,7 +77,7 @@ ALL_LANGUAGES = [
     "zh-TW",
 ]
 
-AVOID = ["tolls", "highways", "ferries", "indoor"]
+AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
 TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]

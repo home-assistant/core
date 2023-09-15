@@ -18,7 +18,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from .const import (
     ALL_LANGUAGES,
     ARRIVAL_TIME,
-    AVOID,
+    AVOID_OPTIONS,
     CONF_ARRIVAL_TIME,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
@@ -66,7 +66,7 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_AVOID, default=NONE_SENTINEL): SelectSelector(
             SelectSelectorConfig(
-                options=[NONE_SENTINEL] + AVOID,
+                options=[NONE_SENTINEL] + AVOID_OPTIONS,
                 sort=True,
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_AVOID,
