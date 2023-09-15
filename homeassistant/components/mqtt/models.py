@@ -350,7 +350,6 @@ class EntityTopicState:
         if monitor and not monitor.changed:
             # no change detected skip state write request
             return
-        del monitor
         self.subscribe_calls[entity.entity_id] = entity
 
 
