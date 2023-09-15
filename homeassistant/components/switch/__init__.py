@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -103,7 +102,7 @@ class SwitchEntity(ToggleEntity):
     entity_description: SwitchEntityDescription
     _attr_device_class: SwitchDeviceClass | None
 
-    @cached_property
+    @property
     def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

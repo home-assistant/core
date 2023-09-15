@@ -98,13 +98,9 @@ class TestHelpersEntity:
 
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self._create_entity()
-
-    def _create_entity(self) -> None:
         self.entity = entity.Entity()
         self.entity.entity_id = "test.overwrite_hidden_true"
-        self.entity.hass = self.hass
+        self.hass = self.entity.hass = get_test_home_assistant()
         self.entity.schedule_update_ha_state()
         self.hass.block_till_done()
 
@@ -127,7 +123,6 @@ class TestHelpersEntity:
         with patch(
             "homeassistant.helpers.entity.Entity.device_class", new="test_class"
         ):
-            self._create_entity()
             self.entity.schedule_update_ha_state()
             self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)

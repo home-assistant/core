@@ -9,7 +9,6 @@ from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -159,7 +158,7 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
-    @cached_property
+    @property
     def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
