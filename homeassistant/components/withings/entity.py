@@ -36,7 +36,7 @@ class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixi
 
 
 class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT]):
-    """Base class for withings sensors."""
+    """Base class for withings entities."""
 
     entity_description: WithingsEntityDescription
     _attr_has_entity_name = True
