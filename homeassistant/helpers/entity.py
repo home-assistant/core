@@ -550,7 +550,7 @@ class Entity(ABC):
         """
         return self._attr_device_info
 
-    @cached_property
+    @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         if hasattr(self, "_attr_device_class"):
@@ -639,7 +639,7 @@ class Entity(ABC):
             return self.entity_description.entity_registry_visible_default
         return True
 
-    @cached_property
+    @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
@@ -653,7 +653,7 @@ class Entity(ABC):
             return self.entity_description.entity_category
         return None
 
-    @cached_property
+    @property
     def translation_key(self) -> str | None:
         """Return the translation key to translate the entity's states."""
         if hasattr(self, "_attr_translation_key"):

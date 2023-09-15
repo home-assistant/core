@@ -50,9 +50,7 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
         """Return True if the binary sensor is on."""
         return cast(bool, self._device.is_on)
 
-    @property  # type: ignore[override]
-    # We don't know if the class may be set late here
-    # so we need to override the property to disable the cache.
+    @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
