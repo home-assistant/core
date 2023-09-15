@@ -11,10 +11,11 @@ import CO2Signal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
+from .exceptions import APIRatelimitExceeded, CO2Error, InvalidAuth, UnknownError
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -84,22 +85,6 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CO2SignalResponse]):
             raise UpdateFailed(str(err)) from err
 
         return data
-
-
-class CO2Error(HomeAssistantError):
-    """Base error."""
-
-
-class InvalidAuth(CO2Error):
-    """Raised when invalid authentication credentials are provided."""
-
-
-class APIRatelimitExceeded(CO2Error):
-    """Raised when the API rate limit is exceeded."""
-
-
-class UnknownError(CO2Error):
-    """Raised when an unknown error occurs."""
 
 
 def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalResponse:
