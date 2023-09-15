@@ -16,18 +16,21 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import _LOGGER, DOMAIN
 from .coordinator import VodafoneStationRouter
 
+NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
+
 
 @dataclass
 class VodafoneStationBaseEntityDescription:
     """Vodafone Station entity base description."""
 
-    value: Callable[[Any], Any] = lambda val: val
+    value: Callable[[Any, Any], Any] = lambda val, key: val[key]
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
@@ -38,13 +41,33 @@ class VodafoneStationEntityDescription(
     """Vodafone Station entity description."""
 
 
-def _calculate_uptime(uptime: str) -> datetime:
+def _calculate_uptime(value: dict, key: str) -> datetime:
     """Calculate device uptime."""
-    d = int(uptime.split(":")[0])
-    h = int(uptime.split(":")[1])
-    m = int(uptime.split(":")[2])
+    d = int(value[key].split(":")[0])
+    h = int(value[key].split(":")[1])
+    m = int(value[key].split(":")[2])
 
     return utcnow() - timedelta(days=d, hours=h, minutes=m)
+
+
+def _line_connection(value: dict, key: str) -> str:
+    """Identify line type."""
+
+    internet_ip = value[key]
+    dsl_ip = value.get("dsl_ipaddr")
+    fiber_ip = value.get("fiber_ipaddr")
+    internet_key_ip = value.get("vf_internet_key_ip_addr")
+
+    if internet_ip == dsl_ip:
+        return "xDSL"
+
+    if internet_ip == fiber_ip:
+        return "Fiber"
+
+    if internet_ip == internet_key_ip:
+        return "Internet Key"
+
+    return "Unknown"
 
 
 SENSOR_TYPES: Final = (
@@ -52,13 +75,25 @@ SENSOR_TYPES: Final = (
         key="wan_ip4_addr",
         translation_key="external_ipv4",
         icon="mdi:earth",
-        is_suitable=lambda info: info["wan_ip4_addr"] not in ["", "N/A"],
+        is_suitable=lambda info: info["wan_ip4_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="wan_ip6_addr",
         translation_key="external_ipv6",
         icon="mdi:earth",
-        is_suitable=lambda info: info["wan_ip6_addr"] not in ["", "N/A"],
+        is_suitable=lambda info: info["wan_ip6_addr"] not in NOT_AVAILABLE,
+    ),
+    VodafoneStationEntityDescription(
+        key="vf_internet_key_ip_addr",
+        translation_key="external_ip_key",
+        icon="mdi:earth",
+        is_suitable=lambda info: info["vf_internet_key_ip_addr"] not in NOT_AVAILABLE,
+    ),
+    VodafoneStationEntityDescription(
+        key="inter_ip_address",
+        translation_key="active_connection",
+        icon="mdi:wan",
+        value=_line_connection,
     ),
     VodafoneStationEntityDescription(
         key="down_str",
@@ -105,7 +140,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:chip",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value: float(value[:-1]),
+        value=lambda value, key: float(value[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
@@ -113,7 +148,7 @@ SENSOR_TYPES: Final = (
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value=lambda value: float(value[:-1]),
+        value=lambda value, key: float(value[key][:-1]),
     ),
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
@@ -134,19 +169,20 @@ async def async_setup_entry(
 
     sensors_data = coordinator.data.sensors
 
-    entities = (
+    async_add_entities(
         VodafoneStationSensorEntity(coordinator, sensor_descr)
         for sensor_descr in SENSOR_TYPES
         if sensor_descr.key in sensors_data and sensor_descr.is_suitable(sensors_data)
     )
 
-    async_add_entities(entities, True)
 
-
-class VodafoneStationSensorEntity(CoordinatorEntity, SensorEntity):
+class VodafoneStationSensorEntity(
+    CoordinatorEntity[VodafoneStationRouter], SensorEntity
+):
     """Representation of a Vodafone Station sensor."""
 
     _attr_has_entity_name = True
+    entity_description: VodafoneStationEntityDescription
 
     def __init__(
         self,
@@ -169,7 +205,11 @@ class VodafoneStationSensorEntity(CoordinatorEntity, SensorEntity):
             hw_version=sensors_data["sys_hardware_version"],
             sw_version=sensors_data["sys_firmware_version"],
         )
-        self._attr_native_value = self.entity_description.value(
-            sensors_data.get(self.entity_description.key)
-        )
         self._attr_unique_id = f"{serial_num}_{description.key}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Sensor value."""
+        return self.entity_description.value(
+            self.coordinator.data.sensors, self.entity_description.key
+        )

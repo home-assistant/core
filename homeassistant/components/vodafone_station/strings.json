@@ -32,8 +32,10 @@
   },
   "entity": {
     "sensor": {
-      "external_ipv4": { "name": "WAN IP4 address" },
-      "external_ipv6": { "name": "WAN IP6 address" },
+      "external_ipv4": { "name": "WAN IPv4 address" },
+      "external_ipv6": { "name": "WAN IPv6 address" },
+      "external_ip_key": { "name": "WAN Internet Key address" },
+      "active_connection": { "name": "Active connection" },
       "down_stream": { "name": "WAN Download rate" },
       "up_stream": { "name": "WAN Upload rate" },
       "fw_version": { "name": "Firmware version" },
