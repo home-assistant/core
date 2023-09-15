@@ -10,12 +10,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
+from .const import DOMAIN, Measurement
+from .coordinator import (
     BaseWithingsDataUpdateCoordinator,
     PollingWithingsDataUpdateCoordinator,
     WebhookWithingsDataUpdateCoordinator,
 )
-from .const import DOMAIN, Measurement
 
 _BaseWithingsDataUpdateCoordinatorT = TypeVar(
     "_BaseWithingsDataUpdateCoordinatorT", bound="BaseWithingsDataUpdateCoordinator"

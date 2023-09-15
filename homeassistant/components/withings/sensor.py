@@ -23,11 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    BaseWithingsDataUpdateCoordinator,
-    PollingWithingsDataUpdateCoordinator,
-    WebhookWithingsDataUpdateCoordinator,
-)
 from .const import (
     DOMAIN,
     SCORE_POINTS,
@@ -36,6 +31,11 @@ from .const import (
     UOM_FREQUENCY,
     UOM_MMHG,
     Measurement,
+)
+from .coordinator import (
+    BaseWithingsDataUpdateCoordinator,
+    PollingWithingsDataUpdateCoordinator,
+    WebhookWithingsDataUpdateCoordinator,
 )
 from .entity import (
     BaseWithingsEntity,
