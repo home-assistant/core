@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 CONFIG = {
     "username": "admin@admin.com",
     "password": "admin",
-    "host": "localhost:5000",
+    "url": "http://localhost:5000",
     "power_sensor": 1,
     "soc_sensor": 3,
     "rm_discharge_sensor": 4,
@@ -18,6 +18,8 @@ CONFIG = {
     "soc_unit": "kWh",
     "soc_min": 0.0,
     "soc_max": 0.001,
+    "ssl": False,
+    "host": "localhost:5000",
 }
 
 

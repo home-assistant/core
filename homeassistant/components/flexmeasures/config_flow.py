@@ -20,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host", description={"suggested_value": "localhost:5000"}): str,
+        vol.Required(
+            "url", description={"suggested_value": "http://localhost:5000"}
+        ): str,
         vol.Required(
             "username", description={"suggested_value": "toy-user@flexmeasures.io"}
         ): str,
@@ -40,6 +42,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
         vol.Required("soc_min", description={"suggested_value": 0.001}): float,
         vol.Required("soc_max", description={"suggested_value": 0.002}): float,
+        vol.Optional(
+            "host",
+        ): str,
+        vol.Optional(
+            "ssl",
+        ): bool,
     }
 )
 
@@ -57,7 +65,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             host=data["host"],
             email=data["username"],
             password=data["password"],
-            ssl=False,
+            ssl=data["ssl"],
         )
     except Exception as exception:
         raise CannotConnect(exception) from exception
@@ -90,9 +98,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+        host, ssl = get_host_and_ssl_from_url(user_input["url"])
+        config_data = user_input
+        config_data["host"] = host
+        config_data["ssl"] = ssl
 
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await validate_input(self.hass, config_data)
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
 
@@ -106,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info["title"], data=config_data)
 
         # Show form again, showing captured errors
         # still do invalid_auth validation error is not yet shown properly
@@ -135,8 +147,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            host, ssl = get_host_and_ssl_from_url(user_input["url"])
+            config_data = user_input
+            config_data["host"] = host
+            config_data["ssl"] = ssl
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await validate_input(self.hass, config_data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -146,12 +162,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
             else:
                 # Value of data will be set on the options property of our config_entry instance.
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=info["title"], data=config_data)
 
         options_schema = vol.Schema(
             {
                 vol.Required(
-                    "host", default=get_previous_option(self.config_entry, "host")
+                    "url", default=get_previous_option(self.config_entry, "url")
                 ): str,
                 vol.Required(
                     "username",
@@ -203,6 +219,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     "soc_max",
                     default=get_previous_option(self.config_entry, "soc_max"),
                 ): float,
+                vol.Optional(
+                    "host",
+                    default=get_previous_option(self.config_entry, "host"),
+                ): str,
+                vol.Optional(
+                    "ssl",
+                    default=get_previous_option(self.config_entry, "ssl"),
+                ): bool,
             }
         )
 
@@ -222,3 +246,15 @@ class InvalidAuth(HomeAssistantError):
 def get_previous_option(config: ConfigEntry, option: str):
     """Get default from previous options or otherwise from initial config."""
     return config.options.get(option, config.data[option])
+
+
+def get_host_and_ssl_from_url(url: str) -> tuple[str, bool]:
+    """Get the host and ssl from the url."""
+    if url.startswith("http://"):
+        ssl = False
+        host = url.removeprefix("http://")
+    if url.startswith("https://"):
+        ssl = True
+        host = url.removeprefix("https://")
+
+    return host, ssl

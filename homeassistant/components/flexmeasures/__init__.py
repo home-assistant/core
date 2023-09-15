@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host=config_data["host"],
         email=config_data["username"],
         password=config_data["password"],
+        ssl=config_data["ssl"],
         session=async_get_clientsession(hass),
     )
 
