@@ -290,9 +290,17 @@ class MqttSensor(MqttEntity, RestoreSensor):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
+            last_native_value = self._attr_native_value
+            last_last_reset = self._attr_last_reset
             _update_state(msg)
             if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
                 _update_last_reset(msg)
+            if (
+                last_native_value == self._attr_native_value
+                and last_last_reset == self._attr_last_reset
+                and not self._attr_force_update
+            ):
+                return
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
