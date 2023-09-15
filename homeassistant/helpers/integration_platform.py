@@ -65,7 +65,7 @@ async def _async_process_single_integration_platform_component(
         )
 
 
-async def async_process_integration_platform_for_component(
+async def _async_process_integration_platform_for_component(
     hass: HomeAssistant, component_name: str
 ) -> None:
     """Process integration platforms on demand for a component.
@@ -116,7 +116,7 @@ async def async_process_integration_platforms(
 
         async def _async_component_loaded(event: Event) -> None:
             """Handle a new component loaded."""
-            await async_process_integration_platform_for_component(
+            await _async_process_integration_platform_for_component(
                 hass, event.data[ATTR_COMPONENT]
             )
 
