@@ -18,8 +18,6 @@ CONFIG = {
     "soc_unit": "kWh",
     "soc_min": 0.0,
     "soc_max": 0.001,
-    "ssl": False,
-    "host": "localhost:5000",
 }
 
 

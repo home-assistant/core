@@ -27,8 +27,6 @@ async def setup_fm_integration(hass: HomeAssistant):
         domain=DOMAIN,
         data={
             "url": "http://localhost:5000",
-            "ssl": True,
-            "host": "localhost:5000",
             "username": "admin@admin.com",
             "password": "admin",
             "schedule_duration": "PT24H",
