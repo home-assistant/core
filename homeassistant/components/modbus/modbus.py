@@ -425,7 +425,7 @@ class ModbusHub:
         if not hasattr(result, entry.attr):
             self._log_error(str(result))
             return None
-        if not result:
+        if not result.isError():  # type: ignore[no-untyped-call]
             self._log_error("Error: pymodbus returned isError True")
             return None
         self._in_error = False
