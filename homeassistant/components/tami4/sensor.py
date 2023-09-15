@@ -27,50 +27,45 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_DESCRIPTIONS = [
     SensorEntityDescription(
         key="uv_last_replacement",
-        name="UV Last Replacement",
+        translation_key="uv_last_replacement",
         icon="mdi:calendar",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="uv_upcoming_replacement",
-        name="UV Upcoming Replacement",
+        translation_key="uv_upcoming_replacement",
         icon="mdi:calendar",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="uv_status",
-        name="UV Status",
+        translation_key="uv_status",
         icon="mdi:clipboard-check-multiple",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="filter_last_replacement",
-        name="Filter Last Replacement",
+        translation_key="filter_last_replacement",
         icon="mdi:calendar",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="filter_upcoming_replacement",
-        name="Filter Upcoming Replacement",
+        translation_key="filter_upcoming_replacement",
         icon="mdi:calendar",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
         key="filter_status",
-        name="Filter Status",
+        translation_key="filter_status",
         icon="mdi:clipboard-check-multiple",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="filter_milli_litters_passed",
-        name="Filter Water Passed",
-        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+        key="filter_litters_passed",
+        translation_key="filter_litters_passed",
         icon="mdi:water",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
     ),
 ]
 
@@ -103,6 +98,8 @@ async def async_setup_entry(
 
 class Tami4EdgeSensorEntity(Tami4EdgeBaseEntity, CoordinatorEntity, SensorEntity):
     """Representation of the entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

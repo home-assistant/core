@@ -1,4 +1,29 @@
 {
+  "entity": {
+    "sensor": {
+      "uv_last_replacement": {
+        "name": "UV Last Replacement"
+      },
+      "uv_upcoming_replacement": {
+        "name": "UV Upcoming Replacement"
+      },
+      "uv_status": {
+        "name": "UV Status"
+      },
+      "filter_last_replacement": {
+        "name": "Filter Last Replacement"
+      },
+      "filter_upcoming_replacement": {
+        "name": "Filter Upcoming Replacement"
+      },
+      "filter_status": {
+        "name": "Filter Status"
+      },
+      "filter_litters_passed": {
+        "name": "Filter Water Passed"
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -10,7 +35,7 @@
       },
       "otp": {
         "title": "SMS Verification",
-        "description": "Enter the SMS code",
+        "description": "Enter the code you received via SMS",
         "data": {
           "otp": "SMS Code"
         }

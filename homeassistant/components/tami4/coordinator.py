@@ -36,7 +36,8 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator):
                 "filter_last_replacement": water_quality.filter.last_replacement,
                 "filter_upcoming_replacement": water_quality.filter.upcoming_replacement,
                 "filter_status": water_quality.filter.status,
-                "filter_milli_litters_passed": water_quality.filter.milli_litters_passed,
+                "filter_litters_passed": water_quality.filter.milli_litters_passed
+                / 1000,
             }
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with API: {ex}") from ex
