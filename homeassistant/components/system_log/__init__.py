@@ -75,16 +75,22 @@ def _figure_out_source(
                 break
     else:
         #
-        # We need to figure out where the log call came from
+        # We need to figure out where the log call came from if we
+        # don't have an exception.
+        #
         # We do this by walking up the stack until we find the first
         # frame match the record pathname so the code below
         # can be used to reverse the remaining stack frames
         # and find the first one that is from a file within Home Assistant.
         #
         # We do not call traceback.extract_stack() because it is
-        # it makes many blocking stat() calls to get file info
-        # which is not needed for this use case and can block
-        # the event loop on system with slow IO.
+        # it makes many stat() syscalls calls which do blocking I/O,
+        # and since this code is running in the event loop, we need to avoid
+        # blocking I/O.
+
+        frame = sys._getframe(4)  # pylint: disable=protected-access
+        #
+        # We use _getframe with 4 to skip the following frames:
         #
         # Jump 2 frames up to get to the actual caller
         # since we are in a function, and always called from another function
@@ -93,13 +99,12 @@ def _figure_out_source(
         # Next try to skip any frames that are from the logging module
         # We know that the logger module typically has 5 frames itself
         # but it may change in the future so we are conservative and
-        # only skip 2 for a total of 4 from the above.
+        # only skip 2.
         #
         # _getframe is cpython only but we are already using cpython specific
         # code everywhere in HA so it's fine as its unlikely we will ever
         # support other python implementations.
         #
-        frame = sys._getframe(4)  # pylint: disable=protected-access
         stack = []
         in_stack = False
         while back := frame.f_back:
