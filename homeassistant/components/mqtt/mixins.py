@@ -381,6 +381,7 @@ class MqttAttributes(Entity):
         @callback
         @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: ReceiveMessage) -> None:
+            self.monitor.track({"_attr_extra_state_attributes"})  # type: ignore[attr-defined]
             try:
                 payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
@@ -494,6 +495,7 @@ class MqttAvailability(Entity):
             topic = msg.topic
             payload: ReceivePayloadType
             payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
+            self.monitor.track({"available"})  # type: ignore[attr-defined]
             if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True
                 self._available_latest = True
