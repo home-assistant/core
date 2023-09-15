@@ -334,6 +334,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
+        await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
@@ -377,6 +378,7 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to HASS."""
+        await super().async_added_to_hass()
         self.async_on_remove(self.coordinator.async_add_listener(self._update_callback))
 
     @callback
