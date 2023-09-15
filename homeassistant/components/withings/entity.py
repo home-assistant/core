@@ -57,7 +57,7 @@ class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT])
 
 
 class PollingWithingsEntity(BaseWithingsEntity[PollingWithingsDataUpdateCoordinator]):
-    """Sensor used for polling."""
+    """Entity used for polling."""
 
 
 class WebhookWithingsEntity(BaseWithingsEntity[WebhookWithingsDataUpdateCoordinator]):
