@@ -23,4 +23,6 @@ def get_maybe_authenticated_session(hass, password, username):
 
 def get_non_empty_key(dictionary: Mapping[str, Any], key: str) -> str | None:
     """Return None if key's value is empty string."""
-    return dictionary[key] if key in dictionary and dictionary[key] != "" else None
+    if value := dictionary.get(key):
+       return value
+    return None
