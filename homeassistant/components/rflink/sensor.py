@@ -354,6 +354,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
+        await super().async_added_to_hass()
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if (
