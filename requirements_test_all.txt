@@ -1741,11 +1741,9 @@ screenlogicpy==0.9.0
 # homeassistant.components.backup
 securetar==2023.3.0
 
+# homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense-energy==0.12.2
-
-# homeassistant.components.emulated_kasa
-sense_energy==0.12.2
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
