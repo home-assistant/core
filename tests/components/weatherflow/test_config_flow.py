@@ -96,35 +96,12 @@ async def test_devices_with_mocks(
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-# @pytest.mark.timeout(8)
 async def test_devices_with_mocks_timeout(
     hass: HomeAssistant, mock_start_timeout: AsyncMock, mock_stop: AsyncMock
 ) -> None:
     """Test getting user input."""
 
     async def time_jump(hass: HomeAssistant):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-        await asyncio.sleep(1)
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
         await asyncio.sleep(1)
 
