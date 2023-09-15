@@ -61,7 +61,7 @@ class PollingWithingsEntity(BaseWithingsEntity[PollingWithingsDataUpdateCoordina
 
 
 class WebhookWithingsEntity(BaseWithingsEntity[WebhookWithingsDataUpdateCoordinator]):
-    """Sensor used for Webhooks."""
+    """Entity used for Webhooks."""
 
     _attr_should_poll = False
 
