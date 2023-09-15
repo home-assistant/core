@@ -220,16 +220,9 @@ class SensorFilter(SensorEntity):
         self._state: StateType = None
         self._filters = filters
         self._attr_icon = None
-        self._device_class = None
+        self._attr_device_class = None
         self._attr_state_class = None
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_id}
-
-    @property
-    # This property is not cached because the underlying source may
-    # not always be available.
-    def device_class(self) -> SensorDeviceClass | None:  # type: ignore[override]
-        """Return the device class of the sensor."""
-        return self._device_class
 
     @callback
     def _update_filter_sensor_state_event(
@@ -290,7 +283,7 @@ class SensorFilter(SensorEntity):
         self._state = temp_state.state
 
         self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
-        self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+        self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
         self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._attr_native_unit_of_measurement != new_state.attributes.get(

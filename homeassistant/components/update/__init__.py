@@ -11,7 +11,6 @@ from typing import Any, Final, final
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
@@ -224,7 +223,7 @@ class UpdateEntity(RestoreEntity):
         """
         return self.device_class is not None
 
-    @cached_property
+    @property
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

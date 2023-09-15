@@ -8,12 +8,10 @@ from typing import final
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_FIELDS,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -54,7 +52,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_VALUE,
         {
             vol.Required(ATTR_DATETIME): cv.datetime,
-            **ENTITY_SERVICE_FIELDS,
         },
         _async_set_value,
     )
@@ -87,7 +84,7 @@ class DateTimeEntity(Entity):
     _attr_state: None = None
     _attr_native_value: datetime | None
 
-    @cached_property
+    @property
     @final
     def device_class(self) -> None:
         """Return entity device class."""

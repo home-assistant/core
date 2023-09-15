@@ -11,7 +11,6 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
@@ -260,7 +259,7 @@ class SensorEntity(Entity):
         """
         return self.device_class not in (None, SensorDeviceClass.ENUM)
 
-    @cached_property
+    @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

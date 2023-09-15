@@ -360,10 +360,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity_ids, **self._extra_state_attribute}
 
-    @property  # type: ignore[override]
-    # Because the device class is calculated, there is no guarantee that the
-    # sensors will be available when the entity is created so we do not want to
-    # cache the value.
+    @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return device class."""
         if self._attr_device_class is not None:
