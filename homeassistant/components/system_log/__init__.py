@@ -117,8 +117,7 @@ def _figure_out_source(
         # Iterate through the stack call (in reverse) and find the last call from
         # a file in Home Assistant. Try to figure out where error happened.
         while back := frame.f_back:
-            path = frame.f_code.co_filename
-            if match := paths_re.match(path):
+            if match := paths_re.match(frame.f_code.co_filename):
                 return (cast(str, match.group(1)), frame.f_lineno)
             frame = back
 
