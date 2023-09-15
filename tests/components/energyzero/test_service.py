@@ -1,14 +1,9 @@
 """Tests for the sensors provided by the EnergyZero integration."""
-from unittest.mock import MagicMock
 
-from energyzero import EnergyZeroNoDataError
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
-from homeassistant.components.energyzero.const import DOMAIN, SERVICE_NAME, LOGGER
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.energyzero.const import DOMAIN, LOGGER, SERVICE_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component

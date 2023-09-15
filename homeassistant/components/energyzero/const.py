@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from typing import Final
+
 import voluptuous as vol
-from homeassistant.util import dt as dt_util
 
 DOMAIN: Final = "energyzero"
 LOGGER = logging.getLogger(__package__)

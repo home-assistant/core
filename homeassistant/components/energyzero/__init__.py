@@ -1,6 +1,8 @@
 """The EnergyZero integration."""
 from __future__ import annotations
 
+from energyzero import EnergyZero
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import (
@@ -13,17 +15,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DOMAIN,
-    SERVICE_PRICE_TYPES,
-    SERVICE_NAME,
-    SERVICE_SCHEMA,
-)
+from .const import DOMAIN, SERVICE_NAME, SERVICE_PRICE_TYPES, SERVICE_SCHEMA
 from .coordinator import EnergyZeroDataUpdateCoordinator
-
-from energyzero import (
-    EnergyZero,
-)
 
 PLATFORMS = [Platform.SENSOR]
 
