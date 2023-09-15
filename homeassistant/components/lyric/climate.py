@@ -181,8 +181,19 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         # Setup supported fan modes
         self._attr_fan_modes = device.settings.attributes.get("fan", {}).get(
-            "allowedModes", []
+            "allowedModes"
         )
+
+        # Setup supported features
+        if device.changeableValues.thermostatSetpointStatus:
+            self._attr_supported_features = SUPPORT_FLAGS_LCC
+        else:
+            self._attr_supported_features = SUPPORT_FLAGS_TCC
+
+        if self._attr_fan_modes:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
 
         super().__init__(
             coordinator,
@@ -191,19 +202,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             f"{device.macID}_thermostat",
         )
         self.entity_description = description
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        if self.device.changeableValues.thermostatSetpointStatus:
-            supported_flags = SUPPORT_FLAGS_LCC
-        else:
-            supported_flags = SUPPORT_FLAGS_TCC
-
-        if self._attr_fan_modes:
-            supported_flags = supported_flags | ClimateEntityFeature.FAN_MODE
-
-        return supported_flags
 
     @property
     def current_temperature(self) -> float | None:
