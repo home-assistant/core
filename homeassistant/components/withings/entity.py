@@ -46,7 +46,7 @@ class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT])
         coordinator: _BaseWithingsDataUpdateCoordinatorT,
         description: WithingsEntityDescription,
     ) -> None:
-        """Initialize the Withings sensor."""
+        """Initialize the Withings entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"withings_{coordinator.config_entry.unique_id}_{description.measurement.value}"
