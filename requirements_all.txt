@@ -2235,7 +2235,7 @@ pyvlx==0.2.20
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.4.0
+pywaze==0.5.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -2372,11 +2372,9 @@ securetar==2023.3.0
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
-# homeassistant.components.sense
-sense-energy==0.12.1
-
 # homeassistant.components.emulated_kasa
-sense_energy==0.12.1
+# homeassistant.components.sense
+sense-energy==0.12.2
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2751,7 +2749,7 @@ yeelight==0.7.13
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.0
+yolink-api==0.3.1
 
 # homeassistant.components.youless
 youless-api==1.0.1
