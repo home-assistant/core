@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_VALUE,
@@ -75,6 +76,23 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_PRECISION: 0,
+                    CONF_SCALE: 1,
+                    CONF_OFFSET: 0,
+                    CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+                    CONF_LAZY_ERROR: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_CLASS: "battery",
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_DATA_TYPE: DataType.INT16,
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
