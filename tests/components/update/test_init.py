@@ -59,26 +59,17 @@ class MockUpdateEntity(UpdateEntity):
     """Mock UpdateEntity to use in tests."""
 
 
-def _create_mock_update_entity(
-    hass: HomeAssistant,
-) -> MockUpdateEntity:
-    mock_platform = MockEntityPlatform(hass)
+async def test_update(hass: HomeAssistant) -> None:
+    """Test getting data from the mocked update entity."""
     update = MockUpdateEntity()
     update.hass = hass
-    update.platform = mock_platform
+    update.platform = MockEntityPlatform(hass)
 
     update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "1.0.1"
     update._attr_release_summary = "Summary"
     update._attr_release_url = "https://example.com"
     update._attr_title = "Title"
-
-    return update
-
-
-async def test_update(hass: HomeAssistant) -> None:
-    """Test getting data from the mocked update entity."""
-    update = _create_mock_update_entity(hass)
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
     assert (
@@ -102,6 +93,7 @@ async def test_update(hass: HomeAssistant) -> None:
         ATTR_SKIPPED_VERSION: None,
         ATTR_TITLE: "Title",
     }
+
     # Test no update available
     update._attr_installed_version = "1.0.0"
     update._attr_latest_version = "1.0.0"
@@ -128,19 +120,14 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.state is STATE_ON
 
     # Test entity category becomes config when its possible to install
-    update = _create_mock_update_entity(hass)
     update._attr_supported_features = UpdateEntityFeature.INSTALL
     assert update.entity_category is EntityCategory.CONFIG
 
     # UpdateEntityDescription was set
-    update = _create_mock_update_entity(hass)
     update._attr_supported_features = 0
     update.entity_description = UpdateEntityDescription(key="F5 - Its very refreshing")
     assert update.device_class is None
     assert update.entity_category is EntityCategory.CONFIG
-
-    update = _create_mock_update_entity(hass)
-    update._attr_supported_features = 0
     update.entity_description = UpdateEntityDescription(
         key="F5 - Its very refreshing",
         device_class=UpdateDeviceClass.FIRMWARE,
@@ -150,24 +137,14 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.entity_category is None
 
     # Device class via attribute (override entity description)
-    update = _create_mock_update_entity(hass)
-    update._attr_supported_features = 0
     update._attr_device_class = None
     assert update.device_class is None
-
-    update = _create_mock_update_entity(hass)
-    update._attr_supported_features = 0
     update._attr_device_class = UpdateDeviceClass.FIRMWARE
     assert update.device_class is UpdateDeviceClass.FIRMWARE
 
     # Entity Attribute via attribute (override entity description)
-    update = _create_mock_update_entity(hass)
-    update._attr_supported_features = 0
     update._attr_entity_category = None
     assert update.entity_category is None
-
-    update = _create_mock_update_entity(hass)
-    update._attr_supported_features = 0
     update._attr_entity_category = EntityCategory.DIAGNOSTIC
     assert update.entity_category is EntityCategory.DIAGNOSTIC
 
