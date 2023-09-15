@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
@@ -65,7 +66,29 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                    CONF_DEVICE_CLASS: "door",
+                    CONF_LAZY_ERROR: 10,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 }
             ]
@@ -299,7 +322,7 @@ TEST_NAME = "test_sensor"
             CONF_BINARY_SENSORS: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
+                    CONF_ADDRESS: 52,
                     CONF_VIRTUAL_COUNT: 3,
                 }
             ]
