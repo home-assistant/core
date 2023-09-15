@@ -719,7 +719,7 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         """Call back for incoming data that only writes when state has changed.
 
         Only the native value and available are every updated for these
-        entity and since the websocket update for the device will trigger
+        entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
         """
@@ -749,7 +749,7 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         """Call back for incoming data that only writes when state has changed.
 
         Only the native value and available are every updated for these
-        entity and since the websocket update for the device will trigger
+        entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
         """

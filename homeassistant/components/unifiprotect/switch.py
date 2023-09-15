@@ -426,12 +426,10 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         await self.entity_description.ufp_set(self.device, False)
 
     @callback
@@ -439,7 +437,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         """Call back for incoming data that only writes when state has changed.
 
         Only the is_on and available are every updated for these
-        entity and since the websocket update for the device will trigger
+        entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
         """
