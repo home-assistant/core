@@ -7,6 +7,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -23,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -31,6 +32,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from .binary_sensor import async_create_preview_binary_sensor
 from .const import DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
@@ -38,9 +40,26 @@ from .template_entity import TemplateEntity
 NONE_SENTINEL = "none"
 
 
-def generate_schema(domain: str) -> dict[vol.Marker, Any]:
+def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+
+    if domain == Platform.BINARY_SENSOR and flow_type == "config":
+        schema = {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        NONE_SENTINEL,
+                        *sorted(
+                            [cls.value for cls in BinarySensorDeviceClass],
+                            key=str.casefold,
+                        ),
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="binary_sensor_device_class",
+                ),
+            )
+        }
 
     if domain == Platform.SENSOR:
         schema = {
@@ -105,7 +124,7 @@ def options_schema(domain: str) -> vol.Schema:
     """Generate options schema."""
     return vol.Schema(
         {vol.Required(CONF_STATE): selector.TemplateSelector()}
-        | generate_schema(domain),
+        | generate_schema(domain, "option"),
     )
 
 
@@ -116,7 +135,7 @@ def config_schema(domain: str) -> vol.Schema:
             vol.Required(CONF_NAME): selector.TextSelector(),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
         }
-        | generate_schema(domain),
+        | generate_schema(domain, "config"),
     )
 
 
@@ -141,32 +160,43 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
-        units_string = sorted(
-            [str(unit) if unit else "no unit of measurement" for unit in units],
+        sorted_units = sorted(
+            [f"'{str(unit)}'" if unit else "no unit of measurement" for unit in units],
             key=str.casefold,
         )
+        if len(sorted_units) == 1:
+            units_string = sorted_units[0]
+        else:
+            units_string = f"one of {', '.join(sorted_units)}"
 
         raise vol.Invalid(
             f"'{unit}' is not a valid unit for device class '{device_class}'; "
-            f"expected one of {', '.join(units_string)}"
+            f"expected {units_string}"
         )
 
 
 def _validate_state_class(options: dict[str, Any]) -> None:
     """Validate state class."""
     if (
-        (device_class := options.get(CONF_DEVICE_CLASS))
+        (state_class := options.get(CONF_STATE_CLASS))
+        and (device_class := options.get(CONF_DEVICE_CLASS))
         and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
-        and (state_class := options.get(CONF_STATE_CLASS)) not in state_classes
+        and state_class not in state_classes
     ):
-        state_classes_string = sorted(
-            [str(state_class) for state_class in state_classes],
+        sorted_state_classes = sorted(
+            [f"'{str(state_class)}'" for state_class in state_classes],
             key=str.casefold,
         )
+        if len(sorted_state_classes) == 0:
+            state_classes_string = "no state class"
+        elif len(sorted_state_classes) == 1:
+            state_classes_string = sorted_state_classes[0]
+        else:
+            state_classes_string = f"one of {', '.join(sorted_state_classes)}"
 
         raise vol.Invalid(
             f"'{state_class}' is not a valid state class for device class "
-            f"'{device_class}'; expected one of {', '.join(state_classes_string)}"
+            f"'{device_class}'; expected {state_classes_string}"
         )
 
 
@@ -178,6 +208,7 @@ def validate_user_input(
 ]:
     """Do post validation of user input.
 
+    For binary sensors: Strip none-sentinels.
     For sensors: Strip none-sentinels and validate unit of measurement.
     For all domaines: Set template type.
     """
@@ -187,8 +218,9 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type == Platform.SENSOR:
+        if template_type in (Platform.BINARY_SENSOR, Platform.SENSOR):
             _strip_sentinel(user_input)
+        if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
         return {"template_type": template_type} | user_input
@@ -197,11 +229,17 @@ def validate_user_input(
 
 
 TEMPLATE_TYPES = [
+    "binary_sensor",
     "sensor",
 ]
 
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        config_schema(Platform.BINARY_SENSOR),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
         preview="template",
@@ -212,6 +250,11 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
+    Platform.BINARY_SENSOR: SchemaFlowFormStep(
+        options_schema(Platform.BINARY_SENSOR),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.BINARY_SENSOR),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),
         preview="template",
@@ -223,6 +266,7 @@ CREATE_PREVIEW_ENTITY: dict[
     str,
     Callable[[HomeAssistant, str, dict[str, Any]], TemplateEntity],
 ] = {
+    "binary_sensor": async_create_preview_binary_sensor,
     "sensor": async_create_preview_sensor,
 }
 
@@ -284,6 +328,7 @@ def ws_start_preview(
 
         return errors
 
+    entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
         template_type = flow_status["step_id"]
@@ -298,6 +343,12 @@ def ws_start_preview(
         template_type = config_entry.options["template_type"]
         name = config_entry.options["name"]
         schema = cast(vol.Schema, OPTIONS_FLOW[template_type].schema)
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, flow_status["handler"]
+        )
+        if entries:
+            entity_registry_entry = entries[0]
 
     errors = _validate(schema, template_type, msg["user_input"])
 
@@ -305,6 +356,7 @@ def ws_start_preview(
     def async_preview_updated(
         state: str | None,
         attributes: Mapping[str, Any] | None,
+        listeners: dict[str, bool | set[str]] | None,
         error: str | None,
     ) -> None:
         """Forward config entry state events to websocket."""
@@ -319,7 +371,7 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "state": state},
+                {"attributes": attributes, "listeners": listeners, "state": state},
             )
         )
 
@@ -337,6 +389,7 @@ def ws_start_preview(
     _strip_sentinel(msg["user_input"])
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
     preview_entity.hass = hass
+    preview_entity.registry_entry = entity_registry_entry
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(

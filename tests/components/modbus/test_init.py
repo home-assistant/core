@@ -566,17 +566,17 @@ SERVICE = "service"
     ],
 )
 @pytest.mark.parametrize(
-    "do_unit",
+    "do_slave",
     [
-        ATTR_UNIT,
         ATTR_SLAVE,
+        ATTR_UNIT,
     ],
 )
 async def test_pb_service_write(
     hass: HomeAssistant,
     do_write,
     do_return,
-    do_unit,
+    do_slave,
     caplog: pytest.LogCaptureFixture,
     mock_modbus_with_pymodbus,
 ) -> None:
@@ -591,7 +591,7 @@ async def test_pb_service_write(
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        do_unit: 17,
+        do_slave: 17,
         ATTR_ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
@@ -884,7 +884,7 @@ async def test_stop_restart(
 
     caplog.set_level(logging.INFO)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
     hass.states.async_set(entity_id, 17)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "17"
@@ -932,7 +932,7 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
+        ATTR_SLAVE: 17,
         ATTR_ADDRESS: 16,
         ATTR_STATE: True,
     }

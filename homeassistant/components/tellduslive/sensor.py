@@ -142,6 +142,7 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     def __init__(self, client, device_id):
         """Initialize TelldusLiveSensor."""
         super().__init__(client, device_id)
+        self._attr_unique_id = "{}-{}-{}".format(*device_id)
         if desc := SENSOR_TYPES.get(self._type):
             self.entity_description = desc
         else:
@@ -189,8 +190,3 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         if self._type == SENSOR_TYPE_LUMINANCE:
             return self._value_as_luminance
         return self._value
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return "{}-{}-{}".format(*self._id)
