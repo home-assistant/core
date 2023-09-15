@@ -77,7 +77,9 @@ def _figure_out_source(
         #
         # We need to figure out where the log call came from
         # We do this by walking up the stack until we find the first
-        # frame match the record pathname.
+        # frame match the record pathname so the code below
+        # can be used to reverse the remaining stack frames
+        # and find the first one that is from a file within Home Assistant.
         #
         # We do not call traceback.extract_stack() because it is
         # it makes many blocking stat() calls to get file info
