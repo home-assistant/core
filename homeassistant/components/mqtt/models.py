@@ -289,6 +289,30 @@ class MqttValueTemplate:
         return rendered_payload
 
 
+class EntityMonitor:
+    """Monitors entity state changes."""
+
+    _singleton: object = object()
+
+    def __init__(self, entity: Entity, attributes: set[str]) -> None:
+        """Initialize entity monitor."""
+        self._entity: Entity = entity
+        self._attributes: dict[str, Any] = {
+            attribute: getattr(entity, attribute, self._singleton)
+            for attribute in attributes
+        }
+
+    @property
+    def changed(self) -> bool:
+        """Return True if attributes on entity changed or if update is forced."""
+        if getattr(self._entity, "_attr_force_update", False):
+            return True
+        return any(
+            getattr(self._entity, attribute, self._singleton) != last_value
+            for attribute, last_value in self._attributes.items()
+        )
+
+
 class EntityTopicState:
     """Manage entity state write requests for subscribed topics."""
 
@@ -313,8 +337,14 @@ class EntityTopicState:
                 )
 
     @callback
-    def write_state_request(self, entity: Entity) -> None:
+    def write_state_request(
+        self, entity: Entity, monitor: EntityMonitor | None = None
+    ) -> None:
         """Register write state request."""
+        if monitor and not monitor.changed:
+            # no change detected skip state write request
+            return
+        del monitor
         self.subscribe_calls[entity.entity_id] = entity
 
 

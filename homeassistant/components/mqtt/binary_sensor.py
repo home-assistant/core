@@ -44,7 +44,7 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
 )
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import EntityMonitor, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -221,7 +221,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self._config.get(CONF_VALUE_TEMPLATE),
                 )
                 return
-            last_is_on_state = self._attr_is_on
+            monitor = EntityMonitor(self, {"_attr_is_on"})
             if payload == self._config[CONF_PAYLOAD_ON]:
                 self._attr_is_on = True
             elif payload == self._config[CONF_PAYLOAD_OFF]:
@@ -257,9 +257,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self.hass, off_delay, off_delay_listener
                 )
 
-            if last_is_on_state == self._attr_is_on and not self._attr_force_update:
-                return
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                self, monitor
+            )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
