@@ -711,7 +711,6 @@ omit =
     homeassistant/components/matter/__init__.py
     homeassistant/components/meater/__init__.py
     homeassistant/components/meater/sensor.py
-    homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py
     homeassistant/components/melcloud/climate.py
