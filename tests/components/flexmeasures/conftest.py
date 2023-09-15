@@ -26,7 +26,7 @@ async def setup_fm_integration(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "host": "localhost:5000",
+            "url": "http://localhost:5000",
             "username": "admin@admin.com",
             "password": "admin",
             "schedule_duration": "PT24H",

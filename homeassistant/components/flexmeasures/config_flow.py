@@ -20,7 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host", description={"suggested_value": "localhost:5000"}): str,
+        vol.Required(
+            "url", description={"suggested_value": "http://localhost:5000"}
+        ): str,
         vol.Required(
             "username", description={"suggested_value": "toy-user@flexmeasures.io"}
         ): str,
@@ -37,7 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(
             "schedule_duration", description={"suggested_value": "PT24H"}
         ): str,
-        vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
+        vol.Required("soc_unit", description={"suggested_value": "kWh"}): str,
         vol.Required("soc_min", description={"suggested_value": 0.001}): float,
         vol.Required("soc_max", description={"suggested_value": 0.002}): float,
     }
@@ -49,15 +51,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    host, ssl = get_host_and_ssl_from_url(data["url"])
 
     # Currently used here solely for config validation (i.e. not returned to be stored in the config entry)
     try:
         client = FlexMeasuresClient(
             session=async_get_clientsession(hass),
-            host=data["host"],
+            host=host,
             email=data["username"],
             password=data["password"],
-            ssl=False,
+            ssl=ssl,
         )
     except Exception as exception:
         raise CannotConnect(exception) from exception
@@ -96,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
 
-            for field in ("host", "email", "password"):
+            for field in ("url", "email", "password"):
                 if field in str(exception):
                     errors[field] = str(exception)
 
@@ -151,7 +154,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Required(
-                    "host", default=get_previous_option(self.config_entry, "host")
+                    "url", default=get_previous_option(self.config_entry, "url")
                 ): str,
                 vol.Required(
                     "username",
@@ -222,3 +225,15 @@ class InvalidAuth(HomeAssistantError):
 def get_previous_option(config: ConfigEntry, option: str):
     """Get default from previous options or otherwise from initial config."""
     return config.options.get(option, config.data[option])
+
+
+def get_host_and_ssl_from_url(url: str) -> tuple[str, bool]:
+    """Get the host and ssl from the url."""
+    if url.startswith("http://"):
+        ssl = False
+        host = url.removeprefix("http://")
+    if url.startswith("https://"):
+        ssl = True
+        host = url.removeprefix("https://")
+
+    return host, ssl

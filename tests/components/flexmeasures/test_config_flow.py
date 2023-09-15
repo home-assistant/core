@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 CONFIG = {
     "username": "admin@admin.com",
     "password": "admin",
-    "host": "localhost:5000",
+    "url": "http://localhost:5000",
     "power_sensor": 1,
     "soc_sensor": 3,
     "rm_discharge_sensor": 4,

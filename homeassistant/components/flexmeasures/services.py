@@ -104,22 +104,15 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 "production_price_sensor", entry
             ),
         )
-        LOGGER.info(
-            {
-                "sensor_id": get_from_option_or_config("power_sensor", entry),
-                "start": start,
-                "duration": get_from_option_or_config("schedule_duration", entry),
-                "flex_model": flex_model,
-                "flex_context": flex_context,
-            }
-        )
-        schedule = await client.trigger_and_get_schedule(
-            sensor_id=get_from_option_or_config("power_sensor", entry),
-            start=start,
-            duration=get_from_option_or_config("schedule_duration", entry),
-            flex_model=flex_model,
-            flex_context=flex_context,
-        )
+        schedule_input = {
+            "sensor_id": get_from_option_or_config("power_sensor", entry),
+            "start": start,
+            "duration": get_from_option_or_config("schedule_duration", entry),
+            "flex_model": flex_model,
+            "flex_context": flex_context,
+        }
+        LOGGER.info(schedule_input)
+        schedule = await client.trigger_and_get_schedule(**schedule_input)
 
         schedule = [
             {"start": start + resolution * i, "value": value}

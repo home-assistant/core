@@ -48,12 +48,13 @@ async def test_trigger_and_get_schedule(
                 datetime.now(tz=tzinfo), isodate.parse_duration(RESOLUTION)
             ),
             duration="PT24H",
-            soc_unit="MWh",
-            soc_min=0.0,
-            soc_max=0.001,
-            consumption_price_sensor=2,
-            production_price_sensor=2,
-            soc_at_start=10,
+            flex_model={
+                "soc-unit": "kWh",
+                "soc-at-start": 10,
+                "soc-max": 0.001,
+                "soc-min": 0.0,
+            },
+            flex_context={"consumption-price-sensor": 2, "production-price-sensor": 2},
         )
 
 
