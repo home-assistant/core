@@ -166,9 +166,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         if self._scale < 1 and not self._precision:
             self._precision = 2
         self._offset = config[CONF_OFFSET]
-        self._slave_count = config.get(CONF_SLAVE_COUNT, None)
-        if not self._slave_count:
-            self._slave_count = config.get(CONF_VIRTUAL_COUNT, 0)
+        self._slave_count = config.get(
+            CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0)
+        )
         self._slave_size = self._count = config[CONF_COUNT]
 
     def _swap_registers(self, registers: list[int], slave_count: int) -> list[int]:
