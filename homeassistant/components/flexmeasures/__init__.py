@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .config_flow import get_host_and_ssl_from_url
 from .const import DOMAIN, FRBC_CONFIG
 from .services import (
     async_setup_services,
@@ -36,11 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unsub_options_update_listener = entry.add_update_listener(options_update_listener)
     # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
     config_data["unsub_options_update_listener"] = unsub_options_update_listener
+    host, ssl = get_host_and_ssl_from_url(config_data["url"])
     client = FlexMeasuresClient(
-        host=config_data["host"],
+        host=host,
         email=config_data["username"],
         password=config_data["password"],
-        ssl=config_data["ssl"],
+        ssl=ssl,
         session=async_get_clientsession(hass),
     )
 

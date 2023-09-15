@@ -42,12 +42,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
         vol.Required("soc_min", description={"suggested_value": 0.001}): float,
         vol.Required("soc_max", description={"suggested_value": 0.002}): float,
-        vol.Optional(
-            "host",
-        ): str,
-        vol.Optional(
-            "ssl",
-        ): bool,
     }
 )
 
@@ -57,15 +51,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    host, ssl = get_host_and_ssl_from_url(data["url"])
 
     # Currently used here solely for config validation (i.e. not returned to be stored in the config entry)
     try:
         client = FlexMeasuresClient(
             session=async_get_clientsession(hass),
-            host=data["host"],
+            host=host,
             email=data["username"],
             password=data["password"],
-            ssl=data["ssl"],
+            ssl=ssl,
         )
     except Exception as exception:
         raise CannotConnect(exception) from exception
@@ -98,17 +93,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
-        host, ssl = get_host_and_ssl_from_url(user_input["url"])
-        config_data = user_input
-        config_data["host"] = host
-        config_data["ssl"] = ssl
 
         try:
-            info = await validate_input(self.hass, config_data)
+            info = await validate_input(self.hass, user_input)
         except CannotConnect as exception:
             errors["base"] = "cannot_connect"
 
-            for field in ("host", "email", "password"):
+            for field in ("url", "email", "password"):
                 if field in str(exception):
                     errors[field] = str(exception)
 
@@ -118,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=config_data)
+            return self.async_create_entry(title=info["title"], data=user_input)
 
         # Show form again, showing captured errors
         # still do invalid_auth validation error is not yet shown properly
@@ -147,12 +138,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host, ssl = get_host_and_ssl_from_url(user_input["url"])
-            config_data = user_input
-            config_data["host"] = host
-            config_data["ssl"] = ssl
             try:
-                info = await validate_input(self.hass, config_data)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -162,7 +149,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
             else:
                 # Value of data will be set on the options property of our config_entry instance.
-                return self.async_create_entry(title=info["title"], data=config_data)
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         options_schema = vol.Schema(
             {
@@ -219,14 +206,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     "soc_max",
                     default=get_previous_option(self.config_entry, "soc_max"),
                 ): float,
-                vol.Optional(
-                    "host",
-                    default=get_previous_option(self.config_entry, "host"),
-                ): str,
-                vol.Optional(
-                    "ssl",
-                    default=get_previous_option(self.config_entry, "ssl"),
-                ): bool,
             }
         )
 
