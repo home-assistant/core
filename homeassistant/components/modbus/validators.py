@@ -25,6 +25,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -241,7 +242,8 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                addr += "_" + str(entry.get(CONF_SLAVE, 0))
+                inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
+                addr += "_" + str(inx)
                 if addr in addresses:
                     err = (
                         f"Modbus {component}/{name} address {addr} is duplicate, second"
