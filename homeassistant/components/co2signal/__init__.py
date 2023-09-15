@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 import CO2Signal
 
@@ -16,31 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_COUNTRY_CODE, DOMAIN
 from .exceptions import APIRatelimitExceeded, CO2Error, InvalidAuth, UnknownError
+from .models import CO2SignalResponse
 
 PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
-
-
-class CO2SignalData(TypedDict):
-    """Data field."""
-
-    carbonIntensity: float
-    fossilFuelPercentage: float
-
-
-class CO2SignalUnit(TypedDict):
-    """Unit field."""
-
-    carbonIntensity: str
-
-
-class CO2SignalResponse(TypedDict):
-    """API response."""
-
-    status: str
-    countryCode: str
-    data: CO2SignalData
-    units: CO2SignalUnit
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
