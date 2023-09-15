@@ -269,6 +269,7 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         this control is changed on the device and prevent duplicate firing
         of `isy994_control` events.
         """
+        await super().async_added_to_hass()
         self._change_handler = self._node.control_events.subscribe(
             self.async_on_update, event_filter={ATTR_CONTROL: self._control}
         )

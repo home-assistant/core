@@ -158,6 +158,7 @@ class ISYEnableSwitchEntity(ISYAuxControlEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
+        await super().async_added_to_hass()
         self._change_handler = self._node.isy.nodes.status_events.subscribe(
             self.async_on_update,
             event_filter={
