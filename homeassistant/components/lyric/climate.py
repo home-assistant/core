@@ -198,22 +198,21 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         ):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
-        # Setup supported fan modes
-        device_fan_modes = device.settings.attributes.get("fan", {}).get("allowedModes")
-        if device_fan_modes:
-            self._attr_fan_modes = [
-                FAN_MODES[device_fan_mode]
-                for device_fan_mode in device_fan_modes
-                if device_fan_mode in FAN_MODES
-            ]
-
         # Setup supported features
         if device.changeableValues.thermostatSetpointStatus:
             self._attr_supported_features = SUPPORT_FLAGS_LCC
         else:
             self._attr_supported_features = SUPPORT_FLAGS_TCC
 
-        if self._attr_fan_modes:
+        # Setup supported fan modes
+        if device_fan_modes := device.settings.attributes.get("fan", {}).get(
+            "allowedModes"
+        ):
+            self._attr_fan_modes = [
+                FAN_MODES[device_fan_mode]
+                for device_fan_mode in device_fan_modes
+                if device_fan_mode in FAN_MODES
+            ]
             self._attr_supported_features = (
                 self._attr_supported_features | ClimateEntityFeature.FAN_MODE
             )
@@ -304,11 +303,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return current fan mode."""
         device = self.device
-        return FAN_MODES[
+        return FAN_MODES.get(
             device.settings.attributes.get("fan", {})
             .get("changeableValues", {})
-            .get("mode", None)
-        ]
+            .get("mode")
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -443,4 +442,9 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
+        except KeyError:
+            _LOGGER.error(
+                "The fan mode requested does not have a corresponding mode in lyric: %s",
+                fan_mode,
+            )
         await self.coordinator.async_refresh()
