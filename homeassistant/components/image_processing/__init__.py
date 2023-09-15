@@ -10,7 +10,6 @@ from typing import Any, Final, TypedDict, final
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.components.camera import Image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -157,7 +156,7 @@ class ImageProcessingEntity(Entity):
             return self.entity_description.confidence
         return None
 
-    @cached_property
+    @property
     def device_class(self) -> ImageProcessingDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

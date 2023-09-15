@@ -393,9 +393,7 @@ class StatisticsSensor(SensorEntity):
             unit = base_unit + "/s"
         return unit
 
-    @property  # type: ignore[override]
-    # Since the underlying data source may not be available at startup
-    # we disable the caching of device_class.
+    @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device."""
         if self._state_characteristic in STATS_DATETIME:

@@ -8,7 +8,6 @@ from typing import final
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -85,7 +84,7 @@ class DateTimeEntity(Entity):
     _attr_state: None = None
     _attr_native_value: datetime | None
 
-    @cached_property
+    @property
     @final
     def device_class(self) -> None:
         """Return entity device class."""
