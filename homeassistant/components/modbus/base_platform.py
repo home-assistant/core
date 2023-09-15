@@ -77,9 +77,7 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE, None)
-        if not self._slave:
-            self._slave = entry.get(CONF_DEVICE_ADDRESS, 0)
+        self._slave = entry.get(CONF_SLAVE, entry.get(CONF_DEVICE_ADDRESS, 0))
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
