@@ -1,0 +1,28 @@
+get_prices:
+  fields:
+    type:
+      required: true
+      example: "all"
+      default: "all"
+      selector:
+        select:
+          translation_key: "type"
+          options:
+            - "all"
+            - "gas"
+            - "energy"
+    incl_btw:
+      required: false
+      example: false
+      selector:
+        boolean:
+    start:
+      required: false
+      example: "2023-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2023-01-01 00:00:00"
+      selector:
+        datetime:

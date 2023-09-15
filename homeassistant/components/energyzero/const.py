@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from typing import Final
+import voluptuous as vol
+from homeassistant.util import dt as dt_util
 
 DOMAIN: Final = "energyzero"
 LOGGER = logging.getLogger(__package__)
@@ -14,3 +16,13 @@ SERVICE_TYPE_DEVICE_NAMES = {
     "today_energy": "Energy market price",
     "today_gas": "Gas market price",
 }
+SERVICE_NAME: Final = "get_prices"
+SERVICE_PRICE_TYPES: Final = ["energy", "gas", "all"]
+SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required("type"): vol.In(SERVICE_PRICE_TYPES),
+        vol.Optional("start"): str,
+        vol.Optional("end"): str,
+        vol.Optional("incl_btw", default=False): bool,
+    }
+)
