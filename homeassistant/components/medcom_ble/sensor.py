@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -46,18 +45,10 @@ async def async_setup_entry(
         entry.entry_id
     ]
 
-    # See the Airthings BLE integration: this template system
-    # lets us change some units if we want to. We could use this
-    # in the future to map CPMs to dose rate, but this depends
-    # on the device calibration - the device only tells us the CPM.
-    # Another approach would be to store the calibration value in
-    # Home assistant directly as a configuration.
-    sensors_mapping = SENSORS_MAPPING_TEMPLATE.copy()
-
     entities = []
     _LOGGER.debug("got sensors: %s", coordinator.data.sensors)
     for sensor_type, sensor_value in coordinator.data.sensors.items():
-        if sensor_type not in sensors_mapping:
+        if sensor_type not in SENSORS_MAPPING_TEMPLATE:
             _LOGGER.debug(
                 "Unknown sensor type detected: %s, %s",
                 sensor_type,
@@ -65,7 +56,9 @@ async def async_setup_entry(
             )
             continue
         entities.append(
-            MedcomSensor(coordinator, coordinator.data, sensors_mapping[sensor_type])
+            MedcomSensor(
+                coordinator, coordinator.data, SENSORS_MAPPING_TEMPLATE[sensor_type]
+            )
         )
 
     async_add_entities(entities)
@@ -108,6 +101,6 @@ class MedcomSensor(
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float:
         """Return the value reported by the sensor."""
         return self.coordinator.data.sensors[self.entity_description.key]

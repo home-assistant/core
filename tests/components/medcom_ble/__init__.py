@@ -6,10 +6,7 @@ from unittest.mock import patch
 from medcom_ble import MedcomBleDevice, MedcomBleDeviceData
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
-from homeassistant.components.medcom_ble.const import DOMAIN
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 
-from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
@@ -112,27 +109,3 @@ MEDCOM_DEVICE_INFO = MedcomBleDevice(
     },
     address="cc:cc:cc:cc:cc:cc",
 )
-
-
-def create_entry(hass):
-    """Create a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MEDCOM_SERVICE_INFO.address,
-        title="Inspector BLE (a0d95a570b00)",
-    )
-    entry.add_to_hass(hass)
-    return entry
-
-
-def create_device(hass, entry):
-    """Create a device for the given entry."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(CONNECTION_BLUETOOTH, MEDCOM_SERVICE_INFO.address)},
-        manufacturer="International Medcom",
-        name="Inspector BLE (a0d95a570b00)",
-        model="Inspector BLE",
-    )
-    return device
