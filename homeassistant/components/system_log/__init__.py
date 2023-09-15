@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict, deque
 import logging
 import re
+import sys
 import traceback
 from typing import Any, cast
 
@@ -32,6 +33,8 @@ EVENT_SYSTEM_LOG = "system_log_event"
 SERVICE_CLEAR = "clear"
 SERVICE_WRITE = "write"
 
+LOGGER_OBJECTS = (logging.Logger, logging.LogRecord, logging.Handler)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -59,24 +62,65 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 
 def _figure_out_source(
-    record: logging.LogRecord, call_stack: list[tuple[str, int]], paths_re: re.Pattern
+    record: logging.LogRecord, paths_re: re.Pattern
 ) -> tuple[str, int]:
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
+    reduce_stack = True
     if record.exc_info:
         stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
+
+    elif record.levelno >= logging.WARN:
+        # Jump 2 frames up to get to the actual caller
+        # since we are in a function, and always called from another function
+        # that are never the original source of the log message.
+        #
+        # Next try to skip any frames that are from the logging module
+        # to avoid stat() calls on the file system since extract_stack
+        # will do that for each frame which we try to avoid in the event loop
+        # since these calls are blocking.
+        #
+        # We know that the logger module typically has 5 frames itself
+        # but it may change in the future so we are conservative and
+        # only skip 2 for a total of 4 from the above.
+        #
+        # _getframe is cpython only but we are already using cpython specific
+        # code everywhere in HA so it's fine as its unlikely we will ever
+        # support other python implementations.
+        #
+        extract_stack_frame = frame = sys._getframe(  # pylint: disable=protected-access
+            4
+        )
+        while back := frame.f_back:
+            if (frame_self := frame.f_locals.get("self")) and isinstance(
+                frame_self, LOGGER_OBJECTS
+            ):
+                # We found a logger object so we can move the extract_stack_frame
+                # to this frame so if we don't find the file in the call stack
+                # we don't extract stack from the logger object.
+                extract_stack_frame = frame
+            elif frame.f_code.co_filename == record.pathname:
+                # We found it!
+                extract_stack_frame = frame
+                break
+            frame = back
+        stack = [(f[0], f[1]) for f in traceback.extract_stack(extract_stack_frame)]
     else:
+        stack = [(record.pathname, record.lineno)]
+        reduce_stack = False
+
+    if reduce_stack:
         index = -1
-        for i, frame in enumerate(call_stack):
-            if frame[0] == record.pathname:
+        for i, path_lineno in enumerate(stack):
+            if path_lineno[0] == record.pathname:
                 index = i
                 break
         if index == -1:
             # For some reason we couldn't find pathname in the stack.
             stack = [(record.pathname, record.lineno)]
         else:
-            stack = call_stack[0 : index + 1]
+            stack = stack[0 : index + 1]
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
@@ -217,11 +261,7 @@ class LogErrorHandler(logging.Handler):
         default upper limit is set to 50 (older entries are discarded) but can
         be changed if needed.
         """
-        stack = []
-        if not record.exc_info:
-            stack = [(f[0], f[1]) for f in traceback.extract_stack()]
-
-        entry = LogEntry(record, _figure_out_source(record, stack, self.paths_re))
+        entry = LogEntry(record, _figure_out_source(record, self.paths_re))
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
