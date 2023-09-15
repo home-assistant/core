@@ -303,12 +303,16 @@ class Entity(ABC):
     # If entity is added to an entity platform
     _platform_state = EntityPlatformState.NOT_ADDED
 
-    __unstored_attributes: frozenset[str]
     # Attributes to exclude from recording, only set by base components, e.g. light
     _component_unstored_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
     # platforms, e.g. a derived class in hue.light
     _platform_unstored_attributes: frozenset[str] = frozenset()
+    # Union of _component_unstored_attributes and _platform_unstored_attributes,
+    # set automatically by __init_subclass__
+    __unstored_attributes: frozenset[str] = (
+        _component_unstored_attributes | _platform_unstored_attributes
+    )
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
     # While not purely typed, it makes typehinting more useful for us
