@@ -9,6 +9,7 @@ from typing import final
 
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -96,7 +97,7 @@ class ButtonEntity(RestoreEntity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

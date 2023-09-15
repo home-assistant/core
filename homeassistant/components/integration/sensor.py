@@ -242,6 +242,14 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._device_class: SensorDeviceClass | None = None
+
+    @property  # type: ignore[override]
+    # The underlying source data may be unavailable at startup, so the device
+    # class may be set late so we need to override the property to disable the cache.
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     def _unit(self, source_unit: str) -> str:
         """Derive unit from the source sensor, SI prefix and time unit."""
@@ -288,7 +296,7 @@ class IntegrationSensor(RestoreSensor):
                         err,
                     )
 
-            self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+            self._device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         @callback
@@ -319,7 +327,7 @@ class IntegrationSensor(RestoreSensor):
                 and new_state.attributes.get(ATTR_DEVICE_CLASS)
                 == SensorDeviceClass.POWER
             ):
-                self._attr_device_class = SensorDeviceClass.ENERGY
+                self._device_class = SensorDeviceClass.ENERGY
                 self._attr_icon = None
 
             self.async_write_ha_state()

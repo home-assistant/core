@@ -592,7 +592,10 @@ class DSMREntity(SensorEntity):
         """Entity is only available if there is a telegram."""
         return self.telegram is not None
 
-    @property
+    @property  # type: ignore[override]
+    # The device class can change at runtime from GAS to ENERGY
+    # when new data is received. This should be remembered and restored
+    # at startup, but the integration currently doesn't support that.
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of this entity."""
         device_class = super().device_class

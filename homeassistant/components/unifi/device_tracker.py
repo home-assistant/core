@@ -179,7 +179,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
         has_entity_name=True,
-        icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: controller.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
