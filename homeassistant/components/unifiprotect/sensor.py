@@ -718,7 +718,7 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data that only writes when state has changed.
 
-        Only the native value and available are every updated for these
+        Only the native value and available are ever updated for these
         entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
@@ -727,11 +727,10 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
         if (
-            self._attr_native_value == previous_value
-            and self._attr_available == previous_available
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
         ):
-            return
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
 
 class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
@@ -747,7 +746,7 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data that only writes when state has changed.
 
-        Only the native value and available are every updated for these
+        Only the native value and available are ever updated for these
         entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
@@ -756,11 +755,10 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
         if (
-            self._attr_native_value == previous_value
-            and self._attr_available == previous_available
+            self._attr_native_value != previous_value
+            or self._attr_available != previous_available
         ):
-            return
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):

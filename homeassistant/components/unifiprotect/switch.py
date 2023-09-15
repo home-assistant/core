@@ -436,7 +436,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data that only writes when state has changed.
 
-        Only the is_on and available are every updated for these
+        Only the is_on and available are ever updated for these
         entities, and since the websocket update for the device will trigger
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
@@ -445,11 +445,10 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
         if (
-            self._attr_is_on == previous_is_on
-            and self._attr_available == previous_available
+            self._attr_is_on != previous_is_on
+            or self._attr_available != previous_available
         ):
-            return
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
 
 class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):
