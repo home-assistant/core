@@ -74,15 +74,21 @@ def _figure_out_source(
                 stack = stack[0 : i + 1]
                 break
     else:
+        #
+        # We need to figure out where the log call came from
+        # We do this by walking up the stack until we find the first
+        # frame match the record pathname.
+        #
+        # We do not call traceback.extract_stack() because it is
+        # it makes many blocking stat() calls to get file info
+        # which is not needed for this use case and can block
+        # the event loop on system with slow IO.
+        #
         # Jump 2 frames up to get to the actual caller
         # since we are in a function, and always called from another function
         # that are never the original source of the log message.
         #
         # Next try to skip any frames that are from the logging module
-        # to avoid stat() calls on the file system since extract_stack
-        # will do that for each frame which we try to avoid in the event loop
-        # since these calls are blocking.
-        #
         # We know that the logger module typically has 5 frames itself
         # but it may change in the future so we are conservative and
         # only skip 2 for a total of 4 from the above.
