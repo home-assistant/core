@@ -298,6 +298,8 @@ class MqttValueTemplate:
 class EntityMonitor:
     """Monitors entity state changes."""
 
+    __slots__ = ["_entity", "_attributes"]
+
     def __init__(self, entity: Entity) -> None:
         """Initialize entity monitor."""
         self._entity: Entity = entity
