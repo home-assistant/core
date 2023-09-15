@@ -62,6 +62,7 @@ from .const import (  # noqa: F401
     CONF_CLIMATES,
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -138,7 +139,8 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_SLAVE, default=0): cv.positive_int,
+        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
