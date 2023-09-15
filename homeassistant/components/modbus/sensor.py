@@ -50,7 +50,9 @@ async def async_setup_platform(
     sensors: list[ModbusRegisterSensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, entry.get(CONF_VIRTUAL_COUNT, 0))
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
         sensor = ModbusRegisterSensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
