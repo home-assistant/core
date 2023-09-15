@@ -660,6 +660,48 @@ async def test_force_update_disabled(
                     "state_topic": "test-topic",
                     "payload_on": "ON",
                     "payload_off": "OFF",
+                }
+            }
+        }
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+
+    with patch(
+        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+    ) as mock_async_ha_write_state:
+        assert len(mock_async_ha_write_state.mock_calls) == 0
+        async_fire_mqtt_message(hass, "test-topic", "ON")
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, "test-topic", "ON")
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 1
+
+        async_fire_mqtt_message(hass, "test-topic", "OFF")
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+        async_fire_mqtt_message(hass, "test-topic", "OFF")
+        await hass.async_block_till_done()
+        assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "payload_on": "ON",
+                    "payload_off": "OFF",
                     "force_update": True,
                 }
             }
