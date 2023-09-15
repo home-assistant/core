@@ -82,6 +82,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     _attr_min_humidity = 10
     _attr_max_humidity = 50
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
 
     @property
     def precision(self) -> float:
@@ -91,11 +92,6 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
             if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
             else PRECISION_WHOLE
         )
-
-    @property
-    def name(self) -> str | None:
-        """Get name of entity."""
-        return "Thermostat"
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
