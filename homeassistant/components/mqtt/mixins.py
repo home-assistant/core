@@ -101,6 +101,7 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
+    EntityMonitor,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -392,7 +393,7 @@ class MqttAttributes(Entity):
                     }
                     self._attr_extra_state_attributes = filtered_dict
                     get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                        self
+                        self  # type: ignore[arg-type]
                     )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
@@ -500,7 +501,7 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)  # type: ignore[arg-type]
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
@@ -1030,6 +1031,7 @@ class MqttEntity(
         """Init the MQTT Entity."""
         self.hass = hass
         self._config: ConfigType = config
+        self.monitor = EntityMonitor(self)
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
         self._discovery = discovery_data is not None

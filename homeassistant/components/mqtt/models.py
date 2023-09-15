@@ -23,7 +23,6 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     TemplateVarsType,
-    UndefinedType,
 )
 
 if TYPE_CHECKING:
@@ -33,6 +32,7 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
+    from .mixins import MqttEntity
     from .tag import MQTTTagScanner
 
 
@@ -298,25 +298,34 @@ class MqttValueTemplate:
 class EntityMonitor:
     """Monitors entity state changes."""
 
-    _singleton: UndefinedType = UNDEFINED
-
-    def __init__(self, entity: Entity, attributes: set[str]) -> None:
+    def __init__(self, entity: Entity) -> None:
         """Initialize entity monitor."""
         self._entity: Entity = entity
-        self._attributes: dict[str, Any] = {
-            attribute: getattr(entity, attribute, self._singleton)
+        self._attributes: dict[str, Any] = {}
+
+    def track(self, attributes: set[str]) -> None:
+        """Start tracking attributes."""
+        self._attributes = {
+            attribute: getattr(self._entity, attribute, UNDEFINED)
             for attribute in attributes
         }
 
     @property
-    def changed(self) -> bool:
-        """Return True if attributes on entity changed or if update is forced."""
-        if getattr(self._entity, "_attr_force_update", False):
-            return True
-        return any(
-            getattr(self._entity, attribute, self._singleton) != last_value
-            for attribute, last_value in self._attributes.items()
+    def assume_has_changed(self) -> bool:
+        """Return True if attributes on entity changed or if update is forced.
+
+        Stops tracking attribute changes.
+        """
+        assume_has_changed = (
+            getattr(self._entity, "_attr_force_update", False)
+            or not self._attributes
+            or any(
+                getattr(self._entity, attribute, UNDEFINED) != last_value
+                for attribute, last_value in self._attributes.items()
+            )
         )
+        self._attributes = {}
+        return assume_has_changed
 
 
 class EntityTopicState:
@@ -324,7 +333,7 @@ class EntityTopicState:
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, Entity] = {}
+        self.subscribe_calls: dict[str, MqttEntity] = {}
 
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
@@ -343,11 +352,9 @@ class EntityTopicState:
                 )
 
     @callback
-    def write_state_request(
-        self, entity: Entity, monitor: EntityMonitor | None = None
-    ) -> None:
+    def write_state_request(self, entity: MqttEntity) -> None:
         """Register write state request."""
-        if monitor and not monitor.changed:
+        if not entity.monitor.assume_has_changed:
             # no change detected skip state write request
             return
         self.subscribe_calls[entity.entity_id] = entity
