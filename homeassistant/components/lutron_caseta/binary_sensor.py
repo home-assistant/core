@@ -65,6 +65,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
         self._smartbridge.add_occupancy_subscriber(
             self.device_id, self.async_write_ha_state
         )
