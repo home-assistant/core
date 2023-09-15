@@ -17,7 +17,7 @@ from zwave_js_server.model.controller.statistics import ControllerStatisticsData
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatisticsDataType
-from zwave_js_server.model.value import ConfigurationValue, ConfigurationValueType
+from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
@@ -767,13 +767,6 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[property_key_name] if property_key_name else None,
         )
-        if (
-            self.entity_description.device_class is None
-            and not hasattr(self, "_attr_device_class")
-            and self._primary_value.configuration_value_type
-            == ConfigurationValueType.ENUMERATED
-        ):
-            self._attr_device_class = SensorDeviceClass.ENUM
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
