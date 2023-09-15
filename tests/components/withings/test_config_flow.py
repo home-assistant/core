@@ -1,7 +1,7 @@
 """Tests for config flow."""
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.withings.const import DOMAIN
+from homeassistant.components.withings.const import CONF_USE_WEBHOOK, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -73,6 +73,7 @@ async def test_full_flow(
     assert "result" in result
     assert result["result"].unique_id == "600"
     assert "token" in result["result"].data
+    assert "webhook_id" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
@@ -255,3 +256,31 @@ async def test_config_reauth_wrong_account(
     assert result
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    current_request_with_host,
+) -> None:
+    """Test options flow."""
+    await setup_integration(hass, config_entry)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_USE_WEBHOOK: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_USE_WEBHOOK: True}
