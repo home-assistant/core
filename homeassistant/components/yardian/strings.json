@@ -27,10 +27,6 @@
           "description": "Duration for the target to be turned on."
         }
       }
-    },
-    "stop_irrigation": {
-      "name": "Stop irrigation",
-      "description": "Stops the irrigation."
     }
   }
 }
