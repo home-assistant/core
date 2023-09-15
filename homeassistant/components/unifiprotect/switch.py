@@ -443,11 +443,11 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         an update for all entities connected to the device, we want to avoid
         writing state unless something has actually changed.
         """
-        previous_value = self._attr_is_on
+        previous_is_on = self._attr_is_on
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
         new_available = self._attr_available
-        if self._attr_is_on == previous_value and new_available == previous_available:
+        if self._attr_is_on == previous_is_on and new_available == previous_available:
             return
         self.async_write_ha_state()
 
