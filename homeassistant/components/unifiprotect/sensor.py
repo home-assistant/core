@@ -726,10 +726,9 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         previous_value = self._attr_native_value
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
-        new_available = self._attr_available
         if (
             self._attr_native_value == previous_value
-            and new_available == previous_available
+            and self._attr_available == previous_available
         ):
             return
         self.async_write_ha_state()
@@ -756,10 +755,9 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         previous_value = self._attr_native_value
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
-        new_available = self._attr_available
         if (
             self._attr_native_value == previous_value
-            and new_available == previous_available
+            and self._attr_available == previous_available
         ):
             return
         self.async_write_ha_state()

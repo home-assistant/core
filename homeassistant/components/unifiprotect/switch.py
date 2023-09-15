@@ -444,8 +444,10 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         previous_is_on = self._attr_is_on
         previous_available = self._attr_available
         self._async_update_device_from_protect(device)
-        new_available = self._attr_available
-        if self._attr_is_on == previous_is_on and new_available == previous_available:
+        if (
+            self._attr_is_on == previous_is_on
+            and self._attr_available == previous_available
+        ):
             return
         self.async_write_ha_state()
 

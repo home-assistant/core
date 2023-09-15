@@ -565,29 +565,6 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 updated_device.mount_type, BinarySensorDeviceClass.DOOR
             )
 
-    @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data that only writes when state has changed.
-
-        Only the is_on, device_class, and available are every updated for these
-        entities, and since the websocket update for the device will trigger
-        an update for all entities connected to the device, we want to avoid
-        writing state unless something has actually changed.
-        """
-        previous_device_class = self.entity_description.device_class
-        previous_is_on = self._attr_is_on
-        previous_available = self._attr_available
-        self._async_update_device_from_protect(device)
-        new_available = self._attr_available
-        new_device_class = self.entity_description.device_class
-        if (
-            self._attr_is_on == previous_is_on
-            and new_available == previous_available
-            and new_device_class == previous_device_class
-        ):
-            return
-        self.async_write_ha_state()
-
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
@@ -644,3 +621,24 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         if not is_on:
             self._event = None
             self._attr_extra_state_attributes = {}
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the is_on, _attr_extra_state_attributes, and available are every
+        updated for these entities, and since the websocket update for the
+        device will trigger an update for all entities connected to the device,
+        we want to avoid writing state unless something has actually changed.
+        """
+        previous_is_on = self._attr_is_on
+        previous_available = self._attr_available
+        previous_extra_state_attributes = self._attr_extra_state_attributes
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_is_on == previous_is_on
+            and self._attr_extra_state_attributes == previous_extra_state_attributes
+            and self._attr_available == previous_available
+        ):
+            return
+        self.async_write_ha_state()
