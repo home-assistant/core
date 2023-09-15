@@ -121,6 +121,10 @@
     "save_persistent_states": {
       "name": "Save persistent states",
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval."
+    },
+    "reload_all": {
+      "name": "Reload all",
+      "description": "Reloads all of the YAML configurations."
     }
   }
 }
