@@ -87,11 +87,6 @@ class WatchLogErrorHandler(system_log.LogErrorHandler):
             self.watch_event.set()
 
 
-def get_frame(name):
-    """Get log stack frame."""
-    return (name, 5, None, None)
-
-
 async def async_setup_system_log(hass, config) -> WatchLogErrorHandler:
     """Set up the system_log component."""
     WatchLogErrorHandler.instances = []
@@ -362,21 +357,28 @@ async def test_unknown_path(
     assert log["source"] == ["unknown_path", 0]
 
 
+def get_frame(path: str, previous_frame: MagicMock | None) -> MagicMock:
+    """Get log stack frame."""
+    return MagicMock(
+        f_back=previous_frame,
+        f_code=MagicMock(co_filename=path),
+        f_lineno=5,
+    )
+
+
 async def async_log_error_from_test_path(hass, path, watcher):
     """Log error while mocking the path."""
     call_path = "internal_path.py"
+    main_frame = get_frame("main_path/main.py", None)
+    path_frame = get_frame(path, main_frame)
+    call_path_frame = get_frame(call_path, path_frame)
+    logger_frame = get_frame("venv_path/logging/log.py", call_path_frame)
+
     with patch.object(
         _LOGGER, "findCaller", MagicMock(return_value=(call_path, 0, None, None))
     ), patch(
-        "traceback.extract_stack",
-        MagicMock(
-            return_value=[
-                get_frame("main_path/main.py"),
-                get_frame(path),
-                get_frame(call_path),
-                get_frame("venv_path/logging/log.py"),
-            ]
-        ),
+        "homeassistant.components.system_log.sys._getframe",
+        return_value=logger_frame,
     ):
         wait_empty = watcher.add_watcher("error message")
         _LOGGER.error("error message")

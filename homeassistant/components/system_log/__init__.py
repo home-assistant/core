@@ -69,6 +69,10 @@ def _figure_out_source(
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
         stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
+        for i, (filename, _) in enumerate(stack):
+            if filename == record.pathname:
+                stack = stack[0 : i + 1]
+                break
     else:
         # Jump 2 frames up to get to the actual caller
         # since we are in a function, and always called from another function
@@ -87,37 +91,24 @@ def _figure_out_source(
         # code everywhere in HA so it's fine as its unlikely we will ever
         # support other python implementations.
         #
-        extract_stack_frame = frame = sys._getframe(  # pylint: disable=protected-access
-            4
-        )
+        frame = sys._getframe(4)  # pylint: disable=protected-access
+        stack = []
+        in_stack = False
         while back := frame.f_back:
-            if (frame_self := frame.f_locals.get("self")) and isinstance(
-                frame_self, LOGGER_OBJECTS
-            ):
-                # We found a logger object so we can move the extract_stack_frame
-                # to this frame so if we don't find the file in the call stack
-                # we don't extract stack from the logger object.
-                extract_stack_frame = frame
-            elif frame.f_code.co_filename == record.pathname:
-                # We found it!
-                extract_stack_frame = frame
-                break
+            if in_stack:
+                stack.append((frame.f_code.co_filename, frame.f_lineno))
+            elif (filename := frame.f_code.co_filename) == record.pathname:
+                # We found the start of the call stack so we can stop
+                stack.append((filename, frame.f_lineno))
+                in_stack = True
             frame = back
-        stack = [(f[0], f[1]) for f in traceback.extract_stack(extract_stack_frame)]
 
-    index = -1
-    for i, path_lineno in enumerate(stack):
-        if path_lineno[0] == record.pathname:
-            index = i
-            break
-    if index != -1:
-        stack = stack[0 : index + 1]
-        # Iterate through the stack call (in reverse) and find the last call from
-        # a file in Home Assistant. Try to figure out where error happened.
-        for pathname in reversed(stack):
-            # Try to match with a file within Home Assistant
-            if match := paths_re.match(pathname[0]):
-                return (cast(str, match.group(1)), pathname[1])
+    # Iterate through the stack call (in reverse) and find the last call from
+    # a file in Home Assistant. Try to figure out where error happened.
+    for pathname in reversed(stack):
+        # Try to match with a file within Home Assistant
+        if match := paths_re.match(pathname[0]):
+            return (cast(str, match.group(1)), pathname[1])
 
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
