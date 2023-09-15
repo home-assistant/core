@@ -41,6 +41,7 @@ from homeassistant.components.modbus.const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
@@ -513,6 +514,20 @@ async def test_duplicate_entity_validator(do_config) -> None:
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 0,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ],
+        },
+        {
+            # Special test for scan_interval validator with scan_interval: 0
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 117,
+                    CONF_DEVICE_ADDRESS: 0,
                     CONF_SCAN_INTERVAL: 0,
                 }
             ],
