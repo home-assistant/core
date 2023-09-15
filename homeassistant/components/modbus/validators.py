@@ -242,9 +242,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                inx = entry.get(CONF_SLAVE, None)
-                if not inx:
-                    inx = entry.get(CONF_DEVICE_ADDRESS, 0)
+                inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
                 addr += "_" + str(inx)
                 if addr in addresses:
                     err = (
