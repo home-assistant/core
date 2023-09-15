@@ -67,11 +67,9 @@ def _figure_out_source(
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
-    reduce_stack = True
     if record.exc_info:
         stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
-
-    elif record.levelno >= logging.WARN:
+    else:
         # Jump 2 frames up to get to the actual caller
         # since we are in a function, and always called from another function
         # that are never the original source of the log message.
@@ -106,28 +104,21 @@ def _figure_out_source(
                 break
             frame = back
         stack = [(f[0], f[1]) for f in traceback.extract_stack(extract_stack_frame)]
-    else:
-        stack = [(record.pathname, record.lineno)]
-        reduce_stack = False
 
-    if reduce_stack:
-        index = -1
-        for i, path_lineno in enumerate(stack):
-            if path_lineno[0] == record.pathname:
-                index = i
-                break
-        if index == -1:
-            # For some reason we couldn't find pathname in the stack.
-            stack = [(record.pathname, record.lineno)]
-        else:
-            stack = stack[0 : index + 1]
+    index = -1
+    for i, path_lineno in enumerate(stack):
+        if path_lineno[0] == record.pathname:
+            index = i
+            break
+    if index != -1:
+        stack = stack[0 : index + 1]
+        # Iterate through the stack call (in reverse) and find the last call from
+        # a file in Home Assistant. Try to figure out where error happened.
+        for pathname in reversed(stack):
+            # Try to match with a file within Home Assistant
+            if match := paths_re.match(pathname[0]):
+                return (cast(str, match.group(1)), pathname[1])
 
-    # Iterate through the stack call (in reverse) and find the last call from
-    # a file in Home Assistant. Try to figure out where error happened.
-    for pathname in reversed(stack):
-        # Try to match with a file within Home Assistant
-        if match := paths_re.match(pathname[0]):
-            return (cast(str, match.group(1)), pathname[1])
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
 
