@@ -318,15 +318,19 @@ class EntityMonitor:
 
         Stops tracking attribute changes.
         """
-        assume_has_changed = (
-            getattr(self._entity, "_attr_force_update", False)
-            or not self._attributes
-            or any(
-                getattr(self._entity, attribute, UNDEFINED) != last_value
-                for attribute, last_value in self._attributes.items()
+        entity = self._entity
+        attributes = self._attributes
+        if not (
+            assume_has_changed := (
+                getattr(entity, "_attr_force_update", False) or not attributes
             )
-        )
-        self._attributes = {}
+        ):
+            for attribute, last_value in attributes.items():
+                if getattr(entity, attribute, UNDEFINED) != last_value:
+                    assume_has_changed = True
+                    break
+
+        attributes.clear()
         return assume_has_changed
 
 
