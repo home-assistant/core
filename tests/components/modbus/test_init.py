@@ -50,6 +50,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
@@ -265,8 +266,20 @@ async def test_ok_struct_validator(do_config) -> None:
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_VIRTUAL_COUNT: 5,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
             CONF_DATA_TYPE: DataType.STRING,
             CONF_SLAVE_COUNT: 2,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.STRING,
+            CONF_VIRTUAL_COUNT: 2,
         },
         {
             CONF_NAME: TEST_ENTITY_NAME,
@@ -277,6 +290,12 @@ async def test_ok_struct_validator(do_config) -> None:
             CONF_NAME: TEST_ENTITY_NAME,
             CONF_COUNT: 2,
             CONF_SLAVE_COUNT: 2,
+            CONF_DATA_TYPE: DataType.INT32,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_VIRTUAL_COUNT: 2,
             CONF_DATA_TYPE: DataType.INT32,
         },
         {
