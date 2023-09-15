@@ -98,12 +98,12 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get supported features."""
         features = 0
 
-        if self._coordinator.data.get(Attribute.MODE) == 5:
+        if self.coordinator.data.get(Attribute.MODE) == 5:
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
             features = features | ClimateEntityFeature.TARGET_TEMPERATURE
 
-        if self._coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
+        if self.coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) == 2:
             features = features | ClimateEntityFeature.TARGET_HUMIDITY
 
         features = features | ClimateEntityFeature.PRESET_MODE
@@ -115,20 +115,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Get current humidity."""
-        return self._coordinator.data.get(
+        return self.coordinator.data.get(
             Attribute.INDOOR_HUMIDITY_CONTROLLING_SENSOR_VALUE
         )
 
     @property
     def target_humidity(self) -> int | None:
         """Get current target humidity."""
-        return self._coordinator.data.get(Attribute.HUMIDIFICATION_SETPOINT)
+        return self.coordinator.data.get(Attribute.HUMIDIFICATION_SETPOINT)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Get HVAC mode."""
 
-        if mode := self._coordinator.data.get(Attribute.MODE):
+        if mode := self.coordinator.data.get(Attribute.MODE):
             if hvac_mode := HVAC_MODE_MAP.get(mode):
                 return hvac_mode
 
@@ -138,7 +138,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Get supported HVAC modes."""
 
-        if modes := self._coordinator.data.get(Attribute.THERMOSTAT_MODES):
+        if modes := self.coordinator.data.get(Attribute.THERMOSTAT_MODES):
             if thermostat_modes := HVAC_MODES_MAP.get(modes):
                 return thermostat_modes
 
@@ -148,14 +148,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Get the current HVAC action."""
 
-        heating_equipment_status = self._coordinator.data.get(
+        heating_equipment_status = self.coordinator.data.get(
             Attribute.HEATING_EQUIPMENT_STATUS, 0
         )
 
         if heating_equipment_status > 0:
             return HVACAction.HEATING
 
-        cooling_equipment_status = self._coordinator.data.get(
+        cooling_equipment_status = self.coordinator.data.get(
             Attribute.COOLING_EQUIPMENT_STATUS, 0
         )
 
@@ -167,7 +167,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Get current temperature."""
-        return self._coordinator.data.get(
+        return self.coordinator.data.get(
             Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_VALUE
         )
 
@@ -196,17 +196,17 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> float | None:
         """Get cool setpoint."""
-        return self._coordinator.data.get(Attribute.COOL_SETPOINT)
+        return self.coordinator.data.get(Attribute.COOL_SETPOINT)
 
     @property
     def target_temperature_low(self) -> float | None:
         """Get heat setpoint."""
-        return self._coordinator.data.get(Attribute.HEAT_SETPOINT)
+        return self.coordinator.data.get(Attribute.HEAT_SETPOINT)
 
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if hold := self._coordinator.data.get(Attribute.HOLD):
+        if hold := self.coordinator.data.get(Attribute.HOLD):
             if preset_mode := PRESET_MODE_MAP.get(hold):
                 return preset_mode
 
@@ -217,10 +217,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Get the supported preset modes."""
         presets = [PRESET_NONE, PRESET_VACATION]
 
-        if self._coordinator.data.get(Attribute.AWAY_AVAILABLE) == 1:
+        if self.coordinator.data.get(Attribute.AWAY_AVAILABLE) == 1:
             presets.append(PRESET_AWAY)
 
-        hold = self._coordinator.data.get(Attribute.HOLD, 0)
+        hold = self.coordinator.data.get(Attribute.HOLD, 0)
 
         if hold == 1:
             presets.append(PRESET_TEMPORARY_HOLD)
@@ -233,7 +233,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Get fan mode."""
 
-        if mode := self._coordinator.data.get(Attribute.FAN_MODE):
+        if mode := self.coordinator.data.get(Attribute.FAN_MODE):
             if fan_mode := FAN_MODE_MAP.get(mode):
                 return fan_mode
 
@@ -244,25 +244,25 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         """Return device specific state attributes."""
         return {
             "fan_status": "on"
-            if self._coordinator.data.get(Attribute.FAN_STATUS, 0) == 1
+            if self.coordinator.data.get(Attribute.FAN_STATUS, 0) == 1
             else "off",
-            "humidification_setpoint": self._coordinator.data.get(
+            "humidification_setpoint": self.coordinator.data.get(
                 Attribute.HUMIDIFICATION_SETPOINT
             ),
-            "dehumidification_setpoint": self._coordinator.data.get(
+            "dehumidification_setpoint": self.coordinator.data.get(
                 Attribute.DEHUMIDIFICATION_SETPOINT
             ),
             "air_cleaning_mode": {1: "constant", 2: "automatic"}.get(
-                self._coordinator.data.get(Attribute.AIR_CLEANING_MODE, 0), "off"
+                self.coordinator.data.get(Attribute.AIR_CLEANING_MODE, 0), "off"
             ),
             "air_cleaning_event": {3: "3hour", 4: "24hour"}.get(
-                self._coordinator.data.get(Attribute.AIR_CLEANING_EVENT, 0), "off"
+                self.coordinator.data.get(Attribute.AIR_CLEANING_EVENT, 0), "off"
             ),
             "fresh_air_mode": {1: "automatic"}.get(
-                self._coordinator.data.get(Attribute.FRESH_AIR_MODE, 0), "off"
+                self.coordinator.data.get(Attribute.FRESH_AIR_MODE, 0), "off"
             ),
             "fresh_air_event": {2: "3hour", 3: "24hour"}.get(
-                self._coordinator.data.get(Attribute.FRESH_AIR_EVENT, 0), "off"
+                self.coordinator.data.get(Attribute.FRESH_AIR_EVENT, 0), "off"
             ),
         }
 
@@ -273,7 +273,7 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         heat_setpoint = 0
 
         if temperature := kwargs.get("temperature"):
-            if self._coordinator.data.get(Attribute.MODE) == 3:
+            if self.coordinator.data.get(Attribute.MODE) == 3:
                 cool_setpoint = temperature
             else:
                 heat_setpoint = temperature
@@ -286,14 +286,14 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         if cool_setpoint == 0 and heat_setpoint == 0:
             return
 
-        await self._coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
+        await self.coordinator.client.update_setpoint(cool_setpoint, heat_setpoint)
 
-        await self._coordinator.client.read_control()
+        await self.coordinator.client.read_control()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidification setpoint."""
 
-        await self._coordinator.client.set_humidification_setpoint(humidity)
+        await self.coordinator.client.set_humidification_setpoint(humidity)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
@@ -305,9 +305,9 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         fan_mode_value = list(FAN_MODE_MAP.keys())[fan_mode_value_index]
 
-        await self._coordinator.client.update_fan_mode(fan_mode_value)
+        await self.coordinator.client.update_fan_mode(fan_mode_value)
 
-        await self._coordinator.client.read_control()
+        await self.coordinator.client.read_control()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -319,20 +319,20 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
 
         mode_value = list(HVAC_MODE_MAP.keys())[mode_value_index]
 
-        await self._coordinator.client.update_mode(mode_value)
+        await self.coordinator.client.update_mode(mode_value)
 
-        await self._coordinator.client.read_control()
+        await self.coordinator.client.read_control()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
 
         if preset_mode == PRESET_AWAY:
-            await self._coordinator.client.set_hold(3)
+            await self.coordinator.client.set_hold(3)
         elif preset_mode == PRESET_VACATION:
-            await self._coordinator.client.set_hold(4)
+            await self.coordinator.client.set_hold(4)
         elif preset_mode == PRESET_NONE:
-            await self._coordinator.client.set_hold(0)
+            await self.coordinator.client.set_hold(0)
         else:
             raise ValueError(f"Unsupported preset mode {preset_mode}")
 
-        await self._coordinator.client.read_scheduling()
+        await self.coordinator.client.read_scheduling()

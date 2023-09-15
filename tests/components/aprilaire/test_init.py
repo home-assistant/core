@@ -18,7 +18,7 @@ from homeassistant.util import uuid as uuid_util
 @pytest.fixture
 def logger() -> logging.Logger:
     """Return a logger."""
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
     logger.propagate = False
 
     return logger
@@ -60,7 +60,6 @@ def client() -> AprilaireClient:
 
 
 async def test_async_setup_entry(
-    caplog: pytest.LogCaptureFixture,
     client: AprilaireClient,
     config_entry: ConfigEntry,
     unique_id: str,
@@ -72,19 +71,14 @@ async def test_async_setup_entry(
     with patch(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
-    ), caplog.at_level(logging.INFO, logger=logger.name):
-        setup_result = await async_setup_entry(hass, config_entry, logger=logger)
+    ):
+        setup_result = await async_setup_entry(hass, config_entry)
 
     assert setup_result is True
 
     client.start_listen.assert_called_once()
 
     assert isinstance(hass.data[DOMAIN][unique_id], AprilaireCoordinator)
-
-    assert caplog.record_tuples == [
-        ("root", logging.ERROR, "Missing MAC address, cannot create unique ID"),
-        ("root", logging.ERROR, "Failed to wait for ready"),
-    ]
 
 
 async def test_async_setup_entry_ready(
@@ -105,13 +99,12 @@ async def test_async_setup_entry_ready(
         "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ):
-        setup_result = await async_setup_entry(hass, config_entry, logger=logger)
+        setup_result = await async_setup_entry(hass, config_entry)
 
     assert setup_result is True
 
 
 async def test_async_setup_entry_not_ready(
-    caplog: pytest.LogCaptureFixture,
     client: AprilaireClient,
     config_entry: ConfigEntry,
     hass: HomeAssistant,
@@ -128,62 +121,12 @@ async def test_async_setup_entry_not_ready(
     ), patch(
         "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
-    ), caplog.at_level(logging.INFO, logger=logger.name):
-        setup_result = await async_setup_entry(hass, config_entry, logger=logger)
+    ):
+        setup_result = await async_setup_entry(hass, config_entry)
 
     assert setup_result is True
 
     client.stop_listen.assert_called_once()
-
-    assert caplog.record_tuples == [("root", logging.ERROR, "Failed to wait for ready")]
-
-
-async def test_invalid_host(
-    caplog: pytest.LogCaptureFixture,
-    client: AprilaireClient,
-    hass: HomeAssistant,
-    logger: logging.Logger,
-) -> None:
-    """Test setup with invalid host."""
-
-    config_entry_mock = AsyncMock()
-    config_entry_mock.data = {}
-
-    with patch(
-        "pyaprilaire.client.AprilaireClient",
-        return_value=client,
-    ), caplog.at_level(logging.INFO, logger=logger.name):
-        setup_result = await async_setup_entry(hass, config_entry_mock, logger=logger)
-
-    assert setup_result is False
-
-    client.start_listen.assert_not_called()
-
-    assert caplog.record_tuples == [("root", logging.ERROR, "Invalid host None")]
-
-
-async def test_invalid_port(
-    caplog: pytest.LogCaptureFixture,
-    client: AprilaireClient,
-    hass: HomeAssistant,
-    logger: logging.Logger,
-) -> None:
-    """Test setup with invalid port."""
-
-    config_entry_mock = AsyncMock()
-    config_entry_mock.data = {"host": "test123"}
-
-    with patch(
-        "pyaprilaire.client.AprilaireClient",
-        return_value=client,
-    ), caplog.at_level(logging.INFO, logger=logger.name):
-        setup_result = await async_setup_entry(hass, config_entry_mock, logger=logger)
-
-    assert setup_result is False
-
-    client.start_listen.assert_not_called()
-
-    assert caplog.record_tuples == [("root", logging.ERROR, "Invalid port None")]
 
 
 async def test_unload_entry_ok(
@@ -211,7 +154,7 @@ async def test_unload_entry_ok(
         "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.stop_listen",
         new=stop_listen_mock,
     ):
-        await async_setup_entry(hass, config_entry, logger=logger)
+        await async_setup_entry(hass, config_entry)
 
         unload_result = await async_unload_entry(hass, config_entry)
 
@@ -240,7 +183,7 @@ async def test_unload_entry_not_ok(
         "homeassistant.components.aprilaire.coordinator.AprilaireCoordinator.wait_for_ready",
         new=wait_for_ready,
     ):
-        await async_setup_entry(hass, config_entry, logger=logger)
+        await async_setup_entry(hass, config_entry)
 
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
 

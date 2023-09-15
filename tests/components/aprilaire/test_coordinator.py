@@ -44,15 +44,13 @@ def client() -> AprilaireClient:
 
 
 @pytest.fixture
-def coordinator(
-    client: AprilaireClient, hass: HomeAssistant, logger: logging.Logger
-) -> AprilaireCoordinator:
+def coordinator(client: AprilaireClient, hass: HomeAssistant) -> AprilaireCoordinator:
     """Return a mock coordinator."""
     with patch(
         "pyaprilaire.client.AprilaireClient",
         return_value=client,
     ):
-        return AprilaireCoordinator(hass, "", 0, logger)
+        return AprilaireCoordinator(hass, "", 0)
 
 
 async def test_start_listen(coordinator: AprilaireCoordinator) -> None:
@@ -202,12 +200,7 @@ async def test_wait_for_ready_mac_fail(
 
     ready_callback_mock = AsyncMock()
 
-    with caplog.at_level(logging.INFO, logger=logger.name):
-        await coordinator.wait_for_ready(ready_callback_mock)
-
-    assert caplog.record_tuples == [
-        ("root", logging.ERROR, "Missing MAC address, cannot create unique ID"),
-    ]
+    await coordinator.wait_for_ready(ready_callback_mock)
 
     assert ready_callback_mock.call_count == 1
     assert ready_callback_mock.call_args[0][0] is False

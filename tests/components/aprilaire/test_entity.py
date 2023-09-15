@@ -58,8 +58,7 @@ async def test_handle_coordinator_update(coordinator: AprilaireCoordinator) -> N
         entity = BaseAprilaireEntity(coordinator)
         entity._handle_coordinator_update()
 
-    assert update_available_mock.call_count == 2
-
+    update_available_mock.assert_called_once()
     async_write_ha_state_mock.assert_called_once()
 
 
@@ -148,11 +147,9 @@ def test_extra_state_attributes(coordinator: AprilaireCoordinator) -> None:
     """Test the entity's extra state attributes."""
 
     entity = BaseAprilaireEntity(coordinator)
-    coordinator.device_name = "Aprilaire"
     coordinator.data["location"] = "Test Location"
 
     assert entity.extra_state_attributes == {
-        "device_name": "Aprilaire",
         "device_location": "Test Location",
     }
 

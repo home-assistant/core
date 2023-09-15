@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 DOMAIN = "aprilaire"
-LOG_NAME = "aprilaire"
 
 FAN_CIRCULATE = "Circulate"
 

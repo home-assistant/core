@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from logging import Logger
+import logging
 from typing import Any
 
 import pyaprilaire.client
@@ -19,27 +19,25 @@ from .const import DOMAIN
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10
 
+_LOGGER = logging.getLogger(__name__)
 
-class AprilaireCoordinator(DataUpdateCoordinator):
+
+class AprilaireCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for interacting with the thermostat."""
 
-    def __init__(
-        self, hass: HomeAssistant, host: str, port: int, logger: Logger
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            logger,
+            _LOGGER,
             name=DOMAIN,
         )
-
-        self.data: dict[str, Any] = {}
 
         self.client = pyaprilaire.client.AprilaireClient(
             host,
             port,
             self.async_set_updated_data,
-            self.logger,
+            _LOGGER,
             RECONNECT_INTERVAL,
             RETRY_CONNECTION_INTERVAL,
         )
@@ -92,7 +90,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
             )
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                self.logger.error("Missing MAC address, cannot create unique ID")
+                _LOGGER.error("Missing MAC address, cannot create unique ID")
                 await ready_callback(False)
 
                 return False
@@ -122,7 +120,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def create_device_name(self, data: dict[str, Any]) -> str:
         """Create the name of the thermostat."""
 
-        name = data.get(Attribute.NAME)
+        name = None if data is None else data.get(Attribute.NAME)
 
         if name is None or len(name) == 0:
             return "Aprilaire"
@@ -149,7 +147,7 @@ class AprilaireCoordinator(DataUpdateCoordinator):
     def create_device_info(self, data: dict[str, Any]) -> DeviceInfo | None:
         """Create the device info for the thermostat."""
 
-        if Attribute.MAC_ADDRESS not in data:
+        if data is None or Attribute.MAC_ADDRESS not in data:
             return None
 
         device_info = DeviceInfo(
