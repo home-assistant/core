@@ -30,16 +30,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         device_info = await client.get_details()
+        software_version = await client.get_firmware_version()
     except (asyncio.TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady from exception
 
-    software_version = await client.get_firmware_version()
-
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = client
-    hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_INFO] = device_info
-    hass.data[DOMAIN][entry.entry_id][ATTR_SW_VERSION] = software_version.get(
-        ATTR_VERSION
-    )
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_DEVICE_INFO: device_info,
+        ATTR_SW_VERSION: software_version.get(ATTR_VERSION),
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
