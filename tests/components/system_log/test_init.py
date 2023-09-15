@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 import logging
+import re
 import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -443,3 +444,28 @@ async def test_raise_during_log_capture(
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert log is not None
     assert_log(log, "", "Bad logger message: repr error", "ERROR")
+
+
+async def test__figure_out_source(hass: HomeAssistant) -> None:
+    """Test that source is figured out correctly.
+
+    We have to test this directly for exception tracebacks since
+    we cannot generate a trackback from a Home Assistant component
+    in a test because the test is not a component.
+    """
+    try:
+        raise ValueError("test")
+    except ValueError as ex:
+        exc_info = (type(ex), ex, ex.__traceback__)
+    mock_record = MagicMock(
+        pathname="should not hit",
+        lineno=5,
+        exc_info=exc_info,
+    )
+    regex_str = f"({__file__})"
+    file, line_no = system_log._figure_out_source(
+        mock_record,
+        re.compile(regex_str),
+    )
+    assert file == __file__
+    assert line_no != 5

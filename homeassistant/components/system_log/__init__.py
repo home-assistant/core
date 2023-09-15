@@ -64,15 +64,24 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 def _figure_out_source(
     record: logging.LogRecord, paths_re: re.Pattern
 ) -> tuple[str, int]:
+    """Figure out where a log message came from."""
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
         stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
         for i, (filename, _) in enumerate(stack):
+            # Slice the stack to the first frame that matches
+            # the record pathname.
             if filename == record.pathname:
                 stack = stack[0 : i + 1]
                 break
+        # Iterate through the stack call (in reverse) and find the last call from
+        # a file in Home Assistant. Try to figure out where error happened.
+        for path, line_number in reversed(stack):
+            # Try to match with a file within Home Assistant
+            if match := paths_re.match(path):
+                return (cast(str, match.group(1)), line_number)
     else:
         #
         # We need to figure out where the log call came from if we
@@ -105,23 +114,13 @@ def _figure_out_source(
         # code everywhere in HA so it's fine as its unlikely we will ever
         # support other python implementations.
         #
-        stack = []
-        in_stack = False
+        # Iterate through the stack call (in reverse) and find the last call from
+        # a file in Home Assistant. Try to figure out where error happened.
         while back := frame.f_back:
-            if in_stack:
-                stack.append((frame.f_code.co_filename, frame.f_lineno))
-            elif (filename := frame.f_code.co_filename) == record.pathname:
-                # We found the start of the call stack so we can stop
-                stack.append((filename, frame.f_lineno))
-                in_stack = True
+            path = frame.f_code.co_filename
+            if match := paths_re.match(path):
+                return (cast(str, match.group(1)), frame.f_lineno)
             frame = back
-
-    # Iterate through the stack call (in reverse) and find the last call from
-    # a file in Home Assistant. Try to figure out where error happened.
-    for pathname in reversed(stack):
-        # Try to match with a file within Home Assistant
-        if match := paths_re.match(pathname[0]):
-            return (cast(str, match.group(1)), pathname[1])
 
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
