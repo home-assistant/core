@@ -2,11 +2,24 @@
 from typing import Any
 
 from tests.common import load_json_object_fixture
-from tests.components.media_extractor.const import AUDIO_QUERY
+from tests.components.media_extractor.const import (
+    AUDIO_QUERY,
+    NO_FORMATS_RESPONSE,
+    SOUNDCLOUD_TRACK,
+    YOUTUBE_EMPTY_PLAYLIST,
+    YOUTUBE_PLAYLIST,
+    YOUTUBE_VIDEO,
+)
 
 
 def _get_base_fixture(url: str) -> str:
-    return {"https://www.youtube.com/watch?v=dQw4w9WgXcQ": "youtube_1"}[url]
+    return {
+        YOUTUBE_VIDEO: "youtube_1",
+        YOUTUBE_PLAYLIST: "youtube_playlist",
+        YOUTUBE_EMPTY_PLAYLIST: "youtube_empty_playlist",
+        SOUNDCLOUD_TRACK: "soundcloud",
+        NO_FORMATS_RESPONSE: "no_formats",
+    }[url]
 
 
 def _get_query_fixture(query: str | None) -> str:
