@@ -33,8 +33,6 @@ EVENT_SYSTEM_LOG = "system_log_event"
 SERVICE_CLEAR = "clear"
 SERVICE_WRITE = "write"
 
-LOGGER_OBJECTS = (logging.Logger, logging.LogRecord, logging.Handler)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
