@@ -1742,7 +1742,7 @@ screenlogicpy==0.9.0
 securetar==2023.3.0
 
 # homeassistant.components.sense
-sense-energy==0.12.1
+sense-energy==0.12.2
 
 # homeassistant.components.emulated_kasa
 sense_energy==0.12.2

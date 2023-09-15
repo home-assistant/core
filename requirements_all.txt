@@ -2373,7 +2373,7 @@ securetar==2023.3.0
 sendgrid==6.8.2
 
 # homeassistant.components.sense
-sense-energy==0.12.1
+sense-energy==0.12.2
 
 # homeassistant.components.emulated_kasa
 sense_energy==0.12.2
