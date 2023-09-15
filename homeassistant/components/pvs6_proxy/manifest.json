@@ -1,0 +1,10 @@
+{
+  "domain": "pvs6_proxy",
+  "name": "SunPower PVS6 Proxy",
+  "codeowners": ["@shollwedel"],
+  "config_flow": true,
+  "documentation": "https://github.com/ginoledesma/sunpower-pvs-exporter/blob/master/sunpower_pvs_notes.md",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": []
+}
