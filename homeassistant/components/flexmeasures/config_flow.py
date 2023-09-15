@@ -39,7 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(
             "schedule_duration", description={"suggested_value": "PT24H"}
         ): str,
-        vol.Required("soc_unit", description={"suggested_value": "MWh"}): str,
+        vol.Required("soc_unit", description={"suggested_value": "kWh"}): str,
         vol.Required("soc_min", description={"suggested_value": 0.001}): float,
         vol.Required("soc_max", description={"suggested_value": 0.002}): float,
     }
