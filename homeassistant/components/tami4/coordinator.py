@@ -19,7 +19,7 @@ class Tami4EdgeWaterQualityCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Tami4Edge water quality coordinator",
-            update_interval=timedelta(minutes=10),
+            update_interval=timedelta(minutes=60),
         )
         self.edge = edge
 
