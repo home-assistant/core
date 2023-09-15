@@ -13,7 +13,7 @@ from homeassistant.components.roborock.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
@@ -152,12 +152,13 @@ async def test_get_networking_fails_both_cached_connection_fails_for_one(
         assert mock_roborock_entry.state is ConfigEntryState.LOADED
     assert (
         hass.states.get("time.roborock_s7_maxv_do_not_disturb_begin").state
-        == "unavailable"
+        == STATE_UNAVAILABLE
     )
     assert (
-        hass.states.get("switch.roborock_s7_maxv_do_not_disturb").state == "unavailable"
+        hass.states.get("switch.roborock_s7_maxv_do_not_disturb").state
+        == STATE_UNAVAILABLE
     )
-    assert hass.states.get("number.roborock_s7_maxv_volume").state == "unavailable"
+    assert hass.states.get("number.roborock_s7_maxv_volume").state == STATE_UNAVAILABLE
 
 
 async def test_get_networking_fails_both_cached_connection_fails_for_both(
@@ -185,7 +186,7 @@ async def test_get_networking_fails_both_cached_connection_fails_for_both(
         await async_setup_component(hass, DOMAIN, {})
         assert mock_roborock_entry.state is ConfigEntryState.LOADED
     assert len(hass.states.async_all("sensor")) == 1
-    assert hass.states.get("sensor.roborock_s7_maxv_status").state == "unavailable"
+    assert hass.states.get("sensor.roborock_s7_maxv_status").state == STATE_UNAVAILABLE
     # Recover
     future = dt_util.utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
