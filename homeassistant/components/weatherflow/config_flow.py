@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import Future
 from typing import Any
-
-from async_timeout import timeout
 
 # import my_pypi_dependency
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
@@ -16,7 +15,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN, LOGGER
 
@@ -26,26 +24,22 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=DEFAULT_HOST
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
-    event = asyncio.Event()
+    future_event: Future[bool] = asyncio.Future()
     host: str = DEFAULT_HOST
 
     @callback
     def found():
         """Handle a discovered device."""
-        event.set()
+        future_event.set_result(True)
 
     async with WeatherFlowListener(host) as client:
         LOGGER.debug("Registering EVENT_DISCOVERED_FUNCTION")
         client.on(EVENT_DEVICE_DISCOVERED, lambda _: found())
         try:
-            async with timeout(10):
-                await event.wait()
+            await asyncio.wait_for(future_event, timeout=10)
         except asyncio.TimeoutError:
             return False
     return True
-
-
-config_entry_flow.register_discovery_flow(DOMAIN, "WeatherFlow", _async_has_devices)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -73,7 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not (has_devices := in_progress):
             errors = {}
             try:
-                has_devices = await self.hass.async_add_job(_async_has_devices, host)  # type: ignore[arg-type, misc]
+                has_devices = await _async_has_devices(host)  # type: ignore[assignment]
+
             except AddressInUseError:
                 errors["base"] = "address_in_use"
             except ListenerError:
