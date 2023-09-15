@@ -62,6 +62,7 @@ CONF_HVAC_MODE_DRY = "state_dry"
 CONF_HVAC_MODE_FAN_ONLY = "state_fan_only"
 CONF_WRITE_REGISTERS = "write_registers"
 CONF_VERIFY = "verify"
+CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
