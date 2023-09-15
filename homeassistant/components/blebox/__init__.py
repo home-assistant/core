@@ -52,7 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = get_maybe_authenticated_session(hass, password, username)
 
-    api_host = ApiHost(host, port, timeout, websession, hass.loop)
+    api_host = ApiHost(
+        host,
+        port,
+        timeout,
+        websession,
+        hass.loop,
+        username=username,
+        password=password,
+    )
 
     try:
         product = await Box.async_from_host(api_host)
