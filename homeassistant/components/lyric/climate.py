@@ -52,12 +52,10 @@ SUPPORT_FLAGS_LCC = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    | ClimateEntityFeature.FAN_MODE
 )
 SUPPORT_FLAGS_TCC = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-    | ClimateEntityFeature.FAN_MODE
 )
 
 LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
@@ -198,8 +196,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         if self.device.changeableValues.thermostatSetpointStatus:
-            return SUPPORT_FLAGS_LCC
-        return SUPPORT_FLAGS_TCC
+            supported_flags = SUPPORT_FLAGS_LCC
+        else:
+            supported_flags = SUPPORT_FLAGS_TCC
+
+        if self._attr_fan_modes:
+            supported_flags = supported_flags | ClimateEntityFeature.FAN_MODE
+
+        return supported_flags
 
     @property
     def current_temperature(self) -> float | None:
@@ -410,7 +414,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan (On, Auto, Circulate) mode."""
-        _LOGGER.debug("Set preset mode: %s", fan_mode)
+        _LOGGER.debug("Set fan mode: %s", fan_mode)
         try:
             await self._update_fan(self.location, self.device, mode=fan_mode)
         except LYRIC_EXCEPTIONS as exception:
