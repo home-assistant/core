@@ -22,7 +22,7 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
@@ -164,7 +164,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, device_identifer)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
     assert device.identifiers == {(DOMAIN, device_identifer)}
@@ -172,7 +172,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)
@@ -199,7 +199,7 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
         entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
-        assert entry.disabled_by == er.DISABLED_INTEGRATION
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         entity_state = hass.states.get(entity_id)
         assert not entity_state
 
@@ -215,7 +215,7 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
 
             async_fire_time_changed(
                 hass,
-                dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+                dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
             )
             await hass.async_block_till_done()
 

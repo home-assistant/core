@@ -7,10 +7,11 @@ from pizzapi.address import StoreException
 import voluptuous as vol
 
 from homeassistant.components import http
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,16 +63,25 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[DominosOrder](_LOGGER, DOMAIN, hass)
     hass.data[DOMAIN] = {}
-    entities = []
+    entities: list[DominosOrder] = []
     conf = config[DOMAIN]
 
-    hass.services.register(DOMAIN, "order", dominos.handle_order)
+    hass.services.register(
+        DOMAIN,
+        "order",
+        dominos.handle_order,
+        vol.Schema(
+            {
+                vol.Required(ATTR_ORDER_ENTITY): cv.entity_ids,
+            }
+        ),
+    )
 
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
@@ -80,8 +90,7 @@ def setup(hass, config):
         order = DominosOrder(order_info, dominos)
         entities.append(order)
 
-    if entities:
-        component.add_entities(entities)
+    component.add_entities(entities)
 
     # Return boolean to indicate that initialization was successfully.
     return True
@@ -111,9 +120,9 @@ class Dominos:
         except StoreException:
             self.closest_store = None
 
-    def handle_order(self, call):
+    def handle_order(self, call: ServiceCall) -> None:
         """Handle ordering pizza."""
-        entity_ids = call.data.get(ATTR_ORDER_ENTITY)
+        entity_ids = call.data[ATTR_ORDER_ENTITY]
 
         target_orders = [
             order

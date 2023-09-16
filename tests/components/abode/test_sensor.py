@@ -1,20 +1,20 @@
 """Tests for the Abode sensor device."""
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_HUMIDITY,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SENSOR_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -23,7 +23,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "13545b21f4bdcd33d9abd461f8443e65-humidity"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the sensor attributes are correct."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
@@ -35,13 +35,13 @@ async def test_attributes(hass):
     assert state.attributes.get("device_type") == "LM"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
 
-    state = hass.states.get("sensor.environment_sensor_lux")
+    state = hass.states.get("sensor.environment_sensor_illuminance")
     assert state.state == "1.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lux"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lx"
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4
     assert state.state == "19.4"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS

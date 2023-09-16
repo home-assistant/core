@@ -1,34 +1,26 @@
 """Support for Russound multizone controllers using RIO Protocol."""
+from __future__ import annotations
+
 from russound_rio import Russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-
-SUPPORT_RUSSOUND = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,7 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Russound RIO platform."""
 
     host = config.get(CONF_HOST)
@@ -71,6 +68,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
+
+    _attr_media_content_type = MediaType.MUSIC
+    _attr_should_poll = False
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, russ, zone_id, name, sources):
         """Initialize the zone device."""
@@ -108,15 +115,10 @@ class RussoundZoneDevice(MediaPlayerEntity):
         if source_id == current:
             self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         self._russ.add_zone_callback(self._zone_callback_handler)
         self._russ.add_source_callback(self._source_callback_handler)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -124,18 +126,14 @@ class RussoundZoneDevice(MediaPlayerEntity):
         return self._zone_var("name", self._name)
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         status = self._zone_var("status", "OFF")
         if status == "ON":
-            return STATE_ON
+            return MediaPlayerState.ON
         if status == "OFF":
-            return STATE_OFF
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_RUSSOUND
+            return MediaPlayerState.OFF
+        return None
 
     @property
     def source(self):
@@ -146,11 +144,6 @@ class RussoundZoneDevice(MediaPlayerEntity):
     def source_list(self):
         """Return a list of available input sources."""
         return [x[1] for x in self._sources]
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_title(self):
@@ -181,20 +174,20 @@ class RussoundZoneDevice(MediaPlayerEntity):
         """
         return float(self._zone_var("volume", 0)) / 50.0
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the zone."""
         await self._russ.send_zone_event(self._zone_id, "ZoneOff")
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the zone."""
         await self._russ.send_zone_event(self._zone_id, "ZoneOn")
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
         await self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, name in self._sources:
             if name.lower() != source.lower():

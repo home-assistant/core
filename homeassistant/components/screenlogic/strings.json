@@ -9,29 +9,41 @@
         "title": "ScreenLogic",
         "description": "Enter your ScreenLogic Gateway information.",
         "data": {
-            "ip_address": "[%key:common::config_flow::data::ip%]",
-            "port": "[%key:common::config_flow::data::port%]"
-          }
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
       },
       "gateway_select": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
         "data": {
-            "selected_gateway": "Gateway"
-          }
+          "selected_gateway": "Gateway"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "options":{
+  "options": {
     "step": {
       "init": {
-        "title": "ScreenLogic",
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
         "description": "Specify settings for {gateway_name}",
         "data": {
           "scan_interval": "Seconds between scans"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_color_mode": {
+      "name": "Set Color Mode",
+      "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
+      "fields": {
+        "color_mode": {
+          "name": "Color Mode",
+          "description": "The ScreenLogic color mode to set."
         }
       }
     }

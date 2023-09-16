@@ -1,8 +1,10 @@
 {
   "domain": "group",
   "name": "Group",
-  "documentation": "https://www.home-assistant.io/integrations/group",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal",
-  "iot_class": "calculated"
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/group",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

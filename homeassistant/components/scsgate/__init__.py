@@ -8,9 +8,10 @@ from scsgate.reactor import Reactor
 from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME
-from homeassistant.core import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ SCSGATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
     scsgate = None
@@ -73,7 +74,7 @@ class SCSGate:
     def handle_message(self, message):
         """Handle a messages seen on the bus."""
 
-        self._logger.debug(f"Received message {message}")
+        self._logger.debug("Received message %s", message)
         if not isinstance(message, StateMessage) and not isinstance(
             message, ScenarioTriggeredMessage
         ):
@@ -97,9 +98,7 @@ class SCSGate:
                 self._logger.error(msg)
         else:
             self._logger.info(
-                "Ignoring state message for device {} because unknown".format(
-                    message.entity
-                )
+                "Ignoring state message for device %s because unknown", message.entity
             )
 
     @property

@@ -1,0 +1,37 @@
+{
+  "traceId": "0000000000",
+  "code": 0,
+  "msg": "request success",
+  "result": {
+    "total": 1,
+    "pageSize": 100,
+    "pageNo": 1,
+    "list": [
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "authKey": null,
+        "deviceName": "Humidifier",
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "cid": "abcdefghabcdefghabcdefghabcdefgh",
+        "deviceStatus": "off",
+        "connectionStatus": "online",
+        "connectionType": "WiFi+BTOnboarding+BTNotify",
+        "deviceType": "LUH-A602S-WUS",
+        "type": "wifi-air",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "WFON_AHM_LUH-A602S-WUS_US",
+        "macID": "00:00:00:00:00:00",
+        "mode": null,
+        "speed": null,
+        "currentFirmVersion": null,
+        "subDeviceNo": null,
+        "subDeviceType": null,
+        "deviceFirstSetupTime": "Jan 24, 2022 12:09:01 AM",
+        "subDeviceList": null,
+        "extension": null,
+        "deviceProp": null
+      }
+    ]
+  }
+}

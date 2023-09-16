@@ -1,7 +1,10 @@
 {
   "config": {
     "abort": {
-      "not_huawei_lte": "Not a Huawei LTE device"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unsupported_device": "Unsupported device"
     },
     "error": {
       "connection_timeout": "Connection timeout",
@@ -15,6 +18,14 @@
     },
     "flow_title": "{name}",
     "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Enter device access credentials.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -34,6 +45,48 @@
           "recipient": "SMS notification recipients",
           "track_wired_clients": "Track wired network clients",
           "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
+        }
+      }
+    }
+  },
+  "services": {
+    "clear_traffic_statistics": {
+      "name": "Clear traffic statistics",
+      "description": "Clears traffic statistics.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL of router to clear; optional when only one is configured."
+        }
+      }
+    },
+    "reboot": {
+      "name": "Reboot",
+      "description": "Reboots router.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL of router to reboot; optional when only one is configured."
+        }
+      }
+    },
+    "resume_integration": {
+      "name": "Resume integration",
+      "description": "Resumes suspended integration.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL of router to resume integration for; optional when only one is configured."
+        }
+      }
+    },
+    "suspend_integration": {
+      "name": "Suspend integration",
+      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the resume_integration service to resume.\n.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "URL of router to suspend integration for; optional when only one is configured."
         }
       }
     }

@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure RTSPtoWebRTC",
+        "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
+        "data": {
+          "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
+        }
+      },
+      "hassio_confirm": {
+        "title": "RTSPtoWebRTC via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the RTSPtoWebRTC server provided by the add-on: {addon}?"
+      }
+    },
+    "error": {
+      "invalid_url": "Must be a valid RTSPtoWebRTC server URL e.g. https://example.com",
+      "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
+      "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "server_failure": "[%key:component::rtsp_to_webrtc::config::error::server_failure%]",
+      "server_unreachable": "[%key:component::rtsp_to_webrtc::config::error::server_unreachable%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stun_server": "Stun server address (host:port)"
+        }
+      }
+    }
+  }
+}

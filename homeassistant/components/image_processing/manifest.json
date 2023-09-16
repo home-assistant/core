@@ -1,8 +1,9 @@
 {
   "domain": "image_processing",
   "name": "Image Processing",
-  "documentation": "https://www.home-assistant.io/integrations/image_processing",
+  "codeowners": ["@home-assistant/core"],
   "dependencies": ["camera"],
-  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/image_processing",
+  "integration_type": "entity",
   "quality_scale": "internal"
 }

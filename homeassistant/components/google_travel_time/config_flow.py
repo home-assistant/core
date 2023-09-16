@@ -1,15 +1,14 @@
 """Config flow for Google Maps Travel Time integration."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     ALL_LANGUAGES,
@@ -20,14 +19,12 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_LANGUAGE,
-    CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_TRAVEL_MODE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -38,51 +35,20 @@ from .const import (
     TRAVEL_MODE,
     TRAVEL_MODEL,
     UNITS,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
-from .helpers import is_valid_config_entry
-
-_LOGGER = logging.getLogger(__name__)
+from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
 
-def is_dupe_import(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
-) -> bool:
-    """Return whether imported config already exists."""
-    # Check the main data keys
-    if any(
-        entry.data[key] != user_input[key]
-        for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN)
-    ):
-        return False
-
-    options = user_input.get(CONF_OPTIONS, {})
-
-    # We have to check for units differently because there is a default
-    units = options.get(CONF_UNITS) or hass.config.units.name
-    if entry.options[CONF_UNITS] != units:
-        return False
-
-    # We have to check for travel mode differently because of the default and because
-    # it can be provided in two different ways. We have to give mode preference over
-    # travel mode because that's the way that entry setup works.
-    mode = options.get(CONF_MODE) or user_input.get(CONF_TRAVEL_MODE) or "driving"
-    if entry.options[CONF_MODE] != mode:
-        return False
-
-    # We have to check for options that don't have defaults
-    for key in (
-        CONF_LANGUAGE,
-        CONF_AVOID,
-        CONF_ARRIVAL_TIME,
-        CONF_DEPARTURE_TIME,
-        CONF_TRAFFIC_MODEL,
-        CONF_TRANSIT_MODE,
-        CONF_TRANSIT_ROUTING_PREFERENCE,
-    ):
-        if options.get(key) != entry.options.get(key):
-            return False
-
-    return True
+def default_options(hass: HomeAssistant) -> dict[str, str | None]:
+    """Get the default options."""
+    return {
+        CONF_MODE: "driving",
+        CONF_UNITS: (
+            UNITS_IMPERIAL if hass.config.units is US_CUSTOMARY_SYSTEM else UNITS_METRIC
+        ),
+    }
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -92,7 +58,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
         """Initialize google options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
             time_type = user_input.pop(CONF_TIME_TYPE)
@@ -111,7 +77,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
             default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
         else:
             default_time_type = DEPARTURE_TIME
-            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME, "")
+            default_time = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
 
         return self.async_show_form(
             step_id="init",
@@ -166,37 +132,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GoogleOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         user_input = user_input or {}
         if user_input:
-            # We need to prevent duplicate imports
-            if self.source == config_entries.SOURCE_IMPORT and any(
-                is_dupe_import(self.hass, entry, user_input)
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.source == config_entries.SOURCE_IMPORT
-            ):
-                return self.async_abort(reason="already_configured")
-
-            if (
-                self.source == config_entries.SOURCE_IMPORT
-                or await self.hass.async_add_executor_job(
-                    is_valid_config_entry,
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_config_entry,
                     self.hass,
-                    _LOGGER,
                     user_input[CONF_API_KEY],
                     user_input[CONF_ORIGIN],
                     user_input[CONF_DESTINATION],
                 )
-            ):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
+                    options=default_options(self.hass),
                 )
-
-            # If we get here, it's because we couldn't connect
-            errors["base"] = "cannot_connect"
+            except InvalidApiKeyException:
+                errors["base"] = "invalid_auth"
+            except UnknownException:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -212,5 +169,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async_step_import = async_step_user

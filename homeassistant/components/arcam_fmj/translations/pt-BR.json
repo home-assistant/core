@@ -1,7 +1,0 @@
-{
-    "device_automation": {
-        "trigger_type": {
-            "turn_on": "Foi solicitado que {entity_name} ligue"
-        }
-    }
-}

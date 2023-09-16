@@ -1,25 +1,17 @@
 show_lovelace_view:
-  name: Show lovelace view
-  description: Show a Lovelace view on a Chromecast.
   fields:
     entity_id:
-      name: Entity
-      description: Media Player entity to show the Lovelace view on.
       required: true
       selector:
         entity:
           integration: cast
           domain: media_player
     dashboard_path:
-      name: Dashboard path
-      description: The URL path of the Lovelace dashboard to show.
       required: true
       example: lovelace-cast
       selector:
         text:
     view_path:
-      name: View Path
-      description: The path of the Lovelace view to show.
       example: downstairs
       selector:
         text:

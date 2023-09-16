@@ -1,19 +1,63 @@
 """Support for Ombi."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pyombi import OmbiError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SENSOR_TYPES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="movies",
+        name="Movie requests",
+        icon="mdi:movie",
+    ),
+    SensorEntityDescription(
+        key="tv",
+        name="TV show requests",
+        icon="mdi:television-classic",
+    ),
+    SensorEntityDescription(
+        key="music",
+        name="Music album requests",
+        icon="mdi:album",
+    ),
+    SensorEntityDescription(
+        key="pending",
+        name="Pending requests",
+        icon="mdi:clock-alert-outline",
+    ),
+    SensorEntityDescription(
+        key="approved",
+        name="Approved requests",
+        icon="mdi:check",
+    ),
+    SensorEntityDescription(
+        key="available",
+        name="Available requests",
+        icon="mdi:download",
+    ),
+)
+
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ombi sensor platform."""
     if discovery_info is None:
         return
@@ -28,14 +72,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OmbiSensor(SensorEntity):
     """Representation of an Ombi sensor."""
 
-    def __init__(self, ombi, description: SensorEntityDescription):
+    def __init__(self, ombi, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._ombi = ombi
 
         self._attr_name = f"Ombi {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         try:
             sensor_type = self.entity_description.key

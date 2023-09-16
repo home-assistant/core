@@ -1,28 +1,21 @@
 """Support for Venstar WiFi Thermostats."""
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -35,12 +28,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     PRECISION_HALVES,
     STATE_ON,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
@@ -51,8 +44,6 @@ from .const import (
     DEFAULT_SSL,
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
-    VALID_FAN_STATES,
-    VALID_THERMOSTAT_MODES,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -87,7 +78,12 @@ async def async_setup_entry(
     )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Venstar thermostat platform.
 
     Venstar uses config flow for configuration now. If an entry exists in
@@ -108,6 +104,11 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class VenstarThermostat(VenstarEntity, ClimateEntity):
     """Representation of a Venstar thermostat."""
 
+    _attr_fan_modes = [FAN_ON, FAN_AUTO]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
+    _attr_precision = PRECISION_HALVES
+    _attr_name = None
+
     def __init__(
         self,
         venstar_data_coordinator: VenstarDataUpdateCoordinator,
@@ -116,51 +117,35 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(venstar_data_coordinator, config)
         self._mode_map = {
-            HVAC_MODE_HEAT: self._client.MODE_HEAT,
-            HVAC_MODE_COOL: self._client.MODE_COOL,
-            HVAC_MODE_AUTO: self._client.MODE_AUTO,
+            HVACMode.HEAT: self._client.MODE_HEAT,
+            HVACMode.COOL: self._client.MODE_COOL,
+            HVACMode.AUTO: self._client.MODE_AUTO,
         }
         self._attr_unique_id = config.entry_id
-        self._attr_name = self._client.name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+        )
 
         if self._client.mode == self._client.MODE_AUTO:
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 
         if self._client.hum_setpoint is not None:
-            features |= SUPPORT_TARGET_HUMIDITY
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
 
         return features
 
     @property
-    def precision(self):
-        """Return the precision of the system.
-
-        Venstar temperature values are passed back and forth in the
-        API in C or F, with half-degree accuracy.
-        """
-        return PRECISION_HALVES
-
-    @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement, as defined by the API."""
         if self._client.tempunits == self._client.TEMPUNITS_F:
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return VALID_FAN_STATES
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return VALID_THERMOSTAT_MODES
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):
@@ -173,26 +158,26 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return self._client.get_indoor_humidity()
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation mode ie. heat, cool, auto."""
         if self._client.mode == self._client.MODE_HEAT:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if self._client.mode == self._client.MODE_COOL:
-            return HVAC_MODE_COOL
+            return HVACMode.COOL
         if self._client.mode == self._client.MODE_AUTO:
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_OFF
+            return HVACMode.AUTO
+        return HVACMode.OFF
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current operation mode ie. heat, cool, auto."""
         if self._client.state == self._client.STATE_IDLE:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         if self._client.state == self._client.STATE_HEATING:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if self._client.state == self._client.STATE_COOLING:
-            return CURRENT_HVAC_COOL
-        return CURRENT_HVAC_OFF
+            return HVACAction.COOLING
+        return HVACAction.OFF
 
     @property
     def fan_mode(self):
@@ -261,13 +246,13 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         """Return valid preset modes."""
         return [PRESET_NONE, PRESET_AWAY, HOLD_MODE_TEMPERATURE]
 
-    def _set_operation_mode(self, operation_mode):
+    def _set_operation_mode(self, operation_mode: HVACMode):
         """Change the operation mode (internal)."""
-        if operation_mode == HVAC_MODE_HEAT:
+        if operation_mode == HVACMode.HEAT:
             success = self._client.set_mode(self._client.MODE_HEAT)
-        elif operation_mode == HVAC_MODE_COOL:
+        elif operation_mode == HVACMode.COOL:
             success = self._client.set_mode(self._client.MODE_COOL)
-        elif operation_mode == HVAC_MODE_AUTO:
+        elif operation_mode == HVACMode.AUTO:
             success = self._client.set_mode(self._client.MODE_AUTO)
         else:
             success = self._client.set_mode(self._client.MODE_OFF)
@@ -306,8 +291,10 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             else:
                 success = False
                 _LOGGER.error(
-                    "The thermostat is currently not in a mode "
-                    "that supports target temperature: %s",
+                    (
+                        "The thermostat is currently not in a mode "
+                        "that supports target temperature: %s"
+                    ),
                     operation_mode,
                 )
 
@@ -315,7 +302,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
                 _LOGGER.error("Failed to change the temperature")
         self.schedule_update_ha_state()
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode == STATE_ON:
             success = self._client.set_fan(self._client.FAN_ON)
@@ -326,12 +313,12 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the fan mode")
         self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         self._set_operation_mode(hvac_mode)
         self.schedule_update_ha_state()
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         success = self._client.set_hum_setpoint(humidity)
 
@@ -339,7 +326,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
             _LOGGER.error("Failed to change the target humidity level")
         self.schedule_update_ha_state()
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set the hold mode."""
         if preset_mode == PRESET_AWAY:
             success = self._client.set_away(self._client.AWAY_AWAY)

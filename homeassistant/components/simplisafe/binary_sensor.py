@@ -1,22 +1,16 @@
 """Support for SimpliSafe binary sensors."""
 from __future__ import annotations
 
-from simplipy.device import DeviceTypes
+from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,22 +21,27 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
     DeviceTypes.SIREN,
     DeviceTypes.SMOKE,
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE,
     DeviceTypes.TEMPERATURE,
 ]
 
 TRIGGERED_SENSOR_TYPES = {
-    DeviceTypes.CARBON_MONOXIDE: DEVICE_CLASS_GAS,
-    DeviceTypes.ENTRY: DEVICE_CLASS_DOOR,
-    DeviceTypes.GLASS_BREAK: DEVICE_CLASS_SAFETY,
-    DeviceTypes.LEAK: DEVICE_CLASS_MOISTURE,
-    DeviceTypes.MOTION: DEVICE_CLASS_MOTION,
-    DeviceTypes.SIREN: DEVICE_CLASS_SAFETY,
-    DeviceTypes.SMOKE: DEVICE_CLASS_SMOKE,
+    DeviceTypes.CARBON_MONOXIDE: BinarySensorDeviceClass.GAS,
+    DeviceTypes.ENTRY: BinarySensorDeviceClass.DOOR,
+    DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
+    DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
+    DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
+    # Although this sensor can technically apply to both smoke and carbon, we use the
+    # SMOKE device class for simplicity:
+    DeviceTypes.SMOKE_AND_CARBON_MONOXIDE: BinarySensorDeviceClass.SMOKE,
 }
 
 
@@ -72,6 +71,9 @@ async def async_setup_entry(
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
 
+        for lock in system.locks.values():
+            sensors.append(BatteryBinarySensor(simplisafe, system, lock))
+
     async_add_entities(sensors)
 
 
@@ -83,7 +85,7 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         simplisafe: SimpliSafe,
         system: SystemV3,
         sensor: SensorV3,
-        device_class: str,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
         super().__init__(simplisafe, system, device=sensor)
@@ -100,18 +102,17 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
 class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3
+        self, simplisafe: SimpliSafe, system: SystemV3, device: DeviceV3
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, device=sensor)
+        super().__init__(simplisafe, system, device=device)
 
-        self._attr_name = f"{super().name} Battery"
         self._attr_unique_id = f"{super().unique_id}-battery"
-        self._device: SensorV3
+        self._device: DeviceV3
 
     @callback
     def async_update_from_rest_api(self) -> None:

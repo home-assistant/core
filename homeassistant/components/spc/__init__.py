@@ -6,9 +6,12 @@ from pyspcwebgw.area import Area
 from pyspcwebgw.zone import Zone
 import voluptuous as vol
 
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,11 +37,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SPC component."""
 
     async def async_upate_callback(spc_object):
-
         if isinstance(spc_object, Area):
             async_dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
         elif isinstance(spc_object, Zone):
@@ -62,12 +64,14 @@ async def async_setup(hass, config):
 
     # add sensor devices for each zone (typically motion/fire/door sensors)
     hass.async_create_task(
-        discovery.async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        discovery.async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     # create a separate alarm panel for each area
     hass.async_create_task(
-        discovery.async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
+        discovery.async_load_platform(
+            hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config
+        )
     )
 
     # start listening for incoming events over websocket

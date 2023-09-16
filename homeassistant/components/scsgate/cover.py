@@ -1,5 +1,8 @@
 """Support for SCSGate covers."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from scsgate.tasks import (
     HaltRollerShutterTask,
@@ -10,7 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_DEVICES, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
@@ -19,7 +25,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SCSGate cover."""
     devices = config.get(CONF_DEVICES)
     covers = []
@@ -48,6 +59,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SCSGateCover(CoverEntity):
     """Representation of SCSGate cover."""
 
+    _attr_should_poll = False
+
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the cover."""
         self._scs_id = scs_id
@@ -61,29 +74,24 @@ class SCSGateCover(CoverEntity):
         return self._scs_id
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> None:
         """Return if the cover is closed."""
         return None
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Move the cover."""
         self._scsgate.append_task(RaiseRollerShutterTask(target=self._scs_id))
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         self._scsgate.append_task(LowerRollerShutterTask(target=self._scs_id))
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._scsgate.append_task(HaltRollerShutterTask(target=self._scs_id))
 

@@ -10,15 +10,21 @@
       },
       "credentials": {
         "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
           "password": "Password of the Smart Home Controller"
         }
       },
       "confirm_discovery": {
-        "description": "Please press the Bosch Smart Home Controller's front-side button until LED starts flashing.\nReady to continue to set up {model} @ {host} with Home Assistant?"
+        "description": "Smart Home Controller I: Please press the front-side button until LED starts flashing.\nSmart Home Controller II: Press the function button shortly. Cloud and network lights start blinking orange.\nDevice is now ready to be paired.\n\nReady to continue to set up {model} @ {host} with Home Assistant?"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The bosch_shc integration needs to re-authenticate your account"
+        "description": "The bosch_shc integration needs to re-authenticate your account",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       }
     },
     "error": {
@@ -33,5 +39,35 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "flow_title": "Bosch SHC: {name}"
+  },
+  "entity": {
+    "sensor": {
+      "purity_rating": {
+        "name": "Purity rating"
+      },
+      "purity": {
+        "name": "Purity"
+      },
+      "valvetappet": {
+        "name": "Valvetappet"
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "temperature_rating": {
+        "name": "Temperature rating"
+      },
+      "humidity_rating": {
+        "name": "Humidity rating"
+      },
+      "communication_quality": {
+        "name": "Communication quality"
+      }
+    },
+    "switch": {
+      "routing": {
+        "name": "Routing"
+      }
+    }
   }
 }

@@ -1,13 +1,20 @@
 """Support for EnOcean binary sensors."""
+from __future__ import annotations
+
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
 
@@ -24,11 +31,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Binary Sensor platform for EnOcean."""
-    dev_id = config.get(CONF_ID)
-    dev_name = config.get(CONF_NAME)
-    device_class = config.get(CONF_DEVICE_CLASS)
+    dev_id: list[int] = config[CONF_ID]
+    dev_name: str = config[CONF_NAME]
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
@@ -41,22 +53,19 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     - F6-02-02 (Light and Blind Control - Application Style 1)
     """
 
-    def __init__(self, dev_id, dev_name, device_class):
+    def __init__(
+        self,
+        dev_id: list[int],
+        dev_name: str,
+        device_class: BinarySensorDeviceClass | None,
+    ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(dev_id, dev_name)
-        self._device_class = device_class
+        super().__init__(dev_id)
+        self._attr_device_class = device_class
         self.which = -1
         self.onoff = -1
-
-    @property
-    def name(self):
-        """Return the default name for the binary sensor."""
-        return self.dev_name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
+        self._attr_name = dev_name
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.

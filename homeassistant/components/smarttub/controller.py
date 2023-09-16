@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 
 from aiohttp import client_exceptions
-import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
@@ -85,7 +84,7 @@ class SmartTubController:
 
         data = {}
         try:
-            async with async_timeout.timeout(POLLING_TIMEOUT):
+            async with asyncio.timeout(POLLING_TIMEOUT):
                 for spa in self.spas:
                     data[spa.id] = await self._get_spa_data(spa)
         except APIError as err:
@@ -94,7 +93,6 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        # pylint: disable=no-self-use
         full_status, reminders, errors = await asyncio.gather(
             spa.get_status_full(),
             spa.get_reminders(),

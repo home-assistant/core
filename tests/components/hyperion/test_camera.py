@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Awaitable
-from typing import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
@@ -193,7 +192,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     device_id = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
     assert device.identifiers == {(DOMAIN, device_id)}
@@ -201,7 +200,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

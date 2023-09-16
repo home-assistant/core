@@ -1,6 +1,8 @@
 """Test deprecation helpers."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.helpers.deprecation import (
     deprecated_function,
     deprecated_substitute,
@@ -37,7 +39,7 @@ class MockUpdatedClass(MockBaseClass):
 
 
 @patch("logging.getLogger")
-def test_deprecated_substitute_old_class(mock_get_logger):
+def test_deprecated_substitute_old_class(mock_get_logger) -> None:
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
@@ -50,7 +52,7 @@ def test_deprecated_substitute_old_class(mock_get_logger):
 
 
 @patch("logging.getLogger")
-def test_deprecated_substitute_new_class(mock_get_logger):
+def test_deprecated_substitute_new_class(mock_get_logger) -> None:
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
@@ -62,7 +64,7 @@ def test_deprecated_substitute_new_class(mock_get_logger):
 
 
 @patch("logging.getLogger")
-def test_config_get_deprecated_old(mock_get_logger):
+def test_config_get_deprecated_old(mock_get_logger) -> None:
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
@@ -74,7 +76,7 @@ def test_config_get_deprecated_old(mock_get_logger):
 
 
 @patch("logging.getLogger")
-def test_config_get_deprecated_new(mock_get_logger):
+def test_config_get_deprecated_new(mock_get_logger) -> None:
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
@@ -84,7 +86,7 @@ def test_config_get_deprecated_new(mock_get_logger):
     assert not mock_logger.warning.called
 
 
-def test_deprecated_function(caplog):
+def test_deprecated_function(caplog: pytest.LogCaptureFixture) -> None:
     """Test deprecated_function decorator."""
 
     @deprecated_function("new_function")

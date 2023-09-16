@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUEST_REFRESH_DELAY = 0.35
 
 
-class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
+class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific TPLink device."""
 
     def __init__(
@@ -26,7 +26,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
         self.update_children = True
-        update_interval = timedelta(seconds=10)
+        update_interval = timedelta(seconds=5)
         super().__init__(
             hass,
             _LOGGER,

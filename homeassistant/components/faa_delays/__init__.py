@@ -1,9 +1,9 @@
 """The FAA Delays integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
 from faadelays import Airport
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -56,7 +56,7 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await self.data.update()
         except ClientConnectionError as err:
             raise UpdateFailed(err) from err

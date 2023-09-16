@@ -1,212 +1,281 @@
-"""The Picture integration."""
+"""The image integration."""
 from __future__ import annotations
 
 import asyncio
+import collections
+from contextlib import suppress
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
-import pathlib
-import secrets
-import shutil
+from random import SystemRandom
+from typing import Final, final
 
-from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
-from aiohttp.web_request import FileField
-import voluptuous as vol
+import httpx
 
-from homeassistant.components.http.static import CACHE_HEADERS
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import collection
-from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DOMAIN
+from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
-VALID_SIZES = {256, 512}
-MAX_SIZE = 1024 * 1024 * 10
 
-CREATE_FIELDS = {
-    vol.Required("file"): FileField,
-}
+SCAN_INTERVAL: Final = timedelta(seconds=30)
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
-UPDATE_FIELDS = {
-    vol.Optional("name"): vol.All(str, vol.Length(min=1)),
-}
+DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
+ENTITY_IMAGE_URL: Final = "/api/image_proxy/{0}?token={1}"
+
+TOKEN_CHANGE_INTERVAL: Final = timedelta(minutes=5)
+_RND: Final = SystemRandom()
+
+GET_IMAGE_TIMEOUT: Final = 10
+
+
+@dataclass
+class ImageEntityDescription(EntityDescription):
+    """A class that describes image entities."""
+
+
+@dataclass
+class Image:
+    """Represent an image."""
+
+    content_type: str
+    content: bytes
+
+
+class ImageContentTypeError(HomeAssistantError):
+    """Error with the content type while loading an image."""
+
+
+def valid_image_content_type(content_type: str | None) -> str:
+    """Validate the assigned content type is one of an image."""
+    if content_type is None or content_type.split("/", 1)[0] != "image":
+        raise ImageContentTypeError
+    return content_type
+
+
+async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
+    """Fetch image from an image entity."""
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
+        async with asyncio.timeout(timeout):
+            if image_bytes := await image_entity.async_image():
+                content_type = valid_image_content_type(image_entity.content_type)
+                image = Image(content_type, image_bytes)
+                return image
+
+    raise HomeAssistantError("Unable to get image")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Image integration."""
-    image_dir = pathlib.Path(hass.config.path(DOMAIN))
-    hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
-    await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
-        storage_collection,
-        DOMAIN,
-        DOMAIN,
-        CREATE_FIELDS,
-        UPDATE_FIELDS,
-    ).async_setup(hass, create_create=False)
+    """Set up the image component."""
+    component = hass.data[DOMAIN] = EntityComponent[ImageEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
-    hass.http.register_view(ImageUploadView)
-    hass.http.register_view(ImageServeView(image_dir, storage_collection))
+    hass.http.register_view(ImageView(component))
+
+    await component.async_setup(config)
+
+    @callback
+    def update_tokens(time: datetime) -> None:
+        """Update tokens of the entities."""
+        for entity in component.entities:
+            entity.async_update_token()
+            entity.async_write_ha_state()
+
+    unsub = async_track_time_interval(
+        hass, update_tokens, TOKEN_CHANGE_INTERVAL, name="Image update tokens"
+    )
+
+    @callback
+    def unsub_track_time_interval(_event: Event) -> None:
+        """Unsubscribe track time interval timer."""
+        unsub()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
+
     return True
 
 
-class ImageStorageCollection(collection.StorageCollection):
-    """Image collection stored in storage."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    component: EntityComponent[ImageEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    def __init__(self, hass: HomeAssistant, image_dir: pathlib.Path) -> None:
-        """Initialize media storage collection."""
-        super().__init__(
-            Store(hass, STORAGE_VERSION, STORAGE_KEY),
-            logging.getLogger(f"{__name__}.storage_collection"),
-        )
-        self.async_add_listener(self._change_listener)
-        self.image_dir = image_dir
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    component: EntityComponent[ImageEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
-    async def _process_create_data(self, data: dict) -> dict:
-        """Validate the config is valid."""
-        data = self.CREATE_SCHEMA(dict(data))
-        uploaded_file: FileField = data["file"]
 
-        if not uploaded_file.content_type.startswith("image/"):
-            raise vol.Invalid("Only images are allowed")
+class ImageEntity(Entity):
+    """The base class for image entities."""
 
-        data[CONF_ID] = secrets.token_hex(16)
-        data["filesize"] = await self.hass.async_add_executor_job(self._move_data, data)
+    # Entity Properties
+    _attr_content_type: str = DEFAULT_CONTENT_TYPE
+    _attr_image_last_updated: datetime | None = None
+    _attr_image_url: str | None | UndefinedType = UNDEFINED
+    _attr_should_poll: bool = False  # No need to poll image entities
+    _attr_state: None = None  # State is determined by last_updated
+    _cached_image: Image | None = None
 
-        data["content_type"] = uploaded_file.content_type
-        data["name"] = uploaded_file.filename
-        data["uploaded_at"] = dt_util.utcnow().isoformat()
+    def __init__(self, hass: HomeAssistant, verify_ssl: bool = False) -> None:
+        """Initialize an image entity."""
+        self._client = get_async_client(hass, verify_ssl=verify_ssl)
+        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.async_update_token()
 
-        return data
+    @property
+    def content_type(self) -> str:
+        """Image content type."""
+        return self._attr_content_type
 
-    def _move_data(self, data):
-        """Move data."""
-        uploaded_file: FileField = data.pop("file")
+    @property
+    def entity_picture(self) -> str | None:
+        """Return a link to the image as entity picture."""
+        if self._attr_entity_picture is not None:
+            return self._attr_entity_picture
+        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-        # Verify we can read the image
+    @property
+    def image_last_updated(self) -> datetime | None:
+        """The time when the image was last updated."""
+        return self._attr_image_last_updated
+
+    @property
+    def image_url(self) -> str | None | UndefinedType:
+        """Return URL of image."""
+        return self._attr_image_url
+
+    def image(self) -> bytes | None:
+        """Return bytes of image."""
+        raise NotImplementedError()
+
+    async def _fetch_url(self, url: str) -> httpx.Response | None:
+        """Fetch a URL."""
         try:
-            image = Image.open(uploaded_file.file)
-        except UnidentifiedImageError as err:
-            raise vol.Invalid("Unable to identify image file") from err
+            response = await self._client.get(
+                url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+            )
+            response.raise_for_status()
+            return response
+        except httpx.TimeoutException:
+            _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
+            return None
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error(
+                "%s: Error getting new image from %s: %s",
+                self.entity_id,
+                url,
+                err,
+            )
+            return None
 
-        # Reset content
-        uploaded_file.file.seek(0)
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url."""
+        if response := await self._fetch_url(url):
+            content_type = response.headers.get("content-type")
+            try:
+                return Image(
+                    content=response.content,
+                    content_type=valid_image_content_type(content_type),
+                )
+            except ImageContentTypeError:
+                _LOGGER.error(
+                    "%s: Image from %s has invalid content type: %s",
+                    self.entity_id,
+                    url,
+                    content_type,
+                )
+                return None
+        return None
 
-        media_folder: pathlib.Path = self.image_dir / data[CONF_ID]
-        media_folder.mkdir(parents=True)
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
 
-        media_file = media_folder / "original"
+        if self._cached_image:
+            return self._cached_image.content
+        if (url := self.image_url) is not UNDEFINED:
+            if not url or (image := await self._async_load_image_from_url(url)) is None:
+                return None
+            self._cached_image = image
+            self._attr_content_type = image.content_type
+            return image.content
+        return await self.hass.async_add_executor_job(self.image)
 
-        # Raises if path is no longer relative to the media dir
-        media_file.relative_to(media_folder)
+    @property
+    @final
+    def state(self) -> str | None:
+        """Return the state."""
+        if self.image_last_updated is None:
+            return None
+        return self.image_last_updated.isoformat()
 
-        _LOGGER.debug("Storing file %s", media_file)
-
-        with media_file.open("wb") as target:
-            shutil.copyfileobj(uploaded_file.file, target)
-
-        image.close()
-
-        return media_file.stat().st_size
+    @final
+    @property
+    def state_attributes(self) -> dict[str, str | None]:
+        """Return the state attributes."""
+        return {"access_token": self.access_tokens[-1]}
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
-        """Suggest an ID based on the config."""
-        return info[CONF_ID]
-
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
-        """Return a new updated data object."""
-        return {**data, **self.UPDATE_SCHEMA(update_data)}
-
-    async def _change_listener(self, change_type, item_id, data):
-        """Handle change."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        await self.hass.async_add_executor_job(shutil.rmtree, self.image_dir / item_id)
+    def async_update_token(self) -> None:
+        """Update the used token."""
+        self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
 
 
-class ImageUploadView(HomeAssistantView):
-    """View to upload images."""
+class ImageView(HomeAssistantView):
+    """View to serve an image."""
 
-    url = "/api/image/upload"
-    name = "api:image:upload"
-
-    async def post(self, request):
-        """Handle upload."""
-        # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
-
-        data = await request.post()
-        item = await request.app["hass"].data[DOMAIN].async_create_item(data)
-        return self.json(item)
-
-
-class ImageServeView(HomeAssistantView):
-    """View to download images."""
-
-    url = "/api/image/serve/{image_id}/{filename}"
-    name = "api:image:serve"
+    name = "api:image:image"
     requires_auth = False
+    url = "/api/image_proxy/{entity_id}"
 
-    def __init__(
-        self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
-    ) -> None:
-        """Initialize image serve view."""
-        self.transform_lock = asyncio.Lock()
-        self.image_folder = image_folder
-        self.image_collection = image_collection
+    def __init__(self, component: EntityComponent[ImageEntity]) -> None:
+        """Initialize an image view."""
+        self.component = component
 
-    async def get(self, request: web.Request, image_id: str, filename: str):
-        """Serve image."""
-        image_size = filename.split("-", 1)[0]
-        try:
-            parts = image_size.split("x", 1)
-            width = int(parts[0])
-            height = int(parts[1])
-        except (ValueError, IndexError) as err:
-            raise web.HTTPBadRequest from err
-
-        if not width or width != height or width not in VALID_SIZES:
-            raise web.HTTPBadRequest
-
-        image_info = self.image_collection.data.get(image_id)
-
-        if image_info is None:
+    async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
+        """Start a GET request."""
+        if (image_entity := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound()
 
-        hass = request.app["hass"]
-        target_file = self.image_folder / image_id / f"{width}x{height}"
-
-        if not target_file.is_file():
-            async with self.transform_lock:
-                # Another check in case another request already finished it while waiting
-                if not target_file.is_file():
-                    await hass.async_add_executor_job(
-                        _generate_thumbnail,
-                        self.image_folder / image_id / "original",
-                        image_info["content_type"],
-                        target_file,
-                        (width, height),
-                    )
-
-        return web.FileResponse(
-            target_file,
-            headers={**CACHE_HEADERS, hdrs.CONTENT_TYPE: image_info["content_type"]},
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") in image_entity.access_tokens
         )
 
+        if not authenticated:
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized()
+            # Invalid sigAuth or image entity access token
+            raise web.HTTPForbidden()
 
-def _generate_thumbnail(original_path, content_type, target_path, target_size):
-    """Generate a size."""
-    image = ImageOps.exif_transpose(Image.open(original_path))
-    image.thumbnail(target_size)
-    image.save(target_path, format=content_type.split("/", 1)[1])
+        return await self.handle(request, image_entity)
+
+    async def handle(
+        self, request: web.Request, image_entity: ImageEntity
+    ) -> web.StreamResponse:
+        """Serve image."""
+        try:
+            image = await _async_get_image(image_entity, IMAGE_TIMEOUT)
+        except (HomeAssistantError, ValueError) as ex:
+            raise web.HTTPInternalServerError() from ex
+
+        return web.Response(body=image.content, content_type=image.content_type)

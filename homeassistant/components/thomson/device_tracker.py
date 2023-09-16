@@ -1,7 +1,9 @@
 """Support for THOMSON routers."""
+from __future__ import annotations
+
 import logging
 import re
-import telnetlib
+import telnetlib  # pylint: disable=deprecated-module
 
 import voluptuous as vol
 
@@ -11,7 +13,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> ThomsonDeviceScanner | None:
     """Validate the configuration and return a THOMSON scanner."""
     scanner = ThomsonDeviceScanner(config[DOMAIN])
 
@@ -42,7 +46,7 @@ def get_scanner(hass, config):
 
 
 class ThomsonDeviceScanner(DeviceScanner):
-    """This class queries a router running THOMSON firmware."""
+    """Class which queries a router running THOMSON firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""

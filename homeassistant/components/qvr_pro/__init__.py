@@ -1,5 +1,4 @@
 """Support for QVR Pro NVR software by QNAP."""
-
 import logging
 
 from pyqvrpro import Client
@@ -7,10 +6,17 @@ from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_EXCLUDE_CHANNELS,
@@ -47,7 +53,7 @@ SERVICE_CHANNEL_RECORD_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the QVR Pro component."""
     conf = config[DOMAIN]
     user = conf[CONF_USERNAME]
@@ -81,14 +87,14 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = {"channels": channels, "client": qvrpro}
 
-    load_platform(hass, CAMERA_DOMAIN, DOMAIN, {}, config)
+    load_platform(hass, Platform.CAMERA, DOMAIN, {}, config)
 
     # Register services
-    def handle_start_record(call):
+    def handle_start_record(call: ServiceCall) -> None:
         guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.start_recording(guid)
 
-    def handle_stop_record(call):
+    def handle_stop_record(call: ServiceCall) -> None:
         guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.stop_recording(guid)
 

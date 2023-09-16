@@ -3,11 +3,6 @@
     "title": "The Andy Griffith Show",
     "alternateTitles": [],
     "sortTitle": "andy griffith show",
-    "seasonCount": 8,
-    "totalEpisodeCount": 253,
-    "episodeCount": 0,
-    "episodeFileCount": 0,
-    "sizeOnDisk": 0,
     "status": "ended",
     "overview": "Down-home humor and an endearing cast of characters helped make The Andy Griffith Show one of the most beloved comedies in the history of TV. The show centered around widower Andy Taylor, who divided his time between raising his young son Opie, and his job as sheriff of the sleepy North Carolina town, Mayberry. Andy and Opie live with Andy's Aunt Bee, who serves as a surrogate mother to both father and son. Andy's nervous cousin, Barney Fife, is his deputy sheriff whose incompetence is tolerated because Mayberry is virtually crime-free.",
     "network": "CBS",
@@ -148,9 +143,7 @@
     "imdbId": "tt0053479",
     "titleSlug": "the-andy-griffith-show",
     "certification": "TV-G",
-    "genres": [
-      "Comedy"
-    ],
+    "genres": ["Comedy"],
     "tags": [],
     "added": "2020-04-05T20:40:20.050044Z",
     "ratings": {
@@ -158,6 +151,14 @@
       "value": 8.6
     },
     "qualityProfileId": 2,
+    "statistics": {
+      "seasonCount": 8,
+      "episodeFileCount": 0,
+      "episodeCount": 0,
+      "totalEpisodeCount": 253,
+      "sizeOnDisk": 0,
+      "percentOfEpisodes": 0.0
+    },
     "id": 105
   }
 ]

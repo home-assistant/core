@@ -2,32 +2,28 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, KeysView
+from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
-import enum
 from functools import wraps
 import random
 import re
 import string
 import threading
-from types import MappingProxyType
 from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
-T = TypeVar("T")
-U = TypeVar("U")  # pylint: disable=invalid-name
-ENUM_T = TypeVar("ENUM_T", bound=enum.Enum)  # pylint: disable=invalid-name
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
 
 def raise_if_invalid_filename(filename: str) -> None:
-    """
-    Check if a filename is valid.
+    """Check if a filename is valid.
 
     Raises a ValueError if the filename is invalid.
     """
@@ -36,8 +32,7 @@ def raise_if_invalid_filename(filename: str) -> None:
 
 
 def raise_if_invalid_path(path: str) -> None:
-    """
-    Check if a path is valid.
+    """Check if a path is valid.
 
     Raises a ValueError if the path is invalid.
     """
@@ -55,7 +50,7 @@ def slugify(text: str | None, *, separator: str = "_") -> str:
 
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
-    if isinstance(inp, (dict, MappingProxyType)):
+    if isinstance(inp, Mapping):
         return ", ".join(
             f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
@@ -66,8 +61,8 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(
-    value: T | None, to_type: Callable[[T], U], default: U | None = None
-) -> U | None:
+    value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
+) -> _U | None:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -108,7 +103,7 @@ class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being
-    called more then 1 time within the timedelta interval `min_time` after it
+    called more than 1 time within the timedelta interval `min_time` after it
     returned its result.
 
     Calling a method a second time during the interval will return None.
@@ -140,7 +135,7 @@ class Throttle:
 
         else:
 
-            def throttled_value() -> None:  # type: ignore
+            def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -159,7 +154,7 @@ class Throttle:
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (
             not hasattr(method, "__self__")
-            and "." not in method.__qualname__.split(".<locals>.")[-1]
+            and "." not in method.__qualname__.rpartition(".<locals>.")[-1]
         )
 
         @wraps(method)
@@ -175,7 +170,7 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access # to _throttle
+            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
                 host._throttle = {}
 
@@ -194,7 +189,7 @@ class Throttle:
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result  # type: ignore
+                    return result  # type: ignore[no-any-return]
 
                 return throttled_value()
             finally:

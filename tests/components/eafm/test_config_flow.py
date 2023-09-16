@@ -6,9 +6,12 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.eafm import const
+from homeassistant.core import HomeAssistant
 
 
-async def test_flow_no_discovered_stations(hass, mock_get_stations):
+async def test_flow_no_discovered_stations(
+    hass: HomeAssistant, mock_get_stations
+) -> None:
     """Test config flow discovers no station."""
     mock_get_stations.return_value = []
     result = await hass.config_entries.flow.async_init(
@@ -18,7 +21,7 @@ async def test_flow_no_discovered_stations(hass, mock_get_stations):
     assert result["reason"] == "no_stations"
 
 
-async def test_flow_invalid_station(hass, mock_get_stations):
+async def test_flow_invalid_station(hass: HomeAssistant, mock_get_stations) -> None:
     """Test config flow errors on invalid station."""
     mock_get_stations.return_value = [
         {"label": "My station", "stationReference": "L12345"}
@@ -35,7 +38,9 @@ async def test_flow_invalid_station(hass, mock_get_stations):
         )
 
 
-async def test_flow_works(hass, mock_get_stations, mock_get_station):
+async def test_flow_works(
+    hass: HomeAssistant, mock_get_stations, mock_get_station
+) -> None:
     """Test config flow discovers no station."""
     mock_get_stations.return_value = [
         {"label": "My station", "stationReference": "L12345"}

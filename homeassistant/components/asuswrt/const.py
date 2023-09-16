@@ -11,8 +11,11 @@ DATA_ASUSWRT = DOMAIN
 
 DEFAULT_DNSMASQ = "/var/lib/misc"
 DEFAULT_INTERFACE = "eth0"
-DEFAULT_SSH_PORT = 22
 DEFAULT_TRACK_UNKNOWN = False
+
+KEY_COORDINATOR = "coordinator"
+KEY_METHOD = "method"
+KEY_SENSORS = "sensors"
 
 MODE_AP = "ap"
 MODE_ROUTER = "router"

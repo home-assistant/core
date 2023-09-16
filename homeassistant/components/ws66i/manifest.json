@@ -1,0 +1,10 @@
+{
+  "domain": "ws66i",
+  "name": "Soundavo WS66i 6-Zone Amplifier",
+  "codeowners": ["@ssaenger"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ws66i",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["pyws66i==1.1"]
+}

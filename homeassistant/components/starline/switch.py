@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -14,7 +18,6 @@ from .entity import StarlineEntity
 class StarlineRequiredKeysMixin:
     """Mixin for required keys."""
 
-    name_: str
     icon_on: str
     icon_off: str
 
@@ -29,32 +32,34 @@ class StarlineSwitchEntityDescription(
 SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
     StarlineSwitchEntityDescription(
         key="ign",
-        name_="Engine",
+        translation_key="engine",
         icon_on="mdi:engine-outline",
         icon_off="mdi:engine-off-outline",
     ),
     StarlineSwitchEntityDescription(
         key="webasto",
-        name_="Webasto",
+        translation_key="webasto",
         icon_on="mdi:radiator",
         icon_off="mdi:radiator-off",
     ),
     StarlineSwitchEntityDescription(
         key="out",
-        name_="Additional Channel",
+        translation_key="additional_channel",
         icon_on="mdi:access-point-network",
         icon_off="mdi:access-point-network-off",
     ),
     StarlineSwitchEntityDescription(
         key="poke",
-        name_="Horn",
+        translation_key="horn",
         icon_on="mdi:bullhorn-outline",
         icon_off="mdi:bullhorn-outline",
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine switch."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = [
@@ -72,6 +77,8 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
 
     entity_description: StarlineSwitchEntityDescription
 
+    _attr_assumed_state = True
+
     def __init__(
         self,
         account: StarlineAccount,
@@ -79,11 +86,11 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         description: StarlineSwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(account, device, description.key, description.name_)
+        super().__init__(account, device, description.key)
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
@@ -104,22 +111,17 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         )
 
     @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the entity."""
-        return True
-
-    @property
     def is_on(self):
         """Return True if entity is on."""
         if self._key == "poke":
             return False
         return self._device.car_state.get(self._key)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._account.api.set_car_state(self._device.device_id, self._key, True)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self._key == "poke":
             return

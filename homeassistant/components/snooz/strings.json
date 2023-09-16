@@ -1,0 +1,53 @@
+{
+  "config": {
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "pairing_timeout": {
+        "description": "The device did not enter pairing mode. Click Submit to try again.\n\n### Troubleshooting\n1. Check that the device isn't connected to the mobile app.\n2. Unplug the device for 5 seconds, then plug it back in."
+      }
+    },
+    "progress": {
+      "wait_for_pairing_mode": "To complete setup, put this device in pairing mode.\n\n### How to enter pairing mode\n1. Force quit SNOOZ mobile apps.\n2. Press and hold the power button on the device. Release when the lights start blinking (approximately 5 seconds)."
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "transition_on": {
+      "name": "Transition on",
+      "description": "Transitions to a target volume level over time.",
+      "fields": {
+        "duration": {
+          "name": "Transition duration",
+          "description": "Time it takes to reach the target volume level."
+        },
+        "volume": {
+          "name": "Target volume",
+          "description": "If not specified, the volume level is read from the device."
+        }
+      }
+    },
+    "transition_off": {
+      "name": "Transition off",
+      "description": "Transitions volume off over time.",
+      "fields": {
+        "duration": {
+          "name": "[%key:component::snooz::services::transition_on::fields::duration::name%]",
+          "description": "Time it takes to turn off."
+        }
+      }
+    }
+  }
+}

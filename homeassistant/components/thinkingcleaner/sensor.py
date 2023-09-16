@@ -13,7 +13,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -65,7 +68,12 @@ STATES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ThinkingCleaner platform."""
     if host := config.get(CONF_HOST):
         devices = [ThinkingCleaner(host, "unknown")]
@@ -91,7 +99,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
-    def __init__(self, tc_object, update_devices, description: SensorEntityDescription):
+    def __init__(
+        self, tc_object, update_devices, description: SensorEntityDescription
+    ) -> None:
         """Initialize the ThinkingCleaner."""
         self.entity_description = description
         self._tc_object = tc_object
@@ -99,7 +109,7 @@ class ThinkingCleanerSensor(SensorEntity):
 
         self._attr_name = f"{tc_object.name} {description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         self._update_devices()
 

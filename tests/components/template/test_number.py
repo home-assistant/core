@@ -1,13 +1,11 @@
 """The tests for the Template number platform."""
-import pytest
-
 from homeassistant import setup
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -16,14 +14,10 @@ from homeassistant.components.number.const import (
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
-from tests.common import (
-    assert_setup_component,
-    async_capture_events,
-    async_mock_service,
-)
+from tests.common import assert_setup_component, async_capture_events
 
 _TEST_NUMBER = "number.template_number"
 # Represent for number's value
@@ -47,13 +41,7 @@ _VALUE_INPUT_NUMBER_CONFIG = {
 }
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def test_missing_optional_config(hass, calls):
+async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -77,7 +65,7 @@ async def test_missing_optional_config(hass, calls):
     _verify(hass, 4, 1, 0.0, 100.0)
 
 
-async def test_missing_required_keys(hass, calls):
+async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
     with assert_setup_component(0, "template"):
         assert await setup.async_setup_component(
@@ -112,7 +100,7 @@ async def test_missing_required_keys(hass, calls):
     assert hass.states.async_all("number") == []
 
 
-async def test_all_optional_config(hass, calls):
+async def test_all_optional_config(hass: HomeAssistant) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -138,7 +126,7 @@ async def test_all_optional_config(hass, calls):
     _verify(hass, 4, 1, 3, 5)
 
 
-async def test_templates_with_entities(hass, calls):
+async def test_templates_with_entities(hass: HomeAssistant, calls) -> None:
     """Test templates with values from other entities."""
     with assert_setup_component(4, "input_number"):
         assert await setup.async_setup_component(
@@ -184,13 +172,23 @@ async def test_templates_with_entities(hass, calls):
                         "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
                         "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
                         "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
-                        "set_value": {
-                            "service": "input_number.set_value",
-                            "data_template": {
-                                "entity_id": _VALUE_INPUT_NUMBER,
-                                "value": "{{ value }}",
+                        "set_value": [
+                            {
+                                "service": "input_number.set_value",
+                                "data_template": {
+                                    "entity_id": _VALUE_INPUT_NUMBER,
+                                    "value": "{{ value }}",
+                                },
                             },
-                        },
+                            {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "action": "set_value",
+                                    "caller": "{{ this.entity_id }}",
+                                    "value": "{{ value }}",
+                                },
+                            },
+                        ],
                         "optimistic": True,
                         "unique_id": "a",
                     },
@@ -258,8 +256,14 @@ async def test_templates_with_entities(hass, calls):
     )
     _verify(hass, 2, 2, 2, 6)
 
+    # Check this variable can be used in set_value script
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_value"
+    assert calls[-1].data["caller"] == _TEST_NUMBER
+    assert calls[-1].data["value"] == 2
 
-async def test_trigger_number(hass):
+
+async def test_trigger_number(hass: HomeAssistant) -> None:
     """Test trigger based template number."""
     events = async_capture_events(hass, "test_number_event")
     assert await setup.async_setup_component(
@@ -341,7 +345,7 @@ def _verify(
     assert attributes.get(ATTR_MIN) == float(expected_minimum)
 
 
-async def test_icon_template(hass):
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test template numbers with icon templates."""
     with assert_setup_component(1, "input_number"):
         assert await setup.async_setup_component(
@@ -398,7 +402,7 @@ async def test_icon_template(hass):
     assert state.attributes[ATTR_ICON] == "mdi:greater"
 
 
-async def test_icon_template_with_trigger(hass):
+async def test_icon_template_with_trigger(hass: HomeAssistant) -> None:
     """Test template numbers with icon templates."""
     with assert_setup_component(1, "input_number"):
         assert await setup.async_setup_component(

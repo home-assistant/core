@@ -17,9 +17,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rest_command"
 
@@ -54,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
     @callback
@@ -88,7 +89,7 @@ async def async_setup(hass, config):
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
 
-        async def async_service_handler(service):
+        async def async_service_handler(service: ServiceCall) -> None:
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -124,7 +125,6 @@ async def async_setup(hass, config):
                     headers=headers,
                     timeout=timeout,
                 ) as response:
-
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
                             "Success. Url: %s. Status code: %d. Payload: %s",
@@ -143,13 +143,17 @@ async def async_setup(hass, config):
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s", request_url)
 
-            except aiohttp.ClientError:
-                _LOGGER.error("Client error %s", request_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error(
+                    "Client error. Url: %s. Error: %s",
+                    request_url,
+                    err,
+                )
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
 
-    for command, command_config in config[DOMAIN].items():
-        async_register_rest_command(command, command_config)
+    for name, command_config in config[DOMAIN].items():
+        async_register_rest_command(name, command_config)
 
     return True

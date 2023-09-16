@@ -5,9 +5,11 @@ from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the opnsense component."""
 
     conf = config[DOMAIN]
@@ -47,7 +49,7 @@ def setup(hass, config):
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl
+        api_key, api_secret, url, verify_ssl, timeout=20
     )
     try:
         interfaces_client.get_arp()
@@ -58,7 +60,7 @@ def setup(hass, config):
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl
+            api_key, api_secret, url, verify_ssl, timeout=20
         )
         interfaces = list(netinsight_client.get_interfaces().values())
         for interface in tracker_interfaces:
@@ -73,5 +75,5 @@ def setup(hass, config):
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
-    load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
+    load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, tracker_interfaces, config)
     return True

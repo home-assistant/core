@@ -1,14 +1,22 @@
 """Support for SMS notifications from the Dovado router."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> DovadoSMSNotificationService:
     """Get the Dovado Router SMS notification service."""
     return DovadoSMSNotificationService(hass.data[DOVADO_DOMAIN].client)
 

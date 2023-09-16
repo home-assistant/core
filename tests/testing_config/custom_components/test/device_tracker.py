@@ -5,7 +5,7 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Return a mock scanner."""
     return SCANNER
 
@@ -18,7 +18,7 @@ class MockScannerEntity(ScannerEntity):
         self.connected = False
         self._hostname = "test.hostname.org"
         self._ip_address = "0.0.0.0"
-        self._mac_address = "ad:de:ef:be:ed:fe:"
+        self._mac_address = "ad:de:ef:be:ed:fe"
 
     @property
     def source_type(self):

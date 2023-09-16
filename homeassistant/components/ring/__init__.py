@@ -2,17 +2,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
-from pathlib import Path
+from typing import Any
 
 from oauthlib.oauth2 import AccessDeniedError
 import requests
 from ring_doorbell import Auth, Ring
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, __version__
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -32,26 +35,11 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.CAMERA,
+    Platform.SIREN,
 ]
 
 
-async def async_setup(hass, config):
-    """Set up the Ring component."""
-    if DOMAIN not in config:
-        return True
-
-    def legacy_cleanup():
-        """Clean up old tokens."""
-        old_cache = Path(hass.config.path(".ring_cache.pickle"))
-        if old_cache.is_file():
-            old_cache.unlink()
-
-    await hass.async_add_executor_job(legacy_cleanup)
-
-    return True
-
-
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
     def token_updater(token):
@@ -106,12 +94,12 @@ async def async_setup_entry(hass, entry):
         ),
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, "update"):
         return True
 
-    async def async_refresh_all(_):
+    async def async_refresh_all(_: ServiceCall) -> None:
         """Refresh all ring data."""
         for info in hass.data[DOMAIN].values():
             await info["device_data"].async_refresh_all()
@@ -125,7 +113,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
@@ -138,6 +126,13 @@ async def async_unload_entry(hass, entry):
     # Last entry unloaded, clean up service
     hass.services.async_remove(DOMAIN, "update")
 
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
     return True
 
 
@@ -160,7 +155,7 @@ class GlobalDataUpdater:
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
-        self.listeners = []
+        self.listeners: list[Callable[[], None]] = []
         self._unsub_interval = None
 
     @callback
@@ -223,7 +218,7 @@ class DeviceDataUpdater:
         data_type: str,
         config_entry_id: str,
         ring: Ring,
-        update_method: str,
+        update_method: Callable[[Ring], Any],
         update_interval: timedelta,
     ) -> None:
         """Initialize device data updater."""
@@ -233,7 +228,7 @@ class DeviceDataUpdater:
         self.ring = ring
         self.update_method = update_method
         self.update_interval = update_interval
-        self.devices = {}
+        self.devices: dict = {}
         self._unsub_interval = None
 
     async def async_track_device(self, device, update_callback):

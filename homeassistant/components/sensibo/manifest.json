@@ -1,8 +1,19 @@
 {
   "domain": "sensibo",
   "name": "Sensibo",
+  "codeowners": ["@andrey-git", "@gjohansson-ST"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "sensibo*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/sensibo",
-  "requirements": ["pysensibo==1.0.3"],
-  "codeowners": ["@andrey-git"],
-  "iot_class": "cloud_polling"
+  "homekit": {
+    "models": ["Sensibo"]
+  },
+  "iot_class": "cloud_polling",
+  "loggers": ["pysensibo"],
+  "quality_scale": "platinum",
+  "requirements": ["pysensibo==1.0.33"]
 }

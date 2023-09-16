@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "file_path": "Path to file"
+        }
+      }
+    },
+    "error": {
+      "not_valid": "Path is not valid",
+      "not_allowed": "Path is not allowed"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "title": "Filesize",
+  "entity": {
+    "sensor": {
+      "size": {
+        "name": "Size"
+      },
+      "size_bytes": {
+        "name": "Size in bytes"
+      },
+      "last_updated": {
+        "name": "Last updated"
+      }
+    }
+  }
+}

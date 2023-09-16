@@ -1,8 +1,8 @@
 """Tests for fan platforms."""
-
 import pytest
 
 from homeassistant.components.fan import FanEntity
+from homeassistant.core import HomeAssistant
 
 
 class BaseFan(FanEntity):
@@ -12,11 +12,10 @@ class BaseFan(FanEntity):
         """Initialize the fan."""
 
 
-def test_fanentity():
+def test_fanentity() -> None:
     """Test fan entity methods."""
     fan = BaseFan()
     assert fan.state == "off"
-    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
     assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
@@ -25,7 +24,7 @@ def test_fanentity():
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
         fan.oscillate(True)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         fan.set_speed("low")
     with pytest.raises(NotImplementedError):
         fan.set_percentage(0)
@@ -37,12 +36,11 @@ def test_fanentity():
         fan.turn_off()
 
 
-async def test_async_fanentity(hass):
+async def test_async_fanentity(hass: HomeAssistant) -> None:
     """Test async fan entity methods."""
     fan = BaseFan()
     fan.hass = hass
     assert fan.state == "off"
-    assert len(fan.speed_list) == 4  # legacy compat off,low,medium,high
     assert fan.preset_modes is None
     assert fan.supported_features == 0
     assert fan.percentage_step == 1
@@ -51,7 +49,7 @@ async def test_async_fanentity(hass):
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
         await fan.async_oscillate(True)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         await fan.async_set_speed("low")
     with pytest.raises(NotImplementedError):
         await fan.async_set_percentage(0)
@@ -68,7 +66,7 @@ async def test_async_fanentity(hass):
 
 
 @pytest.mark.parametrize(
-    "attribute_name, attribute_value",
+    ("attribute_name", "attribute_value"),
     [
         ("current_direction", "forward"),
         ("oscillating", True),
@@ -79,7 +77,7 @@ async def test_async_fanentity(hass):
         ("supported_features", 1),
     ],
 )
-def test_fanentity_attributes(attribute_name, attribute_value):
+def test_fanentity_attributes(attribute_name, attribute_value) -> None:
     """Test fan entity attribute shorthand."""
     fan = BaseFan()
     setattr(fan, f"_attr_{attribute_name}", attribute_value)

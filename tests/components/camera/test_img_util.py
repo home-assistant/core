@@ -24,13 +24,13 @@ def _reset_turbojpeg_singleton():
     TurboJPEGSingleton.__instance = TurboJPEG()
 
 
-def test_turbojpeg_singleton():
+def test_turbojpeg_singleton() -> None:
     """Verify the instance always gives back the same."""
     _clear_turbojpeg_singleton()
     assert TurboJPEGSingleton.instance() == TurboJPEGSingleton.instance()
 
 
-def test_scale_jpeg_camera_image():
+def test_scale_jpeg_camera_image() -> None:
     """Test we can scale a jpeg image."""
     _clear_turbojpeg_singleton()
 
@@ -71,7 +71,7 @@ def test_scale_jpeg_camera_image():
     assert jpeg_bytes == EMPTY_16_12_JPEG
 
 
-def test_turbojpeg_load_failure():
+def test_turbojpeg_load_failure() -> None:
     """Handle libjpegturbo not being installed."""
     _clear_turbojpeg_singleton()
     with patch("turbojpeg.TurboJPEG", side_effect=Exception):
@@ -102,12 +102,12 @@ SCALE_TEST_EXPECTED = [
 
 
 @pytest.mark.parametrize(
-    "image_width, image_height, input_width, input_height, scaling_factor",
+    ("image_width", "image_height", "input_width", "input_height", "scaling_factor"),
     SCALE_TEST_EXPECTED,
 )
 def test_find_supported_scaling_factor(
     image_width, image_height, input_width, input_height, scaling_factor
-):
+) -> None:
     """Test we always get an image of at least the size we ask if its big enough."""
 
     assert (

@@ -11,3 +11,5 @@ class DoorDevice(TypedDict):
     door_number: int
     name: str
     status: str
+    serial: str
+    model: str

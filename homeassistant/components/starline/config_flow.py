@@ -29,7 +29,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._app_id: str | None = None
         self._app_secret: str | None = None
@@ -212,6 +212,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._captcha_image = data["captchaImg"]
                 return self._async_form_auth_captcha(error)
 
+            #  pylint: disable=broad-exception-raised
             raise Exception(data)
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Error auth user: %s", err)

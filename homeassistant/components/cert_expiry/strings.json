@@ -12,13 +12,20 @@
       }
     },
     "error": {
-      "resolve_failed": "This host can not be resolved",
+      "resolve_failed": "This host cannot be resolved",
       "connection_timeout": "Timeout when connecting to this host",
       "connection_refused": "Connection refused when connecting to host"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "import_failed": "Import from config failed"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "certificate_expiry": {
+        "name": "Cert expiry"
+      }
     }
   }
 }

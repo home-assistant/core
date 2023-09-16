@@ -5,10 +5,9 @@ import logging
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN
 from .hap import AsyncHome, HomematicipHAP
@@ -29,7 +29,9 @@ CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -38,6 +40,12 @@ async def async_setup_entry(
 
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     """Representation of the HomematicIP alarm control panel."""
+
+    _attr_should_poll = False
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
@@ -76,20 +84,15 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    async def async_alarm_disarm(self, code=None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._home.set_security_zones_activation(False, False)
 
-    async def async_alarm_arm_home(self, code=None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._home.set_security_zones_activation(False, True)
 
-    async def async_alarm_arm_away(self, code=None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
 
@@ -106,7 +109,10 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
             self.async_write_ha_state()
         else:
             _LOGGER.debug(
-                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled",
+                (
+                    "Device Changed Event for %s (Alarm Control Panel) not fired."
+                    " Entity is disabled"
+                ),
                 self.name,
             )
 
@@ -117,11 +123,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         if self._home.name:
             name = f"{self._home.name} {name}"
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

@@ -6,13 +6,16 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
+from homeassistant.helpers.aiohttp_client import (
+    SERVER_SOFTWARE,
+    async_get_clientsession,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +38,7 @@ NO_IP_ERRORS = {
     "911": "A fatal error on NO-IP's side such as a database outage",
 }
 
-UPDATE_URL = "https://dynupdate.noip.com/nic/update"
+UPDATE_URL = "https://dynupdate.no-ip.com/nic/update"
 HA_USER_AGENT = f"{SERVER_SOFTWARE} {EMAIL}"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -62,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     auth_str = base64.b64encode(f"{user}:{password}".encode())
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     result = await _update_no_ip(hass, session, domain, auth_str, timeout)
 
@@ -73,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
-    hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
+    async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return True
 
@@ -96,11 +99,12 @@ async def _update_no_ip(
     }
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
+                _LOGGER.debug("Updating NO-IP success: %s", domain)
                 return True
 
             _LOGGER.warning(

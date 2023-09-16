@@ -1,12 +1,18 @@
 """Platform for Mazda device tracker integration."""
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the device tracker platform."""
     client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
@@ -22,31 +28,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     """Class for the device tracker."""
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        vehicle_name = self.get_vehicle_name()
-        return f"{vehicle_name} Device Tracker"
+    _attr_translation_key = "device_tracker"
+    _attr_icon = "mdi:car"
+    _attr_force_update = False
+
+    def __init__(self, client, coordinator, index) -> None:
+        """Initialize Mazda device tracker."""
+        super().__init__(client, coordinator, index)
+
+        self._attr_unique_id = self.vin
 
     @property
-    def unique_id(self):
-        """Return a unique identifier for this entity."""
-        return self.vin
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:car"
-
-    @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
-
-    @property
-    def force_update(self):
-        """All updates do not need to be written to the state machine."""
-        return False
+        return SourceType.GPS
 
     @property
     def latitude(self):

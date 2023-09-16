@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.const import (
     CONF_COVERS,
     CONF_NAME,
@@ -45,7 +45,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     covers = []
@@ -58,6 +58,8 @@ async def async_setup_platform(
 
 class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
+
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(
         self,
@@ -73,7 +75,6 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
-        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         self._attr_is_closed = False
 
         # If we read cover status from coil, and not from optional status register,
@@ -119,7 +120,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
@@ -127,7 +128,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
@@ -137,14 +138,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, 1, self._input_type
         )
-        self._call_active = False
         if result is None:
             if self._lazy_errors:
                 self._lazy_errors -= 1

@@ -1,6 +1,7 @@
 """Config flow for Evil Genius Labs integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -29,9 +30,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
 
     try:
-        data = await hub.get_data()
-        info = await hub.get_info()
+        async with asyncio.timeout(10):
+            data = await hub.get_all()
+            info = await hub.get_info()
     except aiohttp.ClientError as err:
+        _LOGGER.debug("Unable to connect: %s", err)
         raise CannotConnect from err
 
     return {"title": data["name"]["value"], "unique_id": info["wiFiChipId"]}
@@ -60,6 +63,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+        except asyncio.TimeoutError:
+            errors["base"] = "timeout"
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except

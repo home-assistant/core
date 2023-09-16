@@ -1,0 +1,1422 @@
+# serializer version: 1
+# name: test_binary_sensors[00.111111111111]
+  list([
+  ])
+# ---
+# name: test_binary_sensors[00.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[00.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[05.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '05.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2405',
+      'name': '05.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[05.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[05.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[10.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '10.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18S20',
+      'name': '10.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[10.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[10.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[12.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '12.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2406',
+      'name': '12.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[12.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.12_111111111111_sensed_a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed A',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_a',
+      'unique_id': '/12.111111111111/sensed.A',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.12_111111111111_sensed_b',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed B',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_b',
+      'unique_id': '/12.111111111111/sensed.B',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[12.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/sensed.A',
+        'friendly_name': '12.111111111111 Sensed A',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.12_111111111111_sensed_a',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/12.111111111111/sensed.B',
+        'friendly_name': '12.111111111111 Sensed B',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.12_111111111111_sensed_b',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_binary_sensors[1D.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1D.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2423',
+      'name': '1D.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[1D.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[1D.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[1F.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1F.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2409',
+      'name': '1F.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '1D.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2423',
+      'name': '1D.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[1F.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[1F.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[22.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '22.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS1822',
+      'name': '22.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[22.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[22.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[26.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '26.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'name': '26.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[26.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[26.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'name': '28.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[28.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.222222222222]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.222222222222',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'name': '28.222222222222',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[28.222222222222].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.222222222222].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.222222222223]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '28.222222222223',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS18B20',
+      'name': '28.222222222223',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[28.222222222223].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[28.222222222223].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[29.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '29.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2408',
+      'name': '29.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[29.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 0',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_0',
+      'unique_id': '/29.111111111111/sensed.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 1',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_1',
+      'unique_id': '/29.111111111111/sensed.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 2',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_2',
+      'unique_id': '/29.111111111111/sensed.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 3',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_3',
+      'unique_id': '/29.111111111111/sensed.3',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_4',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 4',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_4',
+      'unique_id': '/29.111111111111/sensed.4',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_5',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 5',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_5',
+      'unique_id': '/29.111111111111/sensed.5',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_6',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 6',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_6',
+      'unique_id': '/29.111111111111/sensed.6',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_7',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed 7',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_7',
+      'unique_id': '/29.111111111111/sensed.7',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[29.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.0',
+        'friendly_name': '29.111111111111 Sensed 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_0',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.1',
+        'friendly_name': '29.111111111111 Sensed 1',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_1',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.2',
+        'friendly_name': '29.111111111111 Sensed 2',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_2',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.3',
+        'friendly_name': '29.111111111111 Sensed 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_3',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.4',
+        'friendly_name': '29.111111111111 Sensed 4',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_4',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.5',
+        'friendly_name': '29.111111111111 Sensed 5',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_5',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.6',
+        'friendly_name': '29.111111111111 Sensed 6',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_6',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/29.111111111111/sensed.7',
+        'friendly_name': '29.111111111111 Sensed 7',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.29_111111111111_sensed_7',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_binary_sensors[30.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '30.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2760',
+      'name': '30.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[30.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[30.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[3A.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '3A.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2413',
+      'name': '3A.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[3A.111111111111].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed A',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_a',
+      'unique_id': '/3A.111111111111/sensed.A',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': None,
+      'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Sensed B',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'sensed_b',
+      'unique_id': '/3A.111111111111/sensed.B',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[3A.111111111111].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/3A.111111111111/sensed.A',
+        'friendly_name': '3A.111111111111 Sensed A',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_file': '/3A.111111111111/sensed.B',
+        'friendly_name': '3A.111111111111 Sensed B',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_binary_sensors[3B.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '3B.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS1825',
+      'name': '3B.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[3B.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[3B.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[42.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '42.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS28EA00',
+      'name': '42.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[42.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[42.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[7E.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '7E.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Embedded Data Systems',
+      'model': 'EDS0068',
+      'name': '7E.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[7E.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[7E.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[7E.222222222222]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          '7E.222222222222',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Embedded Data Systems',
+      'model': 'EDS0066',
+      'name': '7E.222222222222',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[7E.222222222222].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[7E.222222222222].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Hobby Boards',
+      'model': 'HobbyBoards_EF',
+      'name': 'EF.111111111111',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111111].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111112]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111112',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Hobby Boards',
+      'model': 'HB_MOISTURE_METER',
+      'name': 'EF.111111111112',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111112].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111112].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111113]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'EF.111111111113',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'Hobby Boards',
+      'model': 'HB_HUB',
+      'name': 'EF.111111111113',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111113].1
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+      'original_icon': None,
+      'original_name': 'Hub short on branch 0',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'hub_short_0',
+      'unique_id': '/EF.111111111113/hub/short.0',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+      'original_icon': None,
+      'original_name': 'Hub short on branch 1',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'hub_short_1',
+      'unique_id': '/EF.111111111113/hub/short.1',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+      'original_icon': None,
+      'original_name': 'Hub short on branch 2',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'hub_short_2',
+      'unique_id': '/EF.111111111113/hub/short.2',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+      'domain': 'binary_sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+      'original_icon': None,
+      'original_name': 'Hub short on branch 3',
+      'platform': 'onewire',
+      'supported_features': 0,
+      'translation_key': 'hub_short_3',
+      'unique_id': '/EF.111111111113/hub/short.3',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[EF.111111111113].2
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'device_file': '/EF.111111111113/hub/short.0',
+        'friendly_name': 'EF.111111111113 Hub short on branch 0',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'device_file': '/EF.111111111113/hub/short.1',
+        'friendly_name': 'EF.111111111113 Hub short on branch 1',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'device_file': '/EF.111111111113/hub/short.2',
+        'friendly_name': 'EF.111111111113 Hub short on branch 2',
+        'raw_value': 1.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'device_file': '/EF.111111111113/hub/short.3',
+        'friendly_name': 'EF.111111111113 Hub short on branch 3',
+        'raw_value': 0.0,
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---

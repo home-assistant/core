@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_setup[98bd0f12-0b0e-421a-84e5-ddbf75dc6de4-raw0-binary_sensor.mock_title_valve_connection]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title Valve connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_valve_connection',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup[98bd0f12-0b0e-421a-84e5-ddbf75dc6de4-raw0-binary_sensor.mock_title_valve_connection].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock Title Valve connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_valve_connection',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

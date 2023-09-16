@@ -1,0 +1,15 @@
+unlock_specific_door:
+  target:
+    entity:
+      domain: lock
+      integration: subaru
+  fields:
+    door:
+      example: driver
+      required: true
+      selector:
+        select:
+          options:
+            - "all"
+            - "driver"
+            - "tailgate"

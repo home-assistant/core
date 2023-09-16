@@ -1,4 +1,6 @@
 """Support for OpenWRT (luci) routers."""
+from __future__ import annotations
+
 import logging
 
 from openwrt_luci_rpc import OpenWrtRpc
@@ -16,7 +18,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +38,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | None:
     """Validate the configuration and return a Luci scanner."""
     scanner = LuciDeviceScanner(config[DOMAIN])
 
@@ -42,7 +46,7 @@ def get_scanner(hass, config):
 
 
 class LuciDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to an OpenWrt router."""
+    """Scanner for devices connected to an OpenWrt router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -73,8 +77,7 @@ class LuciDeviceScanner(DeviceScanner):
         return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include MAC address (mac), network device (dev), IP address

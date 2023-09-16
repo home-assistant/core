@@ -1,0 +1,137 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "db_url_invalid": "Database URL invalid",
+      "query_invalid": "SQL Query invalid",
+      "column_invalid": "The column `{column}` is not returned by the query"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "db_url": "Database URL",
+          "name": "[%key:common::config_flow::data::name%]",
+          "query": "Select Query",
+          "column": "Column",
+          "unit_of_measurement": "Unit of Measure",
+          "value_template": "Value Template",
+          "device_class": "Device Class",
+          "state_class": "State Class"
+        },
+        "data_description": {
+          "db_url": "Database URL, leave empty to use HA recorder database",
+          "name": "Name that will be used for Config Entry and also the Sensor",
+          "query": "Query to run, needs to start with 'SELECT'",
+          "column": "Column for returned query to present as state",
+          "unit_of_measurement": "Unit of Measure (optional)",
+          "value_template": "Value Template (optional)",
+          "device_class": "The type/class of the sensor to set the icon in the frontend",
+          "state_class": "The state_class of the sensor"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "db_url": "[%key:component::sql::config::step::user::data::db_url%]",
+          "name": "[%key:component::sql::config::step::user::data::name%]",
+          "query": "[%key:component::sql::config::step::user::data::query%]",
+          "column": "[%key:component::sql::config::step::user::data::column%]",
+          "unit_of_measurement": "[%key:component::sql::config::step::user::data::unit_of_measurement%]",
+          "value_template": "[%key:component::sql::config::step::user::data::value_template%]",
+          "device_class": "[%key:component::sql::config::step::user::data::device_class%]",
+          "state_class": "[%key:component::sql::config::step::user::data::state_class%]"
+        },
+        "data_description": {
+          "db_url": "[%key:component::sql::config::step::user::data_description::db_url%]",
+          "name": "[%key:component::sql::config::step::user::data_description::name%]",
+          "query": "[%key:component::sql::config::step::user::data_description::query%]",
+          "column": "[%key:component::sql::config::step::user::data_description::column%]",
+          "unit_of_measurement": "[%key:component::sql::config::step::user::data_description::unit_of_measurement%]",
+          "value_template": "[%key:component::sql::config::step::user::data_description::value_template%]",
+          "device_class": "[%key:component::sql::config::step::user::data_description::device_class%]",
+          "state_class": "[%key:component::sql::config::step::user::data_description::state_class%]"
+        }
+      }
+    },
+    "error": {
+      "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
+      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
+      "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "none": "No device class",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "state_class": {
+      "options": {
+        "none": "No state class",
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    }
+  },
+  "issues": {
+    "entity_id_query_does_full_table_scan": {
+      "title": "SQL query does full table scan",
+      "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
+    }
+  }
+}

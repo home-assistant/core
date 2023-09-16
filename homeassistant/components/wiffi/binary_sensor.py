@@ -1,14 +1,19 @@
 """Binary sensor platform support for wiffi devices."""
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up platform for a new integration.
 
     Called by the HA framework after async_forward_entry_setup has been called
@@ -34,13 +39,13 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
     def __init__(self, device, metric, options):
         """Initialize the entity."""
         super().__init__(device, metric, options)
-        self._value = metric.value
+        self._attr_is_on = metric.value
         self.reset_expiration_date()
 
     @property
-    def is_on(self):
-        """Return the state of the entity."""
-        return self._value
+    def available(self):
+        """Return true if value is valid."""
+        return self._attr_is_on is not None
 
     @callback
     def _update_value_callback(self, device, metric):
@@ -49,5 +54,5 @@ class BoolEntity(WiffiEntity, BinarySensorEntity):
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
-        self._value = metric.value
+        self._attr_is_on = metric.value
         self.async_write_ha_state()

@@ -1,53 +1,49 @@
 {
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) to configure the Cloud Console:\n\n1. Go to the [OAuth consent screen]({oauth_consent_url}) and configure\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web Application** for the Application Type.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
+  },
   "config": {
     "step": {
+      "create_cloud_project": {
+        "title": "Nest: Create and configure Cloud Project",
+        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nProceed when your cloud project is set up."
+      },
+      "cloud_project": {
+        "title": "Nest: Enter Cloud Project ID",
+        "description": "Enter the Cloud Project ID below e.g. *example-project-12345*. See the [Google Cloud Console]({cloud_console_url}) or the documentation for [more info]({more_info_url}).",
+        "data": {
+          "cloud_project_id": "Google Cloud Project ID"
+        }
+      },
+      "device_project": {
+        "title": "Nest: Create a Device Access Project",
+        "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Click on **Create project**\n1. Give your Device Access project a name and click **Next**.\n1. Enter your OAuth Client ID\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).\n",
+        "data": {
+          "project_id": "Device Access Project ID"
+        }
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "auth": {
-        "title": "Link Google Account",
-        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
-        "data": {
-          "code": "[%key:common::config_flow::data::access_token%]"
-        }
       },
       "pubsub": {
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
-          "cloud_project_id": "Google Cloud Project ID"
+          "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
-      },
-      "init": {
-        "title": "Authentication Provider",
-        "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "flow_impl": "Provider"
-        }
-      },
-      "link": {
-        "title": "Link Nest Account",
-        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
-        "data": {
-          "code": "[%key:common::config_flow::data::pin%]"
-        }
       }
     },
     "error": {
-      "timeout": "Timeout validating code",
-      "invalid_pin": "Invalid [%key:common::config_flow::data::pin%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "internal_error": "Internal error validating code",
       "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
-      "wrong_project_id": "Please enter a valid Cloud Project ID (found Device Access Project ID)",
+      "wrong_project_id": "Please enter a valid Cloud Project ID (was same as Device Access Project ID)",
       "subscriber_error": "Unknown subscriber error, see logs"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
@@ -65,6 +61,12 @@
       "camera_motion": "Motion detected",
       "camera_sound": "Sound detected",
       "doorbell_chime": "Doorbell pressed"
+    }
+  },
+  "issues": {
+    "legacy_nest_removed": {
+      "title": "Legacy Works With Nest has been removed",
+      "description": "Legacy Works With Nest has been removed from Home Assistant, and the API shuts down as of September 2023.\n\nYou must take action to use the SDM API. Remove all `nest` configuration from `configuration.yaml` and restart Home Assistant, then see the Nest [integration instructions]({documentation_url}) for set up instructions and supported devices."
     }
   }
 }

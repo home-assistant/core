@@ -21,5 +21,35 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "charge_power": {
+        "name": "Charging power"
+      },
+      "input_charge_current": {
+        "name": "Charging current"
+      },
+      "input_charge_voltage": {
+        "name": "Charging voltage"
+      },
+      "voltage": {
+        "name": "Battery voltage"
+      }
+    },
+    "switch": {
+      "bypass": {
+        "name": "Studio mode"
+      },
+      "energy_saving": {
+        "name": "Energy saving"
+      }
+    }
+  },
+  "services": {
+    "identify": {
+      "name": "Identify",
+      "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification."
+    }
   }
 }

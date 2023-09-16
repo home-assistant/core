@@ -1,7 +1,8 @@
 """Types for the energy platform."""
 from __future__ import annotations
 
-from typing import Awaitable, Callable, TypedDict
+from collections.abc import Awaitable, Callable
+from typing import Protocol, TypedDict
 
 from homeassistant.core import HomeAssistant
 
@@ -17,8 +18,8 @@ GetSolarForecastType = Callable[
 ]
 
 
-class EnergyPlatform:
-    """This class represents the methods we expect on the energy platforms."""
+class EnergyPlatform(Protocol):
+    """Represents the methods we expect on the energy platforms."""
 
     @staticmethod
     async def async_get_solar_forecast(

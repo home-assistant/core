@@ -1,1 +1,0 @@
-"""The apns component."""

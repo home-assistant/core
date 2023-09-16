@@ -25,7 +25,7 @@ async def async_setup_platform(
     """Read configuration and create Modbus switches."""
     switches = []
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     for entry in discovery_info[CONF_SWITCHES]:

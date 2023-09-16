@@ -6,24 +6,20 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioswitcher.api import Command, SwitcherApi, SwitcherBaseResponse
+from aioswitcher.api import Command, SwitcherBaseResponse, SwitcherType1Api
 from aioswitcher.device import DeviceCategory, DeviceState
 import voluptuous as vol
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     entity_platform,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -82,8 +78,13 @@ async def async_setup_entry(
     )
 
 
-class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
+class SwitcherBaseSwitchEntity(
+    CoordinatorEntity[SwitcherDataUpdateCoordinator], SwitchEntity
+):
     """Representation of a Switcher switch entity."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
@@ -91,12 +92,9 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         self.control_result: bool | None = None
 
         # Entity class attributes
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     @callback
@@ -112,7 +110,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         error = None
 
         try:
-            async with SwitcherApi(
+            async with SwitcherType1Api(
                 self.coordinator.data.ip_address, self.coordinator.data.device_id
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
@@ -122,7 +120,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         if error or not response or not response.successful:
             _LOGGER.error(
                 "Call api for %s failed, api: '%s', args: %s, response/error: %s",
-                self.name,
+                self.coordinator.name,
                 api,
                 args,
                 response or error,
@@ -154,7 +152,7 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_SET_AUTO_OFF_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
     async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
@@ -162,20 +160,20 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
         _LOGGER.warning(
             "Service '%s' is not supported by %s",
             SERVICE_TURN_ON_WITH_TIMER_NAME,
-            self.name,
+            self.coordinator.name,
         )
 
 
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
 
-    _attr_device_class = DEVICE_CLASS_OUTLET
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
 
 class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher water heater switch entity."""
 
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""

@@ -1,9 +1,15 @@
 """Config flow to configure the SmartTub integration."""
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 from smarttub import LoginFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .controller import SmartTubController
@@ -21,8 +27,8 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Instantiate config flow."""
         super().__init__()
-        self._reauth_input = None
-        self._reauth_entry = None
+        self._reauth_input: Mapping[str, Any] | None = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -48,7 +54,8 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # this is a reauth attempt
                 if self._reauth_entry.unique_id != self.unique_id:
-                    # there is a config entry matching this account, but it is not the one we were trying to reauth
+                    # there is a config entry matching this account,
+                    # but it is not the one we were trying to reauth
                     return self.async_abort(reason="already_configured")
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
@@ -60,9 +67,9 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Get new credentials if the current ones don't work anymore."""
-        self._reauth_input = dict(user_input)
+        self._reauth_input = entry_data
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )

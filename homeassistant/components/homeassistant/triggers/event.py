@@ -1,17 +1,15 @@
 """Offer event listening automation rules."""
 from __future__ import annotations
 
+from collections.abc import ItemsView
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 CONF_EVENT_TYPE = "event_type"
@@ -37,22 +35,21 @@ def _schema_value(value: Any) -> Any:
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "event",
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    variables = automation_info["variables"]
+    trigger_data = trigger_info["trigger_data"]
+    variables = trigger_info["variables"]
 
     template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
-    removes = []
-
-    event_data_schema = None
+    event_data_schema: vol.Schema | None = None
+    event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_DATA])
@@ -60,13 +57,21 @@ async def async_attach_trigger(
         event_data.update(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
         )
-        # Build the schema
-        event_data_schema = vol.Schema(
-            {vol.Required(key): value for key, value in event_data.items()},
-            extra=vol.ALLOW_EXTRA,
-        )
+        # Build the schema or a an items view if the schema is simple
+        # and does not contain sub-dicts. We explicitly do not check for
+        # list like the context data below since lists are a special case
+        # only for context data. (see test test_event_data_with_list)
+        if any(isinstance(value, dict) for value in event_data.values()):
+            event_data_schema = vol.Schema(
+                {vol.Required(key): value for key, value in event_data.items()},
+                extra=vol.ALLOW_EXTRA,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_data_items = event_data.items()
 
-    event_context_schema = None
+    event_context_schema: vol.Schema | None = None
+    event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
         template.attach(hass, config[CONF_EVENT_CONTEXT])
@@ -74,31 +79,55 @@ async def async_attach_trigger(
         event_context.update(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
         )
-        # Build the schema
-        event_context_schema = vol.Schema(
-            {
-                vol.Required(key): _schema_value(value)
-                for key, value in event_context.items()
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
+        # Build the schema or a an items view if the schema is simple
+        # and does not contain lists. Lists are a special case to support
+        # matching events by user_id. (see test test_if_fires_on_multiple_user_ids)
+        # This can likely be optimized further in the future to handle the
+        # multiple user_id case without requiring expensive schema
+        # validation.
+        if any(isinstance(value, list) for value in event_context.values()):
+            event_context_schema = vol.Schema(
+                {
+                    vol.Required(key): _schema_value(value)
+                    for key, value in event_context.items()
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+        else:
+            # Use a simple items comparison if possible
+            event_context_items = event_context.items()
 
-    job = HassJob(action)
+    job = HassJob(action, f"event trigger {trigger_info}")
+
+    @callback
+    def filter_event(event: Event) -> bool:
+        """Filter events."""
+        try:
+            # Check that the event data and context match the configured
+            # schema if one was provided
+            if event_data_items:
+                # Fast path for simple items comparison
+                if not (event.data.items() >= event_data_items):
+                    return False
+            elif event_data_schema:
+                # Slow path for schema validation
+                event_data_schema(event.data)
+
+            if event_context_items:
+                # Fast path for simple items comparison
+                if not (event.context.as_dict().items() >= event_context_items):
+                    return False
+            elif event_context_schema:
+                # Slow path for schema validation
+                event_context_schema(dict(event.context.as_dict()))
+        except vol.Invalid:
+            # If event doesn't match, skip event
+            return False
+        return True
 
     @callback
     def handle_event(event: Event) -> None:
         """Listen for events and calls the action when data matches."""
-        try:
-            # Check that the event data and context match the configured
-            # schema if one was provided
-            if event_data_schema:
-                event_data_schema(event.data)
-            if event_context_schema:
-                event_context_schema(event.context.as_dict())
-        except vol.Invalid:
-            # If event doesn't match, skip event
-            return
-
         hass.async_run_hass_job(
             job,
             {
@@ -113,7 +142,8 @@ async def async_attach_trigger(
         )
 
     removes = [
-        hass.bus.async_listen(event_type, handle_event) for event_type in event_types
+        hass.bus.async_listen(event_type, handle_event, event_filter=filter_event)
+        for event_type in event_types
     ]
 
     @callback

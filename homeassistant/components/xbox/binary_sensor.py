@@ -6,9 +6,8 @@ from functools import partial
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import XboxUpdateCoordinator
 from .base_sensor import XboxBaseSensorEntity
@@ -18,8 +17,8 @@ PRESENCE_ATTRIBUTES = ["online", "in_party", "in_game", "in_multiplayer"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Xbox Live friends."""
     coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         "coordinator"
@@ -55,7 +54,7 @@ def async_update_friends(
     current_ids = set(current)
 
     # Process new favorites, add them to Home Assistant
-    new_entities = []
+    new_entities: list[XboxBinarySensorEntity] = []
     for xuid in new_ids - current_ids:
         current[xuid] = [
             XboxBinarySensorEntity(coordinator, xuid, attribute)
@@ -63,8 +62,7 @@ def async_update_friends(
         ]
         new_entities = new_entities + current[xuid]
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
     # Process deleted favorites, remove them from Home Assistant
     for xuid in current_ids - new_ids:
@@ -76,10 +74,10 @@ def async_update_friends(
 async def async_remove_entities(
     xuid: str,
     coordinator: XboxUpdateCoordinator,
-    current: dict[str, XboxBinarySensorEntity],
+    current: dict[str, list[XboxBinarySensorEntity]],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
-    registry = await async_get_entity_registry(coordinator.hass)
+    registry = er.async_get(coordinator.hass)
     entities = current[xuid]
     for entity in entities:
         if entity.entity_id in registry.entities:

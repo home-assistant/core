@@ -1,4 +1,6 @@
 """The bayesian component."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "bayesian"
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]

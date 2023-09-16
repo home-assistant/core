@@ -2,6 +2,7 @@
 import logging
 
 from pyhap.const import (
+    CATEGORY_DOOR,
     CATEGORY_GARAGE_DOOR_OPENER,
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
@@ -13,9 +14,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,8 +30,12 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import State, callback
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -56,6 +59,7 @@ from .const import (
     HK_POSITION_STOPPED,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
+    SERV_DOOR,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
@@ -80,6 +84,8 @@ DOOR_TARGET_HASS_TO_HK = {
     STATE_OPENING: HK_DOOR_OPEN,
     STATE_CLOSING: HK_DOOR_CLOSED,
 }
+
+MOVING_STATES = {STATE_OPENING, STATE_CLOSING}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,12 +139,14 @@ class GarageDoorOpener(HomeAccessory):
         await super().run()
 
     @callback
-    def _async_update_obstruction_event(self, event):
+    def _async_update_obstruction_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
-        self._async_update_obstruction_state(event.data.get("new_state"))
+        self._async_update_obstruction_state(event.data["new_state"])
 
     @callback
-    def _async_update_obstruction_state(self, new_state):
+    def _async_update_obstruction_state(self, new_state: State | None) -> None:
         """Handle linked obstruction sensor state change to update HomeKit value."""
         if not new_state:
             return
@@ -201,11 +209,11 @@ class OpeningDeviceBase(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        self._supports_stop = self.features & SUPPORT_STOP
+        self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
-        self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
+        self._supports_tilt = self.features & CoverEntityFeature.SET_TILT_POSITION
 
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
@@ -276,14 +284,17 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             CHAR_CURRENT_POSITION, value=0
         )
         target_args = {"value": 0}
-        if self.features & SUPPORT_SET_POSITION:
+        if self.features & CoverEntityFeature.SET_POSITION:
             target_args["setter_callback"] = self.move_cover
         else:
             # If its tilt only we lock the position state to 0 (closed)
             # since CHAR_CURRENT_POSITION/CHAR_TARGET_POSITION are required
             # by homekit, but really don't exist.
             _LOGGER.debug(
-                "%s does not support setting position, current position will be locked to closed",
+                (
+                    "%s does not support setting position, current position will be"
+                    " locked to closed"
+                ),
                 self.entity_id,
             )
             target_args["properties"] = {PROP_MIN_VALUE: 0, PROP_MAX_VALUE: 0}
@@ -303,13 +314,16 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         self.async_call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            self.char_target_position.set_value(current_position)
+            # Writing target_position on a moving cover
+            # will break the moving state in HK.
+            if new_state.state not in MOVING_STATES:
+                self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)
         self.char_position_state.set_value(position_state)
@@ -317,9 +331,21 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         super().async_update_state(new_state)
 
 
+@TYPES.register("Door")
+class Door(OpeningDevice):
+    """Generate a Door accessory for a cover entity.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Door accessory object."""
+        super().__init__(*args, category=CATEGORY_DOOR, service=SERV_DOOR)
+
+
 @TYPES.register("Window")
 class Window(OpeningDevice):
-    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+    """Generate a Window accessory for a cover entity with WINDOW device class.
 
     The entity must support: set_cover_position.
     """
@@ -392,14 +418,16 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         self.char_target_position.set_value(position)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position after state changed."""
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
         if hk_position is not None:
+            is_moving = new_state.state in MOVING_STATES
+
             if self.char_current_position.value != hk_position:
                 self.char_current_position.set_value(hk_position)
-            if self.char_target_position.value != hk_position:
+            if self.char_target_position.value != hk_position and not is_moving:
                 self.char_target_position.set_value(hk_position)
         position_state = _hass_state_to_position_start(new_state.state)
         if self.char_position_state.value != position_state:

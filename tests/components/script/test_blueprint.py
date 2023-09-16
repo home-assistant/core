@@ -1,9 +1,11 @@
 """Test script blueprints."""
 import asyncio
+from collections.abc import Iterator
 import contextlib
 import pathlib
-from typing import Iterator
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import script
 from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
@@ -25,7 +27,7 @@ def patch_blueprint(blueprint_path: str, data_path: str) -> Iterator[None]:
     @callback
     def mock_load_blueprint(self, path: str) -> Blueprint:
         if path != blueprint_path:
-            assert False, f"Unexpected blueprint {path}"
+            pytest.fail(f"Unexpected blueprint {path}")
             return orig_load(self, path)
 
         return Blueprint(
@@ -76,7 +78,6 @@ async def test_confirmable_notification(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
-
         # Trigger script
         await hass.services.async_call(script.DOMAIN, "confirm", context=context)
 

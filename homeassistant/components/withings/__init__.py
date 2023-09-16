@@ -1,5 +1,4 @@
-"""
-Support for the Withings API.
+"""Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
 """
@@ -9,17 +8,22 @@ import asyncio
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
-from withings_api import WithingsAuth
 from withings_api.common import NotifyAppli
 
 from homeassistant.components import webhook
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.webhook import (
+    async_generate_id,
     async_unregister as async_unregister_webhook,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_TOKEN,
     CONF_WEBHOOK_ID,
     Platform,
 )
@@ -28,15 +32,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from . import config_flow, const
+from . import const
 from .common import (
-    _LOGGER,
-    WithingsLocalOAuth2Implementation,
     async_get_data_manager,
     async_remove_data_manager,
     get_data_manager_by_webhook_id,
     json_message_response,
 )
+from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -45,10 +48,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.deprecated(const.CONF_PROFILES),
+            cv.deprecated(CONF_CLIENT_ID),
+            cv.deprecated(CONF_CLIENT_SECRET),
             vol.Schema(
                 {
-                    vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Required(CONF_CLIENT_SECRET): vol.All(
+                    vol.Optional(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(CONF_CLIENT_SECRET): vol.All(
                         cv.string, vol.Length(min=1)
                     ),
                     vol.Optional(const.CONF_USE_WEBHOOK, default=False): cv.boolean,
@@ -68,62 +73,58 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Withings component."""
-    conf = config.get(DOMAIN, {})
-    if not (conf := config.get(DOMAIN, {})):
+    if not (conf := config.get(DOMAIN)):
+        # Apply the defaults.
+        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
+        hass.data[DOMAIN] = {const.CONFIG: conf}
         return True
 
-    # Make the config available to the oauth2 config flow.
     hass.data[DOMAIN] = {const.CONFIG: conf}
 
     # Setup the oauth2 config flow.
-    config_flow.WithingsFlowHandler.async_register_implementation(
-        hass,
-        WithingsLocalOAuth2Implementation(
+    if CONF_CLIENT_ID in conf:
+        await async_import_client_credential(
             hass,
-            const.DOMAIN,
-            conf[CONF_CLIENT_ID],
-            conf[CONF_CLIENT_SECRET],
-            f"{WithingsAuth.URL}/oauth2_user/authorize2",
-            f"{WithingsAuth.URL}/oauth2/token",
-        ),
-    )
+            DOMAIN,
+            ClientCredential(
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
+            ),
+        )
+        LOGGER.warning(
+            "Configuration of Withings integration OAuth2 credentials in YAML "
+            "is deprecated and will be removed in a future release; Your "
+            "existing OAuth Application Credentials have been imported into "
+            "the UI automatically and can be safely removed from your "
+            "configuration.yaml file"
+        )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
-    config_updates = {}
-
-    # Add a unique id if it's an older config entry.
-    if entry.unique_id != entry.data["token"]["userid"] or not isinstance(
-        entry.unique_id, str
-    ):
-        config_updates["unique_id"] = str(entry.data["token"]["userid"])
-
-    # Add the webhook configuration.
-    if CONF_WEBHOOK_ID not in entry.data:
-        webhook_id = webhook.async_generate_id()
-        config_updates["data"] = {
-            **entry.data,
-            **{
-                const.CONF_USE_WEBHOOK: hass.data[DOMAIN][const.CONFIG][
-                    const.CONF_USE_WEBHOOK
-                ],
-                CONF_WEBHOOK_ID: webhook_id,
-                const.CONF_WEBHOOK_URL: entry.data.get(
-                    const.CONF_WEBHOOK_URL,
-                    webhook.async_generate_url(hass, webhook_id),
-                ),
-            },
+    if CONF_USE_WEBHOOK not in entry.options:
+        new_data = entry.data.copy()
+        new_options = {
+            CONF_USE_WEBHOOK: new_data.get(CONF_USE_WEBHOOK, False),
         }
+        unique_id = str(entry.data[CONF_TOKEN]["userid"])
+        if CONF_WEBHOOK_ID not in new_data:
+            new_data[CONF_WEBHOOK_ID] = async_generate_id()
 
-    if config_updates:
-        hass.config_entries.async_update_entry(entry, **config_updates)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, unique_id=unique_id
+        )
+    use_webhook = hass.data[DOMAIN][CONFIG][CONF_USE_WEBHOOK]
+    if use_webhook is not None and use_webhook != entry.options[CONF_USE_WEBHOOK]:
+        new_options = entry.options.copy()
+        new_options |= {CONF_USE_WEBHOOK: use_webhook}
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     data_manager = await async_get_data_manager(hass, entry)
 
-    _LOGGER.debug("Confirming %s is authenticated to withings", data_manager.profile)
+    LOGGER.debug("Confirming %s is authenticated to withings", entry.title)
     await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
@@ -145,9 +146,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
         # Start subscription check in the background, outside this component's setup.
-        async_call_later(hass, 1, async_call_later_callback)
+        entry.async_on_unload(async_call_later(hass, 1, async_call_later_callback))
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -167,6 +169,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_remove_data_manager(hass, entry)
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_webhook_handler(
@@ -191,14 +198,17 @@ async def async_webhook_handler(
         return json_message_response("Parameter appli not provided", message_code=20)
 
     try:
-        appli = NotifyAppli(int(params.getone("appli")))
+        appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
     except ValueError:
         return json_message_response("Invalid appli provided", message_code=21)
 
     data_manager = get_data_manager_by_webhook_id(hass, webhook_id)
     if not data_manager:
-        _LOGGER.error(
-            "Webhook id %s not handled by data manager. This is a bug and should be reported",
+        LOGGER.error(
+            (
+                "Webhook id %s not handled by data manager. This is a bug and should be"
+                " reported"
+            ),
             webhook_id,
         )
         return json_message_response("User not found", message_code=1)

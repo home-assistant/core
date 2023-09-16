@@ -25,10 +25,15 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
+    CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
+    CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
@@ -39,93 +44,112 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-OLD_DATA_TYPES = {
-    DataType.INT: {
-        1: DataType.INT16,
-        2: DataType.INT32,
-        4: DataType.INT64,
-    },
-    DataType.UINT: {
-        1: DataType.UINT16,
-        2: DataType.UINT32,
-        4: DataType.UINT64,
-    },
-    DataType.FLOAT: {
-        1: DataType.FLOAT16,
-        2: DataType.FLOAT32,
-        4: DataType.FLOAT64,
-    },
-}
-ENTRY = namedtuple("ENTRY", ["struct_id", "register_count"])
+ENTRY = namedtuple(
+    "ENTRY",
+    [
+        "struct_id",
+        "register_count",
+        "validate_parm",
+    ],
+)
+PARM_IS_LEGAL = namedtuple(
+    "PARM_IS_LEGAL",
+    [
+        "count",
+        "structure",
+        "slave_count",
+        "swap_byte",
+        "swap_word",
+    ],
+)
+# PARM_IS_LEGAL defines if the keywords:
+#    count: ..
+#    structure: ..
+#    swap: byte
+#    swap: word
+#    swap: word_byte (identical to swap: word)
+# are legal to use.
+# These keywords are only legal with some datatype: ...
+# As expressed in DEFAULT_STRUCT_FORMAT
+
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT16: ENTRY("h", 1),
-    DataType.INT32: ENTRY("i", 2),
-    DataType.INT64: ENTRY("q", 4),
-    DataType.UINT16: ENTRY("H", 1),
-    DataType.UINT32: ENTRY("I", 2),
-    DataType.UINT64: ENTRY("Q", 4),
-    DataType.FLOAT16: ENTRY("e", 1),
-    DataType.FLOAT32: ENTRY("f", 2),
-    DataType.FLOAT64: ENTRY("d", 4),
-    DataType.STRING: ENTRY("s", 1),
+    DataType.INT8: ENTRY("b", 1, PARM_IS_LEGAL(False, False, False, False, False)),
+    DataType.UINT8: ENTRY("c", 1, PARM_IS_LEGAL(False, False, False, False, False)),
+    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
+    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
+    DataType.STRING: ENTRY("s", 1, PARM_IS_LEGAL(True, False, False, False, False)),
+    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
 }
 
 
 def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Sensor schema validator."""
 
-    data_type = config[CONF_DATA_TYPE]
-    count = config.get(CONF_COUNT, 1)
     name = config[CONF_NAME]
-    structure = config.get(CONF_STRUCTURE)
-    swap_type = config.get(CONF_SWAP)
-    if data_type in (DataType.INT, DataType.UINT, DataType.FLOAT):
-        error = f"{name}  with {data_type} is not valid, trying to convert"
-        _LOGGER.warning(error)
-        try:
-            data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
-            config[CONF_DATA_TYPE] = data_type
-        except KeyError as exp:
-            error = f"{name}  cannot convert automatically {data_type}"
-            raise vol.Invalid(error) from exp
-    if config[CONF_DATA_TYPE] != DataType.CUSTOM:
-        if structure:
-            error = f"{name}  structure: cannot be mixed with {data_type}"
+    data_type = config[CONF_DATA_TYPE]
+    if data_type == "int":
+        data_type = config[CONF_DATA_TYPE] = DataType.INT16
+    count = config.get(CONF_COUNT, None)
+    structure = config.get(CONF_STRUCTURE, None)
+    slave_count = config.get(CONF_SLAVE_COUNT, None)
+    slave_name = CONF_SLAVE_COUNT
+    if not slave_count:
+        slave_count = config.get(CONF_VIRTUAL_COUNT, 0)
+        slave_name = CONF_VIRTUAL_COUNT
+    swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
+    validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
+    if count and not validator.count:
+        error = f"{name}: `{CONF_COUNT}: {count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if not count and validator.count:
+        error = f"{name}: `{CONF_COUNT}:` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if structure and not validator.structure:
+        error = f"{name}: `{CONF_STRUCTURE}: {structure}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if not structure and validator.structure:
+        error = f"{name}: `{CONF_STRUCTURE}` missing or empty, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if slave_count and not validator.slave_count:
+        error = f"{name}: `{slave_name}: {slave_count}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
+        raise vol.Invalid(error)
+    if swap_type != CONF_SWAP_NONE:
+        swap_type_validator = {
+            CONF_SWAP_NONE: False,
+            CONF_SWAP_BYTE: validator.swap_byte,
+            CONF_SWAP_WORD: validator.swap_word,
+            CONF_SWAP_WORD_BYTE: validator.swap_word,
+        }[swap_type]
+        if not swap_type_validator:
+            error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
-        structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
-        if CONF_COUNT not in config:
-            config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
-    else:
-        if not structure:
-            error = (
-                f"Error in sensor {name}. The `{CONF_STRUCTURE}` field can not be empty"
-            )
-            raise vol.Invalid(error)
+    if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
-            raise vol.Invalid(f"Error in {name} structure: {str(err)}") from err
-
-        count = config.get(CONF_COUNT, 1)
+            raise vol.Invalid(
+                f"{name}: error in structure format --> {str(err)}"
+            ) from err
         bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(
-                f"Structure request {size} bytes, "
-                f"but {count} registers have a size of {bytecount} bytes"
+                f"{name}: Size of structure is {size} bytes but `{CONF_COUNT}: {count}` is {bytecount} bytes"
             )
-
-        if swap_type != CONF_SWAP_NONE:
-            if swap_type == CONF_SWAP_BYTE:
-                regs_needed = 1
-            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-                regs_needed = 2
-            if count < regs_needed or (count % regs_needed) != 0:
-                raise vol.Invalid(
-                    f"Error in sensor {name} swap({swap_type}) "
-                    f"not possible due to the registers "
-                    f"count: {count}, needed: {regs_needed}"
-                )
-
+    else:
+        config[CONF_COUNT] = DEFAULT_STRUCT_FORMAT[data_type].register_count
+        if slave_count:
+            structure = (
+                f">{slave_count + 1}{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
+            )
+        else:
+            structure = f">{DEFAULT_STRUCT_FORMAT[data_type].struct_id}"
     return {
         **config,
         CONF_STRUCTURE: structure,
@@ -150,6 +174,20 @@ def number_validator(value: Any) -> int | float:
         raise vol.Invalid(f"invalid number {value}") from err
 
 
+def nan_validator(value: Any) -> int:
+    """Convert nan string to number (can be hex string or int)."""
+    if isinstance(value, int):
+        return value
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        pass
+    try:
+        return int(value, 16)
+    except (TypeError, ValueError) as err:
+        raise vol.Invalid(f"invalid number {value}") from err
+
+
 def scan_interval_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub in config:
@@ -164,8 +202,10 @@ def scan_interval_validator(config: dict) -> dict:
                     continue
                 if scan_interval < 5:
                     _LOGGER.warning(
-                        "%s %s scan_interval(%d) is lower than 5 seconds, "
-                        "which may cause Home Assistant stability issues",
+                        (
+                            "%s %s scan_interval(%d) is lower than 5 seconds, "
+                            "which may cause Home Assistant stability issues"
+                        ),
                         component,
                         entry.get(CONF_NAME),
                         scan_interval,
@@ -207,14 +247,20 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_ON])
                 if CONF_COMMAND_OFF in entry:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
-                if CONF_SLAVE in entry:
-                    addr += "_" + str(entry[CONF_SLAVE])
+                inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
+                addr += "_" + str(inx)
                 if addr in addresses:
-                    err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
+                    err = (
+                        f"Modbus {component}/{name} address {addr} is duplicate, second"
+                        " entry not loaded!"
+                    )
                     _LOGGER.warning(err)
                     errors.append(index)
                 elif name in names:
-                    err = f"Modbus {component}/{name}  is duplicate, second entry not loaded!"
+                    err = (
+                        f"Modbus {component}/{name}  is duplicate, second entry not"
+                        " loaded!"
+                    )
                     _LOGGER.warning(err)
                     errors.append(index)
                 else:

@@ -6,8 +6,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
+from homeassistant.const import CURRENCY_CENT, UnitOfVolume
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -37,7 +40,6 @@ CONF_ALLOWED_FUEL_TYPES = [
 ]
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
-ATTRIBUTION = "Data provided by NSW Government FuelCheck"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.positive_int,
@@ -48,7 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NSW Fuel Station sensor."""
 
     station_id = config[CONF_STATION_ID]
@@ -75,8 +82,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities)
 
 
-class StationPriceSensor(CoordinatorEntity, SensorEntity):
+class StationPriceSensor(
+    CoordinatorEntity[DataUpdateCoordinator[StationPriceData]], SensorEntity
+):
     """Implementation of a sensor that reports the fuel price for a station."""
+
+    _attr_attribution = "Data provided by NSW Government FuelCheck"
 
     def __init__(
         self,
@@ -106,18 +117,17 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
         return prices.get((self._station_id, self._fuel_type))
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int | str]:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,
             ATTR_STATION_NAME: self._get_station_name(),
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
-        return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
+        return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
     def _get_station_name(self):
         default_name = f"station {self._station_id}"

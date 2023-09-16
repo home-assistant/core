@@ -31,7 +31,3 @@ class StookalertFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_PROVINCE): vol.In(PROVINCES)}),
         )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        return await self.async_step_user(config)

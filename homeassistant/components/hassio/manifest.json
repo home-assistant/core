@@ -1,16 +1,9 @@
 {
   "domain": "hassio",
   "name": "Home Assistant Supervisor",
+  "codeowners": ["@home-assistant/supervisor"],
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/hassio",
-  "dependencies": [
-    "http"
-  ],
-  "after_dependencies": [
-    "panel_custom"
-  ],
-  "codeowners": [
-    "@home-assistant/supervisor"
-  ],
   "iot_class": "local_polling",
   "quality_scale": "internal"
 }

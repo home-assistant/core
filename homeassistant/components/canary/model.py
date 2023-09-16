@@ -1,18 +1,14 @@
 """Constants for the Canary integration."""
-
 from __future__ import annotations
 
 from collections.abc import ValuesView
-from typing import List, Optional, Tuple, TypedDict
+from typing import TypedDict
 
-from canary.api import Location
+from canary.model import Location, Reading
 
 
 class CanaryData(TypedDict):
     """TypedDict for Canary Coordinator Data."""
 
     locations: dict[str, Location]
-    readings: dict[str, ValuesView]
-
-
-SensorTypeItem = Tuple[str, Optional[str], Optional[str], Optional[str], List[str]]
+    readings: dict[str, ValuesView[Reading]]

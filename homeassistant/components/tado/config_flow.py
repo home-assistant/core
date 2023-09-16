@@ -1,5 +1,8 @@
 """Config flow for Tado integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from PyTado.interface import Tado
 import requests.exceptions
@@ -11,16 +14,27 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_OPTIONS,
+    DOMAIN,
+    UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -55,7 +69,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -94,37 +110,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
-    def _username_already_configured(self, user_input):
-        """See if we already have a username matching user input configured."""
-        existing_username = {
-            entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-        }
-        return user_input[CONF_USERNAME] in existing_username
-
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for tado."""
+    """Handle an option flow for Tado."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_FALLBACK, default=self.config_entry.options.get(CONF_FALLBACK)
-                ): bool,
+                vol.Optional(
+                    CONF_FALLBACK,
+                    default=self.config_entry.options.get(
+                        CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+                    ),
+                ): vol.In(CONST_OVERLAY_TADO_OPTIONS),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

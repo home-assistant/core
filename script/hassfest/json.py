@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import json
 
-from .model import Integration
+from .model import Config, Integration
 
 
-def validate_json_files(integration: Integration):
+def validate_json_files(integration: Integration) -> None:
     """Validate JSON files for integration."""
     for json_file in integration.path.glob("**/*.json"):
         if not json_file.is_file():
@@ -18,16 +18,11 @@ def validate_json_files(integration: Integration):
             relative_path = json_file.relative_to(integration.path)
             integration.add_error("json", f"Invalid JSON file {relative_path}")
 
-    return
 
-
-def validate(integrations: dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle JSON files inside integrations."""
     if not config.specific_integrations:
         return
 
     for integration in integrations.values():
-        if not integration.manifest:
-            continue
-
         validate_json_files(integration)

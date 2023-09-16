@@ -1,4 +1,6 @@
 """Support for UK public transport data provided by transportapi.com."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -8,8 +10,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MODE, TIME_MINUTES
+from homeassistant.const import CONF_MODE, UnitOfTime
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -47,20 +52,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Get the uk_transport sensor."""
-    sensors = []
-    number_sensors = len(config.get(CONF_QUERIES))
+    sensors: list[UkTransportSensor] = []
+    number_sensors = len(queries := config[CONF_QUERIES])
     interval = timedelta(seconds=87 * number_sensors)
 
-    for query in config.get(CONF_QUERIES):
+    api_app_id = config[CONF_API_APP_ID]
+    api_app_key = config[CONF_API_APP_KEY]
+
+    for query in queries:
         if "bus" in query.get(CONF_MODE):
             stop_atcocode = query.get(CONF_ORIGIN)
             bus_direction = query.get(CONF_DESTINATION)
             sensors.append(
                 UkTransportLiveBusTimeSensor(
-                    config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
+                    api_app_id,
+                    api_app_key,
                     stop_atcocode,
                     bus_direction,
                     interval,
@@ -72,8 +85,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             calling_at = query.get(CONF_DESTINATION)
             sensors.append(
                 UkTransportLiveTrainTimeSensor(
-                    config.get(CONF_API_APP_ID),
-                    config.get(CONF_API_APP_KEY),
+                    api_app_id,
+                    api_app_key,
                     station_code,
                     calling_at,
                     interval,
@@ -84,8 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class UkTransportSensor(SensorEntity):
-    """
-    Sensor that reads the UK transport web API.
+    """Sensor that reads the UK transport web API.
 
     transportapi.com provides comprehensive transport data for UK train, tube
     and bus travel across the UK via simple JSON API. Subclasses of this
@@ -94,7 +106,7 @@ class UkTransportSensor(SensorEntity):
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
     _attr_icon = "mdi:train"
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -121,7 +133,7 @@ class UkTransportSensor(SensorEntity):
             {"app_id": self._api_app_id, "app_key": self._api_app_key}, **params
         )
 
-        response = requests.get(self._url, params=request_params)
+        response = requests.get(self._url, params=request_params, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
@@ -160,7 +172,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         if self._data != {}:
             self._next_buses = []
 
-            for (route, departures) in self._data["departures"].items():
+            for route, departures in self._data["departures"].items():
                 for departure in departures:
                     if self._destination_re.search(departure["direction"]):
                         self._next_buses.append(

@@ -11,20 +11,25 @@ import os
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant import core
+from homeassistant import core, loader
 from homeassistant.config import get_default_config_dir
+from homeassistant.config_entries import ConfigEntries
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry, device_registry, entity_registry
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.check_config import async_check_ha_config_file
 from homeassistant.util.yaml import Secrets
 import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.6.0",)
+REQUIREMENTS = ("colorlog==6.7.0",)
 
 _LOGGER = logging.getLogger(__name__)
-# pylint: disable=protected-access
 MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
@@ -39,7 +44,7 @@ ERROR_STR = "General Errors"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from colorlog.escape_codes import escape_codes, parse_colors
 
     try:
@@ -160,13 +165,13 @@ def check(config_dir, secrets=False):
         "secret_cache": {},
     }
 
-    # pylint: disable=possibly-unused-variable
+    # pylint: disable-next=possibly-unused-variable
     def mock_load(filename, secrets=None):
         """Mock hass.util.load_yaml to save config file names."""
         res["yaml_files"][filename] = True
         return MOCKS["load"][1](filename, secrets)
 
-    # pylint: disable=possibly-unused-variable
+    # pylint: disable-next=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -191,11 +196,11 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml_loader.SafeLineLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+        yaml_loader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
-        res["secret_cache"] = secrets._cache
+        res["secret_cache"] = secrets._cache  # pylint: disable=protected-access
         return secrets
 
     try:
@@ -219,20 +224,20 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml_loader.SafeLineLoader.add_constructor(
-                "!secret", yaml_loader.secret_yaml
-            )
+            yaml_loader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     return res
 
 
 async def async_check_config(config_dir):
     """Check the HA config."""
-    hass = core.HomeAssistant()
-    hass.config.config_dir = config_dir
-    await area_registry.async_load(hass)
-    await device_registry.async_load(hass)
-    await entity_registry.async_load(hass)
+    hass = core.HomeAssistant(config_dir)
+    loader.async_setup(hass)
+    hass.config_entries = ConfigEntries(hass, {})
+    await ar.async_load(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    await ir.async_load(hass, read_only=True)
     components = await async_check_ha_config_file(hass)
     await hass.async_stop(force=True)
     return components

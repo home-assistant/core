@@ -1,3 +1,61 @@
 {
-  "title": "Energy"
+  "title": "Energy",
+  "issues": {
+    "entity_not_defined": {
+      "title": "Entity not defined",
+      "description": "Check the integration or your configuration that provides:"
+    },
+    "recorder_untracked": {
+      "title": "Entity not tracked",
+      "description": "The recorder has been configured to exclude these configured entities:"
+    },
+    "entity_unavailable": {
+      "title": "Entity unavailable",
+      "description": "The state of these configured entities are currently not available:"
+    },
+    "entity_state_non_numeric": {
+      "title": "Entity has non-numeric state",
+      "description": "The following entities have a state that cannot be parsed as a number:"
+    },
+    "entity_negative_state": {
+      "title": "Entity has a negative state",
+      "description": "The following entities have a negative state while a positive state is expected:"
+    },
+    "entity_unexpected_unit_energy": {
+      "title": "Unexpected unit of measurement",
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units}):"
+    },
+    "entity_unexpected_unit_gas": {
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have an expected unit of measurement (either of {energy_units} for an energy sensor or either of {gas_units} for a gas sensor):"
+    },
+    "entity_unexpected_unit_water": {
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have the expected unit of measurement (either of {water_units}):"
+    },
+    "entity_unexpected_unit_energy_price": {
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]",
+      "description": "The following entities do not have an expected unit of measurement {price_units}:"
+    },
+    "entity_unexpected_unit_gas_price": {
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::title%]",
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]"
+    },
+    "entity_unexpected_unit_water_price": {
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::title%]",
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]"
+    },
+    "entity_unexpected_state_class": {
+      "title": "Unexpected state class",
+      "description": "The following entities do not have the expected state class:"
+    },
+    "entity_unexpected_device_class": {
+      "title": "Unexpected device class",
+      "description": "The following entities do not have the expected device class:"
+    },
+    "entity_state_class_measurement_no_last_reset": {
+      "title": "Last reset missing",
+      "description": "The following entities have state class 'measurement' but 'last_reset' is missing:"
+    }
+  }
 }

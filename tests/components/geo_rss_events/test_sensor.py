@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -55,7 +56,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass, mock_feed):
+async def test_setup(hass: HomeAssistant, mock_feed) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -119,7 +120,7 @@ async def test_setup(hass, mock_feed):
         }
 
 
-async def test_setup_with_categories(hass, mock_feed):
+async def test_setup_with_categories(hass: HomeAssistant, mock_feed) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(

@@ -27,7 +27,7 @@ LOGGER = logging.getLogger(__name__)
 def async_register_services(hass: HomeAssistant) -> None:
     """Register services for Hue integration."""
 
-    async def hue_activate_scene(call: ServiceCall, skip_reload=True):
+    async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
         """Handle activation of Hue scene."""
         # Get parameters
         group_name = call.data[ATTR_GROUP_NAME]
@@ -133,8 +133,10 @@ async def hue_activate_scene_v2(
 ) -> bool:
     """Service for V2 bridge to call scene by name."""
     LOGGER.warning(
-        "Use of service_call '%s' is deprecated and will be removed "
-        "in a future release. Please use scene entities instead",
+        (
+            "Use of service_call '%s' is deprecated and will be removed "
+            "in a future release. Please use scene entities instead"
+        ),
         SERVICE_HUE_ACTIVATE_SCENE,
     )
     api: HueBridgeV2 = bridge.api
@@ -146,8 +148,10 @@ async def hue_activate_scene_v2(
             continue
         # found match!
         if transition:
-            transition = transition * 100  # in steps of 100ms
-        await api.scenes.recall(scene.id, dynamic=dynamic, duration=transition)
+            transition = transition * 1000  # transition is in ms
+        await bridge.async_request_call(
+            api.scenes.recall, scene.id, dynamic=dynamic, duration=transition
+        )
         return True
     LOGGER.debug(
         "Unable to find scene %s for group %s on bridge %s",

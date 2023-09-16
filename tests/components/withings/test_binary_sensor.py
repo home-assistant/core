@@ -1,63 +1,51 @@
 """Tests for the Withings component."""
+from unittest.mock import AsyncMock
+
 from withings_api.common import NotifyAppli
 
-from homeassistant.components.withings.common import (
-    WITHINGS_MEASUREMENTS_MAP,
-    async_get_entity_id,
-)
-from homeassistant.components.withings.const import Measurement
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .common import ComponentFactory, new_profile_config
+from . import call_webhook, enable_webhooks, setup_integration
+from .conftest import USER_ID, WEBHOOK_ID
+
+from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
+    hass: HomeAssistant,
+    withings: AsyncMock,
+    disable_webhook_delay,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
     """Test binary sensor."""
-    in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]
-    person0 = new_profile_config("person0", 0)
-    person1 = new_profile_config("person1", 1)
+    await enable_webhooks(hass)
+    await setup_integration(hass, config_entry)
 
-    entity_registry: EntityRegistry = er.async_get(hass)
+    client = await hass_client_no_auth()
 
-    await component_factory.configure_component(profile_configs=(person0, person1))
-    assert not await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    assert not await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
+    entity_id = "binary_sensor.henk_in_bed"
 
-    # person 0
-    await component_factory.setup_profile(person0.user_id)
-    await component_factory.setup_profile(person1.user_id)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    entity_id0 = await async_get_entity_id(hass, in_bed_attribute, person0.user_id)
-    entity_id1 = await async_get_entity_id(hass, in_bed_attribute, person1.user_id)
-    assert entity_id0
-    assert entity_id1
-
-    assert entity_registry.async_is_registered(entity_id0)
-    assert hass.states.get(entity_id0).state == STATE_UNAVAILABLE
-
-    resp = await component_factory.call_webhook(person0.user_id, NotifyAppli.BED_IN)
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_IN},
+        client,
+    )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id0).state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
 
-    resp = await component_factory.call_webhook(person0.user_id, NotifyAppli.BED_OUT)
+    resp = await call_webhook(
+        hass,
+        WEBHOOK_ID,
+        {"userid": USER_ID, "appli": NotifyAppli.BED_OUT},
+        client,
+    )
     assert resp.message_code == 0
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id0).state == STATE_OFF
-
-    # person 1
-    assert hass.states.get(entity_id1).state == STATE_UNAVAILABLE
-
-    resp = await component_factory.call_webhook(person1.user_id, NotifyAppli.BED_IN)
-    assert resp.message_code == 0
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id1).state == STATE_ON
-
-    # Unload
-    await component_factory.unload(person0)
-    await component_factory.unload(person1)
+    assert hass.states.get(entity_id).state == STATE_OFF

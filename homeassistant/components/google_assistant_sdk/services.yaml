@@ -1,0 +1,11 @@
+send_text_command:
+  fields:
+    command:
+      example: turn off kitchen TV
+      selector:
+        text:
+    media_player:
+      example: media_player.living_room_speaker
+      selector:
+        entity:
+          domain: media_player

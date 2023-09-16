@@ -1,5 +1,6 @@
 """Class to hold all lock accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
@@ -12,7 +13,7 @@ from homeassistant.components.lock import (
     STATE_UNLOCKING,
 )
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
@@ -59,11 +60,12 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self._code = self.config.get(ATTR_CODE)
         state = self.hass.states.get(self.entity_id)
+        assert state is not None
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
         self.char_current_state = serv_lock_mechanism.configure_char(
@@ -76,7 +78,7 @@ class Lock(HomeAccessory):
         )
         self.async_update_state(state)
 
-    def set_state(self, value):
+    def set_state(self, value: int) -> None:
         """Set lock state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
 
@@ -89,7 +91,7 @@ class Lock(HomeAccessory):
         self.async_call_service(DOMAIN, service, params)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update lock after state changed."""
         hass_state = new_state.state
         current_lock_state = HASS_TO_HOMEKIT_CURRENT.get(

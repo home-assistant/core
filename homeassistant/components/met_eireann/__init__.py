@@ -1,10 +1,13 @@
 """The met_eireann component."""
 from datetime import timedelta
 import logging
+from typing import Self
 
 import meteireann
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -18,7 +21,7 @@ UPDATE_INTERVAL = timedelta(minutes=60)
 PLATFORMS = [Platform.WEATHER]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Met Éireann as config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -31,7 +34,7 @@ async def async_setup_entry(hass, config_entry):
 
     weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
 
-    async def _async_update_data():
+    async def _async_update_data() -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:
             return await weather_data.fetch_data()
@@ -49,12 +52,12 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -76,7 +79,7 @@ class MetEireannWeatherData:
         self.daily_forecast = None
         self.hourly_forecast = None
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()

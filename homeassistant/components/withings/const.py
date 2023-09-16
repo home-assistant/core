@@ -1,8 +1,8 @@
 """Constants used by the Withings component."""
-from enum import Enum
+from enum import StrEnum
+import logging
 
-from homeassistant import const
-
+DEFAULT_TITLE = "Withings"
 CONF_PROFILES = "profiles"
 CONF_USE_WEBHOOK = "use_webhook"
 
@@ -13,10 +13,11 @@ DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 PROFILE = "profile"
 PUSH_HANDLER = "push_handler"
-CONF_WEBHOOK_URL = "webhook_url"
+
+LOGGER = logging.getLogger(__package__)
 
 
-class Measurement(Enum):
+class Measurement(StrEnum):
     """Measurement supported by the withings integration."""
 
     BODY_TEMP_C = "body_temperature_c"
@@ -57,8 +58,6 @@ class Measurement(Enum):
 
 SCORE_POINTS = "points"
 UOM_BEATS_PER_MINUTE = "bpm"
-UOM_BREATHS_PER_MINUTE = f"br/{const.TIME_MINUTES}"
+UOM_BREATHS_PER_MINUTE = "br/min"
 UOM_FREQUENCY = "times"
 UOM_MMHG = "mmhg"
-UOM_LENGTH_M = const.LENGTH_METERS
-UOM_TEMP_C = const.TEMP_CELSIUS

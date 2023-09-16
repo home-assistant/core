@@ -1,6 +1,7 @@
 """Config flow for Aurora ABB PowerOne integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_and_connect(
-    hass: core.HomeAssistant, data: dict[str, Any]
+    hass: core.HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
@@ -35,7 +36,7 @@ def validate_and_connect(
     """
     comport = data[CONF_PORT]
     address = data[CONF_ADDRESS]
-    _LOGGER.debug("Intitialising com port=%s", comport)
+    _LOGGER.debug("Initialising com port=%s", comport)
     ret = {}
     ret["title"] = DEFAULT_INTEGRATION_TITLE
     try:
@@ -79,18 +80,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.config = None
         self._com_ports_list = None
         self._default_com_port = None
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        conf = {}
-        conf[CONF_PORT] = config["device"]
-        conf[CONF_ADDRESS] = config["address"]
-        # config["name"] from yaml is ignored.
-
-        return self.async_create_entry(title=DEFAULT_INTEGRATION_TITLE, data=conf)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

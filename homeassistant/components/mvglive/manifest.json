@@ -1,8 +1,9 @@
 {
   "domain": "mvglive",
   "name": "MVG",
-  "documentation": "https://www.home-assistant.io/integrations/mvglive",
-  "requirements": ["PyMVGLive==1.1.4"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/mvglive",
+  "iot_class": "cloud_polling",
+  "loggers": ["MVGLive"],
+  "requirements": ["PyMVGLive==1.1.4"]
 }

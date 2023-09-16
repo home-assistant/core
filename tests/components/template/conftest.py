@@ -1,6 +1,4 @@
 """template conftest."""
-import json
-
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -15,18 +13,8 @@ def calls(hass):
 
 
 @pytest.fixture
-def config_addon():
-    """Add entra configuration items."""
-    return None
-
-
-@pytest.fixture
-async def start_ha(hass, count, domain, config_addon, config, caplog):
+async def start_ha(hass, count, domain, config, caplog):
     """Do setup of integration."""
-    if config_addon:
-        for key, value in config_addon.items():
-            config = config.replace(key, value)
-        config = json.loads(config)
     with assert_setup_component(count, domain):
         assert await async_setup_component(
             hass,
@@ -42,4 +30,4 @@ async def start_ha(hass, count, domain, config_addon, config, caplog):
 @pytest.fixture
 async def caplog_setup_text(caplog):
     """Return setup log of integration."""
-    yield caplog.text
+    return caplog.text

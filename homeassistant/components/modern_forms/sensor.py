@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -44,20 +43,19 @@ class ModernFormsSensor(ModernFormsDeviceEntity, SensorEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        name: str,
         icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
         self._key = key
-        super().__init__(
-            entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
-        )
+        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_{self._key}"
 
 
 class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
     """Defines the Modern Forms Light Timer remaining time sensor."""
+
+    _attr_translation_key = "light_timer_remaining_time"
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
@@ -68,9 +66,8 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             entry_id=entry_id,
             icon="mdi:timer-outline",
             key="light_timer_remaining_time",
-            name=f"{coordinator.data.info.device_name} Light Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -89,6 +86,8 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
     """Defines the Modern Forms Light Timer remaining time sensor."""
 
+    _attr_translation_key = "fan_timer_remaining_time"
+
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
     ) -> None:
@@ -98,9 +97,8 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
             entry_id=entry_id,
             icon="mdi:timer-outline",
             key="fan_timer_remaining_time",
-            name=f"{coordinator.data.info.device_name} Fan Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self) -> StateType | datetime:

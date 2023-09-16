@@ -27,7 +27,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery = None
+    _hassio_discovery: dict[str, Any] | None = None
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
@@ -56,7 +56,6 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
-            data_schema=vol.Schema({}),
             errors=errors or {},
         )
 
@@ -80,8 +79,8 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         adguard = AdGuardHome(
             user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=username,  # type:ignore[arg-type]
-            password=password,  # type:ignore[arg-type]
+            username=username,
+            password=password,
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
             session=session,

@@ -3,16 +3,15 @@ import logging
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -22,8 +21,12 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import State, callback
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -46,13 +49,13 @@ HC_HUMIDIFIER = 1
 HC_DEHUMIDIFIER = 2
 
 HC_HASS_TO_HOMEKIT_DEVICE_CLASS = {
-    DEVICE_CLASS_HUMIDIFIER: HC_HUMIDIFIER,
-    DEVICE_CLASS_DEHUMIDIFIER: HC_DEHUMIDIFIER,
+    HumidifierDeviceClass.HUMIDIFIER: HC_HUMIDIFIER,
+    HumidifierDeviceClass.DEHUMIDIFIER: HC_DEHUMIDIFIER,
 }
 
 HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME = {
-    DEVICE_CLASS_HUMIDIFIER: "Humidifier",
-    DEVICE_CLASS_DEHUMIDIFIER: "Dehumidifier",
+    HumidifierDeviceClass.HUMIDIFIER: "Humidifier",
+    HumidifierDeviceClass.DEHUMIDIFIER: "Dehumidifier",
 }
 
 HC_DEVICE_CLASS_TO_TARGET_CHAR = {
@@ -75,7 +78,9 @@ class HumidifierDehumidifier(HomeAccessory):
         super().__init__(*args, category=CATEGORY_HUMIDIFIER)
         self.chars = []
         state = self.hass.states.get(self.entity_id)
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS, DEVICE_CLASS_HUMIDIFIER)
+        device_class = state.attributes.get(
+            ATTR_DEVICE_CLASS, HumidifierDeviceClass.HUMIDIFIER
+        )
         self._hk_device_class = HC_HASS_TO_HOMEKIT_DEVICE_CLASS[device_class]
 
         self._target_humidity_char_name = HC_DEVICE_CLASS_TO_TARGET_CHAR[
@@ -97,6 +102,10 @@ class HumidifierDehumidifier(HomeAccessory):
             serv_humidifier_dehumidifier.configure_char(
                 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
                 value=self._hk_device_class,
+                properties={
+                    PROP_MIN_VALUE: self._hk_device_class,
+                    PROP_MAX_VALUE: self._hk_device_class,
+                },
                 valid_values={
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
                         device_class
@@ -110,20 +119,12 @@ class HumidifierDehumidifier(HomeAccessory):
             CHAR_CURRENT_HUMIDITY, value=0
         )
 
-        max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
-        max_humidity = round(max_humidity)
-        max_humidity = min(max_humidity, 100)
-
-        min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
-        min_humidity = round(min_humidity)
-        min_humidity = max(min_humidity, 0)
-
         self.char_target_humidity = serv_humidifier_dehumidifier.configure_char(
             self._target_humidity_char_name,
             value=45,
             properties={
-                PROP_MIN_VALUE: min_humidity,
-                PROP_MAX_VALUE: max_humidity,
+                PROP_MIN_VALUE: DEFAULT_MIN_HUMIDITY,
+                PROP_MAX_VALUE: DEFAULT_MAX_HUMIDITY,
                 PROP_MIN_STEP: 1,
             },
         )
@@ -160,16 +161,21 @@ class HumidifierDehumidifier(HomeAccessory):
         await super().run()
 
     @callback
-    def async_update_current_humidity_event(self, event):
+    def async_update_current_humidity_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Handle state change event listener callback."""
-        self._async_update_current_humidity(event.data.get("new_state"))
+        self._async_update_current_humidity(event.data["new_state"])
 
     @callback
-    def _async_update_current_humidity(self, new_state):
+    def _async_update_current_humidity(self, new_state: State | None) -> None:
         """Handle linked humidity sensor state change to update HomeKit value."""
         if new_state is None:
             _LOGGER.error(
-                "%s: Unable to update from linked humidity sensor %s: the entity state is None",
+                (
+                    "%s: Unable to update from linked humidity sensor %s: the entity"
+                    " state is None"
+                ),
                 self.entity_id,
                 self.linked_humidity_sensor,
             )
@@ -185,7 +191,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
                 self.char_current_humidity.set_value(current_humidity)
         except ValueError as ex:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s: Unable to update from linked humidity sensor %s: %s",
                 self.entity_id,
                 self.linked_humidity_sensor,
@@ -211,13 +217,31 @@ class HumidifierDehumidifier(HomeAccessory):
             )
 
         if self._target_humidity_char_name in char_values:
+            state = self.hass.states.get(self.entity_id)
+            max_humidity = state.attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)
+            max_humidity = round(max_humidity)
+            max_humidity = min(max_humidity, 100)
+
+            min_humidity = state.attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+            min_humidity = round(min_humidity)
+            min_humidity = max(min_humidity, 0)
+
             humidity = round(char_values[self._target_humidity_char_name])
+
+            if (humidity < min_humidity) or (humidity > max_humidity):
+                humidity = min(max_humidity, max(min_humidity, humidity))
+                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
+                # cannot not set to a value below/above the min/max.
+                self.char_target_humidity.set_value(humidity)
+
             self.async_call_service(
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
-                f"{self._target_humidity_char_name} to "
-                f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}",
+                (
+                    f"{self._target_humidity_char_name} to "
+                    f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}"
+                ),
             )
 
     @callback

@@ -6,20 +6,22 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
-import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
@@ -50,7 +52,7 @@ PING_MATCHER_BUSYBOX = re.compile(
 
 WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -62,13 +64,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Ping Binary sensor."""
-    host = config[CONF_HOST]
-    count = config[CONF_PING_COUNT]
-    name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
-    privileged = hass.data[DOMAIN][PING_PRIVS]
+    host: str = config[CONF_HOST]
+    count: int = config[CONF_PING_COUNT]
+    name: str = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    privileged: bool | None = hass.data[DOMAIN][PING_PRIVS]
+    ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
         ping_cls = PingDataSubProcess
     else:
@@ -82,26 +88,13 @@ async def async_setup_platform(
 class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name: str, ping) -> None:
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, name: str, ping: PingDataSubProcess | PingDataICMPLib) -> None:
         """Initialize the Ping Binary sensor."""
-        self._available = False
-        self._name = name
+        self._attr_available = False
+        self._attr_name = name
         self._ping = ping
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def available(self) -> str:
-        """Return if we have done the first ping."""
-        return self._available
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def is_on(self) -> bool:
@@ -109,31 +102,32 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._ping.is_alive
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the ICMP checo request."""
-        if self._ping.data is not False:
-            return {
-                ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
-                ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
-                ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
-                ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
-            }
+        if self._ping.data is None:
+            return None
+        return {
+            ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
+            ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
+            ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
+            ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
+        }
 
     async def async_update(self) -> None:
         """Get the latest data."""
         await self._ping.async_update()
-        self._available = True
+        self._attr_available = True
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state on restart to avoid blocking startup."""
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
         if last_state is not None:
-            self._available = True
+            self._attr_available = True
 
         if last_state is None or last_state.state != STATE_ON:
-            self._ping.data = False
+            self._ping.data = None
             return
 
         attributes = last_state.attributes
@@ -149,19 +143,21 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 class PingData:
     """The base class for handling the data retrieval."""
 
-    def __init__(self, hass, host, count) -> None:
+    def __init__(self, hass: HomeAssistant, host: str, count: int) -> None:
         """Initialize the data object."""
         self.hass = hass
         self._ip_address = host
         self._count = count
-        self.data = {}
+        self.data: dict[str, Any] | None = None
         self.is_alive = False
 
 
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         self._privileged = privileged
@@ -182,7 +178,7 @@ class PingDataICMPLib(PingData):
 
         self.is_alive = data.is_alive
         if not self.is_alive:
-            self.data = False
+            self.data = None
             return
 
         self.data = {
@@ -196,41 +192,33 @@ class PingDataICMPLib(PingData):
 class PingDataSubProcess(PingData):
     """The Class for handling the data retrieval using the ping binary."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(
+        self, hass: HomeAssistant, host: str, count: int, privileged: bool | None
+    ) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
+        self._ping_cmd = [
+            "ping",
+            "-n",
+            "-q",
+            "-c",
+            str(self._count),
+            "-W1",
+            self._ip_address,
+        ]
 
-    async def async_ping(self):
+    async def async_ping(self) -> dict[str, Any] | None:
         """Send ICMP echo request and return details if success."""
         pinger = await asyncio.create_subprocess_exec(
             *self._ping_cmd,
             stdin=None,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            close_fds=False,  # required for posix_spawn
         )
         try:
-            out_data, out_error = await asyncio.wait_for(
-                pinger.communicate(), self._count + PING_TIMEOUT
-            )
+            async with asyncio.timeout(self._count + PING_TIMEOUT):
+                out_data, out_error = await pinger.communicate()
 
             if out_data:
                 _LOGGER.debug(
@@ -247,7 +235,7 @@ class PingDataSubProcess(PingData):
                     out_error,
                 )
 
-            if pinger.returncode > 1:
+            if pinger.returncode and pinger.returncode > 1:
                 # returncode of 1 means the host is unreachable
                 _LOGGER.exception(
                     "Error running command: `%s`, return code: %s",
@@ -255,19 +243,17 @@ class PingDataSubProcess(PingData):
                     pinger.returncode,
                 )
 
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(
-                    str(out_data).rsplit("\n", maxsplit=1)[-1]
-                )
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]
                 )
+                if TYPE_CHECKING:
+                    assert match is not None
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
+            if TYPE_CHECKING:
+                assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:
@@ -278,14 +264,14 @@ class PingDataSubProcess(PingData):
             )
             if pinger:
                 with suppress(TypeError):
-                    await pinger.kill()
+                    await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 
-            return False
+            return None
         except AttributeError:
-            return False
+            return None
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
-        self.is_alive = bool(self.data)
+        self.is_alive = self.data is not None

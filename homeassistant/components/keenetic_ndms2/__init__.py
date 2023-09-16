@@ -6,7 +6,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -67,8 +67,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         _LOGGER.debug(
             "Cleaning device_tracker entities since some interfaces are now untracked:"
         )
-        ent_reg = entity_registry.async_get(hass)
-        dev_reg = device_registry.async_get(hass)
+        ent_reg = er.async_get(hass)
+        dev_reg = dr.async_get(hass)
         # We keep devices currently connected to new_tracked_interfaces
         keep_devices: set[str] = {
             mac
@@ -85,17 +85,18 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
 
                     ent_reg.async_remove(entity_entry.entity_id)
-                    dev_reg.async_update_device(
-                        entity_entry.device_id,
-                        remove_config_entry_id=config_entry.entry_id,
-                    )
+                    if entity_entry.device_id:
+                        dev_reg.async_update_device(
+                            entity_entry.device_id,
+                            remove_config_entry_id=config_entry.entry_id,
+                        )
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
 
     return unload_ok
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

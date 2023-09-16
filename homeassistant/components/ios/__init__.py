@@ -11,7 +11,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.json import load_json, save_json
+from homeassistant.helpers.json import save_json
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import load_json_object
 
 from .const import (
     CONF_ACTION_BACKGROUND_COLOR,
@@ -247,26 +249,26 @@ def device_name_for_push_id(hass, push_id):
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
-    conf = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     ios_config = await hass.async_add_executor_job(
-        load_json, hass.config.path(CONFIGURATION_FILE)
+        load_json_object, hass.config.path(CONFIGURATION_FILE)
     )
 
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_USER] = conf or {}
+    if CONF_PUSH not in (conf_user := conf or {}):
+        conf_user[CONF_PUSH] = {}
 
-    if CONF_PUSH not in ios_config[CONF_USER]:
-        ios_config[CONF_USER][CONF_PUSH] = {}
+    ios_config[CONF_USER] = conf_user
 
     hass.data[DOMAIN] = ios_config
 
     # No entry support for notify component yet
-    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.NOTIFY, DOMAIN, {}, config)
 
     if conf is not None:
         hass.async_create_task(
@@ -282,7 +284,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up an iOS entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
     hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
@@ -291,7 +293,6 @@ async def async_setup_entry(
     return True
 
 
-# pylint: disable=invalid-name
 class iOSPushConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 

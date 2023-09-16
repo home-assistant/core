@@ -22,8 +22,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -207,7 +209,7 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Homematic component."""
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
@@ -260,7 +262,7 @@ def setup(hass, config):
     for hub_name in conf[CONF_HOSTS]:
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
-    def _hm_service_virtualkey(service):
+    def _hm_service_virtualkey(service: ServiceCall) -> None:
         """Service to handle virtualkey servicecalls."""
         address = service.data.get(ATTR_ADDRESS)
         channel = service.data.get(ATTR_CHANNEL)
@@ -292,7 +294,7 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_VIRTUALKEY,
     )
 
-    def _service_handle_value(service):
+    def _service_handle_value(service: ServiceCall) -> None:
         """Service to call setValue method for HomeMatic system variable."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         name = service.data[ATTR_NAME]
@@ -319,7 +321,7 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE,
     )
 
-    def _service_handle_reconnect(service):
+    def _service_handle_reconnect(service: ServiceCall) -> None:
         """Service to reconnect all HomeMatic hubs."""
         homematic.reconnect()
 
@@ -330,12 +332,12 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_RECONNECT,
     )
 
-    def _service_handle_device(service):
+    def _service_handle_device(service: ServiceCall) -> None:
         """Service to call setValue method for HomeMatic devices."""
-        address = service.data.get(ATTR_ADDRESS)
-        channel = service.data.get(ATTR_CHANNEL)
-        param = service.data.get(ATTR_PARAM)
-        value = service.data.get(ATTR_VALUE)
+        address = service.data[ATTR_ADDRESS]
+        channel = service.data[ATTR_CHANNEL]
+        param = service.data[ATTR_PARAM]
+        value = service.data[ATTR_VALUE]
         value_type = service.data.get(ATTR_VALUE_TYPE)
 
         # Convert value into correct XML-RPC Type.
@@ -368,7 +370,7 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE,
     )
 
-    def _service_handle_install_mode(service):
+    def _service_handle_install_mode(service: ServiceCall) -> None:
         """Service to set interface into install mode."""
         interface = service.data.get(ATTR_INTERFACE)
         mode = service.data.get(ATTR_MODE)
@@ -384,15 +386,15 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_SET_INSTALL_MODE,
     )
 
-    def _service_put_paramset(service):
+    def _service_put_paramset(service: ServiceCall) -> None:
         """Service to call the putParamset method on a HomeMatic connection."""
-        interface = service.data.get(ATTR_INTERFACE)
-        address = service.data.get(ATTR_ADDRESS)
-        paramset_key = service.data.get(ATTR_PARAMSET_KEY)
+        interface = service.data[ATTR_INTERFACE]
+        address = service.data[ATTR_ADDRESS]
+        paramset_key = service.data[ATTR_PARAMSET_KEY]
         # When passing in the paramset from a YAML file we get an OrderedDict
         # here instead of a dict, so add this explicit cast.
         # The service schema makes sure that this cast works.
-        paramset = dict(service.data.get(ATTR_PARAMSET))
+        paramset = dict(service.data[ATTR_PARAMSET])
         rx_mode = service.data.get(ATTR_RX_MODE)
 
         _LOGGER.debug(

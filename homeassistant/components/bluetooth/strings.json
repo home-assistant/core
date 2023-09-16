@@ -1,0 +1,38 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Choose a device to set up",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "multiple_adapters": {
+        "description": "Select a Bluetooth adapter to set up",
+        "data": {
+          "adapter": "Adapter"
+        }
+      },
+      "single_adapter": {
+        "description": "Do you want to set up the Bluetooth adapter {name}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "no_adapters": "No unconfigured Bluetooth adapters found. There are {ignored_adapters} ignored adapters."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "passive": "Passive scanning"
+        }
+      }
+    }
+  }
+}

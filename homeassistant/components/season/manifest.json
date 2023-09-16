@@ -1,9 +1,12 @@
 {
   "domain": "season",
   "name": "Season",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/season",
-  "requirements": ["ephem==3.7.7.0"],
-  "codeowners": [],
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "loggers": ["ephem"],
   "quality_scale": "internal",
-  "iot_class": "local_polling"
+  "requirements": ["ephem==4.1.2"]
 }

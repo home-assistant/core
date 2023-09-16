@@ -1,1 +1,1 @@
-"""Tests for the Image integration."""
+"""The tests for the image integration."""

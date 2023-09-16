@@ -1,5 +1,6 @@
 """Constants for testing the Coinbase integration."""
 
+
 GOOD_CURRENCY = "BTC"
 GOOD_CURRENCY_2 = "USD"
 GOOD_CURRENCY_3 = "EUR"

@@ -44,7 +44,8 @@ def run_download_docker():
             "json",
             "--unzip-to",
             "/opt/dest",
-        ]
+        ],
+        check=False,
     )
     print()
 
@@ -70,7 +71,7 @@ def get_component_path(lang, component):
         return os.path.join(
             "homeassistant", "components", component, "translations", f"{lang}.json"
         )
-    raise ExitApp(f"Integration {component} not found under homeassistant/components/")
+    return None
 
 
 def get_platform_path(lang, component, platform):
@@ -98,7 +99,11 @@ def save_language_translations(lang, translations):
     for component, component_translations in components.items():
         base_translations = get_component_translations(component_translations)
         if base_translations:
-            path = get_component_path(lang, component)
+            if (path := get_component_path(lang, component)) is None:
+                print(
+                    f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
+                )
+                continue
             os.makedirs(os.path.dirname(path), exist_ok=True)
             save_json(path, base_translations)
 

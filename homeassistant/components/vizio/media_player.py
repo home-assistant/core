@@ -3,17 +3,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
-    SUPPORT_SELECT_SOUND_MODE,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,20 +22,18 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -74,7 +71,8 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
-    # If config entry options not set up, set them up, otherwise assign values managed in options
+    # If config entry options not set up, set them up,
+    # otherwise assign values managed in options
     volume_step = config_entry.options.get(
         CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
     )
@@ -104,7 +102,10 @@ async def async_setup_entry(
         params["data"] = new_data
 
     if params:
-        hass.config_entries.async_update_entry(config_entry, **params)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            **params,  # type: ignore[arg-type]
+        )
 
     device = VizioAsync(
         DEVICE_ID,
@@ -135,8 +136,8 @@ class VizioDevice(MediaPlayerEntity):
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
-        device_class: str,
-        apps_coordinator: DataUpdateCoordinator,
+        device_class: MediaPlayerDeviceClass,
+        apps_coordinator: VizioAppsDataUpdateCoordinator | None,
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -145,8 +146,9 @@ class VizioDevice(MediaPlayerEntity):
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._current_input = None
         self._current_app_config = None
-        self._available_inputs = []
-        self._available_apps = []
+        self._attr_app_name = None
+        self._available_inputs: list[str] = []
+        self._available_apps: list[str] = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
@@ -178,9 +180,9 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(log_api_exception=False)
-
-        if is_on is None:
+        if (
+            is_on := await self._device.get_power_state(log_api_exception=False)
+        ) is None:
             if self._attr_available:
                 _LOGGER.warning(
                     "Lost connection to %s", self._config_entry.data[CONF_HOST]
@@ -195,6 +197,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_available = True
 
         if not self._attr_device_info:
+            assert self._attr_unique_id
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer="VIZIO",
@@ -204,7 +207,7 @@ class VizioDevice(MediaPlayerEntity):
             )
 
         if not is_on:
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
@@ -213,13 +216,11 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_sound_mode = None
             return
 
-        self._attr_state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
 
-        audio_settings = await self._device.get_all_settings(
+        if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False
-        )
-
-        if audio_settings:
+        ):
             self._attr_volume_level = (
                 float(audio_settings[VIZIO_VOLUME]) / self._max_volume
             )
@@ -231,7 +232,9 @@ class VizioDevice(MediaPlayerEntity):
                 self._attr_is_volume_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
-                self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                )
                 self._attr_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if not self._attr_sound_mode_list:
                     self._attr_sound_mode_list = await self._device.get_setting_options(
@@ -240,30 +243,31 @@ class VizioDevice(MediaPlayerEntity):
                         log_api_exception=False,
                     )
             else:
-                # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
-                self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
+                # Explicitly remove MediaPlayerEntityFeature.SELECT_SOUND_MODE from supported features
+                self._attr_supported_features &= (
+                    ~MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                )
 
-        input_ = await self._device.get_current_input(log_api_exception=False)
-        if input_:
+        if input_ := await self._device.get_current_input(log_api_exception=False):
             self._current_input = input_
 
-        inputs = await self._device.get_inputs_list(log_api_exception=False)
-
         # If no inputs returned, end update
-        if not inputs:
+        if not (inputs := await self._device.get_inputs_list(log_api_exception=False)):
             return
 
         self._available_inputs = [input_.name for input_ in inputs]
 
         # Return before setting app variables if INPUT_APPS isn't in available inputs
-        if self._attr_device_class == DEVICE_CLASS_SPEAKER or not any(
+        if self._attr_device_class == MediaPlayerDeviceClass.SPEAKER or not any(
             app for app in INPUT_APPS if app in self._available_inputs
         ):
             return
 
         # Create list of available known apps from known app list after
         # filtering by CONF_INCLUDE/CONF_EXCLUDE
-        self._available_apps = self._apps_list([app["name"] for app in self._all_apps])
+        self._available_apps = self._apps_list(
+            [app["name"] for app in self._all_apps or ()]
+        )
 
         self._current_app_config = await self._device.get_current_app_config(
             log_api_exception=False
@@ -271,13 +275,13 @@ class VizioDevice(MediaPlayerEntity):
 
         self._attr_app_name = find_app_name(
             self._current_app_config,
-            [APP_HOME, *self._all_apps, *self._additional_app_configs],
+            [APP_HOME, *(self._all_apps or ()), *self._additional_app_configs],
         )
 
         if self._attr_app_name == NO_APP_RUNNING:
             self._attr_app_name = None
 
-    def _get_additional_app_names(self) -> list[dict[str, Any]]:
+    def _get_additional_app_names(self) -> list[str]:
         """Return list of additional apps that were included in configuration.yaml."""
         return [
             additional_app["name"] for additional_app in self._additional_app_configs
@@ -288,7 +292,8 @@ class VizioDevice(MediaPlayerEntity):
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
-        # Move this method to component level if another entity ever gets added for a single config entry.
+        # Move this method to component level if another entity ever gets added for a
+        # single config entry.
         # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
@@ -325,17 +330,21 @@ class VizioDevice(MediaPlayerEntity):
             )
         )
 
+        if not self._apps_coordinator:
+            return
+
         # Register callback for app list updates if device is a TV
         @callback
-        def apps_list_update():
+        def apps_list_update() -> None:
             """Update list of all apps."""
+            if not self._apps_coordinator:
+                return
             self._all_apps = self._apps_coordinator.data
             self.async_write_ha_state()
 
-        if self._attr_device_class == DEVICE_CLASS_TV:
-            self.async_on_remove(
-                self._apps_coordinator.async_add_listener(apps_list_update)
-            )
+        self.async_on_remove(
+            self._apps_coordinator.async_add_listener(apps_list_update)
+        )
 
     @property
     def source(self) -> str | None:
@@ -370,7 +379,7 @@ class VizioDevice(MediaPlayerEntity):
     @property
     def app_id(self) -> str | None:
         """Return the ID of the current app if it is unknown by pyvizio."""
-        if self._current_app_config and self.app_name == UNKNOWN_APP:
+        if self._current_app_config and self.source == UNKNOWN_APP:
             return {
                 "APP_ID": self._current_app_config.APP_ID,
                 "NAME_SPACE": self._current_app_config.NAME_SPACE,

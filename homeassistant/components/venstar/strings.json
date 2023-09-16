@@ -19,5 +19,18 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "schedule_part": {
+        "state": {
+          "morning": "Morning",
+          "day": "Day",
+          "evening": "Evening",
+          "night": "Night",
+          "inactive": "Inactive"
+        }
+      }
+    }
   }
 }

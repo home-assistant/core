@@ -1,99 +1,157 @@
 """Support for Switchbot devices."""
-from asyncio import Lock
 
-import switchbot  # pylint: disable=import-error
+import logging
 
+import switchbot
+
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SENSOR_TYPE, Platform
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SENSOR_TYPE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    ATTR_BOT,
-    ATTR_CURTAIN,
-    BTLE_LOCK,
-    COMMON_OPTIONS,
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
     CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
-    CONF_SCAN_TIMEOUT,
-    CONF_TIME_BETWEEN_UPDATE_COMMAND,
-    DATA_COORDINATOR,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_TIMEOUT,
-    DEFAULT_SCAN_TIMEOUT,
-    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
     DOMAIN,
+    HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
+    SupportedModels,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.LIGHT_STRIP.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.CEILING_LIGHT.value: [Platform.SENSOR, Platform.LIGHT],
+    SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.CURTAIN.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.LOCK.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.BLIND_TILT.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
 }
+CLASS_BY_DEVICE = {
+    SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
+    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
+    SupportedModels.BOT.value: switchbot.Switchbot,
+    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
+    SupportedModels.BULB.value: switchbot.SwitchbotBulb,
+    SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
+    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
+    SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
+}
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
+    assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
-
-    if not entry.options:
-        options = {
-            CONF_TIME_BETWEEN_UPDATE_COMMAND: DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
-            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
-            CONF_SCAN_TIMEOUT: DEFAULT_SCAN_TIMEOUT,
-        }
-
-        hass.config_entries.async_update_entry(entry, options=options)
-
-    # Use same coordinator instance for all entities.
-    # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
-    if DATA_COORDINATOR not in hass.data[DOMAIN]:
-
-        # Check if asyncio.lock is stored in hass data.
-        # BTLE has issues with multiple connections,
-        # so we use a lock to ensure that only one API request is reaching it at a time:
-        if BTLE_LOCK not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][BTLE_LOCK] = Lock()
-
-        if COMMON_OPTIONS not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
-
-        switchbot.DEFAULT_RETRY_TIMEOUT = hass.data[DOMAIN][COMMON_OPTIONS][
-            CONF_RETRY_TIMEOUT
-        ]
-
-        # Store api in coordinator.
-        coordinator = SwitchbotDataUpdateCoordinator(
-            hass,
-            update_interval=hass.data[DOMAIN][COMMON_OPTIONS][
-                CONF_TIME_BETWEEN_UPDATE_COMMAND
-            ],
-            api=switchbot,
-            retry_count=hass.data[DOMAIN][COMMON_OPTIONS][CONF_RETRY_COUNT],
-            scan_timeout=hass.data[DOMAIN][COMMON_OPTIONS][CONF_SCAN_TIMEOUT],
-            api_lock=hass.data[DOMAIN][BTLE_LOCK],
+    if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
+        # Bleak uses addresses not mac addresses which are actually
+        # UUIDs on some platforms (MacOS).
+        mac = entry.data[CONF_MAC]
+        if "-" not in mac:
+            mac = dr.format_mac(mac)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_ADDRESS: mac},
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR] = coordinator
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
+        )
 
+    sensor_type: str = entry.data[CONF_SENSOR_TYPE]
+    switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
+    # connectable means we can make connections to the device
+    connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
+    address: str = entry.data[CONF_ADDRESS]
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, address.upper(), connectable
+    )
+    if not ble_device:
+        raise ConfigEntryNotReady(
+            f"Could not find Switchbot {sensor_type} with address {address}"
+        )
+
+    await switchbot.close_stale_connections(ble_device)
+    cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
+    if cls is switchbot.SwitchbotLock:
+        try:
+            device = switchbot.SwitchbotLock(
+                device=ble_device,
+                key_id=entry.data.get(CONF_KEY_ID),
+                encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
+                retry_count=entry.options[CONF_RETRY_COUNT],
+            )
+        except ValueError as error:
+            raise ConfigEntryNotReady(
+                "Invalid encryption configuration provided"
+            ) from error
     else:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
+        device = cls(
+            device=ble_device,
+            password=entry.data.get(CONF_PASSWORD),
+            retry_count=entry.options[CONF_RETRY_COUNT],
+        )
 
-    await coordinator.async_config_entry_first_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        ble_device,
+        device,
+        entry.unique_id,
+        entry.data.get(CONF_NAME, entry.title),
+        connectable,
+        switchbot_model,
+    )
+    entry.async_on_unload(coordinator.async_start())
+    if not await coordinator.async_wait_ready():
+        raise ConfigEntryNotReady(f"{address} is not advertising state")
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
-
-    sensor_type = entry.data[CONF_SENSOR_TYPE]
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
+    await hass.config_entries.async_forward_entry_setups(
+        entry, PLATFORMS_BY_TYPE[sensor_type]
+    )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -105,18 +163,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
-        if len(hass.config_entries.async_entries(DOMAIN)) == 0:
+        if not hass.config_entries.async_entries(DOMAIN):
             hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    # Update entity options stored in hass.
-    if {**entry.options} != hass.data[DOMAIN][COMMON_OPTIONS]:
-        hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
-        hass.data[DOMAIN].pop(DATA_COORDINATOR)
-
-    await hass.config_entries.async_reload(entry.entry_id)

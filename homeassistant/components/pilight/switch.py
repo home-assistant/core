@@ -1,9 +1,14 @@
 """Support for switching devices via Pilight to on and off."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_SWITCHES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base_class import SWITCHES_SCHEMA, PilightBaseDevice
 
@@ -12,9 +17,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Pilight platform."""
-    switches = config.get(CONF_SWITCHES)
+    switches = config[CONF_SWITCHES]
     devices = []
 
     for dev_name, dev_config in switches.items():

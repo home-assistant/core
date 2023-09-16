@@ -97,16 +97,9 @@
         "accepted_answer": false
       }
     ],
-    "stream": [
-      1216212
-    ]
+    "stream": [1216212]
   },
-  "timeline_lookup": [
-    [
-      1,
-      0
-    ]
-  ],
+  "timeline_lookup": [[1, 0]],
   "suggested_topics": [
     {
       "id": 168593,
@@ -315,9 +308,7 @@
       "bookmarked": false,
       "liked": false,
       "thumbnails": null,
-      "tags": [
-        "alexa"
-      ],
+      "tags": ["alexa"],
       "like_count": 1092,
       "views": 179580,
       "category_id": 47,
@@ -549,10 +540,7 @@
       ]
     }
   ],
-  "tags": [
-    "blueprint",
-    "zha"
-  ],
+  "tags": ["blueprint", "zha"],
   "id": 253804,
   "title": "ZHA - IKEA five button remote for lights",
   "fancy_title": "ZHA - IKEA five button remote for lights",

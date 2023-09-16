@@ -1,0 +1,38 @@
+{
+  "title": "Threshold Sensor",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Threshold Sensor",
+        "description": "Create a binary sensor that turns on and off depending on the value of a sensor\n\nOnly lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].",
+        "data": {
+          "entity_id": "Input sensor",
+          "hysteresis": "Hysteresis",
+          "lower": "Lower limit",
+          "name": "[%key:common::config_flow::data::name%]",
+          "upper": "Upper limit"
+        }
+      }
+    },
+    "error": {
+      "need_lower_upper": "Lower and upper limits can't both be empty"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Only lower limit configured - Turn on when the input sensor's value is less than the lower limit.\nOnly upper limit configured - Turn on when the input sensor's value is greater than the upper limit.\nBoth lower and upper limit configured - Turn on when the input sensor's value is in the range [lower limit .. upper limit].",
+        "data": {
+          "entity_id": "[%key:component::threshold::config::step::user::data::entity_id%]",
+          "hysteresis": "[%key:component::threshold::config::step::user::data::hysteresis%]",
+          "lower": "[%key:component::threshold::config::step::user::data::lower%]",
+          "name": "[%key:component::threshold::config::step::user::data::name%]",
+          "upper": "[%key:component::threshold::config::step::user::data::upper%]"
+        }
+      }
+    },
+    "error": {
+      "need_lower_upper": "[%key:component::threshold::config::error::need_lower_upper%]"
+    }
+  }
+}

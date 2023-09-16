@@ -4,9 +4,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, cast, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -29,8 +30,6 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +60,17 @@ DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
 
+
+class RemoteEntityFeature(IntFlag):
+    """Supported features of the remote entity."""
+
+    LEARN_COMMAND = 1
+    DELETE_COMMAND = 2
+    ACTIVITY = 4
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the RemoteEntityFeature enum instead.
 SUPPORT_LEARN_COMMAND = 1
 SUPPORT_DELETE_COMMAND = 2
 SUPPORT_ACTIVITY = 4
@@ -78,7 +88,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[RemoteEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -135,12 +145,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await cast(EntityComponent, hass.data[DOMAIN]).async_setup_entry(entry)
+    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await cast(EntityComponent, hass.data[DOMAIN]).async_unload_entry(entry)
+    component: EntityComponent[RemoteEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 @dataclass
@@ -154,10 +166,10 @@ class RemoteEntity(ToggleEntity):
     entity_description: RemoteEntityDescription
     _attr_activity_list: list[str] | None = None
     _attr_current_activity: str | None = None
-    _attr_supported_features: int = 0
+    _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
@@ -175,7 +187,7 @@ class RemoteEntity(ToggleEntity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if not self.supported_features & SUPPORT_ACTIVITY:
+        if not self.supported_features & RemoteEntityFeature.ACTIVITY:
             return None
 
         return {

@@ -1,10 +1,13 @@
 """Config flow for BMW ConnectedDrive integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
-from bimmer_connected.account import ConnectedDriveAccount
-from bimmer_connected.country_selector import get_region_from_name
+from bimmer_connected.api.authentication import MyBMWAuthentication
+from bimmer_connected.api.regions import get_region_from_name
+from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -13,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY
+from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -31,69 +34,102 @@ async def validate_input(
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    auth = MyBMWAuthentication(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        get_region_from_name(data[CONF_REGION]),
+    )
+
     try:
-        await hass.async_add_executor_job(
-            ConnectedDriveAccount,
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            get_region_from_name(data[CONF_REGION]),
-        )
-    except OSError as ex:
+        await auth.login()
+    except MyBMWAuthError as ex:
+        raise InvalidAuth from ex
+    except (MyBMWAPIError, RequestError) as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    retval = {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    if auth.refresh_token:
+        retval[CONF_REFRESH_TOKEN] = auth.refresh_token
+    if auth.gcid:
+        retval[CONF_GCID] = auth.gcid
+    return retval
 
 
-class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BMW ConnectedDrive."""
+class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for MyBMW."""
 
     VERSION = 1
+
+    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
             unique_id = f"{user_input[CONF_REGION]}-{user_input[CONF_USERNAME]}"
 
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if not self._reauth_entry:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
             info = None
             try:
                 info = await validate_input(self.hass, user_input)
+                entry_data = {
+                    **user_input,
+                    CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                    CONF_GCID: info.get(CONF_GCID),
+                }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
             if info:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                if self._reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry, data=entry_data
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._reauth_entry.entry_id
+                        )
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                return self.async_create_entry(
+                    title=info["title"],
+                    data=entry_data,
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> BMWConnectedDriveOptionsFlow:
-        """Return a BWM ConnectedDrive option flow."""
-        return BMWConnectedDriveOptionsFlow(config_entry)
+    ) -> BMWOptionsFlow:
+        """Return a MyBMW option flow."""
+        return BMWOptionsFlow(config_entry)
 
 
-class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
-    """Handle a option flow for BMW ConnectedDrive."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize BMW ConnectedDrive option flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+class BMWOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+    """Handle a option flow for MyBMW."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -106,6 +142,16 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            # Manually update & reload the config entry after options change.
+            # Required as each successful login will store the latest refresh_token
+            # using async_update_entry, which would otherwise trigger a full reload
+            # if the options would be refreshed using a listener.
+            changed = self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options=user_input,
+            )
+            if changed:
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="account_options",
@@ -122,3 +168,7 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""

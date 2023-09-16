@@ -1,6 +1,7 @@
 """Config flow for Cloudflare integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -32,7 +33,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _zone_schema(zones: list | None = None):
+def _zone_schema(zones: list[str] | None = None) -> vol.Schema:
     """Zone selection schema."""
     zones_list = []
 
@@ -42,7 +43,7 @@ def _zone_schema(zones: list | None = None):
     return vol.Schema({vol.Required(CONF_ZONE): vol.In(zones_list)})
 
 
-def _records_schema(records: list | None = None):
+def _records_schema(records: list[str] | None = None) -> vol.Schema:
     """Zone records selection schema."""
     records_dict = {}
 
@@ -52,13 +53,15 @@ def _records_schema(records: list | None = None):
     return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_dict)})
 
 
-async def validate_input(hass: HomeAssistant, data: dict):
+async def _validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, list[str] | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     zone = data.get(CONF_ZONE)
-    records = None
+    records: list[str] | None = None
 
     cfupdate = CloudflareUpdater(
         async_get_clientsession(hass),
@@ -68,7 +71,7 @@ async def validate_input(hass: HomeAssistant, data: dict):
     )
 
     try:
-        zones = await cfupdate.get_zones()
+        zones: list[str] | None = await cfupdate.get_zones()
         if zone:
             zone_id = await cfupdate.get_zone_id()
             records = await cfupdate.get_zone_records(zone_id, "A")
@@ -89,13 +92,13 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     entry: ConfigEntry | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Cloudflare config flow."""
-        self.cloudflare_config = {}
-        self.zones = None
-        self.records = None
+        self.cloudflare_config: dict[str, Any] = {}
+        self.zones: list[str] | None = None
+        self.records: list[str] | None = None
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Cloudflare."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
@@ -104,7 +107,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle re-authentication with Cloudflare."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None and self.entry:
             _, errors = await self._async_validate_or_error(user_input)
@@ -130,14 +133,16 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input: dict | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         persistent_notification.async_dismiss(self.hass, "cloudflare_setup")
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             info, errors = await self._async_validate_or_error(user_input)
@@ -151,9 +156,11 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zone(self, user_input: dict | None = None):
+    async def async_step_zone(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the picking the zone."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self.cloudflare_config.update(user_input)
@@ -171,7 +178,9 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_records(self, user_input: dict | None = None):
+    async def async_step_records(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the picking the zone records."""
 
         if user_input is not None:
@@ -184,12 +193,14 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=_records_schema(self.records),
         )
 
-    async def _async_validate_or_error(self, config):
-        errors = {}
+    async def _async_validate_or_error(
+        self, config: dict[str, Any]
+    ) -> tuple[dict[str, list[str] | None], dict[str, str]]:
+        errors: dict[str, str] = {}
         info = {}
 
         try:
-            info = await validate_input(self.hass, config)
+            info = await _validate_input(self.hass, config)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:

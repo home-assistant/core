@@ -2,10 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Meteoclimatic",
-        "description": "Enter the Meteoclimatic station code (e.g., ESCAT4300000043206B)",
         "data": {
           "code": "Station code"
+        },
+        "data_description": {
+          "code": "Looks like ESCAT4300000043206B"
         }
       }
     },

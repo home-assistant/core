@@ -1,5 +1,7 @@
 """Platform for beewi_smartclim integration."""
-from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
+from __future__ import annotations
+
+from beewi_smartclim import BeewiSmartClimPoller
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -7,15 +9,18 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # Default values
 DEFAULT_NAME = "BeeWi SmartClim"
 
 # Sensor config
 SENSOR_TYPES = [
-    [SensorDeviceClass.TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    [SensorDeviceClass.TEMPERATURE, "Temperature", UnitOfTemperature.CELSIUS],
     [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
     [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
 ]
@@ -28,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the beewi_smartclim platform."""
 
     mac = config[CONF_MAC]
@@ -63,7 +73,7 @@ class BeewiSmartclimSensor(SensorEntity):
         self._attr_device_class = self._device
         self._attr_unique_id = f"{mac}_{device}"
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
         self._attr_native_value = None

@@ -1,6 +1,8 @@
 """The SolarEdge integration."""
 from __future__ import annotations
 
+import socket
+
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge import Solaredge
 
@@ -12,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -25,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         response = await hass.async_add_executor_job(
             api.get_details, entry.data[CONF_SITE_ID]
         )
-    except (ConnectTimeout, HTTPError) as ex:
+    except (ConnectTimeout, HTTPError, socket.gaierror) as ex:
         LOGGER.error("Could not retrieve details from SolarEdge API")
         raise ConfigEntryNotReady from ex
 
@@ -38,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_API_CLIENT: api}
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

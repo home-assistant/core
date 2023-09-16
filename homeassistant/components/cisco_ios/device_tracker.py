@@ -1,4 +1,6 @@
 """Support for Cisco IOS Routers."""
+from __future__ import annotations
+
 import logging
 import re
 
@@ -11,7 +13,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner | None:
     """Validate the configuration and return a Cisco scanner."""
     scanner = CiscoDeviceScanner(config[DOMAIN])
 
@@ -35,7 +39,7 @@ def get_scanner(hass, config):
 
 
 class CiscoDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running Cisco IOS firmware."""
+    """Class which queries a wireless router running Cisco IOS firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -60,8 +64,7 @@ class CiscoDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _update_info(self):
-        """
-        Ensure the information from the Cisco router is up to date.
+        """Ensure the information from the Cisco router is up to date.
 
         Returns boolean if scanning successful.
         """
@@ -135,8 +138,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
 
 def _parse_cisco_mac_address(cisco_hardware_addr):
-    """
-    Parse a Cisco formatted HW address to normal MAC.
+    """Parse a Cisco formatted HW address to normal MAC.
 
     e.g. convert
     001d.ec02.07ab

@@ -1,0 +1,15 @@
+{
+  "title": "CPU Speed",
+  "config": {
+    "step": {
+      "user": {
+        "title": "[%key:component::cpuspeed::title%]",
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "not_compatible": "Unable to get CPU information, this integration is not compatible with your system"
+    }
+  }
+}

@@ -9,8 +9,8 @@
         "type": "HEATING",
         "power": "ON",
         "temperature": {
-          "celsius": 20.50,
-          "fahrenheit": 68.90
+          "celsius": 20.5,
+          "fahrenheit": 68.9
         }
       },
       "overlayType": "MANUAL",
@@ -20,8 +20,8 @@
           "type": "HEATING",
           "power": "ON",
           "temperature": {
-            "celsius": 20.50,
-            "fahrenheit": 68.90
+            "celsius": 20.5,
+            "fahrenheit": 68.9
           }
         },
         "termination": {
@@ -37,8 +37,8 @@
           "type": "HEATING",
           "power": "ON",
           "temperature": {
-            "celsius": 21.00,
-            "fahrenheit": 69.80
+            "celsius": 21.0,
+            "fahrenheit": 69.8
           }
         }
       },
@@ -51,7 +51,7 @@
       "activityDataPoints": {
         "heatingPower": {
           "type": "PERCENTAGE",
-          "percentage": 0.00,
+          "percentage": 0.0,
           "timestamp": "2020-03-10T07:47:45.978Z"
         }
       },
@@ -68,7 +68,7 @@
         },
         "humidity": {
           "type": "PERCENTAGE",
-          "percentage": 45.20,
+          "percentage": 45.2,
           "timestamp": "2020-03-10T07:44:11.947Z"
         }
       }
@@ -82,8 +82,8 @@
         "type": "HOT_WATER",
         "power": "ON",
         "temperature": {
-          "celsius": 65.00,
-          "fahrenheit": 149.00
+          "celsius": 65.0,
+          "fahrenheit": 149.0
         }
       },
       "overlayType": null,
@@ -234,8 +234,8 @@
         "power": "ON",
         "mode": "HEAT",
         "temperature": {
-          "celsius": 20.00,
-          "fahrenheit": 68.00
+          "celsius": 20.0,
+          "fahrenheit": 68.0
         },
         "fanSpeed": "AUTO",
         "swing": "ON"
@@ -250,8 +250,8 @@
           "power": "ON",
           "mode": "HEAT",
           "temperature": {
-            "celsius": 23.00,
-            "fahrenheit": 73.40
+            "celsius": 23.0,
+            "fahrenheit": 73.4
           },
           "fanSpeed": "AUTO",
           "swing": "ON"
@@ -283,7 +283,7 @@
         },
         "humidity": {
           "type": "PERCENTAGE",
-          "percentage": 42.30,
+          "percentage": 42.3,
           "timestamp": "2020-03-28T02:09:27.830Z"
         }
       }

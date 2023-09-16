@@ -1,4 +1,6 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -7,11 +9,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_NAME, POWER_KILO_WATT
+from homeassistant.const import CONF_NAME, UnitOfPower
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +26,6 @@ CONF_VERSION = "version"
 
 DEFAULT_NAME = "Current Energy Usage"
 DEFAULT_VERSION = 1
-
-ICON = "mdi:flash"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,7 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the DTE energy bridge sensor."""
     name = config[CONF_NAME]
     ip_address = config[CONF_IP_ADDRESS]
@@ -46,8 +55,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DteEnergyBridgeSensor(SensorEntity):
     """Implementation of the DTE Energy Bridge sensors."""
 
-    _attr_icon = ICON
-    _attr_native_unit_of_measurement = POWER_KILO_WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, ip_address, name, version):
@@ -61,7 +70,7 @@ class DteEnergyBridgeSensor(SensorEntity):
 
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the energy usage data from the DTE energy bridge."""
         try:
             response = requests.get(self._url, timeout=5)

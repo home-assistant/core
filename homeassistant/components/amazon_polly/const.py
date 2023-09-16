@@ -33,67 +33,87 @@ CONF_SAMPLE_RATE: Final = "sample_rate"
 CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_VOICES: Final[list[str]] = [
-    "Olivia",  # Female, Australian, Neural
-    "Zhiyu",  # Chinese
-    "Mads",
-    "Naja",  # Danish
-    "Ruben",
-    "Lotte",  # Dutch
-    "Russell",
-    "Nicole",  # English Australian
-    "Brian",
-    "Amy",
-    "Emma",  # English
-    "Aditi",
-    "Raveena",  # English, Indian
-    "Joey",
-    "Justin",
-    "Matthew",
-    "Ivy",
-    "Joanna",
-    "Kendra",
-    "Kimberly",
-    "Salli",  # English
-    "Geraint",  # English Welsh
-    "Mathieu",
-    "Celine",
-    "Lea",  # French
-    "Chantal",  # French Canadian
-    "Hans",
-    "Marlene",
-    "Vicki",  # German
     "Aditi",  # Hindi
-    "Karl",
-    "Dora",  # Icelandic
-    "Giorgio",
-    "Carla",
+    "Amy",  # English (British)
+    "Aria",  # English (New Zealand), Neural
+    "Arlet",  # Catalan, Neural
+    "Arthur",  # English, Neural
+    "Astrid",  # Swedish
+    "Ayanda",  # English (South African), Neural
     "Bianca",  # Italian
-    "Takumi",
-    "Mizuki",  # Japanese
-    "Seoyeon",  # Korean
-    "Liv",  # Norwegian
-    "Jacek",
-    "Jan",
-    "Ewa",
-    "Maja",  # Polish
-    "Ricardo",
-    "Vitoria",  # Portuguese, Brazilian
+    "Brian",  # English (British)
     "Camila",  # Portuguese, Brazilian
-    "Cristiano",
-    "Ines",  # Portuguese, European
+    "Carla",  # Italian
     "Carmen",  # Romanian
-    "Maxim",
-    "Tatyana",  # Russian
-    "Enrique",
-    "Conchita",
+    "Celine",  # French
+    "Chantal",  # French Canadian
+    "Conchita",  # Spanish (European)
+    "Cristiano",  # Portuguese (European)
+    "Daniel",  # German, Neural
+    "Dora",  # Icelandic
+    "Elin",  # Swedish, Neural
+    "Emma",  # English
+    "Enrique",  # Spanish (European)
+    "Ewa",  # Polish
+    "Filiz",  # Turkish
+    "Gabrielle",  # French (Canadian)
+    "Geraint",  # English Welsh
+    "Giorgio",  # Italian
+    "Gwyneth",  # Welsh
+    "Hala",  # Arabic (Gulf), Neural
+    "Hannah",  # German (Austrian), Neural
+    "Hans",  # German
+    "Hiujin",  # Chinese (Cantonese), Neural
+    "Ida",  # Norwegian, Neural
+    "Ines",  # Portuguese, European
+    "Ivy",  # English
+    "Jacek",  # Polish
+    "Jan",  # Polish
+    "Joanna",  # English
+    "Joey",  # English
+    "Justin",  # English
+    "Kajal",  # English (Indian)/Hindi (Bilingual ), Neural
+    "Karl",  # Icelandic
+    "Kendra",  # English
+    "Kevin",  # English, Neural
+    "Kimberly",  # English
+    "Laura",  # Dutch, Neural
+    "Lea",  # French
+    "Liam",  # Canadian French, Neural
+    "Liv",  # Norwegian
+    "Lotte",  # Dutch
     "Lucia",  # Spanish European
+    "Lupe",  # Spanish US
+    "Mads",  # Danish
+    "Maja",  # Polish
+    "Marlene",  # German
+    "Mathieu",  # French
+    "Matthew",  # English
+    "Maxim",  # Russian
     "Mia",  # Spanish Mexican
     "Miguel",  # Spanish US
+    "Mizuki",  # Japanese
+    "Naja",  # Danish
+    "Nicole",  # English Australian
+    "Ola",  # Polish, Neural
+    "Olivia",  # Female, Australian, Neural
     "Penelope",  # Spanish US
-    "Lupe",  # Spanish US
-    "Astrid",  # Swedish
-    "Filiz",  # Turkish
-    "Gwyneth",  # Welsh
+    "Pedro",  # Spanish US, Neural
+    "Raveena",  # English, Indian
+    "Ricardo",  # Portuguese (Brazilian)
+    "Ruben",  # Dutch
+    "Russell",  # English (Australian)
+    "Ruth",  # English, Neural
+    "Salli",  # English
+    "Seoyeon",  # Korean
+    "Stephen",  # English, Neural
+    "Suvi",  # Finnish
+    "Takumi",  # Japanese
+    "Tatyana",  # Russian
+    "Vicki",  # German
+    "Vitoria",  # Portuguese, Brazilian
+    "Zeina",  # Arabic
+    "Zhiyu",  # Chinese
 ]
 
 SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]

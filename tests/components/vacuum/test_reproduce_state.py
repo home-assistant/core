@@ -1,4 +1,6 @@
 """Test reproduce state for Vacuum."""
+import pytest
+
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     SERVICE_PAUSE,
@@ -18,7 +20,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -26,7 +29,9 @@ FAN_SPEED_LOW = "low"
 FAN_SPEED_HIGH = "high"
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Vacuum states."""
     hass.states.async_set("vacuum.entity_off", STATE_OFF, {})
     hass.states.async_set("vacuum.entity_on", STATE_ON, {})
@@ -48,7 +53,8 @@ async def test_reproducing_states(hass, caplog):
     fan_speed_calls = async_mock_service(hass, "vacuum", SERVICE_SET_FAN_SPEED)
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("vacuum.entity_off", STATE_OFF),
             State("vacuum.entity_on", STATE_ON),
@@ -70,9 +76,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(fan_speed_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("vacuum.entity_off", "not_supported")]
-    )
+    await async_reproduce_state(hass, [State("vacuum.entity_off", "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
@@ -84,7 +88,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(fan_speed_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("vacuum.entity_off", STATE_ON),
             State("vacuum.entity_on", STATE_OFF),

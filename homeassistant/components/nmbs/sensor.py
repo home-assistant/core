@@ -1,4 +1,6 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
+from __future__ import annotations
+
 import logging
 
 from pyrail import iRail
@@ -6,17 +8,21 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+API_FAILURE = -1
 
 DEFAULT_NAME = "NMBS"
 
@@ -63,7 +69,12 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     return duration_time + get_delay_in_minutes(delay)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NMBS sensor with iRail API."""
 
     api_client = iRail()
@@ -75,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_live = config.get(CONF_STATION_LIVE)
     excl_vias = config[CONF_EXCLUDE_VIAS]
 
-    sensors = [
+    sensors: list[SensorEntity] = [
         NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)
     ]
 
@@ -89,6 +100,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class NMBSLiveBoard(SensorEntity):
     """Get the next train from a station's liveboard."""
+
+    _attr_attribution = "https://api.irail.be/"
 
     def __init__(self, api_client, live_station, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
@@ -139,7 +152,6 @@ class NMBSLiveBoard(SensorEntity):
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if delay > 0:
@@ -148,14 +160,23 @@ class NMBSLiveBoard(SensorEntity):
 
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
-        if liveboard is None or not liveboard.get("departures"):
+        if liveboard == API_FAILURE:
+            _LOGGER.warning("API failed in NMBSLiveBoard")
             return
 
-        next_departure = liveboard["departures"]["departure"][0]
+        if not (departures := liveboard.get("departures")):
+            _LOGGER.warning("API returned invalid departures: %r", liveboard)
+            return
+
+        _LOGGER.debug("API returned departures: %r", departures)
+        if departures["number"] == "0":
+            # No trains are scheduled
+            return
+        next_departure = departures["departure"][0]
 
         self._attrs = next_departure
         self._state = (
@@ -164,9 +185,10 @@ class NMBSLiveBoard(SensorEntity):
 
 
 class NMBSSensor(SensorEntity):
-    """Get the the total travel time for a given connection."""
+    """Get the total travel time for a given connection."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_attribution = "https://api.irail.be/"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
         self, api_client, name, show_on_map, station_from, station_to, excl_vias
@@ -205,17 +227,24 @@ class NMBSSensor(SensorEntity):
 
         delay = get_delay_in_minutes(self._attrs["departure"]["delay"])
         departure = get_time_until(self._attrs["departure"]["time"])
+        canceled = int(self._attrs["departure"]["canceled"])
 
         attrs = {
-            "departure": f"In {departure} minutes",
-            "departure_minutes": departure,
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
             "platform_departing": self._attrs["departure"]["platform"],
             "vehicle_id": self._attrs["departure"]["vehicle"],
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
+
+        if canceled != 1:
+            attrs["departure"] = f"In {departure} minutes"
+            attrs["departure_minutes"] = departure
+            attrs["canceled"] = False
+        else:
+            attrs["departure"] = None
+            attrs["departure_minutes"] = None
+            attrs["canceled"] = True
 
         if self._show_on_map and self.station_coordinates:
             attrs[ATTR_LATITUDE] = self.station_coordinates[0]
@@ -260,26 +289,31 @@ class NMBSSensor(SensorEntity):
 
         return "vias" in self._attrs and int(self._attrs["vias"]["number"]) > 0
 
-    def update(self):
+    def update(self) -> None:
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
             self._station_from, self._station_to
         )
 
-        if connections is None or not connections.get("connection"):
+        if connections == API_FAILURE:
+            _LOGGER.warning("API failed in NMBSSensor")
             return
 
-        if int(connections["connection"][0]["departure"]["left"]) > 0:
-            next_connection = connections["connection"][1]
+        if not (connection := connections.get("connection")):
+            _LOGGER.warning("API returned invalid connection: %r", connections)
+            return
+
+        _LOGGER.debug("API returned connection: %r", connection)
+        if int(connection[0]["departure"]["left"]) > 0:
+            next_connection = connection[1]
         else:
-            next_connection = connections["connection"][0]
+            next_connection = connection[0]
 
         self._attrs = next_connection
 
         if self._excl_vias and self.is_via_connection:
             _LOGGER.debug(
-                "Skipping update of NMBSSensor \
-                because this connection is a via"
+                "Skipping update of NMBSSensor because this connection is a via"
             )
             return
 

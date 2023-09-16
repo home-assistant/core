@@ -1,8 +1,9 @@
 {
   "domain": "greenwave",
   "name": "Greenwave Reality",
-  "documentation": "https://www.home-assistant.io/integrations/greenwave",
-  "requirements": ["greenwavereality==0.5.1"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/greenwave",
+  "iot_class": "local_polling",
+  "loggers": ["greenwavereality"],
+  "requirements": ["greenwavereality==0.5.1"]
 }

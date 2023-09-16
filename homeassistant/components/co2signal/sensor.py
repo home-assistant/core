@@ -5,48 +5,28 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
-import voluptuous as vol
-
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_TOKEN,
-    PERCENTAGE,
-)
-from homeassistant.helpers import config_validation as cv, update_coordinator
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import StateType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CO2SignalCoordinator, CO2SignalResponse
-from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
+from . import CO2SignalCoordinator
+from .const import ATTRIBUTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Inclusive(CONF_LATITUDE, "coords", msg=MSG_LOCATION): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
-        vol.Optional(CONF_COUNTRY_CODE): cv.string,
-    }
-)
-
 
 @dataclass
-class CO2SensorEntityDescription:
+class CO2SensorEntityDescription(SensorEntityDescription):
     """Provide a description of a CO2 sensor."""
 
-    key: str
-    name: str
-    unit_of_measurement: str | None = None
     # For backwards compat, allow description to override unique ID key to use
     unique_id: str | None = None
 
@@ -54,61 +34,51 @@ class CO2SensorEntityDescription:
 SENSORS = (
     CO2SensorEntityDescription(
         key="carbonIntensity",
-        name="CO2 intensity",
+        translation_key="carbon_intensity",
         unique_id="co2intensity",
         # No unit, it's extracted from response.
     ),
     CO2SensorEntityDescription(
         key="fossilFuelPercentage",
-        name="Grid fossil fuel percentage",
-        unit_of_measurement=PERCENTAGE,
+        translation_key="fossil_fuel_percentage",
+        native_unit_of_measurement=PERCENTAGE,
     ),
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the CO2signal sensor."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config,
-    )
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the CO2signal sensor."""
     coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
 
 
-class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorEntity):
+class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description: CO2SensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     _attr_icon = "mdi:molecule-co2"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: CO2SignalCoordinator, description: CO2SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._description = description
+        self.entity_description = description
 
-        name = description.name
-        if extra_name := coordinator.get_extra_name():
-            name = f"{extra_name} - {name}"
-
-        self._attr_name = name
         self._attr_extra_state_attributes = {
             "country_code": coordinator.data["countryCode"],
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://www.electricitymap.org/",
+            configuration_url="https://www.electricitymaps.com/",
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
-            manufacturer="Tmrow.com",
-            name="CO2 signal",
+            manufacturer="Electricity Maps",
+            name="Electricity Maps",
         )
         self._attr_unique_id = (
             f"{coordinator.entry_id}_{description.unique_id or description.key}"
@@ -119,17 +89,21 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
         """Return True if entity is available."""
         return (
             super().available
-            and self.coordinator.data["data"].get(self._description.key) is not None
+            and self.entity_description.key in self.coordinator.data["data"]
         )
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | None:
         """Return sensor state."""
-        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
+        if (value := self.coordinator.data["data"][self.entity_description.key]) is None:  # type: ignore[literal-required]
+            return None
+        return round(value, 2)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self._description.unit_of_measurement:
-            return self._description.unit_of_measurement
-        return cast(str, self.coordinator.data["units"].get(self._description.key))
+        if self.entity_description.native_unit_of_measurement:
+            return self.entity_description.native_unit_of_measurement
+        return cast(
+            str, self.coordinator.data["units"].get(self.entity_description.key)
+        )

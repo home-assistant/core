@@ -1,8 +1,9 @@
 """iAlarm integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
-from async_timeout import timeout
 from pyialarm import IAlarm
 
 from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
@@ -20,12 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iAlarm config."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    host: str = entry.data[CONF_HOST]
+    port: int = entry.data[CONF_PORT]
     ialarm = IAlarm(host, port)
 
     try:
-        async with timeout(10):
+        async with asyncio.timeout(10):
             mac = await hass.async_add_executor_job(ialarm.get_mac)
     except (asyncio.TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
@@ -39,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -52,14 +53,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IAlarmDataUpdateCoordinator(DataUpdateCoordinator):
+class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching iAlarm data."""
 
-    def __init__(self, hass, ialarm, mac):
+    def __init__(self, hass: HomeAssistant, ialarm: IAlarm, mac: str) -> None:
         """Initialize global iAlarm data updater."""
         self.ialarm = ialarm
-        self.state = None
-        self.host = ialarm.host
+        self.state: str | None = None
+        self.host: str = ialarm.host
         self.mac = mac
 
         super().__init__(
@@ -79,7 +80,7 @@ class IAlarmDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarm."""
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await self.hass.async_add_executor_job(self._update_data)
         except ConnectionError as error:
             raise UpdateFailed(error) from error

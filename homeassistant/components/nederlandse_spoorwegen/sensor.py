@@ -1,4 +1,6 @@
 """Support for Nederlandse Spoorwegen public transport."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -8,14 +10,15 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by NS"
 
 CONF_ROUTES = "routes"
 CONF_FROM = "from"
@@ -23,7 +26,6 @@ CONF_TO = "to"
 CONF_VIA = "via"
 CONF_TIME = "time"
 
-ICON = "mdi:train"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
@@ -44,7 +46,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the departure sensor."""
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
@@ -62,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for departure in config.get(CONF_ROUTES):
+    for departure in config.get(CONF_ROUTES, {}):
         if not valid_stations(
             stations,
             [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
@@ -78,8 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 departure.get(CONF_TIME),
             )
         )
-    if sensors:
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):
@@ -96,6 +102,9 @@ def valid_stations(stations, given_stations):
 class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
+    _attr_attribution = "Data provided by NS"
+    _attr_icon = "mdi:train"
+
     def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
         self._nsapi = nsapi
@@ -111,11 +120,6 @@ class NSDepartureSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
 
     @property
     def native_value(self):
@@ -151,7 +155,6 @@ class NSDepartureSensor(SensorEntity):
             "transfers": self._trips[0].nr_transfers,
             "route": route,
             "remarks": None,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
         # Planned departure attributes
@@ -209,7 +212,7 @@ class NSDepartureSensor(SensorEntity):
         return attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the trip information."""
 
         # If looking for a specific trip time, update around that trip time only.
@@ -221,7 +224,8 @@ class NSDepartureSensor(SensorEntity):
             self._trips = None
             return
 
-        # Set the search parameter to search from a specific trip time or to just search for next trip.
+        # Set the search parameter to search from a specific trip time
+        # or to just search for next trip.
         if self._time:
             trip_time = (
                 datetime.today()

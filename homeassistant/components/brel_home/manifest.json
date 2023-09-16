@@ -1,0 +1,6 @@
+{
+  "domain": "brel_home",
+  "name": "Brel Home",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

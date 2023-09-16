@@ -7,6 +7,8 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
@@ -15,6 +17,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -55,12 +58,6 @@ WEBHOOK_SCHEMA = vol.All(
     ),
     _validate_test_mode,
 )
-
-
-async def async_setup(hass, hass_config):
-    """Set up the Locative component."""
-    hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
-    return True
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -111,19 +108,21 @@ async def handle_webhook(hass, webhook_id, request):
     )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {"devices": set(), "unsub_device_tracker": {}}
+    webhook.async_register(
+        hass, DOMAIN, "Locative", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

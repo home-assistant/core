@@ -1,4 +1,4 @@
 {
-    "ack": true,
-    "request": "setAircon"
+  "ack": true,
+  "request": "setAircon"
 }

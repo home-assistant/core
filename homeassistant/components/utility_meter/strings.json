@@ -1,0 +1,72 @@
+{
+  "title": "Utility Meter",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Utility Meter",
+        "description": "Create a sensor which tracks consumption of various utilities (e.g., energy, gas, water, heating) over a configured period of time, typically monthly. The utility meter sensor optionally supports splitting the consumption by tariffs, in that case one sensor for each tariff is created as well as a select entity to choose the current tariff.",
+        "data": {
+          "cycle": "Meter reset cycle",
+          "delta_values": "Delta values",
+          "name": "[%key:common::config_flow::data::name%]",
+          "periodically_resetting": "Periodically resetting",
+          "net_consumption": "Net consumption",
+          "offset": "Meter reset offset",
+          "source": "Input sensor",
+          "tariffs": "Supported tariffs"
+        },
+        "data_description": {
+          "delta_values": "Enable if the source values are delta values since the last reading instead of absolute values.",
+          "net_consumption": "Enable if the source is a net meter, meaning it can both increase and decrease.",
+          "periodically_resetting": "Enable if the source may periodically reset to 0, for example at boot of the measuring device. If disabled, new readings are directly recorded after data inavailability.",
+          "offset": "Offset the day of a monthly meter reset.",
+          "tariffs": "A list of supported tariffs, leave empty if only a single tariff is needed."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "source": "[%key:component::utility_meter::config::step::user::data::source%]",
+          "periodically_resetting": "[%key:component::utility_meter::config::step::user::data::periodically_resetting%]"
+        },
+        "data_description": {
+          "periodically_resetting": "[%key:component::utility_meter::config::step::user::data_description::periodically_resetting%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "cycle": {
+      "options": {
+        "none": "No cycle",
+        "quarter-hourly": "Every 15 minutes",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "bimonthly": "Every two months",
+        "quarterly": "Quarterly",
+        "yearly": "Yearly"
+      }
+    }
+  },
+  "services": {
+    "reset": {
+      "name": "Reset",
+      "description": "Resets all counters of a utility meter."
+    },
+    "calibrate": {
+      "name": "Calibrate",
+      "description": "Calibrates a utility meter sensor.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Value to which set the meter."
+        }
+      }
+    }
+  }
+}

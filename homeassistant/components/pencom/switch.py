@@ -1,13 +1,19 @@
 """Pencom relay control."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pencompy.pencompy import Pencompy
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Pencom relay platform (pencompy)."""
 
     # Assign configuration variables.
@@ -80,15 +91,15 @@ class PencomRelay(SwitchEntity):
         """Return a relay's state."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn a relay on."""
         self._hub.set(self._board, self._addr, True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn a relay off."""
         self._hub.set(self._board, self._addr, False)
 
-    def update(self):
+    def update(self) -> None:
         """Refresh a relay's state."""
         self._state = self._hub.get(self._board, self._addr)
 

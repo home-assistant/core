@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from random import randrange
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Self
 
 import metno
 
@@ -16,15 +16,13 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
-    LENGTH_FEET,
-    LENGTH_METERS,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.distance import convert as convert_distance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_TRACK_HOME,
@@ -33,6 +31,7 @@ from .const import (
     DOMAIN,
 )
 
+# Dedicated Home Assistant endpoint - do not change!
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
 PLATFORMS = [Platform.WEATHER]
@@ -65,7 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    config_entry.async_on_unload(config_entry.add_update_listener(async_update_entry))
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -82,15 +83,22 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class MetDataUpdateCoordinator(DataUpdateCoordinator):
+async def async_update_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Reload Met component when options changed."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+class CannotConnect(HomeAssistantError):
+    """Unable to connect to the web site."""
+
+
+class MetDataUpdateCoordinator(DataUpdateCoordinator["MetWeatherData"]):
     """Class to manage fetching Met data."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Met data updater."""
-        self._unsub_track_home: Callable | None = None
-        self.weather = MetWeatherData(
-            hass, config_entry.data, hass.config.units.is_metric
-        )
+        self._unsub_track_home: Callable[[], None] | None = None
+        self.weather = MetWeatherData(hass, config_entry.data)
         self.weather.set_coordinates()
 
         update_interval = timedelta(minutes=randrange(55, 65))
@@ -109,7 +117,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
         if self._unsub_track_home:
             return
 
-        async def _async_update_weather_data(_event: str | None = None) -> None:
+        async def _async_update_weather_data(_event: Event | None = None) -> None:
             """Update weather data."""
             if self.weather.set_coordinates():
                 await self.async_refresh()
@@ -128,21 +136,18 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator):
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: MappingProxyType[str, Any], is_metric: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
         """Initialise the weather entity data."""
         self.hass = hass
         self._config = config
-        self._is_metric = is_metric
         self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
-        self.daily_forecast = None
-        self.hourly_forecast = None
+        self.daily_forecast: list[dict] = []
+        self.hourly_forecast: list[dict] = []
         self._coordinates: dict[str, str] | None = None
 
     def set_coordinates(self) -> bool:
-        """Weather data inialization - set the coordinates."""
+        """Weather data initialization - set the coordinates."""
         if self._config.get(CONF_TRACK_HOME, False):
             latitude = self.hass.config.latitude
             longitude = self.hass.config.longitude
@@ -151,11 +156,6 @@ class MetWeatherData:
             latitude = self._config[CONF_LATITUDE]
             longitude = self._config[CONF_LONGITUDE]
             elevation = self._config[CONF_ELEVATION]
-
-        if not self._is_metric:
-            elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
-            )
 
         coordinates = {
             "lat": str(latitude),
@@ -171,11 +171,13 @@ class MetWeatherData:
         )
         return True
 
-    async def fetch_data(self) -> MetWeatherData:
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
-        await self._weather_data.fetching_data()
+        resp = await self._weather_data.fetching_data()
+        if not resp:
+            raise CannotConnect()
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.DEFAULT_TIME_ZONE
-        self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
+        self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self
