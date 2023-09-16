@@ -147,7 +147,7 @@ accuweather==1.0.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.3
+adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -406,7 +406,7 @@ amberelectric==1.0.4
 amcrest==1.9.8
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.70
+androidtv[async]==0.0.72
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.0.14
