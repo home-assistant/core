@@ -513,7 +513,7 @@ async def test_call_service_error(hass: HomeAssistant, websocket_client) -> None
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
 
     async def unknown_error_call(_):
-        raise TypeError("type_error")
+        raise ValueError("value_error")
 
     hass.services.async_register("domain_test", "unknown_error", unknown_error_call)
 
@@ -547,7 +547,7 @@ async def test_call_service_error(hass: HomeAssistant, websocket_client) -> None
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
-    assert msg["error"]["message"] == "type_error"
+    assert msg["error"]["message"] == "value_error"
 
 
 async def test_subscribe_unsubscribe_events(
