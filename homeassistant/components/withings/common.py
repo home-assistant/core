@@ -8,7 +8,6 @@ import datetime
 from datetime import timedelta
 from enum import IntEnum, StrEnum
 from http import HTTPStatus
-import logging
 import re
 from typing import Any
 
@@ -35,9 +34,8 @@ from homeassistant.util import dt as dt_util
 
 from . import const
 from .api import ConfigEntryWithingsApi
-from .const import Measurement
+from .const import LOGGER, Measurement
 
-_LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
@@ -181,7 +179,7 @@ class DataManager:
 
         self.subscription_update_coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             name="subscription_update_coordinator",
             update_interval=timedelta(minutes=120),
             update_method=self.async_subscribe_webhook,
@@ -190,7 +188,7 @@ class DataManager:
             dict[MeasureType, Any] | None
         ](
             hass,
-            _LOGGER,
+            LOGGER,
             name="poll_data_update_coordinator",
             update_interval=timedelta(minutes=120)
             if self._webhook_config.enabled
@@ -232,14 +230,14 @@ class DataManager:
 
     async def async_subscribe_webhook(self) -> None:
         """Subscribe the webhook to withings data updates."""
-        _LOGGER.debug("Configuring withings webhook")
+        LOGGER.debug("Configuring withings webhook")
 
         # On first startup, perform a fresh re-subscribe. Withings stops pushing data
         # if the webhook fails enough times but they don't remove the old subscription
         # config. This ensures the subscription is setup correctly and they start
         # pushing again.
         if self._subscribe_webhook_run_count == 0:
-            _LOGGER.debug("Refreshing withings webhook configs")
+            LOGGER.debug("Refreshing withings webhook configs")
             await self.async_unsubscribe_webhook()
         self._subscribe_webhook_run_count += 1
 
@@ -262,7 +260,7 @@ class DataManager:
 
         # Subscribe to each one.
         for appli in to_add_applis:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Subscribing %s for %s in %s seconds",
                 self._webhook_config.url,
                 appli,
@@ -280,7 +278,7 @@ class DataManager:
 
         # Revoke subscriptions.
         for profile in response.profiles:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Unsubscribing %s for %s in %s seconds",
                 profile.callbackurl,
                 profile.appli,
@@ -310,7 +308,7 @@ class DataManager:
 
     async def async_get_measures(self) -> dict[Measurement, Any]:
         """Get the measures data."""
-        _LOGGER.debug("Updating withings measures")
+        LOGGER.debug("Updating withings measures")
         now = dt_util.utcnow()
         startdate = now - datetime.timedelta(days=7)
 
@@ -338,7 +336,7 @@ class DataManager:
 
     async def async_get_sleep_summary(self) -> dict[Measurement, Any]:
         """Get the sleep summary data."""
-        _LOGGER.debug("Updating withing sleep summary")
+        LOGGER.debug("Updating withing sleep summary")
         now = dt_util.now()
         yesterday = now - datetime.timedelta(days=1)
         yesterday_noon = dt_util.start_of_local_day(yesterday) + datetime.timedelta(
@@ -419,7 +417,7 @@ class DataManager:
 
     async def async_webhook_data_updated(self, data_category: NotifyAppli) -> None:
         """Handle scenario when data is updated from a webook."""
-        _LOGGER.debug("Withings webhook triggered")
+        LOGGER.debug("Withings webhook triggered")
         if data_category in {
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
@@ -442,7 +440,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Creating withings data manager for profile: %s", config_entry.title
         )
         config_entry_data[const.DATA_MANAGER] = DataManager(
