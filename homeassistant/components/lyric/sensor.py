@@ -63,7 +63,7 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.indoorTemperature,
-        suitable_fn=lambda device: bool(device.indoorTemperature),
+        suitable_fn=lambda device: device.indoorTemperature,
     ),
     LyricSensorEntityDescription(
         key="indoor_humidity",
