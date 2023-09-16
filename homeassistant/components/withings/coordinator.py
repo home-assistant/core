@@ -2,7 +2,6 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 from typing import Any
 
 from withings_api.common import (
@@ -25,9 +24,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import ConfigEntryWithingsApi
-from .const import Measurement
+from .const import LOGGER, Measurement
 
-_LOGGER = logging.getLogger(__name__)
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 
@@ -88,9 +86,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         update_interval: timedelta | None = timedelta(minutes=10)
         if use_webhooks:
             update_interval = None
-        super().__init__(
-            hass, _LOGGER, name="Withings", update_interval=update_interval
-        )
+        super().__init__(hass, LOGGER, name="Withings", update_interval=update_interval)
         self._client = client
         self._webhook_url = async_generate_url(
             hass, self.config_entry.data[CONF_WEBHOOK_ID]
@@ -106,7 +102,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         except AuthFailedException as exc:
             raise ConfigEntryAuthFailed from exc
         except Exception as exc:
-            _LOGGER.exception("Something went wrong")
+            LOGGER.exception("Something went wrong")
             raise UpdateFailed from exc
         return {
             **measurements,
@@ -114,7 +110,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         }
 
     async def _get_measurements(self) -> dict[Measurement, Any]:
-        _LOGGER.debug("Updating withings measures")
+        LOGGER.debug("Updating withings measures")
         now = dt_util.utcnow()
         startdate = now - timedelta(days=7)
 
@@ -236,7 +232,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         )
 
         for notification in notification_to_subscribe:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Subscribing %s for %s in %s seconds",
                 self._webhook_url,
                 notification,
@@ -252,7 +248,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         current_webhooks = await self._client.async_notify_list()
 
         for webhook_configuration in current_webhooks.profiles:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Unsubscribing %s for %s in %s seconds",
                 webhook_configuration.callbackurl,
                 webhook_configuration.appli,
@@ -269,7 +265,7 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]
         self, notification_category: NotifyAppli
     ) -> None:
         """Update data when webhook is called."""
-        _LOGGER.debug("Withings webhook triggered")
+        LOGGER.debug("Withings webhook triggered")
         if notification_category in {
             NotifyAppli.WEIGHT,
             NotifyAppli.CIRCULATORY,
