@@ -11,7 +11,7 @@ from .coordinator import ScreenlogicDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_unique_id(*args: str | int) -> str:
+def generate_unique_id(*args: str | int | None) -> str:
     """Generate new unique_id for a screenlogic entity from specified parameters."""
     _LOGGER.debug("gen_uid called with %s", args)
     if len(args) == 3:
