@@ -16,7 +16,14 @@ from homeassistant.const import (
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResponse,
+    State,
+    callback,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -232,12 +239,10 @@ async def handle_call_service(
             target=target,
             return_response=msg["return_response"],
         )
+        result: dict[str, Context | ServiceResponse] = {"context": context}
         if msg["return_response"]:
-            connection.send_result(
-                msg["id"], {"context": context, "response": response}
-            )
-        else:
-            connection.send_result(msg["id"], {"context": context})
+            result["response"] = response
+        connection.send_result(msg["id"], result)
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
