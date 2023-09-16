@@ -1,5 +1,3 @@
-# pylint: disable=fixme
-
 """Support for HitachiAirToAirHeatPump."""
 from __future__ import annotations
 
@@ -63,8 +61,8 @@ SWING_STATE = {
 
 OVERKIZ_TO_HVAC_MODES: dict[Protocol, dict[str, HVACMode]] = {
     Protocol.OVP: {
-        OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,  # TODO use value with a space
-        OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,  # TODO use value with a space
+        OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
+        OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,
         OverkizCommandParam.ON: HVACMode.HEAT,
         OverkizCommandParam.OFF: HVACMode.OFF,
         OverkizCommandParam.HEATING: HVACMode.HEAT,
@@ -87,7 +85,7 @@ OVERKIZ_TO_HVAC_MODES: dict[Protocol, dict[str, HVACMode]] = {
 
 HVAC_MODES_TO_OVERKIZ: dict[Protocol, dict[HVACMode, str]] = {
     Protocol.OVP: {
-        HVACMode.AUTO: OverkizCommandParam.AUTOCOOLING,  # TODO use value with a space
+        HVACMode.AUTO: OverkizCommandParam.AUTO,
         HVACMode.HEAT: OverkizCommandParam.HEATING,
         HVACMode.OFF: OverkizCommandParam.HEATING,
         HVACMode.FAN_ONLY: OverkizCommandParam.FAN,
@@ -197,8 +195,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             mode_change_state := self.device.states[MODE_CHANGE_STATE[self.protocol]]
         ) and mode_change_state.value_as_str:
-            # The OVP protocol has 'auto cooling' and 'auto heating' values that don't exist (with a space) in the pyoverkiz lib
-            # TODO update the pyoverkiz lib to include these values and remove the sanitization code
+            # The OVP protocol has 'auto cooling' and 'auto heating' values that are equivalent to the HLRRWIFI protocol without spaces
             sanitized_value = mode_change_state.value_as_str.replace(" ", "").lower()
             return OVERKIZ_TO_HVAC_MODES[self.protocol][sanitized_value]
 
@@ -342,13 +339,6 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         hvac_mode: str,
         swing_mode: str,
     ) -> None:
-        # OVP protocol has states and commands with a space in them
-        # TODO update the pyoverkiz lib with these values and remove the space character management code from this implementation
-        if hvac_mode == OverkizCommandParam.AUTOCOOLING:
-            hvac_mode = "auto cooling"
-        elif hvac_mode == OverkizCommandParam.AUTOHEATING:
-            hvac_mode = "auto heating"
-
         # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLLR_WIFI values are leaking
         if fan_mode == OverkizCommandParam.MEDIUM:
             fan_mode = OverkizCommandParam.MED
@@ -378,13 +368,6 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         swing_mode: str,
         leave_home: str | None = None,
     ) -> None:
-        if hvac_mode.lower() in [
-            OverkizCommandParam.AUTOCOOLING,
-            OverkizCommandParam.AUTOHEATING,
-        ]:
-            # HLLRWIFI protocol has `autoCooling` and `autoHeating` as valid states, but they cannot be used as commands and need to be converted into `auto`
-            hvac_mode = OverkizCommandParam.AUTO
-
         # HLLR_WIFI protocol requires the additional leave_mode parameter
         leave_home = self._control_backfill(
             leave_home,
@@ -433,6 +416,12 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             MODE_CHANGE_STATE[self.protocol],
             OverkizCommandParam.AUTO,
         )
+        if hvac_mode.replace(" ", "").lower() in [
+            OverkizCommandParam.AUTOCOOLING,
+            OverkizCommandParam.AUTOHEATING,
+        ]:
+            hvac_mode = OverkizCommandParam.AUTO
+
         swing_mode = self._control_backfill(
             swing_mode,
             SWING_STATE[self.protocol],
