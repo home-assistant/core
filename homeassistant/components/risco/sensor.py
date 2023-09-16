@@ -90,11 +90,8 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._entity_registry = er.async_get(self.hass)
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._refresh_from_coordinator)
-        )
 
-    def _refresh_from_coordinator(self):
+    def _handle_coordinator_update(self):
         events = self.coordinator.data
         for event in reversed(events):
             if event.category_id in self._excludes:
