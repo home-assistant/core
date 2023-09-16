@@ -296,9 +296,15 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
-    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
+
+    # List of models requiring specific lazy_discover setting
+    LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za5": True,
+        "zhimi.airpurifier.za1": True,
+    }
+    lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
     if (
         model not in MODELS_HUMIDIFIER
