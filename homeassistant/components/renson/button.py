@@ -1,4 +1,4 @@
-"""Sensor data of the Renson ventilation unit."""
+"""Renson ventilation unit buttons."""
 from __future__ import annotations
 
 from _collections_abc import Callable
@@ -41,11 +41,9 @@ async def async_setup_entry(
     data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
+        RensonButton(SYNC_TIME_BUTTON, data.api, data.coordinator, data.api.sync_time),
         RensonButton(
-            SYNC_TIME_BUTTON, data.api, data.coordinator, hass, data.api.sync_time
-        ),
-        RensonButton(
-            RESTART_BUTTON, data.api, data.coordinator, hass, data.api.restart_device
+            RESTART_BUTTON, data.api, data.coordinator, data.api.restart_device
         ),
     ]
 
@@ -62,7 +60,6 @@ class RensonButton(RensonEntity, ButtonEntity):
         description: ButtonEntityDescription,
         api: RensonVentilation,
         coordinator: RensonCoordinator,
-        hass: HomeAssistant,
         action: Callable,
     ) -> None:
         """Initialize class."""
