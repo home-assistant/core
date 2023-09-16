@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -23,6 +24,7 @@ from .conftest import (
     SERIAL_RESPONSE,
     URL,
     ZERO_SERIAL_RESPONSE,
+    ComponentSetup,
     mock_response,
 )
 
@@ -102,17 +104,96 @@ async def test_controller_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_zero_serial(hass: HomeAssistant, mock_setup: Mock) -> None:
-    """Test the controller is setup correctly."""
+@pytest.mark.parametrize(
+    (
+        "unique_id",
+        "config_entry_data",
+        "config_flow_responses",
+        "expected_config_entry",
+    ),
+    [
+        (
+            "other-serial-number",
+            {**CONFIG_ENTRY_DATA, "host": "other-host"},
+            [mock_response(SERIAL_RESPONSE)],
+            CONFIG_ENTRY_DATA,
+        ),
+        (
+            None,
+            {**CONFIG_ENTRY_DATA, "serial_number": 0, "host": "other-host"},
+            [mock_response(ZERO_SERIAL_RESPONSE)],
+            {**CONFIG_ENTRY_DATA, "serial_number": 0},
+        ),
+    ],
+    ids=["with-serial", "zero-serial"],
+)
+async def test_multiple_config_entries(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    responses: list[AiohttpClientMockResponse],
+    config_flow_responses: list[AiohttpClientMockResponse],
+    expected_config_entry: dict[str, Any] | None,
+) -> None:
+    """Test setting up multiple config entries that refer to different devices."""
+    assert await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ConfigEntryState.LOADED
+
+    responses.clear()
+    responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
     assert result.get("type") == "create_entry"
-    assert result.get("title") == HOST
-    assert "result" in result
-    assert result["result"].data == CONFIG_ENTRY_DATA
-    assert result["result"].options == {ATTR_DURATION: 6}
+    assert dict(result.get("result").data) == expected_config_entry
 
-    assert len(mock_setup.mock_calls) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "unique_id",
+        "config_entry_data",
+        "config_flow_responses",
+    ),
+    [
+        (
+            SERIAL_NUMBER,
+            CONFIG_ENTRY_DATA,
+            [mock_response(SERIAL_RESPONSE)],
+        ),
+        (
+            None,
+            {**CONFIG_ENTRY_DATA, "serial_number": 0},
+            [mock_response(ZERO_SERIAL_RESPONSE)],
+        ),
+    ],
+    ids=[
+        "duplicate-serial-number",
+        "duplicate-host-port-no-serial",
+    ],
+)
+async def test_duplicate_config_entries(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    responses: list[AiohttpClientMockResponse],
+    config_flow_responses: list[AiohttpClientMockResponse],
+) -> None:
+    """Test that a device can not be registered twice."""
+    assert await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ConfigEntryState.LOADED
+
+    responses.clear()
+    responses.extend(config_flow_responses)
+
+    result = await complete_flow(hass)
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "already_configured"
 
 
 async def test_controller_cannot_connect(
