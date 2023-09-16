@@ -32,6 +32,11 @@ class ReadResult:
         """Init."""
         self.registers = register_words
         self.bits = register_words
+        self.value = register_words
+
+    def isError(self):
+        """Set error state."""
+        return False
 
 
 @pytest.fixture(name="mock_pymodbus")
@@ -136,6 +141,10 @@ async def mock_pymodbus_return_fixture(hass, register_words, mock_modbus):
     mock_modbus.read_discrete_inputs.return_value = read_result
     mock_modbus.read_input_registers.return_value = read_result
     mock_modbus.read_holding_registers.return_value = read_result
+    mock_modbus.write_register.return_value = read_result
+    mock_modbus.write_registers.return_value = read_result
+    mock_modbus.write_coil.return_value = read_result
+    mock_modbus.write_coils.return_value = read_result
 
 
 @pytest.fixture(name="mock_do_cycle")
