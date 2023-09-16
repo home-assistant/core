@@ -1,6 +1,6 @@
 """Tests for the Decora BLE integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from decora_bleak import DECORA_SERVICE_UUID
 
@@ -24,11 +24,19 @@ def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak 
     )
 
 
-def patch_decora_ble_get_api_key(return_value: str | None):
+def patch_decora_ble_get_api_key(return_value: str):
     """Patch Decora BLE api key call to return a given value."""
     return patch(
         "decora_bleak.DecoraBLEDevice.get_api_key",
         return_value=return_value,
+    )
+
+
+def patch_decora_ble_get_api_key_fail_with_exception(ex):
+    """Patch Decora BLE api key call to raise an exception."""
+    return patch(
+        "decora_bleak.DecoraBLEDevice.get_api_key",
+        MagicMock(side_effect=ex),
     )
 
 

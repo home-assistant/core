@@ -3,17 +3,13 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from decora_bleak import DecoraBLEDevice, DecoraBLEDeviceState, DecoraBLEDeviceSummary
+from decora_bleak import DecoraBLEDevice, DecoraBLEDeviceState
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -42,9 +38,25 @@ class DecoraBLEEntity(LightEntity):
     def __init__(self, device: DecoraBLEDevice, address: str, name: str) -> None:
         """Initialize an Decora BLE light."""
         super().__init__()
+
         self._device = device
         self._attr_unique_id = address
         self._address = address
+
+        summary = device.summary
+        if summary is not None:
+            self._attr_device_info = DeviceInfo(
+                name=name,
+                manufacturer=device.summary.manufacturer,
+                model=device.summary.model,
+                sw_version=device.summary.software_revision,
+                connections={(dr.CONNECTION_BLUETOOTH, self._address)},
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                name=name,
+                connections={(dr.CONNECTION_BLUETOOTH, self._address)},
+            )
 
     @property
     def available(self) -> bool:
@@ -63,25 +75,9 @@ class DecoraBLEEntity(LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self._device.register_connection_callback(self._async_decora_connected)
-        )
-        self.async_on_remove(
             self._device.register_state_callback(self._async_decora_state_changed)
         )
         return await super().async_added_to_hass()
-
-    @callback
-    def _async_decora_connected(self, summary: DecoraBLEDeviceSummary) -> None:
-        """Handle state changed."""
-        self._attr_device_info = DeviceInfo(
-            name=self._attr_name,
-            manufacturer=summary.manufacturer,
-            model=summary.model,
-            sw_version=summary.software_revision,
-            connections={(dr.CONNECTION_BLUETOOTH, self._address)},
-        )
-
-        self.schedule_update_ha_state()
 
     @callback
     def _async_decora_state_changed(self, state: DecoraBLEDeviceState) -> None:

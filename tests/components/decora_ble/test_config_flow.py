@@ -2,6 +2,8 @@
 import logging
 from unittest.mock import patch
 
+from decora_bleak import DeviceConnectionError, DeviceNotInPairingModeError
+
 from homeassistant import config_entries
 from homeassistant.components.decora_ble.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY, CONF_NAME
@@ -13,6 +15,7 @@ from . import (
     NOT_DECORA_BLE_SERVICE_INFO,
     patch_async_ble_device_from_address,
     patch_decora_ble_get_api_key,
+    patch_decora_ble_get_api_key_fail_with_exception,
 )
 
 from tests.common import MockConfigEntry
@@ -57,6 +60,7 @@ async def test_async_step_bluetooth_creates_entity_when_api_key_found(
     assert result2["data"] == {
         CONF_ADDRESS: "11:22:33:44:55:66",
         CONF_API_KEY: "A1B2C3D4",
+        CONF_NAME: "Garage Lights",
     }
     assert result2["result"].unique_id == "11:22:33:44:55:66"
 
@@ -110,13 +114,34 @@ async def test_async_step_bluetooth_errors_on_device_not_in_pairing_mode(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key(None):
+    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_NAME: "Garage Lights"}
         )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "not_in_pairing_mode"
+
+
+async def test_async_step_bluetooth_errors_on_device_connection_problems(
+    hass: HomeAssistant,
+) -> None:
+    """Test showing an error if the device is not in pairing mode."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=DECORA_BLE_SERVICE_INFO,
+    )
+
+    with patch_async_ble_device_from_address(
+        DECORA_BLE_SERVICE_INFO
+    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceConnectionError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_NAME: "Garage Lights"}
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "cannot_connect"
 
 
 async def test_async_step_user_no_devices_found_leads_to_abort(
@@ -216,6 +241,7 @@ async def test_async_step_user_creates_entity_when_api_key_found(
     assert result2["data"] == {
         CONF_ADDRESS: "11:22:33:44:55:66",
         CONF_API_KEY: "A1B2C3D4",
+        CONF_NAME: "Garage Lights",
     }
     assert result2["result"].unique_id == "11:22:33:44:55:66"
 
@@ -256,7 +282,7 @@ async def test_async_step_user_errors_on_device_not_in_pairing_mode(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key(None):
+    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_ADDRESS: "11:22:33:44:55:66", CONF_NAME: "Garage Lights"},
@@ -264,3 +290,28 @@ async def test_async_step_user_errors_on_device_not_in_pairing_mode(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "not_in_pairing_mode"
+
+
+async def test_async_step_user_errors_on_device_connection_problems(
+    hass: HomeAssistant,
+) -> None:
+    """Test showing an error if the device is not in pairing mode."""
+    with patch(
+        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        return_value=[DECORA_BLE_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    with patch_async_ble_device_from_address(
+        DECORA_BLE_SERVICE_INFO
+    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceConnectionError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_ADDRESS: "11:22:33:44:55:66", CONF_NAME: "Garage Lights"},
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "cannot_connect"

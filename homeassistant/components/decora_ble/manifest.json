@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/decora_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["decora_bleak==0.1.0"]
+  "requirements": ["decora_bleak==0.2.0"]
 }

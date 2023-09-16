@@ -23,7 +23,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_in_pairing_mode": "Device not in pairing mode"
+      "not_in_pairing_mode": "Device not in pairing mode",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",

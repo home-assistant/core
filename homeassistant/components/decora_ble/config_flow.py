@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from decora_bleak import DECORA_SERVICE_UUID, DecoraBLEDevice
+from decora_bleak import (
+    DECORA_SERVICE_UUID,
+    DecoraBLEDevice,
+    DeviceConnectionError,
+    DeviceNotInPairingModeError,
+)
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -53,7 +58,11 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             if api_key is not None and error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
+                    data={
+                        CONF_ADDRESS: address.upper(),
+                        CONF_NAME: user_input[CONF_NAME],
+                        CONF_API_KEY: api_key,
+                    },
                 )
 
             if api_key is None and error is not None:
@@ -92,7 +101,11 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             if api_key is not None and error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data={CONF_ADDRESS: address.upper(), CONF_API_KEY: api_key},
+                    data={
+                        CONF_ADDRESS: address.upper(),
+                        CONF_NAME: user_input[CONF_NAME],
+                        CONF_API_KEY: api_key,
+                    },
                 )
 
             if api_key is None and error is not None:
@@ -136,11 +149,15 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass, address.upper(), connectable=True
         )
 
-        if ble_device:
+        if not ble_device:
             return None, "cannot_connect"
 
-        api_key = await DecoraBLEDevice.get_api_key(ble_device)
-        if api_key is None:
+        try:
+            api_key = await DecoraBLEDevice.get_api_key(ble_device)
+            return api_key, None
+        except DeviceNotInPairingModeError:
             return None, "not_in_pairing_mode"
-
-        return api_key, None
+        except DeviceConnectionError:
+            return None, "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            return None, "unknown_error"
