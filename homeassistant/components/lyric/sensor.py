@@ -178,7 +178,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
         )
         self.entity_description = description
         if description.device_class == SensorDeviceClass.TEMPERATURE:
-            if self.device.units == "Fahrenheit":
+            if device.units == "Fahrenheit":
                 self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
             else:
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
