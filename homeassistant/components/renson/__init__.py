@@ -71,13 +71,6 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
 
         await hass.async_add_executor_job(renson_api.set_timer_level, level, time)
 
-    async def set_manual_level(call: ServiceCall) -> None:
-        """Set manual level."""
-        level_string = call.data.get("manual_level", "Off")
-        level = Level[level_string.upper()]
-
-        await hass.async_add_executor_job(renson_api.set_manual_level, level)
-
     async def set_breeze(call: ServiceCall) -> None:
         """Configure breeze feature."""
         level = call.data.get("breeze_level", "")
@@ -115,7 +108,6 @@ def setup_hass_services(hass: HomeAssistant, renson_api: RensonVentilation) -> N
             co2_hysteresis,
         )
 
-    hass.services.async_register(DOMAIN, "set_manual_level", set_manual_level)
     hass.services.async_register(DOMAIN, "set_breeze", set_breeze)
     hass.services.async_register(DOMAIN, "set_day_night_time", set_day_night_time)
     hass.services.async_register(

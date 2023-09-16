@@ -1,21 +1,3 @@
-set_manual_level:
-  fields:
-    manual_level:
-      required: true
-      advanced: false
-      default: "Off"
-      selector:
-        select:
-          translation_key: "fan_setting"
-          options:
-            - "off"
-            - "level1"
-            - "level2"
-            - "level3"
-            - "level4"
-            - "breeze"
-            - "holiday"
-
 set_timer_level:
   fields:
     timer_level:

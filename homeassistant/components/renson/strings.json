@@ -174,16 +174,6 @@
     }
   },
   "services": {
-    "set_manual_level": {
-      "name": "Set Manual Level",
-      "description": "Sets manual level",
-      "fields": {
-        "manual_level": {
-          "name": "Manual level",
-          "description": "Manual level setting"
-        }
-      }
-    },
     "set_timer_level": {
       "name": "Set timer",
       "description": "Set the ventilation timer",
