@@ -65,7 +65,7 @@
     },
     "reload": {
       "name": "[%key:common::action::reload%]",
-      "description": "Reloads helpers from the YAML-configuration."
+      "description": "Reloads timers from the YAML-configuration."
     }
   }
 }
