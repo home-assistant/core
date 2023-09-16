@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from typing import Any
 
 import arrow
@@ -63,7 +63,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         )
         return response.json()
 
-    async def _do_retry(self, func: Callable, attempts=3) -> Any:
+    async def _do_retry(self, func: Callable[[], Awaitable[Any]], attempts=3) -> Any:
         """Retry a function call.
 
         Withings' API occasionally and incorrectly throws errors.
