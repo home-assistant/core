@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from typing import Any
 
 import arrow
@@ -63,7 +63,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         )
         return response.json()
 
-    async def _do_retry(self, func, attempts=3) -> Any:
+    async def _do_retry(self, func: Callable[[], Awaitable[Any]], attempts=3) -> Any:
         """Retry a function call.
 
         Withings' API occasionally and incorrectly throws errors.
@@ -97,8 +97,8 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> MeasureGetMeasResponse:
         """Get measurements."""
 
-        return await self._do_retry(
-            await self._hass.async_add_executor_job(
+        async def call_super() -> MeasureGetMeasResponse:
+            return await self._hass.async_add_executor_job(
                 self.measure_get_meas,
                 meastype,
                 category,
@@ -107,7 +107,8 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
                 offset,
                 lastupdate,
             )
-        )
+
+        return await self._do_retry(call_super)
 
     async def async_sleep_get_summary(
         self,
@@ -119,8 +120,8 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> SleepGetSummaryResponse:
         """Get sleep data."""
 
-        return await self._do_retry(
-            await self._hass.async_add_executor_job(
+        async def call_super() -> SleepGetSummaryResponse:
+            return await self._hass.async_add_executor_job(
                 self.sleep_get_summary,
                 data_fields,
                 startdateymd,
@@ -128,16 +129,18 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
                 offset,
                 lastupdate,
             )
-        )
+
+        return await self._do_retry(call_super)
 
     async def async_notify_list(
         self, appli: NotifyAppli | None = None
     ) -> NotifyListResponse:
         """List webhooks."""
 
-        return await self._do_retry(
-            await self._hass.async_add_executor_job(self.notify_list, appli)
-        )
+        async def call_super() -> NotifyListResponse:
+            return await self._hass.async_add_executor_job(self.notify_list, appli)
+
+        return await self._do_retry(call_super)
 
     async def async_notify_subscribe(
         self,
@@ -147,19 +150,21 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> None:
         """Subscribe to webhook."""
 
-        return await self._do_retry(
+        async def call_super() -> None:
             await self._hass.async_add_executor_job(
                 self.notify_subscribe, callbackurl, appli, comment
             )
-        )
+
+        await self._do_retry(call_super)
 
     async def async_notify_revoke(
         self, callbackurl: str | None = None, appli: NotifyAppli | None = None
     ) -> None:
         """Revoke webhook."""
 
-        return await self._do_retry(
+        async def call_super() -> None:
             await self._hass.async_add_executor_job(
                 self.notify_revoke, callbackurl, appli
             )
-        )
+
+        await self._do_retry(call_super)
