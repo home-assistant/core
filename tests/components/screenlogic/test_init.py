@@ -77,6 +77,13 @@ TEST_MIGRATING_ENTITIES = [
         "old_sensor",
         SENSOR_DOMAIN,
     ),
+    EntityMigrationData(
+        "Pump Sensor Missing Index",
+        "currentWatts",
+        "Pump Sensor Missing Index",
+        "currentWatts",
+        SENSOR_DOMAIN,
+    ),
 ]
 
 MIGRATION_CONNECT = lambda *args, **kwargs: stub_async_connect(
