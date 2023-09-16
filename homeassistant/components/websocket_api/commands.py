@@ -16,15 +16,13 @@ from homeassistant.const import (
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
-from homeassistant.core import (
-    Context,
-    Event,
-    HomeAssistant,
-    State,
-    SupportsResponse,
-    callback,
+from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
 )
-from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -210,6 +208,7 @@ def handle_unsubscribe_events(
         vol.Required("service"): str,
         vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
+        vol.Optional("return_response", default=False): bool,
     }
 )
 @decorators.async_response
@@ -217,31 +216,35 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    blocking = True
     # We do not support templates.
     target = msg.get("target")
     if template.is_complex(target):
         raise vol.Invalid("Templates are not supported here")
 
-    domain = msg["domain"]
-    service_name = msg["service"]
-    all_services = hass.services.async_services()
-    if (service := all_services.get(domain, {}).get(service_name)) is None:
-        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
-        return
-
     try:
         context = connection.context(msg)
         response = await hass.services.async_call(
-            domain,
-            service_name,
+            msg["domain"],
+            msg["service"],
             msg.get("service_data"),
-            blocking,
+            True,
             context,
             target=target,
-            return_response=(service.supports_response != SupportsResponse.NONE),
+            return_response=msg["return_response"],
         )
-        connection.send_result(msg["id"], {"context": context, "response": response})
+        if msg["return_response"]:
+            connection.send_result(
+                msg["id"], {"context": context, "response": response}
+            )
+        else:
+            connection.send_result(msg["id"], {"context": context})
+    except ServiceNotFound as err:
+        if err.domain == msg["domain"] and err.service == msg["service"]:
+            connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
+        else:
+            connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+    except ValueError as err:
+        connection.send_error(msg["id"], const.ERR_NOT_SUPPORTED, str(err))
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:
