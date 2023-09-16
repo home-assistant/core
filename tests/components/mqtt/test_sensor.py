@@ -1450,6 +1450,8 @@ async def test_entity_name(
                 {
                     "availability_topic": "availability-topic",
                     "json_attributes_topic": "json-attributes-topic",
+                    "value_template": "{{ value_json.state }}",
+                    "last_reset_value_template": "{{ value_json.last_reset }}",
                 },
             ),
         )
@@ -1458,7 +1460,12 @@ async def test_entity_name(
 @pytest.mark.parametrize(
     ("topic", "payload1", "payload2"),
     [
-        ("test-topic", "val1", "val2"),
+        ("test-topic", '{"state":"val1"}', '{"state":"val2"}'),
+        (
+            "test-topic",
+            '{"last_reset":"2023-09-15 15:11:03"}',
+            '{"last_reset":"2023-09-16 15:11:02"}',
+        ),
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
     ],
