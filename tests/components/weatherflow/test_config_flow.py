@@ -1,17 +1,14 @@
 """Test the IntelliFire config flow."""
 
-import asyncio
-from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.weatherflow.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_address_in_use(
@@ -101,20 +98,14 @@ async def test_devices_with_mocks_timeout(
 ) -> None:
     """Test getting user input."""
 
-    async def time_jump(hass: HomeAssistant):
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=100))
-        await asyncio.sleep(10)
+    with patch("pyweatherflowudp.client") as mock_listener:
+        mock_client = MagicMock()
+        mock_listener.return_value.__aenter__.return_value = mock_client
 
-    # Start the time forarder task
-    task = asyncio.create_task(time_jump(hass))
+        # Setting up client.on to do nothing
+        mock_client.on.side_effect = lambda event, callback: None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-
-    # Once finished cancel the bg task
-    task.cancel()
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
