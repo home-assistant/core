@@ -6,14 +6,15 @@ set_manual_level:
       default: "Off"
       selector:
         select:
+          translation_key: "fan_setting"
           options:
-            - "Off"
-            - "Level1"
-            - "Level2"
-            - "Level3"
-            - "Level4"
-            - "Breeze"
-            - "Holiday"
+            - "off"
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+            - "breeze"
+            - "holiday"
 
 set_timer_level:
   fields:
@@ -23,13 +24,14 @@ set_timer_level:
       default: "Level1"
       selector:
         select:
+          translation_key: "fan_setting"
           options:
-            - "Level1"
-            - "Level2"
-            - "Level3"
-            - "Level4"
-            - "Holiday"
-            - "Breeze"
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
+            - "holiday"
+            - "breeze"
     time:
       required: true
       advanced: false
@@ -50,11 +52,12 @@ set_breeze:
       default: "Level3"
       selector:
         select:
+          translation_key: "fan_setting"
           options:
-            - "Level1"
-            - "Level2"
-            - "Level3"
-            - "Level4"
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
     temperature:
       required: false
       advanced: false
@@ -78,13 +81,15 @@ set_day_night_time:
     day:
       required: true
       advanced: false
-      default: false
+      default: "7:00:00"
+      example: "7:00:00"
       selector:
         time:
     night:
       required: true
       advanced: false
-      default: false
+      default: "22:00:00"
+      example: "22:00:00"
       selector:
         time:
 
@@ -93,25 +98,27 @@ set_pollution_settings:
     day_pollution_level:
       required: false
       advanced: false
-      default: "Level3"
+      default: "level3"
       selector:
         select:
+          translation_key: "fan_setting"
           options:
-            - "Level1"
-            - "Level2"
-            - "Level3"
-            - "Level4"
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
     night_pollution_level:
       required: false
       advanced: false
-      default: "Level2"
+      default: "level2"
       selector:
         select:
+          translation_key: "fan_setting"
           options:
-            - "Level1"
-            - "Level2"
-            - "Level3"
-            - "Level4"
+            - "level1"
+            - "level2"
+            - "level3"
+            - "level4"
     humidity_control:
       required: false
       advanced: false

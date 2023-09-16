@@ -160,6 +160,19 @@
       }
     }
   },
+  "selector": {
+    "fan_setting": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "level1": "[%key:component::renson::entity::sensor::ventilation_level::state::level1%]",
+        "level2": "[%key:component::renson::entity::sensor::ventilation_level::state::level2%]",
+        "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
+        "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
+        "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]",
+        "holiday": "Holiday"
+      }
+    }
+  },
   "services": {
     "set_manual_level": {
       "name": "Set Manual Level",
