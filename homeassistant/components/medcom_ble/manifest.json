@@ -1,6 +1,6 @@
 {
   "domain": "medcom_ble",
-  "name": "Medcom BLE",
+  "name": "Medcom Bluetooth",
   "bluetooth": [
     {
       "service_uuid": "39b31fec-b63a-4ef7-b163-a7317872007f"
