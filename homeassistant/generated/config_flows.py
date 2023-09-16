@@ -262,6 +262,7 @@ FLOWS = {
         "livisi",
         "local_calendar",
         "local_ip",
+        "local_todo",
         "locative",
         "logi_circle",
         "lookin",
