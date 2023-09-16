@@ -94,7 +94,7 @@ class VeluxEntity(Entity):
         """Initialize the Velux device."""
         self.node = node
         self._attr_unique_id = node.serial_number
-        self._attr_name = node.name if node.name else "#" + str(node.node_id)
+        self._attr_name = node.name if node.name else f"#{node.node_id}"
 
     @callback
     def async_register_callbacks(self):
