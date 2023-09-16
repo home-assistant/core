@@ -40,6 +40,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_WRITE_REGISTERS,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
@@ -413,6 +414,12 @@ async def test_duplicate_entity_validator(do_config) -> None:
 @pytest.mark.parametrize(
     "do_config",
     [
+        {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_CLOSE_COMM_ON_ERROR: True,
+        },
         {
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,

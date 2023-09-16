@@ -261,7 +261,7 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
-            async_create_issue(  # pragma: no cover
+            async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_close_comm_config",
@@ -419,8 +419,14 @@ class ModbusHub:
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return None
+        if not result:
+            self._log_error("Error: pymodbus returned None")
+            return None
         if not hasattr(result, entry.attr):
             self._log_error(str(result))
+            return None
+        if result.isError():  # type: ignore[no-untyped-call]
+            self._log_error("Error: pymodbus returned isError True")
             return None
         self._in_error = False
         return result
