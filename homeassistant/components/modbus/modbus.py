@@ -261,7 +261,7 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
-            async_create_issue(  # pragma: no cover
+            async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_close_comm_config",
