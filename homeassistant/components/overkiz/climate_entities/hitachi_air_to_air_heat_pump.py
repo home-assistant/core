@@ -1,3 +1,5 @@
+# pylint: disable=fixme
+
 """Support for HitachiAirToAirHeatPump."""
 from __future__ import annotations
 
@@ -5,6 +7,7 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState, Protocol
 
+import homeassistant
 from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
@@ -60,8 +63,8 @@ SWING_STATE = {
 
 OVERKIZ_TO_HVAC_MODES: dict[Protocol, dict[str, HVACMode]] = {
     Protocol.OVP: {
-        OverkizCommandParam.AUTO_HEATING: HVACMode.AUTO,
-        OverkizCommandParam.AUTO_COOLING: HVACMode.AUTO,
+        OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,  # TODO use value with a space
+        OverkizCommandParam.AUTOCOOLING: HVACMode.AUTO,  # TODO use value with a space
         OverkizCommandParam.ON: HVACMode.HEAT,
         OverkizCommandParam.OFF: HVACMode.OFF,
         OverkizCommandParam.HEATING: HVACMode.HEAT,
@@ -84,7 +87,7 @@ OVERKIZ_TO_HVAC_MODES: dict[Protocol, dict[str, HVACMode]] = {
 
 HVAC_MODES_TO_OVERKIZ: dict[Protocol, dict[HVACMode, str]] = {
     Protocol.OVP: {
-        HVACMode.AUTO: OverkizCommandParam.AUTO_COOLING,
+        HVACMode.AUTO: OverkizCommandParam.AUTOCOOLING,  # TODO use value with a space
         HVACMode.HEAT: OverkizCommandParam.HEATING,
         HVACMode.OFF: OverkizCommandParam.HEATING,
         HVACMode.FAN_ONLY: OverkizCommandParam.FAN,
@@ -194,7 +197,10 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         if (
             mode_change_state := self.device.states[MODE_CHANGE_STATE[self.protocol]]
         ) and mode_change_state.value_as_str:
-            return OVERKIZ_TO_HVAC_MODES[self.protocol][mode_change_state.value_as_str]
+            # The OVP protocol has 'auto cooling' and 'auto heating' values that don't exist (with a space) in the pyoverkiz lib
+            # TODO update the pyoverkiz lib to include these values and remove the sanitization code
+            sanitized_value = mode_change_state.value_as_str.replace(" ", "").lower()
+            return OVERKIZ_TO_HVAC_MODES[self.protocol][sanitized_value]
 
         return HVACMode.OFF
 
@@ -328,6 +334,77 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             return state.value_as_str
         return fallback_value
 
+    async def _global_control_ovp(
+        self,
+        main_operation: str,
+        target_temperature: int,
+        fan_mode: str,
+        hvac_mode: str,
+        swing_mode: str,
+    ) -> None:
+        # OVP protocol has states and commands with a space in them
+        # TODO update the pyoverkiz lib with these values and remove the space character management code from this implementation
+        if hvac_mode == OverkizCommandParam.AUTOCOOLING:
+            hvac_mode = "auto cooling"
+        elif hvac_mode == OverkizCommandParam.AUTOHEATING:
+            hvac_mode = "auto heating"
+
+        # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLLR_WIFI values are leaking
+        if fan_mode == OverkizCommandParam.MEDIUM:
+            fan_mode = OverkizCommandParam.MED
+        elif fan_mode == OverkizCommandParam.HIGH:
+            fan_mode = OverkizCommandParam.HI
+        elif fan_mode == OverkizCommandParam.LOW:
+            fan_mode = OverkizCommandParam.LO
+
+        command_data = [
+            main_operation,  # Main Operation
+            target_temperature,  # Target Temperature
+            fan_mode,  # Fan Mode
+            hvac_mode,  # Mode
+            swing_mode,  # Swing Mode
+        ]
+
+        await self.executor.async_execute_command(
+            OverkizCommand.GLOBAL_CONTROL, *command_data
+        )
+
+    async def _global_control_hlrrwifi(
+        self,
+        main_operation: str,
+        target_temperature: int,
+        fan_mode: str,
+        hvac_mode: str,
+        swing_mode: str,
+        leave_home: str | None = None,
+    ) -> None:
+        if hvac_mode.lower() in [
+            OverkizCommandParam.AUTOCOOLING,
+            OverkizCommandParam.AUTOHEATING,
+        ]:
+            # HLLRWIFI protocol has `autoCooling` and `autoHeating` as valid states, but they cannot be used as commands and need to be converted into `auto`
+            hvac_mode = OverkizCommandParam.AUTO
+
+        # HLLR_WIFI protocol requires the additional leave_mode parameter
+        leave_home = self._control_backfill(
+            leave_home,
+            LEAVE_HOME_STATE[self.protocol],
+            OverkizCommandParam.OFF,
+        )
+
+        command_data = [
+            main_operation,  # Main Operation
+            target_temperature,  # Target Temperature
+            fan_mode,  # Fan Mode
+            hvac_mode,  # Mode
+            swing_mode,  # Swing Mode
+            leave_home,  # Leave Home
+        ]
+
+        await self.executor.async_execute_command(
+            OverkizCommand.GLOBAL_CONTROL, *command_data
+        )
+
     async def _global_control(
         self,
         main_operation: str | None = None,
@@ -341,6 +418,11 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
         main_operation = main_operation or OverkizCommandParam.ON
         target_temperature = target_temperature or self.target_temperature
+        if not target_temperature:
+            raise homeassistant.exceptions.InvalidStateError(
+                "Target temperature not set"
+            )
+
         fan_mode = self._control_backfill(
             fan_mode,
             FAN_SPEED_STATE[self.protocol],
@@ -358,37 +440,19 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         )
 
         if self.protocol == Protocol.OVP:
-            # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLLR_WIFI values are leaking
-            if fan_mode == OverkizCommandParam.MEDIUM:
-                fan_mode = OverkizCommandParam.MED
-            elif fan_mode == OverkizCommandParam.HIGH:
-                fan_mode = OverkizCommandParam.HI
-            elif fan_mode == OverkizCommandParam.LOW:
-                fan_mode = OverkizCommandParam.LO
-        elif hvac_mode in [
-            OverkizCommandParam.AUTOCOOLING,
-            OverkizCommandParam.AUTOHEATING,
-        ]:
-            # HLLRWIFI protocol has `autoCooling` and `autoHeating` as valid states, but they cannot be used as commands and need to be converted into `auto`
-            hvac_mode = OverkizCommandParam.AUTO
-
-        command_data = [
-            main_operation,  # Main Operation
-            target_temperature,  # Target Temperature
-            fan_mode,  # Fan Mode
-            hvac_mode,  # Mode
-            swing_mode,  # Swing Mode
-        ]
-
-        if self.protocol == Protocol.HLRR_WIFI:
-            # HLLR_WIFI protocol requires the additional leave_mode parameter
-            leave_home = self._control_backfill(
-                leave_home,
-                LEAVE_HOME_STATE[self.protocol],
-                OverkizCommandParam.OFF,
+            await self._global_control_ovp(
+                main_operation=main_operation,
+                target_temperature=target_temperature,
+                fan_mode=fan_mode,
+                hvac_mode=hvac_mode,
+                swing_mode=swing_mode,
             )
-            command_data.append(leave_home)
-
-        await self.executor.async_execute_command(
-            OverkizCommand.GLOBAL_CONTROL, *command_data
-        )
+        else:
+            await self._global_control_hlrrwifi(
+                main_operation=main_operation,
+                target_temperature=target_temperature,
+                fan_mode=fan_mode,
+                hvac_mode=hvac_mode,
+                swing_mode=swing_mode,
+                leave_home=leave_home,
+            )
