@@ -89,7 +89,7 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.displayedOutdoorHumidity,
-        suitable_fn=lambda device: bool(device.displayedOutdoorHumidity),
+        suitable_fn=lambda device: device.displayedOutdoorHumidity,
     ),
     LyricSensorEntityDescription(
         key="next_period_time",
