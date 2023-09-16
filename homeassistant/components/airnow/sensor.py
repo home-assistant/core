@@ -94,8 +94,8 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         icon="mdi:blur",
         value_fn=lambda data: data.get(ATTR_API_STATION),
         extra_state_attributes_fn=lambda data: {
-            "lat": data[ATTR_API_STATION_LATITUDE],
-            "long": data[ATTR_API_STATION_LONGITUDE],
+            "lat": data.get(ATTR_API_STATION_LATITUDE),
+            "long": data.get(ATTR_API_STATION_LONGITUDE),
         },
     ),
 )
