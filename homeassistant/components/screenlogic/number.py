@@ -12,14 +12,14 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
-from .util import cleanup_excluded_entity
+from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ PARALLEL_UPDATES = 1
 class ScreenLogicNumberRequiredMixin:
     """Describes a required mixin for a ScreenLogic number entity."""
 
-    set_value: Callable[..., bool] | str
-    set_value_params: tuple[tuple[str | int, ...], ...]
+    set_value_name: str
+    set_value_args: tuple[tuple[str | int, ...], ...]
 
 
 @dataclass
@@ -45,34 +45,24 @@ class ScreenLogicNumberDescription(
 
 SUPPORTED_SCG_NUMBERS = [
     ScreenLogicNumberDescription(
-        set_value="async_set_scg_config",
-        set_value_params=(
+        set_value_name="async_set_scg_config",
+        set_value_args=(
             (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
             (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
         ),
-        data_path=(DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.POOL_SETPOINT,
         entity_category=EntityCategory.CONFIG,
-        name="Pool Chlorinator Setpoint",
-        native_max_value=100,
-        native_min_value=0,
-        native_step=5,
-        native_unit_of_measurement=PERCENTAGE,
     ),
     ScreenLogicNumberDescription(
-        set_value="async_set_scg_config",
-        set_value_params=(
+        set_value_name="async_set_scg_config",
+        set_value_args=(
             (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
             (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
         ),
-        data_path=(DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SPA_SETPOINT,
         entity_category=EntityCategory.CONFIG,
-        name="Spa Chlorinator Setpoint",
-        native_max_value=100,
-        native_min_value=0,
-        native_step=5,
-        native_unit_of_measurement=PERCENTAGE,
     ),
 ]
 
@@ -89,22 +79,16 @@ async def async_setup_entry(
     ]
     gateway = coordinator.gateway
 
-    scg_number_description: ScreenLogicNumberDescription
     for scg_number_description in SUPPORTED_SCG_NUMBERS:
-        if EQUIPMENT_FLAG.CHLORINATOR in gateway.equipment_flags:
-            if isinstance(scg_number_description.set_value, str):
-                attr = getattr(gateway, scg_number_description.set_value)
-                if not callable(attr):
-                    raise TypeError(
-                        f"{scg_number_description.set_value} is not callable"
-                    )
-                scg_number_description.set_value = attr
+        scg_number_data_path = (
+            *scg_number_description.data_root,
+            scg_number_description.key,
+        )
+        if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
+            continue
+        if gateway.get_data(*scg_number_data_path):
             entities.append(ScreenLogicNumber(coordinator, scg_number_description))
-        else:
-            _LOGGER.debug(
-                "Attempting to cleanup entity '%s'", scg_number_description.key
-            )
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_description.key)
 
     async_add_entities(entities)
 
@@ -120,9 +104,30 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         entity_description: ScreenLogicNumberDescription,
     ) -> None:
         """Initialize a ScreenLogic number entity."""
-        self._set_value_func = entity_description.set_value
-        self._set_value_params = entity_description.set_value_params
         super().__init__(coordinator, entity_description)
+        if not callable(
+            func := getattr(self.gateway, entity_description.set_value_name)
+        ):
+            raise TypeError(
+                f"set_value_name '{entity_description.set_value_name}' is not a callable"
+            )
+        self._set_value_func: Callable[..., bool] = func
+        self._set_value_args = entity_description.set_value_args
+        self._attr_native_unit_of_measurement = get_ha_unit(
+            self.entity_data.get(ATTR.UNIT)
+        )
+        if entity_description.native_max_value is None and isinstance(
+            max_val := self.entity_data.get(ATTR.MAX_SETPOINT), int | float
+        ):
+            self._attr_native_max_value = max_val
+        if entity_description.native_min_value is None and isinstance(
+            min_val := self.entity_data.get(ATTR.MIN_SETPOINT), int | float
+        ):
+            self._attr_native_min_value = min_val
+        if entity_description.native_step is None and isinstance(
+            step := self.entity_data.get(ATTR.STEP), int | float
+        ):
+            self._attr_native_step = step
 
     @property
     def native_value(self) -> float:
@@ -136,15 +141,12 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         # gathers the existing values and updates the particular value being
         # set by this entity.
         args = {}
-        for data_path in self._set_value_params:
-            data_value = data_path[-1]
-            args[data_value] = self.coordinator.gateway.get_value(
-                *data_path, strict=True
-            )
+        for data_path in self._set_value_args:
+            data_key = data_path[-1]
+            args[data_key] = self.coordinator.gateway.get_value(*data_path, strict=True)
 
         args[self._data_key] = value
 
-        assert callable(self._set_value_func)
         if self._set_value_func(*args.values()):
             _LOGGER.debug("Set '%s' to %s", self._data_key, value)
             await self._async_refresh()
