@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 
@@ -14,7 +13,7 @@ from nacl.secret import SecretBox
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import json_bytes
 from homeassistant.util.json import JsonValueType, json_loads
 
 from .const import (
@@ -182,7 +181,7 @@ def webhook_response(
     headers: Mapping[str, str] | None = None,
 ) -> Response:
     """Return a encrypted response if registration supports it."""
-    data = json.dumps(data, cls=JSONEncoder)
+    json_data = json_bytes(data)
 
     if registration[ATTR_SUPPORTS_ENCRYPTION]:
         keylen, encrypt = setup_encrypt(
@@ -190,17 +189,17 @@ def webhook_response(
         )
 
         if ATTR_NO_LEGACY_ENCRYPTION in registration:
-            key = registration[CONF_SECRET]
+            key: bytes = registration[CONF_SECRET]
         else:
             key = registration[CONF_SECRET].encode("utf-8")
             key = key[:keylen]
             key = key.ljust(keylen, b"\0")
 
-        enc_data = encrypt(data.encode("utf-8"), key).decode("utf-8")
-        data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
+        enc_data = encrypt(json_data, key).decode("utf-8")
+        json_data = json_bytes({"encrypted": True, "encrypted_data": enc_data})
 
     return Response(
-        text=data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
+        body=json_data, status=status, content_type=CONTENT_TYPE_JSON, headers=headers
     )
 
 
