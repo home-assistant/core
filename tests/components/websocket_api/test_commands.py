@@ -17,7 +17,7 @@ from homeassistant.components.websocket_api.auth import (
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
-from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -172,12 +172,72 @@ async def test_call_service(hass: HomeAssistant, websocket_client) -> None:
     assert call.context.as_dict() == msg["result"]["context"]
 
 
+async def test_return_response_error(hass: HomeAssistant, websocket_client) -> None:
+    """Test return_response=True errors when service has no response."""
+    hass.services.async_register(
+        "domain_test", "test_service_with_no_response", lambda x: None
+    )
+    await websocket_client.send_json(
+        {
+            "id": 8,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "test_service_with_no_response",
+            "service_data": {"hello": "world"},
+            "return_response": True,
+        },
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 8
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_supported"
+
+
 @pytest.mark.parametrize("command", ("call_service", "call_service_action"))
 async def test_call_service_blocking(
     hass: HomeAssistant, websocket_client, command
 ) -> None:
     """Test call service commands block, except for homeassistant restart / stop."""
-    async_mock_service(hass, "domain_test", "test_service")
+    async_mock_service(
+        hass,
+        "domain_test",
+        "test_service",
+        response={"hello": "world"},
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call", autospec=True
+    ) as mock_call:
+        mock_call.return_value = {"foo": "bar"}
+        await websocket_client.send_json(
+            {
+                "id": 4,
+                "type": "call_service",
+                "domain": "domain_test",
+                "service": "test_service",
+                "service_data": {"hello": "world"},
+                "return_response": True,
+            },
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 4
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["response"] == {"foo": "bar"}
+    mock_call.assert_called_once_with(
+        ANY,
+        "domain_test",
+        "test_service",
+        {"hello": "world"},
+        blocking=True,
+        context=ANY,
+        target=ANY,
+        return_response=True,
+    )
+
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
@@ -453,7 +513,7 @@ async def test_call_service_error(hass: HomeAssistant, websocket_client) -> None
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
 
     async def unknown_error_call(_):
-        raise ValueError("value_error")
+        raise TypeError("type_error")
 
     hass.services.async_register("domain_test", "unknown_error", unknown_error_call)
 
@@ -487,6 +547,29 @@ async def test_call_service_error(hass: HomeAssistant, websocket_client) -> None
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
+    assert msg["error"]["message"] == "type_error"
+
+    async def not_supported_error(_):
+        raise ValueError("value_error")
+
+    hass.services.async_register(
+        "domain_test", "not_supported_error", not_supported_error
+    )
+
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "not_supported_error",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"]["code"] == "not_supported"
     assert msg["error"]["message"] == "value_error"
 
 
