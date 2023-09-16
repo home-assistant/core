@@ -248,8 +248,6 @@ async def handle_call_service(
             connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Service not found.")
         else:
             connection.send_error(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
-    except ValueError as err:
-        connection.send_error(msg["id"], const.ERR_NOT_SUPPORTED, str(err))
     except vol.Invalid as err:
         connection.send_error(msg["id"], const.ERR_INVALID_FORMAT, str(err))
     except HomeAssistantError as err:

@@ -192,7 +192,7 @@ async def test_return_response_error(hass: HomeAssistant, websocket_client) -> N
     assert msg["id"] == 8
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
-    assert msg["error"]["code"] == "not_supported"
+    assert msg["error"]["code"] == "unknown_error"
 
 
 @pytest.mark.parametrize("command", ("call_service", "call_service_action"))
@@ -548,29 +548,6 @@ async def test_call_service_error(hass: HomeAssistant, websocket_client) -> None
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "type_error"
-
-    async def not_supported_error(_):
-        raise ValueError("value_error")
-
-    hass.services.async_register(
-        "domain_test", "not_supported_error", not_supported_error
-    )
-
-    await websocket_client.send_json(
-        {
-            "id": 7,
-            "type": "call_service",
-            "domain": "domain_test",
-            "service": "not_supported_error",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"] is False
-    assert msg["error"]["code"] == "not_supported"
-    assert msg["error"]["message"] == "value_error"
 
 
 async def test_subscribe_unsubscribe_events(
