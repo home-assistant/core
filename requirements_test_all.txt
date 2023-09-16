@@ -1847,6 +1847,9 @@ sunwatcher==0.2.1
 # homeassistant.components.surepetcare
 surepy==0.8.0
 
+# homeassistant.components.switchbot_cloud
+switchbot-api==1.1.0
+
 # homeassistant.components.system_bridge
 systembridgeconnector==3.8.2
 

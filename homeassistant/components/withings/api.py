@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
-import logging
+from collections.abc import Awaitable, Callable, Iterable
 from typing import Any
 
 import arrow
@@ -26,9 +25,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
 )
 
-from .const import LOG_NAMESPACE
+from .const import LOGGER
 
-_LOGGER = logging.getLogger(LOG_NAMESPACE)
 _RETRY_COEFFICIENT = 0.5
 
 
@@ -65,7 +63,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         )
         return response.json()
 
-    async def _do_retry(self, func: Callable, attempts=3) -> Any:
+    async def _do_retry(self, func: Callable[[], Awaitable[Any]], attempts=3) -> Any:
         """Retry a function call.
 
         Withings' API occasionally and incorrectly throws errors.
@@ -73,11 +71,11 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         """
         exception = None
         for attempt in range(1, attempts + 1):
-            _LOGGER.debug("Attempt %s of %s", attempt, attempts)
+            LOGGER.debug("Attempt %s of %s", attempt, attempts)
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Failed attempt %s of %s (%s)", attempt, attempts, exception1
                 )
                 # Make each backoff pause a little bit longer

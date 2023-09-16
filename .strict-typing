@@ -318,6 +318,7 @@ homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
 homeassistant.components.switchbee.*
+homeassistant.components.switchbot_cloud.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*

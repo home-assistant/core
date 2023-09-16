@@ -411,6 +411,17 @@ async def test_config_wrong_struct_sensor(
         ),
         (
             {
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_SCALE: 1,
+                CONF_OFFSET: 0,
+                CONF_PRECISION: 0,
+            },
+            [0x89AB],
+            False,
+            STATE_UNAVAILABLE,
+        ),
+        (
+            {
                 CONF_DATA_TYPE: DataType.UINT32,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -750,6 +761,15 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [0x0102, 0x0304, 0x0403, 0x0201],
             False,
             ["16909060", "67305985"],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 2,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+            },
+            [0x0102, 0x0304, 0x0403, 0x0201, 0x0403],
+            False,
+            [STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_UNKNOWN],
         ),
         (
             {
