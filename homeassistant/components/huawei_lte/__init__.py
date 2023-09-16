@@ -333,7 +333,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs: dict[str, Any] = {
             "timeout": CONNECTION_TIMEOUT,
         }
-        if not entry.data.get(CONF_VERIFY_SSL):
+        if url.startswith("https://") and not entry.data.get(CONF_VERIFY_SSL):
             kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")

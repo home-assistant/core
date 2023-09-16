@@ -127,10 +127,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input.get(CONF_PASSWORD) or ""
 
         def _get_connection() -> Connection:
-            if user_input.get(CONF_VERIFY_SSL):
-                requests_session = None
-            else:
+            if user_input[CONF_URL].startswith("https://") and not user_input.get(
+                CONF_VERIFY_SSL
+            ):
                 requests_session = non_verifying_requests_session(user_input[CONF_URL])
+            else:
+                requests_session = None
 
             return Connection(
                 url=user_input[CONF_URL],
