@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
 from pydaikin.daikin_base import Appliance
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,7 +73,7 @@ async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
 
     session = async_get_clientsession(hass)
     try:
-        async with timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )

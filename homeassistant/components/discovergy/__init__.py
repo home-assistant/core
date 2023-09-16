@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         discovergy_data.meters = await discovergy_data.api_client.meters()
     except discovergyError.InvalidLogin as err:
         raise ConfigEntryAuthFailed("Invalid email or password") from err
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         raise ConfigEntryNotReady(
             "Unexpected error while while getting meters"
         ) from err
@@ -62,7 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
-            config_entry=entry,
             meter=meter,
             discovergy_client=discovergy_data.api_client,
         )

@@ -7,7 +7,6 @@ from collections.abc import AsyncGenerator, Callable
 import logging
 from typing import Any
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
@@ -207,7 +206,7 @@ async def websocket_run(
 
     try:
         # Task contains a timeout
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             await run_task
     except asyncio.TimeoutError:
         pipeline_input.run.process_event(
@@ -333,7 +332,7 @@ async def websocket_list_languages(
             dialect = language_util.Dialect.parse(language_tag)
             languages.add(dialect.language)
         if pipeline_languages is not None:
-            pipeline_languages &= languages
+            pipeline_languages = language_util.intersect(pipeline_languages, languages)
         else:
             pipeline_languages = languages
 
@@ -343,11 +342,15 @@ async def websocket_list_languages(
             dialect = language_util.Dialect.parse(language_tag)
             languages.add(dialect.language)
         if pipeline_languages is not None:
-            pipeline_languages &= languages
+            pipeline_languages = language_util.intersect(pipeline_languages, languages)
         else:
             pipeline_languages = languages
 
     connection.send_result(
         msg["id"],
-        {"languages": pipeline_languages},
+        {
+            "languages": sorted(pipeline_languages)
+            if pipeline_languages
+            else pipeline_languages
+        },
     )

@@ -41,6 +41,7 @@ from homeassistant.components.modbus.const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
@@ -49,6 +50,8 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
+    CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
@@ -181,6 +184,29 @@ async def test_nan_validator() -> None:
             CONF_COUNT: 2,
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">i",
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT32,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_SLAVE: 5,
+            CONF_DATA_TYPE: DataType.INT16,
             CONF_SWAP: CONF_SWAP_BYTE,
         },
     ],
@@ -238,6 +264,50 @@ async def test_ok_struct_validator(do_config) -> None:
             CONF_DATA_TYPE: DataType.CUSTOM,
             CONF_STRUCTURE: ">f",
             CONF_SLAVE_COUNT: 5,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_DATA_TYPE: DataType.CUSTOM,
+            CONF_STRUCTURE: ">f",
+            CONF_VIRTUAL_COUNT: 5,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.STRING,
+            CONF_SLAVE_COUNT: 2,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.STRING,
+            CONF_VIRTUAL_COUNT: 2,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_SLAVE_COUNT: 2,
+            CONF_DATA_TYPE: DataType.INT32,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_COUNT: 2,
+            CONF_VIRTUAL_COUNT: 2,
+            CONF_DATA_TYPE: DataType.INT32,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD,
+        },
+        {
+            CONF_NAME: TEST_ENTITY_NAME,
+            CONF_DATA_TYPE: DataType.INT16,
+            CONF_SWAP: CONF_SWAP_WORD_BYTE,
         },
     ],
 )
@@ -448,6 +518,20 @@ async def test_duplicate_entity_validator(do_config) -> None:
                 }
             ],
         },
+        {
+            # Special test for scan_interval validator with scan_interval: 0
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 117,
+                    CONF_DEVICE_ADDRESS: 0,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ],
+        },
     ],
 )
 async def test_config_modbus(
@@ -516,17 +600,17 @@ SERVICE = "service"
     ],
 )
 @pytest.mark.parametrize(
-    "do_unit",
+    "do_slave",
     [
-        ATTR_UNIT,
         ATTR_SLAVE,
+        ATTR_UNIT,
     ],
 )
 async def test_pb_service_write(
     hass: HomeAssistant,
     do_write,
     do_return,
-    do_unit,
+    do_slave,
     caplog: pytest.LogCaptureFixture,
     mock_modbus_with_pymodbus,
 ) -> None:
@@ -541,7 +625,7 @@ async def test_pb_service_write(
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        do_unit: 17,
+        do_slave: 17,
         ATTR_ADDRESS: 16,
         do_write[DATA]: do_write[VALUE],
     }
@@ -834,7 +918,7 @@ async def test_stop_restart(
 
     caplog.set_level(logging.INFO)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
     hass.states.async_set(entity_id, 17)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "17"
@@ -882,7 +966,7 @@ async def test_write_no_client(hass: HomeAssistant, mock_modbus) -> None:
 
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_UNIT: 17,
+        ATTR_SLAVE: 17,
         ATTR_ADDRESS: 16,
         ATTR_STATE: True,
     }

@@ -216,6 +216,13 @@ class UpdateEntity(RestoreEntity):
         """Version installed and in use."""
         return self._attr_installed_version
 
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For updates this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""

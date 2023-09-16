@@ -1,8 +1,8 @@
 """The sms gateway to interact with a GSM modem."""
 import logging
 
-import gammu  # pylint: disable=import-error
-from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
+import gammu
+from gammu.asyncworker import GammuAsyncWorker
 
 from homeassistant.core import callback
 

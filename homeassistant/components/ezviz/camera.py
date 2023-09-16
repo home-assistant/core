@@ -288,6 +288,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_sound_alarm",
+            breaks_in_ha_version="2024.3.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_sound_alarm",
+        )
+
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
         except HTTPError as err:

@@ -19,7 +19,6 @@ from urllib.parse import quote, urlparse
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-import async_timeout
 import voluptuous as vol
 from yarl import URL
 
@@ -1259,7 +1258,7 @@ async def async_fetch_image(
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
     with suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             response = await websession.get(url)
             if response.status == HTTPStatus.OK:
                 content = await response.read()
