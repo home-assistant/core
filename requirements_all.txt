@@ -2502,6 +2502,9 @@ surepy==0.8.0
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
 
+# homeassistant.components.switchbot_cloud
+switchbot-api==1.1.0
+
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
 
