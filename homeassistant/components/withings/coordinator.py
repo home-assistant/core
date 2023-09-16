@@ -75,21 +75,27 @@ WITHINGS_MEASURE_TYPE_MAP: dict[
 }
 
 
-class BaseWithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
+class WithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, Any]]):
     """Base coordinator."""
 
+    in_bed: bool | None = None
     config_entry: ConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        client: ConfigEntryWithingsApi,
-        name: str,
-        update_interval: timedelta | None = None,
+        self, hass: HomeAssistant, client: ConfigEntryWithingsApi, use_webhooks: bool
     ) -> None:
         """Initialize the Withings data coordinator."""
-        super().__init__(hass, _LOGGER, name=name, update_interval=update_interval)
+        update_interval: timedelta | None = timedelta(minutes=10)
+        if use_webhooks:
+            update_interval = None
+        super().__init__(
+            hass, _LOGGER, name="Withings", update_interval=update_interval
+        )
         self._client = client
+        self._webhook_url = async_generate_url(
+            hass, self.config_entry.data[CONF_WEBHOOK_ID]
+        )
+        self.use_webhooks = use_webhooks
 
     async def _async_update_data(self) -> dict[Measurement, Any]:
         try:
@@ -210,27 +216,6 @@ class BaseWithingsDataUpdateCoordinator(DataUpdateCoordinator[dict[Measurement, 
             else None
             for field, value in values.items()
         }
-
-
-class PollingWithingsDataUpdateCoordinator(BaseWithingsDataUpdateCoordinator):
-    """Coordinator when polling."""
-
-    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
-        """Initialize the Withings polling data coordinator."""
-        super().__init__(hass, client, "Polling Withings", timedelta(minutes=10))
-
-
-class WebhookWithingsDataUpdateCoordinator(BaseWithingsDataUpdateCoordinator):
-    """Coordinator for webhook updates."""
-
-    in_bed: bool | None = None
-
-    def __init__(self, hass: HomeAssistant, client: ConfigEntryWithingsApi) -> None:
-        """Initialize the Withings polling data coordinator."""
-        super().__init__(hass, client, "Webhook Withings")
-        self._webhook_url = async_generate_url(
-            hass, self.config_entry.data[CONF_WEBHOOK_ID]
-        )
 
     async def async_subscribe_webhooks(self) -> None:
         """Subscribe to webhooks."""

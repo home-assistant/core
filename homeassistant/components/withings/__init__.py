@@ -36,11 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import const
 from .api import ConfigEntryWithingsApi
 from .const import CONF_USE_WEBHOOK, CONFIG, LOGGER
-from .coordinator import (
-    BaseWithingsDataUpdateCoordinator,
-    PollingWithingsDataUpdateCoordinator,
-    WebhookWithingsDataUpdateCoordinator,
-)
+from .coordinator import WithingsDataUpdateCoordinator
 
 DOMAIN = const.DOMAIN
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -131,13 +127,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
-    coordinator: BaseWithingsDataUpdateCoordinator
-    if entry.options[CONF_USE_WEBHOOK]:
-        webhook_coordinator = WebhookWithingsDataUpdateCoordinator(hass, client)
+    use_webhooks = entry.options[CONF_USE_WEBHOOK]
+    coordinator = WithingsDataUpdateCoordinator(hass, client, use_webhooks)
+    if use_webhooks:
 
         @callback
         def async_call_later_callback(now) -> None:
-            hass.async_create_task(webhook_coordinator.async_subscribe_webhooks())
+            hass.async_create_task(coordinator.async_subscribe_webhooks())
 
         entry.async_on_unload(async_call_later(hass, 1, async_call_later_callback))
         webhook.async_register(
@@ -145,11 +141,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             "Withings notify",
             entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(webhook_coordinator),
+            get_webhook_handler(coordinator),
         )
-        coordinator = webhook_coordinator
-    else:
-        coordinator = PollingWithingsDataUpdateCoordinator(hass, client)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -182,7 +175,7 @@ def json_message_response(message: str, message_code: int) -> Response:
 
 
 def get_webhook_handler(
-    coordinator: WebhookWithingsDataUpdateCoordinator,
+    coordinator: WithingsDataUpdateCoordinator,
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
 

@@ -15,11 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, Measurement
-from .coordinator import (
-    BaseWithingsDataUpdateCoordinator,
-    WebhookWithingsDataUpdateCoordinator,
-)
-from .entity import WebhookWithingsEntity, WithingsEntityDescription
+from .coordinator import WithingsDataUpdateCoordinator
+from .entity import WithingsEntity, WithingsEntityDescription
 
 
 @dataclass
@@ -48,18 +45,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: BaseWithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if isinstance(coordinator, WebhookWithingsDataUpdateCoordinator):
+    if coordinator.use_webhooks:
         entities = [
-            WithingsHealthBinarySensor(coordinator, attribute)
-            for attribute in BINARY_SENSORS
+            WithingsBinarySensor(coordinator, attribute) for attribute in BINARY_SENSORS
         ]
 
         async_add_entities(entities)
 
 
-class WithingsHealthBinarySensor(WebhookWithingsEntity, BinarySensorEntity):
+class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsBinarySensorEntityDescription

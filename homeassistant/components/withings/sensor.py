@@ -32,17 +32,8 @@ from .const import (
     UOM_MMHG,
     Measurement,
 )
-from .coordinator import (
-    BaseWithingsDataUpdateCoordinator,
-    PollingWithingsDataUpdateCoordinator,
-    WebhookWithingsDataUpdateCoordinator,
-)
-from .entity import (
-    BaseWithingsEntity,
-    PollingWithingsEntity,
-    WebhookWithingsEntity,
-    WithingsEntityDescription,
-)
+from .coordinator import WithingsDataUpdateCoordinator
+from .entity import WithingsEntity, WithingsEntityDescription
 
 
 @dataclass
@@ -371,19 +362,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator: BaseWithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WithingsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if isinstance(coordinator, PollingWithingsDataUpdateCoordinator):
-        async_add_entities(
-            PollingWithingsHealthSensor(coordinator, attribute) for attribute in SENSORS
-        )
-    elif isinstance(coordinator, WebhookWithingsDataUpdateCoordinator):
-        async_add_entities(
-            WebhookWithingsHealthSensor(coordinator, attribute) for attribute in SENSORS
-        )
+    async_add_entities(WithingsSensor(coordinator, attribute) for attribute in SENSORS)
 
 
-class WithingsHealthSensor(BaseWithingsEntity, SensorEntity):
+class WithingsSensor(WithingsEntity, SensorEntity):
     """Implementation of a Withings sensor."""
 
     entity_description: WithingsSensorEntityDescription
@@ -400,15 +384,3 @@ class WithingsHealthSensor(BaseWithingsEntity, SensorEntity):
             super().available
             and self.entity_description.measurement in self.coordinator.data
         )
-
-
-class PollingWithingsHealthSensor(PollingWithingsEntity, WithingsHealthSensor):
-    """Implementation of a Withings polling sensor."""
-
-    entity_description: WithingsSensorEntityDescription
-
-
-class WebhookWithingsHealthSensor(WebhookWithingsEntity, WithingsHealthSensor):
-    """Implementation of a Withings webhook sensor."""
-
-    entity_description: WithingsSensorEntityDescription

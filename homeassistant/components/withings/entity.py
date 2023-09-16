@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar
 
 from withings_api.common import GetSleepSummaryField, MeasureType, NotifyAppli
 
@@ -11,15 +10,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, Measurement
-from .coordinator import (
-    BaseWithingsDataUpdateCoordinator,
-    PollingWithingsDataUpdateCoordinator,
-    WebhookWithingsDataUpdateCoordinator,
-)
-
-_BaseWithingsDataUpdateCoordinatorT = TypeVar(
-    "_BaseWithingsDataUpdateCoordinatorT", bound="BaseWithingsDataUpdateCoordinator"
-)
+from .coordinator import WithingsDataUpdateCoordinator
 
 
 @dataclass
@@ -35,7 +26,7 @@ class WithingsEntityDescription(EntityDescription, WithingsEntityDescriptionMixi
     """Immutable class for describing withings data."""
 
 
-class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT]):
+class WithingsEntity(CoordinatorEntity[WithingsDataUpdateCoordinator]):
     """Base class for withings entities."""
 
     entity_description: WithingsEntityDescription
@@ -43,7 +34,7 @@ class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT])
 
     def __init__(
         self,
-        coordinator: _BaseWithingsDataUpdateCoordinatorT,
+        coordinator: WithingsDataUpdateCoordinator,
         description: WithingsEntityDescription,
     ) -> None:
         """Initialize the Withings entity."""
@@ -54,19 +45,5 @@ class BaseWithingsEntity(CoordinatorEntity[_BaseWithingsDataUpdateCoordinatorT])
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
             manufacturer="Withings",
         )
-
-
-class PollingWithingsEntity(BaseWithingsEntity[PollingWithingsDataUpdateCoordinator]):
-    """Entity used for polling."""
-
-
-class WebhookWithingsEntity(BaseWithingsEntity[WebhookWithingsDataUpdateCoordinator]):
-    """Entity used for Webhooks."""
-
-    _attr_should_poll = False
-
-    async def async_added_to_hass(self) -> None:
-        """Register update dispatcher."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
+        if coordinator.use_webhooks:
+            self._attr_should_poll = False
