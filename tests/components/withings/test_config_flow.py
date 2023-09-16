@@ -73,6 +73,7 @@ async def test_full_flow(
     assert "result" in result
     assert result["result"].unique_id == "600"
     assert "token" in result["result"].data
+    assert "webhook_id" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
