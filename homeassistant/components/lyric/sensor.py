@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -177,6 +177,11 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
             f"{device.macID}_{description.key}",
         )
         self.entity_description = description
+        if description.device_class == SensorDeviceClass.TEMPERATURE:
+            if self.device.units == "Fahrenheit":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+            else:
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
     def native_value(self) -> StateType | datetime:
