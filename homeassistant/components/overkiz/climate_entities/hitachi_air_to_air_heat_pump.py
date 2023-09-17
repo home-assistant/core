@@ -28,6 +28,7 @@ from ..entity import OverkizEntity
 
 PRESET_HOLIDAY_MODE = "holiday_mode"
 FAN_SILENT = "silent"
+AUTO_MANU_MODE_STATE = "core:AutoManuModeState"
 
 FAN_SPEED_STATE = {
     Protocol.OVP: OverkizState.OVP_FAN_SPEED,
@@ -320,6 +321,15 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                     OverkizCommandParam.OFF,
                 )
 
+    # OVP has this property to control the unit's timer mode
+    @property
+    def auto_manu_mode(self) -> str | None:
+        """Return auto/manu mode."""
+        if (state := self.device.states[AUTO_MANU_MODE_STATE]) and state.value_as_str:
+            return state.value_as_str
+
+        return None
+
     def _control_backfill(
         self, value: str | None, state_name: str, fallback_value: str
     ) -> str:
@@ -337,7 +347,6 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         target_temperature: int,
         fan_mode: str,
         hvac_mode: str,
-        swing_mode: str,
     ) -> None:
         # OVP protocol has specific fan_mode values; they require cleaning in case protocol HLLR_WIFI values are leaking
         if fan_mode == OverkizCommandParam.MEDIUM:
@@ -347,12 +356,18 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         elif fan_mode == OverkizCommandParam.LOW:
             fan_mode = OverkizCommandParam.LO
 
+        auto_manu_mode = self._control_backfill(
+            None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
+        )
+        if self.preset_mode == PRESET_HOLIDAY_MODE:
+            auto_manu_mode = OverkizCommandParam.HOLIDAYS
+
         command_data = [
             main_operation,  # Main Operation
             target_temperature,  # Target Temperature
             fan_mode,  # Fan Mode
             hvac_mode,  # Mode
-            swing_mode,  # Swing Mode
+            auto_manu_mode,  # Auto Manu Mode
         ]
 
         await self.executor.async_execute_command(
@@ -415,8 +430,10 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             hvac_mode,
             MODE_CHANGE_STATE[self.protocol],
             OverkizCommandParam.AUTO,
-        )
-        if hvac_mode.replace(" ", "").lower() in [
+        ).lower()  # Overkiz can return states that have uppercase characters which are not accepted back as commands
+        if hvac_mode.replace(
+            " ", ""
+        ) in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
             OverkizCommandParam.AUTOCOOLING,
             OverkizCommandParam.AUTOHEATING,
         ]:
@@ -434,7 +451,6 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
                 target_temperature=target_temperature,
                 fan_mode=fan_mode,
                 hvac_mode=hvac_mode,
-                swing_mode=swing_mode,
             )
         else:
             await self._global_control_hlrrwifi(
