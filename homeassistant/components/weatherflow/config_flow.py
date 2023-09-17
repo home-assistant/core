@@ -34,8 +34,8 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     async with WeatherFlowListener(host) as client:
         LOGGER.debug("Registering EVENT_DISCOVERED_FUNCTION")
-        client.on(EVENT_DEVICE_DISCOVERED, lambda _: found())
         try:
+            client.on(EVENT_DEVICE_DISCOVERED, lambda _: found())
             await asyncio.wait_for(future_event, timeout=10)
         except asyncio.TimeoutError:
             return False

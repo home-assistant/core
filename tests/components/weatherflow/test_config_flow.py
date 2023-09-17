@@ -1,5 +1,6 @@
 """Test the IntelliFire config flow."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
@@ -94,21 +95,16 @@ async def test_devices_with_mocks(
 
 
 async def test_devices_with_mocks_timeout(
-    hass: HomeAssistant, mock_start_timeout: AsyncMock, mock_stop: AsyncMock
+    hass: HomeAssistant,
+    mock_start_timeout: AsyncMock,
+    mock_stop: AsyncMock,
+    monkeypatch,
 ) -> None:
     """Test getting user input."""
-
-    # with patch("pyweatherflowudp.client") as mock_listener:
-    #     mock_client = MagicMock()
-    #     mock_listener.return_value.__aenter__.return_value = mock_client
-
-    #     # Setting up client.on to do nothing
-    #     mock_client.on.side_effect = lambda event, callback: None
     with patch(
-        "homeassistant.components.weatherflow.config_flow._async_has_devices"
-    ) as mock_async_has_devices:
-        # Set the wait_timeout parameter to 5 seconds
-        mock_async_has_devices.wait_timeout = 1
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
+        side_effect=asyncio.TimeoutError,
+    ):
         await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
