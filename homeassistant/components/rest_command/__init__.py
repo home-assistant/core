@@ -1,7 +1,7 @@
 """Support for exposing regular REST commands as services."""
 import asyncio
-from http import HTTPStatus
 import contextlib
+from http import HTTPStatus
 import logging
 
 import aiohttp
