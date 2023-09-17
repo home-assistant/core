@@ -2317,6 +2317,16 @@ def _delete_latest_statistics_short_term_by_metadata_ids_stmt(
     )
 
 
+def _delete_latest_statistics_short_term_stmt() -> StatementLambdaElement:
+    """Delete all LatestStatisticsShortTerm rows."""
+    return lambda_stmt(lambda: delete(LatestStatisticsShortTerm))
+
+
+def delete_latest_short_term_statistics(session: Session) -> None:
+    """Delete all LatestStatisticsShortTerm rows."""
+    session.execute(_delete_latest_statistics_short_term_stmt())
+
+
 @retryable_database_job("statistics")
 def import_statistics(
     instance: Recorder,

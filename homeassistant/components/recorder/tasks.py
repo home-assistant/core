@@ -480,3 +480,13 @@ class RefreshEventTypesTask(RecorderTask):
             instance.event_type_manager.get_many(
                 self.event_types, session, from_recorder=True
             )
+
+
+@dataclass(slots=True)
+class DeleteLatestShortTermStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to delete latest short term statistics."""
+
+    def run(self, instance: Recorder) -> None:
+        """Delete latest short term statistics."""
+        with session_scope(session=instance.get_session()) as session:
+            statistics.delete_latest_short_term_statistics(session)
