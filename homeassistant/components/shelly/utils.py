@@ -285,6 +285,16 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_rpc_input_name(device: RpcDevice, key: str) -> str:
+    """Get input name based from the device configuration."""
+    input_config = device.config[key]
+
+    if input_name := input_config.get("name"):
+        return f"{device.name} {input_name}"
+
+    return f"{device.name} {key.replace(':', ' ').capitalize()}"
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")

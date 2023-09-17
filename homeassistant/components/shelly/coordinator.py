@@ -389,6 +389,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -423,6 +424,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self._ota_event_listeners.remove(ota_event_callback)
 
         self._ota_event_listeners.append(ota_event_callback)
+
+        return _unsubscribe
+
+    @callback
+    def async_subscribe_input_events(
+        self, input_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
+        self._input_event_listeners.append(input_event_callback)
 
         return _unsubscribe
 
@@ -469,6 +483,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                for event_callback in self._input_event_listeners:
+                    event_callback(event)
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {

@@ -73,6 +73,7 @@ RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
