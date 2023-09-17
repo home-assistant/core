@@ -98,8 +98,9 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
-        self._onvif_push_supported = self._api.supported(None, "ONVIF")
-        self._onvif_long_poll_supported = self._api.supported(None, "ONVIF")
+        onvif_supported = self._api.supported(None, "ONVIF")
+        self._onvif_push_supported = onvif_supported
+        self._onvif_long_poll_supported = onvif_supported
 
         enable_rtsp = None
         enable_onvif = None
@@ -111,9 +112,7 @@ class ReolinkHost:
             )
             enable_rtsp = True
 
-        if not self._api.onvif_enabled and (
-            self._onvif_push_supported or self._onvif_long_poll_supported
-        ):
+        if not self._api.onvif_enabled and onvif_supported:
             _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
