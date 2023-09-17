@@ -8,6 +8,7 @@ import pytest
 
 import homeassistant.components.rest_command as rc
 from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -386,7 +387,7 @@ class TestRestCommandComponent:
         assert not response
 
         # Throws Decode error when requesting response
-        with pytest.raises(UnicodeDecodeError):
+        with pytest.raises(HomeAssistantError):
             response = self.hass.services.call(
                 rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
             )

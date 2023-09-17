@@ -1,6 +1,7 @@
 """Support for exposing regular REST commands as services."""
 import asyncio
 from http import HTTPStatus
+from json.decoder import JSONDecodeError
 import logging
 
 import aiohttp
@@ -24,6 +25,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -149,22 +151,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     if service.return_response:
                         _content = None
                         if response.content_type == "application/json":
-                            _content = await response.json()
+                            try:
+                                _content = await response.json()
+                            except JSONDecodeError as err:
+                                raise HomeAssistantError from err
                         else:
                             try:
                                 _content = await response.text()
-                            except (LookupError, UnicodeDecodeError):
+                            except (LookupError, UnicodeDecodeError) as err:
                                 _LOGGER.exception(
                                     "Response of `%s` could not be interpreted as text",
                                     request_url,
                                 )
-                                raise
+                                raise HomeAssistantError from err
                         return {"content": _content, "status": response.status}
                     return None
 
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as err:
                 _LOGGER.warning("Timeout call %s", request_url)
-                raise
+                raise HomeAssistantError from err
 
             except aiohttp.ClientError as err:
                 _LOGGER.error(
@@ -172,7 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     err,
                 )
-                raise
+                raise HomeAssistantError from err
 
         # register services
         hass.services.async_register(
