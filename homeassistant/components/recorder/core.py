@@ -841,7 +841,7 @@ class Recorder(threading.Thread):
                         self.use_legacy_events_index = True
 
             # Delete the latest short term statistics table that tracks
-            # what the newest id is for each statistic_id. This is to ensure
+            # what the newest id is for each metadata_id. This is to ensure
             # that if the user upgrades to 2023.10.x, than downgrades to an
             # old version, than upgrades again, the latest short term statistics
             # table will be recreated and not have stale data in it. It will
