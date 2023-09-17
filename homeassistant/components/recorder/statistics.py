@@ -14,7 +14,7 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
-from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
+from sqlalchemy import Select, and_, bindparam, delete, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
@@ -54,6 +54,7 @@ from .const import (
 )
 from .db_schema import (
     STATISTICS_TABLES,
+    LatestStatisticsShortTerm,
     Statistics,
     StatisticsBase,
     StatisticsRuns,
@@ -508,19 +509,23 @@ def _compile_statistics(
         platform_stats.extend(compiled.platform_stats)
         current_metadata.update(compiled.current_metadata)
 
+    new_short_term_stats: list[StatisticsBase] = []
+    updated_metadata_ids: set[int] = set()
     # Insert collected statistics in the database
     for stats in platform_stats:
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
             session, stats["meta"], current_metadata
         )
-        if modified_statistic_id is not None:
+        if modified_statistic_id:
             modified_statistic_ids.add(modified_statistic_id)
-        _insert_statistics(
+        updated_metadata_ids.add(metadata_id)
+        if new_stat := _insert_statistics(
             session,
             StatisticsShortTerm,
             metadata_id,
             stats["stat"],
-        )
+        ):
+            new_short_term_stats.append(new_stat)
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -532,6 +537,20 @@ def _compile_statistics(
         instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
         if start.minute == 55:
             instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
+
+    if updated_metadata_ids:
+        # These are always the newest statistics, so we can update the latest
+        # statistics table without having to check the start_ts.
+        session.flush()  # populate the ids of the new StatisticsShortTerm rows
+        session.execute(
+            _delete_latest_statistics_short_term_by_metadata_ids_stmt(
+                updated_metadata_ids
+            ),
+        )
+        session.add_all(
+            LatestStatisticsShortTerm(metadata_id=new_stat.metadata_id, id=new_stat.id)
+            for new_stat in new_short_term_stats
+        )
 
     return modified_statistic_ids
 
@@ -566,16 +585,19 @@ def _insert_statistics(
     table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
-) -> None:
+) -> StatisticsBase | None:
     """Insert statistics in the database."""
     try:
-        session.add(table.from_stats(metadata_id, statistic))
+        stat = table.from_stats(metadata_id, statistic)
+        session.add(stat)
+        return stat
     except SQLAlchemyError:
         _LOGGER.exception(
             "Unexpected exception when inserting statistics %s:%s ",
             metadata_id,
             statistic,
         )
+        return None
 
 
 def _update_statistics(
@@ -1809,24 +1831,27 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_stmt(
-    metadata_ids: list[int],
+def _latest_short_term_statistics_from_latest_stmt(
+    metadata_ids: set[int],
+) -> StatementLambdaElement:
+    """Create the statement for finding the latest short term stat rows using LatestStatisticsShortTerm."""
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
+        .select_from(LatestStatisticsShortTerm)
+        .join(
+            StatisticsShortTerm, LatestStatisticsShortTerm.id == StatisticsShortTerm.id
+        )
+        .filter(LatestStatisticsShortTerm.metadata_id.in_(metadata_ids))
+    )
+
+
+def _short_term_statistics_by_ids_stmt(
+    ids: set[int],
 ) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM).join(
-            (
-                most_recent_statistic_row := (
-                    select(
-                        StatisticsShortTerm.metadata_id,
-                        func.max(StatisticsShortTerm.start_ts).label("start_max"),
-                    )
-                    .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-                    .group_by(StatisticsShortTerm.metadata_id)
-                ).subquery()
-            ),
-            (StatisticsShortTerm.metadata_id == most_recent_statistic_row.c.metadata_id)
-            & (StatisticsShortTerm.start_ts == most_recent_statistic_row.c.start_max),
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM).where(
+            StatisticsShortTerm.id.in_(ids)
         )
     )
 
@@ -1846,11 +1871,40 @@ def get_latest_short_term_statistics(
             )
         if not metadata:
             return {}
-        metadata_ids = _extract_metadata_and_discard_impossible_columns(metadata, types)
-        stmt = _latest_short_term_statistics_stmt(metadata_ids)
+        metadata_ids = set(
+            _extract_metadata_and_discard_impossible_columns(metadata, types)
+        )
+        stmt = _latest_short_term_statistics_from_latest_stmt(metadata_ids)
         stats = cast(
             Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
         )
+        found_metadata_ids = {stat.metadata_id for stat in stats}
+        # If we do not have a row for a metadata_id, we need to find it in the table
+        # manually with a slower query. This should only happen once per metadata_id
+        # ever since the latest statistics table was introduced.
+        if missing_metadata_ids := metadata_ids - found_metadata_ids:
+            missing_ids: set[int] = set()
+            for metadata_id in missing_metadata_ids:
+                if (
+                    latest := cast(
+                        Sequence[Row],
+                        execute_stmt_lambda_element(
+                            session,
+                            _find_latest_short_term_statistic_stmt(metadata_id),
+                            orm_rows=False,
+                        ),
+                    )
+                ) and (missing_id := latest[0].id):
+                    missing_ids.add(missing_id)
+            if missing_ids:
+                stmt = _short_term_statistics_by_ids_stmt(missing_ids)
+                if stats_for_missing_rows := cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(session, stmt, orm_rows=False),
+                ):
+                    stats = list(stats)
+                    stats.extend(stats_for_missing_rows)
+
         if not stats:
             return {}
 
@@ -2221,7 +2275,44 @@ def _import_statistics_with_session(
         else:
             _insert_statistics(session, table, metadata_id, stat)
 
+    if table != StatisticsShortTerm:
+        return True
+
+    session.execute(
+        _delete_latest_statistics_short_term_by_metadata_ids_stmt({metadata_id}),
+    )
+    if latest := cast(
+        Sequence[Row],
+        execute_stmt_lambda_element(
+            session, _find_latest_short_term_statistic_stmt(metadata_id), orm_rows=False
+        ),
+    ):
+        session.add(LatestStatisticsShortTerm(metadata_id=metadata_id, id=latest[0].id))
+
     return True
+
+
+def _find_latest_short_term_statistic_stmt(
+    metadata_id: int,
+) -> StatementLambdaElement:
+    """Find the latest short term statistics for a list of metadata_ids."""
+    return lambda_stmt(
+        lambda: select(
+            StatisticsShortTerm.id,
+            func.max(StatisticsShortTerm.start_ts).label("start_max"),
+        ).where(StatisticsShortTerm.metadata_id == metadata_id)
+    )
+
+
+def _delete_latest_statistics_short_term_by_metadata_ids_stmt(
+    metadata_ids: set[int],
+) -> StatementLambdaElement:
+    """Delete LatestStatisticsShortTerm rows."""
+    return lambda_stmt(
+        lambda: delete(LatestStatisticsShortTerm)
+        .where(LatestStatisticsShortTerm.metadata_id.in_(metadata_ids))
+        .execution_options(synchronize_session=False)
+    )
 
 
 @retryable_database_job("statistics")
