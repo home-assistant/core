@@ -189,7 +189,11 @@ class FritzBoxCallMonitor:
         _LOGGER.debug("Setting up socket connection")
         try:
             self.connection = FritzMonitor(address=self.host, port=self.port)
-            kwargs: dict[str, Any] = {"event_queue": self.connection.start()}
+            kwargs: dict[str, Any] = {
+                "event_queue": self.connection.start(
+                    reconnect_tries=50, reconnect_delay=120
+                )
+            }
             Thread(target=self._process_events, kwargs=kwargs).start()
         except OSError as err:
             self.connection = None
