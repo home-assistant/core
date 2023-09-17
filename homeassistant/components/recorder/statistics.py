@@ -516,7 +516,7 @@ def _compile_statistics(
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
             session, stats["meta"], current_metadata
         )
-        if modified_statistic_id:
+        if modified_statistic_id is not None:
             modified_statistic_ids.add(modified_statistic_id)
         updated_metadata_ids.add(metadata_id)
         if new_stat := _insert_statistics(
