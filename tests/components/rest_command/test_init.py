@@ -57,6 +57,18 @@ class TestRestCommandSetup:
         assert self.hass.services.has_service(rc.DOMAIN, "test_get")
         assert not self.hass.services.has_service(rc.DOMAIN, "new_test")
 
+        # Old config retained if rest_command is not in new config
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={},
+        ):
+            self.hass.services.call(rc.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+        assert self.hass.services.has_service(rc.DOMAIN, "test_get")
+        assert not self.hass.services.has_service(rc.DOMAIN, "new_test")
+
+        # Successful reload
         new_config = {
             rc.DOMAIN: {
                 "new_test": {"url": "https://example.org", "method": "get"},
