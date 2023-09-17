@@ -92,18 +92,7 @@ class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
             mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
-        activity = LawnMowerActivity.ERROR
-        if not (
-            (mower_attributes.mower.state in ERROR_STATES)
-            or mower_attributes.mower.activity in ERROR_ACTIVITIES
-        ):
-            _LOGGER.warning(
-                "Unknown activity detected. Mower state is %s and mower activity is %s. \
-                Please report this issue",
-                mower_attributes.mower.state,
-                mower_attributes.mower.activity,
-            )
-        return LawnMowerActivity(activity)
+        return LawnMowerActivity.ERROR
 
     async def async_start_mowing(self) -> None:
         """Resume schedule."""

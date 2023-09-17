@@ -5,7 +5,7 @@ import aioautomower
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -36,8 +36,4 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from Husqvarna."""
-        try:
-            await self.session.connect()
-        except Exception as error:
-            _LOGGER.debug("Exception in async_setup_entry: %s", error)
-            raise UpdateFailed from Exception
+        await self.session.connect()
