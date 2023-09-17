@@ -84,7 +84,7 @@ TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
 TABLE_STATISTICS_RUNS = "statistics_runs"
 TABLE_STATISTICS_SHORT_TERM = "statistics_short_term"
-TABLE_LATEST_STATISTICS_SHORT_TERM = "latest_statistics_short_term"
+TABLE_LATEST_STATISTICS_SHORT_TERM_IDS = "latest_statistics_short_term_ids"
 
 STATISTICS_TABLES = ("statistics", "statistics_short_term")
 
@@ -106,7 +106,7 @@ ALL_TABLES = [
     TABLE_STATISTICS_META,
     TABLE_STATISTICS_RUNS,
     TABLE_STATISTICS_SHORT_TERM,
-    TABLE_LATEST_STATISTICS_SHORT_TERM,
+    TABLE_LATEST_STATISTICS_SHORT_TERM_IDS,
 ]
 
 TABLES_TO_CHECK = [
@@ -805,15 +805,15 @@ class StatisticsRuns(Base):
         )
 
 
-class LatestStatisticsShortTerm(Base):
-    """Track latest short term statistics.
+class LatestStatisticsShortTermIDs(Base):
+    """Track latest short term statistics ids.
 
     This table keeps track of the id of the latest short term statistic
     for each metadata_id to avoid having a complex query to figure out where
     we left off every five minutes when we build statistics.
     """
 
-    __tablename__ = TABLE_LATEST_STATISTICS_SHORT_TERM
+    __tablename__ = TABLE_LATEST_STATISTICS_SHORT_TERM_IDS
     metadata_id: Mapped[int | None] = mapped_column(
         Integer,
         primary_key=True,
@@ -823,7 +823,7 @@ class LatestStatisticsShortTerm(Base):
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
-            f"<recorder.LatestStatisticsShortTerm(metadata_id={self.metadata_id},"
+            f"<recorder.LatestStatisticsShortTermIDs(metadata_id={self.metadata_id},"
             f" id='{self.id}')>"
         )
 

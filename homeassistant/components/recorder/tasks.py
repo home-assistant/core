@@ -483,10 +483,16 @@ class RefreshEventTypesTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class DeleteLatestShortTermStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to delete latest short term statistics."""
+class ClearLatestShortTermStatisticsIDsTask(RecorderTask):
+    """An object to insert into the recorder queue to clear latest_statistics_short_term_ids.
+
+    Clear the latest_statistics_short_term_ids that tracks what the newest id
+    is for each metadata_id.
+
+    This does NOT delete the actual statistics data.
+    """
 
     def run(self, instance: Recorder) -> None:
-        """Delete latest short term statistics."""
+        """Clear latest short term statistics ids."""
         with session_scope(session=instance.get_session()) as session:
-            statistics.delete_latest_short_term_statistics(session)
+            statistics.clear_latest_short_term_statistics_ids(session)

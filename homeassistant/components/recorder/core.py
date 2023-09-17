@@ -95,11 +95,11 @@ from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
+    ClearLatestShortTermStatisticsIDsTask,
     ClearStatisticsTask,
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    DeleteLatestShortTermStatisticsTask,
     EntityIDMigrationTask,
     EntityIDPostMigrationTask,
     EventIdMigrationTask,
@@ -840,7 +840,7 @@ class Recorder(threading.Thread):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
 
-            # Delete the latest short term statistics table that tracks
+            # Clear the latest_statistics_short_term_ids table that tracks
             # what the newest id is for each statistic_id. This is to ensure
             # that if the user upgrades to 2023.10.x, than downgrades to an
             # old version, than upgrades again, the latest short term statistics
@@ -853,7 +853,7 @@ class Recorder(threading.Thread):
             # chance of someone downgrading to a version before 2023.10.x
             # after that.
             #
-            self.queue_task(DeleteLatestShortTermStatisticsTask())
+            self.queue_task(ClearLatestShortTermStatisticsIDsTask())
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.

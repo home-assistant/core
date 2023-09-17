@@ -54,7 +54,7 @@ from .const import (
 )
 from .db_schema import (
     STATISTICS_TABLES,
-    LatestStatisticsShortTerm,
+    LatestStatisticsShortTermIDs,
     Statistics,
     StatisticsBase,
     StatisticsRuns,
@@ -543,12 +543,14 @@ def _compile_statistics(
         # statistics table without having to check the start_ts.
         session.flush()  # populate the ids of the new StatisticsShortTerm rows
         session.execute(
-            _delete_latest_statistics_short_term_by_metadata_ids_stmt(
+            _delete_latest_statistics_short_term_ids_by_metadata_ids_stmt(
                 updated_metadata_ids
             ),
         )
         session.add_all(
-            LatestStatisticsShortTerm(metadata_id=new_stat.metadata_id, id=new_stat.id)
+            LatestStatisticsShortTermIDs(
+                metadata_id=new_stat.metadata_id, id=new_stat.id
+            )
             for new_stat in new_short_term_stats
         )
 
@@ -1837,11 +1839,12 @@ def _latest_short_term_statistics_from_latest_stmt(
     """Create the statement for finding the latest short term stat rows using LatestStatisticsShortTerm."""
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SHORT_TERM)
-        .select_from(LatestStatisticsShortTerm)
+        .select_from(LatestStatisticsShortTermIDs)
         .join(
-            StatisticsShortTerm, LatestStatisticsShortTerm.id == StatisticsShortTerm.id
+            StatisticsShortTerm,
+            LatestStatisticsShortTermIDs.id == StatisticsShortTerm.id,
         )
-        .filter(LatestStatisticsShortTerm.metadata_id.in_(metadata_ids))
+        .filter(LatestStatisticsShortTermIDs.metadata_id.in_(metadata_ids))
     )
 
 
@@ -2279,7 +2282,7 @@ def _import_statistics_with_session(
         return True
 
     session.execute(
-        _delete_latest_statistics_short_term_by_metadata_ids_stmt({metadata_id}),
+        _delete_latest_statistics_short_term_ids_by_metadata_ids_stmt({metadata_id}),
     )
     if latest := cast(
         Sequence[Row],
@@ -2287,7 +2290,9 @@ def _import_statistics_with_session(
             session, _find_latest_short_term_statistic_stmt(metadata_id), orm_rows=False
         ),
     ):
-        session.add(LatestStatisticsShortTerm(metadata_id=metadata_id, id=latest[0].id))
+        session.add(
+            LatestStatisticsShortTermIDs(metadata_id=metadata_id, id=latest[0].id)
+        )
 
     return True
 
@@ -2306,25 +2311,37 @@ def _find_latest_short_term_statistic_stmt(
     )
 
 
-def _delete_latest_statistics_short_term_by_metadata_ids_stmt(
+def _delete_latest_statistics_short_term_ids_by_metadata_ids_stmt(
     metadata_ids: set[int],
 ) -> StatementLambdaElement:
-    """Delete LatestStatisticsShortTerm rows."""
+    """Delete LatestStatisticsShortTermIDs rows.
+
+    Delete matching metadata_ids in the latest_statistics_short_term_ids table
+    that tracks what the newest id is for each metadata_id.
+
+    This does NOT delete the actual statistics data.
+    """
     return lambda_stmt(
-        lambda: delete(LatestStatisticsShortTerm)
-        .where(LatestStatisticsShortTerm.metadata_id.in_(metadata_ids))
+        lambda: delete(LatestStatisticsShortTermIDs)
+        .where(LatestStatisticsShortTermIDs.metadata_id.in_(metadata_ids))
         .execution_options(synchronize_session=False)
     )
 
 
-def _delete_latest_statistics_short_term_stmt() -> StatementLambdaElement:
-    """Delete all LatestStatisticsShortTerm rows."""
-    return lambda_stmt(lambda: delete(LatestStatisticsShortTerm))
+def _clear_latest_statistics_short_term_ids_stmt() -> StatementLambdaElement:
+    """Delete all LatestStatisticsShortTermIDs rows."""
+    return lambda_stmt(lambda: delete(LatestStatisticsShortTermIDs))
 
 
-def delete_latest_short_term_statistics(session: Session) -> None:
-    """Delete all LatestStatisticsShortTerm rows."""
-    session.execute(_delete_latest_statistics_short_term_stmt())
+def clear_latest_short_term_statistics_ids(session: Session) -> None:
+    """Delete all LatestStatisticsShortTermIDs rows.
+
+    Clear the latest latest_statistics_short_term_ids table that
+    tracks what the newest id is for each metadata_id.
+
+    This does NOT delete the actual statistics data.
+    """
+    session.execute(_clear_latest_statistics_short_term_ids_stmt())
 
 
 @retryable_database_job("statistics")
