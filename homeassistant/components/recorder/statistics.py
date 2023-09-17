@@ -1833,10 +1833,13 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_from_latest_stmt(
+def _latest_short_term_statistics_from_latest_statistics_short_term_ids_stmt(
     metadata_ids: set[int],
 ) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows using LatestStatisticsShortTerm."""
+    """Create the statement for finding the latest short term stat rows.
+
+    This query uses LatestStatisticsShortTermIDs.
+    """
     return lambda_stmt(
         lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .select_from(LatestStatisticsShortTermIDs)
@@ -1877,7 +1880,9 @@ def get_latest_short_term_statistics(
         metadata_ids = set(
             _extract_metadata_and_discard_impossible_columns(metadata, types)
         )
-        stmt = _latest_short_term_statistics_from_latest_stmt(metadata_ids)
+        stmt = _latest_short_term_statistics_from_latest_statistics_short_term_ids_stmt(
+            metadata_ids
+        )
         stats = cast(
             Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
         )
