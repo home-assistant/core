@@ -311,6 +311,7 @@ jobs:
             env.BLACK_CACHE_VERSION }}-${{ steps.generate-black-key.outputs.version }}-${{
             env.HA_SHORT_VERSION }}-
       - name: Run black (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
         env:
           BLACK_CACHE_DIR: ${{ env.BLACK_CACHE }}
         run: |
