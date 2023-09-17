@@ -8,6 +8,7 @@ import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, DOMAIN
@@ -47,3 +48,16 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         await self.api.logout()
 
         return devices_data
+
+    def device_info_serial_bridge(self) -> DeviceInfo:
+        """Set device info."""
+        assert self.config_entry
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self.config_entry.entry_id),
+            },
+            manufacturer="Comelit",
+            model="Serial Bridge",
+            hw_version="20003101",
+            name=f"Serial Bridge ({self.api.host})",
+        )
