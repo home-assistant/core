@@ -2286,6 +2286,9 @@ def _import_statistics_with_session(
     if table != StatisticsShortTerm:
         return True
 
+    # We just inserted new short term statistics, so we need to update the
+    # latest_statistics_short_term_ids table that tracks what the newest id is
+    # for the metadata_id.
     session.execute(
         _delete_latest_statistics_short_term_ids_by_metadata_ids_stmt({metadata_id}),
     )
