@@ -128,7 +128,7 @@ accuweather==1.0.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.3
+adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -375,7 +375,7 @@ airtouch4pyapi==1.0.5
 amberelectric==1.0.4
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.70
+androidtv[async]==0.0.72
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.0.14
@@ -1846,6 +1846,9 @@ sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
 surepy==0.8.0
+
+# homeassistant.components.switchbot_cloud
+switchbot-api==1.1.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.8.2
