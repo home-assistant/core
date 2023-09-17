@@ -811,6 +811,8 @@ class LatestStatisticsShortTermIDs(Base):
     This table keeps track of the id of the latest short term statistic
     for each metadata_id to avoid having a complex query to figure out where
     we left off every five minutes when we build statistics.
+
+    This is effectively a cache of the latest short term statistics ids.
     """
 
     __tablename__ = TABLE_LATEST_STATISTICS_SHORT_TERM_IDS
