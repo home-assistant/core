@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, CommandStatus
+from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -38,12 +38,6 @@ from .helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SET_VALUE_FAILED_EXC = SetValueFailed(
-    "Unable to set value, refer to "
-    "https://zwave-js.github.io/node-zwave-js/#/api/node?id=setvalue for "
-    "possible reasons"
-)
 
 
 def parameter_name_does_not_need_bitmask(
@@ -538,16 +532,20 @@ class ZWaveServices:
         nodes_list = list(nodes)
         # multiple set_values my fail so we will track the entire list
         set_value_failed_nodes_list: list[ZwaveNode | Endpoint] = []
-        for node_, success in get_valid_responses_from_results(nodes_list, results):
-            if success is False:
-                # If we failed to set a value, add node to SetValueFailed exception list
+        set_value_failed_error_list: list[SetValueFailed] = []
+        for node_, result in get_valid_responses_from_results(nodes_list, results):
+            if result and result.status not in SET_VALUE_SUCCESS:
+                # If we failed to set a value, add node to exception list
                 set_value_failed_nodes_list.append(node_)
+                set_value_failed_error_list.append(
+                    SetValueFailed(f"{result.status} {result.message}")
+                )
 
-        # Add the SetValueFailed exception to the results and the nodes to the node
-        # list. No-op if there are no SetValueFailed exceptions
+        # Add the exception to the results and the nodes to the node list. No-op if
+        # no set value commands failed
         raise_exceptions_from_results(
             (*nodes_list, *set_value_failed_nodes_list),
-            (*results, *([SET_VALUE_FAILED_EXC] * len(set_value_failed_nodes_list))),
+            (*results, *set_value_failed_error_list),
         )
 
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
@@ -611,7 +609,7 @@ class ZWaveServices:
             new_value = str(new_value)
 
         try:
-            success = await async_multicast_set_value(
+            result = await async_multicast_set_value(
                 client=client,
                 new_value=new_value,
                 value_data=value,
@@ -621,10 +619,10 @@ class ZWaveServices:
         except FailedZWaveCommand as err:
             raise HomeAssistantError("Unable to set value via multicast") from err
 
-        if success is False:
+        if result.status not in SET_VALUE_SUCCESS:
             raise HomeAssistantError(
                 "Unable to set value via multicast"
-            ) from SetValueFailed
+            ) from SetValueFailed(f"{result.status} {result.message}")
 
     async def async_ping(self, service: ServiceCall) -> None:
         """Ping node(s)."""

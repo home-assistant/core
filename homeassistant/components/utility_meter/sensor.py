@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
+from homeassistant.components.sensor.recorder import _suggest_report_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -32,8 +33,8 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -484,6 +485,12 @@ class UtilityMeterSensor(RestoreSensor):
                 DATA_TARIFF_SENSORS
             ]:
                 sensor.start(new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                if self._unit_of_measurement is None:
+                    _LOGGER.warning(
+                        "Source sensor %s has no unit of measurement. Please %s",
+                        self._sensor_source_id,
+                        _suggest_report_issue(self.hass, self._sensor_source_id),
+                    )
 
         if (
             adjustment := self.calculate_adjustment(old_state, new_state)
@@ -491,6 +498,7 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._state += adjustment  # type: ignore[operator] # self._state will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         self._last_valid_state = new_state_val
         self.async_write_ha_state()
 

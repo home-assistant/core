@@ -3,10 +3,7 @@ from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
 
-from homeassistant.components.pegel_online.const import (
-    CONF_STATION,
-    DOMAIN,
-)
+from homeassistant.components.pegel_online.const import CONF_STATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,

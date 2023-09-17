@@ -92,9 +92,9 @@ def async_condition_from_config(
             return False
 
         if config[CONF_TYPE] == "is_hvac_mode":
-            return state.state == config[const.ATTR_HVAC_MODE]
+            return bool(state.state == config[const.ATTR_HVAC_MODE])
 
-        return (
+        return bool(
             state.attributes.get(const.ATTR_PRESET_MODE)
             == config[const.ATTR_PRESET_MODE]
         )

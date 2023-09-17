@@ -4,19 +4,12 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
-from homeassistant.config_entries import (
-    ConfigEntry,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DATA_COORDINATOR,
-    DOMAIN,
-)
+from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
@@ -44,8 +37,6 @@ async def async_setup_entry(
 
 class EzvizLastMotion(EzvizEntity, ImageEntity):
     """Return Last Motion Image from Ezviz Camera."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, hass: HomeAssistant, coordinator: EzvizDataUpdateCoordinator, serial: str

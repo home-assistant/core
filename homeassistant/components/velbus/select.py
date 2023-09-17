@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import VelbusEntity
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -37,6 +37,7 @@ class VelbusSelect(VelbusEntity, SelectEntity):
         self._attr_options = self._channel.get_options()
         self._attr_unique_id = f"{self._attr_unique_id}-program_select"
 
+    @api_call
     async def async_select_option(self, option: str) -> None:
         """Update the program on the module."""
         await self._channel.set_selected_program(option)

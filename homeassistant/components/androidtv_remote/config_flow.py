@@ -12,8 +12,12 @@ from androidtvremote2 import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -35,7 +39,7 @@ STEP_PAIR_DATA_SCHEMA = vol.Schema(
 )
 
 
-class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Android TV Remote."""
 
     VERSION = 1
@@ -43,7 +47,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new AndroidTVRemoteConfigFlow."""
         self.api: AndroidTVRemote | None = None
-        self.reauth_entry: config_entries.ConfigEntry | None = None
+        self.reauth_entry: ConfigEntry | None = None
         self.host: str | None = None
         self.name: str | None = None
         self.mac: str | None = None
@@ -58,6 +62,7 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.host
             api = create_api(self.hass, self.host, enable_ime=False)
             try:
+                await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
                 assert self.mac
                 await self.async_set_unique_id(format_mac(self.mac))
@@ -191,18 +196,14 @@ class AndroidTVRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> AndroidTVRemoteOptionsFlowHandler:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return AndroidTVRemoteOptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Android TV Remote options flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

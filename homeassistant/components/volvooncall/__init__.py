@@ -1,9 +1,9 @@
 """Support for Volvo On Call."""
 
+import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientResponseError
-import async_timeout
 from volvooncall import Connection
 from volvooncall.dashboard import Instrument
 
@@ -17,8 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -186,7 +186,7 @@ class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             await self.volvo_data.update()
 
 

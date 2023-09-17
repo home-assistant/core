@@ -11,8 +11,8 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -551,7 +551,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
@@ -625,7 +625,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
 
     entity_description: RpcEntityDescription
 
-    # pylint: disable=super-init-not-called
+    # pylint: disable-next=super-init-not-called
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,

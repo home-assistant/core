@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,6 +58,16 @@ class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMi
     """Describes Airnow sensor entity."""
 
 
+def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
+    """Process extra attributes for station location (if available)."""
+    if ATTR_API_STATION in data:
+        return {
+            "lat": data.get(ATTR_API_STATION_LATITUDE),
+            "long": data.get(ATTR_API_STATION_LONGITUDE),
+        }
+    return {}
+
+
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
@@ -94,10 +103,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         translation_key="station",
         icon="mdi:blur",
         value_fn=lambda data: data.get(ATTR_API_STATION),
-        extra_state_attributes_fn=lambda data: {
-            "lat": data[ATTR_API_STATION_LATITUDE],
-            "long": data[ATTR_API_STATION_LONGITUDE],
-        },
+        extra_state_attributes_fn=station_extra_attrs,
     ),
 )
 
