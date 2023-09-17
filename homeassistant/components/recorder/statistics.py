@@ -539,8 +539,8 @@ def _compile_statistics(
             instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
     if updated_metadata_ids:
-        # These are always the newest statistics, so we can update the latest
-        # statistics table without having to check the start_ts.
+        # These are always the newest statistics, so we can update
+        # latest_statistics_short_term_ids table without having to check the start_ts.
         session.flush()  # populate the ids of the new StatisticsShortTerm rows
         session.execute(
             _delete_latest_statistics_short_term_ids_by_metadata_ids_stmt(
