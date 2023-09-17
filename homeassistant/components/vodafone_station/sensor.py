@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
@@ -59,15 +59,15 @@ def _line_connection(value: dict, key: str) -> str:
     internet_key_ip = value.get("vf_internet_key_ip_addr")
 
     if internet_ip == dsl_ip:
-        return "xDSL"
+        return LINE_TYPES[1]
 
     if internet_ip == fiber_ip:
-        return "Fiber"
+        return LINE_TYPES[2]
 
     if internet_ip == internet_key_ip:
-        return "Internet Key"
+        return LINE_TYPES[3]
 
-    return "Unknown"
+    return LINE_TYPES[0]
 
 
 SENSOR_TYPES: Final = (
@@ -92,7 +92,9 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="inter_ip_address",
         translation_key="active_connection",
+        device_class=SensorDeviceClass.ENUM,
         icon="mdi:wan",
+        options=LINE_TYPES,
         value=_line_connection,
     ),
     VodafoneStationEntityDescription(
