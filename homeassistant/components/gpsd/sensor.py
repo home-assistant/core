@@ -10,9 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
+    ATTR_TIME,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -22,16 +24,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import ATTR_CLIMB, ATTR_SPEED, DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CLIMB = "climb"
-ATTR_ELEVATION = "elevation"
-ATTR_GPS_TIME = "gps_time"
-ATTR_SPEED = "speed"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "GPS"
-DEFAULT_PORT = 2947
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -116,7 +111,7 @@ class GpsdSensor(SensorEntity):
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
             ATTR_LONGITUDE: self.agps_thread.data_stream.lon,
             ATTR_ELEVATION: self.agps_thread.data_stream.alt,
-            ATTR_GPS_TIME: self.agps_thread.data_stream.time,
+            ATTR_TIME: self.agps_thread.data_stream.time,
             ATTR_SPEED: self.agps_thread.data_stream.speed,
             ATTR_CLIMB: self.agps_thread.data_stream.climb,
             ATTR_MODE: self.agps_thread.data_stream.mode,
