@@ -29,6 +29,7 @@ from ..entity import OverkizEntity
 PRESET_HOLIDAY_MODE = "holiday_mode"
 FAN_SILENT = "silent"
 AUTO_MANU_MODE_STATE = "core:AutoManuModeState"
+TEMPERATURE_CHANGE_STATE = "ovp:TemperatureChangeState"
 
 FAN_SPEED_STATE = {
     Protocol.OVP: OverkizState.OVP_FAN_SPEED,
@@ -327,6 +328,16 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         """Return auto/manu mode."""
         if (state := self.device.states[AUTO_MANU_MODE_STATE]) and state.value_as_str:
             return state.value_as_str
+        return None
+
+    # OVP has this property to control the target temperature delta in auto mode
+    @property
+    def temperature_change(self) -> int | None:
+        """Return temperature change state."""
+        if (
+            state := self.device.states[TEMPERATURE_CHANGE_STATE]
+        ) and state.value_as_str:
+            return state.value_as_int
 
         return None
 
@@ -356,11 +367,16 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         elif fan_mode == OverkizCommandParam.LOW:
             fan_mode = OverkizCommandParam.LO
 
+        # OVP protocol has an AUTO_MANU parameter that is not controlled by HA (except if we want to club it into the PRESET property) and which is getting turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
             None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
         )
         if self.preset_mode == PRESET_HOLIDAY_MODE:
             auto_manu_mode = OverkizCommandParam.HOLIDAYS
+
+        # OVP protocol does not pass a target temperature when in AUTO mode, it passes a "temperature change" value in the range [-5,5]
+        if main_operation == OverkizCommandParam.AUTO:
+            target_temperature = self.temperature_change or 0
 
         command_data = [
             main_operation,  # Main Operation
