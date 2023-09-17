@@ -20,6 +20,7 @@ from homeassistant.components.recorder.statistics import (
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
+    clear_latest_short_term_statistics_ids,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics,
@@ -171,6 +172,14 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
     )
     assert stats == {"sensor.test1": [expected_2]}
 
+    stats = get_latest_short_term_statistics(
+        hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
+    )
+    assert stats == {"sensor.test1": [expected_2]}
+
+    # Now wipe the latest_short_term_statistics_ids table and test again
+    # to make sure we can rebuild the missing data
+    clear_latest_short_term_statistics_ids(instance.get_session())
     stats = get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
