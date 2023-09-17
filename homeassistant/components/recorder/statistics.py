@@ -2299,8 +2299,10 @@ def _find_latest_short_term_statistic_stmt(
     return lambda_stmt(
         lambda: select(
             StatisticsShortTerm.id,
-            func.max(StatisticsShortTerm.start_ts).label("start_max"),
-        ).where(StatisticsShortTerm.metadata_id == metadata_id)
+        )
+        .where(StatisticsShortTerm.metadata_id == metadata_id)
+        .order_by(StatisticsShortTerm.start_ts.desc())
+        .limit(1)
     )
 
 
