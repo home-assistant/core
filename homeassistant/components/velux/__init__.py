@@ -1,5 +1,7 @@
 """Support for VELUX KLF 200 devices."""
 import logging
+import asyncio
+from typing import Any, Dict
 
 from pyvlx import OpeningDevice, PyVLX, PyVLXException
 import voluptuous as vol
@@ -49,10 +51,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class DelayVelux(PyVLX):
+    """PyVLX, but with delays to workaround KLF 200 issues."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__send_lock = asyncio.Lock()
+
+    async def send_frame(self, frame):
+        """Send frame to API via connection."""
+        async with self.__send_lock:
+            await asyncio.sleep(1)
+        # Note we explicitly don't do the send_frame in the lock, as sometimes
+        # this seems to fail to return, particularly at startup
+        await super().send_frame(frame)
+
+
 class VeluxModule:
     """Abstraction for velux component."""
 
-    def __init__(self, hass, domain_config):
+    def __init__(self, hass: HomeAssistant, domain_config: Dict[str, Any]):
         """Initialize for velux component."""
         self.pyvlx = None
         self._hass = hass
@@ -72,7 +90,7 @@ class VeluxModule:
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
         host = self._domain_config.get(CONF_HOST)
         password = self._domain_config.get(CONF_PASSWORD)
-        self.pyvlx = PyVLX(host=host, password=password)
+        self.pyvlx = DelayVelux(host=host, password=password)
 
         self._hass.services.async_register(
             DOMAIN, "reboot_gateway", async_reboot_gateway
