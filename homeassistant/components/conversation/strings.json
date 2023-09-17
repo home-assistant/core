@@ -24,11 +24,11 @@
       "description": "Reloads the intent configuration.",
       "fields": {
         "language": {
-          "name": "[%key:components::conversation::services::process::language::name%]",
+          "name": "[%key:component::conversation::services::process::language::name%]",
           "description": "Language to clear cached intents for. Defaults to server language."
         },
         "agent_id": {
-          "name": "[%key:components::conversation::services::process::agent_id::name%]",
+          "name": "[%key:component::conversation::services::process::agent_id::name%]",
           "description": "Conversation agent to reload."
         }
       }
