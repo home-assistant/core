@@ -214,6 +214,7 @@ homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
 homeassistant.components.logger.*
+homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
