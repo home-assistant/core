@@ -41,7 +41,7 @@ def mock_config_entry2() -> MockConfigEntry:
 def mock_has_devices() -> Generator[AsyncMock, None, None]:
     """Return a mock has_devices function."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow._async_has_devices",
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
         return_value=True,
     ) as mock_has_devices:
         yield mock_has_devices
@@ -51,7 +51,7 @@ def mock_has_devices() -> Generator[AsyncMock, None, None]:
 def mock_has_no_devices() -> Generator[AsyncMock, None, None]:
     """Return a mock has_devices function returning False."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow._async_has_devices",
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
         return_value=False,
     ) as mock_has_devices:
         yield mock_has_devices
@@ -61,7 +61,7 @@ def mock_has_no_devices() -> Generator[AsyncMock, None, None]:
 def mock_has_devices_error_listener() -> Generator[AsyncMock, None, None]:
     """Return a mock has_devices returning an error."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow._async_has_devices",
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
         side_effect=ListenerError,
     ) as mock_has_devices:
         yield mock_has_devices
@@ -71,7 +71,7 @@ def mock_has_devices_error_listener() -> Generator[AsyncMock, None, None]:
 def mock_has_devices_error_address_in_use() -> Generator[AsyncMock, None, None]:
     """Return a mock has_devices returning an error."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow._async_has_devices",
+        "homeassistant.components.weatherflow.config_flow._async_can_discover_devices",
         side_effect=AddressInUseError,
     ) as mock_has_devices:
         yield mock_has_devices
