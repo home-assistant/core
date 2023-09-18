@@ -6,14 +6,14 @@ import wave
 
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStop
 from wyoming.client import AsyncTcpClient
-from wyoming.tts import Synthesize
+from wyoming.tts import Synthesize, SynthesizeVoice
 
 from homeassistant.components import tts
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .error import WyomingError
 
@@ -57,9 +57,15 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                 self._voices[language].append(
                     tts.Voice(
                         voice_id=voice.name,
-                        name=voice.name,
+                        name=voice.description or voice.name,
                     )
                 )
+
+        # Sort voices by name
+        for language in self._voices:
+            self._voices[language] = sorted(
+                self._voices[language], key=lambda v: v.name
+            )
 
         self._supported_languages: list[str] = list(voice_languages)
 
@@ -82,7 +88,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @property
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
-        return [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE]
+        return [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE, ATTR_SPEAKER]
 
     @property
     def default_options(self):
@@ -95,10 +101,18 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         return self._voices.get(language)
 
     async def async_get_tts_audio(self, message, language, options):
-        """Load TTS from UNIX socket."""
+        """Load TTS from TCP socket."""
+        voice_name: str | None = options.get(tts.ATTR_VOICE)
+        voice_speaker: str | None = options.get(ATTR_SPEAKER)
+
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                await client.write_event(Synthesize(message).event())
+                voice: SynthesizeVoice | None = None
+                if voice_name is not None:
+                    voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
+
+                synthesize = Synthesize(text=message, voice=voice)
+                await client.write_event(synthesize.event())
 
                 with io.BytesIO() as wav_io:
                     wav_writer: wave.Wave_write | None = None

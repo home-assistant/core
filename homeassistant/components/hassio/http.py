@@ -82,7 +82,6 @@ NO_STORE = re.compile(
     r"|app/entrypoint.js"
     r")$"
 )
-# pylint: enable=implicit-str-concat
 # fmt: on
 
 RESPONSE_HEADERS_FILTER = {
@@ -177,7 +176,8 @@ class HassIOView(HomeAssistantView):
             )
             response.content_type = client.content_type
 
-            response.enable_compression()
+            if should_compress(response.content_type):
+                response.enable_compression()
             await response.prepare(request)
             async for data in client.content.iter_chunked(8192):
                 await response.write(data)
@@ -213,3 +213,10 @@ def _get_timeout(path: str) -> ClientTimeout:
     if NO_TIMEOUT.match(path):
         return ClientTimeout(connect=10, total=None)
     return ClientTimeout(connect=10, total=300)
+
+
+def should_compress(content_type: str) -> bool:
+    """Return if we should compress a response."""
+    if content_type.startswith("image/"):
+        return "svg" in content_type
+    return not content_type.startswith(("video/", "audio/", "font/"))

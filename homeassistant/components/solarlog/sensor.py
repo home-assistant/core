@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_local
@@ -36,13 +36,13 @@ class SolarLogSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     SolarLogSensorEntityDescription(
         key="time",
-        name="last update",
+        translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         value=as_local,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
-        name="power AC",
+        translation_key="power_ac",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -50,7 +50,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="power_dc",
-        name="power DC",
+        translation_key="power_dc",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -58,21 +58,21 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="voltage_ac",
-        name="voltage AC",
+        translation_key="voltage_ac",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="voltage_dc",
-        name="voltage DC",
+        translation_key="voltage_dc",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="yield_day",
-        name="yield day",
+        translation_key="yield_day",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -80,7 +80,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="yield_yesterday",
-        name="yield yesterday",
+        translation_key="yield_yesterday",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -88,7 +88,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="yield_month",
-        name="yield month",
+        translation_key="yield_month",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -96,7 +96,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="yield_year",
-        name="yield year",
+        translation_key="yield_year",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -104,7 +104,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="yield_total",
-        name="yield total",
+        translation_key="yield_total",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -113,42 +113,42 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="consumption_ac",
-        name="consumption AC",
+        translation_key="consumption_ac",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_day",
-        name="consumption day",
+        translation_key="consumption_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_yesterday",
-        name="consumption yesterday",
+        translation_key="consumption_yesterday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_month",
-        name="consumption month",
+        translation_key="consumption_month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_year",
-        name="consumption year",
+        translation_key="consumption_year",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_total",
-        name="consumption total",
+        translation_key="consumption_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -156,14 +156,14 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="total_power",
-        name="installed peak power",
+        translation_key="total_power",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     SolarLogSensorEntityDescription(
         key="alternator_loss",
-        name="alternator loss",
+        translation_key="alternator_loss",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -171,7 +171,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="capacity",
-        name="capacity",
+        translation_key="capacity",
         icon="mdi:solar-power",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -180,7 +180,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="efficiency",
-        name="efficiency",
+        translation_key="efficiency",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -188,7 +188,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="power_available",
-        name="power available",
+        translation_key="power_available",
         icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -196,7 +196,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     ),
     SolarLogSensorEntityDescription(
         key="usage",
-        name="usage",
+        translation_key="usage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -218,6 +218,8 @@ async def async_setup_entry(
 class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_has_entity_name = True
+
     entity_description: SolarLogSensorEntityDescription
 
     def __init__(
@@ -228,7 +230,6 @@ class SolarlogSensor(CoordinatorEntity[SolarlogData], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},

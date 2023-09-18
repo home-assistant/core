@@ -7,7 +7,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "title": "Connect"
+        "title": "[%key:common::action::connect%]"
       }
     },
     "abort": {
@@ -16,6 +16,44 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    }
+  },
+  "services": {
+    "join": {
+      "name": "Join",
+      "description": "Groups players together.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Entity ID of the player to synchronize to."
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "The players to join to the \"master\"."
+        }
+      }
+    },
+    "unjoin": {
+      "name": "Unjoin",
+      "description": "Unjoins the player from a group."
+    },
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Takes a snapshot of the media player."
+    },
+    "restore": {
+      "name": "Restore",
+      "description": "Restores a snapshot of the media player."
+    },
+    "set_latency": {
+      "name": "Set latency",
+      "description": "Sets client set_latency.",
+      "fields": {
+        "latency": {
+          "name": "Latency",
+          "description": "Latency in master."
+        }
+      }
     }
   }
 }

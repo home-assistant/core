@@ -12,7 +12,7 @@ from aioshelly.rpc_device import RpcDevice, WsServer
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity_registry import async_get as er_async_get
-from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -211,7 +210,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     await context.initialize(port)
 
     @callback
-    def shutdown_listener(ev: EventType) -> None:
+    def shutdown_listener(ev: Event) -> None:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
@@ -286,9 +285,20 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_rpc_input_name(device: RpcDevice, key: str) -> str:
+    """Get input name based from the device configuration."""
+    input_config = device.config[key]
+
+    if input_name := input_config.get("name"):
+        return f"{device.name} {input_name}"
+
+    return f"{device.name} {key.replace(':', ' ').capitalize()}"
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
+    key = key.replace("em1data", "em1")
     if device.config.get("switch:0"):
         key = key.replace("input", "switch")
     device_name = device.name
@@ -299,6 +309,8 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
             return f"{device_name} {key.replace(':', '_')}"
+        if key.startswith("em1"):
+            return f"{device_name} EM{key.split(':')[-1]}"
         return device_name
 
     return entity_name

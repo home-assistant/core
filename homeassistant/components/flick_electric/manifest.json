@@ -3,7 +3,7 @@
   "name": "Flick Electric",
   "codeowners": ["@ZephireNZ"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/flick_electric/",
+  "documentation": "https://www.home-assistant.io/integrations/flick_electric",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyflick"],

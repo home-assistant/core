@@ -1,5 +1,6 @@
 """The sensor tests for the Airzone platform."""
 
+import copy
 from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
@@ -10,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .util import (
+    HVAC_DHW_MOCK,
     HVAC_MOCK,
     HVAC_SYSTEMS_MOCK,
     HVAC_VERSION_MOCK,
@@ -26,6 +28,10 @@ async def test_airzone_create_sensors(
     """Test creation of sensors."""
 
     await async_init_integration(hass)
+
+    # Hot Water
+    state = hass.states.get("sensor.airzone_dhw_temperature")
+    assert state.state == "43"
 
     # WebServer
     state = hass.states.get("sensor.webserver_rssi")
@@ -82,10 +88,13 @@ async def test_airzone_sensors_availability(
 
     await async_init_integration(hass)
 
-    HVAC_MOCK_UNAVAILABLE_ZONE = {**HVAC_MOCK}
+    HVAC_MOCK_UNAVAILABLE_ZONE = copy.deepcopy(HVAC_MOCK)
     del HVAC_MOCK_UNAVAILABLE_ZONE[API_SYSTEMS][0][API_DATA][1]
 
     with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+        return_value=HVAC_DHW_MOCK,
+    ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
         return_value=HVAC_MOCK_UNAVAILABLE_ZONE,
     ), patch(

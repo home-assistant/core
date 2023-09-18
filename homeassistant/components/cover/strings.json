@@ -76,5 +76,59 @@
     "window": {
       "name": "Window"
     }
+  },
+  "services": {
+    "open_cover": {
+      "name": "[%key:common::action::open%]",
+      "description": "Opens a cover."
+    },
+    "close_cover": {
+      "name": "[%key:common::action::close%]",
+      "description": "Closes a cover."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles a cover open/closed."
+    },
+    "set_cover_position": {
+      "name": "Set position",
+      "description": "Moves a cover to a specific position.",
+      "fields": {
+        "position": {
+          "name": "Position",
+          "description": "Target position."
+        }
+      }
+    },
+    "stop_cover": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stops the cover movement."
+    },
+    "open_cover_tilt": {
+      "name": "Open tilt",
+      "description": "Tilts a cover open."
+    },
+    "close_cover_tilt": {
+      "name": "Close tilt",
+      "description": "Tilts a cover to close."
+    },
+    "toggle_cover_tilt": {
+      "name": "Toggle tilt",
+      "description": "Toggles a cover tilt open/closed."
+    },
+    "set_cover_tilt_position": {
+      "name": "Set tilt position",
+      "description": "Moves a cover tilt to a specific position.",
+      "fields": {
+        "tilt_position": {
+          "name": "Tilt position",
+          "description": "Target tilt positition."
+        }
+      }
+    },
+    "stop_cover_tilt": {
+      "name": "Stop tilt",
+      "description": "Stops a tilting cover movement."
+    }
   }
 }

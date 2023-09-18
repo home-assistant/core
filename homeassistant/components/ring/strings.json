@@ -64,5 +64,11 @@
         "name": "[%key:component::siren::title%]"
       }
     }
+  },
+  "services": {
+    "update": {
+      "name": "Update",
+      "description": "Updates the data we have for all your ring devices."
+    }
   }
 }

@@ -29,7 +29,7 @@
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
         "data": {
-          "cloud_project_id": "Google Cloud Project ID"
+          "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }
       },
       "reauth_confirm": {

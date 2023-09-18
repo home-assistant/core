@@ -21,7 +21,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
-    diag: dict[str, Any] = {}
+    diag: dict[str, Any] = device.additional_diagnostics.copy()
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
 

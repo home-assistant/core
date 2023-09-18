@@ -1,62 +1,39 @@
 # Describes the format for available group services
 reload:
-  name: Reload
-  description: Reload group configuration, entities, and notify services.
-
 set:
-  name: Set
-  description: Create/Update a user group.
   fields:
     object_id:
-      name: Object ID
-      description: Group id and part of entity id.
       required: true
       example: "test_group"
       selector:
         text:
     name:
-      name: Name
-      description: Name of group
       example: "My test group"
       selector:
         text:
     icon:
-      name: Icon
-      description: Name of icon for the group.
       example: "mdi:camera"
       selector:
         icon:
     entities:
-      name: Entities
-      description: List of all members in the group. Not compatible with 'delta'.
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:
     add_entities:
-      name: Add Entities
-      description: List of members that will change on group listening.
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:
     remove_entities:
-      name: Remove Entities
-      description: List of members that will be removed from group listening.
       example: domain.entity_id1, domain.entity_id2
       selector:
         object:
     all:
-      name: All
-      description: Enable this option if the group should only turn on when all entities are on.
       selector:
         boolean:
 
 remove:
-  name: Remove
-  description: Remove a user group.
   fields:
     object_id:
-      name: Object ID
-      description: Group id and part of entity id.
       required: true
       example: "test_group"
       selector:

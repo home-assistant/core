@@ -16,10 +16,16 @@
       "name": "Identify"
     },
     "restart": {
-      "name": "Restart"
+      "name": "[%key:common::action::restart%]"
     },
     "update": {
       "name": "Update"
+    }
+  },
+  "services": {
+    "press": {
+      "name": "Press",
+      "description": "Press the button entity."
     }
   }
 }

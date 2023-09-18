@@ -93,13 +93,6 @@ class ESPHomeDashboardManager:
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
-        if not cur_dashboard and not dashboard.last_update_success:
-            # If there was no previous dashboard and the new one is not available,
-            # we skip setup and wait for discovery.
-            _LOGGER.error(
-                "Dashboard unavailable; skipping setup: %s", dashboard.last_exception
-            )
-            return
 
         self._current_dashboard = dashboard
 
@@ -143,7 +136,14 @@ class ESPHomeDashboardManager:
 
 @callback
 def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
-    """Get an instance of the dashboard if set."""
+    """Get an instance of the dashboard if set.
+
+    This is only safe to call after `async_setup` has been completed.
+
+    It should not be called from the config flow because there is a race
+    where manager can be an asyncio.Event instead of the actual manager
+    because the singleton decorator is not yet done.
+    """
     manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
     return manager.async_get() if manager else None
 
@@ -172,6 +172,7 @@ class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
             _LOGGER,
             name="ESPHome Dashboard",
             update_interval=timedelta(minutes=5),
+            always_update=False,
         )
         self.addon_slug = addon_slug
         self.url = url

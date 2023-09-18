@@ -1,50 +1,34 @@
 # Describes the format for available device tracker services
 
 see:
-  name: See
-  description: Control tracked device.
   fields:
     mac:
-      name: MAC address
-      description: MAC address of device
       example: "FF:FF:FF:FF:FF:FF"
       selector:
         text:
     dev_id:
-      name: Device ID
-      description: Id of device (find id in known_devices.yaml).
       example: "phonedave"
       selector:
         text:
     host_name:
-      name: Host name
-      description: Hostname of device
       example: "Dave"
       selector:
         text:
     location_name:
-      name: Location name
-      description: Name of location where device is located (not_home is away).
       example: "home"
       selector:
         text:
     gps:
-      name: GPS coordinates
-      description: GPS coordinates where device is located, specified by latitude and longitude.
       example: "[51.509802, -0.086692]"
       selector:
         object:
     gps_accuracy:
-      name: GPS accuracy
-      description: Accuracy of GPS coordinates.
       selector:
         number:
           min: 1
           max: 100
           unit_of_measurement: "%"
     battery:
-      name: Battery level
-      description: Battery level of device.
       selector:
         number:
           min: 0

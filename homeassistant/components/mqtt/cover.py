@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
-    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -159,7 +158,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_GET_POSITION_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): vol.Any(
             cv.string, None
@@ -236,6 +235,7 @@ async def _async_setup_entity(
 class MqttCover(MqttEntity, CoverEntity):
     """Representation of a cover that can be controlled using MQTT."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_COVER_ATTRIBUTES_BLOCKED
 
@@ -294,6 +294,7 @@ class MqttCover(MqttEntity, CoverEntity):
         ):
             # Force into optimistic mode.
             self._optimistic = True
+        self._attr_assumed_state = bool(self._optimistic)
 
         if (
             config[CONF_TILT_STATE_OPTIMISTIC]
@@ -333,6 +334,25 @@ class MqttCover(MqttEntity, CoverEntity):
             entity=self,
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
+
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+
+        supported_features = CoverEntityFeature(0)
+        if self._config.get(CONF_COMMAND_TOPIC) is not None:
+            if self._config.get(CONF_PAYLOAD_OPEN) is not None:
+                supported_features |= CoverEntityFeature.OPEN
+            if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
+                supported_features |= CoverEntityFeature.CLOSE
+            if self._config.get(CONF_PAYLOAD_STOP) is not None:
+                supported_features |= CoverEntityFeature.STOP
+
+        if self._config.get(CONF_SET_POSITION_TOPIC) is not None:
+            supported_features |= CoverEntityFeature.SET_POSITION
+
+        if self._config.get(CONF_TILT_COMMAND_TOPIC) is not None:
+            supported_features |= TILT_FEATURES
+
+        self._attr_supported_features = supported_features
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -470,11 +490,6 @@ class MqttCover(MqttEntity, CoverEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return bool(self._optimistic)
-
-    @property
     def is_closed(self) -> bool | None:
         """Return true if the cover is closed or None if the status is unknown."""
         if self._state is None:
@@ -504,31 +519,6 @@ class MqttCover(MqttEntity, CoverEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         return self._tilt_value
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Return the class of this sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        supported_features = CoverEntityFeature(0)
-        if self._config.get(CONF_COMMAND_TOPIC) is not None:
-            if self._config.get(CONF_PAYLOAD_OPEN) is not None:
-                supported_features |= CoverEntityFeature.OPEN
-            if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
-                supported_features |= CoverEntityFeature.CLOSE
-            if self._config.get(CONF_PAYLOAD_STOP) is not None:
-                supported_features |= CoverEntityFeature.STOP
-
-        if self._config.get(CONF_SET_POSITION_TOPIC) is not None:
-            supported_features |= CoverEntityFeature.SET_POSITION
-
-        if self._config.get(CONF_TILT_COMMAND_TOPIC) is not None:
-            supported_features |= TILT_FEATURES
-
-        return supported_features
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up.

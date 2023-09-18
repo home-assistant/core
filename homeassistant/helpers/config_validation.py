@@ -9,7 +9,7 @@ from datetime import (
     time as time_sys,
     timedelta,
 )
-from enum import Enum
+from enum import Enum, StrEnum
 import inspect
 import logging
 from numbers import Number
@@ -102,9 +102,23 @@ import homeassistant.util.dt as dt_util
 
 from . import script_variables as script_variables_helper, template as template_helper
 
-# pylint: disable=invalid-name
-
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+
+
+class UrlProtocolSchema(StrEnum):
+    """Valid URL protocol schema values."""
+
+    HTTP = "http"
+    HTTPS = "https"
+    HOMEASSISTANT = "homeassistant"
+
+
+EXTERNAL_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
+CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
+    {UrlProtocolSchema.HOMEASSISTANT, UrlProtocolSchema.HTTP, UrlProtocolSchema.HTTPS}
+)
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -570,7 +584,7 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # pylint: disable=unidiomatic-typecheck
+    if type(value) is str:  # noqa: E721
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -727,15 +741,22 @@ def socket_timeout(value: Any | None) -> object:
         raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
-# pylint: disable=no-value-for-parameter
-def url(value: Any) -> str:
+def url(
+    value: Any,
+    _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
+) -> str:
     """Validate an URL."""
     url_in = str(value)
 
-    if urlparse(url_in).scheme in ["http", "https"]:
+    if urlparse(url_in).scheme in _schema_list:
         return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")
+
+
+def configuration_url(value: Any) -> str:
+    """Validate an URL that allows the homeassistant schema."""
+    return url(value, CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST)
 
 
 def url_no_path(value: Any) -> str:
@@ -1098,6 +1119,7 @@ def _no_yaml_config_schema(
         # pylint: disable-next=import-outside-toplevel
         from .issue_registry import IssueSeverity, async_create_issue
 
+        # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
             hass = async_get_hass()
             async_create_issue(
@@ -1127,7 +1149,11 @@ def _no_yaml_config_schema(
 
 
 def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from yaml is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1138,7 +1164,11 @@ def config_entry_only_config_schema(domain: str) -> Callable[[dict], dict]:
 
 
 def platform_only_config_schema(domain: str) -> Callable[[dict], dict]:
-    """Return a config schema which logs if attempted to setup from YAML."""
+    """Return a config schema which logs if attempted to setup from YAML.
+
+    Use this when an integration's __init__.py defines setup or async_setup
+    but setup from the integration key is not supported.
+    """
 
     return _no_yaml_config_schema(
         domain,
@@ -1327,7 +1357,7 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")

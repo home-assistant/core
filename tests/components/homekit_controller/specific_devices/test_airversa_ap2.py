@@ -60,8 +60,8 @@ async def test_airversa_ap2_setup(hass: HomeAssistant) -> None:
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.airversa_ap2_1808_filter_life",
-                    friendly_name="Airversa AP2 1808 Filter Life",
+                    entity_id="sensor.airversa_ap2_1808_filter_lifetime",
+                    friendly_name="Airversa AP2 1808 Filter lifetime",
                     unique_id="00:00:00:00:00:00_1_32896_32900",
                     state="100.0",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

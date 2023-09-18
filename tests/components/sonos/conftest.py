@@ -107,6 +107,9 @@ def config_entry_fixture():
 class MockSoCo(MagicMock):
     """Mock the Soco Object."""
 
+    audio_delay = 2
+    sub_gain = 5
+
     @property
     def visible_zones(self):
         """Return visible zones and allow property to be overridden by device classes."""

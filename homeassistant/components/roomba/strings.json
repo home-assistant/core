@@ -47,5 +47,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "bin_full": {
+        "name": "Bin full"
+      }
+    }
   }
 }

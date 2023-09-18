@@ -4,7 +4,7 @@
       "user": {
         "description": "Enter your Roborock email address.",
         "data": {
-          "username": "Email"
+          "username": "[%key:common::config_flow::data::email%]"
         }
       },
       "code": {
@@ -27,6 +27,22 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "mop_attached": {
+        "name": "Mop attached"
+      },
+      "mop_drying_status": {
+        "name": "Mop drying"
+      },
+      "water_box_attached": {
+        "name": "Water box attached"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "cleaning_area": {
         "name": "Cleaning area"
@@ -34,8 +50,25 @@
       "cleaning_time": {
         "name": "Cleaning time"
       },
+      "clean_percent": {
+        "name": "Cleaning progress"
+      },
+      "dock_error": {
+        "name": "Dock error",
+        "state": {
+          "ok": "Ok",
+          "duct_blockage": "Duct blockage",
+          "water_empty": "Water empty",
+          "waste_water_tank_full": "Waste water tank full",
+          "dirty_tank_latch_open": "Dirty tank latch open",
+          "no_dustbin": "No dustbin"
+        }
+      },
       "main_brush_time_left": {
         "name": "Main brush time left"
+      },
+      "mop_drying_remaining_time": {
+        "name": "Mop drying remaining time"
       },
       "side_brush_time_left": {
         "name": "Side brush time left"
@@ -51,14 +84,14 @@
         "state": {
           "starting": "Starting",
           "charger_disconnected": "Charger disconnected",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "remote_control_active": "Remote control active",
           "cleaning": "Cleaning",
           "returning_home": "Returning home",
           "manual_mode": "Manual mode",
           "charging": "Charging",
           "charging_problem": "Charging problem",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "spot_cleaning": "Spot cleaning",
           "error": "Error",
           "shutting_down": "Shutting down",
@@ -134,7 +167,7 @@
           "moderate": "Moderate",
           "high": "High",
           "intense": "Intense",
-          "custom": "Custom"
+          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]"
         }
       }
     },
@@ -145,8 +178,25 @@
       "dnd_switch": {
         "name": "Do not disturb"
       },
+      "off_peak_switch": {
+        "name": "Off-peak charging"
+      },
       "status_indicator": {
         "name": "Status indicator light"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
+      },
+      "off_peak_start": {
+        "name": "Off-peak start"
+      },
+      "off_peak_end": {
+        "name": "Off-peak end"
       }
     },
     "vacuum": {
@@ -156,7 +206,7 @@
             "state": {
               "auto": "Auto",
               "balanced": "Balanced",
-              "custom": "Custom",
+              "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
               "max": "Max",
@@ -164,7 +214,7 @@
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
-              "standard": "Standard",
+              "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
               "turbo": "Turbo"
             }
           }
@@ -175,7 +225,14 @@
   "issues": {
     "service_deprecation_start_pause": {
       "title": "Roborock vacuum support for vacuum.start_pause is being removed",
-      "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::roborock::issues::service_deprecation_start_pause::title%]",
+            "description": "Roborock vacuum support for the vacuum.start_pause service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.pause or vacuum.start and select submit below to mark this issue as resolved."
+          }
+        }
+      }
     }
   }
 }

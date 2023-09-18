@@ -148,16 +148,6 @@ def get_arguments() -> argparse.Namespace:
     return arguments
 
 
-def cmdline() -> list[str]:
-    """Collect path and arguments to re-execute the current hass instance."""
-    if os.path.basename(sys.argv[0]) == "__main__.py":
-        modulepath = os.path.dirname(sys.argv[0])
-        os.environ["PYTHONPATH"] = os.path.dirname(modulepath)
-        return [sys.executable, "-m", "homeassistant"] + list(sys.argv[1:])
-
-    return sys.argv
-
-
 def check_threads() -> None:
     """Check if there are any lingering threads."""
     try:

@@ -1,0 +1,8 @@
+{
+  "services": {
+    "speedtest": {
+      "name": "Speed test",
+      "description": "Immediately executs a speed test with Fast.com."
+    }
+  }
+}

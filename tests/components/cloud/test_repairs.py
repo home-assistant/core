@@ -123,6 +123,7 @@ async def test_legacy_subscription_repair_flow(
         "errors": None,
         "description_placeholders": None,
         "last_step": None,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -205,6 +206,7 @@ async def test_legacy_subscription_repair_flow_timeout(
         "errors": None,
         "description_placeholders": None,
         "last_step": None,
+        "preview": None,
     }
 
     with patch("homeassistant.components.cloud.repairs.MAX_RETRIES", new=0):

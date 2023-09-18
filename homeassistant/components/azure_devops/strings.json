@@ -18,7 +18,7 @@
       },
       "reauth": {
         "data": {
-          "personal_access_token": "Personal Access Token (PAT)"
+          "personal_access_token": "[%key:component::azure_devops::config::step::user::data::personal_access_token%]"
         },
         "description": "Authentication failed for {project_url}. Please enter your current credentials.",
         "title": "Reauthentication"

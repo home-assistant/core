@@ -45,5 +45,11 @@
         "name": "Energy saving"
       }
     }
+  },
+  "services": {
+    "identify": {
+      "name": "Identify",
+      "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification."
+    }
   }
 }

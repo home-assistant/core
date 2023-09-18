@@ -1,0 +1,17 @@
+{
+  "Body": {
+    "Data": {}
+  },
+  "Head": {
+    "RequestArguments": {
+      "DeviceClass": "OhmPilot",
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-14T17:29:16+02:00"
+  }
+}

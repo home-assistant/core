@@ -17,8 +17,8 @@
     "step": {
       "init": {
         "data": {
-          "resolver": "Resolver for IPV4 lookup",
-          "resolver_ipv6": "Resolver for IPV6 lookup"
+          "resolver": "[%key:component::dnsip::config::step::user::data::resolver%]",
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::data::resolver_ipv6%]"
         }
       }
     },
