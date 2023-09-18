@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -24,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -133,6 +134,7 @@ class VizioDevice(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _received_device_info = False
 
     def __init__(
         self,
@@ -158,8 +160,7 @@ class VizioDevice(MediaPlayerEntity):
             CONF_ADDITIONAL_CONFIGS, []
         )
         self._device = device
-        self._max_volume = float(self._device.get_max_volume())
-        self._name = name
+        self._max_volume = float(device.get_max_volume())
 
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
@@ -168,8 +169,18 @@ class VizioDevice(MediaPlayerEntity):
 
         # Entity class attributes that will not change
         self._attr_icon = ICON[device_class]
-        self._attr_unique_id = self._config_entry.unique_id
+        unique_id = config_entry.unique_id
+        if TYPE_CHECKING:
+            assert unique_id
+        self._attr_unique_id = unique_id
         self._attr_device_class = device_class
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="VIZIO",
+            # model=await self._device.get_model_name(log_api_exception=False),
+            name=name,
+            # sw_version=await self._device.get_version(log_api_exception=False),
+        )
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -199,15 +210,19 @@ class VizioDevice(MediaPlayerEntity):
             )
             self._attr_available = True
 
-        if not self._attr_device_info:
-            assert self._attr_unique_id
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._attr_unique_id)},
-                manufacturer="VIZIO",
-                model=await self._device.get_model_name(log_api_exception=False),
-                name=self._name,
-                sw_version=await self._device.get_version(log_api_exception=False),
+        if not self._received_device_info:
+            device_reg = dr.async_get(self.hass)
+            assert self._config_entry.unique_id
+            device = device_reg.async_get_device(
+                identifiers={(DOMAIN, self._config_entry.unique_id)}
             )
+            if device:
+                device_reg.async_update_device(
+                    device.id,
+                    model=await self._device.get_model_name(log_api_exception=False),
+                    sw_version=await self._device.get_version(log_api_exception=False),
+                )
+                self._received_device_info = True
 
         if not is_on:
             self._attr_state = MediaPlayerState.OFF
