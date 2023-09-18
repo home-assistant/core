@@ -277,7 +277,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(device: WeatherFlowDevice) -> None:
         """Add WeatherFlow sensor."""
-        LOGGER.error("+++++::async_add_sensor  Adding sensors for %s", device)
+        LOGGER.debug("Adding sensors for %s", device)
 
         sensors: list[WeatherFlowSensorEntity | WeatherFlowAirDensitySensorEntity] = [
             WeatherFlowSensorEntity(
