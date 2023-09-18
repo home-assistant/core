@@ -9,7 +9,6 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TankerkoenigCoordinatorEntity, TankerkoenigDataUpdateCoordinator
 from .const import (
     ATTR_BRAND,
     ATTR_CITY,
@@ -21,6 +20,8 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
 )
+from .coordinator import TankerkoenigDataUpdateCoordinator
+from .entity import TankerkoenigCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 

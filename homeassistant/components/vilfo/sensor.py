@@ -39,14 +39,14 @@ class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMix
 SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
     VilfoSensorEntityDescription(
         key=ATTR_LOAD,
-        name="Load",
+        translation_key=ATTR_LOAD,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         api_key=ATTR_API_DATA_FIELD_LOAD,
     ),
     VilfoSensorEntityDescription(
         key=ATTR_BOOT_TIME,
-        name="Boot time",
+        translation_key=ATTR_BOOT_TIME,
         icon="mdi:timer-outline",
         api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,

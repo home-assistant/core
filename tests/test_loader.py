@@ -150,7 +150,14 @@ async def test_custom_integration_version_not_valid(
 
 async def test_get_integration(hass: HomeAssistant) -> None:
     """Test resolving integration."""
+    with pytest.raises(loader.IntegrationNotLoaded):
+        loader.async_get_loaded_integration(hass, "hue")
+
     integration = await loader.async_get_integration(hass, "hue")
+    assert hue == integration.get_component()
+    assert hue_light == integration.get_platform("light")
+
+    integration = loader.async_get_loaded_integration(hass, "hue")
     assert hue == integration.get_component()
     assert hue_light == integration.get_platform("light")
 

@@ -6,7 +6,7 @@ from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -459,6 +459,9 @@ ATTR_HIDDEN: Final = "hidden"
 # Location of the entity
 ATTR_LATITUDE: Final = "latitude"
 ATTR_LONGITUDE: Final = "longitude"
+
+# Elevation of the entity
+ATTR_ELEVATION: Final = "elevation"
 
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY: Final = "gps_accuracy"

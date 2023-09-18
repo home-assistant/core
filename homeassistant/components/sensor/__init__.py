@@ -13,7 +13,7 @@ from typing import Any, Final, Self, cast, final
 
 from homeassistant.config_entries import ConfigEntry
 
-# pylint: disable=[hass-deprecated-import]
+# pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
