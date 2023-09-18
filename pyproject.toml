@@ -100,6 +100,7 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
+    "hass_enforce_super_call",
     "hass_enforce_type_hints",
     "hass_inheritance",
     "hass_imports",
