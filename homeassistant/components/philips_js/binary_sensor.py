@@ -22,10 +22,9 @@ from .entity import PhilipsJsEntity
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
 
-    def __init__(self, recording_entry, recording_value, *args, **kwargs) -> None:
+    def __init__(self, recording_value, *args, **kwargs) -> None:
         """Set up a binary sensor entity description and add additional attributes."""
         super().__init__(*args, **kwargs)
-        self.recording_entry: str = recording_entry
         self.recording_value: str = recording_value
 
 
@@ -34,14 +33,12 @@ DESCRIPTIONS = (
         key="recording_ongoing",
         translation_key="recording_ongoing",
         icon="mdi:record-rec",
-        recording_entry="RecordingType",
         recording_value="RECORDING_ONGOING",
     ),
     PhilipsTVBinarySensorEntityDescription(
         key="recording_new",
         translation_key="recording_new",
         icon="mdi:new-box",
-        recording_entry="RecordingType",
         recording_value="RECORDING_NEW",
     ),
 )
@@ -97,7 +94,7 @@ class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEnti
         """Handle updated data from the coordinator and set is_on true if one specified value is available within given entry of list."""
         self._attr_is_on = _check_for_recording_entry(
             self.coordinator.api,
-            self.entity_description.recording_entry,
+            "RecordingType",
             self.entity_description.recording_value,
         )
         super()._handle_coordinator_update()
