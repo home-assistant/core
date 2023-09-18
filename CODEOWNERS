@@ -1636,6 +1636,8 @@ build.json @home-assistant/supervisor
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/homeassistant/components/viam/ @hipsterbrown
+/tests/components/viam/ @hipsterbrown
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW
