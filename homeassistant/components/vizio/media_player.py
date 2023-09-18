@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -170,8 +169,7 @@ class VizioDevice(MediaPlayerEntity):
         # Entity class attributes that will not change
         self._attr_icon = ICON[device_class]
         unique_id = config_entry.unique_id
-        if TYPE_CHECKING:
-            assert unique_id
+        assert unique_id
         self._attr_unique_id = unique_id
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(
