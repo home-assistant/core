@@ -88,7 +88,13 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         super().__init__(coordinator)
         self.sharkiq = sharkiq
         self._attr_unique_id = sharkiq.serial_number
-        self._serial_number = sharkiq.serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sharkiq.serial_number)},
+            manufacturer=SHARK,
+            model=self.model,
+            name=sharkiq.name,
+            sw_version=sharkiq.get_property_value(Properties.ROBOT_FIRMWARE_VERSION),
+        )
 
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot. Not yet implemented."""
@@ -106,7 +112,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     @property
     def is_online(self) -> bool:
         """Tell us if the device is online."""
-        return self.coordinator.device_is_online(self._serial_number)
+        return self.coordinator.device_is_online(self.sharkiq.serial_number)
 
     @property
     def model(self) -> str:
@@ -114,19 +120,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         if self.sharkiq.vac_model_number:
             return self.sharkiq.vac_model_number
         return self.sharkiq.oem_model_number
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info dictionary."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
-            manufacturer=SHARK,
-            model=self.model,
-            name=self.sharkiq.name,
-            sw_version=self.sharkiq.get_property_value(
-                Properties.ROBOT_FIRMWARE_VERSION
-            ),
-        )
 
     @property
     def error_code(self) -> int | None:

@@ -24,7 +24,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+)
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +51,9 @@ async def async_setup_platform(
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
         sensor = ModbusBinarySensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
@@ -115,10 +122,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
                 self._result = result.bits
             else:
                 self._result = result.registers
-            if len(self._result) >= 1:
-                self._attr_is_on = bool(self._result[0] & 1)
-            else:
-                self._attr_available = False
+            self._attr_is_on = bool(self._result[0] & 1)
 
         self.async_write_ha_state()
         if self._coordinator:

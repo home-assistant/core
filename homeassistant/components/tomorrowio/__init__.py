@@ -221,7 +221,6 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.async_refresh()
 
         self.update_interval = async_set_update_interval(self.hass, self._api)
-        self._next_refresh = None
         self._async_unsub_refresh()
         if self._listeners:
             self._schedule_refresh()
@@ -302,6 +301,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     [
                         TMRW_ATTR_TEMPERATURE_LOW,
                         TMRW_ATTR_TEMPERATURE_HIGH,
+                        TMRW_ATTR_DEW_POINT,
+                        TMRW_ATTR_HUMIDITY,
                         TMRW_ATTR_WIND_SPEED,
                         TMRW_ATTR_WIND_DIRECTION,
                         TMRW_ATTR_CONDITION,

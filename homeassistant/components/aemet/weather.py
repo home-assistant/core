@@ -6,6 +6,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
@@ -35,11 +36,13 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
@@ -69,6 +72,7 @@ FORECAST_MAP = {
         ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
         ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
         ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+        ATTR_API_FORECAST_WIND_MAX_SPEED: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
         ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
     },
 }
@@ -189,6 +193,11 @@ class AemetWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
+
+    @property
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data[ATTR_API_WIND_MAX_SPEED]
 
     @property
     def native_wind_speed(self):
