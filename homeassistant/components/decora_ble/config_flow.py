@@ -21,6 +21,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_API_KEY, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+from .models import DiscoveredDecoraDevice
 
 
 class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -30,8 +31,8 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovery_info: BluetoothServiceInfoBleak | None = None
-        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
+        self._discovered_device: DiscoveredDecoraDevice | None = None
+        self._discovered_devices: dict[str, DiscoveredDecoraDevice] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -40,26 +41,29 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        self._discovery_info = discovery_info
+        self._discovered_device = DiscoveredDecoraDevice(
+            name=discovery_info.name,
+            address=discovery_info.address.upper(),
+            api_key=None,
+        )
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Confirm discovery."""
-        assert self._discovery_info is not None
-
-        address = self._discovery_info.address
+        """Confirm discovery of a single discovered Decora device."""
+        discovered_device = self._discovered_device
+        assert discovered_device is not None
 
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            api_key, error = await self._get_api_key(address)
+            api_key, error = await self._get_api_key(discovered_device.address)
             if api_key is not None and error is None:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={
-                        CONF_ADDRESS: address.upper(),
+                        CONF_ADDRESS: discovered_device.address,
                         CONF_NAME: user_input[CONF_NAME],
                         CONF_API_KEY: api_key,
                     },
@@ -68,7 +72,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             if api_key is None and error is not None:
                 errors["base"] = error
 
-        placeholders = {"name": self._discovery_info.name}
+        placeholders = {"name": discovered_device.name}
         self.context["title_placeholders"] = placeholders
 
         field_values = user_input if user_input is not None else {}
@@ -102,7 +106,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data={
-                        CONF_ADDRESS: address.upper(),
+                        CONF_ADDRESS: address,
                         CONF_NAME: user_input[CONF_NAME],
                         CONF_API_KEY: api_key,
                     },
@@ -115,11 +119,14 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         for discovery in async_discovered_service_info(self.hass):
             if (
                 discovery.address in current_addresses
-                or discovery.address in self._discovered_devices
+                or discovery.address.upper() in self._discovered_devices
                 or DECORA_SERVICE_UUID not in discovery.service_uuids
             ):
                 continue
-            self._discovered_devices[discovery.address] = discovery
+            address = discovery.address.upper()
+            self._discovered_devices[address] = DiscoveredDecoraDevice(
+                name=discovery.name, address=address, api_key=None
+            )
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
@@ -146,7 +153,7 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _get_api_key(self, address: str) -> tuple[Optional[str], Optional[str]]:
         ble_device = bluetooth.async_ble_device_from_address(
-            self.hass, address.upper(), connectable=True
+            self.hass, address, connectable=True
         )
 
         if not ble_device:
