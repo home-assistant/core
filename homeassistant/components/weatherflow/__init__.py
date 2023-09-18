@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Found a device: %s", device)
 
         @callback
-        def add_device_if_started(hass: HomeAssistant, device: WeatherFlowDevice):
+        def add_device_if_started(device: WeatherFlowDevice):
             async_at_started(
                 hass,
                 lambda _: async_dispatcher_send(
@@ -43,12 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ),
             )
 
-        entry.async_on_unload(
-            device.on(
-                EVENT_LOAD_COMPLETE,
-                lambda _: add_device_if_started(hass, device),
-            )
-        )
+        entry.async_on_unload(device.on(EVENT_LOAD_COMPLETE, add_device_if_started))
 
     entry.async_on_unload(client.on(EVENT_DEVICE_DISCOVERED, device_discovered))
 
