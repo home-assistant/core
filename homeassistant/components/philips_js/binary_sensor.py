@@ -72,7 +72,7 @@ async def async_setup_entry(
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
     for rec in api.recordings_list["recordings"]:
-        if rec[entry] == value:
+        if rec.get(entry) == value:
             return True
     return False
 
@@ -90,8 +90,6 @@ class PhilipsTVBinarySensorEntityRecordingType(
         description: PhilipsTVBinarySensorEntityDescription,
     ) -> None:
         """Initialize entity class."""
-        self.coordinator = coordinator
-
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
