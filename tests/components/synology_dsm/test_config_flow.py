@@ -1,4 +1,5 @@
 """Tests for the Synology DSM config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -666,8 +667,8 @@ async def test_discovered_via_zeroconf(hass: HomeAssistant, service: MagicMock) 
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.5",
-            addresses=["192.168.1.5"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             port=5000,
             hostname="mydsm.local.",
             type="_http._tcp.local.",
@@ -714,8 +715,8 @@ async def test_discovered_via_zeroconf_missing_mac(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.5",
-            addresses=["192.168.1.5"],
+            ip_address=ip_address("192.168.1.5"),
+            ip_addresses=[ip_address("192.168.1.5")],
             port=5000,
             hostname="mydsm.local.",
             type="_http._tcp.local.",
