@@ -12,10 +12,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PhilipsJsEntity
 
 
 @dataclass
@@ -32,7 +32,6 @@ class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
 DESCRIPTIONS = (
     PhilipsTVBinarySensorEntityDescription(
         key="recording_ongoing",
-        has_entity_name=True,
         translation_key="recording_ongoing",
         icon="mdi:record-rec",
         recording_entry="RecordingType",
@@ -40,7 +39,6 @@ DESCRIPTIONS = (
     ),
     PhilipsTVBinarySensorEntityDescription(
         key="recording_new",
-        has_entity_name=True,
         translation_key="recording_new",
         icon="mdi:new-box",
         recording_entry="RecordingType",
@@ -77,9 +75,7 @@ def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     return False
 
 
-class PhilipsTVBinarySensorEntityRecordingType(
-    CoordinatorEntity[PhilipsTVDataUpdateCoordinator], BinarySensorEntity
-):
+class PhilipsTVBinarySensorEntityRecordingType(PhilipsJsEntity, BinarySensorEntity):
     """A Philips TV binary sensor class, which allows multiple entities given by a BinarySensorEntityDescription."""
 
     entity_description: PhilipsTVBinarySensorEntityDescription
