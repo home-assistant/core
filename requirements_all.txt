@@ -147,7 +147,7 @@ accuweather==1.0.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.3
+adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -406,7 +406,7 @@ amberelectric==1.0.4
 amcrest==1.9.8
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.70
+androidtv[async]==0.0.72
 
 # homeassistant.components.androidtv_remote
 androidtvremote2==0.0.14
@@ -729,7 +729,7 @@ elgato==4.0.1
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.5
+elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
 elmax-api==0.0.4
@@ -834,7 +834,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.12.2
+fritzconnection[qr]==1.13.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1315,7 +1315,7 @@ numato-gpio==0.10.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.23.2
+numpy==1.26.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1378,7 +1378,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.33
+opower==0.0.34
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2235,7 +2235,7 @@ pyvlx==0.2.20
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==0.4.0
+pywaze==0.5.0
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -2372,11 +2372,9 @@ securetar==2023.3.0
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
 
-# homeassistant.components.sense
-sense-energy==0.12.1
-
 # homeassistant.components.emulated_kasa
-sense_energy==0.12.1
+# homeassistant.components.sense
+sense-energy==0.12.2
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2503,6 +2501,9 @@ surepy==0.8.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
+
+# homeassistant.components.switchbot_cloud
+switchbot-api==1.1.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2751,7 +2752,7 @@ yeelight==0.7.13
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.0
+yolink-api==0.3.1
 
 # homeassistant.components.youless
 youless-api==1.0.1

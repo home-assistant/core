@@ -312,7 +312,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
-            vol.Optional(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
             vol.Optional(CONF_MIN_VALUE): number_validator,
             vol.Optional(CONF_MAX_VALUE): number_validator,
             vol.Optional(CONF_NAN_VALUE): nan_validator,
@@ -344,7 +344,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
-        vol.Optional(CONF_RETRY_ON_EMPTY, default=False): cv.boolean,
+        vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
