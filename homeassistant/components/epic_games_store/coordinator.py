@@ -7,11 +7,13 @@ from typing import Any
 
 from epicstore_api import EpicGamesStoreAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_LOCALE, DOMAIN
+from .helper import get_country_from_locale, is_free_game
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -21,12 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]]):
     """Class to manage fetching data from the Epic Game Store."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: EpicGamesStoreAPI, locale: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        self._api = api
-        self.locale = locale
+        self._api = EpicGamesStoreAPI(
+            entry.data[CONF_LOCALE], get_country_from_locale(entry.data[CONF_LOCALE])
+        )
+        self.locale = entry.data[CONF_LOCALE]
 
         super().__init__(
             hass,
@@ -112,25 +114,3 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
 
         _LOGGER.debug(return_data)
         return return_data
-
-
-def is_free_game(game: dict[str, Any]) -> bool:
-    """Return if the game is free or will be free."""
-    return (
-        # Current free game(s)
-        game["promotions"]["promotionalOffers"]
-        and game["promotions"]["promotionalOffers"][0]["promotionalOffers"][0][
-            "discountSetting"
-        ]["discountPercentage"]
-        == 0
-        and
-        # Checking current price, maybe not necessary
-        game["price"]["totalPrice"]["discountPrice"] == 0
-    ) or (
-        # Upcoming free game(s)
-        game["promotions"]["upcomingPromotionalOffers"]
-        and game["promotions"]["upcomingPromotionalOffers"][0]["promotionalOffers"][0][
-            "discountSetting"
-        ]["discountPercentage"]
-        == 0
-    )

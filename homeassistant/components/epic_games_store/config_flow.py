@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import get_country_from_locale
 from .const import CONF_LOCALE, CONF_SUPPORTED_LOCALES, DOMAIN
+from .helper import get_country_from_locale
 
 _LOGGER = logging.getLogger(__name__)
 
