@@ -105,6 +105,16 @@ class ZeroconfServiceInfo(BaseServiceInfo):
 
     The ip_addresses are all addresses in order of most
     recently updated to least recently updated.
+
+    The host is the string representation of the ip_address.
+
+    The addresses are the string representations of the
+    ip_addresses.
+
+    It is recommended to use the ip_address to determine
+    the address to connect to as it will be the most
+    recently updated address that is not a link local
+    or unspecified address.
     """
 
     ip_address: IPv4Address | IPv6Address
