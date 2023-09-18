@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ListenerError as ex:
         raise ConfigEntryNotReady from ex
 
-    async def handle_ha_shutdown(event: Event) -> None:
+    async def _async_handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
         await client.stop_listening()
 
