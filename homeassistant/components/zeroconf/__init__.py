@@ -100,13 +100,23 @@ CONFIG_SCHEMA = vol.Schema(
 class ZeroconfServiceInfo(BaseServiceInfo):
     """Prepared info from mDNS entries."""
 
-    host: str
-    addresses: list[str]
+    ip_address: IPv4Address | IPv6Address
+    ip_addresses: list[IPv4Address | IPv6Address]
     port: int | None
     hostname: str
     type: str
     name: str
     properties: dict[str, Any]
+
+    @property
+    def host(self) -> str:
+        """Return the host."""
+        return _stringify_ip_address(self.ip_address)
+
+    @property
+    def addresses(self) -> list[str]:
+        """Return the addresses."""
+        return [_stringify_ip_address(ip_address) for ip_address in self.ip_addresses]
 
 
 @bind_hass
@@ -536,10 +546,8 @@ def async_get_homekit_discovery(
     return None
 
 
-@lru_cache(maxsize=256)  # matches to the cache in zeroconf itself
-def _stringify_ip_address(ip_addr: IPv4Address | IPv6Address) -> str:
-    """Stringify an IP address."""
-    return str(ip_addr)
+# matches to the cache in zeroconf itself
+_stringify_ip_address = lru_cache(maxsize=256)(str)
 
 
 def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
@@ -547,14 +555,18 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
     # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
     # for property keys and values
-    if not (ip_addresses := service.ip_addresses_by_version(IPVersion.All)):
+    if not (maybe_ip_addresses := service.ip_addresses_by_version(IPVersion.All)):
         return None
-    host: str | None = None
+    if TYPE_CHECKING:
+        ip_addresses = cast(list[IPv4Address | IPv6Address], maybe_ip_addresses)
+    else:
+        ip_addresses = maybe_ip_addresses
+    ip_address: IPv4Address | IPv6Address | None = None
     for ip_addr in ip_addresses:
         if not ip_addr.is_link_local and not ip_addr.is_unspecified:
-            host = _stringify_ip_address(ip_addr)
+            ip_address = ip_addr
             break
-    if not host:
+    if not ip_address:
         return None
 
     # Service properties are always bytes if they are set from the network.
@@ -571,8 +583,8 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
 
     assert service.server is not None, "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
-        host=host,
-        addresses=[_stringify_ip_address(ip_addr) for ip_addr in ip_addresses],
+        ip_address=ip_address,
+        ip_addresses=ip_addresses,
         port=service.port,
         hostname=service.server,
         type=service.type,
