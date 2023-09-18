@@ -710,6 +710,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/logi_circle/ @evanjd
 /tests/components/logi_circle/ @evanjd
 /homeassistant/components/london_underground/ @jpbede
+/tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
