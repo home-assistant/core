@@ -327,6 +327,7 @@ class WeatherFlowSensorEntity(SensorEntity):
 
     entity_description: WeatherFlowSensorEntityDescription
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -346,7 +347,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             sw_version=self.device.firmware_revision,
             suggested_area="Backyard",
         )
-        self._attr_name = f"{self.device.model} {self.device.serial_number} {description.key.replace('_',' ')}"
+
         self._attr_unique_id = f"{self.device.serial_number}_{description.key}"
 
         # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
