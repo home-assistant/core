@@ -347,14 +347,25 @@ def init_entity_id_from_config(
         )
 
 
-class MqttAttributes(Entity):
+class MqttMonitorEntity(Entity):
+    """Monitor for state changes of an MQTT entity."""
+
+    monitor: EntityMonitor
+
+    def __init__(self, _: ConfigType) -> None:
+        """Initialize entity attribute monitoring."""
+        if not hasattr(self, "monitor"):
+            self.monitor = EntityMonitor(self)
+
+
+class MqttAttributes(MqttMonitorEntity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
-    monitor: EntityMonitor
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
+        super().__init__(config)
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
@@ -395,7 +406,7 @@ class MqttAttributes(Entity):
                     }
                     self._attr_extra_state_attributes = filtered_dict
                     get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                        self  # type: ignore[arg-type]
+                        self
                     )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
@@ -426,13 +437,12 @@ class MqttAttributes(Entity):
         )
 
 
-class MqttAvailability(Entity):
+class MqttAvailability(MqttMonitorEntity):
     """Mixin used for platforms that report availability."""
-
-    monitor: EntityMonitor
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
+        super().__init__(config)
         self._availability_sub_state: dict[str, EntitySubscription] = {}
         self._available: dict[str, str | bool] = {}
         self._available_latest: bool = False
@@ -506,7 +516,7 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)  # type: ignore[arg-type]
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
@@ -1036,7 +1046,6 @@ class MqttEntity(
         """Init the MQTT Entity."""
         self.hass = hass
         self._config: ConfigType = config
-        self.monitor = EntityMonitor(self)
         self._attr_unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
         self._discovery = discovery_data is not None

@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
-    from .mixins import MqttEntity
+    from .mixins import MqttMonitorEntity
     from .tag import MQTTTagScanner
 
 
@@ -339,7 +339,7 @@ class EntityTopicState:
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, MqttEntity] = {}
+        self.subscribe_calls: dict[str, MqttMonitorEntity] = {}
 
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
@@ -358,7 +358,7 @@ class EntityTopicState:
                 )
 
     @callback
-    def write_state_request(self, entity: MqttEntity) -> None:
+    def write_state_request(self, entity: MqttMonitorEntity) -> None:
         """Register write state request."""
         if not entity.monitor.assume_has_changed:
             # no change detected skip state write request
