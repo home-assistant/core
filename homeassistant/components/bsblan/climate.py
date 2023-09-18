@@ -71,6 +71,7 @@ class BSBLANClimate(
     """Defines a BSBLAN climate device."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     # Determine preset modes
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -105,6 +106,10 @@ class BSBLANClimate(
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.current_temperature.value == "---":
+            # device returns no current temperature
+            return None
+
         return float(self.coordinator.data.current_temperature.value)
 
     @property

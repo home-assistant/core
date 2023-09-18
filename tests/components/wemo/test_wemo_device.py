@@ -1,9 +1,9 @@
 """Tests for wemo_device.py."""
 import asyncio
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import call, patch
 
-import async_timeout
 import pytest
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
@@ -76,7 +76,7 @@ async def test_long_press_event(
         "testing_params",
     )
 
-    async with async_timeout.timeout(8):
+    async with asyncio.timeout(8):
         await got_event.wait()
 
     assert event_data == {
@@ -107,7 +107,7 @@ async def test_subscription_callback(
         pywemo_registry.callbacks[device.wemo.name], device.wemo, "", ""
     )
 
-    async with async_timeout.timeout(8):
+    async with asyncio.timeout(8):
         await got_callback.wait()
     assert device.last_update_success
 
@@ -186,6 +186,31 @@ async def test_dli_device_info(
 
     assert device_entries[0].configuration_url == "http://127.0.0.1"
     assert device_entries[0].identifiers == {(DOMAIN, "123456789")}
+
+
+async def test_options_enable_subscription_false(
+    hass, pywemo_registry, pywemo_device, wemo_entity
+):
+    """Test setting Options.enable_subscription = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry,
+        options=asdict(
+            wemo_device.Options(enable_subscription=False, enable_long_press=False)
+        ),
+    )
+    await hass.async_block_till_done()
+    pywemo_registry.unregister.assert_called_once_with(pywemo_device)
+
+
+async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
+    """Test setting Options.enable_long_press = False."""
+    config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
+    assert hass.config_entries.async_update_entry(
+        config_entry, options=asdict(wemo_device.Options(enable_long_press=False))
+    )
+    await hass.async_block_till_done()
+    pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
 
 
 class TestInsight:

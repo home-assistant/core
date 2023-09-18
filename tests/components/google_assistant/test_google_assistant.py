@@ -351,11 +351,13 @@ async def test_query_humidifier_request(
         "on": True,
         "online": True,
         "humiditySetpointPercent": 68,
+        "humidityAmbientPercent": 45,
     }
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
         "humiditySetpointPercent": 54,
+        "humidityAmbientPercent": 59,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,

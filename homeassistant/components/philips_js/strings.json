@@ -39,5 +39,25 @@
     "trigger_type": {
       "turn_on": "Device is requested to turn on"
     }
+  },
+  "entity": {
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
+    "remote": {
+      "remote": {
+        "name": "[%key:component::remote::title%]"
+      }
+    },
+    "switch": {
+      "screen_state": {
+        "name": "Screen state"
+      },
+      "ambilight_hue": {
+        "name": "Ambilight + Hue"
+      }
+    }
   }
 }

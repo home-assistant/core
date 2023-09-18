@@ -5,7 +5,6 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
@@ -17,7 +16,6 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_source import Unresolvable
-from homeassistant.components.tts.legacy import _valid_base_url
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -25,7 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.network import normalize_url
 
 from .common import (
     DEFAULT_LANG,
@@ -1313,44 +1310,6 @@ async def test_tags_with_wave() -> None:
     )
 
     assert tagged_data != tts_data
-
-
-@pytest.mark.parametrize(
-    "value",
-    (
-        "http://example.local:8123",
-        "http://example.local",
-        "http://example.local:80",
-        "https://example.com",
-        "https://example.com:443",
-        "https://example.com:8123",
-    ),
-)
-def test_valid_base_url(value) -> None:
-    """Test we validate base urls."""
-    assert _valid_base_url(value) == normalize_url(value)
-    # Test we strip trailing `/`
-    assert _valid_base_url(value + "/") == normalize_url(value)
-
-
-@pytest.mark.parametrize(
-    "value",
-    (
-        "http://example.local:8123/sub-path",
-        "http://example.local/sub-path",
-        "https://example.com/sub-path",
-        "https://example.com:8123/sub-path",
-        "mailto:some@email",
-        "http:example.com",
-        "http:/example.com",
-        "http//example.com",
-        "example.com",
-    ),
-)
-def test_invalid_base_url(value) -> None:
-    """Test we catch bad base urls."""
-    with pytest.raises(vol.Invalid):
-        _valid_base_url(value)
 
 
 @pytest.mark.parametrize(

@@ -44,7 +44,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "EB-*": {
+    "EB": {
         "always_discover": True,
         "domain": "ecobee",
     },
@@ -251,6 +251,21 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
+            "properties": {
+                "model": "appletv*",
+            },
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "model": "audioaccessory*",
+            },
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*",
+            },
         },
         {
             "domain": "samsungtv",
@@ -371,6 +386,11 @@ ZEROCONF = {
             "name": "wac*",
         },
     ],
+    "_ecobee._tcp.local.": [
+        {
+            "domain": "ecobee",
+        },
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
@@ -432,6 +452,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "loqed",
+            "name": "loqed*",
         },
         {
             "domain": "nam",
@@ -662,6 +686,12 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [

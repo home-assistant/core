@@ -37,7 +37,7 @@ class VeraScene(Scene):
         self.vera_scene = vera_scene
         self.controller = controller_data.controller
 
-        self._name = self.vera_scene.name
+        self._attr_name = self.vera_scene.name
         # Append device id to prevent name clashes in HA.
         self.vera_id = VERA_ID_FORMAT.format(
             slugify(vera_scene.name), vera_scene.scene_id
@@ -50,11 +50,6 @@ class VeraScene(Scene):
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.vera_scene.activate()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the scene."""
-        return self._name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

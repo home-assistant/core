@@ -5,6 +5,7 @@ from homeassistant.components import automation, hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_platform
@@ -15,7 +16,9 @@ from tests.common import async_get_device_automations
 REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
 
 
-async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> None:
+async def test_get_triggers(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1, device_reg
+) -> None:
     """Test we get the expected triggers from a hue remote."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
     await setup_platform(hass, mock_bridge_v1, ["sensor", "binary_sensor"])
@@ -26,7 +29,7 @@ async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> 
 
     # Get triggers for specific tap switch
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, hue_tap_device.id
@@ -47,7 +50,10 @@ async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> 
 
     # Get triggers for specific dimmer switch
     hue_dimmer_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+        identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+    )
+    hue_bat_sensor = entity_registry.async_get(
+        "sensor.hue_dimmer_switch_1_battery_level"
     )
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, hue_dimmer_device.id
@@ -58,7 +64,7 @@ async def test_get_triggers(hass: HomeAssistant, mock_bridge_v1, device_reg) -> 
         "domain": "sensor",
         "device_id": hue_dimmer_device.id,
         "type": "battery_level",
-        "entity_id": "sensor.hue_dimmer_switch_1_battery_level",
+        "entity_id": hue_bat_sensor.id,
         "metadata": {"secondary": True},
     }
     expected_triggers = [
@@ -89,7 +95,7 @@ async def test_if_fires_on_state_change(
 
     # Set an automation with a specific tap switch trigger
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     assert await async_setup_component(
         hass,

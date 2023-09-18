@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 PUSH_URL = "https://ios-push.home-assistant.io/push"
 
 
-# pylint: disable=invalid-name
 def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]

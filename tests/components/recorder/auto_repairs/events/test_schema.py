@@ -1,6 +1,5 @@
 """The test repairing events schema."""
 
-# pylint: disable=invalid-name
 from unittest.mock import ANY, patch
 
 import pytest

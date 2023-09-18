@@ -35,16 +35,15 @@ async def test_get_actions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
-    expected_actions = []
-    expected_actions += [
+    expected_actions = [
         {
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": "vacuum.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for action in ["clean", "dock"]
@@ -78,7 +77,7 @@ async def test_get_actions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -92,7 +91,7 @@ async def test_get_actions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": action,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for action in ["clean", "dock"]
@@ -103,8 +102,10 @@ async def test_get_actions_hidden_auxiliary(
     assert actions == unordered(expected_actions)
 
 
-async def test_action(hass: HomeAssistant) -> None:
+async def test_action(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test for turn_on and turn_off actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -115,7 +116,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "vacuum.entity",
+                        "entity_id": entry.id,
                         "type": "dock",
                     },
                 },
@@ -124,7 +125,7 @@ async def test_action(hass: HomeAssistant) -> None:
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
-                        "entity_id": "vacuum.entity",
+                        "entity_id": entry.id,
                         "type": "clean",
                     },
                 },
@@ -144,3 +145,39 @@ async def test_action(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(dock_calls) == 1
     assert len(clean_calls) == 1
+
+    assert dock_calls[-1].data == {"entity_id": entry.entity_id}
+    assert clean_calls[-1].data == {"entity_id": entry.entity_id}
+
+
+async def test_action_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test for turn_on and turn_off actions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_dock"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": entry.entity_id,
+                        "type": "dock",
+                    },
+                },
+            ]
+        },
+    )
+
+    dock_calls = async_mock_service(hass, "vacuum", "return_to_base")
+
+    hass.bus.async_fire("test_event_dock")
+    await hass.async_block_till_done()
+    assert len(dock_calls) == 1
+
+    assert dock_calls[-1].data == {"entity_id": entry.entity_id}

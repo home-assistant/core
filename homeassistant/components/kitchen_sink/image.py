@@ -21,6 +21,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             DemoImage(
+                hass,
                 "kitchen_sink_image_001",
                 "QR Code",
                 "image/png",
@@ -44,13 +45,14 @@ class DemoImage(ImageEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         unique_id: str,
         name: str,
         content_type: str,
         image: str,
     ) -> None:
         """Initialize the image entity."""
-        super().__init__()
+        super().__init__(hass)
         self._attr_content_type = content_type
         self._attr_name = name
         self._attr_unique_id = unique_id

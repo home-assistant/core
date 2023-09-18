@@ -1,6 +1,7 @@
 """Provides device automations for Device Tracker."""
 from __future__ import annotations
 
+from operator import attrgetter
 from typing import Final
 
 import voluptuous as vol
@@ -27,7 +28,7 @@ TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN_ZONE),
     }
@@ -51,7 +52,7 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: "enters",
             }
         )
@@ -60,7 +61,7 @@ async def async_get_triggers(
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                CONF_ENTITY_ID: entry.id,
                 CONF_TYPE: "leaves",
             }
         )
@@ -98,7 +99,7 @@ async def async_get_trigger_capabilities(
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name
-        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=lambda ent: ent.name)
+        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=attrgetter("name"))
     }
     return {
         "extra_fields": vol.Schema(

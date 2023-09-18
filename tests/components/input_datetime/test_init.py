@@ -736,7 +736,7 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     assert (
         dt_util.as_local(
             datetime.datetime.fromtimestamp(
-                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.timezone.utc
+                state_without_tz.attributes[ATTR_TIMESTAMP], datetime.UTC
             )
         ).strftime(FORMAT_DATETIME)
         == "2020-12-13 10:00:00"

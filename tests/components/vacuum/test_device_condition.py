@@ -46,7 +46,7 @@ async def test_get_conditions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     expected_conditions = [
@@ -55,7 +55,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in ["is_cleaning", "is_docked"]
@@ -89,7 +89,7 @@ async def test_get_conditions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -103,7 +103,7 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for condition in ["is_cleaning", "is_docked"]
@@ -114,9 +114,13 @@ async def test_get_conditions_hidden_auxiliary(
     assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass: HomeAssistant, calls) -> None:
+async def test_if_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("vacuum.entity", STATE_DOCKED)
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_DOCKED)
 
     assert await async_setup_component(
         hass,
@@ -130,7 +134,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "vacuum.entity",
+                            "entity_id": entry.id,
                             "type": "is_cleaning",
                         }
                     ],
@@ -148,7 +152,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "vacuum.entity",
+                            "entity_id": entry.id,
                             "type": "is_docked",
                         }
                     ],
@@ -168,7 +172,7 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_docked - event - test_event2"
 
-    hass.states.async_set("vacuum.entity", STATE_CLEANING)
+    hass.states.async_set(entry.entity_id, STATE_CLEANING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
@@ -176,9 +180,49 @@ async def test_if_state(hass: HomeAssistant, calls) -> None:
     assert calls[1].data["some"] == "is_cleaning - event - test_event1"
 
     # Returning means it's still cleaning
-    hass.states.async_set("vacuum.entity", STATE_RETURNING)
+    hass.states.async_set(entry.entity_id, STATE_RETURNING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_cleaning - event - test_event1"
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
+    """Test for turn_on and turn_off conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_CLEANING)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.entity_id,
+                            "type": "is_cleaning",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_cleaning - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_cleaning - event - test_event1"

@@ -42,8 +42,8 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         key="alarm",
         translation_key="alarm",
         device_class=BinarySensorDeviceClass.WINDOW,
-        suitable=lambda device: device.has_alarm,  # type: ignore[no-any-return]
-        is_on=lambda device: device.alert_state,  # type: ignore[no-any-return]
+        suitable=lambda device: device.has_alarm,
+        is_on=lambda device: device.alert_state,
     ),
     FritzBinarySensorEntityDescription(
         key="lock",

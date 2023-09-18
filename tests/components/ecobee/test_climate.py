@@ -25,6 +25,7 @@ def ecobee_fixture():
     vals = {
         "name": "Ecobee",
         "modelNumber": "athenaSmart",
+        "identifier": "abc",
         "program": {
             "climates": [
                 {"name": "Climate1", "climateRef": "c1"},
@@ -83,7 +84,7 @@ def thermostat_fixture(data):
 
 async def test_name(thermostat) -> None:
     """Test name property."""
-    assert thermostat.name == "Ecobee"
+    assert thermostat.device_info["name"] == "Ecobee"
 
 
 async def test_aux_heat_not_supported_by_default(hass: HomeAssistant) -> None:

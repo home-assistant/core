@@ -9,7 +9,6 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -28,6 +27,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
@@ -333,7 +333,7 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
 async def test_calling_service_response_data(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the calling of a service with return values."""
+    """Test the calling of a service with response data."""
     context = Context()
 
     def mock_service(call: ServiceCall) -> ServiceResponse:
@@ -342,7 +342,9 @@ async def test_calling_service_response_data(
             return {"data": "value-12345"}
         return None
 
-    hass.services.async_register("test", "script", mock_service, supports_response=True)
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=SupportsResponse.OPTIONAL
+    )
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
@@ -402,6 +404,50 @@ async def test_calling_service_response_data(
             ],
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("supports_response", "params", "expected_error"),
+    [
+        (
+            SupportsResponse.NONE,
+            {"response_variable": "foo"},
+            "does not support 'response_variable'",
+        ),
+        (SupportsResponse.ONLY, {}, "requires 'response_variable'"),
+    ],
+)
+async def test_service_response_data_errors(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    params: dict[str, str],
+    expected_error: str,
+) -> None:
+    """Test the calling of a service with response data error cases."""
+    context = Context()
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Mock service call."""
+        raise ValueError("Never invoked")
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=supports_response
+    )
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "service step1",
+                "service": "test.script",
+                **params,
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(vol.Invalid, match=expected_error):
+        await script_obj.async_run(context=context)
+        await hass.async_block_till_done()
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
@@ -953,7 +999,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1339,7 +1385,7 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
         ):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True

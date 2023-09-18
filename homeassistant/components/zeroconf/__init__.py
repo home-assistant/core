@@ -7,12 +7,11 @@ from contextlib import suppress
 from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import IPv4Address, IPv6Address
 import logging
 import re
-import socket
 import sys
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import voluptuous as vol
 from zeroconf import (
@@ -25,8 +24,6 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
-from homeassistant.components.network.models import Adapter
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
@@ -243,32 +240,6 @@ def _build_homekit_model_lookups(
     return homekit_model_lookup, homekit_model_matchers
 
 
-def _get_announced_addresses(
-    adapters: list[Adapter],
-    first_ip: bytes | None = None,
-) -> list[bytes]:
-    """Return a list of IP addresses to announce via zeroconf.
-
-    If first_ip is not None, it will be the first address in the list.
-    """
-    addresses = {
-        addr.packed
-        for addr in [
-            ip_address(ip["address"])
-            for adapter in adapters
-            if adapter["enabled"]
-            for ip in cast(list, adapter["ipv6"]) + cast(list, adapter["ipv4"])
-        ]
-        if not (addr.is_unspecified or addr.is_loopback)
-    }
-    if first_ip:
-        address_list = [first_ip]
-        address_list.extend(addresses - set({first_ip}))
-    else:
-        address_list = list(addresses)
-    return address_list
-
-
 def _filter_disallowed_characters(name: str) -> str:
     """Filter disallowed characters from a string.
 
@@ -307,24 +278,13 @@ async def _async_register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    adapters = await network.async_get_adapters(hass)
-
-    # Puts the default IPv4 address first in the list to preserve compatibility,
-    # because some mDNS implementations ignores anything but the first announced
-    # address.
-    host_ip = await async_get_source_ip(hass, target_ip=MDNS_TARGET_IP)
-    host_ip_pton = None
-    if host_ip:
-        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    address_list = _get_announced_addresses(adapters, host_ip_pton)
-
     _suppress_invalid_properties(params)
 
     info = AsyncServiceInfo(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        addresses=address_list,
+        parsed_addresses=await network.async_get_announce_addresses(hass),
         port=hass.http.server_port,
         properties=params,
     )
@@ -343,7 +303,8 @@ def _match_against_data(
         if key not in match_data:
             return False
         match_val = matcher[key]
-        assert isinstance(match_val, str)
+        if TYPE_CHECKING:
+            assert isinstance(match_val, str)
 
         if not _memorized_fnmatch(match_data[key], match_val):
             return False
@@ -525,12 +486,14 @@ class ZeroconfDiscovery:
                     continue
                 if ATTR_PROPERTIES in matcher:
                     matcher_props = matcher[ATTR_PROPERTIES]
-                    assert isinstance(matcher_props, dict)
+                    if TYPE_CHECKING:
+                        assert isinstance(matcher_props, dict)
                     if not _match_against_props(matcher_props, props):
                         continue
 
             matcher_domain = matcher["domain"]
-            assert isinstance(matcher_domain, str)
+            if TYPE_CHECKING:
+                assert isinstance(matcher_domain, str)
             context = {
                 "source": config_entries.SOURCE_ZEROCONF,
             }
@@ -556,10 +519,10 @@ def async_get_homekit_discovery(
 
     Return the domain to forward the discovery data to
     """
-    if not (model := props.get(HOMEKIT_MODEL_LOWER) or props.get(HOMEKIT_MODEL_UPPER)):
+    if not (
+        model := props.get(HOMEKIT_MODEL_LOWER) or props.get(HOMEKIT_MODEL_UPPER)
+    ) or not isinstance(model, str):
         return None
-
-    assert isinstance(model, str)
 
     for split_str in _HOMEKIT_MODEL_SPLITS:
         key = (model.split(split_str))[0] if split_str else model
@@ -593,11 +556,17 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
             break
     if not host:
         return None
+
+    # Service properties are always bytes if they are set from the network.
+    # For legacy backwards compatibility zeroconf allows properties to be set
+    # as strings but we never do that so we can safely cast here.
+    service_properties = cast(dict[bytes, bytes | None], service.properties)
+
     properties: dict[str, Any] = {
         k.decode("ascii", "replace"): None
         if v is None
         else v.decode("utf-8", "replace")
-        for k, v in service.properties.items()
+        for k, v in service_properties.items()
     }
 
     assert service.server is not None, "server cannot be none if there are addresses"

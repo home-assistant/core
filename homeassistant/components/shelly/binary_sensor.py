@@ -164,6 +164,14 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "external_power": RpcBinarySensorDescription(
+        key="devicepower:0",
+        sub_key="external",
+        name="External power",
+        value=lambda status, _: status["present"],
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "overtemp": RpcBinarySensorDescription(
         key="switch",
         sub_key="errors",

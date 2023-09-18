@@ -111,7 +111,6 @@ class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         """Initialize."""
         super().__init__(simplisafe, system, device=device)
 
-        self._attr_name = "Battery"
         self._attr_unique_id = f"{super().unique_id}-battery"
         self._device: DeviceV3
 

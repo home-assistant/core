@@ -34,7 +34,7 @@ async def test_switch_get_state(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["on"] = True
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -61,7 +61,7 @@ async def test_switch_set_off(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["on"] = True
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         await async_update_entity(hass, entity_id)
@@ -91,7 +91,7 @@ async def test_switch_set_off(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["on"] = False
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -130,7 +130,7 @@ async def test_switch_set_on(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["on"] = True
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

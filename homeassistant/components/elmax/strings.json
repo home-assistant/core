@@ -13,7 +13,7 @@
         "data": {
           "panel_name": "Panel Name",
           "panel_id": "Panel ID",
-          "panel_pin": "PIN Code"
+          "panel_pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "reauth_confirm": {
