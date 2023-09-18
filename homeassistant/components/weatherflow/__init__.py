@@ -9,7 +9,7 @@ from pyweatherflowudp.errors import ListenerError
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,7 +19,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.stop_listening()
 
     entry.async_on_unload(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_handle_ha_shutdown)
     )
 
     return True

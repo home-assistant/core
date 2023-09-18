@@ -5,7 +5,6 @@ import asyncio
 from asyncio import Future
 from typing import Any
 
-# import my_pypi_dependency
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.const import DEFAULT_HOST
 from pyweatherflowudp.errors import AddressInUseError, ListenerError
@@ -13,32 +12,31 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST, default=DEFAULT_HOST): str})
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
+async def _async_can_discover_devices(host: str = DEFAULT_HOST) -> bool:
     """Return if there are devices that can be discovered."""
-
-    future_event: Future[bool] = asyncio.Future()
-    host: str = DEFAULT_HOST
+    future_event: Future[bool] = asyncio.get_running_loop().create_future()
 
     @callback
-    def found():
-        """Handle a discovered device."""
-        future_event.set_result(True)
+    def _async_found():
+        """Handle a discovered device - only need to do this once so."""
+        if not future_event.done():
+            future_event.set_result(True)
 
-    async with WeatherFlowListener(host) as client:
-        LOGGER.debug("Registering EVENT_DISCOVERED_FUNCTION")
+    async with WeatherFlowListener(host) as client, asyncio.timeout(10):
         try:
-            client.on(EVENT_DEVICE_DISCOVERED, lambda _: found())
-            await asyncio.wait_for(future_event, timeout=10)
+            client.on(EVENT_DEVICE_DISCOVERED, lambda _: _async_found())
+            await future_event
         except asyncio.TimeoutError:
             return False
+
     return True
 
 
@@ -67,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not (has_devices := in_progress):
             errors = {}
             try:
-                has_devices = await _async_has_devices(host)  # type: ignore[assignment]
+                has_devices = await _async_can_discover_devices(host)  # type: ignore[assignment]
 
             except AddressInUseError:
                 errors["base"] = "address_in_use"
