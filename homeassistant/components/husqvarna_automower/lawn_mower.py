@@ -2,7 +2,7 @@
 import logging
 
 from aioautomower.const import MowerActivities, MowerStates
-from aioautomower.session import AutomowerSession
+from aioautomower.session import MowerData
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerEntity
+from .entity import AutomowerBaseEntity
 
 SUPPORT_STATE_SERVICES = (
     LawnMowerEntityFeature.DOCK
@@ -59,20 +59,22 @@ async def async_setup_entry(
     """Set up lawn mower platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        HusqvarnaAutomowerEntity(coordinator, idx)
-        for idx, ent in enumerate(coordinator.session.data["data"])
+        AutomowerLawnMowerEntity(mower, coordinator)
+        for mower in coordinator.session.dataclass.data
     )
 
 
-class HusqvarnaAutomowerEntity(LawnMowerEntity, AutomowerEntity):
+class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
     _attr_supported_features = SUPPORT_STATE_SERVICES
 
-    def __init__(self, session: AutomowerSession, idx: int) -> None:
+    def __init__(
+        self, mower: MowerData, coordinator: AutomowerDataUpdateCoordinator
+    ) -> None:
         """Set up HusqvarnaAutomowerEntity."""
-        super().__init__(session, idx)
+        super().__init__(mower, coordinator)
         self._attr_unique_id = f"{self.mower_id}_lawn_mower"
 
     @property
