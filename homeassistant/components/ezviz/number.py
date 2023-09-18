@@ -66,7 +66,7 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        EzvizSensor(coordinator, camera, value, entry.entry_id)
+        EzvizNumber(coordinator, camera, value, entry.entry_id)
         for camera in coordinator.data
         for capibility, value in coordinator.data[camera]["supportExt"].items()
         if capibility == NUMBER_TYPE.supported_ext
@@ -74,10 +74,8 @@ async def async_setup_entry(
     )
 
 
-class EzvizSensor(EzvizBaseEntity, NumberEntity):
+class EzvizNumber(EzvizBaseEntity, NumberEntity):
     """Representation of a EZVIZ number entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -86,7 +84,7 @@ class EzvizSensor(EzvizBaseEntity, NumberEntity):
         value: str,
         config_entry_id: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the entity."""
         super().__init__(coordinator, serial)
         self.sensitivity_type = 3 if value == "3" else 0
         self._attr_native_max_value = 100 if value == "3" else 6

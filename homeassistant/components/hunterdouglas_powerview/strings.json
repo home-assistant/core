@@ -20,5 +20,42 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
+    "cover": {
+      "bottom": {
+        "name": "Bottom"
+      },
+      "top": {
+        "name": "Top"
+      },
+      "combined": {
+        "name": "Combined"
+      },
+      "front": {
+        "name": "Front"
+      },
+      "rear": {
+        "name": "Rear"
+      }
+    },
+    "select": {
+      "power_source": {
+        "name": "Power source"
+      }
+    },
+    "sensor": {
+      "signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      }
+    }
   }
 }

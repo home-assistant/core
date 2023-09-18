@@ -77,6 +77,7 @@ class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
     _attr_icon = "mdi:certificate"
+    _attr_has_entity_name = True
 
     @property
     def extra_state_attributes(self):
@@ -91,6 +92,7 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "certificate_expiry"
 
     def __init__(
         self,
@@ -98,7 +100,6 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     ) -> None:
         """Initialize a Cert Expiry timestamp sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"
         self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.host}:{coordinator.port}")},

@@ -13,6 +13,8 @@ class JustNimbusEntity(
 ):
     """Defines a base JustNimbus entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,

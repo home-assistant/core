@@ -295,6 +295,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_direction = (
             optimistic or self._topic[CONF_DIRECTION_STATE_TOPIC] is None
         )
@@ -490,11 +491,6 @@ class MqttFan(MqttEntity, FanEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     @property
     def is_on(self) -> bool | None:

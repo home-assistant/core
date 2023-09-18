@@ -113,23 +113,19 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         )
         self._stream_uri: str | None = None
         self._stream_uri_future: asyncio.Future[str] | None = None
+        self._attr_entity_registry_enabled_default = (
+            device.max_resolution == profile.video.resolution.width
+        )
+        if profile.index:
+            self._attr_unique_id = f"{self.mac_or_serial}_{profile.index}"
+        else:
+            self._attr_unique_id = self.mac_or_serial
+        self._attr_name = f"{device.name} {profile.name}"
 
     @property
-    def name(self) -> str:
-        """Return the name of this camera."""
-        return f"{self.device.name} {self.profile.name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        if self.profile.index:
-            return f"{self.mac_or_serial}_{self.profile.index}"
-        return self.mac_or_serial
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self.device.max_resolution == self.profile.video.resolution.width
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return bool(self.stream and self.stream.dynamic_stream_settings.preload_stream)
 
     async def stream_source(self):
         """Return the stream source."""
@@ -139,9 +135,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-
-        if self.stream and self.stream.dynamic_stream_settings.preload_stream:
-            return await self.stream.async_get_image(width, height)
 
         if self.device.capabilities.snapshot:
             try:

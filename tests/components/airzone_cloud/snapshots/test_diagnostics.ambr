@@ -1,0 +1,236 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'api_data': dict({
+      'devices-config': dict({
+        'device1': dict({
+        }),
+      }),
+      'devices-status': dict({
+        'device1': dict({
+        }),
+      }),
+      'installations': dict({
+        'installation1': dict({
+          'groups': list([
+            dict({
+              'devices': list([
+                dict({
+                  'device_id': 'device1',
+                  'ws_id': 'webserver1',
+                }),
+              ]),
+              'group_id': 'group1',
+            }),
+          ]),
+          'plugins': dict({
+            'schedules': dict({
+              'calendar_ws_ids': list([
+                'webserver1',
+              ]),
+            }),
+          }),
+        }),
+      }),
+      'installations-list': dict({
+      }),
+      'test_cov': dict({
+        '1': None,
+        '2': list([
+          'foo',
+          'bar',
+        ]),
+        '3': list([
+          list([
+            'foo',
+            'bar',
+          ]),
+        ]),
+      }),
+      'webservers': dict({
+        'webserver1': dict({
+        }),
+      }),
+    }),
+    'config_entry': dict({
+      'data': dict({
+        'id': 'installation1',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'airzone_cloud',
+      'entry_id': 'd186e31edb46d64d14b9b2f11f1ebd9f',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': 'installation1',
+      'version': 1,
+    }),
+    'coord_data': dict({
+      'aidoos': dict({
+        'aidoo1': dict({
+          'action': 6,
+          'active': False,
+          'available': True,
+          'id': 'aidoo1',
+          'installation': 'installation1',
+          'is-connected': True,
+          'mode': None,
+          'name': 'Bron',
+          'power': None,
+          'problems': False,
+          'temperature': 21.0,
+          'temperature-step': 0.5,
+          'web-server': '11:22:33:44:55:67',
+          'ws-connected': True,
+        }),
+      }),
+      'groups': dict({
+        'group1': dict({
+          'action': 6,
+          'active': True,
+          'available': True,
+          'humidity': 27,
+          'installation': 'installation1',
+          'mode': 0,
+          'name': 'Group',
+          'num-devices': 2,
+          'power': None,
+          'systems': list([
+            'system1',
+          ]),
+          'temperature': 22.5,
+          'temperature-step': 0.5,
+          'zones': list([
+            'zone1',
+            'zone2',
+          ]),
+        }),
+        'grp2': dict({
+          'action': 6,
+          'active': False,
+          'aidoos': list([
+            'aidoo1',
+          ]),
+          'available': True,
+          'installation': 'installation1',
+          'mode': 0,
+          'name': 'Aidoo Group',
+          'num-devices': 1,
+          'power': None,
+          'temperature': 21.0,
+          'temperature-step': 0.5,
+        }),
+      }),
+      'installations': dict({
+        'installation1': dict({
+          'id': 'installation1',
+          'name': 'House',
+          'web-servers': list([
+            'webserver1',
+            '11:22:33:44:55:67',
+          ]),
+        }),
+      }),
+      'systems': dict({
+        'system1': dict({
+          'available': True,
+          'errors': list([
+            dict({
+              '_id': 'error-id',
+            }),
+          ]),
+          'id': 'system1',
+          'installation': 'installation1',
+          'is-connected': True,
+          'mode': None,
+          'name': 'System 1',
+          'problems': True,
+          'system': 1,
+          'web-server': 'webserver1',
+          'ws-connected': True,
+        }),
+      }),
+      'web-servers': dict({
+        '11:22:33:44:55:67': dict({
+          'available': True,
+          'connection-date': '2023-05-24 17:00:52 +0200',
+          'disconnection-date': '2023-05-24 17:00:25 +0200',
+          'firmware': '3.13',
+          'id': '11:22:33:44:55:67',
+          'installation': 'installation1',
+          'name': 'WebServer 11:22:33:44:55:67',
+          'type': 'ws_aidoo',
+          'wifi-channel': 1,
+          'wifi-mac': '**REDACTED**',
+          'wifi-quality': 4,
+          'wifi-rssi': -77,
+          'wifi-ssid': 'Wifi',
+        }),
+        'webserver1': dict({
+          'available': True,
+          'connection-date': '2023-05-07T12:55:51.000Z',
+          'disconnection-date': '2023-01-01T22:26:55.376Z',
+          'firmware': '3.44',
+          'id': 'webserver1',
+          'installation': 'installation1',
+          'name': 'WebServer 11:22:33:44:55:66',
+          'type': 'ws_az',
+          'wifi-channel': 36,
+          'wifi-mac': '**REDACTED**',
+          'wifi-quality': 4,
+          'wifi-rssi': -56,
+          'wifi-ssid': 'Wifi',
+        }),
+      }),
+      'zones': dict({
+        'zone1': dict({
+          'action': 6,
+          'active': True,
+          'available': True,
+          'humidity': 30,
+          'id': 'zone1',
+          'installation': 'installation1',
+          'is-connected': True,
+          'master': None,
+          'mode': None,
+          'name': 'Salon',
+          'power': None,
+          'problems': False,
+          'system': 1,
+          'system-id': 'system1',
+          'temperature': 20.0,
+          'temperature-step': 0.5,
+          'web-server': 'webserver1',
+          'ws-connected': True,
+          'zone': 1,
+        }),
+        'zone2': dict({
+          'action': 6,
+          'active': False,
+          'available': True,
+          'humidity': 24,
+          'id': 'zone2',
+          'installation': 'installation1',
+          'is-connected': True,
+          'master': None,
+          'mode': None,
+          'name': 'Dormitorio',
+          'power': None,
+          'problems': False,
+          'system': 1,
+          'system-id': 'system1',
+          'temperature': 25.0,
+          'temperature-step': 0.5,
+          'web-server': 'webserver1',
+          'ws-connected': True,
+          'zone': 2,
+        }),
+      }),
+    }),
+  })
+# ---

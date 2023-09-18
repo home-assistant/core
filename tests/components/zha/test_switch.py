@@ -19,8 +19,10 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -29,7 +31,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -411,10 +412,11 @@ async def test_switch_configurable(
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call(
-            {"window_detection_function": True}
-        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": True}, manufacturer=None)
+        ]
+
+    cluster.write_attributes.reset_mock()
 
     # turn off from HA
     with patch(
@@ -425,10 +427,9 @@ async def test_switch_configurable(
         await hass.services.async_call(
             SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
-        assert len(cluster.write_attributes.mock_calls) == 2
-        assert cluster.write_attributes.call_args == call(
-            {"window_detection_function": False}
-        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": False}, manufacturer=None)
+        ]
 
     cluster.read_attributes.reset_mock()
     await async_setup_component(hass, "homeassistant", {})
@@ -461,14 +462,18 @@ async def test_switch_configurable(
     cluster.write_attributes.reset_mock()
     cluster.write_attributes.side_effect = ZigbeeException
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
 
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call(
-        {"window_detection_function": False}
-    )
+    assert cluster.write_attributes.mock_calls == [
+        call({"window_detection_function": False}, manufacturer=None),
+        call({"window_detection_function": False}, manufacturer=None),
+        call({"window_detection_function": False}, manufacturer=None),
+    ]
+
+    cluster.write_attributes.side_effect = None
 
     # test inverter
     cluster.write_attributes.reset_mock()
@@ -477,18 +482,17 @@ async def test_switch_configurable(
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
     )
-    assert len(cluster.write_attributes.mock_calls) == 1
-    assert cluster.write_attributes.call_args == call(
-        {"window_detection_function": True}
-    )
+    assert cluster.write_attributes.mock_calls == [
+        call({"window_detection_function": True}, manufacturer=None)
+    ]
 
+    cluster.write_attributes.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
     )
-    assert len(cluster.write_attributes.mock_calls) == 2
-    assert cluster.write_attributes.call_args == call(
-        {"window_detection_function": False}
-    )
+    assert cluster.write_attributes.mock_calls == [
+        call({"window_detection_function": False}, manufacturer=None)
+    ]
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device_tuya, [cluster], (0,))
