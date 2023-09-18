@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aioqsw.exceptions import APIError, QswError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.components.qnap_qsw.coordinator import (
@@ -11,7 +12,6 @@ from homeassistant.components.qnap_qsw.coordinator import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from .util import (
     CONFIG,
@@ -31,7 +31,9 @@ from .util import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
+async def test_coordinator_client_connector_error(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test ClientConnectorError on coordinator update."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=CONFIG)
@@ -99,7 +101,8 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         mock_users_login.reset_mock()
 
         mock_system_sensor.side_effect = QswError
-        async_fire_time_changed(hass, utcnow() + DATA_SCAN_INTERVAL)
+        freezer.tick(DATA_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         mock_system_sensor.assert_called_once()
@@ -110,17 +113,19 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         assert state.state == STATE_UNAVAILABLE
 
         mock_firmware_update_check.side_effect = APIError
-        async_fire_time_changed(hass, utcnow() + FW_SCAN_INTERVAL)
+        freezer.tick(FW_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         mock_firmware_update_check.assert_called_once()
         mock_firmware_update_check.reset_mock()
 
         mock_firmware_update_check.side_effect = QswError
-        async_fire_time_changed(hass, utcnow() + FW_SCAN_INTERVAL)
+        freezer.tick(FW_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         mock_firmware_update_check.assert_called_once()
 
-        update = hass.states.get("update.qsw_m408_4c_firmware_update")
+        update = hass.states.get("update.qsw_m408_4c_firmware")
         assert update.state == STATE_UNAVAILABLE

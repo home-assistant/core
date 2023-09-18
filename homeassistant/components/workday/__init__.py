@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_COUNTRY, CONF_PROVINCE, LOGGER, PLATFORMS
+from .const import CONF_COUNTRY, CONF_PROVINCE, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -16,12 +16,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     country: str = entry.options[CONF_COUNTRY]
     province: str | None = entry.options.get(CONF_PROVINCE)
     if country and country not in list_supported_countries():
-        LOGGER.error("There is no country %s", country)
-        raise ConfigEntryError("Selected country is not valid")
+        raise ConfigEntryError(f"Selected country {country} is not valid")
 
     if province and province not in list_supported_countries()[country]:
-        LOGGER.error("There is no subdivision %s in country %s", province, country)
-        raise ConfigEntryError("Selected province is not valid")
+        raise ConfigEntryError(
+            f"Selected province {province} for country {country} is not valid"
+        )
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 

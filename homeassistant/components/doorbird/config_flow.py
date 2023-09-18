@@ -23,7 +23,9 @@ from .util import get_mac_address_from_door_station_info
 _LOGGER = logging.getLogger(__name__)
 
 
-def _schema_with_defaults(host=None, name=None):
+def _schema_with_defaults(
+    host: str | None = None, name: str | None = None
+) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host): str,
@@ -39,7 +41,9 @@ def _check_device(device: DoorBird) -> tuple[tuple[bool, int], dict[str, Any]]:
     return device.ready(), device.info()
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     device = DoorBird(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
@@ -78,13 +82,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
-        self.discovery_schema = {}
+        self.discovery_schema: vol.Schema | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             info, errors = await self._async_validate_or_error(user_input)
             if not errors:
@@ -128,7 +134,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def _async_validate_or_error(self, user_input):
+    async def _async_validate_or_error(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Validate doorbird or error."""
         errors = {}
         info = {}
@@ -159,7 +167,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]

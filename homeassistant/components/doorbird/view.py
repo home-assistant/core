@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-import logging
 
 from aiohttp import web
 
@@ -12,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from .const import API_URL, DOMAIN
 from .device import async_reset_device_favorites
 from .util import get_door_station_by_token
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DoorBirdRequestView(HomeAssistantView):

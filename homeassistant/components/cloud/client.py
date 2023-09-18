@@ -221,6 +221,7 @@ class CloudClient(Interface):
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
+                "alias": self.cloud.remote.alias,
             },
             "version": HA_VERSION,
         }

@@ -118,6 +118,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     """Defines a base Honeywell Lyric entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Lyric],
@@ -131,6 +133,7 @@ class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
         self._location = location
         self._mac_id = device.macID
         self._update_thermostat = coordinator.data.update_thermostat
+        self._update_fan = coordinator.data.update_fan
 
     @property
     def unique_id(self) -> str:
