@@ -35,11 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         @callback
         def _async_add_device_if_started(device: WeatherFlowDevice):
-            _LOGGER.debug(f"Dispatching: {DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}")
             async_at_started(
                 hass,
-                lambda _: async_dispatcher_send(
-                    hass, f"{DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}", device
+                callback(
+                    lambda _: async_dispatcher_send(
+                        hass, f"{DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}", device
+                    )
                 ),
             )
 

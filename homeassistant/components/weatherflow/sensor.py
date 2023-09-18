@@ -47,9 +47,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN, LOGGER
 
-CONCENTRATION_KILOGRAMS_PER_CUBIC_METER = "kg/m³"
-CONCENTRATION_POUNDS_PER_CUBIC_FOOT = "lbs/ft³"
-
 
 @dataclass
 class WeatherFlowSensorEntityDescription(SensorEntityDescription):
@@ -280,9 +277,9 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(device: WeatherFlowDevice) -> None:
         """Add WeatherFlow sensor."""
-        LOGGER.error("+++++  Adding sensors for %s", device)
+        LOGGER.error("+++++::async_add_sensor  Adding sensors for %s", device)
 
-        sensors = [
+        sensors: list[WeatherFlowSensorEntity | WeatherFlowAirDensitySensorEntity] = [
             WeatherFlowSensorEntity(
                 device=device,
                 description=description,
@@ -296,7 +293,7 @@ async def async_setup_entry(
             or hasattr(device, description.key)
         ]
 
-        custom_sensors = [
+        sensors = sensors + [
             WeatherFlowAirDensitySensorEntity(
                 device=device,
                 description=description,
@@ -310,7 +307,7 @@ async def async_setup_entry(
             or hasattr(device, description.key)
         ]
 
-        async_add_entities(sensors + custom_sensors)
+        async_add_entities(sensors)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
