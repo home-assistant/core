@@ -4,10 +4,11 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -49,12 +50,12 @@ from .cluster_handlers import (  # noqa: F401
     security,
     smartenergy,
 )
+from .helpers import get_zha_data, get_zha_gateway
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity
     from .device import ZHADevice
     from .endpoint import Endpoint
-    from .gateway import ZHAGateway
     from .group import ZHAGroup
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +114,8 @@ class ProbeEndpoint:
             platform = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if platform and platform in zha_const.PLATFORMS:
+            platform = cast(Platform, platform)
+
             cluster_handlers = endpoint.unclaimed_cluster_handlers()
             platform_entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
                 platform,
@@ -263,9 +266,7 @@ class ProbeEndpoint:
 
     def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
-        zha_config: ConfigType = hass.data[zha_const.DATA_ZHA].get(
-            zha_const.DATA_ZHA_CONFIG, {}
-        )
+        zha_config = get_zha_data(hass).yaml_config
         if overrides := zha_config.get(zha_const.CONF_DEVICE_CONFIG):
             self._device_configs.update(overrides)
 
@@ -297,9 +298,7 @@ class GroupProbe:
     @callback
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
-        zha_gateway: ZHAGateway = self._hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
+        zha_gateway = get_zha_gateway(self._hass)
         if (zha_group := zha_gateway.groups.get(group_id)) is None:
             return
         self.discover_group_entities(zha_group)
@@ -321,14 +320,14 @@ class GroupProbe:
         if not entity_domains:
             return
 
-        zha_gateway: ZHAGateway = self._hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
+        zha_data = get_zha_data(self._hass)
+        zha_gateway = get_zha_gateway(self._hass)
+
         for domain in entity_domains:
             entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
             if entity_class is None:
                 continue
-            self._hass.data[zha_const.DATA_ZHA][domain].append(
+            zha_data.platforms[domain].append(
                 (
                     entity_class,
                     (
@@ -342,24 +341,26 @@ class GroupProbe:
         async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
 
     @staticmethod
-    def determine_entity_domains(hass: HomeAssistant, group: ZHAGroup) -> list[str]:
+    def determine_entity_domains(
+        hass: HomeAssistant, group: ZHAGroup
+    ) -> list[Platform]:
         """Determine the entity domains for this group."""
-        entity_domains: list[str] = []
-        zha_gateway: ZHAGateway = hass.data[zha_const.DATA_ZHA][
-            zha_const.DATA_ZHA_GATEWAY
-        ]
-        all_domain_occurrences = []
+        entity_registry = er.async_get(hass)
+
+        entity_domains: list[Platform] = []
+        all_domain_occurrences: list[Platform] = []
+
         for member in group.members:
             if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry,
+                entity_registry,
                 member.device.device_id,
                 include_disabled_entities=True,
             )
             all_domain_occurrences.extend(
                 [
-                    entity.domain
+                    cast(Platform, entity.domain)
                     for entity in entities
                     if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
                 ]

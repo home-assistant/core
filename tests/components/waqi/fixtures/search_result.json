@@ -1,0 +1,32 @@
+[
+  {
+    "uid": 6332,
+    "aqi": "27",
+    "time": {
+      "tz": "+02:00",
+      "stime": "2023-08-08 15:00:00",
+      "vtime": 1691499600
+    },
+    "station": {
+      "name": "Griftpark, Utrecht",
+      "geo": [52.101308, 5.128183],
+      "url": "netherland/utrecht/griftpark",
+      "country": "NL"
+    }
+  },
+  {
+    "uid": 4584,
+    "aqi": "27",
+    "time": {
+      "tz": "+02:00",
+      "stime": "2023-08-08 15:00:00",
+      "vtime": 1691499600
+    },
+    "station": {
+      "name": "de Jongweg, Utrecht",
+      "geo": [52.105031, 5.124464],
+      "url": "netherland/utrecht/de-jongweg",
+      "country": "NL"
+    }
+  }
+]
