@@ -90,7 +90,7 @@ class TwinklyLight(LightEntity):
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self._name = conf.data[CONF_NAME]
+        self._name = conf.data[CONF_NAME] or "Twinkly light"
         self._model = conf.data[CONF_MODEL]
 
         self._client = client
@@ -111,7 +111,7 @@ class TwinklyLight(LightEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="LEDWORKS",
             model=self._model,
-            name=self._conf.data.get(CONF_NAME, "Twinkly light"),
+            name=self._name,
             sw_version=self._software_version,
         )
 

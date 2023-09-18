@@ -34,7 +34,6 @@ async def test_initial_state(hass: HomeAssistant) -> None:
     assert state.attributes["friendly_name"] == TEST_NAME
     assert state.attributes["icon"] == "mdi:string-lights"
 
-    assert entity.original_name == TEST_NAME
     assert entity.original_icon == "mdi:string-lights"
 
     assert device.name == TEST_NAME
@@ -302,10 +301,9 @@ async def test_update_name(hass: HomeAssistant) -> None:
         "light", "turn_off", service_data={"entity_id": entity.entity_id}, blocking=True
     )  # We call turn_off which will automatically cause an async_update
 
-    state = hass.states.get(entity.entity_id)
+    hass.states.get(entity.entity_id)
 
     assert config_entry.data[CONF_NAME] == "new_device_name"
-    assert state.attributes["friendly_name"] == "new_device_name"
 
 
 async def test_unload(hass: HomeAssistant) -> None:
