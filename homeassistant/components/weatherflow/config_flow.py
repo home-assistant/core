@@ -25,14 +25,15 @@ async def _async_can_discover_devices(host: str = DEFAULT_HOST) -> bool:
     future_event: Future[bool] = asyncio.get_running_loop().create_future()
 
     @callback
-    def _async_found():
+    def _async_found(_):
         """Handle a discovered device - only need to do this once so."""
+
         if not future_event.done():
             future_event.set_result(True)
 
     async with WeatherFlowListener(host) as client, asyncio.timeout(10):
         try:
-            client.on(EVENT_DEVICE_DISCOVERED, lambda _: _async_found())
+            client.on(EVENT_DEVICE_DISCOVERED, _async_found)
             await future_event
         except asyncio.TimeoutError:
             return False

@@ -280,7 +280,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(device: WeatherFlowDevice) -> None:
         """Add WeatherFlow sensor."""
-        LOGGER.debug("Adding sensors for %s", device)
+        LOGGER.error("+++++  Adding sensors for %s", device)
 
         sensors = [
             WeatherFlowSensorEntity(
@@ -310,8 +310,7 @@ async def async_setup_entry(
             or hasattr(device, description.key)
         ]
 
-        async_add_entities(sensors)
-        async_add_entities(custom_sensors)
+        async_add_entities(sensors + custom_sensors)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(

@@ -28,14 +28,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WeatherFlow from a config entry."""
 
     client = WeatherFlowListener(host=entry.data.get(CONF_HOST, "0.0.0.0"))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
     @callback
-    def device_discovered(device: WeatherFlowDevice) -> None:
+    def _async_device_discovered(device: WeatherFlowDevice) -> None:
         _LOGGER.debug("Found a device: %s", device)
 
         @callback
-        def add_device_if_started(device: WeatherFlowDevice):
+        def _async_add_device_if_started(device: WeatherFlowDevice):
+            _LOGGER.debug(f"Dispatching: {DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}")
             async_at_started(
                 hass,
                 lambda _: async_dispatcher_send(
@@ -43,15 +43,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ),
             )
 
-        entry.async_on_unload(device.on(EVENT_LOAD_COMPLETE, add_device_if_started))
+        entry.async_on_unload(
+            device.on(
+                EVENT_LOAD_COMPLETE,
+                lambda _: _async_add_device_if_started(device),
+            )
+        )
 
-    entry.async_on_unload(client.on(EVENT_DEVICE_DISCOVERED, device_discovered))
+        entry.async_on_unload(
+            device.on(EVENT_LOAD_COMPLETE, _async_add_device_if_started)
+        )
+
+    entry.async_on_unload(client.on(EVENT_DEVICE_DISCOVERED, _async_device_discovered))
 
     try:
         await client.start_listening()
     except ListenerError as ex:
         raise ConfigEntryNotReady from ex
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_handle_ha_shutdown(event: Event) -> None:
