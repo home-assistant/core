@@ -98,7 +98,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 @dataclass(slots=True)
 class ZeroconfServiceInfo(BaseServiceInfo):
-    """Prepared info from mDNS entries."""
+    """Prepared info from mDNS entries.
+
+    The ip_address is the most recently updated address
+    that is not a link local or unspecified address.
+
+    The ip_addresses are all addresses in order of most
+    recently updated to least recently updated.
+    """
 
     ip_address: IPv4Address | IPv6Address
     ip_addresses: list[IPv4Address | IPv6Address]
