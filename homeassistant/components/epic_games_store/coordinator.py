@@ -93,24 +93,25 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, list[dict[str, Any]]]
                 "free" if game_free else "discount", []
             )
 
-            return_data["free" if game_free else "discount"].append(
-                {
-                    "title": game_title.replace("\xa0", " "),
-                    "description": game_description.replace("\xa0", " "),
-                    "released_at": game_released_at,
-                    "original_price": game_price.replace("\xa0", " "),
-                    "publisher": game_publisher,
-                    "url": game_url,
-                    "img_portrait": game_img_portrait,
-                    "img_landscape": game_img_landscape,
-                    "discount_start_at": dt_util.parse_datetime(
-                        promotion_data["startDate"]
-                    ),
-                    "discount_end_at": dt_util.parse_datetime(
-                        promotion_data["endDate"]
-                    ),
-                }
-            )
+            if promotion_data:
+                return_data["free" if game_free else "discount"].append(
+                    {
+                        "title": game_title.replace("\xa0", " "),
+                        "description": game_description.replace("\xa0", " "),
+                        "released_at": game_released_at,
+                        "original_price": game_price.replace("\xa0", " "),
+                        "publisher": game_publisher,
+                        "url": game_url,
+                        "img_portrait": game_img_portrait,
+                        "img_landscape": game_img_landscape,
+                        "discount_start_at": dt_util.parse_datetime(
+                            promotion_data["startDate"]
+                        ),
+                        "discount_end_at": dt_util.parse_datetime(
+                            promotion_data["endDate"]
+                        ),
+                    }
+                )
 
         _LOGGER.debug(return_data)
         return return_data

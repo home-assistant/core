@@ -1,22 +1,15 @@
 """Tests for the Epic Games Store calendars."""
 
-import datetime
-import textwrap
 
-from unittest.mock import MagicMock, Mock, patch
-import pytest
+from unittest.mock import Mock
 
 from homeassistant.components.epic_games_store.const import CONF_LOCALE, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.template import DATE_STR_FORMAT
-import homeassistant.util.dt as dt_util
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_LOCALE
 
 from tests.common import MockConfigEntry
-
 
 CAL_CONFIG = {
     "platform": DOMAIN,
@@ -25,12 +18,12 @@ CAL_CONFIG = {
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
     """Test setup component with calendars."""
-    # entry = MockConfigEntry(
-    #     domain=DOMAIN,
-    #     data={CONF_LOCALE: MOCK_LOCALE},
-    #     unique_id=MOCK_LOCALE,
-    # )
-    # entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LOCALE: MOCK_LOCALE},
+        unique_id=MOCK_LOCALE,
+    )
+    entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
