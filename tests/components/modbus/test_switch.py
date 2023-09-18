@@ -316,7 +316,10 @@ async def test_restore_state_switch(
     ],
 )
 async def test_switch_service_turn(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
     assert MODBUS_DOMAIN in hass.config.components
@@ -407,7 +410,9 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus, mock_ha) 
         },
     ],
 )
-async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
+async def test_delay_switch(
+    hass: HomeAssistant, mock_modbus, mock_pymodbus_return
+) -> None:
     """Run test for switch verify delay."""
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()
