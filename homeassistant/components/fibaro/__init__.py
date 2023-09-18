@@ -35,8 +35,6 @@ from .const import CONF_IMPORT_PLUGINS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-FIBARO_CONTROLLER = "fibaro_controller"
-FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
@@ -377,12 +375,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except FibaroAuthFailed as auth_ex:
         raise ConfigEntryAuthFailed from auth_ex
 
-    data: dict[str, Any] = {}
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
-    data[FIBARO_CONTROLLER] = controller
-    devices = data[FIBARO_DEVICES] = {}
-    for platform in PLATFORMS:
-        devices[platform] = [*controller.fibaro_devices[platform]]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
 
     # register the hub device info separately as the hub has sometimes no entities
     device_registry = dr.async_get(hass)
@@ -408,7 +401,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Shutting down Fibaro connection")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][FIBARO_CONTROLLER].disable_state_handler()
+    hass.data[DOMAIN][entry.entry_id].disable_state_handler()
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
