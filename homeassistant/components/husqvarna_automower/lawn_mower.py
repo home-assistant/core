@@ -60,7 +60,7 @@ async def async_setup_entry(
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         AutomowerLawnMowerEntity(mower, coordinator)
-        for mower in coordinator.session.dataclass.data
+        for mower in coordinator.session.mowers.data
     )
 
 
