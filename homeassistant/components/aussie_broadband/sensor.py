@@ -15,8 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,7 +34,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     # Internet Services sensors
     SensorValueEntityDescription(
         key="usedMb",
-        name="Data used",
+        translation_key="data_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -43,7 +42,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     ),
     SensorValueEntityDescription(
         key="downloadedMb",
-        name="Downloaded",
+        translation_key="downloaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -51,7 +50,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     ),
     SensorValueEntityDescription(
         key="uploadedMb",
-        name="Uploaded",
+        translation_key="uploaded",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -60,21 +59,21 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     # Mobile Phone Services sensors
     SensorValueEntityDescription(
         key="national",
-        name="National calls",
+        translation_key="national_calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="mobile",
-        name="Mobile calls",
+        translation_key="mobile_calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="international",
-        name="International calls",
+        translation_key="international_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone-plus",
@@ -82,14 +81,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     ),
     SensorValueEntityDescription(
         key="sms",
-        name="SMS sent",
+        translation_key="sms_sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:message-processing",
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="internet",
-        name="Data used",
+        translation_key="data_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.KILOBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -98,7 +97,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     ),
     SensorValueEntityDescription(
         key="voicemail",
-        name="Voicemail calls",
+        translation_key="voicemail_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
@@ -106,7 +105,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     ),
     SensorValueEntityDescription(
         key="other",
-        name="Other calls",
+        translation_key="other_calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
@@ -115,13 +114,13 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
     # Generic sensors
     SensorValueEntityDescription(
         key="daysTotal",
-        name="Billing cycle length",
+        translation_key="billing_cycle_length",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-range",
     ),
     SensorValueEntityDescription(
         key="daysRemaining",
-        name="Billing cycle remaining",
+        translation_key="billing_cycle_remaining",
         native_unit_of_measurement=UnitOfTime.DAYS,
         icon="mdi:calendar-clock",
     ),

@@ -10,14 +10,14 @@ from aioairzone_cloud.const import (
     AZD_FIRMWARE,
     AZD_NAME,
     AZD_SYSTEM_ID,
+    AZD_SYSTEMS,
     AZD_WEBSERVER,
     AZD_WEBSERVERS,
     AZD_ZONES,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -43,7 +43,6 @@ class AirzoneAidooEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         aidoo_id: str,
         aidoo_data: dict[str, Any],
     ) -> None:
@@ -67,13 +66,41 @@ class AirzoneAidooEntity(AirzoneEntity):
         return value
 
 
+class AirzoneSystemEntity(AirzoneEntity):
+    """Define an Airzone Cloud System entity."""
+
+    def __init__(
+        self,
+        coordinator: AirzoneUpdateCoordinator,
+        system_id: str,
+        system_data: dict[str, Any],
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+
+        self.system_id = system_id
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_id)},
+            manufacturer=MANUFACTURER,
+            name=system_data[AZD_NAME],
+            via_device=(DOMAIN, system_data[AZD_WEBSERVER]),
+        )
+
+    def get_airzone_value(self, key: str) -> Any:
+        """Return system value by key."""
+        value = None
+        if system := self.coordinator.data[AZD_SYSTEMS].get(self.system_id):
+            value = system.get(key)
+        return value
+
+
 class AirzoneWebServerEntity(AirzoneEntity):
     """Define an Airzone Cloud WebServer entity."""
 
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         ws_id: str,
         ws_data: dict[str, Any],
     ) -> None:
@@ -86,7 +113,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
             identifiers={(DOMAIN, ws_id)},
             manufacturer=MANUFACTURER,
-            name=f"WebServer {ws_id}",
+            name=ws_data[AZD_NAME],
             sw_version=ws_data[AZD_FIRMWARE],
         )
 
@@ -104,7 +131,6 @@ class AirzoneZoneEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
         zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

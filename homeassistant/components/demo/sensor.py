@@ -22,10 +22,9 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN
 
@@ -142,17 +141,18 @@ class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         unique_id: str,
         device_name: str | None,
-        state: StateType,
+        state: float | int | str | None,
         device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
-        battery: StateType,
+        battery: int | None,
         options: list[str] | None = None,
         translation_key: str | None = None,
     ) -> None:
@@ -188,7 +188,7 @@ class DemoSumSensor(RestoreSensor):
         device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
-        battery: StateType,
+        battery: int | None,
         suggested_entity_id: str,
     ) -> None:
         """Initialize the sensor."""

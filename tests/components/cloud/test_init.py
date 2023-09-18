@@ -32,7 +32,6 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "relayer_server": "test-relayer-server",
                     "accounts_server": "test-acounts-server",
                     "cloudhook_server": "test-cloudhook-server",
-                    "remote_sni_server": "test-remote-sni-server",
                     "alexa_server": "test-alexa-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
@@ -137,7 +136,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     """Test cloud on connect triggers."""
     cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
 
-    assert len(cl.iot._on_connect) == 4
+    assert len(cl.iot._on_connect) == 3
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 

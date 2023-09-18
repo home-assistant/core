@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
+from bthome_ble.const import (
+    ExtendedSensorDeviceClass as BTHomeExtendedSensorDeviceClass,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -47,6 +50,15 @@ from .coordinator import (
 from .device import device_key_to_bluetooth_entity_key
 
 SENSOR_DESCRIPTIONS = {
+    # Acceleration (m/s²)
+    (
+        BTHomeSensorDeviceClass.ACCELERATION,
+        Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.ACCELERATION}_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Battery (percent)
     (BTHomeSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.BATTERY}_{Units.PERCENTAGE}",
@@ -57,7 +69,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     # Count (-)
     (BTHomeSensorDeviceClass.COUNT, None): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.COUNT}",
+        key=str(BTHomeSensorDeviceClass.COUNT),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # CO2 (parts per million)
@@ -131,6 +143,15 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
     ),
+    # Gyroscope (°/s)
+    (
+        BTHomeSensorDeviceClass.GYROSCOPE,
+        Units.GYROSCOPE_DEGREES_PER_SECOND,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.GYROSCOPE}_{Units.GYROSCOPE_DEGREES_PER_SECOND}",
+        native_unit_of_measurement=Units.GYROSCOPE_DEGREES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Humidity in (percent)
     (BTHomeSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
@@ -168,7 +189,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     # Packet Id (-)
     (BTHomeSensorDeviceClass.PACKET_ID, None): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.PACKET_ID}",
+        key=str(BTHomeSensorDeviceClass.PACKET_ID),
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -242,12 +263,25 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Text (-)
+    (BTHomeExtendedSensorDeviceClass.TEXT, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.TEXT),
+    ),
+    # Timestamp (datetime object)
+    (
+        BTHomeSensorDeviceClass.TIMESTAMP,
+        None,
+    ): SensorEntityDescription(
+        key=str(BTHomeSensorDeviceClass.TIMESTAMP),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # UV index (-)
     (
         BTHomeSensorDeviceClass.UV_INDEX,
         None,
     ): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.UV_INDEX}",
+        key=str(BTHomeSensorDeviceClass.UV_INDEX),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Volatile organic Compounds (VOC) (µg/m3)
@@ -356,7 +390,9 @@ async def async_setup_entry(
             BTHomeBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class BTHomeBluetoothSensorEntity(
@@ -373,7 +409,4 @@ class BTHomeBluetoothSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        coordinator: BTHomePassiveBluetoothProcessorCoordinator = (
-            self.processor.coordinator
-        )
-        return coordinator.device_data.sleepy_device or super().available
+        return self.processor.coordinator.sleepy_device or super().available

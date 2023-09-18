@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -33,7 +33,6 @@ from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
-from typing_extensions import Self
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_EVENT_TYPE,
@@ -41,6 +40,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -64,7 +64,6 @@ from .models import (
 
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 class Base(DeclarativeBase):
     """Base class for tables."""
 
@@ -560,7 +559,7 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, dict[str, str]],
+        entity_sources: dict[str, EntityInfo],
         exclude_attrs_by_domain: dict[str, set[str]],
         dialect: SupportedDialect | None,
     ) -> bytes:

@@ -47,7 +47,6 @@ from .const import (
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
     CONF_RELAYER_SERVER,
-    CONF_REMOTE_SNI_SERVER,
     CONF_REMOTESTATE_SERVER,
     CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
@@ -115,7 +114,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALEXA_SERVER): str,
                 vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
-                vol.Optional(CONF_REMOTE_SNI_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
                 vol.Optional(CONF_THINGTALK_SERVER): str,
                 vol.Optional(CONF_SERVICEHANDLERS_SERVER): str,
@@ -234,7 +232,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
-    cloud.iot.register_on_connect(client.on_cloud_connected)
 
     async def _shutdown(event: Event) -> None:
         """Shutdown event."""

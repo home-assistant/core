@@ -9,11 +9,15 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
 )
-from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
+from homeassistant.components.assist_pipeline.select import (
+    AssistPipelineSelect,
+    VadSensitivitySelect,
+)
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
@@ -22,7 +26,6 @@ from tests.common import MockConfigEntry, MockPlatform, mock_entity_platform
 class SelectPlatform(MockPlatform):
     """Fake select platform."""
 
-    # pylint: disable=method-hidden
     async def async_setup_entry(
         self,
         hass: HomeAssistant,
@@ -30,11 +33,15 @@ class SelectPlatform(MockPlatform):
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up fake select platform."""
-        entity = AssistPipelineSelect(hass, "test")
-        entity._attr_device_info = DeviceInfo(
+        pipeline_entity = AssistPipelineSelect(hass, "test")
+        pipeline_entity._attr_device_info = DeviceInfo(
             identifiers={("test", "test")},
         )
-        async_add_entities([entity])
+        sensitivity_entity = VadSensitivitySelect(hass, "test")
+        sensitivity_entity._attr_device_info = DeviceInfo(
+            identifiers={("test", "test")},
+        )
+        async_add_entities([pipeline_entity, sensitivity_entity])
 
 
 @pytest.fixture
@@ -94,7 +101,8 @@ async def test_select_entity_registering_device(
 ) -> None:
     """Test entity registering as an assist device."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device({("test", "test")})
+    device = dev_reg.async_get_device(identifiers={("test", "test")})
+    assert device is not None
 
     # Test device is registered
     assert pipeline_data.pipeline_devices == {device.id}
@@ -138,6 +146,7 @@ async def test_select_entity_changing_pipelines(
     )
 
     state = hass.states.get("select.assist_pipeline_test_pipeline")
+    assert state is not None
     assert state.state == pipeline_2.name
 
     # Reload config entry to test selected option persists
@@ -145,15 +154,52 @@ async def test_select_entity_changing_pipelines(
     assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
 
     state = hass.states.get("select.assist_pipeline_test_pipeline")
+    assert state is not None
     assert state.state == pipeline_2.name
 
     # Remove selected pipeline
     await pipeline_storage.async_delete_item(pipeline_2.id)
 
     state = hass.states.get("select.assist_pipeline_test_pipeline")
+    assert state is not None
     assert state.state == "preferred"
     assert state.attributes["options"] == [
         "preferred",
         "Home Assistant",
         pipeline_1.name,
     ]
+
+
+async def test_select_entity_changing_vad_sensitivity(
+    hass: HomeAssistant,
+    init_select: ConfigEntry,
+) -> None:
+    """Test entity tracking pipeline changes."""
+    config_entry = init_select  # nicer naming
+
+    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    assert state is not None
+    assert state.state == VadSensitivity.DEFAULT.value
+
+    # Change select to new pipeline
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.assist_pipeline_test_vad_sensitivity",
+            "option": VadSensitivity.AGGRESSIVE.value,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    assert state is not None
+    assert state.state == VadSensitivity.AGGRESSIVE.value
+
+    # Reload config entry to test selected option persists
+    assert await hass.config_entries.async_forward_entry_unload(config_entry, "select")
+    assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
+
+    state = hass.states.get("select.assist_pipeline_test_vad_sensitivity")
+    assert state is not None
+    assert state.state == VadSensitivity.AGGRESSIVE.value

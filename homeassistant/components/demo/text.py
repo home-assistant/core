@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -54,6 +54,7 @@ class DemoText(TextEntity):
     """Representation of a demo text entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
@@ -69,7 +70,6 @@ class DemoText(TextEntity):
     ) -> None:
         """Initialize the Demo text entity."""
         self._attr_unique_id = unique_id
-        self._attr_name = None
         self._attr_native_value = native_value
         self._attr_icon = icon
         self._attr_mode = mode

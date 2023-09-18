@@ -47,10 +47,12 @@ class DeviceTriggerAccessory(HomeAccessory):
             type_: str = trigger["type"]
             subtype: str | None = trigger.get("subtype")
             unique_id = f'{type_}-{subtype or ""}'
-            if (entity_id := trigger.get("entity_id")) and (
-                entry := ent_reg.async_get(entity_id)
+            entity_id: str | None = None
+            if (entity_id_or_uuid := trigger.get("entity_id")) and (
+                entry := ent_reg.async_get(entity_id_or_uuid)
             ):
                 unique_id += f"-entity_unique_id:{get_system_unique_id(entry)}"
+                entity_id = entry.entity_id
             trigger_name_parts = []
             if entity_id and (state := self.hass.states.get(entity_id)):
                 trigger_name_parts.append(state.name)

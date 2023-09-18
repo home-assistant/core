@@ -87,7 +87,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(NumberMode),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_STEP, default=DEFAULT_STEP): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
@@ -134,6 +134,7 @@ async def _async_setup_entity(
 class MqttNumber(MqttEntity, RestoreNumber):
     """representation of an MQTT number."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = number.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
 
@@ -160,7 +161,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._config = config
-        self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = config[CONF_OPTIMISTIC]
 
         self._command_template = MqttCommandTemplate(
             config.get(CONF_COMMAND_TEMPLATE), entity=self
@@ -186,6 +187,9 @@ class MqttNumber(MqttEntity, RestoreNumber):
             """Handle new MQTT messages."""
             num_value: int | float | None
             payload = str(self._value_template(msg.payload))
+            if not payload.strip():
+                _LOGGER.debug("Ignoring empty state update from '%s'", msg.topic)
+                return
             try:
                 if payload == self._config[CONF_PAYLOAD_RESET]:
                     num_value = None
@@ -214,7 +218,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
-            self._optimistic = True
+            self._attr_assumed_state = True
         else:
             self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
@@ -233,7 +237,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-        if self._optimistic and (
+        if self._attr_assumed_state and (
             last_number_data := await self.async_get_last_number_data()
         ):
             self._attr_native_value = last_number_data.native_value
@@ -246,7 +250,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
             current_number = int(value)
         payload = self._command_template(current_number)
 
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._attr_native_value = current_number
             self.async_write_ha_state()
 
@@ -257,8 +261,3 @@ class MqttNumber(MqttEntity, RestoreNumber):
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic

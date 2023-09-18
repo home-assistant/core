@@ -24,5 +24,75 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "set_fan_speed_tracked_state": {
+      "name": "Set fan speed tracked state",
+      "description": "Sets the tracked fan speed for a bond fan.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities to set the tracked fan speed."
+        },
+        "speed": {
+          "name": "Fan Speed",
+          "description": "Fan Speed as %."
+        }
+      }
+    },
+    "set_switch_power_tracked_state": {
+      "name": "Set switch power tracked state",
+      "description": "Sets the tracked power state of a bond switch.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities to set the tracked power state of."
+        },
+        "power_state": {
+          "name": "Power state",
+          "description": "Power state."
+        }
+      }
+    },
+    "set_light_power_tracked_state": {
+      "name": "Set light power tracked state",
+      "description": "Sets the tracked power state of a bond light.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::entity_id::description%]"
+        },
+        "power_state": {
+          "name": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::name%]",
+          "description": "[%key:component::bond::services::set_switch_power_tracked_state::fields::power_state::description%]"
+        }
+      }
+    },
+    "set_light_brightness_tracked_state": {
+      "name": "Set light brightness tracked state",
+      "description": "Sets the tracked brightness state of a bond light.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities to set the tracked brightness state of."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness."
+        }
+      }
+    },
+    "start_increasing_brightness": {
+      "name": "Start increasing brightness",
+      "description": "Start increasing the brightness of the light. (deprecated)."
+    },
+    "start_decreasing_brightness": {
+      "name": "Start decreasing brightness",
+      "description": "Start decreasing the brightness of the light. (deprecated)."
+    },
+    "stop": {
+      "name": "[%key:common::action::stop%]",
+      "description": "Stop any in-progress action and empty the queue. (deprecated)."
+    }
   }
 }

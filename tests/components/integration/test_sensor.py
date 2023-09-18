@@ -4,6 +4,7 @@ from datetime import timedelta
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.integration.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,10 +17,15 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
@@ -671,3 +677,49 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state is not None
     assert round(float(state.state)) == 0 if method != "right" else 1
+
+
+async def test_device_id(hass: HomeAssistant) -> None:
+    """Test for source entity device for Riemann sum integral."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    integration_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "method": "trapezoidal",
+            "name": "integration",
+            "round": 1.0,
+            "source": "sensor.test_source",
+            "unit_prefix": "k",
+            "unit_time": "min",
+        },
+        title="Integration",
+    )
+
+    integration_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    integration_entity = entity_registry.async_get("sensor.integration")
+    assert integration_entity is not None
+    assert integration_entity.device_id == source_entity.device_id

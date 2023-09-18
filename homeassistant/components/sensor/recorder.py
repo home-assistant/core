@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable, MutableMapping
+from collections.abc import Callable, Iterable, MutableMapping
 import datetime
 import itertools
 import logging
@@ -149,7 +149,7 @@ def _equivalent_units(units: set[str | None]) -> bool:
 def _parse_float(state: str) -> float:
     """Parse a float string, throw on inf or nan."""
     fstate = float(state)
-    if math.isnan(fstate) or math.isinf(fstate):
+    if not math.isfinite(fstate):
         raise ValueError
     return fstate
 
@@ -224,6 +224,8 @@ def _normalize_states(
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
+    convert: Callable[[float], float]
+    last_unit: str | None | object = object()
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -247,23 +249,22 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             continue
+        if state_unit != last_unit:
+            # The unit of measurement has changed since the last state change
+            # recreate the converter factory
+            convert = converter.converter_factory(state_unit, statistics_unit)
+            last_unit = state_unit
 
-        valid_fstates.append(
-            (
-                converter.convert(
-                    fstate, from_unit=state_unit, to_unit=statistics_unit
-                ),
-                state,
-            )
-        )
+        valid_fstates.append((convert(fstate), state))
 
     return statistics_unit, valid_fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     """Suggest to report an issue."""
-    domain = entity_sources(hass).get(entity_id, {}).get("domain")
-    custom_component = entity_sources(hass).get(entity_id, {}).get("custom_component")
+    entity_info = entity_sources(hass).get(entity_id)
+    domain = entity_info["domain"] if entity_info else None
+    custom_component = entity_info["custom_component"] if entity_info else None
     report_issue = ""
     if custom_component:
         report_issue = "report it to the custom integration author."
@@ -296,7 +297,8 @@ def warn_dip(
         hass.data[WARN_DIP] = set()
     if entity_id not in hass.data[WARN_DIP]:
         hass.data[WARN_DIP].add(entity_id)
-        domain = entity_sources(hass).get(entity_id, {}).get("domain")
+        entity_info = entity_sources(hass).get(entity_id)
+        domain = entity_info["domain"] if entity_info else None
         if domain in ["energy", "growatt_server", "solaredge"]:
             return
         _LOGGER.warning(
@@ -320,7 +322,8 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
         hass.data[WARN_NEGATIVE].add(entity_id)
-        domain = entity_sources(hass).get(entity_id, {}).get("domain")
+        entity_info = entity_sources(hass).get(entity_id)
+        domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
                 "Entity %s %shas state class total_increasing, but its state is "

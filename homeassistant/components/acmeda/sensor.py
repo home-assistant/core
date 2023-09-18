@@ -40,15 +40,10 @@ async def async_setup_entry(
 
 
 class AcmedaBattery(AcmedaBase, SensorEntity):
-    """Representation of a Acmeda cover device."""
+    """Representation of an Acmeda cover sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def name(self) -> str:
-        """Return the name of roller."""
-        return f"{super().name} Battery"
 
     @property
     def native_value(self) -> float | int | None:

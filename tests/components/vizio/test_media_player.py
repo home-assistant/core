@@ -456,6 +456,7 @@ async def test_options_update(
         options=new_options,
     )
     assert config_entry.options == updated_options
+    await hass.async_block_till_done()
     await _test_service(
         hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP
     )

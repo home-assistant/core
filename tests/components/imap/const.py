@@ -22,6 +22,7 @@ TEST_MESSAGE_HEADERS2 = (
     b"To: notify@example.com\r\n"
     b"From: John Doe <john.doe@example.com>\r\n"
     b"Subject: Test subject\r\n"
+    b"Message-ID: <N753P9hLvLw3lYGan11ji9WggPjxtLSpKvFOYgdnE@example.com>"
 )
 
 TEST_MESSAGE_HEADERS3 = b""
@@ -41,7 +42,7 @@ TEST_INVALID_DATE3 = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER_INVALID3 + TEST_MESSAGE_HEADERS2
 )
 
-TEST_CONTENT_TEXT_BARE = b"\r\n" b"Test body\r\n" b"\r\n"
+TEST_CONTENT_TEXT_BARE = b"\r\nTest body\r\n\r\n"
 
 TEST_CONTENT_BINARY = (
     b"Content-Type: application/binary\r\n"

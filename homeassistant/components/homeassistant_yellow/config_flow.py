@@ -1,11 +1,11 @@
 """Config flow for the Home Assistant Yellow integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -80,7 +80,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             if self._hw_settings == user_input:
                 return self.async_create_entry(data={})
             try:
-                async with async_timeout.timeout(10):
+                async with asyncio.timeout(10):
                     await async_set_yellow_settings(self.hass, user_input)
             except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
@@ -88,7 +88,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             return await self.async_step_confirm_reboot()
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 self._hw_settings: dict[str, bool] = await async_get_yellow_settings(
                     self.hass
                 )

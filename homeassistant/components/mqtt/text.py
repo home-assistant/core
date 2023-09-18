@@ -78,7 +78,7 @@ def valid_text_size_configuration(config: ConfigType) -> ConfigType:
 _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_MAX, default=MAX_LENGTH_STATE_STATE): cv.positive_int,
         vol.Optional(CONF_MIN, default=0): cv.positive_int,
         vol.Optional(CONF_MODE, default=text.TextMode.TEXT): vol.In(
@@ -125,6 +125,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     """Representation of the MQTT text entity."""
 
     _attributes_extra_blocked = MQTT_TEXT_ATTRIBUTES_BLOCKED
+    _default_name = DEFAULT_NAME
     _entity_id_format = text.ENTITY_ID_FORMAT
 
     _compiled_pattern: re.Pattern[Any] | None
@@ -168,6 +169,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
         ).async_render_with_possible_json_value
         optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or config.get(CONF_STATE_TOPIC) is None
+        self._attr_assumed_state = bool(self._optimistic)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -201,11 +203,6 @@ class MqttTextEntity(MqttEntity, TextEntity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_set_value(self, value: str) -> None:
         """Change the text."""

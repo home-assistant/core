@@ -9,5 +9,20 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "grease_filter": {
+        "name": "Grease filter"
+      },
+      "carbon_filter": {
+        "name": "Carbon filter"
+      }
+    },
+    "number": {
+      "periodic_venting": {
+        "name": "Periodic venting"
+      }
+    }
   }
 }

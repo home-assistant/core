@@ -7,7 +7,7 @@ import logging
 import os
 from typing import Any, cast
 
-import pkg_resources
+from packaging.requirements import Requirement
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -232,8 +232,7 @@ class RequirementsManager:
             skipped_requirements = [
                 req
                 for req in requirements
-                if pkg_resources.Requirement.parse(req).project_name
-                in self.hass.config.skip_pip_packages
+                if Requirement(req).name in self.hass.config.skip_pip_packages
             ]
 
             for req in skipped_requirements:

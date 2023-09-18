@@ -28,7 +28,7 @@ from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
+JSON_TYPE = list | dict | str
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)

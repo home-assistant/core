@@ -796,7 +796,7 @@ async def test_discovery_removal_lock(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of discovered lock."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test", "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, lock.DOMAIN, data)
 
 
@@ -855,7 +855,7 @@ async def test_discovery_broken(
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock_entry, caplog, lock.DOMAIN, data1, data2
     )
@@ -1006,7 +1006,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+@pytest.mark.parametrize(
+    "hass_config",
+    [DEFAULT_CONFIG, {"mqtt": [DEFAULT_CONFIG["mqtt"]]}],
+    ids=["platform_key", "listed"],
+)
 async def test_setup_manual_entity_from_yaml(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

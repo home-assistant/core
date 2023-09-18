@@ -1,4 +1,5 @@
 {
+  "title": "Workday",
   "config": {
     "abort": {
       "incorrect_province": "Incorrect subdivision from yaml import",
@@ -12,7 +13,7 @@
         }
       },
       "options": {
-        "description": "Set workday options for {name}",
+        "description": "Set additional options for {name} configured for country {country}",
         "data": {
           "excludes": "Excludes",
           "days_offset": "Offset",
@@ -39,6 +40,7 @@
   "options": {
     "step": {
       "init": {
+        "description": "Change additional options for {name} configured for country {country}",
         "data": {
           "excludes": "[%key:component::workday::config::step::options::data::excludes%]",
           "days_offset": "[%key:component::workday::config::step::options::data::days_offset%]",
@@ -58,8 +60,8 @@
       }
     },
     "error": {
-      "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
-      "remove_holiday_error": "Incorrect format on date (YYYY-MM-DD) or holiday name not found",
+      "add_holiday_error": "[%key:component::workday::config::error::add_holiday_error%]",
+      "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]",
       "already_configured": "Service with this configuration already exist"
     }
   },
@@ -71,13 +73,13 @@
     },
     "days": {
       "options": {
-        "mon": "Monday",
-        "tue": "Tuesday",
-        "wed": "Wednesday",
-        "thu": "Thursday",
-        "fri": "Friday",
-        "sat": "Saturday",
-        "sun": "Sunday",
+        "mon": "[%key:common::time::monday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "fri": "[%key:common::time::friday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]",
         "holiday": "Holidays"
       }
     }

@@ -39,3 +39,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of an entry."""
+    key = slugify(entry.data[CONF_CALENDAR_NAME])
+    path = Path(hass.config.path(STORAGE_PATH.format(key=key)))
+
+    def unlink(path: Path) -> None:
+        path.unlink(missing_ok=True)
+
+    await hass.async_add_executor_job(unlink, path)

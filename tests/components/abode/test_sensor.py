@@ -37,7 +37,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
 
-    state = hass.states.get("sensor.environment_sensor_lux")
+    state = hass.states.get("sensor.environment_sensor_illuminance")
     assert state.state == "1.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lx"
 

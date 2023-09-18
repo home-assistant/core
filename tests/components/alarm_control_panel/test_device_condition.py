@@ -1,5 +1,6 @@
 """The tests for Alarm control panel device conditions."""
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
@@ -23,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -93,7 +93,7 @@ async def test_get_conditions(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -114,7 +114,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in basic_condition_types
@@ -125,7 +125,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in expected_condition_types
@@ -133,7 +133,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
@@ -159,7 +159,7 @@ async def test_get_conditions_hidden_auxiliary(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -173,7 +173,7 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
         for condition in ["is_disarmed", "is_triggered"]
@@ -181,11 +181,15 @@ async def test_get_conditions_hidden_auxiliary(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
+async def test_if_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
+) -> None:
     """Test for all conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -198,7 +202,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_triggered",
                         }
                     ],
@@ -220,7 +224,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_disarmed",
                         }
                     ],
@@ -242,7 +246,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_armed_home",
                         }
                     ],
@@ -264,7 +268,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_armed_away",
                         }
                     ],
@@ -286,7 +290,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_armed_night",
                         }
                     ],
@@ -308,7 +312,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_armed_vacation",
                         }
                     ],
@@ -330,7 +334,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "entity_id": entry.id,
                             "type": "is_armed_custom_bypass",
                         }
                     ],
@@ -348,7 +352,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
             ]
         },
     )
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -360,7 +364,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_triggered - event - test_event1"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -372,7 +376,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_disarmed - event - test_event2"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_HOME)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -384,7 +388,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_armed_home - event - test_event3"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_AWAY)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -396,7 +400,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_armed_away - event - test_event4"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_NIGHT)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -408,7 +412,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_armed_night - event - test_event5"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_VACATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -420,7 +424,7 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     assert len(calls) == 6
     assert calls[5].data["some"] == "is_armed_vacation - event - test_event6"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_CUSTOM_BYPASS)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -431,3 +435,46 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 7
     assert calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls: list[ServiceCall]
+) -> None:
+    """Test for all conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.entity_id,
+                            "type": "is_triggered",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "is_triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_triggered - event - test_event1"

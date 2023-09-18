@@ -79,7 +79,6 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Battery"
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, speaker: SonosSpeaker) -> None:
@@ -107,7 +106,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:import"
-    _attr_name = "Audio input format"
+    _attr_translation_key = "audio_input_format"
     _attr_should_poll = True
 
     def __init__(self, speaker: SonosSpeaker, audio_format: str) -> None:

@@ -1,8 +1,11 @@
 """Test the entity helper."""
 import asyncio
+from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
+import logging
 import threading
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -17,14 +20,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockModule,
     MockPlatform,
     get_test_home_assistant,
+    mock_integration,
     mock_registry,
 )
 
@@ -772,7 +778,7 @@ async def test_warn_slow_write_state_custom_component(
     assert (
         "Updating state for comp_test.test_entity "
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom integration author."
+        "took 10.000 seconds. Please report it to the custom integration author"
     ) in caplog.text
 
 
@@ -791,13 +797,11 @@ async def test_setup_source(hass: HomeAssistant) -> None:
         "test_domain.platform_config_source": {
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
         },
         "test_domain.config_entry_source": {
             "config_entry": platform.config_entry.entry_id,
             "custom_component": False,
             "domain": "test_platform",
-            "source": entity.SOURCE_CONFIG_ENTRY,
         },
     }
 
@@ -953,8 +957,6 @@ async def _test_friendly_name(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     ent: entity.Entity,
-    has_entity_name: bool,
-    entity_name: str | None,
     expected_friendly_name: str | None,
     warn_implicit_name: bool,
 ) -> None:
@@ -971,6 +973,7 @@ async def _test_friendly_name(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
@@ -983,14 +986,25 @@ async def _test_friendly_name(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
     assert (expected_warning in caplog.text) is warn_implicit_name
 
+    await async_update_entity(hass, ent.entity_id)
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
 
 @pytest.mark.parametrize(
-    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
     (
-        (False, "Entity Blu", "Entity Blu", False),
-        (False, None, None, False),
-        (True, "Entity Blu", "Device Bla Entity Blu", False),
-        (True, None, "Device Bla", False),
+        "has_entity_name",
+        "entity_name",
+        "device_name",
+        "expected_friendly_name",
+        "warn_implicit_name",
+    ),
+    (
+        (False, "Entity Blu", "Device Bla", "Entity Blu", False),
+        (False, None, "Device Bla", None, False),
+        (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", "Device Bla", False),
+        (True, "Entity Blu", UNDEFINED, "Entity Blu", False),
+        (True, "Entity Blu", None, "Mock Title Entity Blu", False),
     ),
 )
 async def test_friendly_name_attr(
@@ -998,6 +1012,7 @@ async def test_friendly_name_attr(
     caplog: pytest.LogCaptureFixture,
     has_entity_name: bool,
     entity_name: str | None,
+    device_name: str | None | UndefinedType,
     expected_friendly_name: str | None,
     warn_implicit_name: bool,
 ) -> None:
@@ -1008,7 +1023,7 @@ async def test_friendly_name_attr(
         device_info={
             "identifiers": {("hue", "1234")},
             "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
-            "name": "Device Bla",
+            "name": device_name,
         },
     )
     ent._attr_has_entity_name = has_entity_name
@@ -1017,8 +1032,6 @@ async def test_friendly_name_attr(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
@@ -1060,11 +1073,76 @@ async def test_friendly_name_description(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        (True, UNDEFINED, "Device Bla English cls", False),
+    ),
+)
+async def test_friendly_name_description_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has an entity description."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        device_class="test_class",
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1102,11 +1180,132 @@ async def test_friendly_name_property(
         hass,
         caplog,
         ent,
-        has_entity_name,
-        entity_name,
         expected_friendly_name,
         warn_implicit_name,
     )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, "Entity Blu", "Entity Blu", False),
+        (False, None, None, False),
+        (False, UNDEFINED, None, False),
+        (True, "Entity Blu", "Device Bla Entity Blu", False),
+        (True, None, "Device Bla", False),
+        # Won't use the device class name because the entity overrides the name property
+        (True, UNDEFINED, "Device Bla None", False),
+    ),
+)
+async def test_friendly_name_property_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    entity_name: str | None,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has overridden the name property."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_class="test_class",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name=entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
+
+
+@pytest.mark.parametrize(
+    ("has_entity_name", "expected_friendly_name", "warn_implicit_name"),
+    (
+        (False, None, False),
+        (True, "Device Bla English cls", False),
+    ),
+)
+async def test_friendly_name_device_class_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    has_entity_name: bool,
+    expected_friendly_name: str | None,
+    warn_implicit_name: bool,
+) -> None:
+    """Test friendly name when the entity has not set the name in any way."""
+
+    translations = {
+        "en": {"component.test_domain.entity_component.test_class.name": "English cls"},
+    }
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    class DeviceClassNameMockEntity(MockEntity):
+        def _default_to_device_class_name(self) -> bool:
+            """Return True if an unnamed entity should be named by its device class."""
+            return True
+
+    ent = DeviceClassNameMockEntity(
+        unique_id="qwer",
+        device_class="test_class",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+    )
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(
+            hass,
+            caplog,
+            ent,
+            expected_friendly_name,
+            warn_implicit_name,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1162,6 +1361,7 @@ async def test_friendly_name_updated(
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
     entity_platform = MockEntityPlatform(
         hass, platform_name=config_entry.domain, platform=platform
     )
@@ -1278,3 +1478,84 @@ async def test_warn_no_platform(
     caplog.clear()
     ent.async_write_ha_state()
     assert error_message not in caplog.text
+
+
+async def test_invalid_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the entity helper catches InvalidState and sets state to unknown."""
+    ent = entity.Entity()
+    ent.entity_id = "test.test"
+    ent.hass = hass
+
+    ent._attr_state = "x" * 255
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == "x" * 255
+
+    caplog.clear()
+    ent._attr_state = "x" * 256
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert (
+        "homeassistant.helpers.entity",
+        logging.ERROR,
+        f"Failed to set state, fall back to {STATE_UNKNOWN}",
+    ) in caplog.record_tuples
+
+    ent._attr_state = "x" * 255
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == "x" * 255
+
+
+async def test_suggest_report_issue_built_in(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _suggest_report_issue for an entity from a built-in integration."""
+    mock_entity = entity.Entity()
+    mock_entity.entity_id = "comp_test.test_entity"
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == (
+        "create a bug report at https://github.com/home-assistant/core/issues"
+        "?q=is%3Aopen+is%3Aissue"
+    )
+
+    mock_integration(hass, MockModule(domain="test"), built_in=True)
+    platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == (
+        "create a bug report at https://github.com/home-assistant/core/issues"
+        "?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test%22"
+    )
+
+
+async def test_suggest_report_issue_custom_component(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _suggest_report_issue for an entity from a custom component."""
+
+    class CustomComponentEntity(entity.Entity):
+        """Custom component entity."""
+
+        __module__ = "custom_components.bla.sensor"
+
+    mock_entity = CustomComponentEntity()
+    mock_entity.entity_id = "comp_test.test_entity"
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == "report it to the custom integration author"
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="test", partial_manifest={"issue_tracker": "httpts://some_url"}
+        ),
+        built_in=False,
+    )
+    platform = MockEntityPlatform(hass, domain="comp_test", platform_name="test")
+    await platform.async_add_entities([mock_entity])
+
+    suggestion = mock_entity._suggest_report_issue()
+    assert suggestion == "create a bug report at httpts://some_url"
