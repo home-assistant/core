@@ -50,7 +50,7 @@ def _calculate_uptime(value: dict, key: str) -> datetime:
     return utcnow() - timedelta(days=d, hours=h, minutes=m)
 
 
-def _line_connection(value: dict, key: str) -> str:
+def _line_connection(value: dict, key: str) -> str | None:
     """Identify line type."""
 
     internet_ip = value[key]
@@ -59,15 +59,15 @@ def _line_connection(value: dict, key: str) -> str:
     internet_key_ip = value.get("vf_internet_key_ip_addr")
 
     if internet_ip == dsl_ip:
-        return LINE_TYPES[1]
+        return LINE_TYPES[0]
 
     if internet_ip == fiber_ip:
-        return LINE_TYPES[2]
+        return LINE_TYPES[1]
 
     if internet_ip == internet_key_ip:
-        return LINE_TYPES[3]
+        return LINE_TYPES[2]
 
-    return LINE_TYPES[0]
+    return None
 
 
 SENSOR_TYPES: Final = (
