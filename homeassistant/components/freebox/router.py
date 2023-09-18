@@ -122,38 +122,35 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
-        try:
-            # System sensors
-            syst_datas: dict[str, Any] = await self._api.system.get_config()
 
-            # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
-            # Name and id of sensors may vary under Freebox devices.
-            for sensor in syst_datas["sensors"]:
-                self.sensors_temperature[sensor["name"]] = sensor.get("value")
+        # System sensors
+        syst_datas: dict[str, Any] = await self._api.system.get_config()
 
-            # Connection sensors
-            connection_datas: dict[str, Any] = await self._api.connection.get_status()
-            for sensor_key in CONNECTION_SENSORS_KEYS:
-                self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+        # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
+        # Name and id of sensors may vary under Freebox devices.
+        for sensor in syst_datas["sensors"]:
+            self.sensors_temperature[sensor["name"]] = sensor.get("value")
 
-            self._attrs = {
-                "IPv4": connection_datas.get("ipv4"),
-                "IPv6": connection_datas.get("ipv6"),
-                "connection_type": connection_datas["media"],
-                "uptime": datetime.fromtimestamp(
-                    round(datetime.now().timestamp()) - syst_datas["uptime_val"]
-                ),
-                "firmware_version": self._sw_v,
-                "serial": syst_datas["serial"],
-            }
+        # Connection sensors
+        connection_datas: dict[str, Any] = await self._api.connection.get_status()
+        for sensor_key in CONNECTION_SENSORS_KEYS:
+            self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
-            self.call_list = await self._api.call.get_calls_log()
+        self._attrs = {
+            "IPv4": connection_datas.get("ipv4"),
+            "IPv6": connection_datas.get("ipv6"),
+            "connection_type": connection_datas["media"],
+            "uptime": datetime.fromtimestamp(
+                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+            ),
+            "firmware_version": self._sw_v,
+            "serial": syst_datas["serial"],
+        }
 
-            await self._update_disks_sensors()
-            await self._update_raids_sensors()
-        except HttpRequestError as error:
-            _LOGGER.warning("The Freebox API URL sensors error %s", error)
-            return
+        self.call_list = await self._api.call.get_calls_log()
+
+        await self._update_disks_sensors()
+        await self._update_raids_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
