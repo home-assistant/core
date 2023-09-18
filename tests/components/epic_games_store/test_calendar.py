@@ -3,13 +3,11 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.epic_games_store.const import CONF_LOCALE, DOMAIN
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
+from homeassistant.components.epic_games_store.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .const import MOCK_LOCALE
-
-from tests.common import MockConfigEntry
+from .common import setup_platform
 
 CAL_CONFIG = {
     "platform": DOMAIN,
@@ -18,19 +16,33 @@ CAL_CONFIG = {
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
     """Test setup component with calendars."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_LOCALE: MOCK_LOCALE},
-        unique_id=MOCK_LOCALE,
-    )
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_platform(hass, CALENDAR_DOMAIN)
 
     state = hass.states.get("calendar.epic_games_store_discount_games")
     assert state.name == "Epic Games Store Discount Games"
     state = hass.states.get("calendar.epic_games_store_free_games")
     assert state.name == "Epic Games Store Free Games"
+
+
+# async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
+#     """Test setup component with calendars."""
+#     await setup_platform(hass, CALENDAR_DOMAIN)
+
+#     state = hass.states.get("calendar.epic_games_store_discount_games")
+#     assert state.name == "Epic Games Store Discount Games"
+#     state = hass.states.get("calendar.epic_games_store_free_games")
+#     assert state.name == "Epic Games Store Free Games"
+#     assert state.state == STATE_ON
+#     assert dict(state.attributes) == {
+#         "friendly_name": "Private",
+#         "message": "This is a normal event",
+#         "all_day": False,
+#         "offset_reached": False,
+#         "start_time": "2017-11-27 17:00:00",
+#         "end_time": "2017-11-27 18:00:00",
+#         "location": "Hamburg",
+#         "description": "Surprisingly rainy",
+#     }
 
 
 # @patch(
