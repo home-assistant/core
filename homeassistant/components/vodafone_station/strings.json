@@ -29,5 +29,30 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "external_ipv4": { "name": "WAN IPv4 address" },
+      "external_ipv6": { "name": "WAN IPv6 address" },
+      "external_ip_key": { "name": "WAN internet key address" },
+      "active_connection": {
+        "name": "Active connection",
+        "state": {
+          "unknown": "Unknown",
+          "dsl": "xDSL",
+          "fiber": "Fiber",
+          "internet_key": "Internet key"
+        }
+      },
+      "down_stream": { "name": "WAN download rate" },
+      "up_stream": { "name": "WAN upload rate" },
+      "fw_version": { "name": "Firmware version" },
+      "phone_num1": { "name": "Phone number (1)" },
+      "phone_num2": { "name": "Phone number (2)" },
+      "sys_uptime": { "name": "Uptime" },
+      "sys_cpu_usage": { "name": "CPU usage" },
+      "sys_memory_usage": { "name": "Memory usage" },
+      "sys_reboot_cause": { "name": "Reboot cause" }
+    }
   }
 }
