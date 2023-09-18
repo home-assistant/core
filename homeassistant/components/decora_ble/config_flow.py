@@ -117,13 +117,13 @@ class DecoraBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         current_addresses = self._async_current_ids()
         for discovery in async_discovered_service_info(self.hass):
+            address = discovery.address.upper()
             if (
-                discovery.address in current_addresses
-                or discovery.address.upper() in self._discovered_devices
+                address in current_addresses
+                or address in self._discovered_devices
                 or DECORA_SERVICE_UUID not in discovery.service_uuids
             ):
                 continue
-            address = discovery.address.upper()
             self._discovered_devices[address] = DiscoveredDecoraDevice(
                 name=discovery.name, address=address, api_key=None
             )
