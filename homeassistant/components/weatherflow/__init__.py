@@ -30,8 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = WeatherFlowListener(host=entry.data.get(CONF_HOST, "0.0.0.0"))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     @callback
     def device_discovered(device: WeatherFlowDevice) -> None:
         _LOGGER.debug("Found a device: %s", device)
@@ -58,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.start_listening()
     except ListenerError as ex:
         raise ConfigEntryNotReady from ex
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
