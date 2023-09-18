@@ -38,11 +38,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result2["type"] == FlowResultType.FORM
 
-    # assert result2["title"] == "Name of the device"
-    # assert result2["data"] == {
-    #     "host": "https://test.aqvify.com",
-    #     "api_key": "top-secret-api-key",
-    # }
     assert len(mock_setup_entry.mock_calls) == 0
 
 

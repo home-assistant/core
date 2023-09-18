@@ -1,4 +1,4 @@
-"""Common fixtures for the Eng Testing tests."""
+"""Common fixtures for the Aqvify tests."""
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

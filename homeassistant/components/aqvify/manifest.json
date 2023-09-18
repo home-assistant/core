@@ -3,11 +3,7 @@
   "name": "Aqvify",
   "codeowners": ["@ptz0n"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/aqvify",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["aqvify==0.1.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["aqvify==0.1.1"]
 }

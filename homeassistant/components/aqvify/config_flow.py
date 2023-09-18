@@ -42,7 +42,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
+
+        if user_input:
             self.name = user_input[CONF_NAME]
             self.host = user_input[CONF_HOST]
             self.api_key = user_input[CONF_API_KEY]
@@ -73,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Select Aqvify devices to configure."""
 
-        if user_input is None:
+        if not user_input:
             return self.async_show_form(
                 step_id="devices",
                 data_schema=vol.Schema(

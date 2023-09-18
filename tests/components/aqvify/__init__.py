@@ -1,1 +1,1 @@
-"""Tests for the Eng Testing integration."""
+"""Tests for the Aqvify integration."""

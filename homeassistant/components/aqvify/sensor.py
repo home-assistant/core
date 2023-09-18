@@ -7,13 +7,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_NAME,
-    UnitOfLength,
-)
+from homeassistant.const import CONF_DEVICES, CONF_NAME, UnitOfLength
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
@@ -70,6 +67,6 @@ class AqvifyWaterLevelMeter(SensorEntity):
                 self.device_key
             )
 
-            self._attr_native_value = latest_value["waterLevel"]
+            self._attr_native_value = round(latest_value["waterLevel"], 2)
         except Exception:  # pylint: disable=broad-except
             LOGGER.debug("Unexpected response from Aqvify, %s", Exception)
