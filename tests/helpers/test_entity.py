@@ -1916,3 +1916,36 @@ async def test_update_capabilities_too_often_cooldown(
     assert entry.supported_features == supported_features + 1
 
     assert capabilities_too_often_warning not in caplog.text
+
+
+@pytest.mark.parametrize(("property", "values"), [("attribution", ["abcd", "efgh"])])
+async def test_cached_entity_properties(
+    hass: HomeAssistant, property: str, values: Any
+) -> None:
+    """Test entity properties are cached."""
+    ent = entity.Entity()
+    setattr(ent, f"_attr_{property}", values[0])
+    assert getattr(ent, property) == values[0]
+
+    # Test update
+    setattr(ent, f"_attr_{property}", values[1])
+    assert getattr(ent, property) == values[1]
+
+
+async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:
+    """Test entity properties on class level work."""
+    property = "attribution"
+    values = ["abcd", "efgh"]
+
+    class EntityWithClassAttribute(entity.Entity):
+        _attr_attribution = values[0]
+
+    ent1 = EntityWithClassAttribute()
+    ent2 = EntityWithClassAttribute()
+    assert getattr(ent1, property) == values[0]
+    assert getattr(ent2, property) == values[0]
+
+    # Test update
+    setattr(ent1, f"_attr_{property}", values[1])
+    assert getattr(ent1, property) == values[1]
+    assert getattr(ent2, property) == values[0]
