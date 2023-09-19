@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer
 from .const import DOMAIN, ICON_STATUS, KEY_STATUS
+from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
 
@@ -36,15 +36,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server binary sensor platform."""
-    server = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add binary sensor entities.
     async_add_entities(
         [
-            MinecraftServerBinarySensorEntity(server, description)
+            MinecraftServerBinarySensorEntity(coordinator, description)
             for description in BINARY_SENSOR_DESCRIPTIONS
-        ],
-        True,
+        ]
     )
 
 
@@ -55,15 +54,21 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
 
     def __init__(
         self,
-        server: MinecraftServer,
+        coordinator: MinecraftServerCoordinator,
         description: MinecraftServerBinarySensorEntityDescription,
     ) -> None:
         """Initialize binary sensor base entity."""
-        super().__init__(server=server)
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{server.unique_id}-{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
         self._attr_is_on = False
 
-    async def async_update(self) -> None:
-        """Update binary sensor state."""
-        self._attr_is_on = self._server.online
+    @property
+    def available(self) -> bool:
+        """Return binary sensor availability."""
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return binary sensor state."""
+        return self.coordinator.last_update_success
