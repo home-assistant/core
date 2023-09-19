@@ -1,4 +1,5 @@
 """Test Home Assistant config flow for BleBox devices."""
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
@@ -211,8 +212,8 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="172.100.123.4",
-            addresses=["172.100.123.4"],
+            ip_address=ip_address("172.100.123.4"),
+            ip_addresses=[ip_address("172.100.123.4")],
             port=80,
             hostname="bbx-bbtest123456.local.",
             type="_bbxsrv._tcp.local.",
@@ -251,8 +252,8 @@ async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -275,8 +276,8 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -301,8 +302,8 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",

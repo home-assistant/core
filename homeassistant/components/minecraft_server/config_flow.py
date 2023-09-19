@@ -1,14 +1,18 @@
 """Config flow for Minecraft Server integration."""
 from contextlib import suppress
+import logging
 
+from mcstatus import JavaServer
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from . import MinecraftServer
+from . import helpers
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,15 +56,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_PORT: port,
                 }
-                server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
-                await server.async_check_connection()
-                if not server.online:
-                    # Host or port invalid or server not reachable.
-                    errors["base"] = "cannot_connect"
-                else:
+                if await self._async_is_server_online(host, port):
                     # Configuration data are available and no error was detected,
                     # create configuration entry.
                     return self.async_create_entry(title=title, data=config_data)
+
+                # Host or port invalid or server not reachable.
+                errors["base"] = "cannot_connect"
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
@@ -85,3 +87,30 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _async_is_server_online(self, host: str, port: int) -> bool:
+        """Check server connection using a 'status' request and return result."""
+
+        # Check if host is a SRV record. If so, update server data.
+        if srv_record := await helpers.async_check_srv_record(host):
+            # Use extracted host and port from SRV record.
+            host = srv_record[CONF_HOST]
+            port = srv_record[CONF_PORT]
+
+        # Send a status request to the server.
+        server = JavaServer(host, port)
+        try:
+            await server.async_status()
+            return True
+        except OSError as error:
+            _LOGGER.debug(
+                (
+                    "Error occurred while trying to check the connection to '%s:%s' -"
+                    " OSError: %s"
+                ),
+                host,
+                port,
+                error,
+            )
+
+        return False

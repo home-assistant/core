@@ -302,6 +302,7 @@ FLOWS = {
         "netatmo",
         "netgear",
         "nexia",
+        "nextbus",
         "nextcloud",
         "nextdns",
         "nfandroidtv",
