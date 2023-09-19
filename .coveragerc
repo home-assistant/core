@@ -735,6 +735,7 @@ omit =
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/coordinator.py
     homeassistant/components/minecraft_server/entity.py
     homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/minio_helper.py
@@ -1462,6 +1463,7 @@ omit =
     homeassistant/components/vodafone_station/const.py
     homeassistant/components/vodafone_station/coordinator.py
     homeassistant/components/vodafone_station/device_tracker.py
+    homeassistant/components/vodafone_station/sensor.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py
