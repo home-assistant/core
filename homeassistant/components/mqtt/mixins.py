@@ -354,13 +354,13 @@ def write_state_on_attr_change(
 
     def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
-        if not (assume_has_changed := (getattr(entity, "_attr_force_update", False))):
+        if not (write_state := (getattr(entity, "_attr_force_update", False))):
             for attribute, last_value in tracked_attrs.items():
                 if getattr(entity, attribute, UNDEFINED) != last_value:
-                    assume_has_changed = True
+                    write_state = True
                     break
 
-        return assume_has_changed
+        return write_state
 
     def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
         @wraps(msg_callback)

@@ -222,6 +222,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self._config.get(CONF_VALUE_TEMPLATE),
                 )
                 return
+
             if payload == self._config[CONF_PAYLOAD_ON]:
                 self._attr_is_on = True
             elif payload == self._config[CONF_PAYLOAD_OFF]:
