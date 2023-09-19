@@ -15,12 +15,11 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Connector
 from .const import DOMAIN
-from .entity import BlueCurrentEntity
+from .entity import BlueCurrentEntity, ChargepointEntity
 
 TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
 
@@ -29,169 +28,147 @@ SENSORS = (
         key="actual_v1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
-        name="Voltage Phase 1",
+        translation_key="actual_v1",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_v2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
-        name="Voltage Phase 2",
+        translation_key="actual_v2",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_v3",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
-        name="Voltage Phase 3",
+        translation_key="actual_v3",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="avg_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
-        name="Average Voltage",
+        translation_key="avg_voltage",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_p1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Current Phase 1",
+        translation_key="actual_p1",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_p2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Current Phase 2",
+        translation_key="actual_p2",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_p3",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Current Phase 3",
+        translation_key="actual_p3",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="avg_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Average Current",
+        translation_key="avg_current",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="total_kw",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
-        name="Total kW",
+        translation_key="total_kw",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="actual_kwh",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        name="Energy Usage",
+        translation_key="actual_kwh",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="start_datetime",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Started On",
-        has_entity_name=True,
+        translation_key="start_datetime",
     ),
     SensorEntityDescription(
         key="stop_datetime",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Stopped On",
-        has_entity_name=True,
+        translation_key="stop_datetime",
     ),
     SensorEntityDescription(
         key="offline_since",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Offline Since",
-        has_entity_name=True,
+        translation_key="offline_since",
     ),
     SensorEntityDescription(
         key="total_cost",
         native_unit_of_measurement="EUR",
         device_class=SensorDeviceClass.MONETARY,
-        name="Total Cost",
-        has_entity_name=True,
+        translation_key="total_cost",
     ),
     SensorEntityDescription(
         key="vehicle_status",
-        name="Vehicle Status",
         icon="mdi:car",
         device_class=SensorDeviceClass.ENUM,
-        has_entity_name=True,
         options=["standby", "vehicle_detected", "ready", "no_power", "vehicle_error"],
         translation_key="vehicle_status",
     ),
     SensorEntityDescription(
         key="activity",
-        name="Activity",
         icon="mdi:ev-station",
         device_class=SensorDeviceClass.ENUM,
-        has_entity_name=True,
         options=["available", "charging", "unavailable", "error", "offline"],
         translation_key="activity",
     ),
     SensorEntityDescription(
         key="max_usage",
-        name="Max Usage",
+        translation_key="max_usage",
         icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="smartcharging_max_usage",
-        name="Smart Charging Max Usage",
+        translation_key="smartcharging_max_usage",
         icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="max_offline",
-        name="Offline Max Usage",
+        translation_key="max_offline",
         icon="mdi:gauge-full",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="current_left",
-        name="Remaining current",
+        translation_key="current_left",
         icon="mdi:gauge",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
 )
 
@@ -200,44 +177,39 @@ GRID_SENSORS = (
         key="grid_actual_p1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Grid Current Phase 1",
+        translation_key="grid_actual_p1",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="grid_actual_p2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Grid Current Phase 2",
+        translation_key="grid_actual_p2",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="grid_actual_p3",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Grid Current Phase 3",
+        translation_key="grid_actual_p3",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="grid_avg_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Average Grid Current",
+        translation_key="grid_avg_current",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
     SensorEntityDescription(
         key="grid_max_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        name="Max Grid Current",
+        translation_key="grid_max_current",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
     ),
 )
 
@@ -260,10 +232,8 @@ async def async_setup_entry(
     async_add_entities(sensor_list)
 
 
-class ChargePointSensor(BlueCurrentEntity, SensorEntity):
+class ChargePointSensor(ChargepointEntity, SensorEntity):
     """Define a charge point sensor."""
-
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -296,10 +266,8 @@ class ChargePointSensor(BlueCurrentEntity, SensorEntity):
             self._attr_available = False
 
 
-class GridSensor(SensorEntity):
+class GridSensor(BlueCurrentEntity, SensorEntity):
     """Define a grid sensor."""
-
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -307,26 +275,11 @@ class GridSensor(SensorEntity):
         sensor: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(connector, f"{DOMAIN}_grid_update")
 
         self.key = sensor.key
         self.entity_description = sensor
         self._attr_unique_id = sensor.key
-        self.connector = connector
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, f"{DOMAIN}_grid_update", update)
-        )
-
-        self.update_from_latest_data()
 
     @callback
     def update_from_latest_data(self) -> None:

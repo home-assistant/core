@@ -24,6 +24,7 @@
   "entity": {
     "sensor": {
       "activity": {
+        "name": "Activity",
         "state": {
           "available": "Available",
           "charging": "Charging",
@@ -33,6 +34,7 @@
         }
       },
       "vehicle_status": {
+        "name": "Vehicle Status",
         "state": {
           "standby": "Standby",
           "vehicle_detected": "Detected",
@@ -40,6 +42,75 @@
           "no_power": "No power",
           "vehicle_error": "Error"
         }
+      },
+      "actual_v1": {
+        "name": "Voltage Phase 1"
+      },
+      "actual_v2": {
+        "name": "Voltage Phase 2"
+      },
+      "actual_v3": {
+        "name": "Voltage Phase 3"
+      },
+      "avg_voltage": {
+        "name": "Average Voltage"
+      },
+      "actual_p1": {
+        "name": "Current Phase 1"
+      },
+      "actual_p2": {
+        "name": "Current Phase 2"
+      },
+      "actual_p3": {
+        "name": "Current Phase 3"
+      },
+      "avg_current": {
+        "name": "Average Current"
+      },
+      "total_kw": {
+        "name": "Total kW"
+      },
+      "actual_kwh": {
+        "name": "Energy Usage"
+      },
+      "start_datetime": {
+        "name": "Started On"
+      },
+      "stop_datetime": {
+        "name": "Stopped On"
+      },
+      "offline_since": {
+        "name": "Offline Since"
+      },
+      "total_cost": {
+        "name": "Total Cost"
+      },
+      "max_usage": {
+        "name": "Max Usage"
+      },
+      "smartcharging_max_usage": {
+        "name": "Smart Charging Max Usage"
+      },
+      "max_offline": {
+        "name": "Offline Max Usage"
+      },
+      "current_left": {
+        "name": "Remaining current"
+      },
+      "grid_actual_p1": {
+        "name": "Grid Current Phase 1"
+      },
+      "grid_actual_p2": {
+        "name": "Grid Current Phase 2"
+      },
+      "grid_actual_p3": {
+        "name": "Grid Current Phase 3"
+      },
+      "grid_avg_current": {
+        "name": "Average Grid Current"
+      },
+      "grid_max_current": {
+        "name": "Max Grid Current"
       }
     }
   }

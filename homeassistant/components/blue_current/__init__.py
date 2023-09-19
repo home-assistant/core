@@ -21,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -47,8 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     connector = Connector(hass, config_entry, client)
     try:
         await connector.connect(api_token)
-    except InvalidApiToken as err:
-        raise ConfigEntryAuthFailed("Invalid API token.") from err
+    except InvalidApiToken:
+        LOGGER.error("Invalid Api token")
+        return False
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
 

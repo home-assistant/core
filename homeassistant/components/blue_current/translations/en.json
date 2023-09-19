@@ -24,6 +24,7 @@
     "entity": {
         "sensor": {
             "activity": {
+                "name": "Activity",
                 "state": {
                     "available": "Available",
                     "charging": "Charging",
@@ -32,7 +33,77 @@
                     "unavailable": "Unavailable"
                 }
             },
+            "actual_kwh": {
+                "name": "Energy Usage"
+            },
+            "actual_p1": {
+                "name": "Current Phase 1"
+            },
+            "actual_p2": {
+                "name": "Current Phase 2"
+            },
+            "actual_p3": {
+                "name": "Current Phase 3"
+            },
+            "actual_v1": {
+                "name": "Voltage Phase 1"
+            },
+            "actual_v2": {
+                "name": "Voltage Phase 2"
+            },
+            "actual_v3": {
+                "name": "Voltage Phase 3"
+            },
+            "avg_current": {
+                "name": "Average Current"
+            },
+            "avg_voltage": {
+                "name": "Average Voltage"
+            },
+            "current_left": {
+                "name": "Remaining current"
+            },
+            "grid_actual_p1": {
+                "name": "Grid Current Phase 1"
+            },
+            "grid_actual_p2": {
+                "name": "Grid Current Phase 2"
+            },
+            "grid_actual_p3": {
+                "name": "Grid Current Phase 3"
+            },
+            "grid_avg_current": {
+                "name": "Average Grid Current"
+            },
+            "grid_max_current": {
+                "name": "Max Grid Current"
+            },
+            "max_offline": {
+                "name": "Offline Max Usage"
+            },
+            "max_usage": {
+                "name": "Max Usage"
+            },
+            "offline_since": {
+                "name": "Offline Since"
+            },
+            "smartcharging_max_usage": {
+                "name": "Smart Charging Max Usage"
+            },
+            "start_datetime": {
+                "name": "Started On"
+            },
+            "stop_datetime": {
+                "name": "Stopped On"
+            },
+            "total_cost": {
+                "name": "Total Cost"
+            },
+            "total_kw": {
+                "name": "Total kW"
+            },
             "vehicle_status": {
+                "name": "Vehicle Status",
                 "state": {
                     "no_power": "No power",
                     "ready": "Ready",
