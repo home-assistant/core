@@ -1,4 +1,5 @@
 """The tests for the recorder filter matching the EntityFilter component."""
+import asyncio
 import importlib
 import sys
 from unittest.mock import patch
@@ -45,6 +46,7 @@ async def _wait_migration_done(hass: HomeAssistant) -> None:
         4  # 2 for the task, and 2 in case there are additional rows to migrate
     )
     for _ in range(migration_tasks):
+        await asyncio.sleep(0.35)
         await recorder.get_instance(hass).async_block_till_done()
         await async_recorder_block_till_done(hass)
 
