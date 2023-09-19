@@ -347,7 +347,7 @@ def init_entity_id_from_config(
         )
 
 
-def track_state_attribute_writes(
+def write_state_on_attr_change(
     entity: Entity, attributes: set[str]
 ) -> Callable[[MessageCallbackType], MessageCallbackType]:
     """Wrap an MQTT message callback to track state attribute changes."""
@@ -415,7 +415,7 @@ class MqttAttributes(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @track_state_attribute_writes(self, {"_attr_extra_state_attributes"})
+        @write_state_on_attr_change(self, {"_attr_extra_state_attributes"})
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = attr_tpl(msg.payload)
@@ -522,7 +522,7 @@ class MqttAvailability(Entity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @track_state_attribute_writes(self, {"available"})
+        @write_state_on_attr_change(self, {"available"})
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
