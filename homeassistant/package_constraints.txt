@@ -8,7 +8,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==23.8.0
 bcrypt==4.0.1
-bleak-retry-connector==3.1.3
+bleak-retry-connector==3.2.1
 bleak==0.21.1
 bluetooth-adapters==0.16.1
 bluetooth-auto-recovery==1.2.3
@@ -47,13 +47,13 @@ PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
-typing-extensions>=4.7.0,<5.0
+typing-extensions>=4.8.0,<5.0
 ulid-transform==0.8.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtcvad==2.0.10
 yarl==1.9.2
-zeroconf==0.111.0
+zeroconf==0.112.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -112,7 +112,7 @@ httpcore==0.17.3
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.2
+numpy==1.26.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated
