@@ -54,7 +54,6 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             hass,
             _LOGGER,
             name=name,
-            update_method=self._async_update_data,
             update_interval=UPDATE_INTERVAL,
         )
         self._controller = controller

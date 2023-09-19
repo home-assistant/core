@@ -42,6 +42,7 @@ from .const import (
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
@@ -192,6 +193,11 @@ class AemetWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
+
+    @property
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data[ATTR_API_WIND_MAX_SPEED]
 
     @property
     def native_wind_speed(self):

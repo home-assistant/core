@@ -940,6 +940,7 @@ async def test_websocket_bind_unbind_devices(
 @pytest.mark.parametrize("command_type", ["bind", "unbind"])
 async def test_websocket_bind_unbind_group(
     command_type: str,
+    hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
 ) -> None:
@@ -947,8 +948,9 @@ async def test_websocket_bind_unbind_group(
 
     test_group_id = 0x0001
     gateway_mock = MagicMock()
+
     with patch(
-        "homeassistant.components.zha.websocket_api.get_gateway",
+        "homeassistant.components.zha.websocket_api.get_zha_gateway",
         return_value=gateway_mock,
     ):
         device_mock = MagicMock()

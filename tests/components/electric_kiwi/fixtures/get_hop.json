@@ -1,0 +1,16 @@
+{
+  "data": {
+    "connection_id": "3",
+    "customer_number": 1000001,
+    "end": {
+      "end_time": "5:00 PM",
+      "interval": "34"
+    },
+    "start": {
+      "start_time": "4:00 PM",
+      "interval": "33"
+    },
+    "type": "hop_customer"
+  },
+  "status": 1
+}
