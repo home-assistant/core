@@ -553,7 +553,7 @@ blinkpy==0.22.4
 blockchain==1.4.4
 
 # homeassistant.components.blue_current
-bluecurrent-api==1.0.4
+bluecurrent-api==1.0.5
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3

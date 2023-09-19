@@ -170,7 +170,7 @@ class Connector:
 
             async_call_later(self.hass, SMALL_DELAY, self.reconnect)
 
-    async def reconnect(self, event_time: datetime | None = None) -> None:
+    async def reconnect(self, _event_time: datetime | None = None) -> None:
         """Keep trying to reconnect to the websocket."""
         try:
             await self.connect(self.config.data[CONF_API_TOKEN])
