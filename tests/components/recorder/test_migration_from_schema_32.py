@@ -208,7 +208,7 @@ async def test_migrate_events_context_ids(
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
         instance.queue_task(EventsContextIDMigrationTask())
-        await async_recorder_block_till_done(hass)
+        await _wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -389,7 +389,7 @@ async def test_migrate_states_context_ids(
 
     await async_wait_recording_done(hass)
     instance.queue_task(StatesContextIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _object_as_dict(obj):
         return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
