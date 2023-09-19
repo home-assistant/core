@@ -39,6 +39,15 @@ SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
+async def _wait_migration_done(hass: HomeAssistant) -> None:
+    """Wait for the migration to be done."""
+    migration_tasks = (
+        4  # 2 for the task, and 2 in case there are additional rows to migrate
+    )
+    for _ in range(migration_tasks):
+        await async_recorder_block_till_done(hass)
+
+
 def _create_engine_test(*args, **kwargs):
     """Test version of create_engine that initializes with old schema.
 
@@ -517,7 +526,7 @@ async def test_migrate_event_type_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -598,7 +607,7 @@ async def test_migrate_entity_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -664,7 +673,7 @@ async def test_post_migrate_entity_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDPostMigrationTask())
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -719,8 +728,7 @@ async def test_migrate_null_entity_ids(
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _fetch_migrated_states():
         with session_scope(hass=hass, read_only=True) as session:
@@ -790,8 +798,7 @@ async def test_migrate_null_event_type_ids(
     # This is a threadsafe way to add a task to the recorder
 
     instance.queue_task(EventTypeIDMigrationTask())
-    await async_recorder_block_till_done(hass)
-    await async_recorder_block_till_done(hass)
+    await _wait_migration_done(hass)
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
