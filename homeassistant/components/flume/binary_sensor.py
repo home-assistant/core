@@ -71,7 +71,7 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         filter_notification=(
-            lambda x: x.get("extra", {}).get("event_rule_name", "")
+            lambda x: x.get("extra", {}).get("event_rule_name")
             == NOTIFICATION_HIGH_FLOW
         ),
         icon="mdi:waves",
@@ -81,8 +81,8 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         translation_key="custom_alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         filter_notification=(
-            lambda x: x.get("type", -1) == 1
-            and x.get("extra", {}).get("event_rule_name", "")
+            lambda x: x.get("type") == 1
+            and x.get("extra", {}).get("event_rule_name")
             not in [NOTIFICATION_LEAK_DETECTED, NOTIFICATION_HIGH_FLOW]
         ),
         icon="mdi:waves",
@@ -92,7 +92,7 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY,
         filter_notification=(
-            lambda x: x.get("extra", {}).get("event_rule_name", "")
+            lambda x: x.get("extra", {}).get("event_rule_name")
             == NOTIFICATION_LOW_BATTERY
         ),
     ),
@@ -162,7 +162,7 @@ class FlumeNotificationBinarySensor(
 
     def _filter_notification(self, notification: dict[str, Any]):
         return notification.get(
-            "device_id", ""
+            "device_id"
         ) == self.device_id and self.entity_description.filter_notification(
             notification
         )
