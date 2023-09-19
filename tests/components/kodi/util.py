@@ -28,8 +28,8 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 
 
 TEST_DISCOVERY_WO_UUID = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     port=8080,
     hostname="hostname.local.",
     type="_xbmc-jsonrpc-h._tcp.local.",
