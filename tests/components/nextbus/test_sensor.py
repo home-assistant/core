@@ -74,9 +74,7 @@ BASIC_RESULTS = {
 @pytest.fixture
 def mock_nextbus() -> Generator[MagicMock, None, None]:
     """Create a mock py_nextbus module."""
-    with patch(
-        "homeassistant.components.nextbus.coordinator.NextBusClient"
-    ) as client:
+    with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
         yield client
 
 

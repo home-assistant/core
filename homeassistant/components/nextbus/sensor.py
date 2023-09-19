@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from itertools import chain
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -80,7 +81,7 @@ async def async_setup_entry(
         (
             NextBusDepartureSensor(
                 coordinator,
-                config.unique_id,
+                cast(str, config.unique_id),
                 config.data[CONF_AGENCY],
                 config.data[CONF_ROUTE],
                 config.data[CONF_STOP],
