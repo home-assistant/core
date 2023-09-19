@@ -53,9 +53,9 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes a WeatherFlow sensor entity description."""
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
-    value_fn: Callable[[Quantity], Quantity] | None = None
     imperial_suggested_unit: None | str = None
-    backing_library_attribute: str | None = None
+
+    backing_library_attribute_fn: Callable[[], str] = lambda: ""
 
 
 @dataclass
@@ -163,7 +163,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.PRECIPITATION,
-        backing_library_attribute="rain_accumulation_previous_minute",
+        backing_library_attribute_fn=lambda: "rain_accumulation_previous_minute",
         imperial_suggested_unit=UnitOfPrecipitationDepth.INCHES,
     ),
     WeatherFlowSensorEntityDescription(
@@ -287,8 +287,8 @@ async def async_setup_entry(
             )
             for description in SENSORS
             if (
-                description.backing_library_attribute is not None
-                and hasattr(device, description.backing_library_attribute)
+                description.backing_library_attribute_fn() != ""
+                and hasattr(device, description.backing_library_attribute_fn())
             )
             or hasattr(device, description.key)
         ]
@@ -301,8 +301,8 @@ async def async_setup_entry(
             )
             for description in CUSTOM_SENSORS
             if (
-                description.backing_library_attribute is not None
-                and hasattr(device, description.backing_library_attribute)
+                description.backing_library_attribute_fn() != ""
+                and hasattr(device, description.backing_library_attribute_fn())
             )
             or hasattr(device, description.key)
         ]
@@ -365,9 +365,9 @@ class WeatherFlowSensorEntity(SensorEntity):
 
         # Extract raw sensor data
         # Either pull from the key (default) or (backing_library_attribute) to get sensor value
-        if self.entity_description.backing_library_attribute is not None:
+        if self.entity_description.backing_library_attribute_fn() != "":
             raw_sensor_data = getattr(
-                self.device, self.entity_description.backing_library_attribute
+                self.device, self.entity_description.backing_library_attribute_fn()
             )
         else:
             raw_sensor_data = getattr(self.device, self.entity_description.key)
