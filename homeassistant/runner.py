@@ -163,8 +163,7 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
 def _enable_posix_spawn() -> None:
     """Enable posix_spawn on Alpine Linux."""
-    # pylint: disable=protected-access
-    if subprocess._USE_POSIX_SPAWN:
+    if subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
         return
 
     # The subprocess module does not know about Alpine Linux/musl
@@ -172,6 +171,7 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
+    # pylint: disable-next=protected-access
     subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
 
 

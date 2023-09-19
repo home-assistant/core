@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -62,6 +61,8 @@ async def async_setup_entry(
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
+    _attr_icon = "mdi:string-lights"
+
     def __init__(
         self,
         conf: ConfigEntry,
@@ -69,7 +70,7 @@ class TwinklyLight(LightEntity):
         device_info,
     ) -> None:
         """Initialize a TwinklyLight entity."""
-        self._id = conf.data[CONF_ID]
+        self._attr_unique_id: str = conf.data[CONF_ID]
         self._conf = conf
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
@@ -93,9 +94,8 @@ class TwinklyLight(LightEntity):
         self._client = client
 
         # Set default state before any update
-        self._is_on = False
-        self._is_available = False
-        self._attributes: dict[Any, Any] = {}
+        self._attr_is_on = False
+        self._attr_available = False
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
         self._software_version = ""
@@ -103,53 +103,20 @@ class TwinklyLight(LightEntity):
         self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
-    def available(self) -> bool:
-        """Get a boolean which indicates if this entity is currently available."""
-        return self._is_available
-
-    @property
-    def unique_id(self) -> str | None:
-        """Id of the device."""
-        return self._id
-
-    @property
     def name(self) -> str:
         """Name of the device."""
         return self._name if self._name else "Twinkly light"
 
     @property
-    def model(self) -> str:
-        """Name of the device."""
-        return self._model
-
-    @property
-    def icon(self) -> str:
-        """Icon of the device."""
-        return "mdi:string-lights"
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="LEDWORKS",
-            model=self.model,
+            model=self._model,
             name=self.name,
             sw_version=self._software_version,
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._is_on
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return device specific state attributes."""
-
-        attributes = self._attributes
-
-        return attributes
 
     @property
     def effect(self) -> str | None:
@@ -246,7 +213,7 @@ class TwinklyLight(LightEntity):
                 await self._client.set_current_movie(int(movie_id))
                 await self._client.set_mode("movie")
                 self._client.default_mode = "movie"
-        if not self._is_on:
+        if not self._attr_is_on:
             await self._client.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -258,7 +225,7 @@ class TwinklyLight(LightEntity):
         _LOGGER.debug("Updating '%s'", self._client.host)
 
         try:
-            self._is_on = await self._client.is_on()
+            self._attr_is_on = await self._client.is_on()
 
             brightness = await self._client.get_brightness()
             brightness_value = (
@@ -266,7 +233,7 @@ class TwinklyLight(LightEntity):
             )
 
             self._attr_brightness = (
-                int(round(brightness_value * 2.55)) if self._is_on else 0
+                int(round(brightness_value * 2.55)) if self._attr_is_on else 0
             )
 
             device_info = await self._client.get_details()
@@ -289,7 +256,7 @@ class TwinklyLight(LightEntity):
                     self._conf,
                     data={
                         CONF_HOST: self._client.host,  # this cannot change
-                        CONF_ID: self._id,  # this cannot change
+                        CONF_ID: self._attr_unique_id,  # this cannot change
                         CONF_NAME: self._name,
                         CONF_MODEL: self._model,
                     },
@@ -299,20 +266,20 @@ class TwinklyLight(LightEntity):
                 await self.async_update_movies()
                 await self.async_update_current_movie()
 
-            if not self._is_available:
+            if not self._attr_available:
                 _LOGGER.info("Twinkly '%s' is now available", self._client.host)
 
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
-            self._is_available = True
+            self._attr_available = True
         except (asyncio.TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the Christmas
             # light are not reachable in July
-            if self._is_available:
+            if self._attr_available:
                 _LOGGER.info(
                     "Twinkly '%s' is not reachable (client error)", self._client.host
                 )
-            self._is_available = False
+            self._attr_available = False
 
     async def async_update_movies(self) -> None:
         """Update the list of movies (effects)."""
