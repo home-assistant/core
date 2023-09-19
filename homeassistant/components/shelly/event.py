@@ -37,6 +37,7 @@ class ShellyEventDescription(EventEntityDescription):
 
 RPC_EVENT: Final = ShellyEventDescription(
     key="input",
+    translation_key="input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
     removal_condition=lambda config, status, key: not is_rpc_momentary_input(
