@@ -28,7 +28,7 @@ dependencies    = [
     "async-timeout==4.0.3",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
-    "awesomeversion==22.9.0",
+    "awesomeversion==23.8.0",
     "bcrypt==4.0.1",
     "certifi>=2021.5.30",
     "ciso8601==2.3.0",
@@ -50,7 +50,7 @@ dependencies    = [
     "python-slugify==4.0.1",
     "PyYAML==6.0.1",
     "requests==2.31.0",
-    "typing-extensions>=4.7.0,<5.0",
+    "typing-extensions>=4.8.0,<5.0",
     "ulid-transform==0.8.1",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
@@ -100,6 +100,7 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
+    "hass_enforce_super_call",
     "hass_enforce_type_hints",
     "hass_inheritance",
     "hass_imports",
@@ -109,6 +110,7 @@ load-plugins = [
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
     "orjson",
@@ -288,6 +290,7 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
     # Ref: <https://github.com/antonagestam/pylint-mypy-overlap>
@@ -449,12 +452,6 @@ filterwarnings = [
     # -- tracked upstream / open PRs
     # https://github.com/caronc/apprise/issues/659 - v1.4.5
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:apprise.AppriseLocal",
-    # https://github.com/gwww/elkm1/pull/71 - v2.2.5
-    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/poljar/matrix-nio/pull/438 - v0.21.2
-    "ignore:FormatChecker.cls_checks is deprecated:DeprecationWarning:nio.schemas",
-    # https://github.com/poljar/matrix-nio/pull/439 - v0.21.2
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nio.client.http_client",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
     # https://github.com/eclipse/paho.mqtt.python/issues/653 - v1.6.1
@@ -464,8 +461,6 @@ filterwarnings = [
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.2
     "ignore:'telnetlib' is deprecated and slated for removal in Python 3.13:DeprecationWarning:ndms2_client.connection",
-    # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - v0.5.3
-    "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
     # https://github.com/pytest-dev/pytest-cov/issues/557 - v4.1.0
     # Should resolve itself once pytest-xdist 4.0 is released and the option is removed
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
@@ -475,10 +470,12 @@ filterwarnings = [
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:feedparser.encodings",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
-    # https://github.com/gurumitts/pylutron-caseta/pull/143 - >0.18.1
-    "ignore:ssl.PROTOCOL_TLSv1_2 is deprecated:DeprecationWarning:pylutron_caseta.smartbridge",
-    # https://github.com/Danielhiversen/pyMillLocal/pull/8 - >=0.3.0
-    "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:mill_local",
+    # https://github.com/poljar/matrix-nio/pull/438 - >0.21.2
+    "ignore:FormatChecker.cls_checks is deprecated:DeprecationWarning:nio.schemas",
+    # https://github.com/poljar/matrix-nio/pull/439 - >0.21.2
+    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:nio.client.http_client",
+    # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
+    "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
 
     # -- not helpful
     # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
@@ -488,6 +485,9 @@ filterwarnings = [
     # Locale changes might take some time to resolve upstream
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:homematicip.base.base_connection",
     "ignore:Use setlocale\\(\\), getencoding\\(\\) and getlocale\\(\\) instead:DeprecationWarning:micloud.micloud",
+    # Wrong stacklevel
+    # https://bugs.launchpad.net/beautifulsoup/+bug/2034451
+    "ignore:It looks like you're parsing an XML document using an HTML parser:UserWarning:bs4.builder",
 
     # -- unmaintained projects, last release about 2+ years
     # https://pypi.org/project/agent-py/ - v0.0.23 - 2020-06-04
@@ -503,6 +503,7 @@ filterwarnings = [
     # https://pypi.org/project/lark-parser/ - v0.12.0 - 2021-08-30 -> moved to `lark`
     # https://pypi.org/project/commentjson/ - v0.9.0 - 2020-10-05
     # https://github.com/vaidik/commentjson/issues/51
+    # https://github.com/vaidik/commentjson/pull/52
     # Fixed upstream, commentjson depends on old version and seems to be unmaintained
     "ignore:module '(sre_parse|sre_constants)' is deprecate:DeprecationWarning:lark.utils",
     # https://pypi.org/project/lomond/ - v0.3.3 - 2018-09-21

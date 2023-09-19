@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import jinja2
 import voluptuous as vol
@@ -313,7 +313,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
                 return
 
-        assert msg_topic is not None
+        if TYPE_CHECKING:
+            assert msg_topic is not None
         await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
