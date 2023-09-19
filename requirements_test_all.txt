@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.20
+SQLAlchemy==2.0.21
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
