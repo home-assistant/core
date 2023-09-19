@@ -45,6 +45,7 @@ async def _wait_migration_done(hass: HomeAssistant) -> None:
         4  # 2 for the task, and 2 in case there are additional rows to migrate
     )
     for _ in range(migration_tasks):
+        await recorder.get_instance(hass).async_block_till_done()
         await async_recorder_block_till_done(hass)
 
 
