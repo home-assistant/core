@@ -11,6 +11,7 @@ MOWER_ONE_SESSION_DATA = {
         "system": {
             "name": "Test Mower 1",
             "model": "450XH-TEST",
+            "serialNumber": 123,
         },
         "metadata": {"connected": True, "statusTimestamp": 1685899526195},
         "calendar": {
@@ -41,7 +42,7 @@ MOWER_ONE_SESSION_DATA = {
         },
         "planner": {
             "nextStartTimestamp": 1685991600000,
-            "override": {"action": None},
+            "override": {"action": "NOT_ACTIVE"},
             "restrictedReason": "WEEK_SCHEDULE",
         },
         "positions": [
@@ -61,6 +62,12 @@ MOWER_ONE_SESSION_DATA = {
             {"latitude": 35.5403481, "longitude": -82.5520054},
         ],
         "battery": {"batteryPercent": 100},
+        "capabilities": {
+            "headlights": True,
+            "workAreas": False,
+            "position": True,
+            "stayOutZones": False,
+        },
         "mower": {
             "mode": "MAIN_AREA",
             "activity": "PARKED_IN_CS",
@@ -69,17 +76,19 @@ MOWER_ONE_SESSION_DATA = {
             "errorCodeTimestamp": 0,
         },
         "statistics": {
-            "numberOfChargingCycles": 231,
-            "numberOfCollisions": 48728,
-            "totalChargingTime": 813600,
-            "totalCuttingTime": 3945600,
-            "totalRunningTime": 4078800,
-            "totalSearchingTime": 133200,
+            "numberOfChargingCycles": 1328,
+            "numberOfCollisions": 10623,
+            "totalChargingTime": 4186800,
+            "totalCuttingTime": 4078800,
+            "totalDriveDistance": 1732536,
+            "totalRunningTime": 4442400,
+            "totalSearchingTime": 363600,
         },
         "cuttingHeight": 4,
         "headlight": {"mode": "EVENING_ONLY"},
     },
     "id": MWR_ONE_ID,
+    "type": "mower",
 }
 
 MOWER_TWO_SESSION_DATA = {
@@ -154,6 +163,7 @@ MOWER_TWO_SESSION_DATA = {
         "headlight": {"mode": "EVENING_ONLY"},
     },
     "id": MWR_TWO_ID,
+    "type": "mower",
 }
 
 AUTOMOWER_ERROR_SESSION_DATA = {
@@ -188,7 +198,7 @@ AUTOMOWER_DM_SESSION_DATA = {
 }
 
 AUTOMOWER_CONFIG_DATA = {
-    "auth_implementation": "husqvarna_automower",
+    "auth_implementation": "husqvarna_automower_433e5fdf_5129_452c_ba7f_fadce3213042",
     "token": {
         "access_token": "f8f1983d-d88a-4ef1-91ab-af54fefaa9d0",
         "scope": "iam:read amc:api",
@@ -198,12 +208,11 @@ AUTOMOWER_CONFIG_DATA = {
         "user_id": "d582fe49-80a5-417b-bf97-29ce20818712",
         "token_type": "Bearer",
         "expires_at": 1685908387.3688,
-        "status": 200,
     },
 }
 
 AUTOMOWER_CONFIG_DATA_BAD_SCOPE = {
-    "auth_implementation": "husqvarna_automower",
+    "auth_implementation": "husqvarna_automower_433e5fdf_5129_452c_ba7f_fadce3213042",
     "token": {
         "access_token": "f8f1983d-d88a-4ef1-91ab-af54fefaa9d0",
         "scope": "iam:read",
@@ -213,6 +222,5 @@ AUTOMOWER_CONFIG_DATA_BAD_SCOPE = {
         "user_id": "d582fe49-80a5-417b-bf97-29ce20818712",
         "token_type": "Bearer",
         "expires_at": 1685908387.3688,
-        "status": 200,
     },
 }
