@@ -175,22 +175,6 @@ class FlumeNotificationBinarySensor(
             for notification in self.coordinator.notifications
         )
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        sorted_notifications: list[dict[str, Any]] = sorted(
-            filter(self._filter_notification, self.coordinator.notifications),
-            key=lambda x: x.get("created_datetime", ""),
-            reverse=True,
-        )
-        if not sorted_notifications:
-            return {}
-        return {
-            "message": sorted_notifications[0].get("message", ""),
-            "title": sorted_notifications[0].get("title", ""),
-            "created_datetime": sorted_notifications[0].get("created_datetime", ""),
-        }
-
 
 class FlumeConnectionBinarySensor(
     FlumeEntity[FlumeDeviceConnectionUpdateCoordinator], BinarySensorEntity
