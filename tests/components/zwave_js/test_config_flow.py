@@ -2698,7 +2698,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
     assert result["data"] == {
-        "url": "ws://localhost:3000",
+        "url": "ws://127.0.0.1:3000",
         "usb_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,
