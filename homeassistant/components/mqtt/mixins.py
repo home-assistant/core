@@ -101,7 +101,6 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
-    EntityAttributeTracker,
     MessageCallbackType,
     MqttValueTemplate,
     PublishPayloadType,
@@ -349,20 +348,33 @@ def init_entity_id_from_config(
 
 
 def track_state_attribute_writes(
-    entity: MqttMonitorEntity, attributes: set[str]
+    entity: Entity, attributes: set[str]
 ) -> Callable[[MessageCallbackType], MessageCallbackType]:
     """Wrap an MQTT message callback to track state attribute changes."""
 
-    mqtt_data = get_mqtt_data(entity.hass)
+    def _attrs_have_changed(tracked_attrs: dict[str, Any]) -> bool:
+        """Return True if attributes on entity changed or if update is forced."""
+        if not (assume_has_changed := (getattr(entity, "_attr_force_update", False))):
+            for attribute, last_value in tracked_attrs.items():
+                if getattr(entity, attribute, UNDEFINED) != last_value:
+                    assume_has_changed = True
+                    break
+
+        return assume_has_changed
 
     def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
         @wraps(msg_callback)
         def wrapper(msg: ReceiveMessage) -> None:
             """Track attributes for write state requests."""
-            entity.monitor.track(attributes)
+            tracked_attrs: dict[str, Any] = {
+                attribute: getattr(entity, attribute, UNDEFINED)
+                for attribute in attributes
+            }
             msg_callback(msg)
-            if not entity.monitor.attrs_have_changed:
+            if not _attrs_have_changed(tracked_attrs):
                 return
+
+            mqtt_data = get_mqtt_data(entity.hass)
             mqtt_data.state_write_requests.write_state_request(entity)
 
         return wrapper
@@ -370,25 +382,13 @@ def track_state_attribute_writes(
     return _decorator
 
 
-class MqttMonitorEntity(Entity):
-    """Monitor for state changes of an MQTT entity."""
-
-    monitor: EntityAttributeTracker
-
-    def __init__(self, _: ConfigType) -> None:
-        """Initialize entity attribute monitoring."""
-        if not hasattr(self, "monitor"):
-            self.monitor = EntityAttributeTracker(self)
-
-
-class MqttAttributes(MqttMonitorEntity):
+class MqttAttributes(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
-        super().__init__(config)
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
         self._attributes_config = config
 
@@ -457,12 +457,11 @@ class MqttAttributes(MqttMonitorEntity):
         )
 
 
-class MqttAvailability(MqttMonitorEntity):
+class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
-        super().__init__(config)
         self._availability_sub_state: dict[str, EntitySubscription] = {}
         self._available: dict[str, str | bool] = {}
         self._available_latest: bool = False

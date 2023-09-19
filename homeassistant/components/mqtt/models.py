@@ -18,12 +18,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    DiscoveryInfoType,
-    TemplateVarsType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 if TYPE_CHECKING:
     from paho.mqtt.client import MQTTMessage
@@ -32,7 +27,6 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
-    from .mixins import MqttMonitorEntity
     from .tag import MQTTTagScanner
 
 
@@ -295,51 +289,12 @@ class MqttValueTemplate:
         return rendered_payload
 
 
-class EntityAttributeTracker:
-    """Monitors entity state changes."""
-
-    __slots__ = ("_entity", "_attributes")
-
-    def __init__(self, entity: Entity) -> None:
-        """Initialize entity monitor."""
-        self._entity: Entity = entity
-        self._attributes: dict[str, Any] = {}
-
-    def track(self, attributes: set[str]) -> None:
-        """Start tracking attributes."""
-        self._attributes = {
-            attribute: getattr(self._entity, attribute, UNDEFINED)
-            for attribute in attributes
-        }
-
-    @property
-    def attrs_have_changed(self) -> bool:
-        """Return True if attributes on entity changed or if update is forced.
-
-        Stops tracking attribute changes.
-        """
-        entity = self._entity
-        attributes = self._attributes
-        if not (
-            assume_has_changed := (
-                getattr(entity, "_attr_force_update", False) or not attributes
-            )
-        ):
-            for attribute, last_value in attributes.items():
-                if getattr(entity, attribute, UNDEFINED) != last_value:
-                    assume_has_changed = True
-                    break
-
-        attributes.clear()
-        return assume_has_changed
-
-
 class EntityTopicState:
     """Manage entity state write requests for subscribed topics."""
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, MqttMonitorEntity] = {}
+        self.subscribe_calls: dict[str, Entity] = {}
 
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
@@ -358,7 +313,7 @@ class EntityTopicState:
                 )
 
     @callback
-    def write_state_request(self, entity: MqttMonitorEntity) -> None:
+    def write_state_request(self, entity: Entity) -> None:
         """Register write state request."""
         self.subscribe_calls[entity.entity_id] = entity
 
