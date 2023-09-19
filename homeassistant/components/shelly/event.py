@@ -56,6 +56,7 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
 )
 BLOCK_EVENT: Final = ShellyBlockEventDescription(
     key="input",
+    translation_key="input",
     device_class=EventDeviceClass.BUTTON,
     event_types=list(BLOCK_INPUTS_EVENTS_TYPES),
     removal_condition=lambda settings, block: not is_block_momentary_input(
@@ -173,7 +174,7 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
-        self._attr_unique_id = f"{coordinator.mac}-input-{input_id}"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}-{input_id}"
         self._attr_name = f"{coordinator.device.name} Input {input_id}"
         self.entity_description = description
 
