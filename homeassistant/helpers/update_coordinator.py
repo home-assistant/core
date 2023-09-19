@@ -15,6 +15,7 @@ import aiohttp
 import requests
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -79,7 +80,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_method = update_method
         self.update_interval = update_interval
         self._shutdown_requested = False
-        self.config_entry = config_entries.current_entry.get()
+        self.config_entry: ConfigEntry | None = config_entries.current_entry.get()
         self.always_update = always_update
 
         # It's None before the first successful update.
