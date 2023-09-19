@@ -1348,7 +1348,7 @@ class ConfigEntries:
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
         ):
-            if value == UNDEFINED or getattr(entry, attr) == value:
+            if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
             setattr(entry, attr, value)
