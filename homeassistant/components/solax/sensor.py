@@ -108,7 +108,8 @@ async def async_setup_entry(
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
 
-        uid = f"{serial}-{idx}"
+        postfix = sensor.replace(" ", "").lower()
+        uid = f"{serial}-{idx}-{postfix}"
         devices.append(
             Inverter(
                 api.inverter.manufacturer,
