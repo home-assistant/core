@@ -27,7 +27,6 @@ from typing import (
 
 import voluptuous as vol
 
-from homeassistant.backports.functools import cached_property
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -64,8 +63,11 @@ from .event import (
 from .typing import UNDEFINED, EventType, StateType, UndefinedType
 
 if TYPE_CHECKING:
-    from .entity_platform import EntityPlatform
+    from functools import cached_property
 
+    from .entity_platform import EntityPlatform
+else:
+    from homeassistant.backports.functools import cached_property
 
 _T = TypeVar("_T")
 
