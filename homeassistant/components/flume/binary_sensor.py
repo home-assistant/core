@@ -1,7 +1,9 @@
 """Flume binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -43,7 +45,7 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 class FlumeBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    event_rule: str
+    filter_notification: Callable
 
 
 @dataclass
@@ -58,21 +60,41 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         key="leak",
         translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
-        event_rule=NOTIFICATION_LEAK_DETECTED,
+        filter_notification=(
+            lambda x: x.get("extra", {}).get("event_rule_name", "")
+            == NOTIFICATION_LEAK_DETECTED
+        ),
         icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
         translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
-        event_rule=NOTIFICATION_HIGH_FLOW,
+        filter_notification=(
+            lambda x: x.get("extra", {}).get("event_rule_name", "")
+            == NOTIFICATION_HIGH_FLOW
+        ),
+        icon="mdi:waves",
+    ),
+    FlumeBinarySensorEntityDescription(
+        key="custom_alert",
+        translation_key="custom_alert",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        filter_notification=(
+            lambda x: x.get("type", -1) == 1
+            and x.get("extra", {}).get("event_rule_name", "")
+            not in [NOTIFICATION_LEAK_DETECTED, NOTIFICATION_HIGH_FLOW]
+        ),
         icon="mdi:waves",
     ),
     FlumeBinarySensorEntityDescription(
         key="low_battery",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY,
-        event_rule=NOTIFICATION_LOW_BATTERY,
+        filter_notification=(
+            lambda x: x.get("extra", {}).get("event_rule_name", "")
+            == NOTIFICATION_LOW_BATTERY
+        ),
     ),
 )
 
@@ -138,17 +160,36 @@ class FlumeNotificationBinarySensor(
 
     entity_description: FlumeBinarySensorEntityDescription
 
+    def _filter_notification(self, notification: dict[str, Any]):
+        return notification.get(
+            "device_id", ""
+        ) == self.device_id and self.entity_description.filter_notification(
+            notification
+        )
+
     @property
     def is_on(self) -> bool:
         """Return on state."""
-        return bool(
-            (
-                notifications := self.coordinator.active_notifications_by_device.get(
-                    self.device_id
-                )
-            )
-            and self.entity_description.event_rule in notifications
+        return any(
+            self._filter_notification(notification)
+            for notification in self.coordinator.notifications
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the state attributes."""
+        sorted_notifications: list[dict[str, Any]] = sorted(
+            filter(self._filter_notification, self.coordinator.notifications),
+            key=lambda x: x.get("created_datetime", ""),
+            reverse=True,
+        )
+        if not sorted_notifications:
+            return {}
+        return {
+            "message": sorted_notifications[0].get("message", ""),
+            "title": sorted_notifications[0].get("title", ""),
+            "created_datetime": sorted_notifications[0].get("created_datetime", ""),
+        }
 
 
 class FlumeConnectionBinarySensor(

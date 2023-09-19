@@ -36,6 +36,9 @@
       },
       "flow": {
         "name": "High flow"
+      },
+      "custom_alert": {
+        "name": "Custom alert"
       }
     },
     "sensor": {
