@@ -49,7 +49,7 @@ class ComelitSerialBridge(DataUpdateCoordinator):
 
         return devices_data
 
-    def device_info_serial_bridge(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Set device info."""
         assert self.config_entry
         return DeviceInfo(
