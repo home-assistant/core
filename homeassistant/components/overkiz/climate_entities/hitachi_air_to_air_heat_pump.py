@@ -336,7 +336,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
         """Return temperature change state."""
         if (
             state := self.device.states[TEMPERATURE_CHANGE_STATE]
-        ) and state.value_as_str:
+        ) and state.value_as_int:
             return state.value_as_int
 
         return None
