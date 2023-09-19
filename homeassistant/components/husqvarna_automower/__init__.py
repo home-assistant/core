@@ -31,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
-    _LOGGER.debug("entry: %s", entry.as_dict())
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
