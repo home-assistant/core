@@ -1077,7 +1077,7 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return self._domain_index.get(domain, [])
+        return list(self._domain_index.get(domain, []))
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
