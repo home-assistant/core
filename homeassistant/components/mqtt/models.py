@@ -295,7 +295,7 @@ class MqttValueTemplate:
         return rendered_payload
 
 
-class EntityMonitor:
+class EntityAttributeTracker:
     """Monitors entity state changes."""
 
     __slots__ = ("_entity", "_attributes")
@@ -306,15 +306,7 @@ class EntityMonitor:
         self._attributes: dict[str, Any] = {}
 
     def track(self, attributes: set[str]) -> None:
-        """Start tracking attributes.
-
-        Only requests a write state request for the MQTT entity
-        if one or more of the passed properties had changes.
-        If MqttMonitorEntity.write_state_request is called without
-        `MqttMonitorEntity.monitor.track`, the state write request is passed
-        and Entity.async_ha_write_state will be triggered
-        to check all properties for changes.
-        """
+        """Start tracking attributes."""
         self._attributes = {
             attribute: getattr(self._entity, attribute, UNDEFINED)
             for attribute in attributes
@@ -368,9 +360,6 @@ class EntityTopicState:
     @callback
     def write_state_request(self, entity: MqttMonitorEntity) -> None:
         """Register write state request."""
-        if not entity.monitor.attrs_have_changed:
-            # no change detected skip state write request
-            return
         self.subscribe_calls[entity.entity_id] = entity
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
-from functools import partial
+from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
@@ -101,7 +101,8 @@ from .discovery import (
     set_discovery_hash,
 )
 from .models import (
-    EntityMonitor,
+    EntityAttributeTracker,
+    MessageCallbackType,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
@@ -347,15 +348,37 @@ def init_entity_id_from_config(
         )
 
 
+def track_state_attribute_writes(
+    entity: MqttMonitorEntity, attributes: set[str]
+) -> Callable[[MessageCallbackType], MessageCallbackType]:
+    """Wrap an MQTT message callback to track state attribute changes."""
+
+    mqtt_data = get_mqtt_data(entity.hass)
+
+    def _decorator(msg_callback: MessageCallbackType) -> MessageCallbackType:
+        @wraps(msg_callback)
+        def wrapper(msg: ReceiveMessage) -> None:
+            """Track attributes for write state requests."""
+            entity.monitor.track(attributes)
+            msg_callback(msg)
+            if not entity.monitor.attrs_have_changed:
+                return
+            mqtt_data.state_write_requests.write_state_request(entity)
+
+        return wrapper
+
+    return _decorator
+
+
 class MqttMonitorEntity(Entity):
     """Monitor for state changes of an MQTT entity."""
 
-    monitor: EntityMonitor
+    monitor: EntityAttributeTracker
 
     def __init__(self, _: ConfigType) -> None:
         """Initialize entity attribute monitoring."""
         if not hasattr(self, "monitor"):
-            self.monitor = EntityMonitor(self)
+            self.monitor = EntityAttributeTracker(self)
 
 
 class MqttAttributes(MqttMonitorEntity):
@@ -392,8 +415,8 @@ class MqttAttributes(MqttMonitorEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @track_state_attribute_writes(self, {"_attr_extra_state_attributes"})
         def attributes_message_received(msg: ReceiveMessage) -> None:
-            self.monitor.track({"_attr_extra_state_attributes"})
             try:
                 payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
@@ -405,9 +428,6 @@ class MqttAttributes(MqttMonitorEntity):
                         and k not in self._attributes_extra_blocked
                     }
                     self._attr_extra_state_attributes = filtered_dict
-                    get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                        self
-                    )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
             except ValueError:
@@ -503,20 +523,18 @@ class MqttAvailability(MqttMonitorEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @track_state_attribute_writes(self, {"available"})
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             payload: ReceivePayloadType
             payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
-            self.monitor.track({"available"})
             if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True
                 self._available_latest = True
             elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available[topic] = False
                 self._available_latest = False
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
