@@ -308,7 +308,7 @@ class EntityMonitor:
     def track(self, attributes: set[str]) -> None:
         """Start tracking attributes.
 
-        Only requests a MqttMonitorEntity.write_state_request()
+        Only requests a write state request for the MQTT entity
         if one or more of the passed properties had changes.
         If MqttMonitorEntity.write_state_request is called without
         `MqttMonitorEntity.monitor.track`, the state write request is passed
