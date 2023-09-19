@@ -400,8 +400,8 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/flux_led/ @icemanch @bdraco
-/tests/components/flux_led/ @icemanch @bdraco
+/homeassistant/components/flux_led/ @icemanch
+/tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
 /tests/components/forecast_solar/ @klaasnicolaas @frenck
 /homeassistant/components/forked_daapd/ @uvjustin
@@ -688,8 +688,6 @@ build.json @home-assistant/supervisor
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
-/homeassistant/components/lifx/ @bdraco
-/tests/components/lifx/ @bdraco
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff

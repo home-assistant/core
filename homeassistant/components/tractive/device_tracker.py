@@ -99,6 +99,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._attr_available = True
         self.async_write_ha_state()
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:
