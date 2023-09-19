@@ -33,7 +33,7 @@ async def test_trigger_and_get_schedule(
     """Test that the method trigger_and_get_schedule is awaited when calling the service trigger_and_get_schedule."""
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.trigger_and_get_schedule",
-        return_value={"values": [0.5, 0.41492, -0.0, -0.0]},
+        return_value={"values": [0.5, 0.41492, -0.0, -0.0], "unit": "MW"},
     ) as mocked_FlexmeasuresClient:
         await hass.services.async_call(
             DOMAIN,
@@ -59,7 +59,7 @@ async def test_trigger_and_get_schedule(
 
 
 async def test_post_measurements(hass: HomeAssistant, setup_fm_integration) -> None:
-    """Test that the method post measuresments is called when calling the service post_measurements."""
+    """Test that the method post measurements is called when calling the service post_measurements."""
 
     with patch(
         "flexmeasures_client.client.FlexMeasuresClient.post_measurements",
