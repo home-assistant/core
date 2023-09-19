@@ -49,7 +49,7 @@ class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
         super().__init__(coordinator)
         self._attr_name = device.name
         self._attr_unique_id = f"{config_entry_unique_id}-{device.index}"
-        self._attr_device_info = coordinator.device_info()
+        self._attr_device_info = coordinator.device_info
 
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""

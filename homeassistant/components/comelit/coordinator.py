@@ -6,6 +6,7 @@ from typing import Any
 from aiocomelit import ComeliteSerialBridgeApi
 import aiohttp
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -16,6 +17,8 @@ from .const import _LOGGER, DOMAIN
 
 class ComelitSerialBridge(DataUpdateCoordinator):
     """Queries Comelit Serial Bridge."""
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, host: str, pin: int) -> None:
         """Initialize the scanner."""
@@ -49,9 +52,10 @@ class ComelitSerialBridge(DataUpdateCoordinator):
 
         return devices_data
 
+    @property
     def device_info(self) -> DeviceInfo:
         """Set device info."""
-        assert self.config_entry
+
         return DeviceInfo(
             identifiers={
                 (DOMAIN, self.config_entry.entry_id),
