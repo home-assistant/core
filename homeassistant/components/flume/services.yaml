@@ -1,0 +1,11 @@
+notifications:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: flume
+    force:
+      default: false
+      selector:
+        boolean:

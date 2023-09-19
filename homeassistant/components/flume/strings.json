@@ -61,5 +61,21 @@
         "name": "30 days"
       }
     }
+  },
+  "services": {
+    "notifications": {
+      "name": "Notifications",
+      "description": "Return user notifications.",
+      "fields": {
+        "config_entry": {
+          "name": "Flume",
+          "description": "The flume config entry for which to return notifications."
+        },
+        "force": {
+          "name": "Force",
+          "description": "If true fetch refreshed notifications. If false return previously fetched notifications that are periodically refreshed."
+        }
+      }
+    }
   }
 }
