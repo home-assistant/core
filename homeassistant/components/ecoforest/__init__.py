@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error communicating with device %s", host)
         return False
 
-    coordinator = EcoforestCoordinator(hass, api)
+    coordinator = EcoforestCoordinator(hass, api, host)
 
     await coordinator.async_config_entry_first_refresh()
 

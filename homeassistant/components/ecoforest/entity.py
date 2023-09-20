@@ -24,6 +24,9 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
         """Initialize device information."""
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
+
+        super().__init__(coordinator)
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.host)},
             name=MANUFACTURER,
@@ -31,7 +34,6 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
             sw_version=self.data.firmware,
             manufacturer=MANUFACTURER,
         )
-        super().__init__(coordinator)
 
     @property
     def data(self) -> Device:

@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class EcoforestCoordinator(DataUpdateCoordinator[Device]):
     """DataUpdateCoordinator to gather data from ecoforest device."""
 
-    def __init__(self, hass: HomeAssistant, api: EcoforestApi) -> None:
+    def __init__(self, hass: HomeAssistant, api: EcoforestApi, host: str) -> None:
         """Initialize DataUpdateCoordinator."""
 
         super().__init__(
@@ -30,6 +30,7 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
             update_interval=POLLING_INTERVAL,
         )
         self.api = api
+        self.host = host
 
     async def _async_update_data(self) -> Device:
         """Fetch all device and sensor data from api."""
