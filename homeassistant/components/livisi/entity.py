@@ -64,8 +64,10 @@ class LivisiEntity(CoordinatorEntity[LivisiDataUpdateCoordinator]):
         )
         super().__init__(coordinator)
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callback for reachability."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
