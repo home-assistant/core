@@ -1,17 +1,20 @@
 """Tests for the Epic Games Store calendars."""
 
-
+import datetime
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.epic_games_store.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
 
-CAL_CONFIG = {
-    "platform": DOMAIN,
-}
+
+def _local_datetime(year, month, day, hour=0):
+    """Build a datetime object for testing in the correct timezone."""
+    return dt_util.as_local(datetime.datetime(year, month, day, hour, 0, 0))
 
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
@@ -24,25 +27,32 @@ async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> N
     assert state.name == "Epic Games Store Free Games"
 
 
-# async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
-#     """Test setup component with calendars."""
-#     await setup_platform(hass, CALENDAR_DOMAIN)
+# @patch("homeassistant.util.dt.now", return_value=_local_datetime(2022, 11, 1))
+async def test_free_games(
+    # mock_now,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_multiple: Mock,
+) -> None:
+    """Test setup component with calendars."""
+    freezer.move_to("2022-11-01T15:00:00.000Z")
 
-#     state = hass.states.get("calendar.epic_games_store_discount_games")
-#     assert state.name == "Epic Games Store Discount Games"
-#     state = hass.states.get("calendar.epic_games_store_free_games")
-#     assert state.name == "Epic Games Store Free Games"
-#     assert state.state == STATE_ON
-#     assert dict(state.attributes) == {
-#         "friendly_name": "Private",
-#         "message": "This is a normal event",
-#         "all_day": False,
-#         "offset_reached": False,
-#         "start_time": "2017-11-27 17:00:00",
-#         "end_time": "2017-11-27 18:00:00",
-#         "location": "Hamburg",
-#         "description": "Surprisingly rainy",
-#     }
+    await setup_platform(hass, CALENDAR_DOMAIN)
+
+    state = hass.states.get("calendar.epic_games_store_free_games")
+    # assert state.state == STATE_ON
+    cal_attrs = dict(state.attributes)
+    cal_games = cal_attrs.pop("games")
+    assert cal_attrs == {
+        "friendly_name": "Epic Games Store Free Games",
+        "message": "Rising Storm 2: Vietnam",
+        "all_day": False,
+        "start_time": "2022-11-03 08:00:00",
+        "end_time": "2022-11-10 08:00:00",
+        "location": "",
+        "description": "Red Orchestra Series' take on Vietnam: 64-player MP matches; 20+ maps; US Army & Marines, PAVN/NVA, NLF/VC; Australians and ARVN forces; 50+ weapons; 4 flyable helicopters; mines, traps and tunnels; Brutal. Authentic. Gritty. Character customization.\n\nhttps://store.epicgames.com/fr/p/rising-storm-2-vietnam",
+    }
+    assert len(cal_games) == 4
 
 
 # @patch(
