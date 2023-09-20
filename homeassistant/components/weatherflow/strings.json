@@ -18,9 +18,6 @@
   },
   "entity": {
     "sensor": {
-      "temperature": {
-        "name": "Temperature"
-      },
       "air_density": {
         "name": "Air density"
       },
@@ -43,7 +40,14 @@
         "name": "Lightning count"
       },
       "precipitation_type": {
-        "name": "Precipitation type"
+        "name": "Precipitation type",
+        "state": {
+          "none": "None",
+          "rain": "Rain",
+          "hail": "Hail",
+          "rain_hail": "Rain and hail",
+          "unknown": "Unknown"
+        }
       },
       "rain_amount": {
         "name": "Rain amount"
@@ -55,7 +59,7 @@
         "name": "Humidity"
       },
       "station_pressure": {
-        "name": "Station pressure"
+        "name": "Air pressure"
       },
       "solar_radiation": {
         "name": "Solar radiation"

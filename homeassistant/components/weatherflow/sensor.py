@@ -85,14 +85,13 @@ CUSTOM_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=5,
+        suggested_display_precision=3,
     ),
 )
 
 SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="air_temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -154,8 +153,9 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="precipitation_type",
+        translation_key="precipitation_type",
         device_class=SensorDeviceClass.ENUM,
-        options=["NONE", "RAIN", "HAIL", "RAIN_HAIL", "UNKNOWN"],
+        options=["none", "rain", "hail", "rain_hail", "unknown"],
         icon="mdi:weather-rainy",
     ),
     WeatherFlowSensorEntityDescription(
@@ -194,6 +194,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="station_pressure",
+        translation_key="station_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -222,6 +223,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="vapor_pressure",
+        translation_key="vapor_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -379,7 +381,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             sensor_value = normalized_data.magnitude
             return sensor_value
         if isinstance(normalized_data, Enum):
-            sensor_value = normalized_data.name
+            sensor_value = normalized_data.name.lower()
             return sensor_value
         if isinstance(normalized_data, float):
             return normalized_data
@@ -400,19 +402,8 @@ class WeatherFlowAirDensitySensorEntity(WeatherFlowSensorEntity):
 
     entity_description: AirDensityWeatherFlowSensorEntityDescription
 
-    def __init__(
-        self,
-        device: WeatherFlowDevice,
-        description: WeatherFlowSensorEntityDescription,
-        is_metric: bool = True,
-    ) -> None:
-        """Initialize the class."""
-        super().__init__(device, description, is_metric)
-        self.is_metric = is_metric
-
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor - with custom conversion."""
         raw_sensor_data = getattr(self.device, self.entity_description.key)
-        # Raw data is in kilograms / cubic meter
         return raw_sensor_data.m * 1000000
