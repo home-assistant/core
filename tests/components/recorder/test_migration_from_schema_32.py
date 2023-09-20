@@ -1,5 +1,4 @@
 """The tests for the recorder filter matching the EntityFilter component."""
-import asyncio
 import importlib
 import sys
 from unittest.mock import patch
@@ -42,13 +41,8 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 async def _wait_migration_done(hass: HomeAssistant) -> None:
     """Wait for the migration to be done."""
-    migration_tasks = (
-        4  # 2 for the task, and 2 in case there are additional rows to migrate
-    )
-    for _ in range(migration_tasks):
-        await asyncio.sleep(0.35)
-        await recorder.get_instance(hass).async_block_till_done()
-        await async_recorder_block_till_done(hass)
+    await recorder.get_instance(hass).async_block_till_done()
+    await async_recorder_block_till_done(hass)
 
 
 def _create_engine_test(*args, **kwargs):
@@ -208,6 +202,8 @@ async def test_migrate_events_context_ids(
     await async_wait_recording_done(hass)
     now = dt_util.utcnow()
     expected_ulid_fallback_start = ulid_to_bytes(ulid_at_time(now.timestamp()))[0:6]
+    await _wait_migration_done(hass)
+
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
         instance.queue_task(EventsContextIDMigrationTask())
@@ -607,7 +603,7 @@ async def test_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
     await _wait_migration_done(hass)
@@ -673,7 +669,7 @@ async def test_post_migrate_entity_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDPostMigrationTask())
     await _wait_migration_done(hass)
@@ -728,7 +724,7 @@ async def test_migrate_null_entity_ids(
 
     await instance.async_add_executor_job(_insert_states)
 
-    await async_wait_recording_done(hass)
+    await _wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
     instance.queue_task(EntityIDMigrationTask())
     await _wait_migration_done(hass)
@@ -797,9 +793,8 @@ async def test_migrate_null_event_type_ids(
 
     await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
+    await _wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-
     instance.queue_task(EventTypeIDMigrationTask())
     await _wait_migration_done(hass)
 
