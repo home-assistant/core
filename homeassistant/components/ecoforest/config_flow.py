@@ -73,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     else MANUFACTURER
                 )
                 return self.async_create_entry(
-                    title=name, data={CONF_HOST: host} | user_input
+                    title=f"{MANUFACTURER} {device.serial_number}", data=user_input
                 )
 
         return self.async_show_form(
