@@ -41,9 +41,7 @@ class ResultHandler:
         success = True
         if self.name_conflicts:
             success = False
-            print(
-                "The following requirements should be renamed to match their name correctly:"
-            )
+            print("The following requirements should be renamed to match Pypi's name:")
             for conflict in self.name_conflicts:
                 print("*", f'"{conflict.actual}" to "{conflict.expected}"')
 
@@ -75,8 +73,11 @@ async def find_merge_base(branch: str) -> str:
     return log.splitlines()[0]
 
 
-async def get_diff() -> PatchSet:
+async def get_diff(only_staged: bool) -> PatchSet:
     """Return diff."""
+    if only_staged:
+        return PatchSet(await async_safe_exec("git", "diff", "--staged"))
+
     base_branch = "dev"
     if remote := (await find_core_remote_name()):
         base_branch = f"{remote}/{base_branch}"
@@ -87,11 +88,11 @@ async def get_diff() -> PatchSet:
     return PatchSet(log)
 
 
-async def get_changed_requirements_from_diff() -> set[str]:
+async def get_changed_requirements_from_diff(only_staged: bool) -> set[str]:
     """Get changed requirements from diff."""
     requirements: set[str] = set()
 
-    diff = await get_diff()
+    diff = await get_diff(only_staged)
     for file in diff:
         hunk: Hunk
         for hunk in file:
@@ -132,13 +133,13 @@ async def validate_requirements(handler: ResultHandler, requirements: set[str]):
             tg.create_task(validate_requirement(handler, session, requirement))
 
 
-async def main() -> int:
+async def main(only_staged: bool) -> int:
     """Execute script."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     handler = ResultHandler()
 
-    requirements = await get_changed_requirements_from_diff()
+    requirements = await get_changed_requirements_from_diff(only_staged)
     await validate_requirements(handler, requirements)
 
     if handler.print_result():
@@ -148,4 +149,5 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    only_staged = sys.argv[-1] == "only_staged"
+    sys.exit(asyncio.run(main(only_staged)))
