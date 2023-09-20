@@ -34,18 +34,18 @@ class EGSCalendar(CalendarEntity):
 
     _attr_has_entity_name = True
 
+    _cal_type: str = ""
+
     def __init__(
         self,
         coordinator: EGSUpdateCoordinator,
         unique_id: str,
-        cal_type: str,
     ) -> None:
         """Initialize EGSCalendar."""
-        self._cal_type = cal_type
         self._coordinator = coordinator
         self._event: CalendarEvent | None = None
-        self._attr_name = f"Epic Games Store {cal_type.title()} Games"
-        self._attr_unique_id = f"{unique_id}-{cal_type}"
+        self._attr_name = f"Epic Games Store {self._cal_type.title()} Games"
+        self._attr_unique_id = f"{unique_id}-{self._cal_type}"
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -75,27 +75,15 @@ class EGSCalendar(CalendarEntity):
 
 
 class EGSFreeGamesCalendar(EGSCalendar):
-    """A calendar entity by Epic Games Store."""
+    """A calendar of free games from the Epic Games Store."""
 
-    def __init__(
-        self,
-        coordinator: EGSUpdateCoordinator,
-        unique_id: str,
-    ) -> None:
-        """Initialize EGSCalendar."""
-        super().__init__(coordinator, unique_id, "free")
+    _cal_type = "free"
 
 
 class EGSDiscountGameCalendar(EGSCalendar):
-    """A calendar entity by Epic Games Store."""
+    """A calendar of discount games from the Epic Games Store."""
 
-    def __init__(
-        self,
-        coordinator: EGSUpdateCoordinator,
-        unique_id: str,
-    ) -> None:
-        """Initialize EGSCalendar."""
-        super().__init__(coordinator, unique_id, "discount")
+    _cal_type = "discount"
 
 
 def _get_calendar_event(event: dict[str, Any]) -> CalendarEvent:
