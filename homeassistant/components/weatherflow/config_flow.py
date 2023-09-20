@@ -53,22 +53,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        # Get current discovered entries.
-        in_progress = self._async_in_progress()
+        errors = {}
+        try:
+            await _async_can_discover_devices()
+        except AddressInUseError:
+            errors["base"] = "address_in_use"
+        except ListenerError:
+            errors["base"] = "cannot_connect"
 
-        if not (has_devices := in_progress):
-            errors = {}
-            try:
-                has_devices = await _async_can_discover_devices()  # type: ignore[assignment]
-            except AddressInUseError:
-                errors["base"] = "address_in_use"
-            except ListenerError:
-                errors["base"] = "cannot_connect"
-
-            if errors or (not has_devices and user_input is None):
-                return self.async_show_form(step_id="user", errors=errors)
-
-        if not has_devices:
-            return self.async_abort(reason="no_devices_found")
+        if errors:
+            return self.async_show_form(step_id="user", errors=errors)
 
         return self.async_create_entry(title="WeatherFlow", data={})

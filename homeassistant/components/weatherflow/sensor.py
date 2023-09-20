@@ -60,20 +60,6 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 class AirDensityWeatherFlowSensorEntityDescription(WeatherFlowSensorEntityDescription):
     """Custom class to handle the conversion between backing lib and Home Assistant Compatible VOC sensor."""
 
-    imperial_unit_of_measurement: str | None = None
-
-
-@dataclass
-class WeatherFlowWindSensorEntityDescription(WeatherFlowSensorEntityDescription):
-    """Describes a WeatherFlow wind sensor entity description."""
-
-    def __post_init__(self) -> None:
-        """Post initialisation processing."""
-        self.icon = "mdi:weather-windy"
-        self.native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
-        self.state_class = SensorStateClass.MEASUREMENT
-        self.suggested_display_precision = 2
-
 
 VOC_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
     AirDensityWeatherFlowSensorEntityDescription(
@@ -223,25 +209,41 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         suggested_display_precision=5,
     ),
     ## Wind Sensors
-    WeatherFlowWindSensorEntityDescription(
+    WeatherFlowSensorEntityDescription(
         key="wind_gust",
         translation_key="wind_gust",
+        icon="mdi:weather-windy",
         device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
-    WeatherFlowWindSensorEntityDescription(
+    WeatherFlowSensorEntityDescription(
         key="wind_lull",
         translation_key="wind_lull",
+        icon="mdi:weather-windy",
         device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
-    WeatherFlowWindSensorEntityDescription(
+    WeatherFlowSensorEntityDescription(
         key="wind_speed",
         device_class=SensorDeviceClass.WIND_SPEED,
+        icon="mdi:weather-windy",
         event_subscriptions=[EVENT_RAPID_WIND, EVENT_OBSERVATION],
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
-    WeatherFlowWindSensorEntityDescription(
+    WeatherFlowSensorEntityDescription(
         key="wind_speed_average",
         translation_key="wind_speed_average",
+        icon="mdi:weather-windy",
         device_class=SensorDeviceClass.WIND_SPEED,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_direction",
