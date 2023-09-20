@@ -180,6 +180,7 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.ibeacon.*
+homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
