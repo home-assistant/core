@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -39,8 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
             try:
                 api = EcoforestApi(
                     user_input[CONF_HOST],
@@ -54,6 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"{MANUFACTURER} {device.serial_number}", data=user_input
                 )
@@ -63,5 +61,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-
