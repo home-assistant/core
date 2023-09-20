@@ -35,15 +35,11 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
     async def _async_update_data(self) -> Device:
         """Fetch all device and sensor data from api."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 data: Device = await self.api.get()
                 _LOGGER.debug("Ecoforest data: %s", data)
                 return data
         except EcoforestAuthenticationRequired as err:
-            # Raising ConfigEntryAuthFailed will cancel future updates
-            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed from err
         except EcoforestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
