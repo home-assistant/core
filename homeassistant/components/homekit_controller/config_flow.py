@@ -246,14 +246,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
         hkid: str = properties[zeroconf.ATTR_PROPERTIES_ID]
-        lower_case_hkid = normalize_hkid(hkid)
+        normalized_hkid = normalize_hkid(hkid)
         upper_case_hkid = hkid.upper()
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(
-            lower_case_hkid, raise_on_progress=False
+            normalized_hkid, raise_on_progress=False
         )
         updated_ip_port = {
             "AccessoryIP": discovery_info.host,
@@ -324,7 +324,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for progress in self._async_in_progress(include_uninitialized=True):
             context = progress["context"]
-            if context.get("unique_id") == lower_case_hkid and not context.get(
+            if context.get("unique_id") == normalized_hkid and not context.get(
                 "pairing"
             ):
                 if paired:
@@ -354,7 +354,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.name = name
         self.model = model
         self.category = Categories(int(properties.get("ci", 0)))
-        self.hkid = lower_case_hkid
+        self.hkid = normalized_hkid
 
         # We want to show the pairing form - but don't call async_step_pair
         # directly as it has side effects (will ask the device to show a
