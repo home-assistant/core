@@ -54,9 +54,6 @@
       "humidity": {
         "name": "Humidity"
       },
-      "rssi": {
-        "name": "Rssi"
-      },
       "station_pressure": {
         "name": "Station pressure"
       },
@@ -64,7 +61,7 @@
         "name": "Solar radiation"
       },
       "up_since": {
-        "name": "Up since"
+        "name": "Uptime"
       },
       "uv": {
         "name": "UV index"
