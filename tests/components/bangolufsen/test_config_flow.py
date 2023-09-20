@@ -1,91 +1,102 @@
 """Test the bangolufsen config_flow."""
 
-from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.bangolufsen.const import (
-    API_EXCEPTION,
-    DOMAIN,
-    MAX_RETRY_ERROR,
-    NEW_CONNECTION_ERROR,
-    NOT_MOZART_DEVICE,
-    VALUE_ERROR,
-)
+from mozart_api.exceptions import ApiException, NotFoundException
+import pytest
+from urllib3.exceptions import MaxRetryError, NewConnectionError
+
+from homeassistant.components.bangolufsen.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MockMozartClient as mmc, TestConstantsConfigFlow as tc
-from .util import mock_entry
+from .conftest import MockMozartClient
+from .const import (
+    TEST_DATA_CONFIRM,
+    TEST_DATA_OPTIONS,
+    TEST_DATA_USER,
+    TEST_DATA_USER_INVALID,
+    TEST_DATA_ZEROCONF,
+    TEST_DATA_ZEROCONF_NOT_MOZART,
+)
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_config_flow_max_retry_error(hass: HomeAssistant) -> None:
+async def test_config_flow_max_retry_error(
+    hass: HomeAssistant, mock_client: MockMozartClient
+) -> None:
     """Test we handle not_mozart_device."""
-    result_init = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_client.get_beolink_self.side_effect = MaxRetryError(pool=None, url=None)
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER,
     )
-    assert result_init["type"] == FlowResultType.FORM
-    assert result_init["step_id"] == "user"
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "max_retry_error"
 
-    client = mmc()
-
-    with patch(
-        client.methods.get_beolink_self, return_value=client.methods.async_result()
-    ), patch(client.methods.get_result, side_effect=client.max_retry_error):
-        result_configure = await hass.config_entries.flow.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_ONLY_HOST,
-        )
-
-    assert result_configure["type"] == FlowResultType.ABORT
-    assert result_configure["reason"] == MAX_RETRY_ERROR
+    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_client.get_volume_settings.call_count == 0
 
 
-async def test_config_flow_api_exception(hass: HomeAssistant) -> None:
+async def test_config_flow_api_exception(
+    hass: HomeAssistant, mock_client: MockMozartClient
+) -> None:
     """Test we handle api_exception."""
+    mock_client.get_beolink_self.side_effect = ApiException()
 
-    result_init = await hass.config_entries.flow.async_init(
+    result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER,
     )
-    assert result_init["type"] == FlowResultType.FORM
-    assert result_init["step_id"] == "user"
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "api_exception"
 
-    client = mmc()
-
-    with patch(
-        client.methods.get_beolink_self, return_value=client.methods.async_result()
-    ), patch(client.methods.get_result, side_effect=client.api_exception):
-        result_configure = await hass.config_entries.flow.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_ONLY_HOST,
-        )
-
-    assert result_configure["type"] == FlowResultType.ABORT
-    assert result_configure["reason"] == API_EXCEPTION
+    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_client.get_volume_settings.call_count == 0
 
 
-async def test_config_flow_new_connection_error(hass: HomeAssistant) -> None:
+async def test_config_flow_new_connection_error(
+    hass: HomeAssistant, mock_client: MockMozartClient
+) -> None:
     """Test we handle new_connection_error."""
-
-    result_init = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+    mock_client.get_beolink_self.side_effect = NewConnectionError(
+        pool=None, message=None
     )
-    assert result_init["type"] == FlowResultType.FORM
-    assert result_init["step_id"] == "user"
 
-    client = mmc()
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER,
+    )
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "new_connection_error"
 
-    with patch(
-        client.methods.get_beolink_self, return_value=client.methods.async_result()
-    ), patch(client.methods.get_result, side_effect=client.new_connection_error):
-        result_configure = await hass.config_entries.flow.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_ONLY_HOST,
-        )
+    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_client.get_volume_settings.call_count == 0
 
-    assert result_configure["type"] == FlowResultType.ABORT
-    assert result_configure["reason"] == NEW_CONNECTION_ERROR
+
+async def test_config_flow_not_found_exception(
+    hass: HomeAssistant,
+    mock_client: MockMozartClient,
+) -> None:
+    """Test we handle not_found_exception."""
+    mock_client.get_beolink_self.side_effect = NotFoundException()
+
+    result_user = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER,
+    )
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "not_found_exception"
+
+    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_client.get_volume_settings.call_count == 0
 
 
 async def test_config_flow_value_error(hass: HomeAssistant) -> None:
@@ -93,133 +104,106 @@ async def test_config_flow_value_error(hass: HomeAssistant) -> None:
 
     result_init = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
+        data=TEST_DATA_USER_INVALID,
     )
-    assert result_init["type"] == FlowResultType.FORM
-    assert result_init["step_id"] == "user"
-
-    result_configure = await hass.config_entries.flow.async_configure(
-        flow_id=result_init["flow_id"],
-        user_input=tc.TEST_DATA_ONLY_HOST_INVALID,
-    )
-
-    assert result_configure["type"] == FlowResultType.ABORT
-    assert result_configure["reason"] == VALUE_ERROR
+    assert result_init["type"] == FlowResultType.ABORT
+    assert result_init["reason"] == "value_error"
 
 
-async def test_config_flow(hass: HomeAssistant) -> None:
+async def test_config_flow(
+    hass: HomeAssistant, mock_client: MockMozartClient, mock_setup_entry
+) -> None:
     """Test config flow."""
-    result_init = await hass.config_entries.flow.async_init(
+
+    result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={CONF_SOURCE: SOURCE_USER},
+        data=None,
     )
-    assert result_init["type"] == FlowResultType.FORM
-    assert result_init["step_id"] == "user"
 
-    client = mmc()
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["step_id"] == "user"
 
-    with patch(
-        client.methods.get_beolink_self, return_value=client.methods.async_result()
-    ), patch(
-        client.methods.get_volume_settings, return_value=client.methods.async_result()
-    ), patch(
-        client.methods.get_result,
-        side_effect=[mmc.Get.get_beolink_self, mmc.Get.get_volume_settings],
-    ), patch(
-        tc.SETUP_ENTRY, return_value=True
-    ):
-        result_configure = await hass.config_entries.flow.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_ONLY_HOST,
-        )
+    result_confirm = await hass.config_entries.flow.async_configure(
+        flow_id=result_user["flow_id"],
+        user_input=TEST_DATA_USER,
+    )
 
-        assert result_configure["type"] == FlowResultType.FORM
-        assert result_configure["step_id"] == "confirm"
+    assert result_confirm["type"] == FlowResultType.FORM
+    assert result_confirm["step_id"] == "confirm"
 
-        result_configure_final = await hass.config_entries.flow.async_configure(
-            flow_id=result_configure["flow_id"],
-            user_input=tc.TEST_DATA_NO_HOST,
-        )
+    result_entry = await hass.config_entries.flow.async_configure(
+        flow_id=result_confirm["flow_id"],
+        user_input=TEST_DATA_USER,
+    )
 
-    assert result_configure_final["type"] == FlowResultType.CREATE_ENTRY
-    assert result_configure_final["data"] == tc.TEST_DATA_FULL
+    assert result_entry["type"] == FlowResultType.CREATE_ENTRY
+    assert result_entry["data"] == TEST_DATA_CONFIRM
+
+    assert mock_client.get_beolink_self.call_count == 1
+    assert mock_client.get_volume_settings.call_count == 1
 
 
-async def test_config_flow_zeroconf(hass: HomeAssistant) -> None:
+async def test_config_flow_zeroconf(
+    hass: HomeAssistant, mock_client: MockMozartClient, mock_setup_entry
+) -> None:
     """Test zeroconf discovery."""
 
-    client = mmc()
+    result_zeroconf = await hass.config_entries.flow.async_init(
+        handler=DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DATA_ZEROCONF,
+    )
 
-    with patch(
-        client.methods.get_volume_settings, return_value=client.methods.async_result()
-    ), patch(
-        client.methods.get_result,
-        side_effect=[mmc.Get.get_volume_settings],
-    ), patch(
-        tc.SETUP_ENTRY, return_value=True
-    ):
-        result_init = await hass.config_entries.flow.async_init(
-            handler=DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=tc.TEST_DATA_ZEROCONF,
-        )
+    assert result_zeroconf["type"] == FlowResultType.FORM
+    assert result_zeroconf["step_id"] == "confirm"
 
-        assert result_init["type"] == FlowResultType.FORM
-        assert result_init["step_id"] == "confirm"
+    result_confirm = await hass.config_entries.flow.async_configure(
+        flow_id=result_zeroconf["flow_id"],
+        user_input=TEST_DATA_USER,
+    )
 
-        result_configure = await hass.config_entries.flow.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_NO_HOST,
-        )
+    assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
+    assert result_confirm["data"] == TEST_DATA_CONFIRM
 
-    assert result_configure["type"] == FlowResultType.CREATE_ENTRY
-    assert result_configure["data"] == tc.TEST_DATA_FULL
+    assert mock_client.get_beolink_self.call_count == 0
+    assert mock_client.get_volume_settings.call_count == 1
 
 
 async def test_config_flow_zeroconf_not_mozart_device(hass: HomeAssistant) -> None:
     """Test zeroconf discovery of invalid device."""
 
-    result_init = await hass.config_entries.flow.async_init(
+    result_user = await hass.config_entries.flow.async_init(
         handler=DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=tc.TEST_DATA_ZEROCONF_NOT_MOZART,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DATA_ZEROCONF_NOT_MOZART,
     )
 
-    assert result_init["type"] == FlowResultType.ABORT
-    assert result_init["reason"] == NOT_MOZART_DEVICE
+    assert result_user["type"] == FlowResultType.ABORT
+    assert result_user["reason"] == "not_mozart_device"
 
 
-async def test_config_flow_options(hass: HomeAssistant) -> None:
+async def test_config_flow_options(hass: HomeAssistant, mock_config_entry) -> None:
     """Test config flow options."""
 
-    config_entry = mock_entry()
+    mock_config_entry.add_to_hass(hass)
 
-    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    client = mmc()
+    result_user = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
 
-    with patch(
-        client.methods.get_volume_settings, return_value=client.methods.async_result()
-    ), patch(
-        client.methods.get_result, side_effect=[mmc.Get.get_volume_settings]
-    ), patch(
-        tc.SETUP_ENTRY, return_value=True
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["step_id"] == "init"
 
-        result_init = await hass.config_entries.options.async_init(
-            config_entry.entry_id
-        )
+    result_confirm = await hass.config_entries.options.async_configure(
+        flow_id=result_user["flow_id"],
+        user_input=TEST_DATA_OPTIONS,
+    )
 
-        assert result_init["type"] == FlowResultType.FORM
-        assert result_init["step_id"] == "init"
-
-        result_configure = await hass.config_entries.options.async_configure(
-            flow_id=result_init["flow_id"],
-            user_input=tc.TEST_DATA_OPTIONS,
-        )
-
-        assert result_configure["type"] == FlowResultType.CREATE_ENTRY
-        new_data = tc.TEST_DATA_FULL
-        new_data.update(tc.TEST_DATA_OPTIONS)
-        assert result_configure["data"] == new_data
+    assert result_confirm["type"] == FlowResultType.CREATE_ENTRY
+    new_data = TEST_DATA_CONFIRM
+    new_data.update(TEST_DATA_OPTIONS)
+    assert result_confirm["data"] == new_data
