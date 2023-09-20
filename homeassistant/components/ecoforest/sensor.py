@@ -64,16 +64,9 @@ async def async_setup_entry(
 class EcoforestSensor(SensorEntity, EcoforestEntity):
     """Representation of an Ecoforest sensor."""
 
-    def __init__(
-        self,
-        coordinator: EcoforestCoordinator,
-        description: EcoforestSensorEntityDescription,
-    ) -> None:
-        """Initialize the Ecoforest Sensor."""
-        self.description = description
-        EcoforestEntity.__init__(self, coordinator, description)
+    entity_description: EcoforestSensorEntityDescription
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.description.value_fn(self.data)
+        return self.entity_description.value_fn(self.data)
