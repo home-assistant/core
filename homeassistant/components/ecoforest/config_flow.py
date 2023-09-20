@@ -7,12 +7,11 @@ from typing import Any
 from httpx import BasicAuth
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import EcoforestAuthenticationRequired
-from pyecoforest.models.device import Device
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -27,26 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Device:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    try:
-        api = EcoforestApi(
-            data[CONF_HOST], BasicAuth(data[CONF_USERNAME], data[CONF_PASSWORD])
-        )
-        device = await api.get()
-    except EcoforestAuthenticationRequired as err:
-        raise InvalidAuth() from err
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception")
-        raise CannotConnect() from err
-
-    return device
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,11 +55,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             try:
-                device = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                api = EcoforestApi(
+                    user_input[CONF_HOST],
+                    BasicAuth(user_input[CONF_USERNAME], user_input[CONF_PASSWORD]),
+                )
+                device = await api.get()
+            except EcoforestAuthenticationRequired:
                 errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "cannot_connect"
             else:
                 if not self.unique_id:
                     await self.async_set_unique_id(device.serial_number)
