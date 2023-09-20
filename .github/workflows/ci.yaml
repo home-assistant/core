@@ -1134,6 +1134,7 @@ jobs:
           attempt_delay: 30000
 
   pypi-name-validator:
+    name: Validate requirement names against Pypi
     runs-on: ubuntu-22.04
     if: |
       github.event_name == 'pull_request'
