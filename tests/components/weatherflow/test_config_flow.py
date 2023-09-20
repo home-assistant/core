@@ -109,3 +109,20 @@ async def test_devices_with_mocks_timeout(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
+
+
+async def test_devices_with_mocks_cancelled(
+    hass: HomeAssistant,
+    mock_start_timeout: AsyncMock,
+    mock_stop: AsyncMock,
+    monkeypatch,
+) -> None:
+    """Test getting user input."""
+    with patch(
+        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
+        side_effect=asyncio.exceptions.CancelledError,
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
