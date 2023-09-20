@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device = await api.get()
             _LOGGER.debug("Ecoforest: %s", device)
     except EcoforestAuthenticationRequired:
-        _LOGGER.error("Authentication on device (%s)  failed", host)
+        _LOGGER.error("Authentication on device %s failed", host)
         return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Error communicating with device %s", host)
