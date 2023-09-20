@@ -26,7 +26,7 @@ async def test_form(
         "pyecoforest.api.EcoforestApi.get",
         return_value=mock_device,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
