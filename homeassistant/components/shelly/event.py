@@ -19,7 +19,11 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BLOCK_INPUTS_EVENTS_TYPES, RPC_INPUTS_EVENTS_TYPES
+from .const import (
+    BASIC_INPUTS_EVENTS_TYPES,
+    RPC_INPUTS_EVENTS_TYPES,
+    SHIX3_1_INPUTS_EVENTS_TYPES,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import (
     async_remove_shelly_entity,
@@ -58,7 +62,6 @@ BLOCK_EVENT: Final = ShellyBlockEventDescription(
     key="input",
     translation_key="input",
     device_class=EventDeviceClass.BUTTON,
-    event_types=list(BLOCK_INPUTS_EVENTS_TYPES),
     removal_condition=lambda settings, block: not is_block_momentary_input(
         settings, block, True
     ),
@@ -176,6 +179,10 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
         )
         self._attr_unique_id = f"{coordinator.mac}-{description.key}-{input_id}"
         self._attr_name = f"{coordinator.device.name} Input {input_id}"
+        if coordinator.device.model == "SHIX3-1":
+            self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
+        else:
+            self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
