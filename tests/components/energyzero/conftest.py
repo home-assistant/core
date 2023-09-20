@@ -32,25 +32,42 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+def apply_energyzero_mock(energyzero_mock):
+    """Apply mocks to EnergyZero client."""
+    client = energyzero_mock.return_value
+    client.energy_prices.return_value = Electricity.from_dict(
+        json.loads(load_fixture("today_energy.json", DOMAIN))
+    )
+    client.gas_prices.return_value = Gas.from_dict(
+        json.loads(load_fixture("today_gas.json", DOMAIN))
+    )
+    return client
+
+
 @pytest.fixture
 def mock_energyzero() -> Generator[MagicMock, None, None]:
     """Return a mocked EnergyZero client."""
     with patch(
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
-        client = energyzero_mock.return_value
-        client.energy_prices.return_value = Electricity.from_dict(
-            json.loads(load_fixture("today_energy.json", DOMAIN))
-        )
-        client.gas_prices.return_value = Gas.from_dict(
-            json.loads(load_fixture("today_gas.json", DOMAIN))
-        )
-        yield client
+        yield apply_energyzero_mock(energyzero_mock)
+
+
+@pytest.fixture
+def mock_energyzero_service() -> Generator[MagicMock, None, None]:
+    """Return a mocked EnergyZero client."""
+    with patch(
+        "homeassistant.components.energyzero.EnergyZero", autospec=True
+    ) as energyzero_mock:
+        yield apply_energyzero_mock(energyzero_mock)
 
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_energyzero: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energyzero: MagicMock,
+    mock_energyzero_service: MagicMock,
 ) -> MockConfigEntry:
     """Set up the EnergyZero integration for testing."""
     mock_config_entry.add_to_hass(hass)
