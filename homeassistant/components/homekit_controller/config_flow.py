@@ -114,7 +114,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the homekit_controller flow."""
         self.model: str | None = None
-        self.hkid: str | None = None
+        self.hkid: str | None = None  # This is always lower case
         self.name: str | None = None
         self.category: Categories | None = None
         self.devices: dict[str, AbstractDiscovery] = {}
@@ -303,7 +303,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     name,
                     model,
-                    upper_case_hkid,
+                    hkid,
                 )
                 await self.hass.config_entries.async_remove(existing.entry_id)
             else:
@@ -315,7 +315,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     name,
                     model,
-                    upper_case_hkid,
+                    hkid,
                 )
                 return self.async_abort(reason="already_paired")
 
@@ -348,7 +348,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If this is a HomeKit bridge/accessory exported
         # by *this* HA instance ignore it.
-        if self._hkid_is_homekit(lower_case_hkid):
+        if self._hkid_is_homekit(hkid):
             return self.async_abort(reason="ignored_model")
 
         self.name = name
