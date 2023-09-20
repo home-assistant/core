@@ -24,18 +24,14 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
         """Initialize device information."""
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}_{description.key}"
-        super().__init__(coordinator)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.host)},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.host)},
             name=MANUFACTURER,
-            model=self.coordinator.data.model_name,
-            sw_version=self.coordinator.data.firmware,
+            model=self.data.model_name,
+            sw_version=self.data.firmware,
             manufacturer=MANUFACTURER,
         )
+        super().__init__(coordinator)
 
     @property
     def data(self) -> Device:
