@@ -75,7 +75,7 @@ class WeatherFlowWindSensorEntityDescription(WeatherFlowSensorEntityDescription)
         self.suggested_display_precision = 2
 
 
-CUSTOM_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
+VOC_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
     AirDensityWeatherFlowSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
@@ -289,7 +289,7 @@ async def async_setup_entry(
                 description=description,
                 is_metric=(hass.config.units == METRIC_SYSTEM),
             )
-            for description in CUSTOM_SENSORS
+            for description in VOC_SENSORS
             if hasattr(device, description.key)
         ]
 
