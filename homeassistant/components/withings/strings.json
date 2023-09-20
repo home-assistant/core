@@ -1,18 +1,12 @@
 {
   "config": {
-    "flow_title": "{profile}",
     "step": {
-      "profile": {
-        "title": "User Profile.",
-        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
-        "data": { "profile": "Profile Name" }
-      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+        "description": "The Withings integration needs to re-authenticate your account"
       }
     },
     "error": {
@@ -26,6 +20,114 @@
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_webhook": "Use webhooks"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_bed": {
+        "name": "In bed"
+      }
+    },
+    "sensor": {
+      "fat_mass": {
+        "name": "Fat mass"
+      },
+      "fat_free_mass": {
+        "name": "Fat free mass"
+      },
+      "muscle_mass": {
+        "name": "Muscle mass"
+      },
+      "bone_mass": {
+        "name": "Bone mass"
+      },
+      "height": {
+        "name": "Height"
+      },
+      "body_temperature": {
+        "name": "Body temperature"
+      },
+      "skin_temperature": {
+        "name": "Skin temperature"
+      },
+      "fat_ratio": {
+        "name": "Fat ratio"
+      },
+      "diastolic_blood_pressure": {
+        "name": "Diastolic blood pressure"
+      },
+      "systolic_blood_pressure": {
+        "name": "Systolic blood pressure"
+      },
+      "heart_pulse": {
+        "name": "Heart pulse"
+      },
+      "spo2": {
+        "name": "SpO2"
+      },
+      "hydration": {
+        "name": "Hydration"
+      },
+      "pulse_wave_velocity": {
+        "name": "Pulse wave velocity"
+      },
+      "breathing_disturbances_intensity": {
+        "name": "Breathing disturbances intensity"
+      },
+      "deep_sleep": {
+        "name": "Deep sleep"
+      },
+      "time_to_sleep": {
+        "name": "Time to sleep"
+      },
+      "time_to_wakeup": {
+        "name": "Time to wakeup"
+      },
+      "average_heart_rate": {
+        "name": "Average heart rate"
+      },
+      "maximum_heart_rate": {
+        "name": "Maximum heart rate"
+      },
+      "light_sleep": {
+        "name": "Light sleep"
+      },
+      "rem_sleep": {
+        "name": "REM sleep"
+      },
+      "average_respiratory_rate": {
+        "name": "Average respiratory rate"
+      },
+      "maximum_respiratory_rate": {
+        "name": "Maximum respiratory rate"
+      },
+      "minimum_respiratory_rate": {
+        "name": "Minimum respiratory rate"
+      },
+      "sleep_score": {
+        "name": "Sleep score"
+      },
+      "snoring": {
+        "name": "Snoring"
+      },
+      "snoring_episode_count": {
+        "name": "Snoring episode count"
+      },
+      "wakeup_count": {
+        "name": "Wakeup count"
+      },
+      "wakeup_time": {
+        "name": "Wakeup time"
+      }
     }
   }
 }

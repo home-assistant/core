@@ -196,23 +196,18 @@ class ViCareBinarySensor(BinarySensorEntity):
         self._api = api
         self.entity_description = description
         self._device_config = device_config
-        self._state = None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
-            name=self._device_config.getModel(),
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_config.getConfig().serial)},
+            name=device_config.getModel(),
             manufacturer="Viessmann",
-            model=self._device_config.getModel(),
+            model=device_config.getModel(),
             configuration_url="https://developer.viessmann.com/",
         )
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None
+        return self._attr_is_on is not None
 
     @property
     def unique_id(self) -> str:
@@ -224,16 +219,11 @@ class ViCareBinarySensor(BinarySensorEntity):
             return f"{tmp_id}-{self._api.id}"
         return tmp_id
 
-    @property
-    def is_on(self):
-        """Return the state of the sensor."""
-        return self._state
-
     def update(self):
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._state = self.entity_description.value_getter(self._api)
+                self._attr_is_on = self.entity_description.value_getter(self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:

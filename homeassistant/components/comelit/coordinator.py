@@ -44,7 +44,6 @@ class ComelitSerialBridge(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed
 
         devices_data = await self.api.get_all_devices()
-        alarm_data = await self.api.get_alarm_config()
         await self.api.logout()
 
-        return devices_data | alarm_data
+        return devices_data
