@@ -204,7 +204,7 @@ class EntityInfo(TypedDict):
 class StateInfo(TypedDict):
     """State info."""
 
-    unstored_attributes: frozenset[str]
+    unrecorded_attributes: frozenset[str]
 
 
 class EntityPlatformState(Enum):
@@ -304,14 +304,14 @@ class Entity(ABC):
     _platform_state = EntityPlatformState.NOT_ADDED
 
     # Attributes to exclude from recording, only set by base components, e.g. light
-    _component_unstored_attributes: frozenset[str] = frozenset()
+    _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
     # platforms, e.g. a derived class in hue.light
-    _platform_unstored_attributes: frozenset[str] = frozenset()
-    # Union of _component_unstored_attributes and _platform_unstored_attributes,
+    _unrecorded_attributes: frozenset[str] = frozenset()
+    # Union of _entity_component_unrecorded_attributes and _unrecorded_attributes,
     # set automatically by __init_subclass__
-    __unstored_attributes: frozenset[str] = (
-        _component_unstored_attributes | _platform_unstored_attributes
+    __combined_unrecorded_attributes: frozenset[str] = (
+        _entity_component_unrecorded_attributes | _unrecorded_attributes
     )
 
     # StateInfo. Set by EntityPlatform by calling async_internal_added_to_hass
@@ -346,8 +346,8 @@ class Entity(ABC):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize an Entity subclass."""
         super().__init_subclass__(**kwargs)
-        cls.__unstored_attributes = (
-            cls._component_unstored_attributes | cls._platform_unstored_attributes
+        cls.__combined_unrecorded_attributes = (
+            cls._entity_component_unrecorded_attributes | cls._unrecorded_attributes
         )
 
     @property
@@ -1125,7 +1125,9 @@ class Entity(ABC):
 
         entity_sources(self.hass)[self.entity_id] = entity_info
 
-        self._state_info = {"unstored_attributes": self.__unstored_attributes}
+        self._state_info = {
+            "unrecorded_attributes": self.__combined_unrecorded_attributes
+        }
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
