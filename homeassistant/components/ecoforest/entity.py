@@ -23,7 +23,7 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
     ) -> None:
         """Initialize device information."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{self.entity_description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{description.key}"
         super().__init__(coordinator)
 
     @property
