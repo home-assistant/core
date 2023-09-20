@@ -17,12 +17,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "Room Temperature"
-      }
-    }
   }
 }

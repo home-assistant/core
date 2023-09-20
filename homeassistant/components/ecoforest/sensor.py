@@ -41,7 +41,6 @@ class EcoforestSensorEntityDescription(
 SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
     EcoforestSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda data: data.environment_temperature,
