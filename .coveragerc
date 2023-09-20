@@ -45,6 +45,7 @@ omit =
     homeassistant/components/airthings_ble/sensor.py
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
+    homeassistant/components/airtouch4/coordinator.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/airvisual_pro/__init__.py
@@ -101,6 +102,7 @@ omit =
     homeassistant/components/azure_devops/__init__.py
     homeassistant/components/azure_devops/sensor.py
     homeassistant/components/azure_service_bus/*
+    homeassistant/components/awair/coordinator.py
     homeassistant/components/baf/__init__.py
     homeassistant/components/baf/climate.py
     homeassistant/components/baf/entity.py
@@ -355,6 +357,7 @@ omit =
     homeassistant/components/ezviz/update.py
     homeassistant/components/faa_delays/__init__.py
     homeassistant/components/faa_delays/binary_sensor.py
+    homeassistant/components/faa_delays/coordinator.py
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
@@ -733,6 +736,7 @@ omit =
     homeassistant/components/mill/sensor.py
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/coordinator.py
     homeassistant/components/minecraft_server/entity.py
     homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/minio_helper.py
@@ -793,6 +797,7 @@ omit =
     homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/button.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/entity.py
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear/switch.py
@@ -1007,6 +1012,7 @@ omit =
     homeassistant/components/rainmachine/util.py
     homeassistant/components/renson/__init__.py
     homeassistant/components/renson/const.py
+    homeassistant/components/renson/coordinator.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
     homeassistant/components/renson/fan.py
@@ -1161,6 +1167,7 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/__init__.py
     homeassistant/components/solarlog/sensor.py
+    homeassistant/components/solarlog/coordinator.py
     homeassistant/components/solax/__init__.py
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/__init__.py
@@ -1253,6 +1260,9 @@ omit =
     homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/switch.py
     homeassistant/components/switchbot/lock.py
+    homeassistant/components/switchbot_cloud/coordinator.py
+    homeassistant/components/switchbot_cloud/entity.py
+    homeassistant/components/switchbot_cloud/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
@@ -1460,6 +1470,7 @@ omit =
     homeassistant/components/vodafone_station/const.py
     homeassistant/components/vodafone_station/coordinator.py
     homeassistant/components/vodafone_station/device_tracker.py
+    homeassistant/components/vodafone_station/sensor.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
     homeassistant/components/volumio/browse_media.py
@@ -1485,6 +1496,7 @@ omit =
     homeassistant/components/wiffi/sensor.py
     homeassistant/components/wiffi/wiffi_strings.py
     homeassistant/components/wirelesstag/*
+    homeassistant/components/withings/api.py
     homeassistant/components/wolflink/__init__.py
     homeassistant/components/wolflink/sensor.py
     homeassistant/components/worldtidesinfo/sensor.py
