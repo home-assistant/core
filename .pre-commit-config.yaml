@@ -105,7 +105,7 @@ repos:
         files: ^(script/hassfest/mypy_config\.py|\.strict-typing|mypy\.ini)$
       - id: pypi-name-validator
         name: pypi-name-validator
-        entry: script/run-in-env.sh python3 -m script.pypi_name_validator
+        entry: script/run-in-env.sh python3 -m script.pypi_name_validator only_staged
         pass_filenames: false
         language: script
         types: [text]
