@@ -1,7 +1,6 @@
 """Sensors for the smartweatherudp integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -55,8 +54,6 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
-
-    backing_library_attribute_fn: Callable[[], str] = lambda: ""
 
 
 @dataclass
@@ -159,13 +156,12 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         icon="mdi:weather-rainy",
     ),
     WeatherFlowSensorEntityDescription(
-        key="rain_amount",
+        key="rain_accumulation_previous_minute",
         translation_key="rain_amount",
         icon="mdi:weather-rainy",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.PRECIPITATION,
-        backing_library_attribute_fn=lambda: "rain_accumulation_previous_minute",
         imperial_suggested_unit=UnitOfPrecipitationDepth.INCHES,
     ),
     WeatherFlowSensorEntityDescription(
@@ -289,11 +285,7 @@ async def async_setup_entry(
                 is_metric=(hass.config.units == METRIC_SYSTEM),
             )
             for description in SENSORS
-            if (
-                description.backing_library_attribute_fn() != ""
-                and hasattr(device, description.backing_library_attribute_fn())
-            )
-            or hasattr(device, description.key)
+            if hasattr(device, description.key)
         ]
 
         sensors = sensors + [
@@ -303,11 +295,7 @@ async def async_setup_entry(
                 is_metric=(hass.config.units == METRIC_SYSTEM),
             )
             for description in CUSTOM_SENSORS
-            if (
-                description.backing_library_attribute_fn() != ""
-                and hasattr(device, description.backing_library_attribute_fn())
-            )
-            or hasattr(device, description.key)
+            if hasattr(device, description.key)
         ]
 
         async_add_entities(sensors)
@@ -366,27 +354,19 @@ class WeatherFlowSensorEntity(SensorEntity):
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
 
-        # Extract raw sensor data
-        # Either pull from the key (default) or (backing_library_attribute) to get sensor value
-        if self.entity_description.backing_library_attribute_fn() != "":
-            raw_sensor_data = getattr(
-                self.device, self.entity_description.backing_library_attribute_fn()
-            )
-        else:
-            raw_sensor_data = getattr(self.device, self.entity_description.key)
+        # Extract & process raw sensor data
+        raw_sensor_data = getattr(self.device, self.entity_description.key)
 
-        normalized_data = raw_sensor_data
-
-        if isinstance(normalized_data, Quantity):
-            sensor_value = normalized_data.magnitude
+        if isinstance(raw_sensor_data, Quantity):
+            sensor_value = raw_sensor_data.magnitude
             return sensor_value
-        if isinstance(normalized_data, Enum):
-            sensor_value = normalized_data.name.lower()
+        if isinstance(raw_sensor_data, Enum):
+            sensor_value = raw_sensor_data.name.lower()
             return sensor_value
-        if isinstance(normalized_data, float):
-            return normalized_data
-        if isinstance(normalized_data, int):
-            return normalized_data
+        if isinstance(raw_sensor_data, float):
+            return raw_sensor_data
+        if isinstance(raw_sensor_data, int):
+            return raw_sensor_data
         return None
 
     async def async_added_to_hass(self) -> None:
