@@ -32,9 +32,6 @@
       "feels_like": {
         "name": "Feels like"
       },
-      "illuminance": {
-        "name": "Illuminance"
-      },
       "lightning_average_distance": {
         "name": "Lightning average distance"
       },
@@ -66,10 +63,10 @@
       "solar_radiation": {
         "name": "Solar radiation"
       },
-      "up_since": {
+      "uptime": {
         "name": "Uptime"
       },
-      "uv": {
+      "uv_index": {
         "name": "UV index"
       },
       "vapor_pressure": {

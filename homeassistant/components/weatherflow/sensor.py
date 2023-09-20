@@ -128,7 +128,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="illuminance",
-        translation_key="illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -157,7 +156,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="rain_accumulation_previous_minute",
-        translation_key="rain_amount",
         icon="mdi:weather-rainy",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         state_class=SensorStateClass.TOTAL,
@@ -166,7 +164,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="rain_rate",
-        translation_key="rain_rate",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         icon="mdi:weather-rainy",
@@ -174,7 +171,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="relative_humidity",
-        translation_key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -239,7 +235,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowWindSensorEntityDescription(
         key="wind_speed",
-        translation_key="wind_speed",
         device_class=SensorDeviceClass.WIND_SPEED,
         event_subscriptions=[EVENT_RAPID_WIND, EVENT_OBSERVATION],
     ),
