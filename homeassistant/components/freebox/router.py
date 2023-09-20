@@ -13,11 +13,7 @@ from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import (
-    HttpRequestError,
-    InsufficientPermissionsError,
-    NotOpenError,
-)
+from freebox_api.exceptions import HttpRequestError, NotOpenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -193,7 +189,7 @@ class FreeboxRouter:
 
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
-        except InsufficientPermissionsError:
+        except HttpRequestError:
             self.home_granted = False
             _LOGGER.warning("Home access is not granted")
             return
