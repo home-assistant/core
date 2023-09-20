@@ -1011,6 +1011,7 @@ omit =
     homeassistant/components/rainmachine/util.py
     homeassistant/components/renson/__init__.py
     homeassistant/components/renson/const.py
+    homeassistant/components/renson/coordinator.py
     homeassistant/components/renson/entity.py
     homeassistant/components/renson/sensor.py
     homeassistant/components/renson/fan.py
