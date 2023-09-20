@@ -332,7 +332,6 @@ class WeatherFlowSensorEntity(SensorEntity):
             model=device.model,
             name=f"{device.model} {device.serial_number}",
             sw_version=self.device.firmware_revision,
-            suggested_area="Backyard",
         )
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
