@@ -158,11 +158,14 @@ async def async_migrate_unique_id(
             "Removing duplicated device %s",
             duplicate.name,
         )
-        dev_reg.async_remove_device(duplicate.id)
-        await asyncio.sleep(1)
 
-        if len(er.async_entries_for_device(ent_reg, duplicate.id)) > 0:
-            await asyncio.sleep(1)
+        duplicate_entities = er.async_entries_for_device(ent_reg, duplicate.id, True)
+        for entity in duplicate_entities:
+            ent_reg.async_update_entity(
+                entity.entity_id, new_unique_id=f"old-{entity.unique_id}"
+            )
+
+        dev_reg.async_remove_device(duplicate.id)
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(
