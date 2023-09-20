@@ -38,7 +38,7 @@ async def read_stream(stream, display):
     return b"".join(output)
 
 
-async def async_exec(*args, display=False):
+async def async_exec(*args, display=False, print_command=True):
     """Execute, return code & log."""
     argsp = []
     for arg in args:
@@ -46,7 +46,8 @@ async def async_exec(*args, display=False):
             argsp.append(f"\\\n  {shlex.quote(arg)}")
         else:
             argsp.append(shlex.quote(arg))
-    printc("cyan", *argsp)
+    if print_command:
+        printc("cyan", *argsp)
     try:
         kwargs = {
             "stdout": asyncio.subprocess.PIPE,
@@ -73,9 +74,11 @@ async def async_exec(*args, display=False):
     return exit_code, stdout
 
 
-async def async_safe_exec(*args: str, display: bool = False) -> str:
+async def async_safe_exec(*args: str, display: bool = False, print_command=True) -> str:
     """Execute and raise Error, if command exit code != 0, return log."""
-    exit_code, log = await async_exec(*args, display=display)
+    exit_code, log = await async_exec(
+        *args, display=display, print_command=print_command
+    )
     if exit_code != 0:
         raise RuntimeError(f'Command "{args}" returned the error "{log}"')
     return log
