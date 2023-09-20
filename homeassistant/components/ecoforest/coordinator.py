@@ -39,6 +39,6 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
                 _LOGGER.debug("Ecoforest data: %s", data)
                 return data
         except EcoforestAuthenticationRequired as err:
-            raise ConfigEntryAuthFailed from err
+            raise UpdateFailed from err
         except EcoforestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
