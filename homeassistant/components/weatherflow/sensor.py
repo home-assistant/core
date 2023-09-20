@@ -345,7 +345,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             suggested_area="Backyard",
         )
 
-        self._attr_unique_id = f"{self.device.serial_number}_{description.key}"
+        self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
         # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
         if (description.imperial_suggested_unit is not None) and (not is_metric):
