@@ -64,7 +64,7 @@ async def async_setup_entry(
         async_add_entities(binary_entities, True)
 
 
-class FreeboxBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
+class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
     def __init__(
