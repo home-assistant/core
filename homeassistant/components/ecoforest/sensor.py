@@ -66,7 +66,6 @@ async def async_setup_entry(
 class EcoforestSensor(SensorEntity, EcoforestEntity):
     """Representation of an Ecoforest sensor."""
 
-    _attr_has_entity_name = True
 
     def __init__(
         self,
