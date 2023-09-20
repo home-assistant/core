@@ -13,14 +13,14 @@ from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
 
 
 class RefossEntity(Entity):
-    """RefossDevice."""
+    """Entity for refoss."""
 
     def __init__(self, device: BaseDevice, channel: int) -> None:
         """__init__."""
         self._attr_unique_id = f"refoss_{device.uuid}_{channel}"
-        self._attr_name = f"{device.dev_name}"
-        if channel > 0:
-            self._attr_name = f"{device.dev_name}-{channel}"
+        self._attr_name = (
+            device.dev_name if channel == 0 else f"{device.dev_name}-{channel}"
+        )
         self.device = device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.uuid)},
@@ -30,11 +30,7 @@ class RefossEntity(Entity):
             sw_version=self.device.fmware_version,
             hw_version=self.device.hdware_version,
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """should_poll."""
-        return False
+        self._attr_should_poll = False
 
     @property
     def available(self) -> bool:
@@ -44,7 +40,7 @@ class RefossEntity(Entity):
     async def _async_push_notification_received(
         self, namespace: Namespace, data: dict, uuid: str
     ):
-        """_async_push_notification_received."""
+        """Synchronize the status of device push."""
         await self.device.async_update_push_state(
             namespace=namespace, data=data, uuid=uuid
         )

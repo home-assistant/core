@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DEFAULT_NAME, DOMAIN
 
 
-def _get_unique_id(data: dict[str, Any]):
+def _get_unique_id(data: dict[str, Any]) -> str:
     """Return unique ID."""
     return f"{data[CONF_NAME]}_{data[CONF_LATITUDE]}_{data[CONF_LONGITUDE]}"
 
@@ -25,6 +25,9 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """async_step_user for Refoss."""
+
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
 
         latitude = self.hass.config.latitude
         longitude = self.hass.config.longitude

@@ -1,15 +1,13 @@
 """Tests for the Refoss config flow."""
 from __future__ import annotations
 
-from typing import Final
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.refoss.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-DOMAIN: Final = "refoss"
 
 
 async def test_configured(hass: HomeAssistant):

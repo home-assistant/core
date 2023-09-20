@@ -1017,6 +1017,11 @@ omit =
     homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/sensor.py
+    homeassistant/components/refoss/__init__.py
+    homeassistant/components/refoss/device.py
+    homeassistant/components/refoss/switch.py
+    homeassistant/components/refoss/util.py
+    homeassistant/components/refoss/models.py
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
@@ -1591,11 +1596,6 @@ omit =
     homeassistant/components/zwave_me/switch.py
     homeassistant/components/electrasmart/climate.py
     homeassistant/components/electrasmart/__init__.py
-    homeassistant/components/refoss/__init__.py
-    homeassistant/components/refoss/const.py
-    homeassistant/components/refoss/device.py
-    homeassistant/components/refoss/switch.py
-    homeassistant/components/refoss/util.py
 
 [report]
 # Regexes for lines to exclude from consideration

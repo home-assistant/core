@@ -23,7 +23,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """async_setup_entry."""
+    """Set up switches for device."""
     hass_data: HomeAssistantRefossData = hass.data[DOMAIN][entry.entry_id]
 
     @callback
@@ -37,11 +37,8 @@ async def async_setup_entry(
             if not isinstance(device, ToggleXMix):
                 continue
 
-            if len(device.channels) == 0:
-                continue
-
             for channel in device.channels:
-                w = SwitchEntityWrapper(device=device, channel=channel)
+                w = RefossSwitchEntity(device=device, channel=channel)
                 new_entities.append(w)
         async_add_entities(new_entities, True)
 
@@ -56,8 +53,8 @@ class SwitchDevice(ToggleXMix, BaseDevice):
     """Switch device."""
 
 
-class SwitchEntityWrapper(RefossEntity, SwitchEntity):
-    """Wrapper around SwitchEntity."""
+class RefossSwitchEntity(RefossEntity, SwitchEntity):
+    """Entity that controls switch based refoss device."""
 
     device: SwitchDevice
 
@@ -73,7 +70,7 @@ class SwitchEntityWrapper(RefossEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """async_turn_on."""
-        LOGGER.info(
+        LOGGER.debug(
             f"Turning on,device_type: {self.device.device_type}, channel: {self._channel_id}"
         )
         await self.device.async_turn_on(self._channel_id)
@@ -81,7 +78,7 @@ class SwitchEntityWrapper(RefossEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """async_turn_off."""
-        LOGGER.info(
+        LOGGER.debug(
             f"Turning off,device_type: {self.device.device_type}, channel: {self._channel_id}"
         )
         await self.device.async_turn_off(self._channel_id)
