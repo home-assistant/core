@@ -279,8 +279,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
         # invalid. Remove it automatically.
-        existing = find_existing_host(self.hass, upper_case_hkid)
-        if not paired and existing:
+        if not paired and (existing := find_existing_host(self.hass, upper_case_hkid)):
             if self.controller is None:
                 await self._async_setup_controller()
 
