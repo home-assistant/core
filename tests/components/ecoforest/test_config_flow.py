@@ -36,9 +36,9 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Ecoforest 1234"
-    assert result2["data"] == {
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Ecoforest 1234"
+    assert result["data"] == {
         "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
