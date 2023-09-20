@@ -61,7 +61,7 @@ def config_entry_fixture(hass: HomeAssistant, config, serial_number):
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-        title=f"Ecoforest {serial_number}" if serial_number else "Ecoforest",
+        title=f"Ecoforest {serial_number}",
         unique_id=serial_number,
         data=config,
     )
