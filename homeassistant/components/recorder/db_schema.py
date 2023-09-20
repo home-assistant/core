@@ -576,6 +576,8 @@ class StateAttributes(Base):
             integration_attrs := exclude_attrs_by_domain.get(entity_info["domain"])
         ):
             exclude_attrs |= integration_attrs
+        if state_info := state.state_info:
+            exclude_attrs |= state_info["unrecorded_attributes"]
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

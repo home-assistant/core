@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.15
+SQLAlchemy==2.0.21
 
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
@@ -529,7 +529,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.7.0
+dbus-fast==2.9.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -819,6 +819,9 @@ ical==5.0.1
 # homeassistant.components.ping
 icmplib==3.0
 
+# homeassistant.components.idasen_desk
+idasen-ha==1.4
+
 # homeassistant.components.network
 ifaddr==0.2.0
 
@@ -838,7 +841,7 @@ insteon-frontend-home-assistant==0.4.0
 intellifire4py==2.2.2
 
 # homeassistant.components.gogogate2
-ismartgate==5.0.0
+ismartgate==5.0.1
 
 # homeassistant.components.file_upload
 janus==1.0.0
@@ -1595,7 +1598,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.34.0
+python-roborock==0.34.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
