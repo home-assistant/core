@@ -149,7 +149,7 @@ async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
 
 async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with an IPv4 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
+    with patch(
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
     ), patch(
@@ -168,7 +168,7 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
 
 async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with an IPv6 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
+    with patch(
         "aiodns.DNSResolver.query",
         side_effect=aiodns.error.DNSError,
     ), patch(

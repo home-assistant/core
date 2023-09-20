@@ -47,7 +47,7 @@ PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.15
-typing-extensions>=4.7.0,<5.0
+typing-extensions>=4.8.0,<5.0
 ulid-transform==0.8.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
@@ -112,7 +112,7 @@ httpcore==0.17.3
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.2
+numpy==1.26.0
 
 # Prevent dependency conflicts between sisyphus-control and aioambient
 # until upper bounds for sisyphus-control have been updated

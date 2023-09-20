@@ -1,5 +1,6 @@
 """Tests for homekit_controller config flow."""
 import asyncio
+from ipaddress import ip_address
 import unittest.mock
 from unittest.mock import AsyncMock, patch
 
@@ -174,10 +175,10 @@ def get_device_discovery_info(
 ) -> zeroconf.ZeroconfServiceInfo:
     """Turn a aiohomekit format zeroconf entry into a homeassistant one."""
     result = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname=device.description.name,
         name=device.description.name + "._hap._tcp.local.",
-        addresses=["127.0.0.1"],
         port=8080,
         properties={
             "md": device.description.model,
