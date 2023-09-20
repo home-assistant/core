@@ -125,9 +125,6 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
             None,
         )
         super().__init__(hass, router, node, cover_node)
-        self._command_cover = self.get_command_id(
-            node["type"]["endpoints"], "signal", "cover"
-        )
         self._open = self.get_value("signal", "cover")
 
     @property
