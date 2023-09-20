@@ -38,5 +38,5 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
     @property
     def data(self) -> Device:
         """Return ecoforest data."""
-        assert self.coordinator.data is not None
+        assert self.coordinator.data
         return self.coordinator.data
