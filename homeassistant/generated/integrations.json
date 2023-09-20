@@ -863,7 +863,7 @@
     },
     "co2signal": {
       "name": "Electricity Maps",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2578,6 +2578,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "IKEA TR\u00c5DFRI"
+        },
+        "idasen_desk": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "IKEA Idasen Desk"
         }
       }
     },
@@ -3712,9 +3718,8 @@
       "supported_by": "overkiz"
     },
     "nextbus": {
-      "name": "NextBus",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "nextcloud": {
@@ -6798,6 +6803,7 @@
     "mobile_app",
     "moehlenhoff_alpha2",
     "moon",
+    "nextbus",
     "nmap_tracker",
     "plant",
     "proximity",

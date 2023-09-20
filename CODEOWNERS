@@ -400,8 +400,8 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/flux_led/ @icemanch @bdraco
-/tests/components/flux_led/ @icemanch @bdraco
+/homeassistant/components/flux_led/ @icemanch
+/tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
 /tests/components/forecast_solar/ @klaasnicolaas @frenck
 /homeassistant/components/forked_daapd/ @uvjustin
@@ -569,6 +569,8 @@ build.json @home-assistant/supervisor
 /tests/components/ibeacon/ @bdraco
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
+/homeassistant/components/idasen_desk/ @abmantis
+/tests/components/idasen_desk/ @abmantis
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
 /homeassistant/components/image/ @home-assistant/core
@@ -688,8 +690,6 @@ build.json @home-assistant/supervisor
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
-/homeassistant/components/lifx/ @bdraco
-/tests/components/lifx/ @bdraco
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
@@ -773,8 +773,8 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus/ @adamchengtkc @janiversen @vzahradnik
-/tests/components/modbus/ @adamchengtkc @janiversen @vzahradnik
+/homeassistant/components/modbus/ @janiversen
+/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1193,8 +1193,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/spider/ @peternijssen
 /tests/components/spider/ @peternijssen
 /homeassistant/components/splunk/ @Bre77
-/homeassistant/components/spotify/ @frenck
-/tests/components/spotify/ @frenck
+/homeassistant/components/spotify/ @frenck @joostlek
+/tests/components/spotify/ @frenck @joostlek
 /homeassistant/components/sql/ @gjohansson-ST @dougiteixeira
 /tests/components/sql/ @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud
