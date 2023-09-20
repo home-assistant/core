@@ -51,10 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-        entry.async_on_unload(
-            device.on(EVENT_LOAD_COMPLETE, _async_add_device_if_started)
-        )
-
     entry.async_on_unload(client.on(EVENT_DEVICE_DISCOVERED, _async_device_discovered))
 
     try:
