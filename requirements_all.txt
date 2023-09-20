@@ -129,7 +129,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.15
+SQLAlchemy==2.0.21
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
@@ -646,7 +646,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.7.0
+dbus-fast==2.9.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -729,7 +729,7 @@ elgato==4.0.1
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.5
+elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
 elmax-api==0.0.4
@@ -834,7 +834,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.12.2
+fritzconnection[qr]==1.13.2
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1042,6 +1042,9 @@ ical==5.0.1
 # homeassistant.components.ping
 icmplib==3.0
 
+# homeassistant.components.idasen_desk
+idasen-ha==1.4
+
 # homeassistant.components.network
 ifaddr==0.2.0
 
@@ -1073,7 +1076,7 @@ intellifire4py==2.2.2
 iperf3==0.1.11
 
 # homeassistant.components.gogogate2
-ismartgate==5.0.0
+ismartgate==5.0.1
 
 # homeassistant.components.file_upload
 janus==1.0.0
@@ -1315,7 +1318,7 @@ numato-gpio==0.10.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.23.2
+numpy==1.26.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1378,7 +1381,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.33
+opower==0.0.34
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2163,7 +2166,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.34.0
+python-roborock==0.34.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
