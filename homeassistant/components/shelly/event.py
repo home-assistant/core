@@ -106,15 +106,12 @@ async def async_setup_entry(
             ):
                 continue
 
-            if not is_block_momentary_input(coordinator.device.settings, block, True):
-                continue
-
             channel = int(block.channel or 0) + 1
 
             if BLOCK_EVENT.removal_condition and BLOCK_EVENT.removal_condition(
                 coordinator.device.settings, block
             ):
-                unique_id = f"{coordinator.mac}-{channel}"
+                unique_id = f"{coordinator.mac}-{BLOCK_EVENT.key}-{channel}"
                 async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
             else:
                 entities.append(ShellyBlockEvent(coordinator, channel, BLOCK_EVENT))
