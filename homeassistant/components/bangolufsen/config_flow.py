@@ -16,12 +16,7 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     ATTR_FRIENDLY_NAME,
@@ -37,52 +32,9 @@ from .const import (
     DEFAULT_DEFAULT_VOLUME,
     DEFAULT_MAX_VOLUME,
     DEFAULT_MODEL,
-    DEFAULT_VOLUME_RANGE,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
-    MAX_VOLUME_RANGE,
-    VOLUME_STEP_RANGE,
 )
-
-
-def _config_schema(
-    volume_step: int = DEFAULT_VOLUME_STEP,
-    default_volume: int = DEFAULT_DEFAULT_VOLUME,
-    max_volume: int = DEFAULT_MAX_VOLUME,
-) -> dict:
-    """Create a schema for configuring the device with adjustable default values."""
-    return {
-        vol.Required(CONF_VOLUME_STEP, default=volume_step): vol.All(
-            NumberSelector(
-                NumberSelectorConfig(
-                    step=1,
-                    min=VOLUME_STEP_RANGE.start,
-                    max=VOLUME_STEP_RANGE.stop,
-                ),
-            ),
-            vol.Coerce(int),
-        ),
-        vol.Required(CONF_DEFAULT_VOLUME, default=default_volume): vol.All(
-            NumberSelector(
-                NumberSelectorConfig(
-                    step=1,
-                    min=DEFAULT_VOLUME_RANGE.start,
-                    max=DEFAULT_VOLUME_RANGE.stop,
-                )
-            ),
-            vol.Coerce(int),
-        ),
-        vol.Required(CONF_MAX_VOLUME, default=max_volume): vol.All(
-            NumberSelector(
-                NumberSelectorConfig(
-                    step=1,
-                    min=MAX_VOLUME_RANGE.start,
-                    max=MAX_VOLUME_RANGE.stop,
-                )
-            ),
-            vol.Coerce(int),
-        ),
-    }
 
 
 class UserInput(TypedDict, total=False):
