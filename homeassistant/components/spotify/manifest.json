@@ -1,7 +1,7 @@
 {
   "domain": "spotify",
   "name": "Spotify",
-  "codeowners": ["@frenck"],
+  "codeowners": ["@frenck", "@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/spotify",
