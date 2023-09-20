@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-
+    binary_entities: list[BinarySensorEntity] = []
     _LOGGER.debug("%s - %s - %s raid(s)", router.name, router.mac, len(router.raids))
 
     binary_entities = [
@@ -68,10 +68,14 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
     """Representation of a Freebox binary sensor."""
 
     def __init__(
-        self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
+        self,
+        hass: HomeAssistant,
+        router: FreeboxRouter,
+        node: dict[str, Any],
+        sub_node: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a Freebox binary sensor."""
-        super().__init__(hass, router, node)
+        super().__init__(hass, router, node, sub_node)
         self._command_trigger = self.get_command_id(
             node["type"]["endpoints"], "signal", "trigger"
         )
@@ -87,12 +91,12 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
                 self.async_write_ha_state()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._detection
 
 
-class FreeboxPirSensor(FreeboxBinarySensor):
+class FreeboxPirSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox motion binary sensor."""
 
     @property
@@ -101,7 +105,7 @@ class FreeboxPirSensor(FreeboxBinarySensor):
         return BinarySensorDeviceClass.MOTION
 
 
-class FreeboxDwsSensor(FreeboxBinarySensor):
+class FreeboxDwsSensor(FreeboxHomeBinarySensor):
     """Representation of a Freebox door opener binary sensor."""
 
     @property
@@ -124,11 +128,12 @@ class FreeboxCoverSensor(FreeboxHomeBinarySensor):
             ),
             None,
         )
+        self._open: bool | None
         super().__init__(hass, router, node, cover_node)
-        self._open = self.get_value("signal", "cover")
+        self.async_update_node()
 
     @property
-    def is_on(self) -> None:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._open
 
