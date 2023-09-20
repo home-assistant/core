@@ -37,7 +37,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    binary_entities: list[BinarySensorEntity] = []
 
     _LOGGER.debug("%s - %s - %s raid(s)", router.name, router.mac, len(router.raids))
 
