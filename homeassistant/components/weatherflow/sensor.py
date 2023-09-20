@@ -123,7 +123,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     ),
     WeatherFlowSensorEntityDescription(
         key="battery",
-        translation_key="battery voltage",
+        translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
