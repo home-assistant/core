@@ -71,6 +71,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self.hass = hass
 
         assert entry_data.device_info is not None
+        self.entry_data = entry_data
         self.device_info = entry_data.device_info
 
         self.queue: asyncio.Queue[bytes] = asyncio.Queue()
@@ -158,7 +159,9 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         data_to_send = None
         error = False
-        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
+        if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+            self.entry_data.async_set_assist_pipeline_state(True)
+        elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
             data_to_send = {"text": event.data["stt_output"]["text"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:

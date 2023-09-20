@@ -6,13 +6,14 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CONDITION,
@@ -36,11 +36,13 @@ from .const import (
     ATTR_API_FORECAST_TEMP_LOW,
     ATTR_API_FORECAST_TIME,
     ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
     ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
     ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
@@ -70,6 +72,7 @@ FORECAST_MAP = {
         ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
         ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
         ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+        ATTR_API_FORECAST_WIND_MAX_SPEED: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
         ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
     },
 }
@@ -111,7 +114,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
+class AemetWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -139,15 +142,6 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
-        )
-
     @property
     def condition(self):
         """Return the current condition."""
@@ -170,11 +164,13 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
         """Return the forecast array."""
         return self._forecast(self._forecast_mode)
 
-    async def async_forecast_daily(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast(FORECAST_MODE_DAILY)
 
-    async def async_forecast_hourly(self) -> list[Forecast]:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(FORECAST_MODE_HOURLY)
 
@@ -197,6 +193,11 @@ class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
+
+    @property
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data[ATTR_API_WIND_MAX_SPEED]
 
     @property
     def native_wind_speed(self):

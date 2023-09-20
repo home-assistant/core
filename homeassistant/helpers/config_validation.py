@@ -102,8 +102,6 @@ import homeassistant.util.dt as dt_util
 
 from . import script_variables as script_variables_helper, template as template_helper
 
-# pylint: disable=invalid-name
-
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
 
@@ -743,7 +741,6 @@ def socket_timeout(value: Any | None) -> object:
         raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
-# pylint: disable=no-value-for-parameter
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
@@ -1360,7 +1357,7 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")

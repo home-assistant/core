@@ -57,10 +57,10 @@ from .core.const import (
     CLUSTER_HANDLER_SOIL_MOISTURE,
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
+from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -99,7 +99,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.SENSOR]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.SENSOR]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -228,7 +229,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> int | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
