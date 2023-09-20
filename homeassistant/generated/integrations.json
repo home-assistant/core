@@ -1311,6 +1311,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "ecoforest": {
+      "name": "Ecoforest",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "econet": {
       "name": "Rheem EcoNet Products",
       "integration_type": "hub",

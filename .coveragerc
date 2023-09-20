@@ -258,6 +258,10 @@ omit =
     homeassistant/components/ecobee/notify.py
     homeassistant/components/ecobee/sensor.py
     homeassistant/components/ecobee/weather.py
+    homeassistant/components/ecoforest/__init__.py
+    homeassistant/components/ecoforest/coordinator.py
+    homeassistant/components/ecoforest/entity.py
+    homeassistant/components/ecoforest/sensor.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
     homeassistant/components/econet/climate.py
