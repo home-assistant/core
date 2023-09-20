@@ -314,6 +314,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class BaseAutomationEntity(ToggleEntity, ABC):
     """Base class for automation entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        (ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, CONF_ID)
+    )
     raw_config: ConfigType | None
 
     @property
