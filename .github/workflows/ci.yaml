@@ -1137,7 +1137,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: |
       github.event_name == 'pull_request'
-      github.base_ref == 'refs/heads/dev'
+      && github.base_ref == 'refs/heads/dev'
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
