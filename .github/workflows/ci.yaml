@@ -1132,3 +1132,39 @@ jobs:
             token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000
+
+  pypi-name-validator:
+    runs-on: ubuntu-22.04
+    if: |
+      github.event_name == 'pull_request'
+      github.base_ref == 'refs/heads/dev'
+      && github.event.inputs.lint-only != 'true'
+      && github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.requirements
+    needs:
+      - info
+      - base
+      - gen-requirements-all
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.0.0
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.7.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: venv
+          fail-on-cache-miss: true
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Run pypi_name_validator.py
+        run: |
+          . venv/bin/activate
+          python -m script.pypi_name_validator
