@@ -30,8 +30,8 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.data.serial_number)},
             name=MANUFACTURER,
-            model=self.data.model_name,
-            sw_version=self.data.firmware,
+            model=coordinator.data.model_name,
+            sw_version=coordinator.data.firmware,
             manufacturer=MANUFACTURER,
         )
 
