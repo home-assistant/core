@@ -246,15 +246,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # It changes if a device is factory reset.
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
-
-        # If this aiohomekit doesn't support this particular device, ignore it.
-        if not domain_supported(discovery_info.name):
-            return self.async_abort(reason="ignored_model")
-
-        model = properties["md"]
-        name = domain_to_name(discovery_info.name)
         status_flags = int(properties["sf"])
-        category = Categories(int(properties.get("ci", 0)))
         paired = not status_flags & 0x01
 
         # Set unique-id and error out if it's already configured
@@ -265,22 +257,27 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "AccessoryIP": discovery_info.host,
             "AccessoryPort": discovery_info.port,
         }
-
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
-        if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
+        if paired and normalized_hkid in self.hass.data.get(KNOWN_DEVICES, {}):
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
             return self.async_abort(reason="already_configured")
 
-        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+        # If this aiohomekit doesn't support this particular device, ignore it.
+        if not domain_supported(discovery_info.name):
+            return self.async_abort(reason="ignored_model")
+
+        model = properties["md"]
+        name = domain_to_name(discovery_info.name)
+        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, normalized_hkid)
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
         # invalid. Remove it automatically.
-        existing = find_existing_host(self.hass, hkid)
+        existing = find_existing_host(self.hass, normalized_hkid)
         if not paired and existing:
             if self.controller is None:
                 await self._async_setup_controller()
@@ -303,7 +300,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     name,
                     model,
-                    hkid,
+                    normalized_hkid,
                 )
                 await self.hass.config_entries.async_remove(existing.entry_id)
             else:
@@ -315,7 +312,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     name,
                     model,
-                    hkid,
+                    normalized_hkid,
                 )
                 return self.async_abort(reason="already_paired")
 
@@ -348,13 +345,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If this is a HomeKit bridge/accessory exported
         # by *this* HA instance ignore it.
-        if await self._hkid_is_homekit(hkid):
+        if await self._hkid_is_homekit(normalized_hkid):
             return self.async_abort(reason="ignored_model")
 
         self.name = name
         self.model = model
-        self.category = category
-        self.hkid = hkid
+        self.category = Categories(int(properties.get("ci", 0)))
+        self.hkid = normalized_hkid
 
         # We want to show the pairing form - but don't call async_step_pair
         # directly as it has side effects (will ask the device to show a
