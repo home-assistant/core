@@ -60,7 +60,7 @@ async def async_setup_entry(
         EcoforestSensor(coordinator, description) for description in SENSOR_TYPES
     ]
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class EcoforestSensor(SensorEntity, EcoforestEntity):
