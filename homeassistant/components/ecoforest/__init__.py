@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error("Error communicating with device %s", host)
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
     coordinator = EcoforestCoordinator(hass, api)
 
