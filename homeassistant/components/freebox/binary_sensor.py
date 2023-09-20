@@ -110,7 +110,7 @@ class FreeboxDwsSensor(FreeboxBinarySensor):
         return BinarySensorDeviceClass.DOOR
 
 
-class FreeboxCoverSensor(FreeboxHomeEntity, BinarySensorEntity):
+class FreeboxCoverSensor(FreeboxHomeBinarySensor):
     """Representation of a cover Freebox plastic removal cover binary sensor (for some sensors: motion detector, door opener detector...)."""
 
     def __init__(
