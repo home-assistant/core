@@ -1213,7 +1213,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
@@ -1251,7 +1251,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
