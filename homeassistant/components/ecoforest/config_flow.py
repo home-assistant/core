@@ -66,13 +66,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
-                if not self.unique_id:
-                    await self.async_set_unique_id(device.serial_number)
-                    name = (
-                        f"{MANUFACTURER} {self.unique_id}"
-                        if self.unique_id
-                        else MANUFACTURER
-                    )
+                await self.async_set_unique_id(device.serial_number)
+                name = (
+                    f"{MANUFACTURER} {self.unique_id}"
+                    if self.unique_id
+                    else MANUFACTURER
+                )
                 return self.async_create_entry(
                     title=name, data={CONF_HOST: host} | user_input
                 )
