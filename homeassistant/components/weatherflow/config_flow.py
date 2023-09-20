@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Future
+from asyncio.exceptions import CancelledError
 from typing import Any
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
@@ -32,6 +33,8 @@ async def _async_can_discover_devices() -> bool:
             await future_event
         except asyncio.TimeoutError:
             return False
+        except CancelledError:
+            raise ListenerError
 
     return True
 

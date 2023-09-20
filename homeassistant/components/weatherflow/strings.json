@@ -2,6 +2,8 @@
   "config": {
     "step": {
       "user": {
+        "title": "WeatherFlow Discovery",
+        "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -9,7 +11,7 @@
     },
     "error": {
       "address_in_use": "The host address is already in use. Please specify a different host address below.",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "UDP discovery error."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
