@@ -258,7 +258,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if event_type in INPUTS_EVENTS_DICT:
                 for event_callback in self._input_event_listeners:
                     event_callback(
-                        {"id": channel, "event": INPUTS_EVENTS_DICT[event_type]}
+                        {"channel": channel, "event": INPUTS_EVENTS_DICT[event_type]}
                     )
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,

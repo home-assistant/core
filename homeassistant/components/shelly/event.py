@@ -109,15 +109,15 @@ async def async_setup_entry(
             if not is_block_momentary_input(coordinator.device.settings, block, True):
                 continue
 
-            input_id = int(block.channel or 0) + 1
+            channel = int(block.channel or 0) + 1
 
             if BLOCK_EVENT.removal_condition and BLOCK_EVENT.removal_condition(
                 coordinator.device.settings, block
             ):
-                unique_id = f"{coordinator.mac}-{input_id}"
+                unique_id = f"{coordinator.mac}-{channel}"
                 async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
             else:
-                entities.append(ShellyBlockEvent(coordinator, input_id, BLOCK_EVENT))
+                entities.append(ShellyBlockEvent(coordinator, channel, BLOCK_EVENT))
 
     async_add_entities(entities)
 
@@ -168,17 +168,17 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
     def __init__(
         self,
         coordinator: ShellyBlockCoordinator,
-        input_id: int,
+        channel: int,
         description: ShellyBlockEventDescription,
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
-        self.input_id = input_id
+        self.channel = channel
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
-        self._attr_unique_id = f"{coordinator.mac}-{description.key}-{input_id}"
-        self._attr_name = f"{coordinator.device.name} Input {input_id}"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}-{channel}"
+        self._attr_name = f"{coordinator.device.name} Input {channel}"
         if coordinator.device.model == "SHIX3-1":
             self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
         else:
@@ -195,6 +195,6 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
-        if event["id"] == self.input_id:
+        if event["channel"] == self.channel:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
