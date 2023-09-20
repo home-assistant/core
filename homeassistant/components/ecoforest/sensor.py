@@ -1,4 +1,4 @@
-"""Support for IPMA sensors."""
+"""Support for Ecoforest sensors."""
 from __future__ import annotations
 
 from collections.abc import Callable
