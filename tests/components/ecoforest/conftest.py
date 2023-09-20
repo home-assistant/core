@@ -6,7 +6,7 @@ from pyecoforest.models.device import Alarm, Device, OperationMode, State
 import pytest
 
 from homeassistant.components.ecoforest import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -24,7 +24,11 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture(name="config")
 def config_fixture():
     """Define a config entry data fixture."""
-    return {CONF_HOST: "1.1.1.1"}
+    return {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
 
 
 @pytest.fixture(name="serial_number")
