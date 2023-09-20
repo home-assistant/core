@@ -54,7 +54,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ecoforest sensor platform."""
     coordinator: EcoforestCoordinator = hass.data[DOMAIN][entry.entry_id]
-    assert coordinator.data is not None
 
     entities = [
         EcoforestSensor(coordinator, description) for description in SENSOR_TYPES
@@ -65,7 +64,6 @@ async def async_setup_entry(
 
 class EcoforestSensor(SensorEntity, EcoforestEntity):
     """Representation of an Ecoforest sensor."""
-
 
     def __init__(
         self,
