@@ -81,11 +81,11 @@ def formatted_category(category: Categories) -> str:
 
 @callback
 def find_existing_host(
-    hass: HomeAssistant, serial: str
+    hass: HomeAssistant, upper_case_hkid: str
 ) -> config_entries.ConfigEntry | None:
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get("AccessoryPairingID") == serial:
+        if entry.data.get("AccessoryPairingID") == upper_case_hkid:
             return entry
     return None
 
