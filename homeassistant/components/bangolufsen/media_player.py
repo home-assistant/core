@@ -256,6 +256,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 self._source_change = product_state.playback.source
             if product_state.playback.state:
                 self._playback_state = product_state.playback.state
+                # Set initial state
+                if self._playback_state.value:
+                    self._state = self._playback_state.value
 
         self._last_update = utcnow()
 
@@ -377,15 +380,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     async def _update_playback_progress(self, data: PlaybackProgress) -> None:
         """Update _playback_progress and last update."""
-        # Fix for some devices appear as "idle" even though they are currently playing
-        if (
-            self.state == MediaPlayerState.IDLE
-            and data.progress
-            and self._playback_progress.progress
-            and data.progress > self._playback_progress.progress
-        ):
-            self._state = BANGOLUFSEN_STATES["started"]
-
         self._playback_progress = data
         self._last_update = utcnow()
 
