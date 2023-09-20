@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -81,7 +82,7 @@ CUSTOM_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
     AirDensityWeatherFlowSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
-        native_unit_of_measurement="µg/m³",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
@@ -336,10 +337,10 @@ class WeatherFlowSensorEntity(SensorEntity):
         self.entity_description = description
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.serial_number)},
+            identifiers={(DOMAIN, device.serial_number)},
             manufacturer="WeatherFlow",
             model=self.device.model,
-            name=f"{self.device.model} {self.device.serial_number}",
+            name=f"{device.model} {device.serial_number}",
             sw_version=self.device.firmware_revision,
             suggested_area="Backyard",
         )
