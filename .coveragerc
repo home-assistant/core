@@ -114,8 +114,9 @@ omit =
     homeassistant/components/baidu/tts.py
     homeassistant/components/bangolufsen/__init__.py
     homeassistant/components/bangolufsen/const.py
-    homeassistant/components/bangolufsen/websocket.py
+    homeassistant/components/bangolufsen/entity.py
     homeassistant/components/bangolufsen/media_player.py
+    homeassistant/components/bangolufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py
