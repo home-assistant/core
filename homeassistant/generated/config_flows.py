@@ -210,6 +210,7 @@ FLOWS = {
         "iaqualink",
         "ibeacon",
         "icloud",
+        "idasen_desk",
         "ifttt",
         "imap",
         "inkbird",
