@@ -384,7 +384,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             and self._playback_progress.progress
             and data.progress > self._playback_progress.progress
         ):
-            self._state = MediaPlayerState.PLAYING
+            self._state = BANGOLUFSEN_STATES["started"]
 
         self._playback_progress = data
         self._last_update = utcnow()
