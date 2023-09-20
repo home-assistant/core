@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+from functools import partial
 import os
 import re
 import sys
@@ -10,7 +11,9 @@ from aiohttp import ClientResponseError, ClientSession
 from unidiff import PatchSet
 from unidiff.patch import Hunk, Line
 
-from script.util import async_safe_exec
+from script.util import FAIL, PASS, async_safe_exec as _async_safe_exec, printc
+
+async_safe_exec = partial(_async_safe_exec, print_command=False)
 
 _FILES_TO_CHECK = ["requirements*.txt", "homeassistant/package_constraints.txt"]
 _CORE_NAME_MATCHER = re.compile(
@@ -41,18 +44,21 @@ class ResultHandler:
         success = True
         if self.name_conflicts:
             success = False
-            print("The following requirements should be renamed to match Pypi's name:")
+            printc(
+                FAIL,
+                "The following requirements should be renamed to match Pypi's name:",
+            )
             for conflict in self.name_conflicts:
-                print("*", f'"{conflict.actual}" to "{conflict.expected}"')
+                printc(FAIL, "*", f'"{conflict.actual}" to "{conflict.expected}"')
 
         if self.errors:
             success = False
-            print("The following occurred:")
+            printc(FAIL, "The following occurred:")
             for error in self.errors:
-                print("*", error)
+                printc(FAIL, "*", str(error))
 
         if success:
-            print("Validation successful.")
+            printc(PASS, "Validation successful.")
 
         return success
 
@@ -76,7 +82,9 @@ async def find_merge_base(branch: str) -> str:
 async def get_diff(only_staged: bool) -> PatchSet:
     """Return diff."""
     if only_staged:
-        return PatchSet(await async_safe_exec("git", "diff", "--staged"))
+        return PatchSet(
+            await async_safe_exec("git", "diff", "--staged", *_FILES_TO_CHECK)
+        )
 
     base_branch = "dev"
     if remote := (await find_core_remote_name()):
