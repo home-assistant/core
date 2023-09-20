@@ -148,18 +148,10 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Get the current HVAC action."""
 
-        heating_equipment_status = self.coordinator.data.get(
-            Attribute.HEATING_EQUIPMENT_STATUS, 0
-        )
-
-        if heating_equipment_status > 0:
+        if self.coordinator.data.get(Attribute.HEATING_EQUIPMENT_STATUS, 0):
             return HVACAction.HEATING
 
-        cooling_equipment_status = self.coordinator.data.get(
-            Attribute.COOLING_EQUIPMENT_STATUS, 0
-        )
-
-        if cooling_equipment_status > 0:
+        if self.coordinator.data.get(Attribute.COOLING_EQUIPMENT_STATUS, 0):
             return HVACAction.COOLING
 
         return HVACAction.IDLE
