@@ -48,11 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        host = (user_input or {}).get(CONF_HOST) or ""
-
         if user_input is not None:
-            if host in self._async_current_hosts():
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
                 api = EcoforestApi(
@@ -67,11 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device.serial_number)
-                name = (
-                    f"{MANUFACTURER} {self.unique_id}"
-                    if self.unique_id
-                    else MANUFACTURER
-                )
                 return self.async_create_entry(
                     title=f"{MANUFACTURER} {device.serial_number}", data=user_input
                 )
