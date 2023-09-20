@@ -331,7 +331,7 @@ class WeatherFlowSensorEntity(SensorEntity):
             manufacturer="WeatherFlow",
             model=device.model,
             name=f"{device.model} {device.serial_number}",
-            sw_version=self.device.firmware_revision,
+            sw_version=device.firmware_revision,
         )
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
