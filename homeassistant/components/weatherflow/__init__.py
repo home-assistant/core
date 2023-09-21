@@ -7,7 +7,6 @@ from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.device import EVENT_LOAD_COMPLETE, WeatherFlowDevice
 from pyweatherflowudp.errors import ListenerError
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
@@ -15,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 
-from .const import DOMAIN
+from .const import DOMAIN, format_dispatch_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 callback(
                     lambda _: async_dispatcher_send(
-                        hass, f"{DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}", device
+                        hass,
+                        format_dispatch_call(entry),
+                        device
+                        # hass, f"{DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}", device
                     )
                 ),
             )

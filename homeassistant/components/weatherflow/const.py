@@ -2,5 +2,12 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
+
 DOMAIN = "weatherflow"
 LOGGER = logging.getLogger(__package__)
+
+
+def format_dispatch_call(config_entry: ConfigEntry) -> str:
+    """Construct a dispatch call from a ConfigEntry."""
+    return f"{config_entry.domain}_{config_entry.entry_id}_add"

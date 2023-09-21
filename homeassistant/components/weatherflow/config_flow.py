@@ -18,14 +18,14 @@ from .const import DOMAIN
 
 async def _async_can_discover_devices() -> bool:
     """Return if there are devices that can be discovered."""
-    future_event: Future[bool] = asyncio.get_running_loop().create_future()
+    future_event: Future[None] = asyncio.get_running_loop().create_future()
 
     @callback
     def _async_found(_):
         """Handle a discovered device - only need to do this once so."""
 
         if not future_event.done():
-            future_event.set_result(True)
+            future_event.set_result(None)
 
     async with WeatherFlowListener() as client, asyncio.timeout(10):
         try:
@@ -49,7 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
 
-        # Only allow a single instance of integration
+        # Only allow a single instance of integration since the listener
+        # will pick up all devices on the network and we don't want to
+        # create multiple entries.
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 

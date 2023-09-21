@@ -14,7 +14,6 @@ from pyweatherflowudp.device import (
 )
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -45,7 +44,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
 @dataclass
@@ -285,7 +284,7 @@ async def async_setup_entry(
             if hasattr(device, description.key)
         ]
 
-        sensors = sensors + [
+        sensors += [
             WeatherFlowAirDensitySensorEntity(
                 device=device,
                 description=description,
@@ -300,7 +299,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            f"{DOMAIN}_{config_entry.entry_id}_add_{SENSOR_DOMAIN}",
+            format_dispatch_call(config_entry),
             async_add_sensor,
         )
     )
@@ -334,7 +333,7 @@ class WeatherFlowSensorEntity(SensorEntity):
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
         # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
-        if (description.imperial_suggested_unit is not None) and (not is_metric):
+        if description.imperial_suggested_unit is not None and not is_metric:
             self._attr_suggested_unit_of_measurement = (
                 description.imperial_suggested_unit
             )
