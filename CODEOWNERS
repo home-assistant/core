@@ -712,6 +712,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/logi_circle/ @evanjd
 /tests/components/logi_circle/ @evanjd
 /homeassistant/components/london_underground/ @jpbede
+/tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
@@ -1146,8 +1147,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/sky_hub/ @rogerselwyn
 /homeassistant/components/skybell/ @tkdrob
 /tests/components/skybell/ @tkdrob
-/homeassistant/components/slack/ @tkdrob
-/tests/components/slack/ @tkdrob
+/homeassistant/components/slack/ @tkdrob @fletcherau
+/tests/components/slack/ @tkdrob @fletcherau
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
