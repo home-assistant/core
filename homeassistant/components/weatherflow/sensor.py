@@ -54,7 +54,7 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
     raw_data_conv_fn: Callable[
-        [Any], datetime | StateType
+        [WeatherFlowDevice], datetime | StateType
     ] = lambda raw_data: raw_data.magnitude
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
