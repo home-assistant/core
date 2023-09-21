@@ -32,7 +32,7 @@
       "status": {
         "name": "Status",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "starting": "Starting",
           "pre_heating": "Pre heating",
           "on": "On",
