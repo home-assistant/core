@@ -23,12 +23,30 @@ from .entity import EcoforestEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+STATUS_TYPE = [
+    "off",
+    "starting",
+    "pre_heating",
+    "on",
+    "shutting_down",
+    "stand_by",
+    "alarm",
+]
+
+ALARM_TYPE = [
+    "air_depression",
+    "pellets",
+    "cpu_overheating",
+    "unkownn",
+    "none",
+]
+
 
 @dataclass
 class EcoforestRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Device], float | None]
+    value_fn: Callable[[Device], float | str | None]
 
 
 @dataclass
@@ -44,6 +62,44 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda data: data.environment_temperature,
+    ),
+    EcoforestSensorEntityDescription(
+        key="cpu_temperature",
+        translation_key="cpu_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=lambda data: data.cpu_temperature,
+    ),
+    EcoforestSensorEntityDescription(
+        key="gas_temperature",
+        translation_key="gas_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.gas_temperature,
+    ),
+    EcoforestSensorEntityDescription(
+        key="ntc_temperature",
+        translation_key="ntc_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.ntc_temperature,
+    ),
+    EcoforestSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_TYPE,
+        value_fn=lambda data: data.state.name,
+    ),
+    EcoforestSensorEntityDescription(
+        key="alarm",
+        translation_key="alarm",
+        device_class=SensorDeviceClass.ENUM,
+        options=ALARM_TYPE,
+        icon="mdi:alert",
+        value_fn=lambda data: data.alarm.value if data.alarm else "none",
     ),
 )
 
@@ -67,6 +123,6 @@ class EcoforestSensor(SensorEntity, EcoforestEntity):
     entity_description: EcoforestSensorEntityDescription
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

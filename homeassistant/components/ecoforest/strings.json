@@ -17,5 +17,40 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_temperature": {
+        "name": "CPU Temperature"
+      },
+      "gas_temperature": {
+        "name": "Gas Temperature"
+      },
+      "ntc_temperature": {
+        "name": "NTC Probe Temperature"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "Off",
+          "starting": "Starting",
+          "pre_heating": "Pre heating",
+          "on": "On",
+          "shutting_down": "Shutting Down",
+          "stand_by": "Stand by",
+          "alarm": "Alarm"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "air_depression": "Air Depression",
+          "pellets": "Pellets",
+          "cpu_overheating": "CPU Overheating",
+          "unkownn": "Unknown",
+          "none": "None"
+        }
+      }
+    }
   }
 }
