@@ -1,6 +1,6 @@
 {
   "domain": "switchbot",
-  "name": "SwitchBot",
+  "name": "SwitchBot Bluetooth",
   "bluetooth": [
     {
       "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",

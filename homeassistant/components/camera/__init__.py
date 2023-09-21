@@ -449,6 +449,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class Camera(Entity):
     """The base class for camera entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {"access_token", "entity_picture"}
+    )
+
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
