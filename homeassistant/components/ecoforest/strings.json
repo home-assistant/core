@@ -34,7 +34,7 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "starting": "Starting",
-          "pre_heating": "Pre heating",
+          "pre_heating": "Pre-heating",
           "on": "[%key:common::state::on%]",
           "shutting_down": "Shutting down",
           "stand_by": "[%key:common::state::standby%]",
