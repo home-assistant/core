@@ -74,7 +74,7 @@
         "name": "Mop drying remaining time"
       },
       "last_clean_start": {
-        "name": "Last clean start"
+        "name": "Last clean begin"
       },
       "last_clean_end": {
         "name": "Last clean end"

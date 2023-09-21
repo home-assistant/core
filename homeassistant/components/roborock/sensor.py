@@ -155,7 +155,7 @@ SENSOR_DESCRIPTIONS = [
         key="last_clean_end",
         translation_key="last_clean_end",
         icon="mdi:clock-time-twelve",
-        value_fn=lambda data: data.last_clean_record.begin_datetime,
+        value_fn=lambda data: data.last_clean_record.end_datetime,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
