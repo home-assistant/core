@@ -1,4 +1,4 @@
-"""Number platform for Enphase Envoy solar energy monitor."""
+"""Support for Ecoforest number platform."""
 from __future__ import annotations
 
 from collections.abc import Callable
