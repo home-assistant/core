@@ -39,3 +39,5 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
     assert hass.states.get("sensor.roborock_s7_maxv_vacuum_error").state == "none"
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
     assert hass.states.get("sensor.roborock_s7_maxv_dock_error").state == "ok"
+    assert hass.states.get("sensor.roborock_s7_maxv_last_clean_start").state == ""
+    assert hass.states.get("sensor.roborock_s7_maxv_last_clean_end").state == ""
