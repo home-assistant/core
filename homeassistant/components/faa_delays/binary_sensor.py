@@ -12,7 +12,35 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, FAA_BINARY_SENSORS
+from .const import DOMAIN
+
+FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="GROUND_DELAY",
+        name="Ground Delay",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="GROUND_STOP",
+        name="Ground Stop",
+        icon="mdi:airport",
+    ),
+    BinarySensorEntityDescription(
+        key="DEPART_DELAY",
+        name="Departure Delay",
+        icon="mdi:airplane-takeoff",
+    ),
+    BinarySensorEntityDescription(
+        key="ARRIVE_DELAY",
+        name="Arrival Delay",
+        icon="mdi:airplane-landing",
+    ),
+    BinarySensorEntityDescription(
+        key="CLOSURE",
+        name="Closure",
+        icon="mdi:airplane:off",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -69,51 +97,21 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         if sensor_type == "GROUND_DELAY":
             self._attrs["average"] = self.coordinator.data.ground_delay.average
             self._attrs["reason"] = self.coordinator.data.ground_delay.reason
-            self._attrs["update_time"] = self.coordinator.data.ground_delay.update_time
-            self._attrs["max_delay"] = self.coordinator.data.ground_delay.max_delay
-            self._attrs["start_time"] = self.coordinator.data.ground_delay.start_time
-            self._attrs["end_time"] = self.coordinator.data.ground_delay.end_time
-            self._attrs[
-                "advisory_url"
-            ] = self.coordinator.data.ground_delay.advisory_url
-            self._attrs[
-                "departure_scope"
-            ] = self.coordinator.data.ground_delay.departure_scope
         elif sensor_type == "GROUND_STOP":
             self._attrs["endtime"] = self.coordinator.data.ground_stop.endtime
             self._attrs["reason"] = self.coordinator.data.ground_stop.reason
-            self._attrs["update_time"] = self.coordinator.data.ground_stop.update_time
-            self._attrs["advisory_url"] = self.coordinator.data.ground_stop.advisory_url
-            self._attrs[
-                "included_facilities"
-            ] = self.coordinator.data.ground_stop.included_facilities
-            self._attrs[
-                "included_flights"
-            ] = self.coordinator.data.ground_stop.included_flights
-            self._attrs[
-                "probability_of_extension"
-            ] = self.coordinator.data.ground_stop.probabibility_of_extension
         elif sensor_type == "DEPART_DELAY":
             self._attrs["minimum"] = self.coordinator.data.depart_delay.minimum
             self._attrs["maximum"] = self.coordinator.data.depart_delay.maximum
             self._attrs["trend"] = self.coordinator.data.depart_delay.trend
             self._attrs["reason"] = self.coordinator.data.depart_delay.reason
-            self._attrs["update_time"] = self.coordinator.data.depart_delay.update_time
-            self._attrs[
-                "average_delay"
-            ] = self.coordinator.data.depart_delay.average_delay
         elif sensor_type == "ARRIVE_DELAY":
             self._attrs["minimum"] = self.coordinator.data.arrive_delay.minimum
             self._attrs["maximum"] = self.coordinator.data.arrive_delay.maximum
             self._attrs["trend"] = self.coordinator.data.arrive_delay.trend
             self._attrs["reason"] = self.coordinator.data.arrive_delay.reason
-            self._attrs["update_time"] = self.coordinator.data.arrive_delay.update_time
-            self._attrs[
-                "average_delay"
-            ] = self.coordinator.data.arrive_delay.average_delay
         elif sensor_type == "CLOSURE":
             self._attrs["begin"] = self.coordinator.data.closure.start
             self._attrs["end"] = self.coordinator.data.closure.end
             self._attrs["notam"] = self.coordinator.data.closure.notam
-            self._attrs["update_time"] = self.coordinator.data.closure.update_time
         return self._attrs

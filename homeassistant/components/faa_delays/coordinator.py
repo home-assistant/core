@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for faa_delays integration."""
 import asyncio
 from datetime import timedelta
+import logging
 
 from aiohttp import ClientConnectionError
 from faadelays import Airport
@@ -8,7 +9,9 @@ from faadelays import Airport
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FAADataUpdateCoordinator(DataUpdateCoordinator):
@@ -17,7 +20,7 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, code):
         """Initialize the coordinator."""
         super().__init__(
-            hass, LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1)
         )
         self.session = aiohttp_client.async_get_clientsession(hass)
         self.data = Airport(code, self.session)

@@ -1,4 +1,5 @@
 """Config flow for FAA Delays integration."""
+import logging
 
 from aiohttp import ClientConnectionError
 import faadelays
@@ -8,7 +9,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ID
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ID): str})
 
@@ -33,15 +36,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await data.update()
 
             except ClientConnectionError:
-                LOGGER.error("Error connecting to FAA API")
+                _LOGGER.error("Error connecting to FAA API")
                 errors["base"] = "cannot_connect"
 
             except Exception as error:  # pylint: disable=broad-except
-                LOGGER.exception("Unexpected exception: %s", error)
+                _LOGGER.exception("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
 
             if not errors:
-                LOGGER.debug(
+                _LOGGER.debug(
                     "Creating entry with id: %s",
                     user_input[CONF_ID],
                 )
