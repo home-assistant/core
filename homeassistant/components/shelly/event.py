@@ -176,7 +176,7 @@ class ShellyBlockEvent(CoordinatorEntity[ShellyBlockCoordinator], EventEntity):
         )
         self._attr_unique_id = f"{coordinator.mac}-{description.key}-{channel}"
         self._attr_name = f"{coordinator.device.name} Input {channel}"
-        if coordinator.device.model == "SHIX3-1":
+        if coordinator.model == "SHIX3-1":
             self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
         else:
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
