@@ -961,7 +961,7 @@ motionblinds==0.6.18
 motioneye-client==0.3.14
 
 # homeassistant.components.bangolufsen
-mozart-api==3.2.1.150.0
+mozart-api==3.2.1.150.1
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
