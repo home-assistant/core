@@ -481,6 +481,8 @@ def is_offset_reached(
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
+    _entity_component_unrecorded_attributes = frozenset({"description"})
+
     _alarm_unsubs: list[CALLBACK_TYPE] = []
 
     @property
