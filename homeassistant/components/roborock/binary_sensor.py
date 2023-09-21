@@ -61,6 +61,14 @@ BINARY_SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
     ),
+    RoborockBinarySensorDescription(
+        key="water_shortage",
+        translation_key="water_shortage",
+        icon="mdi:water",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.water_shortage_status,
+    ),
 ]
 
 
