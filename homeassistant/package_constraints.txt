@@ -51,7 +51,7 @@ typing-extensions>=4.8.0,<5.0
 ulid-transform==0.8.1
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
-webrtcvad==2.0.10
+webrtc-noise-gain==0.0.1
 yarl==1.9.2
 zeroconf==0.112.0
 

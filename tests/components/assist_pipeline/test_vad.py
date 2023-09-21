@@ -1,4 +1,4 @@
-"""Tests for webrtcvad voice command segmenter."""
+"""Tests for voice command segmenter."""
 import itertools as it
 from unittest.mock import patch
 
@@ -22,16 +22,16 @@ def test_silence() -> None:
 def test_speech() -> None:
     """Test that silence + speech + silence triggers a voice command."""
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(chunk):
         """Anything non-zero is speech."""
         return sum(chunk) > 0
 
-    with patch(
-        "webrtcvad.Vad.is_speech",
+    segmenter = VoiceCommandSegmenter()
+    with patch.object(
+        segmenter,
+        "is_speech",
         new=is_speech,
     ):
-        segmenter = VoiceCommandSegmenter()
-
         # silence
         assert segmenter.process(bytes(_ONE_SECOND))
 
@@ -46,15 +46,16 @@ def test_speech() -> None:
 def test_audio_buffer() -> None:
     """Test audio buffer wrapping."""
 
-    def is_speech(self, chunk, sample_rate):
+    def is_speech(chunk):
         """Disable VAD."""
         return False
 
-    with patch(
-        "webrtcvad.Vad.is_speech",
+    segmenter = VoiceCommandSegmenter()
+    with patch.object(
+        segmenter,
+        "is_speech",
         new=is_speech,
     ):
-        segmenter = VoiceCommandSegmenter()
         bytes_per_chunk = segmenter.vad_samples_per_chunk * 2
 
         with patch.object(
