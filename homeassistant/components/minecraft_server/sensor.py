@@ -12,26 +12,26 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    ATTR_PLAYERS_LIST,
-    DOMAIN,
-    ICON_LATENCY,
-    ICON_MOTD,
-    ICON_PLAYERS_MAX,
-    ICON_PLAYERS_ONLINE,
-    ICON_PROTOCOL_VERSION,
-    ICON_VERSION,
-    KEY_LATENCY,
-    KEY_MOTD,
-    KEY_PLAYERS_MAX,
-    KEY_PLAYERS_ONLINE,
-    KEY_PROTOCOL_VERSION,
-    KEY_VERSION,
-    UNIT_PLAYERS_MAX,
-    UNIT_PLAYERS_ONLINE,
-)
+from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
 from .coordinator import MinecraftServerCoordinator, MinecraftServerData
 from .entity import MinecraftServerEntity
+
+ATTR_PLAYERS_LIST = "players_list"
+
+ICON_LATENCY = "mdi:signal"
+ICON_PLAYERS_MAX = "mdi:account-multiple"
+ICON_PLAYERS_ONLINE = "mdi:account-multiple"
+ICON_PROTOCOL_VERSION = "mdi:numeric"
+ICON_VERSION = "mdi:numeric"
+ICON_MOTD = "mdi:minecraft"
+
+KEY_PLAYERS_MAX = "players_max"
+KEY_PLAYERS_ONLINE = "players_online"
+KEY_PROTOCOL_VERSION = "protocol_version"
+KEY_VERSION = "version"
+
+UNIT_PLAYERS_MAX = "players"
+UNIT_PLAYERS_ONLINE = "players"
 
 
 @dataclass
