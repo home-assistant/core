@@ -24,10 +24,10 @@
         "name": "CPU temperature"
       },
       "gas_temperature": {
-        "name": "Gas Temperature"
+        "name": "Gas temperature"
       },
       "ntc_temperature": {
-        "name": "NTC Probe Temperature"
+        "name": "NTC probe temperature"
       },
       "status": {
         "name": "Status",
@@ -36,7 +36,7 @@
           "starting": "Starting",
           "pre_heating": "Pre heating",
           "on": "[%key:common::state::on%]",
-          "shutting_down": "Shutting Down",
+          "shutting_down": "Shutting down",
           "stand_by": "[%key:common::state::standby%]",
           "alarm": "Alarm"
         }
@@ -47,7 +47,7 @@
           "air_depression": "Air Depression",
           "pellets": "Pellets",
           "cpu_overheating": "CPU Overheating",
-          "unkownn": "Unknown",
+          "unkownn": "Unknown alarm",
           "none": "None"
         }
       }
