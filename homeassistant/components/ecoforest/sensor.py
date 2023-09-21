@@ -108,6 +108,6 @@ class EcoforestSensor(SensorEntity, EcoforestEntity):
     entity_description: EcoforestSensorEntityDescription
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)
