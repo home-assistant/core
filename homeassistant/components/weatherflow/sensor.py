@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
@@ -51,21 +50,14 @@ from .const import DOMAIN, LOGGER, format_dispatch_call
 class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes a WeatherFlow sensor entity description."""
 
+    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]  # type: ignore[misc]
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
-    raw_data_conv_fn: Callable[
-        [WeatherFlowDevice], datetime | StateType
-    ]
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
         raw_sensor_data = getattr(device, self.key)
         return self.raw_data_conv_fn(raw_sensor_data)
-
-
-@dataclass
-class AirDensityWeatherFlowSensorEntityDescription(WeatherFlowSensorEntityDescription):
-    """Custom class to handle the conversion between backing lib and Home Assistant Compatible VOC sensor."""
 
 
 SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
@@ -84,6 +76,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="dew_point_temperature",
@@ -92,6 +85,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="feels_like_temperature",
@@ -100,6 +94,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wet_bulb_temperature",
@@ -108,6 +103,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="battery",
@@ -116,12 +112,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_average_distance",
@@ -131,6 +129,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         translation_key="lightning_average_distance",
         suggested_display_precision=2,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="lightning_strike_count",
@@ -154,6 +153,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.PRECIPITATION,
         imperial_suggested_unit=UnitOfPrecipitationDepth.INCHES,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="rain_rate",
@@ -161,12 +161,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         icon="mdi:weather-rainy",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="relative_humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="rssi",
@@ -176,6 +178,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         event_subscriptions=[EVENT_STATUS_UPDATE],
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="station_pressure",
@@ -185,12 +188,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         imperial_suggested_unit=UnitOfPressure.INHG,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="solar_radiation",
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="up_since",
@@ -216,6 +221,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         imperial_suggested_unit=UnitOfPressure.INHG,
         suggested_display_precision=5,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     ## Wind Sensors
     WeatherFlowSensorEntityDescription(
@@ -226,6 +232,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_lull",
@@ -235,6 +242,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_speed",
@@ -244,6 +252,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_speed_average",
@@ -253,6 +262,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_direction",
@@ -261,6 +271,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
         event_subscriptions=[EVENT_RAPID_WIND, EVENT_OBSERVATION],
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
     WeatherFlowSensorEntityDescription(
         key="wind_direction_average",
@@ -268,6 +279,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         icon="mdi:compass-outline",
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
 )
 
