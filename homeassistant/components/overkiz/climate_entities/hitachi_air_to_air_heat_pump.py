@@ -375,7 +375,7 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
             auto_manu_mode = OverkizCommandParam.HOLIDAYS
 
         # OVP protocol does not pass a target temperature when in AUTO mode, it passes a "temperature change" value in the range [-5,5]
-        if main_operation == OverkizCommandParam.AUTO:
+        if hvac_mode == OverkizCommandParam.AUTO:
             target_temperature = self.temperature_change or 0
 
         command_data = [
