@@ -3,9 +3,8 @@
 
 import logging
 
-import async_timeout
 from pyecoforest.api import EcoforestApi
-from pyecoforest.exceptions import EcoforestAuthenticationRequired, EcoforestError
+from pyecoforest.exceptions import EcoforestError
 from pyecoforest.models.device import Device
 
 from homeassistant.core import HomeAssistant
@@ -33,11 +32,8 @@ class EcoforestCoordinator(DataUpdateCoordinator[Device]):
     async def _async_update_data(self) -> Device:
         """Fetch all device and sensor data from api."""
         try:
-            async with async_timeout.timeout(10):
-                data: Device = await self.api.get()
-                _LOGGER.debug("Ecoforest data: %s", data)
-                return data
-        except EcoforestAuthenticationRequired as err:
-            raise UpdateFailed from err
+            data = await self.api.get()
+            _LOGGER.debug("Ecoforest data: %s", data)
+            return data
         except EcoforestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
