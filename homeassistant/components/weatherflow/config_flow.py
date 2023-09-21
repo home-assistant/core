@@ -7,7 +7,7 @@ from asyncio.exceptions import CancelledError
 from typing import Any
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
-from pyweatherflowudp.errors import AddressInUseError, ListenerError
+from pyweatherflowudp.errors import AddressInUseError, EndpointError, ListenerError
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -33,7 +33,7 @@ async def _async_can_discover_devices() -> bool:
             await future_event
         except asyncio.TimeoutError:
             return False
-        except CancelledError:
+        except (EndpointError, CancelledError):
             raise ListenerError
 
     return True

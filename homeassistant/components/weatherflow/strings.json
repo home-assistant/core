@@ -10,7 +10,7 @@
       }
     },
     "error": {
-      "address_in_use": "The host address is already in use. Please specify a different host address below.",
+      "address_in_use": "Unable to open local UDP port 50222.",
       "cannot_connect": "UDP discovery error."
     },
     "abort": {

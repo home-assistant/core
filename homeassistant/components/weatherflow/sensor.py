@@ -50,7 +50,9 @@ from .const import DOMAIN, LOGGER, format_dispatch_call
 class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes a WeatherFlow sensor entity description."""
 
-    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]  # type: ignore[misc]
+    raw_data_conv_fn: Callable[
+        [WeatherFlowDevice], datetime | StateType
+    ] = lambda _: None
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
 
