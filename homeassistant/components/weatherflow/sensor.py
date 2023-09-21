@@ -55,7 +55,7 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     imperial_suggested_unit: None | str = None
     raw_data_conv_fn: Callable[
         [WeatherFlowDevice], datetime | StateType
-    ] = lambda raw_data: raw_data.magnitude
+    ]
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
