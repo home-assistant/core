@@ -1,8 +1,6 @@
 """Z-Wave JS trigger dispatcher."""
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import (
@@ -33,10 +31,7 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     platform = _get_trigger_platform(config)
-    if hasattr(platform, "async_validate_trigger_config"):
-        return await platform.async_validate_trigger_config(hass, config)
-
-    return cast(ConfigType, platform.TRIGGER_SCHEMA(config))
+    return await platform.async_validate_trigger_config(hass, config)
 
 
 async def async_attach_trigger(

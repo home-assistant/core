@@ -24,10 +24,10 @@
     "step": {
       "init": {
         "data": {
-          "mjpeg_url": "MJPEG URL",
+          "mjpeg_url": "[%key:component::mjpeg::config::step::user::data::mjpeg_url%]",
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "still_image_url": "Still Image URL",
+          "still_image_url": "[%key:component::mjpeg::config::step::user::data::still_image_url%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }

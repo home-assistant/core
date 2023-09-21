@@ -1,4 +1,5 @@
 """Tests for the Elgato Key Light config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from elgato import ElgatoConnectionError
@@ -28,7 +29,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
@@ -52,8 +53,8 @@ async def test_full_zeroconf_flow_implementation(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",
             name="mock_name",
             port=9123,
@@ -110,8 +111,8 @@ async def test_zeroconf_connection_error(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -150,8 +151,8 @@ async def test_zeroconf_device_exists_abort(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -171,8 +172,8 @@ async def test_zeroconf_device_exists_abort(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.2",
-            addresses=["127.0.0.2"],
+            ip_address=ip_address("127.0.0.2"),
+            ip_addresses=[ip_address("127.0.0.2")],
             hostname="mock_hostname",
             name="mock_name",
             port=9123,
@@ -200,8 +201,8 @@ async def test_zeroconf_during_onboarding(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="127.0.0.1",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",
             name="mock_name",
             port=9123,

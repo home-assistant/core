@@ -15,10 +15,10 @@ from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
-from .renault_coordinator import RenaultDataUpdateCoordinator
+from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")

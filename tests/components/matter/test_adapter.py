@@ -8,6 +8,7 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 import pytest
 
+from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -15,33 +16,49 @@ from homeassistant.helpers import device_registry as dr
 from .common import load_and_parse_node_fixture, setup_integration_with_node_fixture
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize(
+    ("node_fixture", "name"),
+    [
+        ("onoff-light", "Mock OnOff Light"),
+        ("onoff-light-alt-name", "Mock OnOff Light"),
+        ("onoff-light-no-name", "Mock Light"),
+    ],
+)
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     matter_client: MagicMock,
+    node_fixture: str,
+    name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     await setup_integration_with_node_fixture(
         hass,
-        "onoff-light",
+        node_fixture,
         matter_client,
     )
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
     )
     assert entry is not None
 
     # test serial id present as additional identifier
     assert (DOMAIN, "serial_12345678") in entry.identifiers
 
-    assert entry.name == "Mock OnOff Light"
+    assert entry.name == name
     assert entry.manufacturer == "Nabu Casa"
     assert entry.model == "Mock Light"
     assert entry.hw_version == "v1.0"
     assert entry.sw_version == "v1.0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -55,7 +72,9 @@ async def test_device_registry_single_node_device_alt(
 
     dev_reg = dr.async_get(hass)
     entry = dev_reg.async_get_device(
-        {(DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")}
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
     )
     assert entry is not None
 
@@ -81,7 +100,7 @@ async def test_device_registry_bridge(
     dev_reg = dr.async_get(hass)
 
     # Validate bridge
-    bridge_entry = dev_reg.async_get_device({(DOMAIN, "mock-hub-id")})
+    bridge_entry = dev_reg.async_get_device(identifiers={(DOMAIN, "mock-hub-id")})
     assert bridge_entry is not None
 
     assert bridge_entry.name == "My Mock Bridge"
@@ -91,7 +110,9 @@ async def test_device_registry_bridge(
     assert bridge_entry.sw_version == "123.4.5"
 
     # Device 1
-    device1_entry = dev_reg.async_get_device({(DOMAIN, "mock-id-kitchen-ceiling")})
+    device1_entry = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "mock-id-kitchen-ceiling")}
+    )
     assert device1_entry is not None
 
     assert device1_entry.via_device_id == bridge_entry.id
@@ -102,7 +123,9 @@ async def test_device_registry_bridge(
     assert device1_entry.sw_version == "67.8.9"
 
     # Device 2
-    device2_entry = dev_reg.async_get_device({(DOMAIN, "mock-id-living-room-ceiling")})
+    device2_entry = dev_reg.async_get_device(
+        identifiers={(DOMAIN, "mock-id-living-room-ceiling")}
+    )
     assert device2_entry is not None
 
     assert device2_entry.via_device_id == bridge_entry.id
@@ -113,16 +136,18 @@ async def test_device_registry_bridge(
     assert device2_entry.sw_version == "1.49.1"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,
     integration: MagicMock,
 ) -> None:
     """Test subscription to new devices work."""
-    assert matter_client.subscribe.call_count == 1
-    assert matter_client.subscribe.call_args[0][1] == EventType.NODE_ADDED
+    assert matter_client.subscribe_events.call_count == 4
+    assert matter_client.subscribe_events.call_args[0][1] == EventType.NODE_ADDED
 
-    node_added_callback = matter_client.subscribe.call_args[0][0]
+    node_added_callback = matter_client.subscribe_events.call_args[0][0]
     node_data = load_and_parse_node_fixture("onoff-light")
     node = MatterNode(
         dataclass_from_dict(
@@ -139,3 +164,17 @@ async def test_node_added_subscription(
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
+
+
+async def test_get_clean_name_() -> None:
+    """Test get_clean_name helper.
+
+    Test device names that are assigned to `null`
+    or have a trailing null char with spaces.
+    """
+    assert get_clean_name(None) is None
+    assert get_clean_name("\x00") is None
+    assert get_clean_name("   \x00") is None
+    assert get_clean_name("") is None
+    assert get_clean_name("Mock device") == "Mock device"
+    assert get_clean_name("Mock device                    \x00") == "Mock device"

@@ -14,6 +14,7 @@ async def init_integration(hass, aioclient_mock) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
+        entry_id="3bd2acb0e4f0476d40865546d0d91921",
         unique_id="123-456",
         data={
             "api_key": "foo",

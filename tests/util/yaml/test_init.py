@@ -354,8 +354,6 @@ def load_yaml(fname, string, secrets=None):
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
 
-    # pylint: disable=invalid-name
-
     def setUp(self):
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
@@ -492,7 +490,9 @@ def test_representing_yaml_loaded_data(
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["key: thing1\nkey: thing2"])
-def test_duplicate_key(caplog, try_both_loaders, mock_hass_config_yaml: None) -> None:
+def test_duplicate_key(
+    caplog: pytest.LogCaptureFixture, try_both_loaders, mock_hass_config_yaml: None
+) -> None:
     """Test duplicate dict keys."""
     load_yaml_config_file(YAML_CONFIG_FILE)
     assert "contains duplicate key" in caplog.text
@@ -503,7 +503,7 @@ def test_duplicate_key(caplog, try_both_loaders, mock_hass_config_yaml: None) ->
     [{YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}],
 )
 def test_no_recursive_secrets(
-    caplog, try_both_loaders, mock_hass_config_yaml: None
+    caplog: pytest.LogCaptureFixture, try_both_loaders, mock_hass_config_yaml: None
 ) -> None:
     """Test that loading of secrets from the secrets file fails correctly."""
     with pytest.raises(HomeAssistantError) as e:

@@ -9,7 +9,7 @@
           "entity_id": "Input sensor",
           "hysteresis": "Hysteresis",
           "lower": "Lower limit",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "upper": "Upper limit"
         }
       }

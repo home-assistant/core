@@ -28,5 +28,21 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "press": "Press",
+      "double_press": "Double Press",
+      "triple_press": "Triple Press",
+      "long_press": "Long Press",
+      "long_double_press": "Long Double Press",
+      "long_triple_press": "Long Triple Press",
+      "rotate_right": "Rotate Right",
+      "rotate_left": "Rotate Left"
+    },
+    "trigger_type": {
+      "button": "Button \"{subtype}\"",
+      "dimmer": "Dimmer \"{subtype}\""
+    }
   }
 }

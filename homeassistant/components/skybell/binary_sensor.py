@@ -19,12 +19,11 @@ from .entity import SkybellEntity
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="button",
-        name="Button",
+        translation_key="button",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     BinarySensorEntityDescription(
         key="motion",
-        name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 )

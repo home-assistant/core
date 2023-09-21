@@ -46,12 +46,12 @@ class PicoProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options):
         """Load TTS using pico2wave."""
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmpf:
             fname = tmpf.name
 
-        cmd = ["pico2wave", "--wave", fname, "-l", language, message]
+        cmd = ["pico2wave", "--wave", fname, "-l", language, "--", message]
         subprocess.call(cmd)
         data = None
         try:

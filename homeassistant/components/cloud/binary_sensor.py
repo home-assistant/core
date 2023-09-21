@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from typing import Any
+
+from hass_nabucasa import Cloud
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .client import CloudClient
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 
 WAIT_UNTIL_CHANGE = 3
@@ -41,10 +46,10 @@ class CloudRemoteBinary(BinarySensorEntity):
     _attr_unique_id = "cloud-remote-ui-connectivity"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, cloud):
+    def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize the binary sensor."""
         self.cloud = cloud
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: Callable[[], None] | None = None
 
     @property
     def is_on(self) -> bool:
@@ -59,7 +64,7 @@ class CloudRemoteBinary(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
 
-        async def async_state_update(data):
+        async def async_state_update(data: Any) -> None:
             """Update callback."""
             await asyncio.sleep(WAIT_UNTIL_CHANGE)
             self.async_write_ha_state()

@@ -26,7 +26,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
-from homeassistant.util.network import is_ipv6_address
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -184,9 +183,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
-        host = discovery_info.host
-        if is_ipv6_address(host):
+        if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
+        host = discovery_info.host
         self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
@@ -324,18 +323,29 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         all_identifiers = set(self.atv.all_identifiers)
         discovered_ip_address = str(self.atv.address)
         for entry in self._async_current_entries():
-            if not all_identifiers.intersection(
+            existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
-            ):
+            )
+            if not all_identifiers.intersection(existing_identifiers):
                 continue
-            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
+            combined_identifiers = existing_identifiers | all_identifiers
+            if entry.data.get(
+                CONF_ADDRESS
+            ) != discovered_ip_address or combined_identifiers != set(
+                entry.data.get(CONF_IDENTIFIERS, [])
+            ):
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
+                    data={
+                        **entry.data,
+                        CONF_ADDRESS: discovered_ip_address,
+                        CONF_IDENTIFIERS: list(combined_identifiers),
+                    },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                if entry.source != config_entries.SOURCE_IGNORE:
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
             if not allow_exist:
                 raise DeviceAlreadyConfigured()
 
@@ -396,8 +406,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Protocol specific arguments
         pair_args = {}
-        if self.protocol == Protocol.DMAP:
+        if self.protocol in {Protocol.AirPlay, Protocol.Companion, Protocol.DMAP}:
             pair_args["name"] = "Home Assistant"
+        if self.protocol == Protocol.DMAP:
             pair_args["zeroconf"] = await zeroconf.async_get_instance(self.hass)
 
         # Initiate the pairing process

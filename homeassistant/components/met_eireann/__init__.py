@@ -1,6 +1,7 @@
 """The met_eireann component."""
 from datetime import timedelta
 import logging
+from typing import Self
 
 import meteireann
 
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
 
-    async def _async_update_data():
+    async def _async_update_data() -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:
             return await weather_data.fetch_data()
@@ -78,7 +79,7 @@ class MetEireannWeatherData:
         self.daily_forecast = None
         self.hourly_forecast = None
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()

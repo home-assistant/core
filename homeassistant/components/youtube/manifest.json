@@ -1,0 +1,11 @@
+{
+  "domain": "youtube",
+  "name": "YouTube",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/youtube",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["youtubeaio==1.1.5"]
+}

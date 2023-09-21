@@ -6,6 +6,9 @@ from demetriek import (
     LaMetricConnectionError,
     LaMetricConnectionTimeoutError,
     LaMetricError,
+    Notification,
+    NotificationSound,
+    Sound,
 )
 import pytest
 
@@ -238,6 +241,10 @@ async def test_full_manual(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound == Sound(sound=NotificationSound.WIN)
+
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -894,3 +901,48 @@ async def test_reauth_manual(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("device_fixture", ["device_sa5"])
+async def test_reauth_manual_sky(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with manual entry for LaMetric Sky."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    flow_id = result["flow_id"]
+
+    await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"next_step_id": "manual_entry"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={CONF_API_KEY: "mock-api-key"}
+    )
+
+    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_API_KEY: "mock-api-key",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+    }
+
+    assert len(mock_lametric.device.mock_calls) == 1
+    assert len(mock_lametric.notify.mock_calls) == 1
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is None

@@ -36,7 +36,7 @@ async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
     ("entity_id", "wrapper_method"),
     [
         ("button.mock_title_firmware_update", "async_trigger_firmware_update"),
-        ("button.mock_title_reboot", "async_trigger_reboot"),
+        ("button.mock_title_restart", "async_trigger_reboot"),
         ("button.mock_title_reconnect", "async_trigger_reconnect"),
         ("button.mock_title_cleanup", "async_trigger_cleanup"),
     ],

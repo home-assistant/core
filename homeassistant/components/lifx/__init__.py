@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -30,7 +30,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy, async_get_legacy_entry
+from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -125,7 +125,7 @@ class LIFXDiscoveryManager:
             self.migrating,
         )
         self._cancel_discovery = async_track_time_interval(
-            self.hass, self.async_discovery, discovery_interval
+            self.hass, self.async_discovery, discovery_interval, cancel_on_shutdown=True
         )
 
     async def async_discovery(self, *_: Any) -> None:
@@ -174,7 +174,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # to reduce the risk we miss devices because the event
     # loop is blocked at startup.
     discovery_manager.async_setup_discovery_interval()
-    async_call_later(hass, DISCOVERY_COOLDOWN, _async_delayed_discovery)
+    async_call_later(
+        hass,
+        DISCOVERY_COOLDOWN,
+        HassJob(_async_delayed_discovery, cancel_on_shutdown=True),
+    )
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STARTED, discovery_manager.async_discovery
     )
@@ -210,11 +214,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()
-        await coordinator.sensor_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
         connection.async_stop()
         raise
 
+    serial = formatted_serial(coordinator.serial_number)
+    if serial != entry.unique_id:
+        # If the serial number of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {serial}"
+        )
     domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

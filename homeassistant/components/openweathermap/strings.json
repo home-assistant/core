@@ -15,7 +15,7 @@
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "mode": "[%key:common::config_flow::data::mode%]",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "To generate API key go to https://openweathermap.org/appid"
       }

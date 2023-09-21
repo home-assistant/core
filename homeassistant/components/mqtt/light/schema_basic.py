@@ -111,10 +111,6 @@ CONF_XY_STATE_TOPIC = "xy_state_topic"
 CONF_XY_VALUE_TEMPLATE = "xy_value_template"
 CONF_WHITE_COMMAND_TOPIC = "white_command_topic"
 CONF_WHITE_SCALE = "white_scale"
-CONF_WHITE_VALUE_COMMAND_TOPIC = "white_value_command_topic"
-CONF_WHITE_VALUE_SCALE = "white_value_scale"
-CONF_WHITE_VALUE_STATE_TOPIC = "white_value_state_topic"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
@@ -167,7 +163,7 @@ VALUE_TEMPLATE_KEYS = [
     CONF_XY_VALUE_TEMPLATE,
 ]
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_BASIC = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
@@ -194,7 +190,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
             ),
@@ -228,21 +224,7 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_BASIC = vol.All(
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_BASIC = vol.All(
-    # CONF_WHITE_VALUE_* is no longer supported, support was removed in 2022.9
-    cv.removed(CONF_WHITE_VALUE_COMMAND_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_SCALE),
-    cv.removed(CONF_WHITE_VALUE_STATE_TOPIC),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_BASIC.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -260,6 +242,7 @@ async def async_setup_entity_basic(
 class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT light."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _topic: dict[str, str | None]
@@ -347,6 +330,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             optimistic or topic[CONF_COLOR_MODE_STATE_TOPIC] is None
         )
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
+        self._attr_assumed_state = bool(self._optimistic)
         self._optimistic_rgb_color = optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_rgbw_color = optimistic or topic[CONF_RGBW_STATE_TOPIC] is None
         self._optimistic_rgbww_color = (
@@ -468,6 +452,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             device_value = float(payload)
+            if device_value == 0:
+                _LOGGER.debug("Ignoring zero brightness from '%s'", msg.topic)
+                return
+
             percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
             self._attr_brightness = min(round(percent_bright * 255), 255)
 
@@ -495,8 +483,19 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_color_mode = color_mode
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 rgb = convert_color(*color)
-                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._attr_brightness = min(round(percent_bright * 255), 255)
+                brightness = max(rgb)
+                if brightness == 0:
+                    _LOGGER.debug(
+                        "Ignoring %s message with zero rgb brightness from '%s'",
+                        color_mode,
+                        msg.topic,
+                    )
+                    return None
+                self._attr_brightness = brightness
+                # Normalize the color to 100% brightness
+                color = tuple(
+                    min(round(channel / brightness * 255), 255) for channel in color
+                )
             return color
 
         @callback
@@ -669,11 +668,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_HS_COLOR)
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._optimistic
 
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.

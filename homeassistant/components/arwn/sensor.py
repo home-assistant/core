@@ -101,6 +101,11 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ARWN platform."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
+
     @callback
     def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
         """Process events as sensors.

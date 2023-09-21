@@ -1,5 +1,5 @@
 """Test the Radio Thermostat config flow."""
-import socket
+
 from unittest.mock import MagicMock, patch
 
 from radiotherm import CommonThermostat
@@ -96,43 +96,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test we get can import from yaml."""
-    with patch(
-        "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
-        return_value=_mock_radiotherm(),
-    ), patch(
-        "homeassistant.components.radiotherm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.2.3.4"},
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Name"
-    assert result["data"] == {CONF_HOST: "1.2.3.4"}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we abort if we cannot connect on import from yaml."""
-    with patch(
-        "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
-        side_effect=socket.timeout,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.2.3.4"},
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:

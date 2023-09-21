@@ -34,7 +34,7 @@ class RebootButton(ONVIFBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a SystemReboot command."""
-        device_mgmt = self.device.device.create_devicemgmt_service()
+        device_mgmt = await self.device.device.create_devicemgmt_service()
         await device_mgmt.SystemReboot()
 
 

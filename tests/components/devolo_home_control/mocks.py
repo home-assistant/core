@@ -42,6 +42,7 @@ class BinarySwitchPropertyMock(BinarySwitchProperty):
         """Initialize the mock."""
         self._logger = MagicMock()
         self.element_uid = "Test"
+        self.state = False
 
 
 class ConsumptionPropertyMock(ConsumptionProperty):
@@ -114,6 +115,8 @@ class DeviceMock(Zwave):
         self.brand = "devolo"
         self.name = "Test Device"
         self.uid = "Test"
+        self.device_model_uid = "Test"
+        self.device_type = "Test"
         self.settings_property = {"general_device_settings": SettingsMock()}
         self.href = "https://www.mydevolo.com"
 
@@ -233,6 +236,17 @@ class SensorMock(DeviceMock):
         }
 
 
+class SwitchMock(DeviceMock):
+    """devolo Home Control switch device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_switch_property = {
+            "devolo.BinarySwitch:Test": BinarySwitchPropertyMock()
+        }
+
+
 class HomeControlMock(HomeControl):
     """devolo Home Control gateway mock."""
 
@@ -240,6 +254,9 @@ class HomeControlMock(HomeControl):
         """Initialize the mock."""
         self.devices = {}
         self.publisher = MagicMock()
+        self.gateway = MagicMock()
+        self.gateway.local_connection = True
+        self.gateway.firmware_version = "8.94.0"
 
     def websocket_disconnect(self, event: str = "") -> None:
         """Mock disconnect of the websocket."""
@@ -351,5 +368,16 @@ class HomeControlMockSiren(HomeControlMock):
         """Initialize the mock."""
         super().__init__()
         self.devices = {"Test": SirenMock()}
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
+
+
+class HomeControlMockSwitch(HomeControlMock):
+    """devolo Home Control gateway mock with switch device."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {"Test": SwitchMock()}
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()

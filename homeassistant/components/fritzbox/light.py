@@ -72,8 +72,10 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
 
-        self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
-        self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
+        if supported_color_temps:
+            # only available for color bulbs
+            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
@@ -125,7 +127,11 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        return SUPPORTED_COLOR_MODES
+        if self.data.has_color:
+            return SUPPORTED_COLOR_MODES
+        if self.data.has_level:
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

@@ -59,6 +59,8 @@ async def _setup(hass, hass_ws_client, scene_data):
     return ws_client, devices
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_scenes(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data
 ) -> None:
@@ -73,6 +75,8 @@ async def test_get_scenes(
         assert len(result["20"]) == 3
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_get_scene(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data
 ) -> None:
@@ -86,6 +90,8 @@ async def test_get_scene(
         assert len(result["devices"]) == 3
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_save_scene(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
 ) -> None:
@@ -115,6 +121,8 @@ async def test_save_scene(
         assert result["scene_id"] == 20
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_save_new_scene(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
 ) -> None:
@@ -144,6 +152,8 @@ async def test_save_new_scene(
         assert result["scene_id"] == 21
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_save_scene_error(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
 ) -> None:
@@ -173,6 +183,8 @@ async def test_save_scene_error(
         assert result["scene_id"] == 20
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_delete_scene(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, scene_data, remove_json
 ) -> None:

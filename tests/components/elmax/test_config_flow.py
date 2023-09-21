@@ -223,9 +223,25 @@ async def test_no_online_panel(hass: HomeAssistant) -> None:
 
 async def test_show_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth form shows."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+            CONF_ELMAX_USERNAME: MOCK_USERNAME,
+            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+        },
+        unique_id=MOCK_PANEL_ID,
+    )
+    entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH},
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": entry.unique_id,
+            "entry_id": entry.entry_id,
+        },
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -239,7 +255,7 @@ async def test_show_reauth(hass: HomeAssistant) -> None:
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test that the reauth flow works."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
@@ -248,7 +264,8 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
         unique_id=MOCK_PANEL_ID,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Trigger reauth
     with patch(
@@ -257,7 +274,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -268,7 +289,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -282,7 +302,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     """Test that the case where panel is no longer associated with the user."""
     # Simulate a first setup
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
@@ -291,7 +311,8 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
         unique_id=MOCK_PANEL_ID,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Trigger reauth
     with patch(
@@ -300,7 +321,11 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -311,7 +336,6 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -324,7 +348,7 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
 
 async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     """Test that the case where panel is no longer associated with the user."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
@@ -333,7 +357,8 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
         unique_id=MOCK_PANEL_ID,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Trigger reauth
     with patch(
@@ -342,7 +367,11 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -353,7 +382,6 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -366,7 +394,7 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
 
 async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     """Test bad login attempt at reauth time."""
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
@@ -375,7 +403,8 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
         },
         unique_id=MOCK_PANEL_ID,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Trigger reauth
     with patch(
@@ -384,7 +413,11 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     ):
         reauth_result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": entry.unique_id,
+                "entry_id": entry.entry_id,
+            },
             data={
                 CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
@@ -395,7 +428,6 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,

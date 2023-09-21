@@ -19,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,6 +31,7 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -71,17 +76,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_trigger_discovery(hass, discovered)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    async_track_time_interval(
+        hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
+    )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
+    host = entry.data[CONF_HOST]
     try:
-        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
+        device: SmartDevice = await Discover.discover_single(host)
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
+
+    found_mac = dr.format_mac(device.mac)
+    if found_mac != entry.unique_id:
+        # If the mac address of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+        )
 
     hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -13,10 +13,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +47,7 @@ class EasyEnergySensorEntityDescription(
 SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     EasyEnergySensorEntityDescription(
         key="current_hour_price",
-        name="Current hour",
+        translation_key="current_hour_price",
         service_type="today_gas",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
@@ -50,14 +55,14 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="next_hour_price",
-        name="Next hour",
+        translation_key="next_hour_price",
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
         value_fn=lambda data: get_gas_price(data, 1),
     ),
     EasyEnergySensorEntityDescription(
         key="current_hour_price",
-        name="Current hour",
+        translation_key="current_hour_price",
         service_type="today_energy_usage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -65,7 +70,7 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="next_hour_price",
-        name="Next hour",
+        translation_key="next_hour_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
@@ -74,42 +79,42 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="average_price",
-        name="Average - today",
+        translation_key="average_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.average_usage_price,
     ),
     EasyEnergySensorEntityDescription(
         key="max_price",
-        name="Highest price - today",
+        translation_key="max_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_usage_prices[1],
     ),
     EasyEnergySensorEntityDescription(
         key="min_price",
-        name="Lowest price - today",
+        translation_key="min_price",
         service_type="today_energy_usage",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_usage_prices[0],
     ),
     EasyEnergySensorEntityDescription(
         key="highest_price_time",
-        name="Time of highest price - today",
+        translation_key="highest_price_time",
         service_type="today_energy_usage",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.highest_usage_price_time,
     ),
     EasyEnergySensorEntityDescription(
         key="lowest_price_time",
-        name="Time of lowest price - today",
+        translation_key="lowest_price_time",
         service_type="today_energy_usage",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.lowest_usage_price_time,
     ),
     EasyEnergySensorEntityDescription(
         key="percentage_of_max",
-        name="Current percentage of highest price - today",
+        translation_key="percentage_of_max",
         service_type="today_energy_usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
@@ -117,7 +122,7 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="current_hour_price",
-        name="Current hour",
+        translation_key="current_hour_price",
         service_type="today_energy_return",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -125,7 +130,7 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="next_hour_price",
-        name="Next hour",
+        translation_key="next_hour_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.price_at_time(
@@ -134,46 +139,62 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
     ),
     EasyEnergySensorEntityDescription(
         key="average_price",
-        name="Average - today",
+        translation_key="average_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.average_return_price,
     ),
     EasyEnergySensorEntityDescription(
         key="max_price",
-        name="Highest price - today",
+        translation_key="max_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_return_prices[1],
     ),
     EasyEnergySensorEntityDescription(
         key="min_price",
-        name="Lowest price - today",
+        translation_key="min_price",
         service_type="today_energy_return",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         value_fn=lambda data: data.energy_today.extreme_return_prices[0],
     ),
     EasyEnergySensorEntityDescription(
         key="highest_price_time",
-        name="Time of highest price - today",
+        translation_key="highest_price_time",
         service_type="today_energy_return",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.highest_return_price_time,
     ),
     EasyEnergySensorEntityDescription(
         key="lowest_price_time",
-        name="Time of lowest price - today",
+        translation_key="lowest_price_time",
         service_type="today_energy_return",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: data.energy_today.lowest_return_price_time,
     ),
     EasyEnergySensorEntityDescription(
         key="percentage_of_max",
-        name="Current percentage of highest price - today",
+        translation_key="percentage_of_max",
         service_type="today_energy_return",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_return,
+    ),
+    EasyEnergySensorEntityDescription(
+        key="hours_priced_equal_or_lower",
+        translation_key="hours_priced_equal_or_lower",
+        service_type="today_energy_usage",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage,
+    ),
+    EasyEnergySensorEntityDescription(
+        key="hours_priced_equal_or_higher",
+        translation_key="hours_priced_equal_or_higher",
+        service_type="today_energy_return",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return,
     ),
 )
 
@@ -209,7 +230,7 @@ async def async_setup_entry(
 class EasyEnergySensorEntity(
     CoordinatorEntity[EasyEnergyDataUpdateCoordinator], SensorEntity
 ):
-    """Defines a easyEnergy sensor."""
+    """Defines an easyEnergy sensor."""
 
     _attr_has_entity_name = True
     _attr_attribution = "Data provided by easyEnergy"

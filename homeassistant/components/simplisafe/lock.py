@@ -49,6 +49,9 @@ async def async_setup_entry(
 class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     """Define a SimpliSafe lock."""
 
+    _attr_name = None
+    _device: Lock
+
     def __init__(self, simplisafe: SimpliSafe, system: SystemV3, lock: Lock) -> None:
         """Initialize."""
         super().__init__(
@@ -57,8 +60,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             device=lock,
             additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
         )
-
-        self._device: Lock
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""

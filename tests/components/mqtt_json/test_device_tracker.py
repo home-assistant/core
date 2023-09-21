@@ -11,6 +11,8 @@ from homeassistant.components.device_tracker.legacy import (
     DOMAIN as DT_DOMAIN,
     YAML_DEVICES,
 )
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -37,6 +39,28 @@ async def setup_comp(
     yield
     if os.path.isfile(yaml_devices):
         os.remove(yaml_devices)
+
+
+async def test_setup_fails_without_mqtt_being_setup(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Ensure mqtt is started when we setup the component."""
+    # Simulate MQTT is was removed
+    mqtt_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    await hass.config_entries.async_unload(mqtt_entry.entry_id)
+    await hass.config_entries.async_set_disabled_by(
+        mqtt_entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    dev_id = "zanzito"
+    topic = "location/zanzito"
+
+    await async_setup_component(
+        hass,
+        DT_DOMAIN,
+        {DT_DOMAIN: {CONF_PLATFORM: "mqtt_json", "devices": {dev_id: topic}}},
+    )
+    assert "MQTT integration is not available" in caplog.text
 
 
 async def test_ensure_device_tracker_platform_validation(hass: HomeAssistant) -> None:

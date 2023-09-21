@@ -19,5 +19,22 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_units": "Could not find any HVAC units in CoolMasterNet host."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
+    "sensor": {
+      "error_code": {
+        "name": "Error code"
+      }
+    }
   }
 }

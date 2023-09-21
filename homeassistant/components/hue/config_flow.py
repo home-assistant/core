@@ -9,7 +9,6 @@ import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
 from aiohue.discovery import DiscoveredHueBridge, discover_bridge, discover_nupnp
 from aiohue.util import normalize_bridge_id
-import async_timeout
 import slugify as unicode_slug
 import voluptuous as vol
 
@@ -23,7 +22,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.util.network import is_ipv6_address
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -78,7 +76,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host, websession=aiohttp_client.async_get_clientsession(self.hass)
             )
-        except aiohttp.ClientError:
+        except aiohttp.ClientError as err:
+            LOGGER.warning(
+                "Error while attempting to retrieve discovery information, "
+                "is there a bridge alive on IP %s ?",
+                host,
+                exc_info=err,
+            )
             return None
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
@@ -104,7 +108,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Find / discover bridges
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 bridges = await discover_nupnp(
                     websession=aiohttp_client.async_get_clientsession(self.hass)
                 )
@@ -147,7 +151,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._async_abort_entries_match({"host": user_input["host"]})
-        self.bridge = await self._get_bridge(user_input[CONF_HOST])
+        if (bridge := await self._get_bridge(user_input[CONF_HOST])) is None:
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
     async def async_step_link(
@@ -212,7 +218,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Ignore if host is IPv6
-        if is_ipv6_address(discovery_info.host):
+        if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="invalid_host")
 
         # abort if we already have exactly this bridge id/host
@@ -224,9 +230,12 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # we need to query the other capabilities too
-        self.bridge = await self._get_bridge(
+        bridge = await self._get_bridge(
             discovery_info.host, discovery_info.properties["bridgeid"]
         )
+        if bridge is None:
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
     async def async_step_homekit(
@@ -238,7 +247,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = await self._get_bridge(discovery_info.host)
+        bridge = await self._get_bridge(discovery_info.host)
+        if bridge is None:
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
@@ -254,7 +266,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Check if host exists, abort if so.
         self._async_abort_entries_match({"host": import_info["host"]})
 
-        self.bridge = await self._get_bridge(import_info["host"])
+        bridge = await self._get_bridge(import_info["host"])
+        if bridge is None:
+            return self.async_abort(reason="cannot_connect")
+        self.bridge = bridge
         return await self.async_step_link()
 
 

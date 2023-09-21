@@ -500,7 +500,9 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 if not hasattr(device, method["method"]):
                     continue
                 await getattr(device, method["method"])(**params)
-                update_tasks.append(device.async_update_ha_state(True))
+                update_tasks.append(
+                    asyncio.create_task(device.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)

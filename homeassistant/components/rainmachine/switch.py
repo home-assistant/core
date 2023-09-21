@@ -1,4 +1,4 @@
-"""This component provides support for RainMachine programs and zones."""
+"""Component providing support for RainMachine programs and zones."""
 from __future__ import annotations
 
 import asyncio
@@ -161,14 +161,14 @@ TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING = "hot_days_extra_watering"
 RESTRICTIONS_SWITCH_DESCRIPTIONS = (
     RainMachineRestrictionSwitchDescription(
         key=TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED,
-        name="Freeze protection",
+        translation_key=TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED,
         icon="mdi:snowflake-alert",
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectEnabled",
     ),
     RainMachineRestrictionSwitchDescription(
         key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
-        name="Extra water on hot days",
+        translation_key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
         icon="mdi:heat-wave",
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="hotDaysExtraWatering",

@@ -32,6 +32,8 @@ from .conftest import (
     TEST_STATE,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize(
     ("integration_type", "input_form_step", "patched_method", "config", "entry_title"),

@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import re
 from types import MappingProxyType
 from typing import Any, NamedTuple
+from urllib.parse import urlsplit
 
+from aiohttp import CookieJar
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -20,7 +23,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 
 from .const import DOMAIN
 
@@ -42,11 +48,26 @@ async def create_omada_client(
     hass: HomeAssistant, data: MappingProxyType[str, Any]
 ) -> OmadaClient:
     """Create a TP-Link Omada client API for the given config entry."""
-    host = data[CONF_HOST]
+
+    host: str = data[CONF_HOST]
     verify_ssl = bool(data[CONF_VERIFY_SSL])
+
+    if not host.lower().startswith(("http://", "https://")):
+        host = "https://" + host
+    host_parts = urlsplit(host)
+    if (
+        host_parts.hostname
+        and re.fullmatch(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", host_parts.hostname)
+        is not None
+    ):
+        # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
+        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    else:
+        websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
+
     username = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
-    websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
+
     return OmadaClient(host, username, password, websession=websession)
 
 

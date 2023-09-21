@@ -148,6 +148,8 @@ async def test_transition_off(hass: HomeAssistant, snooz_fan_entity_id: str) -> 
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_push_events(
     hass: HomeAssistant, mock_connected_snooz: SnoozFixture, snooz_fan_entity_id: str
 ) -> None:
@@ -172,6 +174,8 @@ async def test_push_events(
     assert state.attributes[ATTR_ASSUMED_STATE] is True
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_restore_state(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

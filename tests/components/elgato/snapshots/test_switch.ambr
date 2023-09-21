@@ -37,7 +37,7 @@
     'original_name': 'Energy saving',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_saving',
     'unique_id': 'GW24L1A02987_energy_saving',
     'unit_of_measurement': None,
   })
@@ -111,7 +111,7 @@
     'original_name': 'Studio mode',
     'platform': 'elgato',
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'bypass',
     'unique_id': 'GW24L1A02987_bypass',
     'unit_of_measurement': None,
   })

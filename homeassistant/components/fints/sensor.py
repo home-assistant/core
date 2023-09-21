@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any
 
@@ -11,6 +10,7 @@ from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -272,7 +272,7 @@ class FinTsHoldingsAccount(SensorEntity):
         self._attr_native_value = sum(h.total_value for h in self._holdings)
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

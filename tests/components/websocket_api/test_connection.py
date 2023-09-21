@@ -101,3 +101,27 @@ async def test_exception_handling(
     assert send_messages[0]["error"]["code"] == code
     assert send_messages[0]["error"]["message"] == err
     assert log in caplog.text
+
+
+async def test_binary_handler_registration() -> None:
+    """Test binary handler registration."""
+    connection = websocket_api.ActiveConnection(
+        None, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock()
+    )
+
+    # One filler to align indexes with prefix numbers
+    unsubs = [None]
+    fake_handler = object()
+    for i in range(255):
+        prefix, unsub = connection.async_register_binary_handler(fake_handler)
+        assert prefix == i + 1
+        unsubs.append(unsub)
+
+    with pytest.raises(RuntimeError):
+        connection.async_register_binary_handler(None)
+
+    unsubs[15]()
+
+    # Verify we reuse an unsubscribed prefix
+    prefix, unsub = connection.async_register_binary_handler(None)
+    assert prefix == 15

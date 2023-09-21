@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import switchbot
 
@@ -33,6 +34,8 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_translation_key = "bot"
+    _attr_name = None
     _device: switchbot.Switchbot
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
@@ -61,7 +64,7 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
         return self._device.is_on()
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             **super().extra_state_attributes,

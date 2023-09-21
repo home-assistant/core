@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["whirlpool"],
-  "requirements": ["whirlpool-sixth-sense==0.18.2"]
+  "requirements": ["whirlpool-sixth-sense==0.18.4"]
 }

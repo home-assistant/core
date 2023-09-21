@@ -1,5 +1,4 @@
 """Test the SFR Box config flow."""
-from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -15,14 +14,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import load_fixture
 
-
-@pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.sfr_box.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_config_flow_skip_auth(

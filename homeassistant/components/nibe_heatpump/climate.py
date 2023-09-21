@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,6 +32,7 @@ from . import Coordinator
 from .const import (
     DOMAIN,
     LOGGER,
+    VALUES_COOL_WITH_ROOM_SENSOR_OFF,
     VALUES_MIXING_VALVE_CLOSED_STATE,
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
@@ -69,7 +71,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.HEAT_COOL]
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
@@ -100,7 +102,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{key}"
         self._attr_device_info = coordinator.device_info
         self._attr_hvac_action = HVACAction.IDLE
-        self._attr_hvac_mode = HVACMode.OFF
+        self._attr_hvac_mode = HVACMode.AUTO
         self._attr_target_temperature_high = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature = None
@@ -137,12 +139,15 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         self._attr_current_temperature = _get_float(self._coil_current)
 
-        mode = HVACMode.OFF
+        mode = HVACMode.AUTO
         if _get_value(self._coil_use_room_sensor) == "ON":
-            if _get_value(self._coil_cooling_with_room_sensor) == "ON":
-                mode = HVACMode.HEAT_COOL
-            else:
+            if (
+                _get_value(self._coil_cooling_with_room_sensor)
+                in VALUES_COOL_WITH_ROOM_SENSOR_OFF
+            ):
                 mode = HVACMode.HEAT
+            else:
+                mode = HVACMode.HEAT_COOL
         self._attr_hvac_mode = mode
 
         setpoint_heat = _get_float(self._coil_setpoint_heat)
@@ -221,3 +226,25 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
         if (temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
             await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        coordinator = self.coordinator
+
+        if hvac_mode == HVACMode.HEAT_COOL:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "ON"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "ON")
+        elif hvac_mode == HVACMode.HEAT:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "OFF"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "ON")
+        elif hvac_mode == HVACMode.AUTO:
+            await coordinator.async_write_coil(
+                self._coil_cooling_with_room_sensor, "OFF"
+            )
+            await coordinator.async_write_coil(self._coil_use_room_sensor, "OFF")
+        else:
+            raise HomeAssistantError(f"{hvac_mode} mode not supported for {self.name}")

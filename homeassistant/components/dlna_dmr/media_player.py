@@ -37,7 +37,6 @@ from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
-    DOMAIN,
     LOGGER as _LOGGER,
     MEDIA_METADATA_DIDL,
     MEDIA_TYPE_MAP,
@@ -129,6 +128,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
     # DMR devices need polling for track position information. async_update will
     # determine whether further device polling is required.
     _attr_should_poll = True
+
+    # Name of the current sound mode, not supported by DLNA
+    _attr_sound_mode = None
 
     def __init__(
         self,
@@ -381,7 +383,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         device_entry = dev_reg.async_get_or_create(
             config_entry_id=self.registry_entry.config_entry_id,
             connections=connections,
-            identifiers={(DOMAIN, self.unique_id)},
             default_manufacturer=self._device.manufacturer,
             default_model=self._device.model_name,
             default_name=self._device.name,
@@ -748,11 +749,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
 
     @property
-    def sound_mode(self) -> str | None:
-        """Name of the current sound mode, not supported by DLNA."""
-        return None
-
-    @property
     def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
         if not self._device:
@@ -767,7 +763,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper.

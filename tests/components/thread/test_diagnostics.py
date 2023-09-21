@@ -1,7 +1,6 @@
 """Test the thread websocket API."""
 
 import dataclasses
-import time
 from unittest.mock import Mock, patch
 
 import pytest
@@ -106,6 +105,48 @@ TEST_ZEROCONF_RECORD_4 = ServiceInfo(
 # Make sure this generates an invalid DNSPointer
 TEST_ZEROCONF_RECORD_4.name = "office._meshcop._udp.lo\x00cal."
 
+# This has no XA
+TEST_ZEROCONF_RECORD_5 = ServiceInfo(
+    type_="_meshcop._udp.local.",
+    name="bad_1._meshcop._udp.local.",
+    addresses=["127.0.0.1", "fe80::10ed:6406:4ee9:85e0"],
+    port=8080,
+    properties={
+        "rv": "1",
+        "vn": "Apple",
+        "nn": "OpenThread HC",
+        "xp": "\xe6\x0f\xc7\xc1\x86!,\xe5",
+        "tv": "1.2.0",
+        "sb": "\x00\x00\x01\xb1",
+        "at": "\x00\x00\x00\x00\x00\x01\x00\x00",
+        "pt": "\x8f\x06Q~",
+        "sq": "3",
+        "bb": "\xf0\xbf",
+        "dn": "DefaultDomain",
+    },
+)
+
+# This has no XP
+TEST_ZEROCONF_RECORD_6 = ServiceInfo(
+    type_="_meshcop._udp.local.",
+    name="bad_2._meshcop._udp.local.",
+    addresses=["127.0.0.1", "fe80::10ed:6406:4ee9:85e0"],
+    port=8080,
+    properties={
+        "rv": "1",
+        "vn": "Apple",
+        "nn": "OpenThread HC",
+        "tv": "1.2.0",
+        "xa": "\xae\xeb/YKW\x0b\xbf",
+        "sb": "\x00\x00\x01\xb1",
+        "at": "\x00\x00\x00\x00\x00\x01\x00\x00",
+        "pt": "\x8f\x06Q~",
+        "sq": "3",
+        "bb": "\xf0\xbf",
+        "dn": "DefaultDomain",
+    },
+)
+
 
 @dataclasses.dataclass
 class MockRoute:
@@ -133,9 +174,7 @@ class MockNeighbour:
 @pytest.fixture
 def ndb() -> Mock:
     """Prevent NDB poking the OS route tables."""
-    with patch(
-        "homeassistant.components.thread.diagnostics.NDB"
-    ) as ndb, ndb() as instance:
+    with patch("pyroute2.NDB") as ndb, ndb() as instance:
         instance.neighbours = []
         instance.routes = []
         yield instance
@@ -151,32 +190,49 @@ async def test_diagnostics(
     """Test diagnostics for thread routers."""
     cache = mock_async_zeroconf.zeroconf.cache = DNSCache()
 
-    now = time.monotonic() * 1000
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_1.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_1.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_1.dns_addresses(),
+            TEST_ZEROCONF_RECORD_1.dns_service(),
+            TEST_ZEROCONF_RECORD_1.dns_text(),
+            TEST_ZEROCONF_RECORD_1.dns_pointer(),
         ]
     )
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_2.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_2.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_2.dns_addresses(),
+            TEST_ZEROCONF_RECORD_2.dns_service(),
+            TEST_ZEROCONF_RECORD_2.dns_text(),
+            TEST_ZEROCONF_RECORD_2.dns_pointer(),
         ]
     )
     # Test for invalid cache
-    cache.async_add_records([TEST_ZEROCONF_RECORD_3.dns_pointer(created=now)])
+    cache.async_add_records([TEST_ZEROCONF_RECORD_3.dns_pointer()])
     # Test for invalid record
     cache.async_add_records(
         [
-            *TEST_ZEROCONF_RECORD_4.dns_addresses(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_service(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_text(created=now),
-            TEST_ZEROCONF_RECORD_4.dns_pointer(created=now),
+            *TEST_ZEROCONF_RECORD_4.dns_addresses(),
+            TEST_ZEROCONF_RECORD_4.dns_service(),
+            TEST_ZEROCONF_RECORD_4.dns_text(),
+            TEST_ZEROCONF_RECORD_4.dns_pointer(),
+        ]
+    )
+    # Test for record without xa
+    cache.async_add_records(
+        [
+            *TEST_ZEROCONF_RECORD_5.dns_addresses(),
+            TEST_ZEROCONF_RECORD_5.dns_service(),
+            TEST_ZEROCONF_RECORD_5.dns_text(),
+            TEST_ZEROCONF_RECORD_5.dns_pointer(),
+        ]
+    )
+    # Test for record without xp
+    cache.async_add_records(
+        [
+            *TEST_ZEROCONF_RECORD_6.dns_addresses(),
+            TEST_ZEROCONF_RECORD_6.dns_service(),
+            TEST_ZEROCONF_RECORD_6.dns_text(),
+            TEST_ZEROCONF_RECORD_6.dns_pointer(),
         ]
     )
     assert await async_setup_component(hass, DOMAIN, {})

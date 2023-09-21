@@ -9,6 +9,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -30,14 +31,18 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+from .exposed_entities import ExposedEntities
 
 ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
+SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
@@ -246,16 +251,36 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
-        await hass.config.async_update(
-            latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
-        )
+        service_data = {
+            "latitude": call.data[ATTR_LATITUDE],
+            "longitude": call.data[ATTR_LONGITUDE],
+        }
+
+        if elevation := call.data.get(ATTR_ELEVATION):
+            service_data["elevation"] = elevation
+
+        await hass.config.async_update(**service_data)
 
     async_register_admin_service(
         hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
-        vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+        vol.Schema(
+            {
+                vol.Required(ATTR_LATITUDE): cv.latitude,
+                vol.Required(ATTR_LONGITUDE): cv.longitude,
+                vol.Optional(ATTR_ELEVATION): int,
+            }
+        ),
+    )
+
+    async def async_handle_reload_templates(call: ha.ServiceCall) -> None:
+        """Service handler to reload custom Jinja."""
+        await async_load_custom_templates(hass)
+
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES, async_handle_reload_templates
     )
 
     async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
@@ -288,8 +313,10 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         reload of YAML configurations for the domain that support it.
 
         Additionally, it also calls the `homeasssitant.reload_core_config`
-        service, as that reloads the core YAML configuration, and the
-        `frontend.reload_themes` service, as that reloads the themes.
+        service, as that reloads the core YAML configuration, the
+        `frontend.reload_themes` service that reloads the themes, and the
+        `homeassistant.reload_custom_templates` service that reloads any custom
+        jinja into memory.
 
         We only do so, if there are no configuration errors.
         """
@@ -315,10 +342,11 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             hass.services.async_call(
                 domain, service, context=call.context, blocking=True
             )
-            for domain, service in {
-                ha.DOMAIN: SERVICE_RELOAD_CORE_CONFIG,
-                "frontend": "reload_themes",
-            }.items()
+            for domain, service in (
+                (ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
+                ("frontend", "reload_themes"),
+                (ha.DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES),
+            )
         ]
 
         await asyncio.gather(*tasks)
@@ -326,5 +354,9 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
     )
+
+    exposed_entities = ExposedEntities(hass)
+    await exposed_entities.async_initialize()
+    hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
 
     return True

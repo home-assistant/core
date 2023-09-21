@@ -7,6 +7,7 @@ import zigpy.zcl.clusters.security as security
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.zha.core.device import ZHADevice
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,6 +15,7 @@ from homeassistant.helpers.device_registry import async_get
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -56,33 +58,43 @@ def zigpy_device(zigpy_device_mock):
 async def test_diagnostics_for_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry,
+    config_entry: MockConfigEntry,
     zha_device_joined,
     zigpy_device,
 ) -> None:
     """Test diagnostics for config entry."""
     await zha_device_joined(zigpy_device)
-    diagnostics_data = await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    )
-    assert diagnostics_data
+
+    gateway = get_zha_gateway(hass)
+    scan = {c: c for c in range(11, 26 + 1)}
+
+    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
+        diagnostics_data = await get_diagnostics_for_config_entry(
+            hass, hass_client, config_entry
+        )
+
     for key in CONFIG_ENTRY_DIAGNOSTICS_KEYS:
         assert key in diagnostics_data
         assert diagnostics_data[key] is not None
+
+    # Energy scan results are presented as a percentage. JSON object keys also must be
+    # strings, not integers.
+    assert diagnostics_data["energy_scan"] == {
+        str(k): 100 * v / 255 for k, v in scan.items()
+    }
 
 
 async def test_diagnostics_for_device(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry,
+    config_entry: MockConfigEntry,
     zha_device_joined,
     zigpy_device,
 ) -> None:
     """Test diagnostics for device."""
-
     zha_device: ZHADevice = await zha_device_joined(zigpy_device)
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({("zha", str(zha_device.ieee))})
+    device = dev_reg.async_get_device(identifiers={("zha", str(zha_device.ieee))})
     assert device
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device

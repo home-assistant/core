@@ -12,13 +12,14 @@ from homeassistant.components.lock import (
     LockEntityFeature,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
-async def test_manually_configured_platform(hass):
+async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"platform": HMIPC_DOMAIN}}
@@ -26,7 +27,9 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_doorlockdrive(hass, default_mock_hap_factory):
+async def test_hmip_doorlockdrive(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipDoorLockDrive."""
     entity_id = "lock.haustuer"
     entity_name = "Haustuer"
@@ -82,7 +85,9 @@ async def test_hmip_doorlockdrive(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_UNLOCKING
 
 
-async def test_hmip_doorlockdrive_handle_errors(hass, default_mock_hap_factory):
+async def test_hmip_doorlockdrive_handle_errors(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test HomematicipDoorLockDrive."""
     entity_id = "lock.haustuer"
     entity_name = "Haustuer"

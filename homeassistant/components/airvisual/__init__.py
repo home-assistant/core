@@ -380,7 +380,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
         else:
             entry.version = version
-            hass.config_entries.async_update_entry(entry)
 
     LOGGER.info("Migration to version %s successful", version)
 
@@ -422,6 +421,7 @@ class AirVisualEntity(CoordinatorEntity):
         self._entry = entry
         self.entity_description = description
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 

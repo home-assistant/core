@@ -2,10 +2,10 @@
 import asyncio
 from datetime import timedelta
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from bleak import BleakError
-from bleak.backends.scanner import AdvertisementDataCallback, BLEDevice
+from bleak.backends.scanner import AdvertisementDataCallback
 from dbus_fast import InvalidMessageError
 import pytest
 
@@ -18,11 +18,17 @@ from homeassistant.components.bluetooth.scanner import NEED_RESET_ERRORS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
+from . import (
+    _get_manager,
+    async_setup_with_one_adapter,
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_entry_can_be_reloaded_when_stop_raises(
@@ -236,7 +242,7 @@ async def test_recovery_from_dbus_restart(
         return_value=start_time_monotonic,
     ):
         _callback(
-            BLEDevice("44:44:33:11:23:42", "any_name"),
+            generate_ble_device("44:44:33:11:23:42", "any_name"),
             generate_advertisement_data(local_name="any_name"),
         )
 
@@ -455,7 +461,13 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     hass: HomeAssistant, one_adapter: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can recover the adapter at startup and we wait for Dbus to init."""
-
+    assert await async_setup_component(hass, "logger", {})
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.bluetooth": "DEBUG"},
+        blocking=True,
+    )
     called_start = 0
     called_stop = 0
     _callback = None
@@ -575,3 +587,50 @@ async def test_restart_takes_longer_than_watchdog_time(
         await hass.async_block_till_done()
 
     assert "already restarting" in caplog.text
+
+
+async def test_setup_and_stop_macos(
+    hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, macos_adapter: None
+) -> None:
+    """Test we enable use_bdaddr on MacOS."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        unique_id="00:00:00:00:00:00",
+    )
+    entry.add_to_hass(hass)
+    init_kwargs = None
+
+    class MockBleakScanner:
+        def __init__(self, *args, **kwargs):
+            """Init the scanner."""
+            nonlocal init_kwargs
+            init_kwargs = kwargs
+
+        async def start(self, *args, **kwargs):
+            """Start the scanner."""
+
+        async def stop(self, *args, **kwargs):
+            """Stop the scanner."""
+
+        def register_detection_callback(self, *args, **kwargs):
+            """Register a callback."""
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        MockBleakScanner,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert init_kwargs == {
+        "detection_callback": ANY,
+        "scanning_mode": "active",
+        "cb": {"use_bdaddr": True},
+    }

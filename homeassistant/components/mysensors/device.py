@@ -11,8 +11,9 @@ from mysensors.sensor import ChildSensor
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     CHILD_CALLBACK,
@@ -202,11 +203,11 @@ class MySensorsDevice(ABC):
 
 def get_mysensors_devices(
     hass: HomeAssistant, domain: Platform
-) -> dict[DevId, MySensorsDevice]:
+) -> dict[DevId, MySensorsEntity]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    devices: dict[DevId, MySensorsDevice] = hass.data[DOMAIN][
+    devices: dict[DevId, MySensorsEntity] = hass.data[DOMAIN][
         MYSENSORS_PLATFORM_DEVICES.format(domain)
     ]
     return devices
@@ -227,7 +228,6 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return entity specific state attributes."""
         attr = self._extra_attributes
 
-        assert self.platform
         assert self.platform.config_entry
         attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
 

@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,7 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
+    CONDITION_MAP,
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
@@ -50,14 +51,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="name",
         name="Station name",
-        device_class=None,
         icon="mdi:label-outline",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="weather",
         name="Weather",
-        device_class=None,
         icon="mdi:weather-sunny",  # but will adapt to current conditions
         entity_registry_enabled_default=True,
     ),
@@ -106,7 +105,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="visibility",
         name="Visibility",
-        device_class=None,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
@@ -114,14 +112,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility_distance",
         name="Visibility distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="uv",
         name="UV index",
-        device_class=None,
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
         entity_registry_enabled_default=True,
@@ -129,7 +125,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="precipitation",
         name="Probability of precipitation",
-        device_class=None,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
         entity_registry_enabled_default=True,
@@ -207,7 +202,7 @@ class MetOfficeCurrentSensor(
         )
 
     @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         value = None
 
@@ -226,11 +221,7 @@ class MetOfficeCurrentSensor(
         elif self.entity_description.key == "weather" and hasattr(
             self.coordinator.data.now, self.entity_description.key
         ):
-            value = [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.coordinator.data.now.weather.value in v
-            ][0]
+            value = CONDITION_MAP.get(self.coordinator.data.now.weather.value)
 
         elif hasattr(self.coordinator.data.now, self.entity_description.key):
             value = getattr(self.coordinator.data.now, self.entity_description.key)

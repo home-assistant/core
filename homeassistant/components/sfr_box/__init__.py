@@ -36,19 +36,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = DomainData(
         box=box,
         dsl=SFRDataUpdateCoordinator(hass, box, "dsl", lambda b: b.dsl_get_info()),
+        ftth=SFRDataUpdateCoordinator(hass, box, "ftth", lambda b: b.ftth_get_info()),
         system=SFRDataUpdateCoordinator(
             hass, box, "system", lambda b: b.system_get_info()
         ),
+        wan=SFRDataUpdateCoordinator(hass, box, "wan", lambda b: b.wan_get_info()),
     )
-    tasks = [
-        data.dsl.async_config_entry_first_refresh(),
-        data.system.async_config_entry_first_refresh(),
-    ]
+    # Preload system information
+    await data.system.async_config_entry_first_refresh()
+    system_info = data.system.data
+
+    # Preload other coordinators (based on net infrastructure)
+    tasks = [data.wan.async_config_entry_first_refresh()]
+    if (net_infra := system_info.net_infra) == "adsl":
+        tasks.append(data.dsl.async_config_entry_first_refresh())
+    elif net_infra == "ftth":
+        tasks.append(data.ftth.async_config_entry_first_refresh())
     await asyncio.gather(*tasks)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
 
-    system_info = data.system.data
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

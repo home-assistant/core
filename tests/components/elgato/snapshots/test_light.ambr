@@ -23,7 +23,7 @@
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.465,
         0.376,
@@ -130,7 +130,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.465,
         0.376,
@@ -236,7 +236,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.34,
         0.327,

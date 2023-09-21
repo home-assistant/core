@@ -34,6 +34,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -209,8 +210,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
         config_entry.version = 2
-        # update the entry
-        hass.config_entries.async_update_entry(config_entry)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True
