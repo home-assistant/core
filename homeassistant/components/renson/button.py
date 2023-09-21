@@ -72,7 +72,7 @@ class RensonButton(RensonEntity, ButtonEntity):
 
     def __init__(
         self,
-        description: ButtonEntityDescription,
+        description: RensonButtonEntityDescription,
         api: RensonVentilation,
         coordinator: RensonCoordinator,
     ) -> None:
