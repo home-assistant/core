@@ -177,7 +177,6 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
         exclude_event_types: set[str],
-        exclude_attributes_by_domain: dict[str, set[str]],
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -221,9 +220,7 @@ class Recorder(threading.Thread):
         self.event_data_manager = EventDataManager(self)
         self.event_type_manager = EventTypeManager(self)
         self.states_meta_manager = StatesMetaManager(self)
-        self.state_attributes_manager = StateAttributesManager(
-            self, exclude_attributes_by_domain
-        )
+        self.state_attributes_manager = StateAttributesManager(self)
         self.statistics_meta_manager = StatisticsMetaManager(self)
 
         self.event_session: Session | None = None
