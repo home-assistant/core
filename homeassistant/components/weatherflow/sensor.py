@@ -1,11 +1,11 @@
 """Sensors for the smartweatherudp integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from typing import Any
 
-from pyweatherflowudp.calc import Quantity
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
     EVENT_OBSERVATION,
@@ -53,6 +53,14 @@ class WeatherFlowSensorEntityDescription(SensorEntityDescription):
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: None | str = None
+    raw_data_conv_fn: Callable[
+        [Any], datetime | StateType
+    ] = lambda raw_data: raw_data.magnitude
+
+    def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
+        """Return the parsed sensor value."""
+        raw_sensor_data = getattr(device, self.key)
+        return self.raw_data_conv_fn(raw_sensor_data)
 
 
 @dataclass
@@ -60,18 +68,16 @@ class AirDensityWeatherFlowSensorEntityDescription(WeatherFlowSensorEntityDescri
     """Custom class to handle the conversion between backing lib and Home Assistant Compatible VOC sensor."""
 
 
-VOC_SENSORS: tuple[AirDensityWeatherFlowSensorEntityDescription, ...] = (
-    AirDensityWeatherFlowSensorEntityDescription(
+SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
+    WeatherFlowSensorEntityDescription(
         key="air_density",
         translation_key="air_density",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        raw_data_conv_fn=lambda raw_data: raw_data.m * 1000000,
     ),
-)
-
-SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
     WeatherFlowSensorEntityDescription(
         key="air_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -131,6 +137,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="lightning_count",
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.TOTAL,
+        raw_data_conv_fn=lambda raw_data: raw_data,
     ),
     WeatherFlowSensorEntityDescription(
         key="precipitation_type",
@@ -138,6 +145,7 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["none", "rain", "hail", "rain_hail", "unknown"],
         icon="mdi:weather-rainy",
+        raw_data_conv_fn=lambda raw_data: raw_data.name.lower(),
     ),
     WeatherFlowSensorEntityDescription(
         key="rain_accumulation_previous_minute",
@@ -191,12 +199,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         event_subscriptions=[EVENT_STATUS_UPDATE],
+        raw_data_conv_fn=lambda raw_data: raw_data,
     ),
     WeatherFlowSensorEntityDescription(
         key="uv",
         translation_key="uv_index",
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data,
     ),
     WeatherFlowSensorEntityDescription(
         key="vapor_pressure",
@@ -274,23 +284,13 @@ async def async_setup_entry(
         """Add WeatherFlow sensor."""
         LOGGER.debug("Adding sensors for %s", device)
 
-        sensors: list[WeatherFlowSensorEntity | WeatherFlowAirDensitySensorEntity] = [
+        sensors: list[WeatherFlowSensorEntity] = [
             WeatherFlowSensorEntity(
                 device=device,
                 description=description,
                 is_metric=(hass.config.units == METRIC_SYSTEM),
             )
             for description in SENSORS
-            if hasattr(device, description.key)
-        ]
-
-        sensors += [
-            WeatherFlowAirDensitySensorEntity(
-                device=device,
-                description=description,
-                is_metric=(hass.config.units == METRIC_SYSTEM),
-            )
-            for description in VOC_SENSORS
             if hasattr(device, description.key)
         ]
 
@@ -348,21 +348,7 @@ class WeatherFlowSensorEntity(SensorEntity):
     @property
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
-
-        # Extract & process raw sensor data
-        raw_sensor_data = getattr(self.device, self.entity_description.key)
-
-        if isinstance(raw_sensor_data, Quantity):
-            sensor_value = raw_sensor_data.magnitude
-            return sensor_value
-        if isinstance(raw_sensor_data, Enum):
-            sensor_value = raw_sensor_data.name.lower()
-            return sensor_value
-        if isinstance(raw_sensor_data, float):
-            return raw_sensor_data
-        if isinstance(raw_sensor_data, int):
-            return raw_sensor_data
-        return None
+        return self.entity_description.get_native_value(self.device)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
@@ -370,15 +356,3 @@ class WeatherFlowSensorEntity(SensorEntity):
             self.async_on_remove(
                 self.device.on(event, lambda _: self.async_write_ha_state())
             )
-
-
-class WeatherFlowAirDensitySensorEntity(WeatherFlowSensorEntity):
-    """Special case where we have a custom function."""
-
-    entity_description: AirDensityWeatherFlowSensorEntityDescription
-
-    @property
-    def native_value(self) -> datetime | StateType:
-        """Return the state of the sensor - with custom conversion."""
-        raw_sensor_data = getattr(self.device, self.entity_description.key)
-        return raw_sensor_data.m * 1000000
