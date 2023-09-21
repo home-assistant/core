@@ -31,7 +31,7 @@ ALARM_TYPE = [a.value for a in Alarm] + ["none"]
 class EcoforestRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Device], float | str | None]
+    value_fn: Callable[[Device], StateType]
 
 
 @dataclass
