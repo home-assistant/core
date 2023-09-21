@@ -1003,6 +1003,9 @@ govee-ble==0.31.3
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.1
 
+# homeassistant.components.homeassistant_yellow
+gpiod==1.5.4
+
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
 
@@ -2373,6 +2376,9 @@ pyudev==0.24.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
+
+# homeassistant.components.homeassistant_yellow
+pyusb==1.2.1
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11

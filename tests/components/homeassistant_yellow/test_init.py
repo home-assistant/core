@@ -1,6 +1,6 @@
 """Test the Home Assistant Yellow integration."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,9 +10,20 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+
+@pytest.fixture(autouse=True)
+def mock_async_validate_hardware_consistent():
+    """Mock validate hardware state."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -357,3 +368,73 @@ async def test_setup_entry_addon_not_running(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     start_addon.assert_called_once()
+
+
+async def test_create_unseated_repair(hass: HomeAssistant) -> None:
+    """Test that a repair is created when hardware is inconsistent."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_yellow.get_os_info",
+        return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
+        side_effect=HomeAssistantError(),
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+        return_value=False,
+    ), patch("homeassistant.components.homeassistant_yellow.ir") as ir:
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert len(ir.async_create_issue.mock_calls) == 1
+    assert (
+        ir.async_create_issue.mock_calls[0].kwargs["domain"] == "homeassistant_yellow"
+    )
+    assert ir.async_create_issue.mock_calls[0].kwargs["issue_id"] == "cm4_unseated"
+
+
+async def test_clear_unseated_repair(hass: HomeAssistant) -> None:
+    """Test that a repair is cleared when hardware is consistent."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homeassistant_yellow.get_os_info",
+        return_value={"board": "yellow"},
+    ), patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
+        side_effect=HomeAssistantError(),
+    ), patch(
+        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+        return_value=True,
+    ), patch("homeassistant.components.homeassistant_yellow.ir") as ir:
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    assert ir.async_delete_issue.mock_calls == [call(hass, DOMAIN, "cm4_unseated")]
