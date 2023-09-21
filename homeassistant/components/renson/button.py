@@ -80,7 +80,6 @@ class RensonButton(RensonEntity, ButtonEntity):
         super().__init__(description.key, api, coordinator)
 
         self.entity_description = description
-        self._action = action
 
     async def async_press(self) -> None:
         """Triggers the action."""
