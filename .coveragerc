@@ -262,6 +262,7 @@ omit =
     homeassistant/components/ecoforest/__init__.py
     homeassistant/components/ecoforest/coordinator.py
     homeassistant/components/ecoforest/entity.py
+    homeassistant/components/ecoforest/number.py
     homeassistant/components/ecoforest/sensor.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
