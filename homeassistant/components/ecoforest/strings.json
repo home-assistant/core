@@ -44,9 +44,9 @@
       "alarm": {
         "name": "Alarm",
         "state": {
-          "air_depression": "Air Depression",
+          "air_depression": "Air depression",
           "pellets": "Pellets",
-          "cpu_overheating": "CPU Overheating",
+          "cpu_overheating": "CPU overheating",
           "unkownn": "Unknown alarm",
           "none": "None"
         }
