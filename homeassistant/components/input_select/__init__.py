@@ -248,6 +248,9 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
+    _entity_component_unrecorded_attributes = (
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}
+    )
     _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
