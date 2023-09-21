@@ -1691,7 +1691,7 @@ radiotherm==2.1.0
 rapt-ble==0.1.2
 
 # homeassistant.components.refoss
-refoss-ha==1.0.9
+refoss-ha==1.1.0
 
 # homeassistant.components.rainmachine
 regenmaschine==2023.06.0

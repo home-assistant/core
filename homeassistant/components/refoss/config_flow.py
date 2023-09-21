@@ -5,15 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
 
 
-def _get_unique_id(data: dict[str, Any]) -> str:
+def _get_unique_id(latitude: float, longitude: float) -> str:
     """Return unique ID."""
-    return f"{data[CONF_NAME]}_{data[CONF_LATITUDE]}_{data[CONF_LONGITUDE]}"
+    return f"{DEFAULT_NAME}_{latitude}_{longitude}"
 
 
 class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -32,17 +31,8 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         latitude = self.hass.config.latitude
         longitude = self.hass.config.longitude
 
-        data = {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_LATITUDE: latitude,
-            CONF_LONGITUDE: longitude,
-        }
-
-        await self.async_set_unique_id(unique_id=_get_unique_id(data))
+        await self.async_set_unique_id(unique_id=_get_unique_id(latitude, longitude))
 
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
-            title=DEFAULT_NAME,
-            data=data,
-        )
+        return self.async_create_entry(title=DEFAULT_NAME, data={})

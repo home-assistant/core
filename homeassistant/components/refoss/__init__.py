@@ -5,6 +5,7 @@ from typing import Final
 
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.device_manager import RefossDeviceListener, RefossDeviceManager
+from refoss_ha.exceptions import RefossSocketInitErr
 from refoss_ha.socket_server import SocketServerProtocol
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, REFOSS_DISCOVERY_NEW, REFOSS_HA_SIGNAL_UPDATE_ENTITY
 from .models import HomeAssistantRefossData
 from .util import get_refoss_socket_server
 
@@ -27,17 +28,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup  entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    device_ids: set[str] = set()
     try:
-        device_ids: set[str] = set()
         socketserver: SocketServerProtocol = await get_refoss_socket_server(hass)
         device_manager = RefossDeviceManager(socket_server=socketserver)
         await device_manager.async_start_broadcast_msg()
-        listener = DeviceListener(hass, device_ids)
-        device_manager.add_device_listener(listener)
-    except TypeError as ex:
-        raise ConfigEntryNotReady(f"socket error: {ex}") from ex
-    except ValueError as ex:
-        raise ConfigEntryNotReady(f"socket error: {ex}") from ex
+    except RefossSocketInitErr as ex:
+        raise ConfigEntryNotReady(ex) from ex
+
+    listener = DeviceListener(hass, device_ids)
+    device_manager.add_device_listener(listener)
 
     hass.data[DOMAIN][entry.entry_id] = HomeAssistantRefossData(
         device_listener=listener,
@@ -104,7 +104,6 @@ class DeviceListener(RefossDeviceListener):
         self._device_ids.add(device.uuid)
         dispatcher_send(self._hass, REFOSS_DISCOVERY_NEW, [device.uuid])
         dispatcher_send(self._hass, f"{REFOSS_HA_SIGNAL_UPDATE_ENTITY}_{device.uuid}")
-        LOGGER.debug("Add device: %s", device.device_type)
 
     @callback
     async def async_remove_device(self, device_id: str) -> None:

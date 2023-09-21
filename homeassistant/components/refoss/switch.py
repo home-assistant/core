@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from refoss_ha.controller.device import BaseDevice
 from refoss_ha.controller.toggle import ToggleXMix
 
 from homeassistant.components.switch import SwitchEntity
@@ -14,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantRefossData
-from .const import DOMAIN, LOGGER, REFOSS_DISCOVERY_NEW
+from .const import DOMAIN, REFOSS_DISCOVERY_NEW
 from .device import RefossEntity
 
 
@@ -49,14 +48,10 @@ async def async_setup_entry(
     )
 
 
-class SwitchDevice(ToggleXMix, BaseDevice):
-    """Switch device."""
-
-
 class RefossSwitchEntity(RefossEntity, SwitchEntity):
     """Entity that controls switch based refoss device."""
 
-    device: SwitchDevice
+    device: ToggleXMix
 
     def __init__(self, device: ToggleXMix, channel: int) -> None:
         """Construct."""
@@ -70,17 +65,11 @@ class RefossSwitchEntity(RefossEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """async_turn_on."""
-        LOGGER.debug(
-            f"Turning on,device_type: {self.device.device_type}, channel: {self._channel_id}"
-        )
         await self.device.async_turn_on(self._channel_id)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """async_turn_off."""
-        LOGGER.debug(
-            f"Turning off,device_type: {self.device.device_type}, channel: {self._channel_id}"
-        )
         await self.device.async_turn_off(self._channel_id)
         self.async_write_ha_state()
 

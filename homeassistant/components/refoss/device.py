@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from refoss_ha.controller.device import BaseDevice
-from refoss_ha.enums import Namespace
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,6 +14,9 @@ from .const import DOMAIN, REFOSS_HA_SIGNAL_UPDATE_ENTITY
 class RefossEntity(Entity):
     """Entity for refoss."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(self, device: BaseDevice, channel: int) -> None:
         """__init__."""
         self._attr_unique_id = f"refoss_{device.uuid}_{channel}"
@@ -23,14 +25,13 @@ class RefossEntity(Entity):
         )
         self.device = device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.uuid)},
+            identifiers={(DOMAIN, device.uuid)},
             manufacturer="refoss",
-            model=self.device.device_type,
-            name=self.device.dev_name,
-            sw_version=self.device.fmware_version,
-            hw_version=self.device.hdware_version,
+            model=device.device_type,
+            name=device.dev_name,
+            sw_version=device.fmware_version,
+            hw_version=device.hdware_version,
         )
-        self._attr_should_poll = False
 
     @property
     def available(self) -> bool:
@@ -38,7 +39,7 @@ class RefossEntity(Entity):
         return self.device.online
 
     async def _async_push_notification_received(
-        self, namespace: Namespace, data: dict, uuid: str
+        self, namespace: str, data: dict, uuid: str
     ):
         """Synchronize the status of device push."""
         await self.device.async_update_push_state(
