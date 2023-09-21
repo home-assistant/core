@@ -255,6 +255,60 @@ async def test_lock_operator_remote(hass: HomeAssistant) -> None:
     )
 
 
+async def test_lock_operator_manual(hass: HomeAssistant) -> None:
+    """Test operation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.lock_from_manual.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
+    )
+    assert lock_operator_sensor
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").state
+        == "Your favorite elven princess"
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "manual"
+        ]
+        is True
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "remote"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "keypad"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "autorelock"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "method"
+        ]
+        == "manual"
+    )
+
+
 async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
     """Test operation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
@@ -296,4 +350,112 @@ async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
             "method"
         ]
         == "autorelock"
+    )
+
+
+async def test_unlock_operator_manual(hass: HomeAssistant) -> None:
+    """Test operation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.unlock_from_manual.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
+    )
+    assert lock_operator_sensor
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").state
+        == "Your favorite elven princess"
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "manual"
+        ]
+        is True
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "remote"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "keypad"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "autorelock"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "method"
+        ]
+        == "manual"
+    )
+
+
+async def test_unlock_operator_tag(hass: HomeAssistant) -> None:
+    """Test operation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.unlock_from_tag.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    entity_registry = er.async_get(hass)
+    lock_operator_sensor = entity_registry.async_get(
+        "sensor.online_with_doorsense_name_operator"
+    )
+    assert lock_operator_sensor
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").state
+        == "Your favorite elven princess"
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "manual"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
+        is True
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "remote"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "keypad"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "autorelock"
+        ]
+        is False
+    )
+    assert (
+        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
+            "method"
+        ]
+        == "tag"
     )
