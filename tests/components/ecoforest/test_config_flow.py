@@ -34,8 +34,8 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["context"]
-    assert result["context"]["unique_id"] == "1234"
+    assert "result" in result
+    assert result["result"].unique_id == "1234"
     assert result["title"] == "Ecoforest 1234"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
