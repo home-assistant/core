@@ -32,8 +32,8 @@ class EcoforestNumberEntityDescription(
 
 NUMBER_ENTITIES = (
     EcoforestNumberEntityDescription(
-        key="power",
-        translation_key="power",
+        key="power_level",
+        translation_key="power_level",
         native_min_value=1,
         native_max_value=9,
         native_step=1,
@@ -69,6 +69,6 @@ class EcoforestNumberEntity(EcoforestEntity, NumberEntity):
         return self.entity_description.value_fn(self.data)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Update the relay."""
+        """Update the power level."""
         await self.coordinator.api.set_power(int(value))
         await self.coordinator.async_request_refresh()
