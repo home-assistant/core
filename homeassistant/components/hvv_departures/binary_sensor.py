@@ -192,6 +192,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if v is not None
         }
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(

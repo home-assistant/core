@@ -35,6 +35,7 @@ class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
         self._get_data_from_coordinator()
         self.async_write_ha_state()
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(

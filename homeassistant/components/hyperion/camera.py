@@ -119,7 +119,7 @@ class HyperionCamera(Camera):
         """Initialize the switch."""
         super().__init__()
 
-        self._unique_id = get_hyperion_unique_id(
+        self._attr_unique_id = get_hyperion_unique_id(
             server_id, instance_num, TYPE_HYPERION_CAMERA
         )
         self._device_id = get_hyperion_device_id(server_id, instance_num)
@@ -135,11 +135,13 @@ class HyperionCamera(Camera):
         self._client_callbacks = {
             f"{KEY_LEDCOLORS}-{KEY_IMAGE_STREAM}-{KEY_UPDATE}": self._update_imagestream
         }
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for this instance."""
-        return self._unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=instance_name,
+            configuration_url=hyperion_client.remote_url,
+        )
 
     @property
     def is_on(self) -> bool:
@@ -231,7 +233,7 @@ class HyperionCamera(Camera):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_ENTITY_REMOVE.format(self._unique_id),
+                SIGNAL_ENTITY_REMOVE.format(self._attr_unique_id),
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
@@ -241,17 +243,6 @@ class HyperionCamera(Camera):
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            manufacturer=HYPERION_MANUFACTURER_NAME,
-            model=HYPERION_MODEL_NAME,
-            name=self._instance_name,
-            configuration_url=self._client.remote_url,
-        )
 
 
 CAMERA_TYPES = {
