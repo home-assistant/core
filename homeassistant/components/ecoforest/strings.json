@@ -35,7 +35,7 @@
           "off": "[%key:common::state::off%]",
           "starting": "Starting",
           "pre_heating": "Pre heating",
-          "on": "On",
+          "on": "[%key:common::state::on%]",
           "shutting_down": "Shutting Down",
           "stand_by": "Stand by",
           "alarm": "Alarm"
