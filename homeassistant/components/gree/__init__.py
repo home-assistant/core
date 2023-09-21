@@ -1,5 +1,6 @@
 """The Gree Climate integration."""
 from datetime import timedelta
+from ipaddress import IPv4Address
 import logging
 
 from homeassistant.components.network import async_get_ipv4_broadcast_addresses
@@ -33,7 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
-        bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+        if "ip" in entry.data and entry.data["ip"]:
+            bcast_addr = [IPv4Address(entry.data["ip"])]
+        else:
+            bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
         await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
 
     _LOGGER.debug("Scanning network for Gree devices")

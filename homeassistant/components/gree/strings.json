@@ -3,7 +3,18 @@
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "title": "[%key:common::action::connect%]",
+        "description": "Enter IP address of your Gree unit, or leave blank to scan your network.",
+        "data": {
+          "ip": "[%key:common::config_flow::data::ip%]"
+        }
       }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
