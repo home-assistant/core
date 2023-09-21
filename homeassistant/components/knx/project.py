@@ -115,3 +115,7 @@ class KNXProject:
         """Remove project file from storage."""
         await self._store.async_remove()
         self.initial_state()
+
+    async def get_knxproject(self) -> KNXProjectModel | None:
+        """Load the project file from local storage."""
+        return await self._store.async_load()
