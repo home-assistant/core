@@ -261,7 +261,10 @@ async def test_restore_state_fan(
     ],
 )
 async def test_fan_service_turn(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
 
