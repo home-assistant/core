@@ -38,10 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 callback(
                     lambda _: async_dispatcher_send(
-                        hass,
-                        format_dispatch_call(entry),
-                        device
-                        # hass, f"{DOMAIN}_{entry.entry_id}_add_{SENSOR_DOMAIN}", device
+                        hass, format_dispatch_call(entry), device
                     )
                 ),
             )

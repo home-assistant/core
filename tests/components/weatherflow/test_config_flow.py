@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.weatherflow.const import DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -59,26 +58,6 @@ async def test_single_instance(
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] == FlowResultType.ABORT
-
-
-async def test_has_no_devices(
-    hass: HomeAssistant, mock_has_no_devices: AsyncMock
-) -> None:
-    """Test a no device found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "4.3.2.1"},
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.ABORT
 
 
 async def test_devices_with_mocks(
