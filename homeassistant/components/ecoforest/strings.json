@@ -21,7 +21,7 @@
   "entity": {
     "sensor": {
       "cpu_temperature": {
-        "name": "CPU Temperature"
+        "name": "CPU temperature"
       },
       "gas_temperature": {
         "name": "Gas Temperature"
