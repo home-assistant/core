@@ -86,7 +86,6 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
