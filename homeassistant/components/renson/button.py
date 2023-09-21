@@ -18,16 +18,33 @@ from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
 
-SYNC_TIME_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
-    key="sync_time",
-    entity_category=EntityCategory.CONFIG,
-    translation_key="sync_time",
-)
+@dataclass
+class RensonButtonEntityDescriptionMixin:
+    """Action function called on press."""
 
-RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
-    key="restart",
-    device_class=ButtonDeviceClass.RESTART,
-    entity_category=EntityCategory.CONFIG,
+    action_fn: Callable[[RensonVentilation], None]
+
+
+@dataclass
+class RensonButtonEntityDescription(
+    ButtonEntityDescription, RensonButtonEntityDescriptionMixin
+):
+    """Class describing Renson button entity."""
+
+
+ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
+    RensonButtonEntityDescription(
+        key="sync_time",
+        entity_category=EntityCategory.CONFIG,
+        translation_key="sync_time",
+        action_fn=lambda api: api.sync_time(),
+    ),
+    RensonButtonEntityDescription(
+        key="restart",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        action_fn=lambda api: api.restart_device(),
+    ),
 )
 
 
