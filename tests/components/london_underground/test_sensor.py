@@ -16,7 +16,7 @@ VALID_CONFIG = {
 async def test_valid_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test for operational london_air sensor with proper attributes."""
+    """Test for operational london_underground sensor with proper attributes."""
     aioclient_mock.get(
         API_URL,
         text=load_fixture("line_status.json", "london_underground"),
