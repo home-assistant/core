@@ -14,11 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .domain_data import DomainData
-from .entity import (
-    EsphomeAssistEntity,
-    EsphomeEntity,
-    platform_async_setup_entry,
-)
+from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
 
 
 async def async_setup_entry(

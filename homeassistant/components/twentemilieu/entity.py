@@ -7,8 +7,8 @@ from twentemilieu import WasteType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,

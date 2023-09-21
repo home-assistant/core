@@ -1,4 +1,5 @@
 """Test the Android TV Remote config flow."""
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
@@ -90,6 +91,7 @@ async def test_user_flow_cannot_connect(
 
     host = "1.2.3.4"
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(side_effect=CannotConnect())
 
     result = await hass.config_entries.flow.async_configure(
@@ -101,6 +103,7 @@ async def test_user_flow_cannot_connect(
     assert "host" in result["data_schema"].schema
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -329,6 +332,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
 
     result = await hass.config_entries.flow.async_configure(
@@ -338,6 +342,7 @@ async def test_user_flow_already_configured_host_changed_reloads_entry(
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -386,6 +391,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     assert "host" in result["data_schema"].schema
     assert not result["errors"]
 
+    mock_api.async_generate_cert_if_missing = AsyncMock(return_value=True)
     mock_api.async_get_name_and_mac = AsyncMock(return_value=(name, mac))
 
     result = await hass.config_entries.flow.async_configure(
@@ -395,6 +401,7 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
+    mock_api.async_generate_cert_if_missing.assert_called()
     mock_api.async_get_name_and_mac.assert_called()
     mock_api.async_start_pairing.assert_not_called()
 
@@ -425,8 +432,8 @@ async def test_zeroconf_flow_success(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -503,8 +510,8 @@ async def test_zeroconf_flow_cannot_connect(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -554,8 +561,8 @@ async def test_zeroconf_flow_pairing_invalid_auth(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -637,8 +644,8 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -690,8 +697,8 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",
@@ -723,8 +730,8 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=host,
-            addresses=[host],
+            ip_address=ip_address(host),
+            ip_addresses=[ip_address(host)],
             port=6466,
             hostname=host,
             type="mock_type",

@@ -76,12 +76,16 @@ async def test_climate_find_valid_targets() -> None:
 
 
 async def test_climate(
-    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    get_data: SensiboData,
+    load_int: ConfigEntry,
 ) -> None:
     """Test the Sensibo climate."""
 
     state1 = hass.states.get("climate.hallway")
     state2 = hass.states.get("climate.kitchen")
+    state3 = hass.states.get("climate.bedroom")
 
     assert state1.state == "heat"
     assert state1.attributes == {
@@ -97,11 +101,7 @@ async def test_climate(
         "max_temp": 20,
         "target_temp_step": 1,
         "fan_modes": ["low", "medium", "quiet"],
-        "swing_modes": [
-            "fixedmiddletop",
-            "fixedtop",
-            "stopped",
-        ],
+        "swing_modes": ["fixedmiddletop", "fixedtop", "stopped"],
         "current_temperature": 21.2,
         "temperature": 25,
         "current_humidity": 32.9,
@@ -112,6 +112,19 @@ async def test_climate(
     }
 
     assert state2.state == "off"
+
+    assert not state3
+    found_log = False
+    logs = caplog.get_records("setup")
+    for log in logs:
+        if (
+            log.message
+            == "Device Bedroom not correctly registered with Sensibo cloud. Skipping device"
+        ):
+            found_log = True
+            break
+
+    assert found_log
 
 
 async def test_climate_fan(
@@ -1319,3 +1332,56 @@ async def test_climate_full_ac_state(
 
     assert state.state == "cool"
     assert state.attributes["temperature"] == 22
+
+
+async def test_climate_fan_mode_and_swing_mode_not_supported(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate fan_mode and swing_mode not supported is raising error."""
+
+    state1 = hass.states.get("climate.hallway")
+    assert state1.attributes["fan_mode"] == "high"
+    assert state1.attributes["swing_mode"] == "stopped"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+    ), pytest.raises(
+        HomeAssistantError,
+        match="Climate swing mode faulty_swing_mode is not supported by the integration, please open an issue",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_SWING_MODE: "faulty_swing_mode"},
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+    ), pytest.raises(
+        HomeAssistantError,
+        match="Climate fan mode faulty_fan_mode is not supported by the integration, please open an issue",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_FAN_MODE: "faulty_fan_mode"},
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state2 = hass.states.get("climate.hallway")
+    assert state2.attributes["fan_mode"] == "high"
+    assert state2.attributes["swing_mode"] == "stopped"

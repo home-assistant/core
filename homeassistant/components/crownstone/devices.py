@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
 

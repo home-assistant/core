@@ -3,7 +3,7 @@
     "flow_title": "{serial} ({host})",
     "step": {
       "user": {
-        "description": "For newer models, enter username `envoy` without a password. For older models, enter username `installer` without a password. For all other models, enter a valid username and password.",
+        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
@@ -12,13 +12,119 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "Cannot connect: {reason}",
+      "invalid_auth": "Invalid authentication: {reason}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC switch"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      }
+    },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
+      },
+      "restore_battery_level": {
+        "name": "Restore battery level"
+      }
+    },
+    "select": {
+      "relay_mode": {
+        "name": "Mode",
+        "state": {
+          "standard": "Standard",
+          "battery": "Battery level"
+        }
+      },
+      "relay_grid_action": {
+        "name": "Grid action",
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not powered",
+          "schedule": "Follow schedule",
+          "none": "None"
+        }
+      },
+      "relay_microgrid_action": {
+        "name": "Microgrid action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "relay_generator_action": {
+        "name": "Generator action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      }
+    },
+    "sensor": {
+      "last_reported": {
+        "name": "Last reported"
+      },
+      "current_power_production": {
+        "name": "Current power production"
+      },
+      "daily_production": {
+        "name": "Energy production today"
+      },
+      "seven_days_production": {
+        "name": "Energy production last seven days"
+      },
+      "lifetime_production": {
+        "name": "Lifetime energy production"
+      },
+      "current_power_consumption": {
+        "name": "Current power consumption"
+      },
+      "daily_consumption": {
+        "name": "Energy consumption today"
+      },
+      "seven_days_consumption": {
+        "name": "Energy consumption last seven days"
+      },
+      "lifetime_consumption": {
+        "name": "Lifetime energy consumption"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
+      },
+      "available_energy": {
+        "name": "Available battery energy"
+      },
+      "reserve_energy": {
+        "name": "Reserve battery energy"
+      },
+      "max_capacity": {
+        "name": "Battery capacity"
+      },
+      "configured_reserve_soc": {
+        "name": "Configured reserve battery level"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "name": "Grid enabled"
+      }
     }
   }
 }

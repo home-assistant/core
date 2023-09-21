@@ -1,14 +1,14 @@
 """The PEGELONLINE base entity."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PegelOnlineDataUpdateCoordinator
 
 
-class PegelOnlineEntity(CoordinatorEntity):
+class PegelOnlineEntity(CoordinatorEntity[PegelOnlineDataUpdateCoordinator]):
     """Representation of a PEGELONLINE entity."""
 
     _attr_has_entity_name = True

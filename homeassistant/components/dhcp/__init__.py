@@ -58,7 +58,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 from .const import DOMAIN
 
@@ -162,9 +161,9 @@ class WatcherBase(ABC):
         made_ip_address = make_ip_address(ip_address)
 
         if (
-            is_link_local(made_ip_address)
-            or is_loopback(made_ip_address)
-            or is_invalid(made_ip_address)
+            made_ip_address.is_link_local
+            or made_ip_address.is_loopback
+            or made_ip_address.is_unspecified
         ):
             # Ignore self assigned addresses, loopback, invalid
             return
@@ -415,9 +414,7 @@ class DHCPWatcher(WatcherBase):
         """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
-        from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
-            arch,
-        )
+        from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
         from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
         from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
         from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel

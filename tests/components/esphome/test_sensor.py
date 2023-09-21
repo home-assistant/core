@@ -18,11 +18,7 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
-from homeassistant.const import (
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory

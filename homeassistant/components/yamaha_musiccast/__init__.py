@@ -13,8 +13,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -133,24 +136,9 @@ class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     ) -> None:
         """Initialize the MusicCast entity."""
         super().__init__(coordinator)
-        self._enabled_default = enabled_default
-        self._icon = icon
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
+        self._attr_entity_registry_enabled_default = enabled_default
+        self._attr_icon = icon
+        self._attr_name = name
 
 
 class MusicCastDeviceEntity(MusicCastEntity):

@@ -8,11 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get
 from homeassistant.helpers.typing import EventType
 
-from .const import (
-    BTHOME_BLE_EVENT,
-    DOMAIN,
-    BTHomeBleEvent,
-)
+from .const import BTHOME_BLE_EVENT, DOMAIN, BTHomeBleEvent
 
 
 @callback

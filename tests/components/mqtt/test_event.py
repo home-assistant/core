@@ -8,10 +8,7 @@ import pytest
 
 from homeassistant.components import event, mqtt
 from homeassistant.components.mqtt.event import MQTT_EVENT_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -51,9 +48,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    async_fire_mqtt_message,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
@@ -508,9 +503,11 @@ async def test_entity_device_info_with_hub(
 ) -> None:
     """Test MQTT event device registry integration."""
     await mqtt_mock_entry()
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     registry = dr.async_get(hass)
     hub = registry.async_get_or_create(
-        config_entry_id="123",
+        config_entry_id=other_config_entry.entry_id,
         connections=set(),
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",

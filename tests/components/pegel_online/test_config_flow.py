@@ -2,12 +2,8 @@
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
-from aiopegelonline import Station
 
-from homeassistant.components.pegel_online.const import (
-    CONF_STATION,
-    DOMAIN,
-)
+from homeassistant.components.pegel_online.const import CONF_STATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -19,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import PegelOnlineMock
+from .const import MOCK_CONFIG_ENTRY_DATA_DRESDEN, MOCK_NEARBY_STATIONS
 
 from tests.common import MockConfigEntry
 
@@ -27,38 +24,7 @@ MOCK_USER_DATA_STEP1 = {
     CONF_RADIUS: 25,
 }
 
-MOCK_USER_DATA_STEP2 = {CONF_STATION: "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"}
-
-MOCK_CONFIG_ENTRY_DATA = {CONF_STATION: "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"}
-
-MOCK_NEARBY_STATIONS = {
-    "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8": Station(
-        {
-            "uuid": "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8",
-            "number": "501060",
-            "shortname": "DRESDEN",
-            "longname": "DRESDEN",
-            "km": 55.63,
-            "agency": "STANDORT DRESDEN",
-            "longitude": 13.738831783620384,
-            "latitude": 51.054459765598125,
-            "water": {"shortname": "ELBE", "longname": "ELBE"},
-        }
-    ),
-    "85d686f1-xxxx-xxxx-xxxx-3207b50901a7": Station(
-        {
-            "uuid": "85d686f1-xxxx-xxxx-xxxx-3207b50901a7",
-            "number": "501060",
-            "shortname": "MEISSEN",
-            "longname": "MEISSEN",
-            "km": 82.2,
-            "agency": "STANDORT DRESDEN",
-            "longitude": 13.475467710324812,
-            "latitude": 51.16440557554545,
-            "water": {"shortname": "ELBE", "longname": "ELBE"},
-        }
-    ),
-}
+MOCK_USER_DATA_STEP2 = {CONF_STATION: "70272185-xxxx-xxxx-xxxx-43bea330dcae"}
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -85,7 +51,7 @@ async def test_user(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA_STEP2
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_STATION] == "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"
+        assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
 
         await hass.async_block_till_done()
@@ -97,8 +63,8 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user with an already configured statioon."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_CONFIG_ENTRY_DATA,
-        unique_id=MOCK_CONFIG_ENTRY_DATA[CONF_STATION],
+        data=MOCK_CONFIG_ENTRY_DATA_DRESDEN,
+        unique_id=MOCK_CONFIG_ENTRY_DATA_DRESDEN[CONF_STATION],
     )
     mock_config.add_to_hass(hass)
 
@@ -159,7 +125,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA_STEP2
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_STATION] == "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"
+        assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
 
         await hass.async_block_till_done()
@@ -201,7 +167,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA_STEP2
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_STATION] == "3bcd61da-xxxx-xxxx-xxxx-19d5523a7ae8"
+        assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
 
         await hass.async_block_till_done()
