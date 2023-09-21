@@ -9,7 +9,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, DOMAIN
@@ -52,11 +52,12 @@ class ComelitSerialBridge(DataUpdateCoordinator):
 
         return devices_data
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Set device info."""
+    def register_device(self) -> None:
+        """Create device with all available info."""
 
-        return DeviceInfo(
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
             identifiers={
                 (DOMAIN, self.config_entry.entry_id),
             },
