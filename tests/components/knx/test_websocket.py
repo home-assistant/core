@@ -21,7 +21,8 @@ async def test_knx_info_command(
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
+    assert res["result"]["xknx_version"] is not None
+    assert res["result"]["xknxproject_version"] is not None
     assert res["result"]["connected"]
     assert res["result"]["current_address"] == "0.0.0"
     assert res["result"]["project"] is None
@@ -40,7 +41,8 @@ async def test_knx_info_command_with_project(
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
+    assert res["result"]["xknx_version"] is not None
+    assert res["result"]["xknxproject_version"] is not None
     assert res["result"]["connected"]
     assert res["result"]["current_address"] == "0.0.0"
     assert res["result"]["project"] is not None
