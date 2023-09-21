@@ -129,7 +129,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.15
+SQLAlchemy==2.0.21
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
@@ -646,7 +646,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==2.7.0
+dbus-fast==2.9.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -1076,7 +1076,7 @@ intellifire4py==2.2.2
 iperf3==0.1.11
 
 # homeassistant.components.gogogate2
-ismartgate==5.0.0
+ismartgate==5.0.1
 
 # homeassistant.components.file_upload
 janus==1.0.0
@@ -2166,7 +2166,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.34.0
+python-roborock==0.34.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.33
@@ -2809,7 +2809,7 @@ zigpy==0.57.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.51.2
+zwave-js-server-python==0.51.3
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
