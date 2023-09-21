@@ -1,6 +1,6 @@
 aiodiscover==1.5.1
-aiohttp-cors==0.7.0
 aiohttp==3.8.5
+aiohttp_cors==0.7.0
 astral==2.2
 async-timeout==4.0.3
 async-upnp-client==0.35.1
