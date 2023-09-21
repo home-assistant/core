@@ -153,7 +153,7 @@ async def test_knx_get_project(
     res = await client.receive_json()
     assert res["success"], res
     assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] is not None
+    assert res["result"]["knxproject"] == FIXTURE_PROJECT_DATA
 
 
 async def test_knx_group_monitor_info_command(
