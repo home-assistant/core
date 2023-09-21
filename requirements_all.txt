@@ -777,7 +777,7 @@ eufylife-ble-client==0.1.7
 evohome-async==0.3.15
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.8.0
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify

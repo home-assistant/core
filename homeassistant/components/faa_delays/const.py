@@ -1,7 +1,11 @@
 """Constants for the FAA Delays integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+
+LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "faa_delays"
 

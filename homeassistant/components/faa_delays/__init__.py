@@ -3,10 +3,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import FAADataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR]
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate version 1 to version 2."""
+    LOGGER.info("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        config_entry.version = 2
+
+    LOGGER.debug("Migration to version $s successful", config_entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -621,7 +621,7 @@ esphome-dashboard-api==1.2.3
 eufylife-ble-client==0.1.7
 
 # homeassistant.components.faa_delays
-faadelays==0.0.7
+faadelays==2023.8.0
 
 # homeassistant.components.feedreader
 feedparser==6.0.10
