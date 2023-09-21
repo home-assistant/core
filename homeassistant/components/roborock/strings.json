@@ -36,9 +36,6 @@
       },
       "water_box_attached": {
         "name": "Water box attached"
-      },
-      "water_shortage": {
-        "name": "Water shortage"
       }
     },
     "number": {
