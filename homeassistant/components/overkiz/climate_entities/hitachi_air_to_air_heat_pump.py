@@ -376,7 +376,10 @@ class HitachiAirToAirHeatPump(OverkizEntity, ClimateEntity):
 
         # OVP protocol does not pass a target temperature when in AUTO mode, it passes a "temperature change" value in the range [-5,5]
         if hvac_mode == OverkizCommandParam.AUTO:
-            target_temperature = self.temperature_change or 0
+            target_temperature = self.temperature_change
+            # Cases were observed in the nature where the current state is out of range and cannot be used as a command. Resetting to 0 when this happens.
+            if target_temperature < -5 or target_temperature > 5
+                target_temperature = 0
 
         command_data = [
             main_operation,  # Main Operation
