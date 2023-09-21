@@ -1,6 +1,8 @@
 """Renson ventilation unit buttons."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from _collections_abc import Callable
 from renson_endura_delta.renson import RensonVentilation
 
@@ -17,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
+
 
 @dataclass
 class RensonButtonEntityDescriptionMixin:
@@ -82,8 +85,6 @@ class RensonButton(RensonEntity, ButtonEntity):
 
         self.entity_description = description
 
-    async def async_press(self) -> None:
+    def press(self) -> None:
         """Triggers the action."""
-        await self.hass.async_add_executor_job(
-            self.entity_description.action_fn(self.api)
-        )
+        self.entity_description.action_fn(self.api)
