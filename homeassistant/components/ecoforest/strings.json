@@ -37,7 +37,7 @@
           "pre_heating": "Pre heating",
           "on": "[%key:common::state::on%]",
           "shutting_down": "Shutting Down",
-          "stand_by": "Stand by",
+          "stand_by": "[%key:common::state::standby%]",
           "alarm": "Alarm"
         }
       },
