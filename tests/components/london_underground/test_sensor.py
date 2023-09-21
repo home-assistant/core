@@ -26,7 +26,7 @@ async def test_valid_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.metropolitan")
-    assert state is not None
+    assert state
     assert state.state == "Good Service"
     assert state.attributes == {
         "Description": "Nothing to report",
