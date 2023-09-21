@@ -34,7 +34,6 @@ NUMBER_ENTITIES = (
     EcoforestNumberEntityDescription(
         key="power",
         translation_key="power",
-        name="Power",
         native_min_value=1,
         native_max_value=9,
         native_step=1,
@@ -63,8 +62,6 @@ class EcoforestNumberEntity(EcoforestEntity, NumberEntity):
     """Representation of an Ecoforest number entity."""
 
     entity_description: EcoforestNumberEntityDescription
-
-    _attr_has_entity_name = True
 
     @property
     def native_value(self) -> float | None:
