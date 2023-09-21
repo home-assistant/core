@@ -151,6 +151,12 @@ class Sun(Entity):
         self.hass = hass
         self.phase: str | None = None
 
+        # This is normally done by async_internal_added_to_hass which is not called
+        # for sun because sun has no platform
+        self._state_info = {
+            "unrecorded_attributes": self._Entity__combined_unrecorded_attributes  # type: ignore[attr-defined]
+        }
+
         self._config_listener: CALLBACK_TYPE | None = None
         self._update_events_listener: CALLBACK_TYPE | None = None
         self._update_sun_position_listener: CALLBACK_TYPE | None = None
