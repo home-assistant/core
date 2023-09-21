@@ -8,13 +8,7 @@ from mypermobil import MyPermobil, MyPermobilAPIException, MyPermobilClientExcep
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_EMAIL,
-    CONF_REGION,
-    CONF_TOKEN,
-    CONF_TTL,
-)
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
