@@ -69,6 +69,7 @@ class RensonButton(RensonEntity, ButtonEntity):
     """Representation of a Renson actions."""
 
     _attr_has_entity_name = True
+    entity_description: RensonButtonEntityDescription
 
     def __init__(
         self,
