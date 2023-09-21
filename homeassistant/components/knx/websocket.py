@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Final
 
 import knx_frontend as knx_panel
 import voluptuous as vol
-from xknxproject.__version__ import __version__ as xknxproject_version
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
@@ -69,13 +68,13 @@ def ws_info(
             "name": project_info["name"],
             "last_modified": project_info["last_modified"],
             "tool_version": project_info["tool_version"],
+            "xknxproject_version": project_info["xknxproject_version"],
         }
 
     connection.send_result(
         msg["id"],
         {
-            "xknx_version": knx.xknx.version,
-            "xknxproject_version": xknxproject_version,
+            "version": knx.xknx.version,
             "connected": knx.xknx.connection_manager.connected.is_set(),
             "current_address": str(knx.xknx.current_address),
             "project": _project_info,
