@@ -13,10 +13,7 @@ from tests.common import MockConfigEntry
 async def test_configured(hass: HomeAssistant):
     """Test a successful config flow."""
 
-    with patch(
-        "homeassistant.components.refoss.config_flow._get_unique_id",
-        return_value="refoss_30.6598628_104.0633717",
-    ), patch("socket.socket", return_value=Mock()):
+    with patch("socket.socket", return_value=Mock()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -27,19 +24,14 @@ async def test_configured(hass: HomeAssistant):
 async def test_already_configured_abort(hass: HomeAssistant) -> None:
     """test_already_configured_abort."""
 
-    with patch(
-        "homeassistant.components.refoss.config_flow._get_unique_id",
-        return_value="refoss_30.6598628_104.0633717",
-    ) as mock_unique_id:
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=mock_unique_id.return_value,
-        )
-        config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="446073142a0d7f946896c678485d219c"
+    )
+    config_entry.add_to_hass(hass)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -20,9 +20,10 @@ class RefossEntity(Entity):
     def __init__(self, device: BaseDevice, channel: int) -> None:
         """__init__."""
         self._attr_unique_id = f"refoss_{device.uuid}_{channel}"
-        self._attr_name = (
-            device.dev_name if channel == 0 else f"{device.dev_name}-{channel}"
-        )
+        if channel == 0:
+            self._attr_name = None
+        else:
+            self._attr_name = str(channel)
         self.device = device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.uuid)},
