@@ -58,10 +58,8 @@ async def async_setup_entry(
     data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        RensonButton(SYNC_TIME_BUTTON, data.api, data.coordinator, data.api.sync_time),
-        RensonButton(
-            RESTART_BUTTON, data.api, data.coordinator, data.api.restart_device
-        ),
+        RensonButton(description, data.api, data.coordinator)
+        for description in ENTITY_DESCRIPTIONS
     ]
 
     async_add_entities(entities)
