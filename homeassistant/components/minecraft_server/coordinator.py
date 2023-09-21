@@ -14,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import helpers
-from .const import SCAN_INTERVAL
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             hass=hass,
             name=config_data[CONF_NAME],
             logger=_LOGGER,
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            update_interval=SCAN_INTERVAL,
         )
 
         # Server data
