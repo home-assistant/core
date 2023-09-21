@@ -84,4 +84,6 @@ class RensonButton(RensonEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the action."""
-        await self.hass.async_add_executor_job(self._action)
+        await self.hass.async_add_executor_job(
+            self.entity_description.action_fn(self.api)
+        )
