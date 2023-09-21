@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyecoforest.models.device import Device
+from pyecoforest.models.device import Alarm, Device, State
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,23 +23,8 @@ from .entity import EcoforestEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STATUS_TYPE = [
-    "off",
-    "starting",
-    "pre_heating",
-    "on",
-    "shutting_down",
-    "stand_by",
-    "alarm",
-]
-
-ALARM_TYPE = [
-    "air_depression",
-    "pellets",
-    "cpu_overheating",
-    "unkownn",
-    "none",
-]
+STATUS_TYPE = [s.value for s in State]
+ALARM_TYPE = [a.value for a in Alarm] + ["none"]
 
 
 @dataclass
@@ -91,7 +76,7 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=STATUS_TYPE,
-        value_fn=lambda data: data.state.name,
+        value_fn=lambda data: data.state.value,
     ),
     EcoforestSensorEntityDescription(
         key="alarm",
