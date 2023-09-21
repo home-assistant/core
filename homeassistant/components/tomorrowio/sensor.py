@@ -115,6 +115,7 @@ SENSOR_TYPES = (
         name="Feels Like",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="dew_point",
@@ -123,6 +124,7 @@ SENSOR_TYPES = (
         icon="mdi:thermometer-water",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as hPa
     TomorrowioSensorEntityDescription(
@@ -131,6 +133,7 @@ SENSOR_TYPES = (
         name="Pressure (Surface Level)",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
     # https://www.theunitconverter.com/watt-square-meter-to-btu-hour-square-foot-conversion/
@@ -142,6 +145,7 @@ SENSOR_TYPES = (
         unit_metric=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
         device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
@@ -151,6 +155,8 @@ SENSOR_TYPES = (
         icon="mdi:cloud-arrow-down",
         unit_imperial=UnitOfLength.MILES,
         unit_metric=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         imperial_conversion=lambda val: DistanceConverter.convert(
             val,
             UnitOfLength.KILOMETERS,
@@ -165,6 +171,8 @@ SENSOR_TYPES = (
         icon="mdi:cloud-arrow-up",
         unit_imperial=UnitOfLength.MILES,
         unit_metric=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
         imperial_conversion=lambda val: DistanceConverter.convert(
             val,
             UnitOfLength.KILOMETERS,
@@ -186,6 +194,8 @@ SENSOR_TYPES = (
         icon="mdi:weather-windy",
         unit_imperial=UnitOfSpeed.MILES_PER_HOUR,
         unit_metric=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
         imperial_conversion=lambda val: SpeedConverter.convert(
             val, UnitOfSpeed.METERS_PER_SECOND, UnitOfSpeed.MILES_PER_HOUR
         ),
@@ -207,6 +217,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(48),
         device_class=SensorDeviceClass.OZONE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="particulate_matter_2_5_mm",
@@ -214,6 +225,7 @@ SENSOR_TYPES = (
         name="Particulate Matter < 2.5 μm",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="particulate_matter_10_mm",
@@ -221,6 +233,7 @@ SENSOR_TYPES = (
         name="Particulate Matter < 10 μm",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Nitrogen Dioxide is 46.01
@@ -231,6 +244,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(46.01),
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as ppb, convert to ppm
     TomorrowioSensorEntityDescription(
@@ -240,6 +254,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         multiplication_factor=1 / 1000,
         device_class=SensorDeviceClass.CO,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Sulphur Dioxide is 64.07
@@ -250,12 +265,14 @@ SENSOR_TYPES = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         multiplication_factor=convert_ppb_to_ugm3(64.07),
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="us_epa_air_quality_index",
         attribute=TMRW_ATTR_EPA_AQI,
         name="US EPA Air Quality Index",
         device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TomorrowioSensorEntityDescription(
         key="us_epa_primary_pollutant",
