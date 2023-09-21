@@ -81,6 +81,10 @@
         "longitude": {
           "name": "[%key:common::config_flow::data::longitude%]",
           "description": "Longitude of your location."
+        },
+        "elevation": {
+          "name": "[%key:common::config_flow::data::elevation%]",
+          "description": "Elevation of your location."
         }
       }
     },

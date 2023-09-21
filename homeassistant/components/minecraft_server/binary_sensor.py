@@ -1,15 +1,37 @@
 """The Minecraft Server binary sensor platform."""
+from dataclasses import dataclass
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MinecraftServer
-from .const import DOMAIN, ICON_STATUS, KEY_STATUS, NAME_STATUS
+from .const import DOMAIN
+from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
+
+ICON_STATUS = "mdi:lan"
+
+KEY_STATUS = "status"
+
+
+@dataclass
+class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Minecraft Server binary sensor entities."""
+
+
+BINARY_SENSOR_DESCRIPTIONS = [
+    MinecraftServerBinarySensorEntityDescription(
+        key=KEY_STATUS,
+        translation_key=KEY_STATUS,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        icon=ICON_STATUS,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -18,30 +40,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server binary sensor platform."""
-    server = hass.data[DOMAIN][config_entry.unique_id]
-
-    # Create entities list.
-    entities = [MinecraftServerStatusBinarySensor(server)]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Add binary sensor entities.
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            MinecraftServerBinarySensorEntity(coordinator, description)
+            for description in BINARY_SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
-class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntity):
-    """Representation of a Minecraft Server status binary sensor."""
+class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntity):
+    """Representation of a Minecraft Server binary sensor base entity."""
 
-    _attr_translation_key = KEY_STATUS
+    entity_description: MinecraftServerBinarySensorEntityDescription
 
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize status binary sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_STATUS,
-            icon=ICON_STATUS,
-            device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        )
+    def __init__(
+        self,
+        coordinator: MinecraftServerCoordinator,
+        description: MinecraftServerBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize binary sensor base entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
         self._attr_is_on = False
 
-    async def async_update(self) -> None:
-        """Update status."""
-        self._attr_is_on = self._server.online
+    @property
+    def available(self) -> bool:
+        """Return binary sensor availability."""
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return binary sensor state."""
+        return self.coordinator.last_update_success

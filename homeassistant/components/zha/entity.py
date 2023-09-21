@@ -26,14 +26,12 @@ from homeassistant.helpers.typing import EventType
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID,
     DOMAIN,
     SIGNAL_GROUP_ENTITY_REMOVED,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
 )
-from .core.helpers import LogMixin
+from .core.helpers import LogMixin, get_zha_gateway
 
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
@@ -61,7 +59,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
         self._unsubs: list[Callable[[], None]] = []
-        self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
     def unique_id(self) -> str:
@@ -83,13 +80,16 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
+
+        zha_gateway = get_zha_gateway(self.hass)
+
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
+            via_device=(DOMAIN, zha_gateway.coordinator_ieee),
         )
 
     @callback
@@ -142,6 +142,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
+    remove_future: asyncio.Future[Any]
+
     def __init_subclass__(cls, id_suffix: str | None = None, **kwargs: Any) -> None:
         """Initialize subclass.
 
@@ -187,7 +189,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        self.remove_future = asyncio.Future()
+        self.remove_future = self.hass.loop.create_future()
         self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",

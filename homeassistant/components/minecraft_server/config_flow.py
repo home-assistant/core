@@ -1,23 +1,26 @@
 """Config flow for Minecraft Server integration."""
 from contextlib import suppress
-from functools import partial
-import ipaddress
+import logging
 
-import getmac
+from mcstatus import JavaServer
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
-from . import MinecraftServer, helpers
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from . import helpers
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+
+DEFAULT_HOST = "localhost:25565"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
@@ -26,10 +29,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = None
             port = DEFAULT_PORT
+            title = user_input[CONF_HOST]
+
             # Split address at last occurrence of ':'.
             address_left, separator, address_right = user_input[CONF_HOST].rpartition(
                 ":"
             )
+
             # If no separator is found, 'rpartition' returns ('', '', original_string).
             if separator == "":
                 host = address_right
@@ -41,32 +47,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             # Remove '[' and ']' in case of an IPv6 address.
             host = host.strip("[]")
 
-            # Check if 'host' is a valid IP address and if so, get the MAC address.
-            ip_address = None
-            mac_address = None
-            try:
-                ip_address = ipaddress.ip_address(host)
-            except ValueError:
-                # Host is not a valid IP address.
-                # Continue with host and port.
-                pass
-            else:
-                # Host is a valid IP address.
-                if ip_address.version == 4:
-                    # Address type is IPv4.
-                    params = {"ip": host}
-                else:
-                    # Address type is IPv6.
-                    params = {"ip6": host}
-                mac_address = await self.hass.async_add_executor_job(
-                    partial(getmac.get_mac_address, **params)
-                )
-
-            # Validate IP address (MAC address must be available).
-            if ip_address is not None and mac_address is None:
-                errors["base"] = "invalid_ip"
             # Validate port configuration (limit to user and dynamic port range).
-            elif (port < 1024) or (port > 65535):
+            if (port < 1024) or (port > 65535):
                 errors["base"] = "invalid_port"
             # Validate host and port by checking the server connection.
             else:
@@ -76,43 +58,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_PORT: port,
                 }
-                server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
-                await server.async_check_connection()
-                if not server.online:
-                    # Host or port invalid or server not reachable.
-                    errors["base"] = "cannot_connect"
-                else:
-                    # Build unique_id and config entry title.
-                    unique_id = ""
-                    title = f"{host}:{port}"
-                    if ip_address is not None:
-                        # Since IP addresses can change and therefore are not allowed
-                        # in a unique_id, fall back to the MAC address and port (to
-                        # support servers with same MAC address but different ports).
-                        unique_id = f"{mac_address}-{port}"
-                        if ip_address.version == 6:
-                            title = f"[{host}]:{port}"
-                    else:
-                        # Check if 'host' is a valid SRV record.
-                        srv_record = await helpers.async_check_srv_record(
-                            self.hass, host
-                        )
-                        if srv_record is not None:
-                            # Use only SRV host name in unique_id (does not change).
-                            unique_id = f"{host}-srv"
-                            title = host
-                        else:
-                            # Use host name and port in unique_id (to support servers
-                            # with same host name but different ports).
-                            unique_id = f"{host}-{port}"
-
-                    # Abort in case the host was already configured before.
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-
+                if await self._async_is_server_online(host, port):
                     # Configuration data are available and no error was detected,
                     # create configuration entry.
                     return self.async_create_entry(title=title, data=config_data)
+
+                # Host or port invalid or server not reachable.
+                errors["base"] = "cannot_connect"
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
@@ -137,3 +89,30 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _async_is_server_online(self, host: str, port: int) -> bool:
+        """Check server connection using a 'status' request and return result."""
+
+        # Check if host is a SRV record. If so, update server data.
+        if srv_record := await helpers.async_check_srv_record(host):
+            # Use extracted host and port from SRV record.
+            host = srv_record[CONF_HOST]
+            port = srv_record[CONF_PORT]
+
+        # Send a status request to the server.
+        server = JavaServer(host, port)
+        try:
+            await server.async_status()
+            return True
+        except OSError as error:
+            _LOGGER.debug(
+                (
+                    "Error occurred while trying to check the connection to '%s:%s' -"
+                    " OSError: %s"
+                ),
+                host,
+                port,
+                error,
+            )
+
+        return False

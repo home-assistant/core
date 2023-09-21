@@ -52,7 +52,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_icon = "mdi:led-strip-variant"
-    _attr_name = "Master"
+    _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -200,7 +200,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             # WLED uses 100ms per unit, so 10 = 1 second.
             transition = round(kwargs[ATTR_TRANSITION] * 10)
 
-        # If there is no master control, and only 1 segment, handle the
+        # If there is no master control, and only 1 segment, handle the master
         if not self.coordinator.has_master_light:
             await self.coordinator.wled.master(on=False, transition=transition)
             return
