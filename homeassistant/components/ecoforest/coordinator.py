@@ -9,7 +9,6 @@ from pyecoforest.exceptions import EcoforestAuthenticationRequired, EcoforestErr
 from pyecoforest.models.device import Device
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import POLLING_INTERVAL
