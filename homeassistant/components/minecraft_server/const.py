@@ -7,7 +7,3 @@ DOMAIN = "minecraft_server"
 
 KEY_LATENCY = "latency"
 KEY_MOTD = "motd"
-
-MANUFACTURER = "Mojang Studios"
-
-SCAN_INTERVAL = 60
