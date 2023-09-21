@@ -75,7 +75,6 @@ class RensonButton(RensonEntity, ButtonEntity):
         description: ButtonEntityDescription,
         api: RensonVentilation,
         coordinator: RensonCoordinator,
-        action: Callable,
     ) -> None:
         """Initialize class."""
         super().__init__(description.key, api, coordinator)
