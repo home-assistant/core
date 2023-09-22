@@ -809,6 +809,8 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
+/homeassistant/components/motionmount/ @RJPoelstra
+/tests/components/motionmount/ @RJPoelstra
 /homeassistant/components/mqtt/ @emontnemery @jbouwh
 /tests/components/mqtt/ @emontnemery @jbouwh
 /homeassistant/components/msteams/ @peroyvind
