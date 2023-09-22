@@ -329,6 +329,9 @@ class HaScanner(BaseHaScanner):
             self.name,
             SCANNER_WATCHDOG_TIMEOUT,
         )
+        # Immediately mark the scanner as not scanning
+        # since the restart task will have to wait for the lock
+        self.scanning = False
         self.hass.async_create_task(self._async_restart_scanner())
 
     async def _async_restart_scanner(self) -> None:
