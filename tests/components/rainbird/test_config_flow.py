@@ -192,7 +192,7 @@ async def test_duplicate_config_entries(
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    assert result.get("type") == "abort"
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
