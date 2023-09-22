@@ -77,24 +77,20 @@ async def test_devices_with_mocks_timeout(
     hass: HomeAssistant,
     mock_start_timeout: AsyncMock,
     mock_stop: AsyncMock,
-    monkeypatch,
+    mock_on_throws_timeout: AsyncMock,
 ) -> None:
-    """Test getting user input."""
-    with patch(
-        "pyweatherflowudp.client.WeatherFlowListener.on",
-        side_effect=asyncio.TimeoutError,
-    ):
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+    """Test a timeout on discovery."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
 
 
 async def test_devices_with_mocks_cancelled(
     hass: HomeAssistant,
     mock_start_timeout: AsyncMock,
     mock_stop: AsyncMock,
-    monkeypatch,
+    mock_on_throws_cancelled: AsyncMock,
 ) -> None:
     """Test getting user input."""
     with patch(
