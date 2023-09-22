@@ -118,7 +118,7 @@ async def test_turn_on_with_color_rgbw(hass: HomeAssistant) -> None:
     state = hass.states.get(entity.entity_id)
 
     assert state.state == "on"
-    assert client.color == (128, 64, 32)
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": 0}
     assert client.default_mode == "color"
     assert client.mode == "color"
 
@@ -147,7 +147,7 @@ async def test_turn_on_with_color_rgb(hass: HomeAssistant) -> None:
     state = hass.states.get(entity.entity_id)
 
     assert state.state == "on"
-    assert client.color == (128, 64, 32)
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": None}
     assert client.default_mode == "color"
     assert client.mode == "color"
 
@@ -207,7 +207,7 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(hass: HomeAssistant) -
     state = hass.states.get(entity.entity_id)
 
     assert state.state == "on"
-    assert client.color == (0, 128, 64, 32)
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": 0}
     assert client.mode == "movie"
     assert client.default_mode == "movie"
 
@@ -237,7 +237,7 @@ async def test_turn_on_with_color_rgb_and_missing_effect(hass: HomeAssistant) ->
     state = hass.states.get(entity.entity_id)
 
     assert state.state == "on"
-    assert client.color == (128, 64, 32)
+    assert client.color == {"red": 128, "green": 64, "blue": 32, "white": None}
     assert client.mode == "movie"
     assert client.default_mode == "movie"
 

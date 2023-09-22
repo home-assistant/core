@@ -21,7 +21,7 @@ class ClientMock:
         self.is_offline = False
         self.state = True
         self.brightness = {"mode": "enabled", "value": 10}
-        self.color = None
+        self.color = {"white": 255, "red": 255, "green": 255, "blue": 255}
         self.movies = [{"id": 1, "name": "Rainbow"}, {"id": 2, "name": "Flare"}]
         self.current_movie = {}
         self.default_mode = "movie"
@@ -83,12 +83,26 @@ class ClientMock:
 
     async def set_static_colour(self, colour) -> None:
         """Set static color."""
-        self.color = colour
+        self.color = {
+            "red": colour.red,
+            "green": colour.green,
+            "blue": colour.blue,
+            "white": colour.white,
+        }
         self.default_mode = "color"
 
+    async def get_current_colour(self) -> dict:
+        """Get static color."""
+        return self.color
+
     async def set_cycle_colours(self, colour) -> None:
-        """Set static color."""
-        self.color = colour
+        """Set color cycle."""
+        self.color = {
+            "red": colour.red,
+            "green": colour.green,
+            "blue": colour.blue,
+            "white": colour.white,
+        }
         self.default_mode = "movie"
 
     async def interview(self) -> None:
