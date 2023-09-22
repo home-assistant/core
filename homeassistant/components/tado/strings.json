@@ -55,10 +55,10 @@
     },
     "sensor": {
       "air_comfort_humidity": {
-        "name": "Air Comfort Humidity"
+        "name": "Air comfort humidity"
       },
       "air_comfort_temperature": {
-        "name": "Air Comfort Temperature"
+        "name": "Air comfort temperature"
       },
       "freshness": {
         "name": "Freshness"
