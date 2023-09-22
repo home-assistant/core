@@ -238,6 +238,8 @@ class MqttCover(MqttEntity, CoverEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _attributes_extra_blocked: frozenset[str] = MQTT_COVER_ATTRIBUTES_BLOCKED
+    _optimistic: bool
+    _tilt_optimistic: bool
 
     def __init__(
         self,
@@ -248,9 +250,6 @@ class MqttCover(MqttEntity, CoverEntity):
     ) -> None:
         """Initialize the cover."""
         self._attr_is_closed = None
-        self._optimistic: bool | None = None
-        self._tilt_optimistic: bool | None = None
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -284,21 +283,17 @@ class MqttCover(MqttEntity, CoverEntity):
             and config.get(CONF_TILT_STATUS_TOPIC) is None
         )
 
-        if config[CONF_OPTIMISTIC] or (
+        self._optimistic = config[CONF_OPTIMISTIC] or (
             (no_position or optimistic_position)
             and (no_state or optimistic_state)
             and (no_tilt or optimistic_tilt)
-        ):
-            # Force into optimistic mode.
-            self._optimistic = True
-        self._attr_assumed_state = bool(self._optimistic)
+        )
+        self._attr_assumed_state = self._optimistic
 
-        if (
+        self._tilt_optimistic = (
             config[CONF_TILT_STATE_OPTIMISTIC]
             or config.get(CONF_TILT_STATUS_TOPIC) is None
-        ):
-            # Force into optimistic tilt mode.
-            self._tilt_optimistic = True
+        )
 
         template_config_attributes = {
             "position_open": self._config[CONF_POSITION_OPEN],
