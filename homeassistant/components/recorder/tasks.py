@@ -480,19 +480,3 @@ class RefreshEventTypesTask(RecorderTask):
             instance.event_type_manager.get_many(
                 self.event_types, session, from_recorder=True
             )
-
-
-@dataclass(slots=True)
-class ClearLatestShortTermStatisticsIDsTask(RecorderTask):
-    """An object to insert into the recorder queue to clear latest_statistics_short_term_ids.
-
-    Clear the latest_statistics_short_term_ids that tracks what the newest id
-    is for each metadata_id.
-
-    This does NOT delete the actual statistics data.
-    """
-
-    def run(self, instance: Recorder) -> None:
-        """Clear latest short term statistics ids."""
-        with session_scope(session=instance.get_session()) as session:
-            statistics.clear_latest_short_term_statistics_ids(session)

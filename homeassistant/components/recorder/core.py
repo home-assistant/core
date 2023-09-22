@@ -95,7 +95,6 @@ from .tasks import (
     AdjustLRUSizeTask,
     AdjustStatisticsTask,
     ChangeStatisticsUnitTask,
-    ClearLatestShortTermStatisticsIDsTask,
     ClearStatisticsTask,
     CommitTask,
     CompileMissingStatisticsTask,
@@ -839,21 +838,6 @@ class Recorder(threading.Thread):
                     ):
                         self.queue_task(EventIdMigrationTask())
                         self.use_legacy_events_index = True
-
-            # Clear the latest_statistics_short_term_ids table that tracks
-            # what the newest id is for each metadata_id. This is to ensure
-            # that if the user upgrades to 2023.10.x, than downgrades to an
-            # old version, than upgrades again, the latest short term statistics
-            # table will be recreated and not have stale data in it. It will
-            # make the first 5-minute statistics run a little slower after startup
-            # since the table will have to be rebuilt, but it will ensure the
-            # data is correct.
-            #
-            # Remove this after 2024.1.0 is released as there is little
-            # chance of someone downgrading to a version before 2023.10.x
-            # after that.
-            #
-            self.queue_task(ClearLatestShortTermStatisticsIDsTask())
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
