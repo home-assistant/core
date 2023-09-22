@@ -305,14 +305,8 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
                 tado_sensor_data = tado_weather_data
             elif self.entity_description.data_category == SENSOR_DATA_CATEGORY_GEOFENCE:
                 tado_sensor_data = tado_geofence_data
-            elif (
-                self.entity_description.data_category == SENSOR_DATA_CATEGORY_AIRCOMFORT
-            ):
+            else:  # SENSOR_DATA_CATEGORY_AIRCOMFORT
                 tado_sensor_data = tado_aircomfort_data
-            else:
-                _LOGGER.error(
-                    "Unknown data category: %s", self.entity_description.data_category
-                )
         self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
