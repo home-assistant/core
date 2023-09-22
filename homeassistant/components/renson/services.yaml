@@ -31,7 +31,7 @@ set_breeze:
     breeze_level:
       required: false
       advanced: false
-      default: "Level3"
+      default: "level3"
       selector:
         select:
           translation_key: "fan_setting"
