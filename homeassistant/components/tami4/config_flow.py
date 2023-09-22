@@ -35,15 +35,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the otp request step."""
         errors = {}
         if user_input is not None:
-            self.phone = user_input[CONF_PHONE]
-
-            self.phone = self.phone.replace(" ", "")
-            self.phone = self.phone.replace("+9720", "+972")
-            self.phone = re.sub("^0", "+972", self.phone)
-            self.phone = re.sub("^972", "+972", self.phone)
+            phone = user_input[CONF_PHONE].strip()
 
             try:
-                if not re.match(r"^\+972\d{8,9}$", self.phone):
+                if m:= re.match("^(\+?972)?0?(?P<number>\d{8,9})$", phone):
+                    self.phone = f"+972{m.group('number')}"
+                else:
                     raise InvalidPhoneNumber
                 await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.request_otp, self.phone
