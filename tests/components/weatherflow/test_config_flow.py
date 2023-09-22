@@ -81,7 +81,7 @@ async def test_devices_with_mocks_timeout(
 ) -> None:
     """Test getting user input."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
+        "pyweatherflowudp.client.WeatherFlowListener.on",
         side_effect=asyncio.TimeoutError,
     ):
         await hass.config_entries.flow.async_init(
@@ -98,7 +98,7 @@ async def test_devices_with_mocks_cancelled(
 ) -> None:
     """Test getting user input."""
     with patch(
-        "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
+        "pyweatherflowudp.client.WeatherFlowListener.on",
         side_effect=asyncio.exceptions.CancelledError,
     ):
         await hass.config_entries.flow.async_init(

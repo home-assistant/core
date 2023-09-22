@@ -115,14 +115,13 @@ def mock_start() -> Generator[AsyncMock, None, None]:
 
     async def device_discovery_task(self):
         await asyncio.gather(
-            await asyncio.sleep(2), self.emit(EVENT_DEVICE_DISCOVERED, "HB-00000001")
+            await asyncio.sleep(0.1), self.emit(EVENT_DEVICE_DISCOVERED, "HB-00000001")
         )
 
     async def mock_start_listening(self):
         """Mock listening function."""
         self._devices["HB-00000001"] = device
         self._udp_task = asyncio.create_task(device_discovery_task(self))
-        self._udp_task.add_done_callback(lambda _: print("Done Callback"))  # noqa: T201
 
     with patch(
         "pyweatherflowudp.client.WeatherFlowListener.start_listening",
@@ -137,7 +136,7 @@ def mock_start_timeout() -> Generator[AsyncMock, None, None]:
     """Return fixture for starting upd."""
 
     async def device_discovery_task(self):
-        await asyncio.sleep(2)
+        await asyncio.sleep(0.1)
 
     async def mock_start_listening(self):
         """Mock listening function."""
