@@ -1921,7 +1921,7 @@ def get_latest_short_term_statistics(
                 latest_id
                 for metadata_id in missing_metadata_ids
                 if (
-                    latest_id := cache_latest_short_term_statistic_for_metadata_id(
+                    latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
                         run_cache, session, metadata_id
                     )
                 )
@@ -2309,7 +2309,9 @@ def _import_statistics_with_session(
     # latest_statistics_short_term_ids table that tracks what the newest id is
     # for the metadata_id.
     run_cache = get_short_term_statistics_run_cache(instance.hass)
-    cache_latest_short_term_statistic_for_metadata_id(run_cache, session, metadata_id)
+    cache_latest_short_term_statistic_id_for_metadata_id(
+        run_cache, session, metadata_id
+    )
 
     return True
 
@@ -2322,12 +2324,14 @@ def get_short_term_statistics_run_cache(
     return ShortTermStatisticsRunCache()
 
 
-def cache_latest_short_term_statistic_for_metadata_id(
+def cache_latest_short_term_statistic_id_for_metadata_id(
     run_cache: ShortTermStatisticsRunCache, session: Session, metadata_id: int
 ) -> int | None:
     """Cache the latest short term statistic for a given metadata_id.
 
-    Return the id of the latest short term statistic for the metadata_id.
+    Returns the id of the latest short term statistic for the metadata_id
+    that was added to the cache, or None if no latest short term statistic
+    was found for the metadata_id.
     """
     if latest := cast(
         Sequence[Row],
