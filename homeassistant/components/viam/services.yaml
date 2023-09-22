@@ -1,0 +1,34 @@
+capture_data:
+  fields:
+    values:
+      required: true
+      selector:
+        object:
+    component_name:
+      required: true
+      selector:
+        text:
+    component_type:
+      required: false
+      selector:
+        text:
+capture_image:
+  fields:
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
+    file_name:
+      required: false
+      selector:
+        text:
+    component_name:
+      required: false
+      selector:
+        text:
