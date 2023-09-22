@@ -2334,7 +2334,20 @@ def get_statistics_run_cache(hass: HomeAssistant) -> StatisticsRunCache:
 def _find_latest_short_term_statistic_stmt(
     metadata_id: int,
 ) -> StatementLambdaElement:
-    """Find the latest short term statistics for a list of metadata_ids."""
+    """Find the latest short term statistics for a given metadata_id."""
+    #
+    # This code only looks up one row, and should not be refactored to
+    # lookup multiple the latest for multiple metadata_ids using func.max
+    # or similar, as that will cause the query to be significantly slower
+    # for DBMs such as PostgreSQL that will have to do a full scan
+    #
+    # For PostgreSQL a combined query plan looks like:
+    # (actual time=2.218..893.909 rows=170531 loops=1)
+    #
+    # For PostgreSQL a separate query plan looks like:
+    # (actual time=0.301..0.301 rows=1 loops=1)
+    #
+    #
     return lambda_stmt(
         lambda: select(
             StatisticsShortTerm.id,
