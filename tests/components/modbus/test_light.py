@@ -260,7 +260,10 @@ async def test_restore_state_light(
     ],
 )
 async def test_light_service_turn(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
 

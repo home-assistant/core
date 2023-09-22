@@ -12,8 +12,8 @@ from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTempe
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FliprEntity
 from .const import DOMAIN
+from .entity import FliprEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
