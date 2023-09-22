@@ -1,19 +1,17 @@
 """The Minecraft Server integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from mcstatus.server import JavaServer
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from . import helpers
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -36,12 +34,11 @@ class MinecraftServerData:
 class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
     """Minecraft Server data update coordinator."""
 
-    _srv_record_checked = False
-
-    def __init__(
-        self, hass: HomeAssistant, unique_id: str, config_data: Mapping[str, Any]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator instance."""
+        config_data = config_entry.data
+        self.unique_id = config_entry.entry_id
+
         super().__init__(
             hass=hass,
             name=config_data[CONF_NAME],
@@ -49,34 +46,20 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        # Server data
-        self.unique_id = unique_id
-        self._host = config_data[CONF_HOST]
-        self._port = config_data[CONF_PORT]
-
-        # 3rd party library instance
-        self._server = JavaServer(self._host, self._port)
+        try:
+            self._server = JavaServer.lookup(config_data[CONF_ADDRESS])
+        except ValueError as error:
+            raise HomeAssistantError(
+                f"Address in configuration entry cannot be parsed (error: {error}), please remove this device and add it again"
+            ) from error
 
     async def _async_update_data(self) -> MinecraftServerData:
         """Get server data from 3rd party library and update properties."""
-
-        # Check once if host is a valid Minecraft SRV record.
-        if not self._srv_record_checked:
-            self._srv_record_checked = True
-            if srv_record := await helpers.async_check_srv_record(self._host):
-                # Overwrite host, port and 3rd party library instance
-                # with data extracted out of the SRV record.
-                self._host = srv_record[CONF_HOST]
-                self._port = srv_record[CONF_PORT]
-                self._server = JavaServer(self._host, self._port)
-
-        # Send status request to the server.
         try:
             status_response = await self._server.async_status()
         except OSError as error:
             raise UpdateFailed(error) from error
 
-        # Got answer to request, update properties.
         players_list = []
         if players := status_response.players.sample:
             for player in players:
