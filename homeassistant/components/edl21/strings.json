@@ -26,6 +26,9 @@
       "firmware_version_number": {
         "name": "Firmware version number"
       },
+      "positive_active_instantaneous_power": {
+        "name": "Positive active instantaneous power"
+      },
       "positive_active_energy_total": {
         "name": "Positive active energy total"
       },

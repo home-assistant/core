@@ -101,9 +101,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         category="Category 1",
         location="Location 1",
         attribution="Attribution 1",
-        publication_date=datetime.datetime(
-            2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-        ),
+        publication_date=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
         council_area="Council Area 1",
         status="Status 1",
         entry_type="Type 1",
@@ -148,7 +146,7 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_LOCATION: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_FIRE: True,
                 ATTR_COUNCIL_AREA: "Council Area 1",

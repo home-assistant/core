@@ -170,6 +170,8 @@ async def async_setup_entry(
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a EZVIZ security camera."""
 
+    _attr_name = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -192,7 +194,6 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_arguments
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
-        self._attr_name = self.data["name"]
         if camera_password:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
@@ -263,6 +264,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_ptz(self, direction: str, speed: int) -> None:
         """Perform a PTZ action on the camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_ptz",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_ptz",
+        )
+
         try:
             self.coordinator.ezviz_client.ptz_control(
                 str(direction).upper(), self._serial, "START", speed
@@ -276,6 +288,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_sound_alarm",
+            breaks_in_ha_version="2024.3.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_sound_alarm",
+        )
+
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
         except HTTPError as err:

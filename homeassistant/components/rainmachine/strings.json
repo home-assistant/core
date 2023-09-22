@@ -91,11 +91,6 @@
       "hot_days_extra_watering": {
         "name": "Extra water on hot days"
       }
-    },
-    "update": {
-      "firmware": {
-        "name": "Firmware"
-      }
     }
   },
   "services": {

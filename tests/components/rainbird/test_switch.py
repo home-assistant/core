@@ -1,11 +1,13 @@
 """Tests for rainbird sensor platform."""
 
+from http import HTTPStatus
 
 import pytest
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import (
     ACK_ECHO,
@@ -19,6 +21,7 @@ from .conftest import (
     ZONE_OFF_RESPONSE,
     ComponentSetup,
     mock_response,
+    mock_response_error,
 )
 
 from tests.components.switch import common as switch_common
@@ -240,3 +243,36 @@ async def test_yaml_imported_config(
     assert hass.states.get("switch.back_yard")
     assert not hass.states.get("switch.rain_bird_sprinkler_2")
     assert hass.states.get("switch.rain_bird_sprinkler_3")
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_msg"),
+    [
+        (HTTPStatus.SERVICE_UNAVAILABLE, "Rain Bird device is busy"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "Rain Bird device failure"),
+    ],
+)
+async def test_switch_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    responses: list[AiohttpClientMockResponse],
+    status: HTTPStatus,
+    expected_msg: str,
+) -> None:
+    """Test an error talking to the device."""
+
+    assert await setup_integration()
+
+    aioclient_mock.mock_calls.clear()
+    responses.append(mock_response_error(status=status))
+
+    with pytest.raises(HomeAssistantError, match=expected_msg):
+        await switch_common.async_turn_on(hass, "switch.rain_bird_sprinkler_3")
+        await hass.async_block_till_done()
+
+    responses.append(mock_response_error(status=status))
+
+    with pytest.raises(HomeAssistantError, match=expected_msg):
+        await switch_common.async_turn_off(hass, "switch.rain_bird_sprinkler_3")
+        await hass.async_block_till_done()

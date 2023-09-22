@@ -44,7 +44,7 @@
         "name": "Duplex unit page counter"
       },
       "drum_remaining_life": {
-        "name": "Drum remaining life"
+        "name": "Drum remaining lifetime"
       },
       "drum_remaining_pages": {
         "name": "Drum remaining pages"
@@ -53,7 +53,7 @@
         "name": "Drum page counter"
       },
       "black_drum_remaining_life": {
-        "name": "Black drum remaining life"
+        "name": "Black drum remaining lifetime"
       },
       "black_drum_remaining_pages": {
         "name": "Black drum remaining pages"
@@ -62,7 +62,7 @@
         "name": "Black drum page counter"
       },
       "cyan_drum_remaining_life": {
-        "name": "Cyan drum remaining life"
+        "name": "Cyan drum remaining lifetime"
       },
       "cyan_drum_remaining_pages": {
         "name": "Cyan drum remaining pages"
@@ -71,7 +71,7 @@
         "name": "Cyan drum page counter"
       },
       "magenta_drum_remaining_life": {
-        "name": "Magenta drum remaining life"
+        "name": "Magenta drum remaining lifetime"
       },
       "magenta_drum_remaining_pages": {
         "name": "Magenta drum remaining pages"
@@ -80,7 +80,7 @@
         "name": "Magenta drum page counter"
       },
       "yellow_drum_remaining_life": {
-        "name": "Yellow drum remaining life"
+        "name": "Yellow drum remaining lifetime"
       },
       "yellow_drum_remaining_pages": {
         "name": "Yellow drum remaining pages"
@@ -89,19 +89,19 @@
         "name": "Yellow drum page counter"
       },
       "belt_unit_remaining_life": {
-        "name": "Belt unit remaining life"
+        "name": "Belt unit remaining lifetime"
       },
       "fuser_remaining_life": {
-        "name": "Fuser remaining life"
+        "name": "Fuser remaining lifetime"
       },
       "laser_remaining_life": {
-        "name": "Laser remaining life"
+        "name": "Laser remaining lifetime"
       },
       "pf_kit_1_remaining_life": {
-        "name": "PF Kit 1 remaining life"
+        "name": "PF Kit 1 remaining lifetime"
       },
       "pf_kit_mp_remaining_life": {
-        "name": "PF Kit MP remaining life"
+        "name": "PF Kit MP remaining lifetime"
       },
       "black_toner_remaining": {
         "name": "Black toner remaining"

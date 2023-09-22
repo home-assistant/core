@@ -1,0 +1,10 @@
+{
+  "domain": "switchbot_cloud",
+  "name": "SwitchBot Cloud",
+  "codeowners": ["@SeraphicRav"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["switchbot-api"],
+  "requirements": ["switchbot-api==1.1.0"]
+}

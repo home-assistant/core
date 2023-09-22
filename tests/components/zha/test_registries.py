@@ -18,7 +18,8 @@ if typing.TYPE_CHECKING:
 
 MANUFACTURER = "mock manufacturer"
 MODEL = "mock model"
-QUIRK_CLASS = "mock.class"
+QUIRK_CLASS = "mock.test.quirk.class"
+QUIRK_CLASS_SHORT = "quirk.class"
 
 
 @pytest.fixture
@@ -208,6 +209,12 @@ def cluster_handlers(cluster_handler):
                 cluster_handler_names="on_off", quirk_classes=lambda x: x != QUIRK_CLASS
             ),
             False,
+        ),
+        (
+            registries.MatchRule(
+                cluster_handler_names="on_off", quirk_classes=QUIRK_CLASS_SHORT
+            ),
+            True,
         ),
     ],
 )

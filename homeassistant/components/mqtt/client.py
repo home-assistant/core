@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any
 import uuid
 
-import async_timeout
 import attr
 import certifi
 
@@ -36,6 +35,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -64,6 +64,7 @@ from .const import (
     DEFAULT_WILL,
     DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
+    DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     PROTOCOL_5,
@@ -93,6 +94,10 @@ SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 
+MQTT_ENTRIES_NAMING_BLOG_URL = (
+    "https://developers.home-assistant.io/blog/2023-057-21-change-naming-mqtt-entities/"
+)
+
 SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
@@ -105,7 +110,7 @@ def publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    hass.add_job(async_publish, hass, topic, payload, qos, retain, encoding)
+    hass.create_task(async_publish(hass, topic, payload, qos, retain, encoding))
 
 
 async def async_publish(
@@ -356,7 +361,7 @@ class EnsureJobAfterCooldown:
         except asyncio.CancelledError:
             pass
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error cleaning up task", exc_info=True)
+            _LOGGER.exception("Error cleaning up task")
 
 
 class MQTT:
@@ -371,6 +376,7 @@ class MQTT:
     ) -> None:
         """Initialize Home Assistant MQTT client."""
         self.hass = hass
+        self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
 
@@ -404,6 +410,7 @@ class MQTT:
 
             @callback
             def ha_started(_: Event) -> None:
+                self.register_naming_issues()
                 self._ha_started.set()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
@@ -415,6 +422,25 @@ class MQTT:
         self._cleanup_on_unload.append(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
+
+    def register_naming_issues(self) -> None:
+        """Register issues with MQTT entity naming."""
+        mqtt_data = get_mqtt_data(self.hass)
+        for issue_key, items in mqtt_data.issues.items():
+            config_list = "\n".join([f"- {item}" for item in items])
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_key,
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                translation_key=issue_key,
+                translation_placeholders={
+                    "config": config_list,
+                },
+                learn_more_url=MQTT_ENTRIES_NAMING_BLOG_URL,
+                severity=IssueSeverity.WARNING,
+            )
 
     def start(
         self,
@@ -781,7 +807,7 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
-        self.hass.add_job(self._mqtt_handle_message, msg)
+        self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(self, topic: str) -> list[Subscription]:
@@ -892,7 +918,7 @@ class MQTT:
         # may be executed first.
         await self._register_mid(mid)
         try:
-            async with async_timeout.timeout(TIMEOUT_ACK):
+            async with asyncio.timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
         except asyncio.TimeoutError:
             _LOGGER.warning(

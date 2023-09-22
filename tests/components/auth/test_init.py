@@ -1,6 +1,7 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -517,6 +518,106 @@ async def test_ws_delete_refresh_token(
     assert result["success"], result
     refresh_token = await hass.auth.async_get_refresh_token(refresh_token.id)
     assert refresh_token is None
+
+
+async def test_ws_delete_all_refresh_tokens_error(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deleting all refresh tokens, where a revoke callback raises an error."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    # one token already exists
+    await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
+    )
+
+    def cb():
+        raise RuntimeError("I'm bad")
+
+    hass.auth.async_register_revoke_token_callback(token.id, cb)
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    # get all tokens
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
+    result = await ws_client.receive_json()
+    assert result["success"], result
+
+    tokens = result["result"]
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "auth/delete_all_refresh_tokens",
+        }
+    )
+
+    caplog.clear()
+    result = await ws_client.receive_json()
+    assert result, result["success"] is False
+    assert result["error"] == {
+        "code": "token_removing_error",
+        "message": "During removal, an error was raised.",
+    }
+
+    assert (
+        "homeassistant.components.auth",
+        logging.ERROR,
+        "During refresh token removal, the following error occurred: I'm bad",
+    ) in caplog.record_tuples
+
+    for token in tokens:
+        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
+        assert refresh_token is None
+
+
+async def test_ws_delete_all_refresh_tokens(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+) -> None:
+    """Test deleting all refresh tokens."""
+    assert await async_setup_component(hass, "auth", {"http": {}})
+
+    # one token already exists
+    await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
+    )
+    await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
+    )
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    # get all tokens
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
+    result = await ws_client.receive_json()
+    assert result["success"], result
+
+    tokens = result["result"]
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "auth/delete_all_refresh_tokens",
+        }
+    )
+
+    result = await ws_client.receive_json()
+    assert result, result["success"]
+    for token in tokens:
+        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
+        assert refresh_token is None
 
 
 async def test_ws_sign_path(

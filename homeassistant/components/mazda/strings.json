@@ -21,6 +21,97 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "driver_door": {
+        "name": "Driver door"
+      },
+      "passenger_door": {
+        "name": "Passenger door"
+      },
+      "rear_left_door": {
+        "name": "Rear left door"
+      },
+      "rear_right_door": {
+        "name": "Rear right door"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "hood": {
+        "name": "Hood"
+      },
+      "ev_plugged_in": {
+        "name": "Plugged in"
+      }
+    },
+    "button": {
+      "start_engine": {
+        "name": "Start engine"
+      },
+      "stop_engine": {
+        "name": "Stop engine"
+      },
+      "turn_on_hazard_lights": {
+        "name": "Turn on hazard lights"
+      },
+      "turn_off_hazard_lights": {
+        "name": "Turn off hazard lights"
+      },
+      "refresh_vehicle_status": {
+        "name": "Refresh status"
+      }
+    },
+    "climate": {
+      "climate": {
+        "name": "[%key:component::climate::title%]"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "name": "[%key:component::device_tracker::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "sensor": {
+      "fuel_remaining_percentage": {
+        "name": "Fuel remaining percentage"
+      },
+      "fuel_distance_remaining": {
+        "name": "Fuel distance remaining"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "front_left_tire_pressure": {
+        "name": "Front left tire pressure"
+      },
+      "front_right_tire_pressure": {
+        "name": "Front right tire pressure"
+      },
+      "rear_left_tire_pressure": {
+        "name": "Rear left tire pressure"
+      },
+      "rear_right_tire_pressure": {
+        "name": "Rear right tire pressure"
+      },
+      "ev_charge_level": {
+        "name": "Charge level"
+      },
+      "ev_remaining_range": {
+        "name": "Remaining range"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
   "services": {
     "send_poi": {
       "name": "Send POI",

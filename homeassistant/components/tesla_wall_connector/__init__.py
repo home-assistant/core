@@ -19,7 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -122,11 +122,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def prefix_entity_name(name: str) -> str:
-    """Prefixes entity name."""
-    return f"{WALLCONNECTOR_DEVICE_NAME} {name}"
-
-
 def get_unique_id(serial_number: str, key: str) -> str:
     """Get a unique entity name."""
     return f"{serial_number}-{key}"
@@ -134,6 +129,8 @@ def get_unique_id(serial_number: str, key: str) -> str:
 
 class WallConnectorEntity(CoordinatorEntity):
     """Base class for Wall Connector entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, wall_connector_data: WallConnectorData) -> None:
         """Initialize WallConnector Entity."""

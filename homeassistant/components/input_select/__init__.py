@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
 
-from typing_extensions import Self
 import voluptuous as vol
 
 from homeassistant.components.select import (
@@ -30,9 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -138,10 +134,6 @@ class InputSelectStore(Store):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
-
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     id_manager = collection.IDManager()
 
@@ -255,6 +247,11 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
 
 class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
+
+    _entity_component_unrecorded_attributes = (
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}
+    )
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool

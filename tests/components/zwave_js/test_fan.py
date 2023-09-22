@@ -231,6 +231,7 @@ async def test_configurable_speeds_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -356,6 +357,7 @@ async def test_ge_12730_fan(hass: HomeAssistant, client, ge_12730, integration) 
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -448,6 +450,7 @@ async def test_inovelli_lzw36(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -518,6 +521,7 @@ async def test_inovelli_lzw36(
     assert state.attributes[ATTR_PERCENTAGE] is None
 
     client.async_send_command.reset_mock()
+
     await hass.services.async_call(
         "fan",
         "turn_on",
@@ -553,6 +557,7 @@ async def test_leviton_zw4sf_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",
@@ -951,6 +956,7 @@ async def test_honeywell_39358_fan(
     async def get_zwave_speed_from_percentage(percentage):
         """Set the fan to a particular percentage and get the resulting Zwave speed."""
         client.async_send_command.reset_mock()
+
         await hass.services.async_call(
             "fan",
             "turn_on",

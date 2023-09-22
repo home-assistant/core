@@ -102,7 +102,6 @@ async def test_states_non_default_timezone(hass: HomeAssistant) -> None:
     assert device.state == "2017-05-17T20:54:00"
 
 
-# pylint: disable=no-member
 async def test_timezone_intervals(hass: HomeAssistant) -> None:
     """Test date sensor behavior in a timezone besides UTC."""
     hass.config.set_time_zone("America/New_York")

@@ -32,7 +32,7 @@
   },
   "services": {
     "start": {
-      "name": "[%key:common::action::stop%]",
+      "name": "[%key:common::action::start%]",
       "description": "Starts a timer.",
       "fields": {
         "duration": {
@@ -62,6 +62,10 @@
           "description": "Duration to add or subtract to the running timer."
         }
       }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads timers from the YAML-configuration."
     }
   }
 }

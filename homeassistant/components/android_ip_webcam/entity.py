@@ -1,7 +1,7 @@
 """Base class for Android IP Webcam entities."""
 
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN

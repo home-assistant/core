@@ -220,7 +220,7 @@ def patch_bond_action_returns_clientresponseerror():
     return patch(
         "homeassistant.components.bond.Bond.action",
         side_effect=ClientResponseError(
-            request_info=None, history=None, code=405, message="Method Not Allowed"
+            request_info=None, history=None, status=405, message="Method Not Allowed"
         ),
     )
 

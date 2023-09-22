@@ -209,6 +209,20 @@ class ClimateEntityDescription(EntityDescription):
 class ClimateEntity(Entity):
     """Base class for climate entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_HVAC_MODES,
+            ATTR_FAN_MODES,
+            ATTR_SWING_MODES,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_MIN_HUMIDITY,
+            ATTR_MAX_HUMIDITY,
+            ATTR_TARGET_TEMP_STEP,
+            ATTR_PRESET_MODES,
+        }
+    )
+
     entity_description: ClimateEntityDescription
     _attr_current_humidity: int | None = None
     _attr_current_temperature: float | None = None
@@ -239,11 +253,13 @@ class ClimateEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if self.hvac_mode is None:
+        hvac_mode = self.hvac_mode
+        if hvac_mode is None:
             return None
-        if not isinstance(self.hvac_mode, HVACMode):
-            return HVACMode(self.hvac_mode).value
-        return self.hvac_mode.value
+        # Support hvac_mode as string for custom integration backwards compatibility
+        if not isinstance(hvac_mode, HVACMode):
+            return HVACMode(hvac_mode).value  # type: ignore[unreachable]
+        return hvac_mode.value
 
     @property
     def precision(self) -> float:
@@ -258,18 +274,18 @@ class ClimateEntity(Entity):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+        hass = self.hass
+
         data: dict[str, Any] = {
             ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
-            ),
+            ATTR_MIN_TEMP: show_temp(hass, self.min_temp, temperature_unit, precision),
+            ATTR_MAX_TEMP: show_temp(hass, self.max_temp, temperature_unit, precision),
         }
 
-        if self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+        if target_temperature_step := self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
         if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
@@ -291,39 +307,34 @@ class ClimateEntity(Entity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+        hass = self.hass
+
         data: dict[str, str | float | None] = {
             ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
+                hass, self.current_temperature, temperature_unit, precision
             ),
         }
 
         if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
-                self.hass,
+                hass,
                 self.target_temperature,
-                self.temperature_unit,
-                self.precision,
+                temperature_unit,
+                precision,
             )
 
         if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
-                self.hass,
-                self.target_temperature_high,
-                self.temperature_unit,
-                self.precision,
+                hass, self.target_temperature_high, temperature_unit, precision
             )
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
-                self.hass,
-                self.target_temperature_low,
-                self.temperature_unit,
-                self.precision,
+                hass, self.target_temperature_low, temperature_unit, precision
             )
 
-        if self.current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+        if (current_humidity := self.current_humidity) is not None:
+            data[ATTR_CURRENT_HUMIDITY] = current_humidity
 
         if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
@@ -331,8 +342,8 @@ class ClimateEntity(Entity):
         if supported_features & ClimateEntityFeature.FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
 
-        if self.hvac_action:
-            data[ATTR_HVAC_ACTION] = self.hvac_action
+        if hvac_action := self.hvac_action:
+            data[ATTR_HVAC_ACTION] = hvac_action
 
         if supported_features & ClimateEntityFeature.PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
@@ -462,11 +473,11 @@ class ClimateEntity(Entity):
         """
         return self._attr_swing_modes
 
-    def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
