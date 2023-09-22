@@ -125,7 +125,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         options: dict[str, Any],
     ) -> FlowResult:
         """Create the config entry."""
-        # Prevent devices with the same serial number. If the device does not have the same serial
+        # Prevent devices with the same serial number. If the device does not have a serial number
         # then we can at least prevent configuring the same host twice.
         if serial_number:
             await self.async_set_unique_id(serial_number)
