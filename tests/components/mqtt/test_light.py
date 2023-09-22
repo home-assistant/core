@@ -3487,6 +3487,9 @@ async def test_unload_entry(
                     "effect_list": ["effect1", "effect2"],
                     "hs_state_topic": "hs-state-topic",
                     "xy_state_topic": "xy-state-topic",
+                    "rgb_state_topic": "rgb-state-topic",
+                    "rgbw_state_topic": "rgbw-state-topic",
+                    "rgbww_state_topic": "rgbww-state-topic",
                 },
             ),
         )
@@ -3504,6 +3507,9 @@ async def test_unload_entry(
         ("effect-state-topic", "effect1", "effect2"),
         ("hs-state-topic", "210,50", "200,50"),
         ("xy-state-topic", "128,128", "96,96"),
+        ("rgb-state-topic", "128,128,128", "128,128,64"),
+        ("rgbw-state-topic", "128,128,128,255", "128,128,128,128"),
+        ("rgbww-state-topic", "128,128,128,32,255", "128,128,128,64,255"),
     ],
 )
 async def test_skipped_async_ha_write_state(

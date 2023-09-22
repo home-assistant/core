@@ -217,12 +217,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         @write_state_on_attr_change(
             self,
             {
-                "_attr_is_on",
                 "_attr_brightness",
-                "_attr_hs_color",
+                "_attr_color_mode",
                 "_attr_color_temp",
                 "_attr_effect",
-                "_attr_color_mode",
+                "_attr_hs_color",
+                "_attr_is_on",
             },
         )
         def state_received(msg: ReceiveMessage) -> None:

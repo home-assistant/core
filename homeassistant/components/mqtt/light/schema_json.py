@@ -350,15 +350,15 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @write_state_on_attr_change(
             self,
             {
-                "_attr_is_on",
                 "_attr_brightness",
+                "_attr_color_temp",
+                "_attr_effect",
                 "_attr_hs_color",
-                "_attr_xy_color",
+                "_attr_is_on",
                 "_attr_rgb_color",
                 "_attr_rgbw_color",
                 "_attr_rgbww_color",
-                "_attr_color_temp",
-                "_attr_effect",
+                "_attr_xy_color",
                 "color_mode",
             },
         )

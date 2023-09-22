@@ -499,7 +499,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_rgb_color"})
+        @write_state_on_attr_change(
+            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgb_color"}
+        )
         def rgb_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGB."""
             rgb = _rgbx_received(
@@ -513,7 +515,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_rgbw_color"})
+        @write_state_on_attr_change(
+            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgbw_color"}
+        )
         def rgbw_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBW."""
             rgbw = _rgbx_received(
@@ -530,7 +534,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_rgbww_color"})
+        @write_state_on_attr_change(
+            self, {"_attr_brightness", "_attr_color_mode", "_attr_rgbww_color"}
+        )
         def rgbww_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages for RGBWW."""
             rgbww = _rgbx_received(
