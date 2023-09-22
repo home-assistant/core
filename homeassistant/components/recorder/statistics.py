@@ -1914,16 +1914,16 @@ def get_latest_short_term_statistics(
         # manually with a slower query. This should only happen once per metadata_id
         # ever since the latest statistics table was introduced.
         if missing_metadata_ids := metadata_ids - set(metadata_id_to_id):
-            missing_ids: set[int] = set()
+            missing_latest_ids: set[int] = set()
             for metadata_id in missing_metadata_ids:
                 if latest_id := find_latest_short_term_statistic_for_metadata_id(
                     session, metadata_id
                 ):
                     run_cache.set_latest_id_for_metadata_id(metadata_id, latest_id)
-                    missing_ids.add(latest_id)
-            if missing_ids and (
+                    missing_latest_ids.add(latest_id)
+            if missing_latest_ids and (
                 additional_stats := get_latest_short_term_statistics_by_ids(
-                    session, missing_ids
+                    session, missing_latest_ids
                 )
             ):
                 stats.extend(additional_stats)
