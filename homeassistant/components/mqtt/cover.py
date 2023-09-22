@@ -235,22 +235,12 @@ async def _async_setup_entity(
 class MqttCover(MqttEntity, CoverEntity):
     """Representation of a cover that can be controlled using MQTT."""
 
+    _attr_is_closed: bool | None = None
+    _attributes_extra_blocked: frozenset[str] = MQTT_COVER_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
-    _attributes_extra_blocked: frozenset[str] = MQTT_COVER_ATTRIBUTES_BLOCKED
     _optimistic: bool
     _tilt_optimistic: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize the cover."""
-        self._attr_is_closed = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
