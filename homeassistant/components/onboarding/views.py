@@ -193,7 +193,12 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             await self._async_mark_done(hass)
 
             # Integrations to set up when finishing onboarding
-            onboard_integrations = ["google_translate", "met", "radio_browser"]
+            onboard_integrations = [
+                "google_translate",
+                "met",
+                "radio_browser",
+                "shopping_list",
+            ]
 
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.components import hassio

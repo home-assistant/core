@@ -1,8 +1,8 @@
 """Base Entity for Sonarr."""
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -24,15 +24,11 @@ class SonarrEntity(CoordinatorEntity[SonarrDataUpdateCoordinator[SonarrDataT]]):
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the application."""
-        return DeviceInfo(
-            configuration_url=self.coordinator.host_configuration.base_url,
+        self._attr_device_info = DeviceInfo(
+            configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
-            sw_version=self.coordinator.system_version,
+            sw_version=coordinator.system_version,
         )

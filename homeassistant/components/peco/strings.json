@@ -10,5 +10,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "customers_out": {
+        "name": "Customers out"
+      },
+      "percent_customers_out": {
+        "name": "Percent customers out"
+      },
+      "outage_count": {
+        "name": "Outage count"
+      },
+      "customers_served": {
+        "name": "Customers served"
+      },
+      "map_alert": {
+        "name": "Map alert"
+      }
+    }
   }
 }

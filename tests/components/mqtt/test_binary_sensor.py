@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -46,6 +47,7 @@ from .test_common import (
     help_test_reloadable,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -146,57 +148,64 @@ async def expires_helper(hass: HomeAssistant) -> None:
     """Run the basic expiry code."""
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+    with freeze_time(now) as freezer:
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "ON")
         await hass.async_block_till_done()
 
-    # Value was set correctly.
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
+        # Value was set correctly.
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_ON
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
+        # Value is not yet expired
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_ON
 
-    # Next message resets timer
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        # Next message resets timer
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "OFF")
         await hass.async_block_till_done()
 
-    # Value was updated correctly.
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+        # Value was updated correctly.
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_OFF
 
-    # Time jump +3s
-    now = now + timedelta(seconds=3)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is not yet expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+        # Value is not yet expired
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_OFF
 
-    # Time jump +2s
-    now = now + timedelta(seconds=2)
-    async_fire_time_changed(hass, now)
-    await hass.async_block_till_done()
+        # Time jump +2s
+        now += timedelta(seconds=2)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
 
-    # Value is expired now
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
+        # Value is expired now
+        state = hass.states.get("binary_sensor.test")
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     await mqtt_mock_entry()
@@ -212,31 +221,28 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
     realnow = dt_util.utcnow()
     now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
-        )
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", config_msg)
+    await hass.async_block_till_done()
 
     # Test that binary_sensor is not available
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
 
     # Publish state message
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_mqtt_message(hass, "test-topic", "ON")
-        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
 
     # Test that binary_sensor has correct state
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_ON
 
     # Advance +3 seconds
-    now = now + timedelta(seconds=3)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    now += timedelta(seconds=3)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # binary_sensor is not yet expired
     state = hass.states.get("binary_sensor.test")
@@ -255,21 +261,18 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_ON
 
     # Add +2 seconds
-    now = now + timedelta(seconds=2)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    now += timedelta(seconds=2)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # Test that binary_sensor has expired
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
 
     # Resend config message to update discovery
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
-        )
-        await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", config_msg)
+    await hass.async_block_till_done()
 
     # Test that binary_sensor is still expired
     state = hass.states.get("binary_sensor.test")
@@ -1246,3 +1249,38 @@ async def test_entity_name(
     await help_test_entity_name(
         hass, mqtt_mock_entry, domain, config, expected_friendly_name, device_class
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            binary_sensor.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "ON", "OFF"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
