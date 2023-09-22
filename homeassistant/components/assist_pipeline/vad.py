@@ -6,9 +6,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final, cast
 
-import numpy as np
-from webrtc_noise_gain import AudioProcessor
-
 _SAMPLE_RATE: Final = 16000  # Hz
 _SAMPLE_WIDTH: Final = 2  # bytes
 
@@ -74,10 +71,7 @@ class AudioBuffer:
 
 @dataclass
 class VoiceCommandSegmenter:
-    """Segments an audio stream into voice commands using webrtcvad."""
-
-    vad_samples_per_chunk: int = 160  # 10 ms
-    """Must be 10 ms at 16Khz."""
+    """Segments an audio stream into voice commands."""
 
     speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
@@ -106,93 +100,48 @@ class VoiceCommandSegmenter:
     _reset_seconds_left: float = 0.0
     """Seconds left before resetting start/stop time counters."""
 
-    _audio_processor: AudioProcessor = None
-    _leftover_chunk_buffer: AudioBuffer = field(init=False)
-    _bytes_per_chunk: int = field(init=False)
-    _seconds_per_chunk: float = field(init=False)
-    _clean_10ms_array: np.ndarray = field(init=False)
-
     def __post_init__(self) -> None:
-        """Initialize VAD."""
-        self._audio_processor = AudioProcessor(0, 0)
-        self._bytes_per_chunk = self.vad_samples_per_chunk * _SAMPLE_WIDTH
-        self._seconds_per_chunk = self.vad_samples_per_chunk / _SAMPLE_RATE
-        self._leftover_chunk_buffer = AudioBuffer(
-            self.vad_samples_per_chunk * _SAMPLE_WIDTH
-        )
-        self._clean_10ms_array = np.zeros(
-            shape=(self.vad_samples_per_chunk,), dtype=np.int16
-        )
         self.reset()
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._leftover_chunk_buffer.clear()
         self._speech_seconds_left = self.speech_seconds
         self._silence_seconds_left = self.silence_seconds
         self._timeout_seconds_left = self.timeout_seconds
         self._reset_seconds_left = self.reset_seconds
-        self._clean_10ms_array.fill(0)
         self.in_command = False
 
-    def process(self, samples: bytes) -> bool:
-        """Process 16-bit 16Khz mono audio samples.
+    def process(self, chunk_seconds: float, is_speech: bool) -> bool:
+        """Process samples using external VAD.
 
         Returns False when command is done.
         """
-        for chunk in chunk_samples(
-            samples, self._bytes_per_chunk, self._leftover_chunk_buffer
-        ):
-            if not self._process_chunk(chunk):
-                self.reset()
-                return False
-
-        return True
-
-    def is_speech(self, chunk: bytes) -> bool:
-        """Return true if audio chunk contains speech."""
-        dirty_10ms_array = np.frombuffer(chunk, dtype=np.int16)
-        is_speech = self._audio_processor.Process10ms(
-            dirty_10ms_array, self._clean_10ms_array
-        )
-
-        return cast(bool, is_speech)
-
-    @property
-    def audio_buffer(self) -> bytes:
-        """Get partial chunk in the audio buffer."""
-        return self._leftover_chunk_buffer.bytes()
-
-    def _process_chunk(self, chunk: bytes) -> bool:
-        """Process a single chunk of 16-bit 16Khz mono audio.
-
-        Returns False when command is done.
-        """
-        is_speech = self.is_speech(chunk)
-        self._timeout_seconds_left -= self._seconds_per_chunk
+        self._timeout_seconds_left -= chunk_seconds
         if self._timeout_seconds_left <= 0:
+            self.reset()
             return False
 
         if not self.in_command:
             if is_speech:
                 self._reset_seconds_left = self.reset_seconds
-                self._speech_seconds_left -= self._seconds_per_chunk
+                self._speech_seconds_left -= chunk_seconds
                 if self._speech_seconds_left <= 0:
                     # Inside voice command
                     self.in_command = True
             else:
                 # Reset if enough silence
-                self._reset_seconds_left -= self._seconds_per_chunk
+                self._reset_seconds_left -= chunk_seconds
                 if self._reset_seconds_left <= 0:
                     self._speech_seconds_left = self.speech_seconds
         elif not is_speech:
             self._reset_seconds_left = self.reset_seconds
-            self._silence_seconds_left -= self._seconds_per_chunk
+            self._silence_seconds_left -= chunk_seconds
             if self._silence_seconds_left <= 0:
+                self.reset()
                 return False
         else:
             # Reset if enough speech
-            self._reset_seconds_left -= self._seconds_per_chunk
+            self._reset_seconds_left -= chunk_seconds
             if self._reset_seconds_left <= 0:
                 self._silence_seconds_left = self.silence_seconds
 
@@ -209,84 +158,42 @@ class VoiceActivityTimeout:
     reset_seconds: float = 0.5
     """Seconds of speech before resetting timeout."""
 
-    vad_samples_per_chunk: int = 160  # 10 ms
-    """Must be 10 ms at 16Khz."""
-
     _silence_seconds_left: float = 0.0
     """Seconds left before considering voice command as stopped."""
 
     _reset_seconds_left: float = 0.0
     """Seconds left before resetting start/stop time counters."""
 
-    _audio_processor: AudioProcessor = None
-    _leftover_chunk_buffer: AudioBuffer = field(init=False)
-    _bytes_per_chunk: int = field(init=False)
-    _seconds_per_chunk: float = field(init=False)
-    _clean_10ms_array: np.ndarray = field(init=False)
-
     def __post_init__(self) -> None:
-        """Initialize VAD."""
-        self._audio_processor = AudioProcessor(0, 0)
-        self._bytes_per_chunk = self.vad_samples_per_chunk * _SAMPLE_WIDTH
-        self._seconds_per_chunk = self.vad_samples_per_chunk / _SAMPLE_RATE
-        self._leftover_chunk_buffer = AudioBuffer(
-            self.vad_samples_per_chunk * _SAMPLE_WIDTH
-        )
-        self._clean_10ms_array = np.zeros(
-            shape=(self.vad_samples_per_chunk,), dtype=np.int16
-        )
         self.reset()
 
     def reset(self) -> None:
         """Reset all counters and state."""
-        self._leftover_chunk_buffer.clear()
         self._silence_seconds_left = self.silence_seconds
         self._reset_seconds_left = self.reset_seconds
-        self._clean_10ms_array.fill(0)
 
-    def process(self, samples: bytes) -> bool:
-        """Process 16-bit 16Khz mono audio samples.
-
-        Returns False when timeout is reached.
-        """
-        for chunk in chunk_samples(
-            samples, self._bytes_per_chunk, self._leftover_chunk_buffer
-        ):
-            if not self._process_chunk(chunk):
-                return False
-
-        return True
-
-    def is_speech(self, chunk: bytes) -> bool:
-        """Return true if audio chunk contains speech."""
-        dirty_10ms_array = np.frombuffer(chunk, dtype=np.int16)
-        is_speech = self._audio_processor.Process10ms(
-            dirty_10ms_array, self._clean_10ms_array
-        )
-
-        return cast(bool, is_speech)
-
-    def _process_chunk(self, chunk: bytes) -> bool:
-        """Process a single chunk of 16-bit 16Khz mono audio.
+    def process(self, chunk_seconds: float, is_speech: bool) -> bool:
+        """Process samples using external VAD.
 
         Returns False when timeout is reached.
         """
-        if self.is_speech(chunk):
+        if is_speech:
             # Speech
-            self._reset_seconds_left -= self._seconds_per_chunk
+            self._reset_seconds_left -= chunk_seconds
             if self._reset_seconds_left <= 0:
                 # Reset timeout
                 self._silence_seconds_left = self.silence_seconds
         else:
             # Silence
-            self._silence_seconds_left -= self._seconds_per_chunk
+            self._silence_seconds_left -= chunk_seconds
             if self._silence_seconds_left <= 0:
                 # Timeout reached
+                self.reset()
                 return False
 
             # Slowly build reset counter back up
             self._reset_seconds_left = min(
-                self.reset_seconds, self._reset_seconds_left + self._seconds_per_chunk
+                self.reset_seconds, self._reset_seconds_left + chunk_seconds
             )
 
         return True
