@@ -169,7 +169,7 @@
         "level3": "[%key:component::renson::entity::sensor::ventilation_level::state::level3%]",
         "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
         "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]",
-        "holiday": "Holiday"
+        "holiday": "[%key:component::renson::entity::sensor::ventilation_level::state::holiday%]"
       }
     }
   },
