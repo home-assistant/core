@@ -575,7 +575,7 @@ def _compile_statistics(
 
     if updated_metadata_ids:
         # These are always the newest statistics, so we can update
-        # latest_statistics_short_term_ids table without having to check the start_ts.
+        # the run cache without having to check the start_ts.
         session.flush()  # populate the ids of the new StatisticsShortTerm rows
         updated_metadata_id_to_id = cast(
             dict[int, int],
