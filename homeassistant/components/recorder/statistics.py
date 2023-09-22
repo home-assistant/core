@@ -1921,12 +1921,10 @@ def get_latest_short_term_statistics(
                 ):
                     run_cache.set_latest_id_for_metadata_id(metadata_id, latest_id)
                     missing_latest_ids.add(latest_id)
-            if missing_latest_ids and (
-                additional_stats := get_latest_short_term_statistics_by_ids(
-                    session, missing_latest_ids
+            if missing_latest_ids:
+                stats.extend(
+                    get_latest_short_term_statistics_by_ids(session, missing_latest_ids)
                 )
-            ):
-                stats.extend(additional_stats)
 
         if not stats:
             return {}
