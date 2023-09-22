@@ -24,7 +24,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     get_latest_short_term_statistics,
     get_metadata,
-    get_statistics_run_cache,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -179,8 +179,8 @@ def test_compile_hourly_statistics(hass_recorder: Callable[..., HomeAssistant]) 
 
     # Now wipe the latest_short_term_statistics_ids table and test again
     # to make sure we can rebuild the missing data
-    run_cache = get_statistics_run_cache(instance.hass)
-    run_cache._latest_short_term_statistics_id_by_metadata_id = {}
+    run_cache = get_short_term_statistics_run_cache(instance.hass)
+    run_cache._latest_id_by_metadata_id = {}
     stats = get_latest_short_term_statistics(
         hass, {"sensor.test1"}, {"last_reset", "max", "mean", "min", "state", "sum"}
     )
