@@ -251,6 +251,8 @@ async def async_setup_entry(
             continue
         pump_type = pump_data[VALUE.TYPE]
         for proto_pump_sensor_description in SUPPORTED_PUMP_SENSORS:
+            if not pump_data.get(proto_pump_sensor_description.key):
+                continue
             entities.append(
                 ScreenLogicPumpSensor(
                     coordinator,
