@@ -1057,6 +1057,31 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Drying Rack
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46j872iaz
+    "lyj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.HOT_LEFT,
+            translation_key="hot_left",
+            icon="mdi:timer",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIND_LEFT,
+            translation_key="wind_left",
+            icon="mdi:timer",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DISINFECT_LEFT,
+            translation_key="disinfect_left",
+            icon="mdi:timer",
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

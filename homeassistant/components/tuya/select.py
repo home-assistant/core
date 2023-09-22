@@ -324,6 +324,22 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:water-percent",
         ),
     ),
+    # Drying Rack
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46j872iaz
+    "lyj": (
+        SelectEntityDescription(
+            key=DPCode.WIND_DRY_SET,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+            translation_key="wind_dry_set",
+        ),
+        SelectEntityDescription(
+            key=DPCode.HOT_DRY_SET,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+            translation_key="hot_dry_set",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

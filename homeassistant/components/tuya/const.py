@@ -176,6 +176,7 @@ class DPCode(StrEnum):
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DISINFECTION = "disinfection"
+    DISINFECT_LEFT = "disinfect_left"  # Remaining time for disinfection
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
@@ -207,6 +208,9 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HOT_DRY = "hot_dry"  # Hot drying
+    HOT_DRY_SET = "hot_dry_set"  # Countdown for hot drying
+    HOT_LEFT = "hot_left"  # Remaining time of hot drying
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
@@ -363,6 +367,9 @@ class DPCode(StrEnum):
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
+    WIND_DRY = "wind_dry"  # Air drying
+    WIND_DRY_SET = "wind_dry_set"  # Countdown for air drying
+    WIND_LEFT = "wind_left"  # Remaining time of air drying
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"

@@ -356,6 +356,14 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=DPCode.BRIGHT_VALUE_1,
         ),
     ),
+    # Drying Rack
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46j872iaz
+    "lyj": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

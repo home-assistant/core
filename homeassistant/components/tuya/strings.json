@@ -232,6 +232,42 @@
           "1": "High sensitivity"
         }
       },
+      "wind_dry_set": {
+        "name": "Countdown for air drying",
+        "state": {
+          "cancel": "Cancel",
+          "1h": "1 hour",
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours",
+          "7h": "7 hours",
+          "8h": "8 hours",
+          "9h": "9 hours",
+          "10h": "10 hours",
+          "11h": "11 hours",
+          "12h": "12 hours"
+        }
+      },
+      "hot_dry_set": {
+        "name": "Countdown for hot drying",
+        "state": {
+          "cancel": "Cancel",
+          "1h": "1 hour",
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours",
+          "7h": "7 hours",
+          "8h": "8 hours",
+          "9h": "9 hours",
+          "10h": "10 hours",
+          "11h": "11 hours",
+          "12h": "12 hours"
+        }
+      },
       "ipc_work_mode": {
         "name": "IPC mode",
         "state": {
@@ -593,6 +629,15 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "hot_left": {
+        "name": "Hot drying time left"
+      },
+      "wind_left": {
+        "name": "Air drying time left"
+      },
+      "disinfect_left": {
+        "name": "Disinfection time left"
       }
     },
     "switch": {
@@ -799,6 +844,12 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "hot_dry": {
+        "name": "Hot drying"
+      },
+      "wind_dry": {
+        "name": "Air drying"
       }
     }
   },

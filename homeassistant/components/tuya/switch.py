@@ -704,6 +704,25 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Drying Rack
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46j872iaz
+    "lyj": (
+        SwitchEntityDescription(
+            key=DPCode.DISINFECTION,
+            translation_key="disinfection",
+            icon="mdi:bacteria",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.WIND_DRY,
+            translation_key="wind_dry",
+            icon="mdi:fan",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.HOT_DRY,
+            translation_key="hot_dry",
+            icon="mdi:fire",
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
