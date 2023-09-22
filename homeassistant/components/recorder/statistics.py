@@ -1910,8 +1910,8 @@ def get_latest_short_term_statistics(
                 session, metadata_id_to_id.values()
             )
         # If we are missing some metadata_ids in the run cache, we need run a query
-        # to populate the cache, and then run another query to get the latest
-        # short term statistics for the missing metadata_ids.
+        # to populate the cache for each metadata_id, and then run another query
+        # to get the latest short term statistics for the missing metadata_ids.
         if (missing_metadata_ids := metadata_ids - set(metadata_id_to_id)) and (
             missing_latest_ids := {
                 latest_id
