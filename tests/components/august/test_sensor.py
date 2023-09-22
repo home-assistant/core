@@ -279,44 +279,14 @@ async def test_lock_operator_manual(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "manual"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "manual"
-    )
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is True
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "manual"
 
 
 async def test_lock_operator_autorelock(hass: HomeAssistant) -> None:
@@ -377,44 +347,15 @@ async def test_unlock_operator_manual(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "manual"
-        ]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "manual"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is True
+    assert state.attributes["tag"] is False
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "manual"
 
 
 async def test_unlock_operator_tag(hass: HomeAssistant) -> None:
@@ -431,44 +372,15 @@ async def test_unlock_operator_tag(hass: HomeAssistant) -> None:
         "sensor.online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == "Your favorite elven princess"
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "manual"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes["tag"]
-        is True
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "remote"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "keypad"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "autorelock"
-        ]
-        is False
-    )
-    assert (
-        hass.states.get("sensor.online_with_doorsense_name_operator").attributes[
-            "method"
-        ]
-        == "tag"
-    )
+
+    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    assert state.state == "Your favorite elven princess"
+    assert state.attributes["manual"] is False
+    assert state.attributes["tag"] is True
+    assert state.attributes["remote"] is False
+    assert state.attributes["keypad"] is False
+    assert state.attributes["autorelock"] is False
+    assert state.attributes["method"] == "tag"
 
 
 async def test_restored_state(
@@ -513,5 +425,7 @@ async def test_restored_state(
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).attributes["method"] == "tag"
-    assert hass.states.get(entity_id).attributes[ATTR_ENTITY_PICTURE] == "image.png"
+    state = hass.states.get(entity_id)
+    assert state.state == "Tag Unlock"
+    assert state.attributes["method"] == "tag"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == "image.png"
