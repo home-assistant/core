@@ -12,35 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-
-FAA_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
-        key="GROUND_DELAY",
-        name="Ground Delay",
-        icon="mdi:airport",
-    ),
-    BinarySensorEntityDescription(
-        key="GROUND_STOP",
-        name="Ground Stop",
-        icon="mdi:airport",
-    ),
-    BinarySensorEntityDescription(
-        key="DEPART_DELAY",
-        name="Departure Delay",
-        icon="mdi:airplane-takeoff",
-    ),
-    BinarySensorEntityDescription(
-        key="ARRIVE_DELAY",
-        name="Arrival Delay",
-        icon="mdi:airplane-landing",
-    ),
-    BinarySensorEntityDescription(
-        key="CLOSURE",
-        name="Closure",
-        icon="mdi:airplane:off",
-    ),
-)
+from .const import DOMAIN, FAA_BINARY_SENSORS
 
 
 async def async_setup_entry(
@@ -113,5 +85,4 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         elif sensor_type == "CLOSURE":
             self._attrs["begin"] = self.coordinator.data.closure.start
             self._attrs["end"] = self.coordinator.data.closure.end
-            self._attrs["notam"] = self.coordinator.data.closure.notam
         return self._attrs
