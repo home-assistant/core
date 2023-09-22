@@ -214,6 +214,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 76,
     },
     {
+        "domain": "idasen_desk",
+        "service_uuid": "99fa0001-338a-1024-8a49-009c0215f78a",
+    },
+    {
         "connectable": False,
         "domain": "inkbird",
         "local_name": "sps",

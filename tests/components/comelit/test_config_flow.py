@@ -18,9 +18,9 @@ from tests.common import MockConfigEntry
 async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     with patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.login",
+        "aiocomelit.api.ComeliteSerialBridgeApi.login",
     ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.logout",
+        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
     ), patch(
         "homeassistant.components.comelit.async_setup_entry"
     ) as mock_setup_entry, patch(
@@ -64,7 +64,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     assert result["step_id"] == "user"
 
     with patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.login",
+        "aiocomelit.api.ComeliteSerialBridgeApi.login",
         side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -83,9 +83,9 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     with patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.login",
+        "aiocomelit.api.ComeliteSerialBridgeApi.login",
     ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.logout",
+        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
     ), patch("homeassistant.components.comelit.async_setup_entry"), patch(
         "requests.get"
     ) as mock_request_get:
@@ -127,9 +127,9 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
     mock_config.add_to_hass(hass)
 
     with patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.login", side_effect=side_effect
+        "aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect
     ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeAPi.logout",
+        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
     ), patch(
         "homeassistant.components.comelit.async_setup_entry"
     ):
