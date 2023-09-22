@@ -1,9 +1,8 @@
 """Switch platform for Ecoforest."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from pyecoforest.api import EcoforestApi
 from pyecoforest.models.device import Device
@@ -23,7 +22,7 @@ class EcoforestSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Device], bool]
-    switch_fn: Callable[[EcoforestApi, bool], Coroutine[Any, Any, Device]]
+    switch_fn: Callable[[EcoforestApi, bool], Awaitable[Device]]
 
 
 @dataclass
