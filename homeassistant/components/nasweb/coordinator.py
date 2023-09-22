@@ -73,11 +73,13 @@ class NotificationCoordinator:
 class NASwebCoordinator(DataUpdateCoordinator):
     """Coordinator managing status of single NASweb device."""
 
-    def __init__(self, hass: HomeAssistant, webio_api: WebioAPI) -> None:
+    def __init__(
+        self, hass: HomeAssistant, webio_api: WebioAPI, name: str = "NASweb[default]"
+    ) -> None:
         """Initialize NASweb coordinator."""
         self._hass = hass
         self._connection_confirmed = False
-        super().__init__(hass, _LOGGER, name="nasweb_data")
+        super().__init__(hass, _LOGGER, name=name)
         self.webio_api: WebioAPI = webio_api
         self.async_add_switch_callback: Optional[AddEntitiesCallback] = None
         data: dict[str, Any] = {}
