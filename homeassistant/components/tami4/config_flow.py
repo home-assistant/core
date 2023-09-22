@@ -17,9 +17,9 @@ from .const import CONF_PHONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_PHONE_NUMBER_SCHEMA = vol.Schema({vol.Required(CONF_PHONE): cv.string})
+_STEP_PHONE_NUMBER_SCHEMA = vol.Schema({vol.Required(CONF_PHONE): cv.string})
 
-STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
+_STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_otp()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_PHONE_NUMBER_SCHEMA, errors=errors
+            step_id="user", data_schema=_STEP_PHONE_NUMBER_SCHEMA, errors=errors
         )
 
     async def async_step_otp(
@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="otp", data_schema=STEP_OTP_CODE_SCHEMA, errors=errors
+            step_id="otp", data_schema=_STEP_OTP_CODE_SCHEMA, errors=errors
         )
 
 
