@@ -65,7 +65,7 @@ class MediaSourceItem:
                         identifier=None,
                         media_class=MediaClass.APP,
                         media_content_type=MediaType.APP,
-                        thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
+                        thumbnail=f"https://brands.home-assistant.io/{source.domain}/logo.png?fallback=true",
                         title=source.name,
                         can_play=False,
                         can_expand=True,

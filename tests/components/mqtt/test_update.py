@@ -221,7 +221,7 @@ async def test_value_template(
     assert state.attributes.get("latest_version") == "1.9.0"
     assert (
         state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+        == "https://brands.home-assistant.io/mqtt/icon.png?fallback=true"
     )
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
@@ -269,7 +269,7 @@ async def test_value_template_float(
     assert state.attributes.get("latest_version") == "1.9"
     assert (
         state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+        == "https://brands.home-assistant.io/mqtt/icon.png?fallback=true"
     )
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0"}')

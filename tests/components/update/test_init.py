@@ -74,7 +74,7 @@ async def test_update(hass: HomeAssistant) -> None:
     assert update.entity_category is EntityCategory.DIAGNOSTIC
     assert (
         update.entity_picture
-        == "https://brands.home-assistant.io/_/test_platform/icon.png"
+        == "https://brands.home-assistant.io/test_platform/icon.png?fallback=true"
     )
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"

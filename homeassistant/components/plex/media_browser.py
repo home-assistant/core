@@ -93,7 +93,7 @@ def browse_media(  # noqa: C901
             can_expand=True,
             children=[],
             children_media_class=MediaClass.DIRECTORY,
-            thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+            thumbnail="https://brands.home-assistant.io/plex/logo.png?fallback=true",
         )
         if platform != "sonos":
             server_info.children.append(

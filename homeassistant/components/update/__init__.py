@@ -254,9 +254,7 @@ class UpdateEntity(RestoreEntity):
         Update entities return the brand icon based on the integration
         domain by default.
         """
-        return (
-            f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
-        )
+        return f"https://brands.home-assistant.io/{self.platform.platform_name}/icon.png?fallback=true"
 
     @property
     def in_progress(self) -> bool | int | None:

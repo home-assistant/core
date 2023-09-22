@@ -22,7 +22,7 @@ async def async_get_media_browser_root_object(
             media_class=MediaClass.APP,
             media_content_id="",
             media_content_type="plex",
-            thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+            thumbnail="https://brands.home-assistant.io/plex/logo.png?fallback=true",
             can_play=False,
             can_expand=True,
         )
