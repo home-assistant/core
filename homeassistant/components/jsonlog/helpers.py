@@ -1,7 +1,7 @@
 """Helpers for the logger integration."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import logging
 import os
 from queue import SimpleQueue
@@ -18,7 +18,7 @@ class JsonFormatter(jsonlogger.JsonFormatter):
 
     def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:
         """Format log record created timestamp as ISO8601 string."""
-        created = datetime.fromtimestamp(record.created, tz=timezone.utc)
+        created = datetime.fromtimestamp(record.created, tz=UTC)
         return created.isoformat(sep="T", timespec="milliseconds")
 
 
@@ -55,7 +55,7 @@ def setup_queue_handler(
 ) -> HomeAssistantQueueHandler:
     """Set up a queue log handler with JSON formatter."""
 
-    formatter = JsonFormatter(" ".join([f"%({attr})" for attr in logattrs]))
+    formatter = JsonFormatter(" ".join([f"%({attr})" for attr in logattrs]))  # type: ignore[no-untyped-call]
     handler = HomeAssistantQueueHandler(queue)
     handler.setFormatter(formatter)
     return handler

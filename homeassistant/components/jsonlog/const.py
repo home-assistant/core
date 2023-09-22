@@ -1,8 +1,7 @@
 """Constants for the jsonlog integration."""
+from enum import StrEnum
 import logging
 from typing import Final
-
-from homeassistant.backports.enum import StrEnum
 
 DOMAIN: Final = "jsonlog"
 LOGGER = logging.getLogger(__package__)

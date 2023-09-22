@@ -194,6 +194,7 @@ homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
+homeassistant.components.jsonlog.*
 homeassistant.components.jvc_projector.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
