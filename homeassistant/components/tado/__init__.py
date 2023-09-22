@@ -253,6 +253,7 @@ class TadoConnector:
         try:
             self.data["weather"] = self.tado.getWeather()
             self.data["geofence"] = self.tado.getHomeState()
+            self.data["aircomfort"] = self.tado.getAirComfort()
             dispatcher_send(
                 self.hass,
                 SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "home", "data"),

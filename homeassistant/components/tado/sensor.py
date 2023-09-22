@@ -23,6 +23,7 @@ from .const import (
     CONDITIONS_MAP,
     DATA,
     DOMAIN,
+    SENSOR_DATA_CATEGORY_AIRCOMFORT,
     SENSOR_DATA_CATEGORY_GEOFENCE,
     SENSOR_DATA_CATEGORY_WEATHER,
     SIGNAL_TADO_UPDATE_RECEIVED,
@@ -125,6 +126,17 @@ HOME_SENSORS = [
         data_category=SENSOR_DATA_CATEGORY_WEATHER,
     ),
     TadoSensorEntityDescription(
+        key="air comfort",
+        translation_key="freshness",
+        state_fn=lambda data: data["freshness"]["value"],
+        attributes_fn=lambda data: {
+            "lastOpenWidow": data["freshness"]["lastOpenWindow"],
+            "acPoweredOn": data["freshness"]["acPoweredOn"],
+            "lastAcPowerOff": data["freshness"]["lastAcPowerOff"],
+        },
+        data_category=SENSOR_DATA_CATEGORY_AIRCOMFORT,
+    ),
+    TadoSensorEntityDescription(
         key="tado mode",
         translation_key="tado_mode",
         state_fn=get_tado_mode,
@@ -183,6 +195,16 @@ AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     state_fn=lambda data: data.ac_power,
     attributes_fn=lambda data: {"time": data.ac_power_timestamp},
 )
+COMFORT_TEMPERATURE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="air comfort temperature",
+    translation_key="air_comfort_temperature",
+    state_fn=lambda data: data["temperatureLevel"],
+)
+COMFORT_HUMIDITY_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
+    key="air comfort humidity",
+    translation_key="air_comfort_humidity",
+    state_fn=lambda data: data["humidityLevel"],
+)
 
 ZONE_SENSORS = {
     TYPE_HEATING: [
@@ -196,6 +218,8 @@ ZONE_SENSORS = {
         HUMIDITY_ENTITY_DESCRIPTION,
         TADO_MODE_ENTITY_DESCRIPTION,
         AC_ENTITY_DESCRIPTION,
+        COMFORT_TEMPERATURE_ENTITY_DESCRIPTION,
+        COMFORT_HUMIDITY_ENTITY_DESCRIPTION,
     ],
     TYPE_HOT_WATER: [TADO_MODE_ENTITY_DESCRIPTION],
 }
@@ -272,14 +296,23 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         try:
             tado_weather_data = self._tado.data["weather"]
             tado_geofence_data = self._tado.data["geofence"]
+            tado_aircomfort_data = self._tado.data["aircomfort"]
         except KeyError:
             return
 
         if self.entity_description.data_category is not None:
             if self.entity_description.data_category == SENSOR_DATA_CATEGORY_WEATHER:
                 tado_sensor_data = tado_weather_data
-            else:
+            elif self.entity_description.data_category == SENSOR_DATA_CATEGORY_GEOFENCE:
                 tado_sensor_data = tado_geofence_data
+            elif (
+                self.entity_description.data_category == SENSOR_DATA_CATEGORY_AIRCOMFORT
+            ):
+                tado_sensor_data = tado_aircomfort_data
+            else:
+                _LOGGER.error(
+                    "Unknown data category: %s", self.entity_description.data_category
+                )
         self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
@@ -330,7 +363,14 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def _async_update_zone_data(self):
         """Handle update callbacks."""
         try:
-            tado_zone_data = self._tado.data["zone"][self.zone_id]
+            if "air comfort" in self.entity_description.key:
+                tado_zone_data = [
+                    dic
+                    for dic in self._tado.data["aircomfort"]["comfort"]
+                    if dic["roomId"] == self.zone_id
+                ][0]
+            else:
+                tado_zone_data = self._tado.data["zone"][self.zone_id]
         except KeyError:
             return
 

@@ -54,6 +54,15 @@
       }
     },
     "sensor": {
+      "air_comfort_humidity": {
+        "name": "Air Comfort Humidity"
+      },
+      "air_comfort_temperature": {
+        "name": "Air Comfort Temperature"
+      },
+      "freshness": {
+        "name": "Freshness"
+      },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
